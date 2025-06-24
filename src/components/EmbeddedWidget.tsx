@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, X } from 'lucide-react';
+import type { Json } from '@/integrations/supabase/types';
 
 interface Project {
   id: string;
@@ -67,6 +68,20 @@ const EmbeddedWidget = () => {
     }
   }, [selectedFloor, projectId]);
 
+  const parsePolygon = (polygon: Json): { x: number; y: number }[] => {
+    if (Array.isArray(polygon)) {
+      return polygon.filter(p => 
+        typeof p === 'object' && 
+        p !== null && 
+        'x' in p && 
+        'y' in p &&
+        typeof p.x === 'number' &&
+        typeof p.y === 'number'
+      ) as { x: number; y: number }[];
+    }
+    return [];
+  };
+
   const loadProject = async () => {
     try {
       const { data: projectData, error: projectError } = await supabase
@@ -85,7 +100,15 @@ const EmbeddedWidget = () => {
         .order('floor_number');
 
       if (floorsError) throw floorsError;
-      setBuildingFloors(floorsData);
+      
+      const transformedFloors: BuildingFloor[] = floorsData.map(floor => ({
+        id: floor.id,
+        floor_number: floor.floor_number,
+        polygon: parsePolygon(floor.polygon),
+        color: floor.color
+      }));
+
+      setBuildingFloors(transformedFloors);
     } catch (error) {
       console.error('Error loading project:', error);
     } finally {
@@ -118,7 +141,20 @@ const EmbeddedWidget = () => {
         .eq('floor_number', selectedFloor);
 
       if (error) throw error;
-      setApartments(data || []);
+      
+      const transformedApartments: Apartment[] = (data || []).map(apt => ({
+        id: apt.id,
+        apartment_number: apt.apartment_number,
+        rooms: apt.rooms,
+        area: Number(apt.area),
+        price: Number(apt.price) || 0,
+        status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
+          ? apt.status 
+          : 'available',
+        polygon: parsePolygon(apt.polygon)
+      }));
+
+      setApartments(transformedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
     }

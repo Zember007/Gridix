@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,8 +32,9 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     setSelectedProject('new');
   };
 
-  const handleSelectProject = (projectId: string) => {
+  const handleEditProject = (projectId: string, isNew: boolean) => {
     setSelectedProject(projectId);
+    setIsCreatingProject(isNew);
     setActiveTab('editor');
   };
 
@@ -118,7 +118,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <p className="text-real-estate-600 mt-2">Управляйте своими проектами недвижимости</p>
               </div>
             </div>
-            <ProjectList onSelectProject={handleSelectProject} />
+            <ProjectList 
+              onCreateNew={handleCreateProject}
+              onEditProject={handleEditProject}
+            />
           </TabsContent>
 
           <TabsContent value="import" className="space-y-6">
