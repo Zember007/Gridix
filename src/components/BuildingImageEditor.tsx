@@ -1,9 +1,11 @@
-import { useState, useRef, useCallback } from 'react';
+
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Trash2, Edit, Eye, Square } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -19,14 +21,13 @@ interface Floor {
 }
 
 const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImageEditorProps) => {
-  const [buildingImage, setBuildingImage] = useState<string | null>(
-    'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=800&h=600&fit=crop'
-  );
+  const [buildingImage, setBuildingImage] = useState<string | null>(null);
   const [floorPolygons, setFloorPolygons] = useState<Floor[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentFloor, setCurrentFloor] = useState<number | null>(null);
   const [currentPolygon, setCurrentPolygon] = useState<{ x: number; y: number }[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -37,20 +38,77 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
   ];
 
-  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  // Загружаем существующие данные при монтировании компонента
+  useEffect(() => {
+    loadProjectData();
+  }, [projectId]);
+
+  const loadProjectData = async () => {
+    try {
+      // Загружаем данные проекта
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('building_image_url')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError) throw projectError;
+
+      if (project.building_image_url) {
+        setBuildingImage(project.building_image_url);
+      }
+
+      // Загружаем этажи здания
+      const { data: buildingFloors, error: floorsError } = await supabase
+        .from('building_floors')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('floor_number');
+
+      if (floorsError) throw floorsError;
+
+      if (buildingFloors) {
+        const floors = buildingFloors.map(floor => ({
+          id: floor.floor_number,
+          name: `${floor.floor_number}-й этаж`,
+          polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : [],
+          color: floor.color
+        }));
+        setFloorPolygons(floors);
+      }
+    } catch (error) {
+      console.error('Error loading project data:', error);
+      toast.error('Ошибка загрузки данных проекта');
+    }
+  };
+
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
         setBuildingImage(imageUrl);
         onImageUpload(imageUrl);
         setFloorPolygons([]);
-        toast.success('Изображение здания загружено');
+        
+        // Сохраняем изображение в базу данных
+        try {
+          const { error } = await supabase
+            .from('projects')
+            .update({ building_image_url: imageUrl })
+            .eq('id', projectId);
+
+          if (error) throw error;
+          toast.success('Изображение здания загружено и сохранено');
+        } catch (error) {
+          console.error('Error saving building image:', error);
+          toast.error('Ошибка сохранения изображения');
+        }
       };
       reader.readAsDataURL(file);
     }
-  }, [onImageUpload]);
+  }, [onImageUpload, projectId]);
 
   const startDrawingFloor = (floorNumber: number) => {
     setCurrentFloor(floorNumber);
@@ -76,28 +134,56 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     setCurrentPolygon(prev => [...prev, { x, y }]);
   }, [isDrawing, currentFloor]);
 
-  const finishDrawing = () => {
+  const finishDrawing = async () => {
     if (currentPolygon.length < 3 || currentFloor === null) {
       toast.error('Необходимо выбрать минимум 3 точки');
       return;
     }
 
-    const newFloor: Floor = {
-      id: currentFloor,
-      name: `${currentFloor}-й этаж`,
-      polygon: currentPolygon,
-      color: floorColors[(currentFloor - 1) % floorColors.length]
-    };
+    setSaving(true);
+    
+    try {
+      const newFloor: Floor = {
+        id: currentFloor,
+        name: `${currentFloor}-й этаж`,
+        polygon: currentPolygon,
+        color: floorColors[(currentFloor - 1) % floorColors.length]
+      };
 
-    setFloorPolygons(prev => {
-      const filtered = prev.filter(f => f.id !== currentFloor);
-      return [...filtered, newFloor];
-    });
+      // Удаляем существующий этаж, если есть
+      await supabase
+        .from('building_floors')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('floor_number', currentFloor);
 
-    setIsDrawing(false);
-    setCurrentFloor(null);
-    setCurrentPolygon([]);
-    toast.success(`${currentFloor}-й этаж выделен`);
+      // Создаем новый этаж
+      const { error } = await supabase
+        .from('building_floors')
+        .insert({
+          project_id: projectId,
+          floor_number: currentFloor,
+          polygon: currentPolygon,
+          color: newFloor.color
+        });
+
+      if (error) throw error;
+
+      setFloorPolygons(prev => {
+        const filtered = prev.filter(f => f.id !== currentFloor);
+        return [...filtered, newFloor];
+      });
+
+      setIsDrawing(false);
+      setCurrentFloor(null);
+      setCurrentPolygon([]);
+      toast.success(`${currentFloor}-й этаж выделен и сохранен`);
+    } catch (error) {
+      console.error('Error saving floor:', error);
+      toast.error('Ошибка сохранения этажа');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cancelDrawing = () => {
@@ -107,9 +193,22 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     toast.info('Выделение отменено');
   };
 
-  const deleteFloor = (floorId: number) => {
-    setFloorPolygons(prev => prev.filter(f => f.id !== floorId));
-    toast.success('Этаж удален');
+  const deleteFloor = async (floorId: number) => {
+    try {
+      const { error } = await supabase
+        .from('building_floors')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('floor_number', floorId);
+
+      if (error) throw error;
+
+      setFloorPolygons(prev => prev.filter(f => f.id !== floorId));
+      toast.success('Этаж удален');
+    } catch (error) {
+      console.error('Error deleting floor:', error);
+      toast.error('Ошибка удаления этажа');
+    }
   };
 
   const selectFloor = (floorId: number) => {
@@ -189,8 +288,8 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                 Кликайте по изображению для выделения {currentFloor}-го этажа
               </div>
               <div className="flex gap-2 ml-auto">
-                <Button size="sm" onClick={finishDrawing}>
-                  Завершить
+                <Button size="sm" onClick={finishDrawing} disabled={saving}>
+                  {saving ? 'Сохранение...' : 'Завершить'}
                 </Button>
                 <Button size="sm" variant="outline" onClick={cancelDrawing}>
                   Отмена

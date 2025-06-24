@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, Trash2, Edit, Eye, Square, Home } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FloorPlanEditorProps {
   projectId: string;
@@ -30,13 +31,7 @@ interface FloorPlan {
 }
 
 const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
-  const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([
-    {
-      floorNumber: 1,
-      image: 'https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=800&h=600&fit=crop',
-      apartments: []
-    }
-  ]);
+  const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<{ x: number; y: number }[]>([]);
@@ -48,6 +43,7 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
     rooms: 1,
     price: 0
   });
+  const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -55,25 +51,93 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
 
   const currentFloorPlan = floorPlans.find(fp => fp.floorNumber === currentFloor);
 
-  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  // Загружаем существующие данные при монтировании и смене этажа
+  useEffect(() => {
+    loadFloorData();
+  }, [projectId, currentFloor]);
+
+  const loadFloorData = async () => {
+    try {
+      // Загружаем план этажа
+      const { data: floorPlan, error: floorPlanError } = await supabase
+        .from('floor_plans')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('floor_number', currentFloor)
+        .maybeSingle();
+
+      if (floorPlanError) throw floorPlanError;
+
+      // Загружаем квартиры для этого этажа
+      const { data: apartments, error: apartmentsError } = await supabase
+        .from('apartments')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('floor_number', currentFloor);
+
+      if (apartmentsError) throw apartmentsError;
+
+      const floorData: FloorPlan = {
+        floorNumber: currentFloor,
+        image: floorPlan?.image_url || '',
+        apartments: apartments?.map(apt => ({
+          id: apt.id,
+          number: apt.apartment_number,
+          polygon: Array.isArray(apt.polygon) ? apt.polygon as { x: number; y: number }[] : [],
+          status: apt.status as 'available' | 'sold' | 'reserved',
+          area: parseFloat(apt.area.toString()),
+          rooms: apt.rooms,
+          price: apt.price || 0
+        })) || []
+      };
+
+      setFloorPlans(prev => {
+        const filtered = prev.filter(fp => fp.floorNumber !== currentFloor);
+        return [...filtered, floorData];
+      });
+    } catch (error) {
+      console.error('Error loading floor data:', error);
+      toast.error('Ошибка загрузки данных этажа');
+    }
+  };
+
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
-        setFloorPlans(prev => {
-          const filtered = prev.filter(fp => fp.floorNumber !== currentFloor);
-          return [...filtered, {
-            floorNumber: currentFloor,
-            image: imageUrl,
-            apartments: currentFloorPlan?.apartments || []
-          }];
-        });
-        toast.success(`План ${currentFloor}-го этажа загружен`);
+        
+        try {
+          // Сохраняем или обновляем план этажа в базе данных
+          const { error } = await supabase
+            .from('floor_plans')
+            .upsert({
+              project_id: projectId,
+              floor_number: currentFloor,
+              image_url: imageUrl
+            });
+
+          if (error) throw error;
+
+          setFloorPlans(prev => {
+            const filtered = prev.filter(fp => fp.floorNumber !== currentFloor);
+            return [...filtered, {
+              floorNumber: currentFloor,
+              image: imageUrl,
+              apartments: currentFloorPlan?.apartments || []
+            }];
+          });
+          
+          toast.success(`План ${currentFloor}-го этажа загружен и сохранен`);
+        } catch (error) {
+          console.error('Error saving floor plan:', error);
+          toast.error('Ошибка сохранения плана этажа');
+        }
       };
       reader.readAsDataURL(file);
     }
-  }, [currentFloor, currentFloorPlan]);
+  }, [currentFloor, currentFloorPlan, projectId]);
 
   const startDrawingApartment = () => {
     if (!apartmentData.number) {
@@ -102,37 +166,70 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
     setCurrentPolygon(prev => [...prev, { x, y }]);
   }, [isDrawing]);
 
-  const finishDrawing = () => {
+  const finishDrawing = async () => {
     if (currentPolygon.length < 3) {
       toast.error('Необходимо выбрать минимум 3 точки');
       return;
     }
 
-    const newApartment: Apartment = {
-      id: `${currentFloor}-${apartmentData.number}`,
-      number: apartmentData.number,
-      polygon: currentPolygon,
-      status: apartmentData.status,
-      area: apartmentData.area,
-      rooms: apartmentData.rooms,
-      price: apartmentData.price
-    };
+    setSaving(true);
 
-    setFloorPlans(prev => prev.map(fp => {
-      if (fp.floorNumber === currentFloor) {
-        const filteredApartments = fp.apartments.filter(apt => apt.id !== newApartment.id);
-        return {
-          ...fp,
-          apartments: [...filteredApartments, newApartment]
-        };
-      }
-      return fp;
-    }));
+    try {
+      const newApartment: Apartment = {
+        id: `${currentFloor}-${apartmentData.number}`,
+        number: apartmentData.number,
+        polygon: currentPolygon,
+        status: apartmentData.status,
+        area: apartmentData.area,
+        rooms: apartmentData.rooms,
+        price: apartmentData.price
+      };
 
-    setIsDrawing(false);
-    setCurrentPolygon([]);
-    setApartmentData({ number: '', status: 'available', area: 0, rooms: 1, price: 0 });
-    toast.success(`Квартира ${apartmentData.number} добавлена`);
+      // Удаляем существующую квартиру с таким номером, если есть
+      await supabase
+        .from('apartments')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('floor_number', currentFloor)
+        .eq('apartment_number', apartmentData.number);
+
+      // Создаем новую квартиру
+      const { error } = await supabase
+        .from('apartments')
+        .insert({
+          project_id: projectId,
+          floor_number: currentFloor,
+          apartment_number: apartmentData.number,
+          rooms: apartmentData.rooms,
+          area: apartmentData.area,
+          price: apartmentData.price,
+          status: apartmentData.status,
+          polygon: currentPolygon
+        });
+
+      if (error) throw error;
+
+      setFloorPlans(prev => prev.map(fp => {
+        if (fp.floorNumber === currentFloor) {
+          const filteredApartments = fp.apartments.filter(apt => apt.id !== newApartment.id);
+          return {
+            ...fp,
+            apartments: [...filteredApartments, newApartment]
+          };
+        }
+        return fp;
+      }));
+
+      setIsDrawing(false);
+      setCurrentPolygon([]);
+      setApartmentData({ number: '', status: 'available', area: 0, rooms: 1, price: 0 });
+      toast.success(`Квартира ${apartmentData.number} добавлена и сохранена`);
+    } catch (error) {
+      console.error('Error saving apartment:', error);
+      toast.error('Ошибка сохранения квартиры');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cancelDrawing = () => {
@@ -141,17 +238,30 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
     toast.info('Выделение отменено');
   };
 
-  const deleteApartment = (apartmentId: string) => {
-    setFloorPlans(prev => prev.map(fp => {
-      if (fp.floorNumber === currentFloor) {
-        return {
-          ...fp,
-          apartments: fp.apartments.filter(apt => apt.id !== apartmentId)
-        };
-      }
-      return fp;
-    }));
-    toast.success('Квартира удалена');
+  const deleteApartment = async (apartmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('apartments')
+        .delete()
+        .eq('id', apartmentId);
+
+      if (error) throw error;
+
+      setFloorPlans(prev => prev.map(fp => {
+        if (fp.floorNumber === currentFloor) {
+          return {
+            ...fp,
+            apartments: fp.apartments.filter(apt => apt.id !== apartmentId)
+          };
+        }
+        return fp;
+      }));
+      
+      toast.success('Квартира удалена');
+    } catch (error) {
+      console.error('Error deleting apartment:', error);
+      toast.error('Ошибка удаления квартиры');
+    }
   };
 
   const selectApartment = (apartmentId: string) => {
@@ -301,8 +411,8 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
                 Кликайте по плану для выделения квартиры {apartmentData.number}
               </div>
               <div className="flex gap-2 ml-auto">
-                <Button size="sm" onClick={finishDrawing}>
-                  Завершить
+                <Button size="sm" onClick={finishDrawing} disabled={saving}>
+                  {saving ? 'Сохранение...' : 'Завершить'}
                 </Button>
                 <Button size="sm" variant="outline" onClick={cancelDrawing}>
                   Отмена
