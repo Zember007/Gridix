@@ -9,7 +9,169 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      apartments: {
+        Row: {
+          apartment_number: string
+          area: number
+          created_at: string
+          floor_number: number
+          floor_plan_id: string | null
+          id: string
+          polygon: Json | null
+          price: number | null
+          project_id: string
+          rooms: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          apartment_number: string
+          area?: number
+          created_at?: string
+          floor_number: number
+          floor_plan_id?: string | null
+          id?: string
+          polygon?: Json | null
+          price?: number | null
+          project_id: string
+          rooms?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          apartment_number?: string
+          area?: number
+          created_at?: string
+          floor_number?: number
+          floor_plan_id?: string | null
+          id?: string
+          polygon?: Json | null
+          price?: number | null
+          project_id?: string
+          rooms?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartments_floor_plan_id_fkey"
+            columns: ["floor_plan_id"]
+            isOneToOne: false
+            referencedRelation: "floor_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apartments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      building_floors: {
+        Row: {
+          color: string
+          created_at: string
+          floor_number: number
+          id: string
+          polygon: Json
+          project_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          floor_number: number
+          id?: string
+          polygon?: Json
+          project_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          floor_number?: number
+          id?: string
+          polygon?: Json
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "building_floors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      floor_plans: {
+        Row: {
+          created_at: string
+          floor_number: number
+          floor_polygons: Json | null
+          id: string
+          image_url: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          floor_number: number
+          floor_polygons?: Json | null
+          id?: string
+          image_url?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          floor_number?: number
+          floor_polygons?: Json | null
+          id?: string
+          image_url?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "floor_plans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          building_image_url: string | null
+          created_at: string
+          description: string | null
+          floors: number
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          building_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          floors?: number
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          building_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          floors?: number
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,0 +1,426 @@
+
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Building2, ArrowLeft, X } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  floors: number;
+  building_image_url: string;
+}
+
+interface BuildingFloor {
+  id: string;
+  floor_number: number;
+  polygon: { x: number; y: number }[];
+  color: string;
+}
+
+interface FloorPlan {
+  id: string;
+  floor_number: number;
+  image_url: string;
+}
+
+interface Apartment {
+  id: string;
+  apartment_number: string;
+  rooms: number;
+  area: number;
+  price: number;
+  status: 'available' | 'sold' | 'reserved';
+  polygon: { x: number; y: number }[];
+}
+
+const ProjectViewer = () => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const [project, setProject] = useState<Project | null>(null);
+  const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
+  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
+  const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (projectId) {
+      loadProject();
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (selectedFloor && projectId) {
+      loadFloorPlan();
+      loadApartments();
+    }
+  }, [selectedFloor, projectId]);
+
+  const loadProject = async () => {
+    try {
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError) throw projectError;
+      setProject(projectData);
+
+      const { data: floorsData, error: floorsError } = await supabase
+        .from('building_floors')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('floor_number');
+
+      if (floorsError) throw floorsError;
+      setBuildingFloors(floorsData);
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast.error('Ошибка загрузки проекта');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFloorPlan = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('floor_plans')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('floor_number', selectedFloor)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setFloorPlan(data);
+    } catch (error) {
+      console.error('Error loading floor plan:', error);
+    }
+  };
+
+  const loadApartments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('apartments')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('floor_number', selectedFloor);
+
+      if (error) throw error;
+      setApartments(data || []);
+    } catch (error) {
+      console.error('Error loading apartments:', error);
+    }
+  };
+
+  const polygonToPath = (polygon: { x: number; y: number }[]) => {
+    if (polygon.length === 0) return '';
+    return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'available': return '#22c55e';
+      case 'sold': return '#ef4444';
+      case 'reserved': return '#f59e0b';
+      default: return '#22c55e';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'available': return 'Доступна';
+      case 'sold': return 'Продана';
+      case 'reserved': return 'Забронирована';
+      default: return 'Доступна';
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ru-RU').format(price);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
+        <div className="text-center">
+          <Building2 className="h-12 w-12 text-real-estate-600 mx-auto mb-4 animate-pulse" />
+          <p className="text-real-estate-600">Загрузка проекта...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-real-estate-900 mb-4">Проект не найден</h1>
+          <Button onClick={() => window.history.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-real-estate-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.history.back()}
+                className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Назад
+              </Button>
+              <div className="flex items-center gap-3">
+                <Building2 className="h-8 w-8 text-real-estate-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-real-estate-900">{project.name}</h1>
+                  {project.description && (
+                    <p className="text-sm text-real-estate-600">{project.description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Building Image */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold text-real-estate-900 mb-4">
+                  {selectedFloor ? `${selectedFloor}-й этаж` : 'Выберите этаж'}
+                </h2>
+                
+                {!selectedFloor && project.building_image_url && (
+                  <div className="relative inline-block">
+                    <img
+                      src={project.building_image_url}
+                      alt="Building"
+                      className="max-w-full max-h-[500px] object-contain rounded-lg"
+                    />
+                    <svg
+                      className="absolute top-0 left-0 w-full h-full cursor-pointer"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      {buildingFloors.map(floor => (
+                        <path
+                          key={floor.id}
+                          d={polygonToPath(floor.polygon)}
+                          fill={floor.color}
+                          fillOpacity="0.3"
+                          stroke={floor.color}
+                          strokeWidth="0.5"
+                          className="hover:fill-opacity-60 transition-all cursor-pointer"
+                          onClick={() => setSelectedFloor(floor.floor_number)}
+                        />
+                      ))}
+                      {buildingFloors.map(floor => (
+                        <text
+                          key={`label-${floor.id}`}
+                          x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                          y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fill="white"
+                          fontSize="2"
+                          fontWeight="bold"
+                          className="pointer-events-none"
+                        >
+                          {floor.floor_number}
+                        </text>
+                      ))}
+                    </svg>
+                  </div>
+                )}
+
+                {selectedFloor && floorPlan?.image_url && (
+                  <div className="relative inline-block">
+                    <img
+                      src={floorPlan.image_url}
+                      alt={`Floor ${selectedFloor} plan`}
+                      className="max-w-full max-h-[500px] object-contain rounded-lg"
+                    />
+                    <svg
+                      className="absolute top-0 left-0 w-full h-full cursor-pointer"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      {apartments.map(apartment => (
+                        <g key={apartment.id}>
+                          <path
+                            d={polygonToPath(apartment.polygon)}
+                            fill={getStatusColor(apartment.status)}
+                            fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
+                            stroke={getStatusColor(apartment.status)}
+                            strokeWidth="0.3"
+                            className="hover:fill-opacity-70 transition-all cursor-pointer"
+                            onClick={() => setSelectedApartment(apartment)}
+                          />
+                          <text
+                            x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
+                            y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fill="white"
+                            fontSize="1.2"
+                            fontWeight="bold"
+                            className="pointer-events-none"
+                          >
+                            {apartment.apartment_number}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  </div>
+                )}
+
+                {selectedFloor && !floorPlan?.image_url && (
+                  <div className="text-center py-12 text-real-estate-600">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>План этажа не загружен</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Floor Selection */}
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Этажи</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.from({ length: project.floors }, (_, i) => i + 1).map(floorNum => {
+                    const hasFloor = buildingFloors.some(f => f.floor_number === floorNum);
+                    return (
+                      <Button
+                        key={floorNum}
+                        size="sm"
+                        variant={selectedFloor === floorNum ? "default" : "outline"}
+                        onClick={() => setSelectedFloor(selectedFloor === floorNum ? null : floorNum)}
+                        disabled={!hasFloor}
+                        className={`${
+                          hasFloor 
+                            ? selectedFloor === floorNum
+                              ? 'bg-real-estate-600 hover:bg-real-estate-700'
+                              : 'border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50'
+                            : 'opacity-50 cursor-not-allowed'
+                        }`}
+                      >
+                        {floorNum} эт.
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Apartment Details */}
+            {selectedApartment && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-real-estate-900">
+                      Квартира {selectedApartment.apartment_number}
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedApartment(null)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-real-estate-600">Статус:</span>
+                      <Badge className={`${
+                        selectedApartment.status === 'available' ? 'bg-success-100 text-success-800' :
+                        selectedApartment.status === 'sold' ? 'bg-red-100 text-red-800' :
+                        'bg-warning-100 text-warning-800'
+                      }`}>
+                        {getStatusText(selectedApartment.status)}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-real-estate-600">Комнат:</span>
+                      <span className="font-medium">{selectedApartment.rooms}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-real-estate-600">Площадь:</span>
+                      <span className="font-medium">{selectedApartment.area} м²</span>
+                    </div>
+                    
+                    {selectedApartment.price > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-real-estate-600">Цена:</span>
+                        <span className="font-bold text-real-estate-900">
+                          {formatPrice(selectedApartment.price)} ₽
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <span className="text-real-estate-600">Этаж:</span>
+                      <span className="font-medium">{selectedFloor}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Legend */}
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Легенда</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: '#22c55e' }}></div>
+                    <span className="text-sm text-real-estate-600">Доступна</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+                    <span className="text-sm text-real-estate-600">Забронирована</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+                    <span className="text-sm text-real-estate-600">Продана</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProjectViewer;

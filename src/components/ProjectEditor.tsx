@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Save, Building2, Image, Layout } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
 
@@ -16,25 +18,113 @@ interface ProjectEditorProps {
   onBack: () => void;
 }
 
+interface ProjectData {
+  name: string;
+  description: string;
+  floors: number;
+  building_image_url: string | null;
+}
+
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
-  const [projectData, setProjectData] = useState({
-    name: isNew ? '' : 'ЖК "Северная звезда"',
-    description: isNew ? '' : 'Премиальный жилой комплекс в центре города',
-    floors: isNew ? 1 : 12,
-    buildingImage: null as string | null,
-    floorPlans: [] as any[]
+  const [projectData, setProjectData] = useState<ProjectData>({
+    name: '',
+    description: '',
+    floors: 1,
+    building_image_url: null
   });
-
   const [activeTab, setActiveTab] = useState('general');
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    console.log('Сохраняем проект:', projectData);
-    // Here we would save to the backend
+  useEffect(() => {
+    if (!isNew && projectId) {
+      loadProject();
+    }
+  }, [projectId, isNew]);
+
+  const loadProject = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      
+      setProjectData({
+        name: data.name,
+        description: data.description || '',
+        floors: data.floors,
+        building_image_url: data.building_image_url
+      });
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast.error('Ошибка загрузки проекта');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!projectData.name.trim()) {
+      toast.error('Введите название проекта');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (isNew) {
+        const { data, error } = await supabase
+          .from('projects')
+          .insert([{
+            name: projectData.name.trim(),
+            description: projectData.description.trim() || null,
+            floors: projectData.floors,
+            building_image_url: projectData.building_image_url
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        toast.success('Проект создан');
+        // Перенаправляем на редактирование созданного проекта
+        window.location.href = `/admin/projects/${data.id}`;
+      } else {
+        const { error } = await supabase
+          .from('projects')
+          .update({
+            name: projectData.name.trim(),
+            description: projectData.description.trim() || null,
+            floors: projectData.floors,
+            building_image_url: projectData.building_image_url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', projectId);
+
+        if (error) throw error;
+        toast.success('Проект сохранен');
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('Ошибка сохранения проекта');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBuildingImageUpload = (imageUrl: string) => {
-    setProjectData(prev => ({ ...prev, buildingImage: imageUrl }));
+    setProjectData(prev => ({ ...prev, building_image_url: imageUrl }));
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
+        <Building2 className="h-8 w-8 text-real-estate-600 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100">
@@ -66,10 +156,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             </div>
             <Button 
               onClick={handleSave}
+              disabled={saving}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Save className="h-4 w-4 mr-2" />
-              Сохранить
+              {saving ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
         </div>
@@ -83,11 +174,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               <Building2 className="h-4 w-4" />
               Общие
             </TabsTrigger>
-            <TabsTrigger value="building" className="flex items-center gap-2">
+            <TabsTrigger value="building" className="flex items-center gap-2" disabled={isNew}>
               <Image className="h-4 w-4" />
               Здание
             </TabsTrigger>
-            <TabsTrigger value="floors" className="flex items-center gap-2">
+            <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
               Планы этажей
             </TabsTrigger>
@@ -105,13 +196,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name">Название проекта</Label>
+                      <Label htmlFor="name">Название проекта*</Label>
                       <Input
                         id="name"
                         value={projectData.name}
                         onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="ЖК 'Название комплекса'"
                         className="mt-1"
+                        required
                       />
                     </div>
                     
@@ -141,6 +233,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     />
                   </div>
                 </div>
+
+                {isNew && (
+                  <div className="bg-real-estate-50 p-4 rounded-lg">
+                    <p className="text-sm text-real-estate-700">
+                      После создания проекта вы сможете загрузить изображения здания и настроить планы этажей.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

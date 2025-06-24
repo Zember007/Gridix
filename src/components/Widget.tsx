@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,15 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Code, Eye, Settings, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Project {
+  id: string;
+  name: string;
+}
 
 const Widget = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [widgetConfig, setWidgetConfig] = useState({
-    projectId: 'project-1',
+    projectId: '',
     width: '100%',
     height: '600px',
     showLegend: true,
-    showSearch: true,
-    showFilters: true,
+    showSearch: false,
+    showFilters: false,
     theme: 'light',
     autoHeight: false,
     borderRadius: '8px'
@@ -26,11 +32,32 @@ const Widget = () => {
 
   const [customCSS, setCustomCSS] = useState('');
 
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setProjects(data || []);
+      
+      if (data && data.length > 0 && !widgetConfig.projectId) {
+        setWidgetConfig(prev => ({ ...prev, projectId: data[0].id }));
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  };
+
   const generateWidgetCode = () => {
+    if (!widgetConfig.projectId) return '';
+
     const params = new URLSearchParams({
-      project: widgetConfig.projectId,
-      width: widgetConfig.width,
-      height: widgetConfig.height,
       legend: widgetConfig.showLegend.toString(),
       search: widgetConfig.showSearch.toString(),
       filters: widgetConfig.showFilters.toString(),
@@ -39,8 +66,9 @@ const Widget = () => {
       borderRadius: widgetConfig.borderRadius
     });
 
+    const baseUrl = window.location.origin;
     return `<iframe 
-  src="https://your-domain.com/widget?${params.toString()}"
+  src="${baseUrl}/widget/${widgetConfig.projectId}?${params.toString()}"
   width="${widgetConfig.width}"
   height="${widgetConfig.height}"
   frameborder="0"
@@ -50,12 +78,15 @@ const Widget = () => {
   };
 
   const generateReactCode = () => {
+    if (!widgetConfig.projectId) return '';
+
+    const baseUrl = window.location.origin;
     return `import React from 'react';
 
 const RealEstateWidget = () => {
   return (
     <iframe 
-      src="https://your-domain.com/widget?project=${widgetConfig.projectId}&theme=${widgetConfig.theme}"
+      src="${baseUrl}/widget/${widgetConfig.projectId}?theme=${widgetConfig.theme}&legend=${widgetConfig.showLegend}"
       width="${widgetConfig.width}"
       height="${widgetConfig.height}"
       frameBorder="0"
@@ -76,7 +107,9 @@ export default RealEstateWidget;`;
     toast.success('Код скопирован в буфер обмена');
   };
 
-  const previewUrl = `https://your-domain.com/widget?project=${widgetConfig.projectId}&theme=${widgetConfig.theme}`;
+  const previewUrl = widgetConfig.projectId 
+    ? `${window.location.origin}/widget/${widgetConfig.projectId}?theme=${widgetConfig.theme}&legend=${widgetConfig.showLegend}`
+    : '';
 
   return (
     <div className="space-y-6">
@@ -95,17 +128,26 @@ export default RealEstateWidget;`;
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="project-select">Проект</Label>
-              <Select value={widgetConfig.projectId} onValueChange={(value) => setWidgetConfig(prev => ({ ...prev, projectId: value }))}>
+              <Select 
+                value={widgetConfig.projectId} 
+                onValueChange={(value) => setWidgetConfig(prev => ({ ...prev, projectId: value }))}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Выберите проект" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="project-1">ЖК "Северная звезда"</SelectItem>
-                  <SelectItem value="project-2">ЖК "Морские дали"</SelectItem>
-                  <SelectItem value="project-3">ЖК "Центральный"</SelectItem>
-                  <SelectItem value="project-4">ЖК "Парковый"</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {projects.length === 0 && (
+                <p className="text-sm text-real-estate-600 mt-1">
+                  Создайте проект для генерации виджета
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -154,22 +196,6 @@ export default RealEstateWidget;`;
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-search">Показать поиск</Label>
-                <Switch
-                  id="show-search"
-                  checked={widgetConfig.showSearch}
-                  onCheckedChange={(checked) => setWidgetConfig(prev => ({ ...prev, showSearch: checked }))}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-filters">Показать фильтры</Label>
-                <Switch
-                  id="show-filters"
-                  checked={widgetConfig.showFilters}
-                  onCheckedChange={(checked) => setWidgetConfig(prev => ({ ...prev, showFilters: checked }))}
-                />
-              </div>
-              <div className="flex items-center justify-between">
                 <Label htmlFor="auto-height">Автоматическая высота</Label>
                 <Switch
                   id="auto-height"
@@ -199,15 +225,17 @@ export default RealEstateWidget;`;
                   <p className="text-sm text-real-estate-600 mb-4">
                     Интерактивная шахматка будет отображаться здесь
                   </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open(previewUrl, '_blank')}
-                    className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Открыть в новом окне
-                  </Button>
+                  {previewUrl && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(previewUrl, '_blank')}
+                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Открыть в новом окне
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -216,80 +244,82 @@ export default RealEstateWidget;`;
       </div>
 
       {/* Code Generation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Code className="h-5 w-5 text-real-estate-600" />
-            Код для интеграции
-          </CardTitle>
-          <CardDescription>
-            Скопируйте код и вставьте его на ваш сайт
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="html" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="html">HTML</TabsTrigger>
-              <TabsTrigger value="react">React</TabsTrigger>
-              <TabsTrigger value="wordpress">WordPress</TabsTrigger>
-            </TabsList>
+      {widgetConfig.projectId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5 text-real-estate-600" />
+              Код для интеграции
+            </CardTitle>
+            <CardDescription>
+              Скопируйте код и вставьте его на ваш сайт
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="html" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="html">HTML</TabsTrigger>
+                <TabsTrigger value="react">React</TabsTrigger>
+                <TabsTrigger value="wordpress">WordPress</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="html" className="space-y-4">
-              <div className="relative">
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{generateWidgetCode()}</code>
-                </pre>
-                <Button
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => copyToClipboard(generateWidgetCode())}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-real-estate-600">
-                Вставьте этот код в HTML любой страницы вашего сайта
-              </p>
-            </TabsContent>
+              <TabsContent value="html" className="space-y-4">
+                <div className="relative">
+                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+                    <code>{generateWidgetCode()}</code>
+                  </pre>
+                  <Button
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => copyToClipboard(generateWidgetCode())}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-real-estate-600">
+                  Вставьте этот код в HTML любой страницы вашего сайта
+                </p>
+              </TabsContent>
 
-            <TabsContent value="react" className="space-y-4">
-              <div className="relative">
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{generateReactCode()}</code>
-                </pre>
-                <Button
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => copyToClipboard(generateReactCode())}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-real-estate-600">
-                Используйте этот компонент в вашем React приложении
-              </p>
-            </TabsContent>
+              <TabsContent value="react" className="space-y-4">
+                <div className="relative">
+                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+                    <code>{generateReactCode()}</code>
+                  </pre>
+                  <Button
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => copyToClipboard(generateReactCode())}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-real-estate-600">
+                  Используйте этот компонент в вашем React приложении
+                </p>
+              </TabsContent>
 
-            <TabsContent value="wordpress" className="space-y-4">
-              <div className="relative">
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                  <code>{`[real-estate-widget project="${widgetConfig.projectId}" width="${widgetConfig.width}" height="${widgetConfig.height}" theme="${widgetConfig.theme}"]`}</code>
-                </pre>
-                <Button
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => copyToClipboard(`[real-estate-widget project="${widgetConfig.projectId}" width="${widgetConfig.width}" height="${widgetConfig.height}" theme="${widgetConfig.theme}"]`)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-real-estate-600">
-                Используйте этот шорткод в WordPress (требуется установка плагина)
-              </p>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <TabsContent value="wordpress" className="space-y-4">
+                <div className="relative">
+                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+                    <code>{`[real-estate-widget project="${widgetConfig.projectId}" theme="${widgetConfig.theme}"]`}</code>
+                  </pre>
+                  <Button
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => copyToClipboard(`[real-estate-widget project="${widgetConfig.projectId}" theme="${widgetConfig.theme}"]`)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-real-estate-600">
+                  Используйте этот шорткод в WordPress (требуется установка плагина)
+                </p>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Custom CSS */}
       <Card>
