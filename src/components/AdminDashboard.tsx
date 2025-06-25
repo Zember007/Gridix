@@ -8,15 +8,13 @@ import {
   Plus, 
   ArrowLeft, 
   Home, 
-  Upload, 
   Settings, 
   BarChart3,
-  Code,
-  FileSpreadsheet
+  Code
 } from 'lucide-react';
 import ProjectList from '@/components/ProjectList';
 import ProjectEditor from '@/components/ProjectEditor';
-import DataImport from '@/components/DataImport';
+import ProjectCreationModal from '@/components/ProjectCreationModal';
 import Widget from '@/components/Widget';
 
 interface AdminDashboardProps {
@@ -27,8 +25,14 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [showCreationModal, setShowCreationModal] = useState(false);
 
   const handleCreateProject = () => {
+    setShowCreationModal(true);
+  };
+
+  const handleManualProject = () => {
+    setShowCreationModal(false);
     setIsCreatingProject(true);
     setSelectedProject('new');
   };
@@ -93,14 +97,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px] mx-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[500px] mx-auto">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Home className="h-4 w-4" />
               Projects
-            </TabsTrigger>
-            <TabsTrigger value="import" className="flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Data Import
             </TabsTrigger>
             <TabsTrigger value="widget" className="flex items-center gap-2">
               <Code className="h-4 w-4" />
@@ -123,14 +123,6 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               onCreateNew={handleCreateProject}
               onEditProject={handleEditProject}
             />
-          </TabsContent>
-
-          <TabsContent value="import" className="space-y-6">
-            <div>
-              <h2 className="text-3xl font-bold text-real-estate-900">Data Import</h2>
-              <p className="text-real-estate-600 mt-2">Upload apartment data from Excel files</p>
-            </div>
-            <DataImport />
           </TabsContent>
 
           <TabsContent value="widget" className="space-y-6">
@@ -233,6 +225,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ProjectCreationModal 
+        open={showCreationModal}
+        onClose={() => setShowCreationModal(false)}
+        onManualCreate={handleManualProject}
+      />
     </div>
   );
 };
