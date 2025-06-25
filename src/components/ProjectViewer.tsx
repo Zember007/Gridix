@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,12 +60,23 @@ const ProjectViewer = () => {
     if (selectedFloor && projectId) {
       loadFloorPlan();
       loadApartments();
+    } else {
+      setFloorPlan(null);
+      setApartments([]);
+      setSelectedApartment(null);
     }
   }, [selectedFloor, projectId]);
 
   const parsePolygon = (polygon: Json): { x: number; y: number }[] => {
+    console.log('Parsing polygon:', polygon);
+    
+    if (!polygon) {
+      console.log('No polygon data');
+      return [];
+    }
+    
     if (Array.isArray(polygon)) {
-      return polygon.filter(p => 
+      const result = polygon.filter(p => 
         typeof p === 'object' && 
         p !== null && 
         'x' in p && 
@@ -72,40 +84,65 @@ const ProjectViewer = () => {
         typeof p.x === 'number' &&
         typeof p.y === 'number'
       ) as { x: number; y: number }[];
+      
+      console.log('Parsed polygon result:', result);
+      return result;
     }
+    
+    console.log('Polygon is not an array:', typeof polygon);
     return [];
   };
 
   const loadProject = async () => {
     try {
+      console.log('Loading project:', projectId);
+      
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {
+        console.error('Project error:', projectError);
+        throw projectError;
+      }
+      
+      console.log('Project loaded:', projectData);
       setProject(projectData);
 
+      // Load building floors
       const { data: floorsData, error: floorsError } = await supabase
         .from('building_floors')
         .select('*')
         .eq('project_id', projectId)
         .order('floor_number');
 
-      if (floorsError) throw floorsError;
+      if (floorsError) {
+        console.error('Floors error:', floorsError);
+        throw floorsError;
+      }
       
-      const transformedFloors: BuildingFloor[] = floorsData.map(floor => ({
-        id: floor.id,
-        floor_number: floor.floor_number,
-        polygon: parsePolygon(floor.polygon),
-        color: floor.color
-      }));
+      console.log('Raw floors data:', floorsData);
+      
+      const transformedFloors: BuildingFloor[] = (floorsData || []).map(floor => {
+        const polygon = parsePolygon(floor.polygon);
+        console.log(`Floor ${floor.floor_number} polygon:`, polygon);
+        
+        return {
+          id: floor.id,
+          floor_number: floor.floor_number,
+          polygon: polygon,
+          color: floor.color || '#3b82f6'
+        };
+      });
 
+      console.log('Transformed floors:', transformedFloors);
       setBuildingFloors(transformedFloors);
+      
     } catch (error) {
       console.error('Error loading project:', error);
-      toast.error('Ошибка загрузки проекта');
+      toast.error('Error loading project');
     } finally {
       setLoading(false);
     }
@@ -113,14 +150,21 @@ const ProjectViewer = () => {
 
   const loadFloorPlan = async () => {
     try {
+      console.log('Loading floor plan for floor:', selectedFloor);
+      
       const { data, error } = await supabase
         .from('floor_plans')
         .select('*')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Floor plan error:', error);
+        throw error;
+      }
+      
+      console.log('Floor plan loaded:', data);
       setFloorPlan(data);
     } catch (error) {
       console.error('Error loading floor plan:', error);
@@ -129,26 +173,39 @@ const ProjectViewer = () => {
 
   const loadApartments = async () => {
     try {
+      console.log('Loading apartments for floor:', selectedFloor);
+      
       const { data, error } = await supabase
         .from('apartments')
         .select('*')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Apartments error:', error);
+        throw error;
+      }
       
-      const transformedApartments: Apartment[] = (data || []).map(apt => ({
-        id: apt.id,
-        apartment_number: apt.apartment_number,
-        rooms: apt.rooms,
-        area: Number(apt.area),
-        price: Number(apt.price) || 0,
-        status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
-          ? apt.status 
-          : 'available',
-        polygon: parsePolygon(apt.polygon)
-      }));
+      console.log('Raw apartments data:', data);
+      
+      const transformedApartments: Apartment[] = (data || []).map(apt => {
+        const polygon = parsePolygon(apt.polygon);
+        console.log(`Apartment ${apt.apartment_number} polygon:`, polygon);
+        
+        return {
+          id: apt.id,
+          apartment_number: apt.apartment_number,
+          rooms: apt.rooms,
+          area: Number(apt.area),
+          price: Number(apt.price) || 0,
+          status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
+            ? apt.status 
+            : 'available',
+          polygon: polygon
+        };
+      });
 
+      console.log('Transformed apartments:', transformedApartments);
       setApartments(transformedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
@@ -156,8 +213,14 @@ const ProjectViewer = () => {
   };
 
   const polygonToPath = (polygon: { x: number; y: number }[]) => {
-    if (polygon.length === 0) return '';
-    return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
+    if (!polygon || polygon.length === 0) {
+      console.log('Empty polygon for path conversion');
+      return '';
+    }
+    
+    const path = `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
+    console.log('Generated path:', path);
+    return path;
   };
 
   const getStatusColor = (status: string) => {
@@ -171,15 +234,25 @@ const ProjectViewer = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Доступна';
-      case 'sold': return 'Продана';
-      case 'reserved': return 'Забронирована';
-      default: return 'Доступна';
+      case 'available': return 'Available';
+      case 'sold': return 'Sold';
+      case 'reserved': return 'Reserved';
+      default: return 'Available';
     }
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU').format(price);
+    return new Intl.NumberFormat('en-US').format(price);
+  };
+
+  const handleFloorClick = (floorNumber: number) => {
+    console.log('Floor clicked:', floorNumber);
+    setSelectedFloor(floorNumber);
+  };
+
+  const handleApartmentClick = (apartment: Apartment) => {
+    console.log('Apartment clicked:', apartment);
+    setSelectedApartment(apartment);
   };
 
   if (loading) {
@@ -187,7 +260,7 @@ const ProjectViewer = () => {
       <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
         <div className="text-center">
           <Building2 className="h-12 w-12 text-real-estate-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-real-estate-600">Загрузка проекта...</p>
+          <p className="text-real-estate-600">Loading project...</p>
         </div>
       </div>
     );
@@ -197,10 +270,10 @@ const ProjectViewer = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-real-estate-900 mb-4">Проект не найден</h1>
+          <h1 className="text-2xl font-bold text-real-estate-900 mb-4">Project not found</h1>
           <Button onClick={() => window.history.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            Back
           </Button>
         </div>
       </div>
@@ -221,7 +294,7 @@ const ProjectViewer = () => {
                 className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Назад
+                Back
               </Button>
               <div className="flex items-center gap-3">
                 <Building2 className="h-8 w-8 text-real-estate-600" />
@@ -245,89 +318,105 @@ const ProjectViewer = () => {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold text-real-estate-900 mb-4">
-                  {selectedFloor ? `${selectedFloor}-й этаж` : 'Выберите этаж'}
+                  {selectedFloor ? `Floor ${selectedFloor}` : 'Select a floor'}
                 </h2>
                 
                 {!selectedFloor && project.building_image_url && (
-                  <div className="relative inline-block">
+                  <div className="relative inline-block max-w-full">
                     <img
                       src={project.building_image_url}
                       alt="Building"
                       className="max-w-full max-h-[500px] object-contain rounded-lg"
+                      onLoad={() => console.log('Building image loaded')}
+                      onError={(e) => console.error('Building image failed to load:', e)}
                     />
                     <svg
                       className="absolute top-0 left-0 w-full h-full cursor-pointer"
                       viewBox="0 0 100 100"
                       preserveAspectRatio="none"
                     >
-                      {buildingFloors.map(floor => (
-                        <path
-                          key={floor.id}
-                          d={polygonToPath(floor.polygon)}
-                          fill={floor.color}
-                          fillOpacity="0.3"
-                          stroke={floor.color}
-                          strokeWidth="0.5"
-                          className="hover:fill-opacity-60 transition-all cursor-pointer"
-                          onClick={() => setSelectedFloor(floor.floor_number)}
-                        />
-                      ))}
-                      {buildingFloors.map(floor => (
-                        <text
-                          key={`label-${floor.id}`}
-                          x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                          y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          fill="white"
-                          fontSize="2"
-                          fontWeight="bold"
-                          className="pointer-events-none"
-                        >
-                          {floor.floor_number}
-                        </text>
-                      ))}
+                      {buildingFloors.map(floor => {
+                        const path = polygonToPath(floor.polygon);
+                        console.log(`Rendering floor ${floor.floor_number} with path:`, path);
+                        
+                        if (!path) return null;
+                        
+                        return (
+                          <g key={floor.id}>
+                            <path
+                              d={path}
+                              fill={floor.color}
+                              fillOpacity="0.3"
+                              stroke={floor.color}
+                              strokeWidth="0.5"
+                              className="hover:fill-opacity-60 transition-all cursor-pointer"
+                              onClick={() => handleFloorClick(floor.floor_number)}
+                            />
+                            <text
+                              x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                              y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="white"
+                              fontSize="2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
+                              {floor.floor_number}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
                   </div>
                 )}
 
                 {selectedFloor && floorPlan?.image_url && (
-                  <div className="relative inline-block">
+                  <div className="relative inline-block max-w-full">
                     <img
                       src={floorPlan.image_url}
                       alt={`Floor ${selectedFloor} plan`}
                       className="max-w-full max-h-[500px] object-contain rounded-lg"
+                      onLoad={() => console.log('Floor plan image loaded')}
+                      onError={(e) => console.error('Floor plan image failed to load:', e)}
                     />
                     <svg
                       className="absolute top-0 left-0 w-full h-full cursor-pointer"
                       viewBox="0 0 100 100"
                       preserveAspectRatio="none"
                     >
-                      {apartments.map(apartment => (
-                        <g key={apartment.id}>
-                          <path
-                            d={polygonToPath(apartment.polygon)}
-                            fill={getStatusColor(apartment.status)}
-                            fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
-                            stroke={getStatusColor(apartment.status)}
-                            strokeWidth="0.3"
-                            className="hover:fill-opacity-70 transition-all cursor-pointer"
-                            onClick={() => setSelectedApartment(apartment)}
-                          />
-                          <text
-                            x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                            y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="white"
-                            fontSize="1.2"
-                            fontWeight="bold"
-                            className="pointer-events-none"
-                          >
-                            {apartment.apartment_number}
-                          </text>
-                        </g>
-                      ))}
+                      {apartments.map(apartment => {
+                        const path = polygonToPath(apartment.polygon);
+                        console.log(`Rendering apartment ${apartment.apartment_number} with path:`, path);
+                        
+                        if (!path) return null;
+                        
+                        return (
+                          <g key={apartment.id}>
+                            <path
+                              d={path}
+                              fill={getStatusColor(apartment.status)}
+                              fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
+                              stroke={getStatusColor(apartment.status)}
+                              strokeWidth="0.3"
+                              className="hover:fill-opacity-70 transition-all cursor-pointer"
+                              onClick={() => handleApartmentClick(apartment)}
+                            />
+                            <text
+                              x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
+                              y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="white"
+                              fontSize="1.2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
+                              {apartment.apartment_number}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
                   </div>
                 )}
@@ -335,7 +424,14 @@ const ProjectViewer = () => {
                 {selectedFloor && !floorPlan?.image_url && (
                   <div className="text-center py-12 text-real-estate-600">
                     <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>План этажа не загружен</p>
+                    <p>No floor plan uploaded</p>
+                  </div>
+                )}
+
+                {!selectedFloor && !project.building_image_url && (
+                  <div className="text-center py-12 text-real-estate-600">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No building image uploaded</p>
                   </div>
                 )}
               </CardContent>
@@ -347,10 +443,12 @@ const ProjectViewer = () => {
             {/* Floor Selection */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Этажи</h3>
+                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Floors</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {Array.from({ length: project.floors }, (_, i) => i + 1).map(floorNum => {
                     const hasFloor = buildingFloors.some(f => f.floor_number === floorNum);
+                    const hasFloorPlan = selectedFloor === floorNum && floorPlan;
+                    
                     return (
                       <Button
                         key={floorNum}
@@ -366,7 +464,7 @@ const ProjectViewer = () => {
                             : 'opacity-50 cursor-not-allowed'
                         }`}
                       >
-                        {floorNum} эт.
+                        Floor {floorNum}
                       </Button>
                     );
                   })}
@@ -380,7 +478,7 @@ const ProjectViewer = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-real-estate-900">
-                      Квартира {selectedApartment.apartment_number}
+                      Apartment {selectedApartment.apartment_number}
                     </h3>
                     <Button
                       size="sm"
@@ -393,7 +491,7 @@ const ProjectViewer = () => {
                   
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-real-estate-600">Статус:</span>
+                      <span className="text-real-estate-600">Status:</span>
                       <Badge className={`${
                         selectedApartment.status === 'available' ? 'bg-success-100 text-success-800' :
                         selectedApartment.status === 'sold' ? 'bg-red-100 text-red-800' :
@@ -404,26 +502,26 @@ const ProjectViewer = () => {
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className="text-real-estate-600">Комнат:</span>
+                      <span className="text-real-estate-600">Rooms:</span>
                       <span className="font-medium">{selectedApartment.rooms}</span>
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className="text-real-estate-600">Площадь:</span>
-                      <span className="font-medium">{selectedApartment.area} м²</span>
+                      <span className="text-real-estate-600">Area:</span>
+                      <span className="font-medium">{selectedApartment.area} m²</span>
                     </div>
                     
                     {selectedApartment.price > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-real-estate-600">Цена:</span>
+                        <span className="text-real-estate-600">Price:</span>
                         <span className="font-bold text-real-estate-900">
-                          {formatPrice(selectedApartment.price)} ₽
+                          ${formatPrice(selectedApartment.price)}
                         </span>
                       </div>
                     )}
                     
                     <div className="flex justify-between">
-                      <span className="text-real-estate-600">Этаж:</span>
+                      <span className="text-real-estate-600">Floor:</span>
                       <span className="font-medium">{selectedFloor}</span>
                     </div>
                   </div>
@@ -434,19 +532,19 @@ const ProjectViewer = () => {
             {/* Legend */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Легенда</h3>
+                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Legend</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-                    <span className="text-sm text-real-estate-600">Доступна</span>
+                    <span className="text-sm text-real-estate-600">Available</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-                    <span className="text-sm text-real-estate-600">Забронирована</span>
+                    <span className="text-sm text-real-estate-600">Reserved</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                    <span className="text-sm text-real-estate-600">Продана</span>
+                    <span className="text-sm text-real-estate-600">Sold</span>
                   </div>
                 </div>
               </CardContent>

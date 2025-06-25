@@ -65,12 +65,23 @@ const EmbeddedWidget = () => {
     if (selectedFloor && projectId) {
       loadFloorPlan();
       loadApartments();
+    } else {
+      setFloorPlan(null);
+      setApartments([]);
+      setSelectedApartment(null);
     }
   }, [selectedFloor, projectId]);
 
   const parsePolygon = (polygon: Json): { x: number; y: number }[] => {
+    console.log('Widget - Parsing polygon:', polygon);
+    
+    if (!polygon) {
+      console.log('Widget - No polygon data');
+      return [];
+    }
+    
     if (Array.isArray(polygon)) {
-      return polygon.filter(p => 
+      const result = polygon.filter(p => 
         typeof p === 'object' && 
         p !== null && 
         'x' in p && 
@@ -78,19 +89,31 @@ const EmbeddedWidget = () => {
         typeof p.x === 'number' &&
         typeof p.y === 'number'
       ) as { x: number; y: number }[];
+      
+      console.log('Widget - Parsed polygon result:', result);
+      return result;
     }
+    
+    console.log('Widget - Polygon is not an array:', typeof polygon);
     return [];
   };
 
   const loadProject = async () => {
     try {
+      console.log('Widget - Loading project:', projectId);
+      
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {
+        console.error('Widget - Project error:', projectError);
+        throw projectError;
+      }
+      
+      console.log('Widget - Project loaded:', projectData);
       setProject(projectData);
 
       const { data: floorsData, error: floorsError } = await supabase
@@ -99,18 +122,30 @@ const EmbeddedWidget = () => {
         .eq('project_id', projectId)
         .order('floor_number');
 
-      if (floorsError) throw floorsError;
+      if (floorsError) {
+        console.error('Widget - Floors error:', floorsError);
+        throw floorsError;
+      }
       
-      const transformedFloors: BuildingFloor[] = floorsData.map(floor => ({
-        id: floor.id,
-        floor_number: floor.floor_number,
-        polygon: parsePolygon(floor.polygon),
-        color: floor.color
-      }));
+      console.log('Widget - Raw floors data:', floorsData);
+      
+      const transformedFloors: BuildingFloor[] = (floorsData || []).map(floor => {
+        const polygon = parsePolygon(floor.polygon);
+        console.log(`Widget - Floor ${floor.floor_number} polygon:`, polygon);
+        
+        return {
+          id: floor.id,
+          floor_number: floor.floor_number,
+          polygon: polygon,
+          color: floor.color || '#3b82f6'
+        };
+      });
 
+      console.log('Widget - Transformed floors:', transformedFloors);
       setBuildingFloors(transformedFloors);
+      
     } catch (error) {
-      console.error('Error loading project:', error);
+      console.error('Widget - Error loading project:', error);
     } finally {
       setLoading(false);
     }
@@ -118,51 +153,77 @@ const EmbeddedWidget = () => {
 
   const loadFloorPlan = async () => {
     try {
+      console.log('Widget - Loading floor plan for floor:', selectedFloor);
+      
       const { data, error } = await supabase
         .from('floor_plans')
         .select('*')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Widget - Floor plan error:', error);
+        throw error;
+      }
+      
+      console.log('Widget - Floor plan loaded:', data);
       setFloorPlan(data);
     } catch (error) {
-      console.error('Error loading floor plan:', error);
+      console.error('Widget - Error loading floor plan:', error);
     }
   };
 
   const loadApartments = async () => {
     try {
+      console.log('Widget - Loading apartments for floor:', selectedFloor);
+      
       const { data, error } = await supabase
         .from('apartments')
         .select('*')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Widget - Apartments error:', error);
+        throw error;
+      }
       
-      const transformedApartments: Apartment[] = (data || []).map(apt => ({
-        id: apt.id,
-        apartment_number: apt.apartment_number,
-        rooms: apt.rooms,
-        area: Number(apt.area),
-        price: Number(apt.price) || 0,
-        status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
-          ? apt.status 
-          : 'available',
-        polygon: parsePolygon(apt.polygon)
-      }));
+      console.log('Widget - Raw apartments data:', data);
+      
+      const transformedApartments: Apartment[] = (data || []).map(apt => {
+        const polygon = parsePolygon(apt.polygon);
+        console.log(`Widget - Apartment ${apt.apartment_number} polygon:`, polygon);
+        
+        return {
+          id: apt.id,
+          apartment_number: apt.apartment_number,
+          rooms: apt.rooms,
+          area: Number(apt.area),
+          price: Number(apt.price) || 0,
+          status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
+            ? apt.status 
+            : 'available',
+          polygon: polygon
+        };
+      });
 
+      console.log('Widget - Transformed apartments:', transformedApartments);
       setApartments(transformedApartments);
     } catch (error) {
-      console.error('Error loading apartments:', error);
+      console.error('Widget - Error loading apartments:', error);
     }
   };
 
   const polygonToPath = (polygon: { x: number; y: number }[]) => {
-    if (polygon.length === 0) return '';
-    return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
+    if (!polygon || polygon.length === 0) {
+      console.log('Widget - Empty polygon for path conversion');
+      return '';
+    }
+    
+    const path = `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
+    console.log('Widget - Generated path:', path);
+    return path;
   };
 
   const getStatusColor = (status: string) => {
@@ -176,15 +237,25 @@ const EmbeddedWidget = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Доступна';
-      case 'sold': return 'Продана';
-      case 'reserved': return 'Забронирована';
-      default: return 'Доступна';
+      case 'available': return 'Available';
+      case 'sold': return 'Sold';
+      case 'reserved': return 'Reserved';
+      default: return 'Available';
     }
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU').format(price);
+    return new Intl.NumberFormat('en-US').format(price);
+  };
+
+  const handleFloorClick = (floorNumber: number) => {
+    console.log('Widget - Floor clicked:', floorNumber);
+    setSelectedFloor(floorNumber);
+  };
+
+  const handleApartmentClick = (apartment: Apartment) => {
+    console.log('Widget - Apartment clicked:', apartment);
+    setSelectedApartment(apartment);
   };
 
   if (loading) {
@@ -198,7 +269,7 @@ const EmbeddedWidget = () => {
   if (!project) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-real-estate-600">Проект не найден</p>
+        <p className="text-real-estate-600">Project not found</p>
       </div>
     );
   }
@@ -231,7 +302,7 @@ const EmbeddedWidget = () => {
             <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
               <CardContent className="p-4">
                 <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-real-estate-900'}`}>
-                  {selectedFloor ? `${selectedFloor}-й этаж` : 'Выберите этаж'}
+                  {selectedFloor ? `Floor ${selectedFloor}` : 'Select a floor'}
                 </h2>
                 
                 {!selectedFloor && project.building_image_url && (
@@ -240,37 +311,46 @@ const EmbeddedWidget = () => {
                       src={project.building_image_url}
                       alt="Building"
                       className="max-w-full max-h-96 object-contain rounded"
+                      onLoad={() => console.log('Widget - Building image loaded')}
+                      onError={(e) => console.error('Widget - Building image failed to load:', e)}
                     />
                     <svg
                       className="absolute top-0 left-0 w-full h-full cursor-pointer"
                       viewBox="0 0 100 100"
                       preserveAspectRatio="none"
                     >
-                      {buildingFloors.map(floor => (
-                        <g key={floor.id}>
-                          <path
-                            d={polygonToPath(floor.polygon)}
-                            fill={floor.color}
-                            fillOpacity="0.3"
-                            stroke={floor.color}
-                            strokeWidth="0.5"
-                            className="hover:fill-opacity-60 transition-all cursor-pointer"
-                            onClick={() => setSelectedFloor(floor.floor_number)}
-                          />
-                          <text
-                            x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                            y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="white"
-                            fontSize="2"
-                            fontWeight="bold"
-                            className="pointer-events-none"
-                          >
-                            {floor.floor_number}
-                          </text>
-                        </g>
-                      ))}
+                      {buildingFloors.map(floor => {
+                        const path = polygonToPath(floor.polygon);
+                        console.log(`Widget - Rendering floor ${floor.floor_number} with path:`, path);
+                        
+                        if (!path) return null;
+                        
+                        return (
+                          <g key={floor.id}>
+                            <path
+                              d={path}
+                              fill={floor.color}
+                              fillOpacity="0.3"
+                              stroke={floor.color}
+                              strokeWidth="0.5"
+                              className="hover:fill-opacity-60 transition-all cursor-pointer"
+                              onClick={() => handleFloorClick(floor.floor_number)}
+                            />
+                            <text
+                              x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                              y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="white"
+                              fontSize="2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
+                              {floor.floor_number}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
                   </div>
                 )}
@@ -281,38 +361,61 @@ const EmbeddedWidget = () => {
                       src={floorPlan.image_url}
                       alt={`Floor ${selectedFloor} plan`}
                       className="max-w-full max-h-96 object-contain rounded"
+                      onLoad={() => console.log('Widget - Floor plan image loaded')}
+                      onError={(e) => console.error('Widget - Floor plan image failed to load:', e)}
                     />
                     <svg
                       className="absolute top-0 left-0 w-full h-full cursor-pointer"
                       viewBox="0 0 100 100"
                       preserveAspectRatio="none"
                     >
-                      {apartments.map(apartment => (
-                        <g key={apartment.id}>
-                          <path
-                            d={polygonToPath(apartment.polygon)}
-                            fill={getStatusColor(apartment.status)}
-                            fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
-                            stroke={getStatusColor(apartment.status)}
-                            strokeWidth="0.3"
-                            className="hover:fill-opacity-70 transition-all cursor-pointer"
-                            onClick={() => setSelectedApartment(apartment)}
-                          />
-                          <text
-                            x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                            y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="white"
-                            fontSize="1.2"
-                            fontWeight="bold"
-                            className="pointer-events-none"
-                          >
-                            {apartment.apartment_number}
-                          </text>
-                        </g>
-                      ))}
+                      {apartments.map(apartment => {
+                        const path = polygonToPath(apartment.polygon);
+                        console.log(`Widget - Rendering apartment ${apartment.apartment_number} with path:`, path);
+                        
+                        if (!path) return null;
+                        
+                        return (
+                          <g key={apartment.id}>
+                            <path
+                              d={path}
+                              fill={getStatusColor(apartment.status)}
+                              fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
+                              stroke={getStatusColor(apartment.status)}
+                              strokeWidth="0.3"
+                              className="hover:fill-opacity-70 transition-all cursor-pointer"
+                              onClick={() => handleApartmentClick(apartment)}
+                            />
+                            <text
+                              x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
+                              y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="white"
+                              fontSize="1.2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
+                              {apartment.apartment_number}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
+                  </div>
+                )}
+
+                {selectedFloor && !floorPlan?.image_url && (
+                  <div className="text-center py-12 text-real-estate-600">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No floor plan uploaded</p>
+                  </div>
+                )}
+
+                {!selectedFloor && !project.building_image_url && (
+                  <div className="text-center py-12 text-real-estate-600">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No building image uploaded</p>
                   </div>
                 )}
               </CardContent>
@@ -325,11 +428,12 @@ const EmbeddedWidget = () => {
             <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
               <CardContent className="p-4">
                 <h3 className={`text-md font-semibold mb-3 ${isDark ? 'text-white' : 'text-real-estate-900'}`}>
-                  Этажи
+                  Floors
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {Array.from({ length: project.floors }, (_, i) => i + 1).map(floorNum => {
                     const hasFloor = buildingFloors.some(f => f.floor_number === floorNum);
+                    
                     return (
                       <Button
                         key={floorNum}
@@ -359,7 +463,7 @@ const EmbeddedWidget = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className={`text-md font-semibold ${isDark ? 'text-white' : 'text-real-estate-900'}`}>
-                      Кв. {selectedApartment.apartment_number}
+                      Apt. {selectedApartment.apartment_number}
                     </h3>
                     <Button
                       size="sm"
@@ -372,7 +476,7 @@ const EmbeddedWidget = () => {
                   
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Статус:</span>
+                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Status:</span>
                       <Badge className={`text-xs ${
                         selectedApartment.status === 'available' ? 'bg-green-100 text-green-800' :
                         selectedApartment.status === 'sold' ? 'bg-red-100 text-red-800' :
@@ -383,24 +487,24 @@ const EmbeddedWidget = () => {
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Комнат:</span>
+                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Rooms:</span>
                       <span className={`font-medium ${isDark ? 'text-white' : ''}`}>
                         {selectedApartment.rooms}
                       </span>
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Площадь:</span>
+                      <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Area:</span>
                       <span className={`font-medium ${isDark ? 'text-white' : ''}`}>
-                        {selectedApartment.area} м²
+                        {selectedApartment.area} m²
                       </span>
                     </div>
                     
                     {selectedApartment.price > 0 && (
                       <div className="flex justify-between">
-                        <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Цена:</span>
+                        <span className={isDark ? 'text-gray-400' : 'text-real-estate-600'}>Price:</span>
                         <span className={`font-bold ${isDark ? 'text-white' : 'text-real-estate-900'}`}>
-                          {formatPrice(selectedApartment.price)} ₽
+                          ${formatPrice(selectedApartment.price)}
                         </span>
                       </div>
                     )}
@@ -414,25 +518,25 @@ const EmbeddedWidget = () => {
               <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
                 <CardContent className="p-4">
                   <h3 className={`text-md font-semibold mb-3 ${isDark ? 'text-white' : 'text-real-estate-900'}`}>
-                    Легенда
+                    Legend
                   </h3>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
                       <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-real-estate-600'}`}>
-                        Доступна
+                        Available
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
                       <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-real-estate-600'}`}>
-                        Забронирована
+                        Reserved
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
                       <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-real-estate-600'}`}>
-                        Продана
+                        Sold
                       </span>
                     </div>
                   </div>
