@@ -39,9 +39,15 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
   const [editingApartmentId, setEditingApartmentId] = useState<string | null>(null);
   const [currentPolygon, setCurrentPolygon] = useState<{ x: number; y: number }[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<string | null>(null);
-  const [apartmentData, setApartmentData] = useState({
+  const [apartmentData, setApartmentData] = useState<{
+    number: string;
+    status: 'available' | 'sold' | 'reserved';
+    area: number;
+    rooms: number;
+    price: number;
+  }>({
     number: '',
-    status: 'available' as const,
+    status: 'available',
     area: 0,
     rooms: 1,
     price: 0
@@ -521,7 +527,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
             </div>
             <div>
               <Label htmlFor="apt-status">Статус</Label>
-              <Select value={apartmentData.status} onValueChange={(value: any) => setApartmentData(prev => ({ ...prev, status: value }))}>
+              <Select value={apartmentData.status} onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
