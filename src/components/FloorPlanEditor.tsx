@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, Trash2, Edit, Eye, Square, Home, Save, X, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +55,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     price: 0
   });
   const [saving, setSaving] = useState(false);
+  const [uploadForAllFloors, setUploadForAllFloors] = useState(sameLayoutForAllFloors);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -118,8 +121,8 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
         const imageUrl = e.target?.result as string;
         
         try {
-          if (sameLayoutForAllFloors) {
-            // Если планировка одинаковая, загружаем для всех этажей
+          if (uploadForAllFloors) {
+            // Загружаем план для всех этажей
             const promises = Array.from({ length: floors }, (_, i) => i + 1).map(floorNum =>
               supabase
                 .from('floor_plans')
@@ -173,7 +176,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       };
       reader.readAsDataURL(file);
     }
-  }, [currentFloor, currentFloorPlan, projectId, floors, sameLayoutForAllFloors, floorPlans]);
+  }, [currentFloor, currentFloorPlan, projectId, floors, uploadForAllFloors, floorPlans]);
 
   const duplicatePolygonsToAllFloors = async () => {
     if (!currentFloorPlan?.apartments.length) {
@@ -199,9 +202,9 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
 
           // Создаем новые квартиры с адаптированными номерами
           const floorApartments = sourceApartments.map(apt => {
-            // Извлекаем базовый номер квартиры (без номера этажа)
-            const baseNumber = apt.number.slice(-2); // Последние 2 цифры
-            const newNumber = `${floorNum}${baseNumber}`;
+            // Извлекаем базовый номер квартиры (последние 2 цифры)
+            const baseNumber = apt.number.length >= 2 ? apt.number.slice(-2) : apt.number;
+            const newNumber = `${floorNum}${baseNumber.padStart(2, '0')}`;
             
             return {
               project_id: projectId,
@@ -370,12 +373,12 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
           price: apartmentData.price
         };
 
-        if (sameLayoutForAllFloors) {
+        if (uploadForAllFloors) {
           // Создаем квартиры на всех этажах
           const promises = Array.from({ length: floors }, (_, i) => i + 1).map(floorNum => {
             // Адаптируем номер квартиры для каждого этажа
-            const baseNumber = apartmentData.number.slice(-2); // Последние 2 цифры
-            const floorApartmentNumber = floorNum === 1 ? apartmentData.number : `${floorNum}${baseNumber}`;
+            const baseNumber = apartmentData.number.length >= 2 ? apartmentData.number.slice(-2) : apartmentData.number;
+            const floorApartmentNumber = `${floorNum}${baseNumber.padStart(2, '0')}`;
             
             // Удаляем существующую квартиру с таким номером, если есть
             return supabase
@@ -406,8 +409,8 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
 
           // Обновляем состояние для всех этажей
           setFloorPlans(prev => prev.map(fp => {
-            const baseNumber = apartmentData.number.slice(-2);
-            const floorApartmentNumber = fp.floorNumber === 1 ? apartmentData.number : `${fp.floorNumber}${baseNumber}`;
+            const baseNumber = apartmentData.number.length >= 2 ? apartmentData.number.slice(-2) : apartmentData.number;
+            const floorApartmentNumber = `${fp.floorNumber}${baseNumber.padStart(2, '0')}`;
             const filteredApartments = fp.apartments.filter(apt => apt.number !== floorApartmentNumber);
             return {
               ...fp,
@@ -549,11 +552,6 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-real-estate-900">
               Планы этажей
-              {sameLayoutForAllFloors && (
-                <Badge className="ml-2 bg-blue-100 text-blue-800">
-                  Одинаковая планировка
-                </Badge>
-              )}
             </h3>
             <div className="flex items-center gap-4">
               <Label htmlFor="floor-select">Этаж:</Label>
@@ -569,35 +567,58 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Upload Settings */}
+          <div className="mb-4 p-4 bg-real-estate-50 rounded-lg">
+            <div className="flex items-center space-x-2 mb-3">
+              <Checkbox
+                id="upload-all-floors"
+                checked={uploadForAllFloors}
+                onCheckedChange={(checked) => setUploadForAllFloors(checked as boolean)}
+              />
+              <Label htmlFor="upload-all-floors" className="text-sm font-medium">
+                Одинаковая планировка для всех этажей
+              </Label>
+            </div>
+            <p className="text-xs text-real-estate-600">
+              {uploadForAllFloors 
+                ? 'План и квартиры будут применены ко всем этажам с автоматической нумерацией'
+                : 'План и квартиры будут созданы только для текущего этажа'
+              }
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="sm"
+              className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Загрузить план
+            </Button>
+            {uploadForAllFloors && currentFloorPlan?.apartments.length > 0 && (
               <Button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={duplicatePolygonsToAllFloors}
                 variant="outline"
                 size="sm"
-                className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                disabled={saving}
+                className="border-blue-300 text-blue-600 hover:bg-blue-50"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                Загрузить план
+                <Copy className="h-4 w-4 mr-2" />
+                {saving ? 'Дублирование...' : 'Дублировать на все этажи'}
               </Button>
-              {sameLayoutForAllFloors && currentFloorPlan?.apartments.length > 0 && (
-                <Button
-                  onClick={duplicatePolygonsToAllFloors}
-                  variant="outline"
-                  size="sm"
-                  disabled={saving}
-                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  {saving ? 'Дублирование...' : 'Дублировать на все этажи'}
-                </Button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-            </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </div>
         </CardContent>
       </Card>
