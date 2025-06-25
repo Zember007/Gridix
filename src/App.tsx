@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProjectViewer from "./components/ProjectViewer";
@@ -35,12 +35,12 @@ const App = () => (
 
 // Wrapper component for ProjectEditor to handle routing
 const ProjectEditorWrapper = ({ isNew = false }: { isNew?: boolean }) => {
-  const { projectId } = require('react-router-dom').useParams();
-  const navigate = require('react-router-dom').useNavigate();
+  const { projectId } = useParams();
+  const navigate = useNavigate();
   
   return (
     <ProjectEditor 
-      projectId={isNew ? 'new' : projectId}
+      projectId={isNew ? 'new' : projectId || ''}
       isNew={isNew}
       onBack={() => navigate('/admin')}
     />
