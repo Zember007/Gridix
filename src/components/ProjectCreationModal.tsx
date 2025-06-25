@@ -1,10 +1,11 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Upload, FileSpreadsheet, Settings, Building2, Download, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/ExcelColumnMapper';
@@ -13,7 +14,7 @@ import * as XLSX from 'xlsx';
 interface ProjectCreationModalProps {
   open: boolean;
   onClose: () => void;
-  onManualCreate: () => void;
+  onManualCreate: (sameLayout?: boolean) => void;
 }
 
 interface ImportedRow {
@@ -25,6 +26,8 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showColumnMapper, setShowColumnMapper] = useState(false);
+  const [showLayoutQuestion, setShowLayoutQuestion] = useState(false);
+  const [sameLayoutForAllFloors, setSameLayoutForAllFloors] = useState<boolean | null>(null);
   const [excelColumns, setExcelColumns] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -126,10 +129,10 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
   const downloadTemplate = () => {
     const csvContent = `Номер квартиры,Этаж,Комнаты,Площадь (м²),Цена (руб),Статус
-101,1,1,45.5,5500000,доступна
-102,1,2,68.2,7200000,доступна
+101,1,1,45.5,5500000,свободна
+102,1,2,68.2,7200000,свободна
 103,1,3,92.1,9800000,продана
-201,2,1,44.8,5400000,доступна
+201,2,1,44.8,5400000,свободна
 202,2,2,67.5,7100000,забронирована`;
 
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -140,9 +143,21 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     toast.success('Шаблон загружен');
   };
 
+  const handleManualCreateClick = () => {
+    setShowLayoutQuestion(true);
+  };
+
+  const handleLayoutSelection = (sameLayout: boolean) => {
+    setSameLayoutForAllFloors(sameLayout);
+    onManualCreate(sameLayout);
+    handleCloseModal();
+  };
+
   const handleCloseModal = () => {
     setImportedData([]);
     setShowColumnMapper(false);
+    setShowLayoutQuestion(false);
+    setSameLayoutForAllFloors(null);
     setExcelColumns([]);
     setProgress(0);
     setIsProcessing(false);
@@ -179,6 +194,78 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     );
   }
 
+  if (showLayoutQuestion) {
+    return (
+      <Dialog open={open} onOpenChange={handleCloseModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-real-estate-600" />
+              Планировка этажей
+            </DialogTitle>
+            <DialogDescription>
+              Одинаковая ли планировка на всех этажах здания?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <RadioGroup 
+              value={sameLayoutForAllFloors === null ? undefined : sameLayoutForAllFloors.toString()}
+              onValueChange={(value) => setSameLayoutForAllFloors(value === 'true')}
+            >
+              <div className="space-y-4">
+                <Card className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="true" id="same-layout" className="mt-1" />
+                    <div className="flex-1">
+                      <Label htmlFor="same-layout" className="cursor-pointer">
+                        <div className="font-medium text-real-estate-900">Да, планировка одинаковая</div>
+                        <div className="text-sm text-real-estate-600 mt-1">
+                          Вы сможете один раз выделить квартиры на плане, и они автоматически применятся ко всем этажам
+                        </div>
+                      </Label>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="false" id="different-layout" className="mt-1" />
+                    <div className="flex-1">
+                      <Label htmlFor="different-layout" className="cursor-pointer">
+                        <div className="font-medium text-real-estate-900">Нет, планировка разная</div>
+                        <div className="text-sm text-real-estate-600 mt-1">
+                          Вам нужно будет отдельно настроить каждый этаж
+                        </div>
+                      </Label>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </RadioGroup>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => handleLayoutSelection(sameLayoutForAllFloors || false)}
+                disabled={sameLayoutForAllFloors === null}
+                className="flex-1 bg-real-estate-600 hover:bg-real-estate-700"
+              >
+                Продолжить
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowLayoutQuestion(false)}
+                className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+              >
+                Назад
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
       <DialogContent className="max-w-2xl">
@@ -194,7 +281,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
         <div className="space-y-6 py-4">
           {/* Ручное создание */}
-          <Card className="cursor-pointer hover:bg-real-estate-50 transition-colors" onClick={onManualCreate}>
+          <Card className="cursor-pointer hover:bg-real-estate-50 transition-colors" onClick={handleManualCreateClick}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-real-estate-600" />
