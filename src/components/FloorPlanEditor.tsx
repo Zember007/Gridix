@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Trash2, Edit, Eye, Square, Home, Save, X } from 'lucide-react';
+import { Upload, Trash2, Edit, Eye, Square, Home, Save, X, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -118,7 +118,6 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
         const imageUrl = e.target?.result as string;
         
         try {
-          // Сохраняем или обновляем план этажа в базе данных
           if (sameLayoutForAllFloors) {
             // Если планировка одинаковая, загружаем для всех этажей
             const promises = Array.from({ length: floors }, (_, i) => i + 1).map(floorNum =>
@@ -175,6 +174,99 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       reader.readAsDataURL(file);
     }
   }, [currentFloor, currentFloorPlan, projectId, floors, sameLayoutForAllFloors, floorPlans]);
+
+  const duplicatePolygonsToAllFloors = async () => {
+    if (!currentFloorPlan?.apartments.length) {
+      toast.error('Сначала создайте квартиры на текущем этаже');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Получаем все квартиры с текущего этажа
+      const sourceApartments = currentFloorPlan.apartments;
+      
+      // Создаем квартиры для всех остальных этажей
+      const allFloorPromises = Array.from({ length: floors }, (_, i) => i + 1)
+        .filter(floorNum => floorNum !== currentFloor)
+        .map(async (floorNum) => {
+          // Удаляем существующие квартиры на этом этаже
+          await supabase
+            .from('apartments')
+            .delete()
+            .eq('project_id', projectId)
+            .eq('floor_number', floorNum);
+
+          // Создаем новые квартиры с адаптированными номерами
+          const floorApartments = sourceApartments.map(apt => {
+            // Извлекаем базовый номер квартиры (без номера этажа)
+            const baseNumber = apt.number.slice(-2); // Последние 2 цифры
+            const newNumber = `${floorNum}${baseNumber}`;
+            
+            return {
+              project_id: projectId,
+              floor_number: floorNum,
+              apartment_number: newNumber,
+              rooms: apt.rooms,
+              area: apt.area,
+              price: apt.price || 0,
+              status: apt.status,
+              polygon: apt.polygon
+            };
+          });
+
+          // Вставляем все квартиры для этого этажа
+          const { error } = await supabase
+            .from('apartments')
+            .insert(floorApartments);
+
+          if (error) throw error;
+
+          return {
+            floorNumber: floorNum,
+            apartments: floorApartments.map(apt => ({
+              id: `${apt.floor_number}-${apt.apartment_number}`,
+              number: apt.apartment_number,
+              polygon: apt.polygon,
+              status: apt.status as 'available' | 'sold' | 'reserved',
+              area: apt.area,
+              rooms: apt.rooms,
+              price: apt.price
+            }))
+          };
+        });
+
+      const results = await Promise.all(allFloorPromises);
+
+      // Обновляем состояние для всех этажей
+      setFloorPlans(prev => {
+        const updated = [...prev];
+        results.forEach(result => {
+          const existingFloorIndex = updated.findIndex(fp => fp.floorNumber === result.floorNumber);
+          if (existingFloorIndex >= 0) {
+            updated[existingFloorIndex] = {
+              ...updated[existingFloorIndex],
+              apartments: result.apartments
+            };
+          } else {
+            updated.push({
+              floorNumber: result.floorNumber,
+              image: currentFloorPlan.image, // Используем тот же план
+              apartments: result.apartments
+            });
+          }
+        });
+        return updated;
+      });
+
+      toast.success('Полигоны продублированы на все этажи');
+    } catch (error) {
+      console.error('Error duplicating polygons:', error);
+      toast.error('Ошибка дублирования полигонов');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const startDrawingApartment = () => {
     if (!apartmentData.number) {
@@ -281,20 +373,24 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
         if (sameLayoutForAllFloors) {
           // Создаем квартиры на всех этажах
           const promises = Array.from({ length: floors }, (_, i) => i + 1).map(floorNum => {
+            // Адаптируем номер квартиры для каждого этажа
+            const baseNumber = apartmentData.number.slice(-2); // Последние 2 цифры
+            const floorApartmentNumber = floorNum === 1 ? apartmentData.number : `${floorNum}${baseNumber}`;
+            
             // Удаляем существующую квартиру с таким номером, если есть
             return supabase
               .from('apartments')
               .delete()
               .eq('project_id', projectId)
               .eq('floor_number', floorNum)
-              .eq('apartment_number', apartmentData.number)
+              .eq('apartment_number', floorApartmentNumber)
               .then(() => 
                 supabase
                   .from('apartments')
                   .insert({
                     project_id: projectId,
                     floor_number: floorNum,
-                    apartment_number: apartmentData.number,
+                    apartment_number: floorApartmentNumber,
                     rooms: apartmentData.rooms,
                     area: apartmentData.area,
                     price: apartmentData.price,
@@ -310,14 +406,20 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
 
           // Обновляем состояние для всех этажей
           setFloorPlans(prev => prev.map(fp => {
-            const filteredApartments = fp.apartments.filter(apt => apt.number !== newApartment.number);
+            const baseNumber = apartmentData.number.slice(-2);
+            const floorApartmentNumber = fp.floorNumber === 1 ? apartmentData.number : `${fp.floorNumber}${baseNumber}`;
+            const filteredApartments = fp.apartments.filter(apt => apt.number !== floorApartmentNumber);
             return {
               ...fp,
-              apartments: [...filteredApartments, { ...newApartment, id: `${fp.floorNumber}-${apartmentData.number}` }]
+              apartments: [...filteredApartments, { 
+                ...newApartment, 
+                id: `${fp.floorNumber}-${floorApartmentNumber}`,
+                number: floorApartmentNumber 
+              }]
             };
           }));
 
-          toast.success(`Квартира ${apartmentData.number} добавлена на всех этажах`);
+          toast.success(`Квартира добавлена на всех этажах`);
         } else {
           // Обычное создание для текущего этажа
           await supabase
@@ -476,6 +578,18 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                 <Upload className="h-4 w-4 mr-2" />
                 Загрузить план
               </Button>
+              {sameLayoutForAllFloors && currentFloorPlan?.apartments.length > 0 && (
+                <Button
+                  onClick={duplicatePolygonsToAllFloors}
+                  variant="outline"
+                  size="sm"
+                  disabled={saving}
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  {saving ? 'Дублирование...' : 'Дублировать на все этажи'}
+                </Button>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
