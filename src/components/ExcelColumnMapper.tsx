@@ -202,7 +202,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                       <SelectValue placeholder="Select column" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">-- Select Column --</SelectItem>
+                      <SelectItem value="__none__">-- Select Column --</SelectItem>
                       {excelColumns.map((column) => (
                         <SelectItem key={column} value={column}>
                           {column}
@@ -210,7 +210,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                       ))}
                     </SelectContent>
                   </Select>
-                  {currentValue && (
+                  {currentValue && currentValue !== '__none__' && (
                     <div className="flex items-center gap-2 text-sm text-real-estate-600 bg-real-estate-50 p-2 rounded">
                       <span>Preview:</span>
                       <ArrowRight className="h-3 w-3" />
@@ -253,7 +253,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                     </td>
                     {Object.entries(fieldLabels).map(([field]) => {
                       const columnName = columnMapping[field as keyof ColumnMapping];
-                      const value = columnName ? row[columnName] : '';
+                      const value = columnName && columnName !== '__none__' ? row[columnName] : '';
                       return (
                         <td key={field} className="p-3">
                           {value || <span className="text-gray-400">--</span>}
