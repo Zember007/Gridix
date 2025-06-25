@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Trash2, Edit, Eye, Square, Home, Save, X, Copy } from 'lucide-react';
+import { Upload, Trash2, Edit, Eye, Square, Home, Save, X, Copy, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -55,10 +55,15 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
   });
   const [saving, setSaving] = useState(false);
   const [uploadForAllFloors, setUploadForAllFloors] = useState(sameLayoutForAllFloors);
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentFloorPlan = floorPlans.find(fp => fp.floorNumber === currentFloor);
 
@@ -94,7 +99,11 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
         apartments: apartments?.map(apt => ({
           id: apt.id,
           number: apt.apartment_number,
-          polygon: Array.isArray(apt.polygon) ? apt.polygon as { x: number; y: number }[] : [],
+          polygon: Array.isArray(apt.polygon) 
+            ? apt.polygon as { x: number; y: number }[]
+            : typeof apt.polygon === 'string'
+            ? JSON.parse(apt.polygon)
+            : [],
           status: apt.status as 'available' | 'sold' | 'reserved',
           area: parseFloat(apt.area.toString()),
           rooms: apt.rooms,
@@ -311,7 +320,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     setIsEditing(false);
     setEditingApartmentId(null);
     setSelectedApartment(null);
-    toast.info('Выделите контуры квартиры на плане');
+    toast.info('Кликайте левой кнопкой для добавления точек, правой - для удаления последней точки');
   };
 
   const startEditingApartment = (apartmentId: string) => {
@@ -330,11 +339,12 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       rooms: apartment.rooms,
       price: apartment.price || 0
     });
-    toast.info(`Редактирование квартиры ${apartment.number}. Кликайте для изменения контуров`);
+    toast.info(`Редактирование квартиры ${apartment.number}. Левый клик - добавить точку, правый - удалить последнюю`);
   };
 
   const handleSVGClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
     if (!isDrawing && !isEditing) return;
+    event.preventDefault();
 
     const svg = svgRef.current;
     const image = imageRef.current;
@@ -343,11 +353,78 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     const rect = svg.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
     
-    const x = ((event.clientX - imageRect.left) / imageRect.width) * 100;
-    const y = ((event.clientY - imageRect.top) / imageRect.height) * 100;
+    // Учитываем масштабирование и панорамирование
+    const x = ((event.clientX - imageRect.left) / (imageRect.width * zoom) - panOffset.x / (imageRect.width * zoom)) * 100;
+    const y = ((event.clientY - imageRect.top) / (imageRect.height * zoom) - panOffset.y / (imageRect.height * zoom)) * 100;
 
-    setCurrentPolygon(prev => [...prev, { x, y }]);
-  }, [isDrawing, isEditing]);
+    if (event.button === 2) {
+      // Правый клик - удаляем последнюю точку
+      event.preventDefault();
+      if (currentPolygon.length > 0) {
+        setCurrentPolygon(prev => prev.slice(0, -1));
+        toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
+      }
+    } else if (event.button === 0) {
+      // Левый клик - добавляем точку
+      setCurrentPolygon(prev => [...prev, { x, y }]);
+    }
+  }, [isDrawing, isEditing, currentPolygon, zoom, panOffset]);
+
+  const handleSVGContextMenu = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
+    event.preventDefault();
+  }, []);
+
+  const removeLastPoint = () => {
+    if (currentPolygon.length > 0) {
+      setCurrentPolygon(prev => prev.slice(0, -1));
+      toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
+    }
+  };
+
+  const clearPolygon = () => {
+    setCurrentPolygon([]);
+    toast.info('Полигон очищен');
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.5, 5));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.5, 0.5));
+  };
+
+  const resetZoom = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button === 1 || (event.button === 0 && event.ctrlKey)) {
+      // Средняя кнопка или Ctrl + левая кнопка для панорамирования
+      event.preventDefault();
+      setIsPanning(true);
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      const deltaX = event.clientX - lastPanPoint.x;
+      const deltaY = event.clientY - lastPanPoint.y;
+      
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  }, [isPanning, lastPanPoint]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
 
   const finishDrawing = async () => {
     if (currentPolygon.length < 3) {
@@ -749,22 +826,38 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
           </div>
 
           {(isDrawing || isEditing) && (
-            <div className="flex items-center gap-2 p-3 bg-real-estate-50 rounded-lg">
-              <div className="text-sm text-real-estate-700">
-                {isEditing 
-                  ? `Редактируйте контуры квартиры ${apartmentData.number}`
-                  : `Кликайте по плану для выделения квартиры ${apartmentData.number}`
-                }
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 bg-real-estate-50 rounded-lg">
+                <div className="text-sm text-real-estate-700 flex-1">
+                  {isEditing 
+                    ? `Редактируйте контуры квартиры ${apartmentData.number}. Точек: ${currentPolygon.length}`
+                    : `Кликайте по плану для выделения квартиры ${apartmentData.number}. Точек: ${currentPolygon.length}`
+                  }
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={finishDrawing} disabled={saving || currentPolygon.length < 3}>
+                    <Save className="h-4 w-4 mr-1" />
+                    {saving ? 'Сохранение...' : 'Сохранить'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={cancelDrawing}>
+                    <X className="h-4 w-4 mr-1" />
+                    Отмена
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 ml-auto">
-                <Button size="sm" onClick={finishDrawing} disabled={saving}>
-                  <Save className="h-4 w-4 mr-1" />
-                  {saving ? 'Сохранение...' : 'Сохранить'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={cancelDrawing}>
-                  <X className="h-4 w-4 mr-1" />
-                  Отмена
-                </Button>
+              
+              <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
+                <div className="text-xs text-yellow-700 flex-1">
+                  Левый клик - добавить точку, правый клик - удалить последнюю точку
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={removeLastPoint} disabled={currentPolygon.length === 0}>
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={clearPolygon} disabled={currentPolygon.length === 0}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -775,19 +868,60 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       {currentFloorPlan?.image && (
         <Card>
           <CardContent className="pt-6">
-            <div className="relative inline-block">
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button size="sm" variant="outline" onClick={handleZoomIn}>
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleZoomOut}>
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetZoom}>
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Сброс
+              </Button>
+              <span className="text-sm text-real-estate-600 ml-2">
+                Масштаб: {Math.round(zoom * 100)}%
+              </span>
+              <span className="text-xs text-real-estate-500 ml-4">
+                Ctrl + клик или колесико мыши для панорамирования
+              </span>
+            </div>
+
+            <div 
+              ref={containerRef}
+              className="relative inline-block overflow-hidden rounded-lg shadow-lg border"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+            >
               <img
                 ref={imageRef}
                 src={currentFloorPlan.image}
                 alt={`Floor ${currentFloor} plan`}
-                className="max-w-full max-h-[600px] object-contain rounded-lg shadow-lg"
+                className="block"
+                style={{
+                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                  transformOrigin: '0 0',
+                  maxWidth: '100%',
+                  maxHeight: '600px',
+                  objectFit: 'contain'
+                }}
               />
               <svg
                 ref={svgRef}
-                className="absolute top-0 left-0 w-full h-full cursor-crosshair"
+                className="absolute top-0 left-0 w-full h-full pointer-events-auto"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 onClick={handleSVGClick}
+                onContextMenu={handleSVGContextMenu}
+                style={{
+                  cursor: (isDrawing || isEditing) ? 'crosshair' : 'default',
+                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                  transformOrigin: '0 0'
+                }}
               >
                 {/* Existing apartments */}
                 {currentFloorPlan.apartments.map(apartment => (
@@ -801,6 +935,9 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         e.stopPropagation();
                         selectApartment(apartment.id);
                       }}
+                      style={{
+                        strokeWidth: 0.2
+                      }}
                     />
                     {/* Apartment label */}
                     {apartment.polygon.length > 0 && (
@@ -810,7 +947,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill="white"
-                        fontSize="1.5"
+                        fontSize="1"
                         fontWeight="bold"
                         className="pointer-events-none"
                       >
@@ -828,18 +965,19 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                       fill={getStatusColor(apartmentData.status)}
                       fillOpacity="0.4"
                       stroke={getStatusColor(apartmentData.status)}
-                      strokeWidth="0.5"
-                      strokeDasharray="1,1"
+                      strokeWidth="0.2"
+                      strokeDasharray="0.5,0.5"
                     />
                     {currentPolygon.map((point, index) => (
                       <circle
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="0.8"
+                        r="0.3"
                         fill={getStatusColor(apartmentData.status)}
                         stroke="white"
-                        strokeWidth="0.2"
+                        strokeWidth="0.1"
+                        className="cursor-pointer hover:opacity-80"
                       />
                     ))}
                   </>
