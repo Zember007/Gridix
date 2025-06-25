@@ -3,14 +3,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Settings, BarChart3, Upload, Eye } from 'lucide-react';
-import AdminDashboard from '@/components/AdminDashboard';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'landing' | 'admin'>('landing');
+  const navigate = useNavigate();
 
-  if (currentView === 'admin') {
-    return <AdminDashboard onBack={() => setCurrentView('landing')} />;
-  }
+  const goToAdmin = () => {
+    navigate('/admin');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100">
@@ -23,7 +23,7 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-real-estate-900">RealEstate SaaS</h1>
             </div>
             <Button 
-              onClick={() => setCurrentView('admin')}
+              onClick={goToAdmin}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               Login to Panel
@@ -47,7 +47,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-real-estate-600 hover:bg-real-estate-700 text-lg px-8 py-4"
-              onClick={() => setCurrentView('admin')}
+              onClick={goToAdmin}
             >
               Get Started
             </Button>
@@ -144,7 +144,7 @@ const Index = () => {
           <Button 
             size="lg" 
             className="bg-white text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
-            onClick={() => setCurrentView('admin')}
+            onClick={goToAdmin}
           >
             Enter Admin Panel
           </Button>

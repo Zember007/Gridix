@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +11,8 @@ import {
   BarChart3,
   Code
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProjectList from '@/components/ProjectList';
-import ProjectEditor from '@/components/ProjectEditor';
 import ProjectCreationModal from '@/components/ProjectCreationModal';
 import Widget from '@/components/Widget';
 
@@ -23,9 +22,8 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [showCreationModal, setShowCreationModal] = useState(false);
+  const navigate = useNavigate();
 
   const handleCreateProject = () => {
     setShowCreationModal(true);
@@ -33,32 +31,16 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
   const handleManualProject = () => {
     setShowCreationModal(false);
-    setIsCreatingProject(true);
-    setSelectedProject('new');
+    navigate('/admin/project/new');
   };
 
   const handleEditProject = (projectId: string, isNew: boolean) => {
-    setSelectedProject(projectId);
-    setIsCreatingProject(isNew);
-    setActiveTab('editor');
+    if (isNew) {
+      navigate('/admin/project/new');
+    } else {
+      navigate(`/admin/project/${projectId}`);
+    }
   };
-
-  const handleBackToProjects = () => {
-    setSelectedProject(null);
-    setIsCreatingProject(false);
-    setActiveTab('projects');
-  };
-
-  // If we're editing a project, show the project editor
-  if (selectedProject && (activeTab === 'editor' || isCreatingProject)) {
-    return (
-      <ProjectEditor 
-        projectId={selectedProject}
-        isNew={isCreatingProject}
-        onBack={handleBackToProjects}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100">

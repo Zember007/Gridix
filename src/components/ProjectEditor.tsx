@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Save, Building2, Image, Layout } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
@@ -35,6 +36,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isNew && projectId) {
@@ -89,8 +91,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         if (error) throw error;
         
         toast.success('Project created');
-        // Redirect to edit created project
-        window.location.href = `/admin/projects/${data.id}`;
+        // Navigate to edit the created project
+        navigate(`/admin/project/${data.id}`);
       } else {
         const { error } = await supabase
           .from('projects')
