@@ -40,14 +40,14 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
-      toast.error('Ошибка загрузки проектов');
+      toast.error('Error loading projects');
     } finally {
       setLoading(false);
     }
   };
 
   const deleteProject = async (projectId: string, projectName: string) => {
-    if (!confirm(`Вы уверены, что хотите удалить проект "${projectName}"?`)) {
+    if (!confirm(`Are you sure you want to delete the project "${projectName}"?`)) {
       return;
     }
 
@@ -59,10 +59,10 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 
       if (error) throw error;
       setProjects(prev => prev.filter(p => p.id !== projectId));
-      toast.success('Проект удален');
+      toast.success('Project deleted');
     } catch (error) {
       console.error('Error deleting project:', error);
-      toast.error('Ошибка удаления проекта');
+      toast.error('Error deleting project');
     }
   };
 
@@ -85,7 +85,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 </iframe>`;
     
     navigator.clipboard.writeText(widgetCode);
-    toast.success('Код виджета скопирован в буфер обмена');
+    toast.success('Widget code copied to clipboard');
   };
 
   if (loading) {
@@ -101,15 +101,15 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-real-estate-900">Проекты</h2>
-          <p className="text-real-estate-600">Управление жилыми комплексами</p>
+          <h2 className="text-2xl font-bold text-real-estate-900">Projects</h2>
+          <p className="text-real-estate-600">Manage residential complexes</p>
         </div>
         <Button 
           onClick={onCreateNew}
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Создать проект
+          Create Project
         </Button>
       </div>
 
@@ -119,17 +119,17 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Building2 className="h-16 w-16 text-real-estate-300 mb-4" />
             <h3 className="text-lg font-semibold text-real-estate-900 mb-2">
-              Нет проектов
+              No Projects
             </h3>
             <p className="text-real-estate-600 text-center mb-6 max-w-md">
-              Создайте свой первый проект недвижимости с интерактивными планами этажей и квартир
+              Create your first real estate project with interactive floor plans and apartments
             </p>
             <Button 
               onClick={onCreateNew}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Создать первый проект
+              Create First Project
             </Button>
           </CardContent>
         </Card>
@@ -144,7 +144,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       {project.name}
                     </CardTitle>
                     <CardDescription className="mt-1">
-                      {project.description || 'Описание отсутствует'}
+                      {project.description || 'No description'}
                     </CardDescription>
                   </div>
                 </div>
@@ -165,10 +165,10 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                   {/* Project Info */}
                   <div className="flex items-center gap-4 text-sm text-real-estate-600">
                     <Badge variant="outline" className="border-real-estate-300">
-                      {project.floors} этажей
+                      {project.floors} floors
                     </Badge>
                     <span>
-                      Создан {new Date(project.created_at).toLocaleDateString('ru-RU')}
+                      Created {new Date(project.created_at).toLocaleDateString('en-US')}
                     </span>
                   </div>
 
@@ -181,7 +181,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      Открыть
+                      Open
                     </Button>
                     <Button
                       size="sm"
@@ -189,7 +189,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       onClick={() => onEditProject(project.id, false)}
                       className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
-                      Редактировать
+                      Edit
                     </Button>
                     <Button
                       size="sm"
@@ -198,7 +198,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      Виджет
+                      Widget
                     </Button>
                     <Button
                       size="sm"

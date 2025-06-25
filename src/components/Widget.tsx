@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,7 +105,7 @@ export default RealEstateWidget;`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Код скопирован в буфер обмена');
+    toast.success('Code copied to clipboard');
   };
 
   const previewUrl = widgetConfig.projectId 
@@ -119,21 +120,21 @@ export default RealEstateWidget;`;
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-real-estate-600" />
-              Настройки виджета
+              Widget Settings
             </CardTitle>
             <CardDescription>
-              Настройте внешний вид и функциональность виджета
+              Configure the appearance and functionality of the widget
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="project-select">Проект</Label>
+              <Label htmlFor="project-select">Project</Label>
               <Select 
                 value={widgetConfig.projectId} 
                 onValueChange={(value) => setWidgetConfig(prev => ({ ...prev, projectId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите проект" />
+                  <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
@@ -145,23 +146,23 @@ export default RealEstateWidget;`;
               </Select>
               {projects.length === 0 && (
                 <p className="text-sm text-real-estate-600 mt-1">
-                  Создайте проект для генерации виджета
+                  Create a project to generate widget
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="width">Ширина</Label>
+                <Label htmlFor="width">Width</Label>
                 <Input
                   id="width"
                   value={widgetConfig.width}
                   onChange={(e) => setWidgetConfig(prev => ({ ...prev, width: e.target.value }))}
-                  placeholder="100% или 800px"
+                  placeholder="100% or 800px"
                 />
               </div>
               <div>
-                <Label htmlFor="height">Высота</Label>
+                <Label htmlFor="height">Height</Label>
                 <Input
                   id="height"
                   value={widgetConfig.height}
@@ -173,22 +174,22 @@ export default RealEstateWidget;`;
             </div>
 
             <div>
-              <Label htmlFor="theme">Тема</Label>
+              <Label htmlFor="theme">Theme</Label>
               <Select value={widgetConfig.theme} onValueChange={(value) => setWidgetConfig(prev => ({ ...prev, theme: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Светлая</SelectItem>
-                  <SelectItem value="dark">Темная</SelectItem>
-                  <SelectItem value="auto">Автоматическая</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-legend">Показать легенду</Label>
+                <Label htmlFor="show-legend">Show Legend</Label>
                 <Switch
                   id="show-legend"
                   checked={widgetConfig.showLegend}
@@ -196,7 +197,7 @@ export default RealEstateWidget;`;
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="auto-height">Автоматическая высота</Label>
+                <Label htmlFor="auto-height">Auto Height</Label>
                 <Switch
                   id="auto-height"
                   checked={widgetConfig.autoHeight}
@@ -209,9 +210,9 @@ export default RealEstateWidget;`;
 
         <Card>
           <CardHeader>
-            <CardTitle>Предпросмотр</CardTitle>
+            <CardTitle>Preview</CardTitle>
             <CardDescription>
-              Как будет выглядеть виджет на вашем сайте
+              How the widget will look on your website
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -221,9 +222,9 @@ export default RealEstateWidget;`;
                   <Eye className="h-8 w-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-real-estate-900">Предпросмотр виджета</h3>
+                  <h3 className="font-semibold text-real-estate-900">Widget Preview</h3>
                   <p className="text-sm text-real-estate-600 mb-4">
-                    Интерактивная шахматка будет отображаться здесь
+                    Interactive floor plan will be displayed here
                   </p>
                   {previewUrl && (
                     <Button
@@ -233,7 +234,7 @@ export default RealEstateWidget;`;
                       className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      Открыть в новом окне
+                      Open in New Window
                     </Button>
                   )}
                 </div>
@@ -249,10 +250,10 @@ export default RealEstateWidget;`;
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Code className="h-5 w-5 text-real-estate-600" />
-              Код для интеграции
+              Integration Code
             </CardTitle>
             <CardDescription>
-              Скопируйте код и вставьте его на ваш сайт
+              Copy the code and paste it into your website
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -277,7 +278,7 @@ export default RealEstateWidget;`;
                   </Button>
                 </div>
                 <p className="text-sm text-real-estate-600">
-                  Вставьте этот код в HTML любой страницы вашего сайта
+                  Paste this code into the HTML of any page on your website
                 </p>
               </TabsContent>
 
@@ -295,7 +296,7 @@ export default RealEstateWidget;`;
                   </Button>
                 </div>
                 <p className="text-sm text-real-estate-600">
-                  Используйте этот компонент в вашем React приложении
+                  Use this component in your React application
                 </p>
               </TabsContent>
 
@@ -313,7 +314,7 @@ export default RealEstateWidget;`;
                   </Button>
                 </div>
                 <p className="text-sm text-real-estate-600">
-                  Используйте этот шорткод в WordPress (требуется установка плагина)
+                  Use this shortcode in WordPress (requires plugin installation)
                 </p>
               </TabsContent>
             </Tabs>
@@ -324,14 +325,14 @@ export default RealEstateWidget;`;
       {/* Custom CSS */}
       <Card>
         <CardHeader>
-          <CardTitle>Дополнительные стили</CardTitle>
+          <CardTitle>Custom Styles</CardTitle>
           <CardDescription>
-            Настройте внешний вид виджета с помощью CSS
+            Customize widget appearance with CSS
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="custom-css">CSS стили</Label>
+            <Label htmlFor="custom-css">CSS Styles</Label>
             <Textarea
               id="custom-css"
               value={customCSS}
@@ -354,12 +355,12 @@ export default RealEstateWidget;`;
           </div>
           <Button
             onClick={() => {
-              toast.success('CSS стили сохранены');
+              toast.success('CSS styles saved');
               // Here you would save the custom CSS
             }}
             className="bg-real-estate-600 hover:bg-real-estate-700"
           >
-            Сохранить стили
+            Save Styles
           </Button>
         </CardContent>
       </Card>
@@ -367,34 +368,34 @@ export default RealEstateWidget;`;
       {/* Integration Instructions */}
       <Card>
         <CardHeader>
-          <CardTitle>Инструкции по интеграции</CardTitle>
+          <CardTitle>Integration Instructions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <div>
-              <h4 className="font-semibold text-real-estate-900 mb-3">1. Базовая интеграция</h4>
+              <h4 className="font-semibold text-real-estate-900 mb-3">1. Basic Integration</h4>
               <ul className="list-disc list-inside space-y-2 text-real-estate-700">
-                <li>Скопируйте HTML код из вкладки выше</li>
-                <li>Вставьте код в нужное место на вашей веб-странице</li>
-                <li>Виджет автоматически загрузится и будет готов к использованию</li>
+                <li>Copy the HTML code from the tab above</li>
+                <li>Paste the code where you want it on your web page</li>
+                <li>The widget will automatically load and be ready to use</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-real-estate-900 mb-3">2. Настройка безопасности</h4>
+              <h4 className="font-semibold text-real-estate-900 mb-3">2. Security Configuration</h4>
               <ul className="list-disc list-inside space-y-2 text-real-estate-700">
-                <li>Добавьте ваш домен в список разрешенных для встраивания</li>
-                <li>Настройте CORS политики для корректной работы виджета</li>
-                <li>Используйте HTTPS для безопасной передачи данных</li>
+                <li>Add your domain to the allowed embedding list</li>
+                <li>Configure CORS policies for proper widget operation</li>
+                <li>Use HTTPS for secure data transmission</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-real-estate-900 mb-3">3. Дополнительные возможности</h4>
+              <h4 className="font-semibold text-real-estate-900 mb-3">3. Additional Features</h4>
               <ul className="list-disc list-inside space-y-2 text-real-estate-700">
-                <li>Используйте JavaScript API для расширенного взаимодействия</li>
-                <li>Настройте обратные вызовы для отслеживания событий</li>
-                <li>Интегрируйте с системами аналитики и CRM</li>
+                <li>Use JavaScript API for advanced interaction</li>
+                <li>Configure callbacks to track events</li>
+                <li>Integrate with analytics and CRM systems</li>
               </ul>
             </div>
           </div>

@@ -60,7 +60,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       });
     } catch (error) {
       console.error('Error loading project:', error);
-      toast.error('Ошибка загрузки проекта');
+      toast.error('Error loading project');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   const handleSave = async () => {
     if (!projectData.name.trim()) {
-      toast.error('Введите название проекта');
+      toast.error('Please enter project name');
       return;
     }
 
@@ -88,8 +88,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         if (error) throw error;
         
-        toast.success('Проект создан');
-        // Перенаправляем на редактирование созданного проекта
+        toast.success('Project created');
+        // Redirect to edit created project
         window.location.href = `/admin/projects/${data.id}`;
       } else {
         const { error } = await supabase
@@ -104,11 +104,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           .eq('id', projectId);
 
         if (error) throw error;
-        toast.success('Проект сохранен');
+        toast.success('Project saved');
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error('Ошибка сохранения проекта');
+      toast.error('Error saving project');
     } finally {
       setSaving(false);
     }
@@ -140,16 +140,16 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                К проектам
+                Back to Projects
               </Button>
               <div className="flex items-center gap-3">
                 <Building2 className="h-8 w-8 text-real-estate-600" />
                 <div>
                   <h1 className="text-2xl font-bold text-real-estate-900">
-                    {isNew ? 'Новый проект' : projectData.name}
+                    {isNew ? 'New Project' : projectData.name}
                   </h1>
                   {!isNew && (
-                    <p className="text-sm text-real-estate-600">Редактирование проекта</p>
+                    <p className="text-sm text-real-estate-600">Editing project</p>
                   )}
                 </div>
               </div>
@@ -160,7 +160,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Сохранение...' : 'Сохранить'}
+              {saving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
@@ -172,43 +172,43 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Общие
+              General
             </TabsTrigger>
             <TabsTrigger value="building" className="flex items-center gap-2" disabled={isNew}>
               <Image className="h-4 w-4" />
-              Здание
+              Building
             </TabsTrigger>
             <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
-              Планы этажей
+              Floor Plans
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Основная информация</CardTitle>
+                <CardTitle>Basic Information</CardTitle>
                 <CardDescription>
-                  Настройте основные параметры вашего проекта
+                  Configure the basic parameters of your project
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name">Название проекта*</Label>
+                      <Label htmlFor="name">Project Name*</Label>
                       <Input
                         id="name"
                         value={projectData.name}
                         onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="ЖК 'Название комплекса'"
+                        placeholder="Complex Name"
                         className="mt-1"
                         required
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="floors">Количество этажей</Label>
+                      <Label htmlFor="floors">Number of Floors</Label>
                       <Input
                         id="floors"
                         type="number"
@@ -222,12 +222,12 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="description">Описание</Label>
+                    <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
                       value={projectData.description}
                       onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Краткое описание жилого комплекса..."
+                      placeholder="Brief description of the residential complex..."
                       rows={4}
                       className="mt-1"
                     />
@@ -237,7 +237,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 {isNew && (
                   <div className="bg-real-estate-50 p-4 rounded-lg">
                     <p className="text-sm text-real-estate-700">
-                      После создания проекта вы сможете загрузить изображения здания и настроить планы этажей.
+                      After creating the project, you'll be able to upload building images and configure floor plans.
                     </p>
                   </div>
                 )}
@@ -248,9 +248,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsContent value="building" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Изображение здания</CardTitle>
+                <CardTitle>Building Image</CardTitle>
                 <CardDescription>
-                  Загрузите изображение здания и настройте интерактивные зоны этажей
+                  Upload building image and configure interactive floor zones
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -266,9 +266,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsContent value="floors" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Планы этажей</CardTitle>
+                <CardTitle>Floor Plans</CardTitle>
                 <CardDescription>
-                  Загрузите планы этажей и настройте интерактивные зоны квартир
+                  Upload floor plans and configure interactive apartment zones
                 </CardDescription>
               </CardHeader>
               <CardContent>

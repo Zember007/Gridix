@@ -38,7 +38,7 @@ const DataImport = () => {
     if (!file) return;
 
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      toast.error('Поддерживаются только файлы Excel (.xlsx, .xls) и CSV');
+      toast.error('Only Excel (.xlsx, .xls) and CSV files are supported');
       return;
     }
 
@@ -52,43 +52,43 @@ const DataImport = () => {
           clearInterval(interval);
           setIsProcessing(false);
           setImportedData(sampleData);
-          toast.success('Данные успешно импортированы!');
+          toast.success('Data imported successfully!');
           return 100;
         }
         return prev + 10;
       });
     }, 200);
 
-    toast.info('Начата обработка файла...');
+    toast.info('File processing started...');
   };
 
   const downloadTemplate = () => {
     // Create a simple CSV template
-    const csvContent = `Номер квартиры,Этаж,Комнаты,Площадь (м²),Цена (руб),Статус
-101,1,1,45.5,5500000,available
-102,1,2,68.2,7200000,available
-103,1,3,92.1,9800000,sold
-201,2,1,44.8,5400000,available
-202,2,2,67.5,7100000,reserved`;
+    const csvContent = `Apartment Number,Floor,Rooms,Area (m²),Price (USD),Status
+101,1,1,45.5,550000,available
+102,1,2,68.2,720000,available
+103,1,3,92.1,980000,sold
+201,2,1,44.8,540000,available
+202,2,2,67.5,710000,reserved`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'apartment_template.csv';
     link.click();
-    toast.success('Шаблон загружен');
+    toast.success('Template downloaded');
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-success-100 text-success-800">Доступна</Badge>;
+        return <Badge className="bg-success-100 text-success-800">Available</Badge>;
       case 'sold':
-        return <Badge className="bg-red-100 text-red-800">Продана</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Sold</Badge>;
       case 'reserved':
-        return <Badge className="bg-warning-100 text-warning-800">Бронь</Badge>;
+        return <Badge className="bg-warning-100 text-warning-800">Reserved</Badge>;
       default:
-        return <Badge variant="secondary">Неизвестно</Badge>;
+        return <Badge variant="secondary">Unknown</Badge>;
     }
   };
 
@@ -102,10 +102,10 @@ const DataImport = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-6 w-6 text-real-estate-600" />
-            Импорт данных о квартирах
+            Import Apartment Data
           </CardTitle>
           <CardDescription>
-            Загрузите Excel файл с данными о квартирах для автоматического заполнения информации
+            Upload Excel file with apartment data for automatic information filling
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -116,7 +116,7 @@ const DataImport = () => {
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {isProcessing ? 'Обработка...' : 'Загрузить файл'}
+              {isProcessing ? 'Processing...' : 'Upload File'}
             </Button>
             <Button
               variant="outline"
@@ -124,7 +124,7 @@ const DataImport = () => {
               className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
             >
               <Download className="h-4 w-4 mr-2" />
-              Скачать шаблон
+              Download Template
             </Button>
           </div>
           
@@ -139,7 +139,7 @@ const DataImport = () => {
           {isProcessing && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Обработка файла...</span>
+                <span>Processing file...</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="w-full" />
@@ -149,15 +149,15 @@ const DataImport = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-real-estate-50 rounded-lg">
             <div className="text-center">
               <div className="text-2xl font-bold text-real-estate-600">{importedData.length}</div>
-              <div className="text-sm text-real-estate-700">Всего записей</div>
+              <div className="text-sm text-real-estate-700">Total Records</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-success-600">{validCount}</div>
-              <div className="text-sm text-real-estate-700">Корректных</div>
+              <div className="text-sm text-real-estate-700">Valid</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">{errorCount}</div>
-              <div className="text-sm text-real-estate-700">С ошибками</div>
+              <div className="text-sm text-real-estate-700">With Errors</div>
             </div>
           </div>
         </CardContent>
@@ -167,9 +167,9 @@ const DataImport = () => {
       {importedData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Предпросмотр данных</CardTitle>
+            <CardTitle>Data Preview</CardTitle>
             <CardDescription>
-              Проверьте корректность импортированных данных перед применением
+              Check the correctness of imported data before applying
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -177,13 +177,13 @@ const DataImport = () => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Статус</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Квартира</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Этаж</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Комнаты</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Площадь</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Цена</th>
-                    <th className="text-left p-3 font-semibold text-real-estate-900">Доступность</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Status</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Apartment</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Floor</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Rooms</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Area</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Price</th>
+                    <th className="text-left p-3 font-semibold text-real-estate-900">Availability</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -199,8 +199,8 @@ const DataImport = () => {
                       <td className="p-3 font-medium">{row.apartmentNumber}</td>
                       <td className="p-3">{row.floor}</td>
                       <td className="p-3">{row.rooms}</td>
-                      <td className="p-3">{row.area} м²</td>
-                      <td className="p-3">{row.price.toLocaleString()} ₽</td>
+                      <td className="p-3">{row.area} m²</td>
+                      <td className="p-3">${row.price.toLocaleString()}</td>
                       <td className="p-3">{getStatusBadge(row.status)}</td>
                     </tr>
                   ))}
@@ -214,19 +214,19 @@ const DataImport = () => {
                   variant="outline"
                   onClick={() => {
                     setImportedData([]);
-                    toast.info('Данные сброшены');
+                    toast.info('Data cleared');
                   }}
                 >
-                  Отмена
+                  Cancel
                 </Button>
                 <Button
                   onClick={() => {
-                    toast.success('Данные применены к проектам');
+                    toast.success('Data applied to projects');
                     // Here you would actually apply the data to projects
                   }}
                   className="bg-real-estate-600 hover:bg-real-estate-700"
                 >
-                  Применить данные
+                  Apply Data
                 </Button>
               </div>
             )}
@@ -237,47 +237,47 @@ const DataImport = () => {
       {/* Instructions */}
       <Card>
         <CardHeader>
-          <CardTitle>Инструкции по импорту</CardTitle>
+          <CardTitle>Import Instructions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold text-real-estate-900 mb-2">Формат файла</h4>
+              <h4 className="font-semibold text-real-estate-900 mb-2">File Format</h4>
               <ul className="list-disc list-inside space-y-1 text-real-estate-700">
-                <li>Поддерживаются форматы: Excel (.xlsx, .xls) и CSV</li>
-                <li>Первая строка должна содержать заголовки колонок</li>
-                <li>Используйте UTF-8 кодировку для корректного отображения русских символов</li>
+                <li>Supported formats: Excel (.xlsx, .xls) and CSV</li>
+                <li>First row should contain column headers</li>
+                <li>Use UTF-8 encoding for proper character display</li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold text-real-estate-900 mb-2">Обязательные колонки</h4>
-              <div className="grid grid-cols-1 md:gri-cols-2 gap-4">
+              <h4 className="font-semibold text-real-estate-900 mb-2">Required Columns</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Номер квартиры:</span>
+                    <span className="text-real-estate-700">Apartment Number:</span>
                     <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">101, 102A, etc.</code>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Этаж:</span>
+                    <span className="text-real-estate-700">Floor:</span>
                     <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">1, 2, 3, etc.</code>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Комнаты:</span>
+                    <span className="text-real-estate-700">Rooms:</span>
                     <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">1, 2, 3, etc.</code>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Площадь (м²):</span>
+                    <span className="text-real-estate-700">Area (m²):</span>
                     <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">45.5, 68.2, etc.</code>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Цена (руб):</span>
-                    <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">5500000</code>
+                    <span className="text-real-estate-700">Price (USD):</span>
+                    <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">550000</code>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-real-estate-700">Статус:</span>
+                    <span className="text-real-estate-700">Status:</span>
                     <code className="bg-real-estate-100 px-2 py-1 rounded text-sm">available, sold, reserved</code>
                   </div>
                 </div>

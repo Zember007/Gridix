@@ -26,7 +26,7 @@ const Index = () => {
               onClick={() => setCurrentView('admin')}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
-              Войти в панель
+              Login to Panel
             </Button>
           </div>
         </div>
@@ -36,12 +36,12 @@ const Index = () => {
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-5xl font-bold text-real-estate-900 mb-6">
-            Создавайте интерактивные
-            <span className="block text-real-estate-600">шахматки недвижимости</span>
+            Create Interactive
+            <span className="block text-real-estate-600">Real Estate Floor Plans</span>
           </h2>
           <p className="text-xl text-real-estate-700 mb-8 max-w-3xl mx-auto">
-            Профессиональная платформа для создания интерактивных планов зданий и квартир 
-            с интеграцией Excel-данных и встраиваемыми виджетами
+            Professional platform for creating interactive building and apartment floor plans 
+            with Excel data integration and embeddable widgets
           </p>
           <div className="flex gap-4 justify-center">
             <Button 
@@ -49,14 +49,14 @@ const Index = () => {
               className="bg-real-estate-600 hover:bg-real-estate-700 text-lg px-8 py-4"
               onClick={() => setCurrentView('admin')}
             >
-              Начать работу
+              Get Started
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               className="border-real-estate-600 text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
             >
-              Посмотреть демо
+              View Demo
             </Button>
           </div>
         </div>
@@ -66,15 +66,15 @@ const Index = () => {
       <section className="py-16 bg-white/50">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center text-real-estate-900 mb-12">
-            Возможности платформы
+            Platform Features
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Upload className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Загрузка планов</CardTitle>
+                <CardTitle className="text-real-estate-900">Plan Upload</CardTitle>
                 <CardDescription>
-                  Загружайте изображения зданий и планы этажей в высоком разрешении
+                  Upload high-resolution building images and floor plans
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -82,9 +82,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Settings className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Интерактивное редактирование</CardTitle>
+                <CardTitle className="text-real-estate-900">Interactive Editing</CardTitle>
                 <CardDescription>
-                  Выделяйте этажи полигонами и создавайте интерактивные зоны квартир
+                  Outline floors with polygons and create interactive apartment zones
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -92,9 +92,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <BarChart3 className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Excel интеграция</CardTitle>
+                <CardTitle className="text-real-estate-900">Excel Integration</CardTitle>
                 <CardDescription>
-                  Импортируйте данные о квартирах из Excel файлов с автоматической синхронизацией
+                  Import apartment data from Excel files with automatic synchronization
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -102,9 +102,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Eye className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Встраиваемый виджет</CardTitle>
+                <CardTitle className="text-real-estate-900">Embeddable Widget</CardTitle>
                 <CardDescription>
-                  Легко интегрируйте интерактивные планы на любой сайт одной строкой кода
+                  Easily integrate interactive plans into any website with one line of code
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -112,9 +112,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Users className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Управление статусами</CardTitle>
+                <CardTitle className="text-real-estate-900">Status Management</CardTitle>
                 <CardDescription>
-                  Отслеживайте статусы квартир: доступно, продано, забронировано
+                  Track apartment statuses: available, sold, reserved
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -122,9 +122,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Building2 className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Мультипроектность</CardTitle>
+                <CardTitle className="text-real-estate-900">Multi-Project</CardTitle>
                 <CardDescription>
-                  Управляйте несколькими проектами недвижимости из единой панели
+                  Manage multiple real estate projects from a single dashboard
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -136,17 +136,17 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-r from-real-estate-600 to-real-estate-800">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-4xl font-bold text-white mb-6">
-            Готовы начать?
+            Ready to Start?
           </h3>
           <p className="text-xl text-real-estate-100 mb-8 max-w-2xl mx-auto">
-            Создайте свой первый интерактивный проект недвижимости уже сегодня
+            Create your first interactive real estate project today
           </p>
           <Button 
             size="lg" 
             className="bg-white text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
             onClick={() => setCurrentView('admin')}
           >
-            Войти в админ-панель
+            Enter Admin Panel
           </Button>
         </div>
       </section>
@@ -159,7 +159,7 @@ const Index = () => {
             <span className="text-lg font-semibold">RealEstate SaaS</span>
           </div>
           <p className="text-real-estate-300">
-            © 2024 RealEstate SaaS. Профессиональные решения для недвижимости.
+            © 2024 RealEstate SaaS. Professional real estate solutions.
           </p>
         </div>
       </footer>
