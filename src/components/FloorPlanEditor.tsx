@@ -248,7 +248,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
             apartments: insertedApartments?.map(apt => ({
               id: apt.id,
               number: apt.apartment_number,
-              polygon: apt.polygon,
+              polygon: Array.isArray(apt.polygon) ? apt.polygon as { x: number; y: number }[] : [],
               status: apt.status as 'available' | 'sold' | 'reserved',
               area: apt.area,
               rooms: apt.rooms,
