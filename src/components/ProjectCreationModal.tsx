@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileSpreadsheet, Settings, Building2, Download, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/ExcelColumnMapper';
+import * as XLSX from 'xlsx';
 
 interface ProjectCreationModalProps {
   open: boolean;
@@ -32,59 +33,111 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     if (!file) return;
 
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      toast.error('Only Excel (.xlsx, .xls) and CSV files are supported');
+      toast.error('Поддерживаются только Excel (.xlsx, .xls) и CSV файлы');
       return;
     }
 
     setIsProcessing(true);
     setProgress(0);
 
-    // Simulate processing
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsProcessing(false);
+    try {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
           
-          // Mock extracted columns from Excel file
-          const mockColumns = [
-            'Apartment Number', 'Floor', 'Rooms', 'Area', 'Price', 'Status',
-            'номер квартиры', 'этаж', 'комнаты', 'площадь', 'цена', 'статус'
-          ];
-          setExcelColumns(mockColumns);
+          // Берем первый лист
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
           
-          // Mock imported data
-          const mockData = [
-            { 'Apartment Number': '101', 'Floor': 1, 'Rooms': 1, 'Area': 45.5, 'Price': 550000, 'Status': 'available' },
-            { 'Apartment Number': '102', 'Floor': 1, 'Rooms': 2, 'Area': 68.2, 'Price': 720000, 'Status': 'available' },
-            { 'Apartment Number': '103', 'Floor': 1, 'Rooms': 3, 'Area': 92.1, 'Price': 980000, 'Status': 'sold' },
-          ];
-          setImportedData(mockData);
-          setShowColumnMapper(true);
-          toast.success('File processed successfully!');
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
+          // Конвертируем в JSON
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          
+          if (jsonData.length < 2) {
+            toast.error('Файл должен содержать как минимум заголовки и одну строку данных');
+            setIsProcessing(false);
+            return;
+          }
 
-    toast.info('Processing Excel file...');
+          // Первая строка - заголовки
+          const headers = jsonData[0].filter(header => header && header.toString().trim() !== '');
+          console.log('Извлеченные заголовки:', headers);
+          
+          // Остальные строки - данные
+          const rows = jsonData.slice(1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
+          
+          // Преобразуем в объекты
+          const processedData = rows.map(row => {
+            const obj: any = {};
+            headers.forEach((header, index) => {
+              obj[header] = row[index] || '';
+            });
+            return obj;
+          });
+
+          console.log('Обработанные данные:', processedData.slice(0, 3));
+          
+          setExcelColumns(headers.map(h => h.toString()));
+          setImportedData(processedData);
+          setShowColumnMapper(true);
+          setProgress(100);
+          toast.success(`Файл обработан успешно! Найдено ${processedData.length} записей`);
+          
+        } catch (error) {
+          console.error('Ошибка обработки файла:', error);
+          toast.error('Ошибка при обработке файла');
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
+      reader.onerror = () => {
+        toast.error('Ошибка при чтении файла');
+        setIsProcessing(false);
+      };
+
+      // Симуляция прогресса
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 100);
+
+      if (file.name.endsWith('.csv')) {
+        reader.readAsText(file, 'UTF-8');
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+
+      toast.info('Обработка Excel файла...');
+      
+    } catch (error) {
+      console.error('Ошибка:', error);
+      toast.error('Ошибка при загрузке файла');
+      setIsProcessing(false);
+    }
   };
 
   const downloadTemplate = () => {
-    const csvContent = `Apartment Number,Floor,Rooms,Area (m²),Price (USD),Status
-101,1,1,45.5,550000,available
-102,1,2,68.2,720000,available
-103,1,3,92.1,980000,sold
-201,2,1,44.8,540000,available
-202,2,2,67.5,710000,reserved`;
+    const csvContent = `Номер квартиры,Этаж,Комнаты,Площадь (м²),Цена (руб),Статус
+101,1,1,45.5,5500000,доступна
+102,1,2,68.2,7200000,доступна
+103,1,3,92.1,9800000,продана
+201,2,1,44.8,5400000,доступна
+202,2,2,67.5,7100000,забронирована`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'apartment_template.csv';
     link.click();
-    toast.success('Template downloaded');
+    toast.success('Шаблон загружен');
   };
 
   const handleCloseModal = () => {
@@ -99,16 +152,16 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
   if (showColumnMapper) {
     return (
       <Dialog open={open} onOpenChange={handleCloseModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle className="flex items-center gap-2">
                   <Settings className="h-6 w-6 text-real-estate-600" />
-                  Map Excel Columns
+                  Соотнести столбцы Excel
                 </DialogTitle>
                 <DialogDescription>
-                  Map the columns from your Excel file to the apartment data fields
+                  Укажите, какие столбцы из вашего Excel файла соответствуют полям квартир
                 </DialogDescription>
               </div>
               <Button variant="ghost" size="sm" onClick={handleCloseModal}>
@@ -132,41 +185,41 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
-            Create New Project
+            Создать новый проект
           </DialogTitle>
           <DialogDescription>
-            Choose how you want to create your project
+            Выберите способ создания проекта
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Manual Creation Option */}
+          {/* Ручное создание */}
           <Card className="cursor-pointer hover:bg-real-estate-50 transition-colors" onClick={onManualCreate}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-real-estate-600" />
-                Manual Setup
+                Ручная настройка
               </CardTitle>
               <CardDescription>
-                Create a project from scratch and configure everything manually
+                Создать проект с нуля и настроить все самостоятельно
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button className="w-full bg-real-estate-600 hover:bg-real-estate-700">
-                Start Manual Creation
+                Начать ручное создание
               </Button>
             </CardContent>
           </Card>
 
-          {/* Excel Import Option */}
+          {/* Импорт из Excel */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-real-estate-600" />
-                Import from Excel
+                Импорт из Excel
               </CardTitle>
               <CardDescription>
-                Upload an Excel file with apartment data and map columns automatically
+                Загрузить Excel файл с данными квартир и автоматически создать проект
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -177,7 +230,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                   className="bg-real-estate-600 hover:bg-real-estate-700"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {isProcessing ? 'Processing...' : 'Upload Excel File'}
+                  {isProcessing ? 'Обработка...' : 'Загрузить Excel файл'}
                 </Button>
                 <Button
                   variant="outline"
@@ -185,7 +238,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                   className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download Template
+                  Скачать шаблон
                 </Button>
               </div>
               
@@ -200,7 +253,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               {isProcessing && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Processing file...</span>
+                    <span>Обработка файла...</span>
                     <span>{progress}%</span>
                   </div>
                   <Progress value={progress} className="w-full" />
@@ -208,8 +261,8 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               )}
 
               <div className="text-sm text-real-estate-600 bg-real-estate-50 p-3 rounded-md">
-                <p><strong>Supported formats:</strong> Excel (.xlsx, .xls) and CSV</p>
-                <p><strong>Required data:</strong> Apartment numbers, floors, rooms, area, price, status</p>
+                <p><strong>Поддерживаемые форматы:</strong> Excel (.xlsx, .xls) и CSV</p>
+                <p><strong>Необходимые данные:</strong> Номера квартир, этажи, комнаты, площадь, цена, статус</p>
               </div>
             </CardContent>
           </Card>
