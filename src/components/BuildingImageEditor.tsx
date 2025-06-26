@@ -127,11 +127,16 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     const image = imageRef.current;
     if (!svg || !image) return;
 
-    const imageRect = image.getBoundingClientRect();
+    // Получаем границы SVG элемента
+    const svgRect = svg.getBoundingClientRect();
     
-    // Корректное вычисление координат с учетом зума и панорамирования
-    const x = ((event.clientX - imageRect.left) / zoom - panOffset.x) / imageRect.width * 100;
-    const y = ((event.clientY - imageRect.top) / zoom - panOffset.y) / imageRect.height * 100;
+    // Вычисляем координаты клика относительно SVG
+    const clickX = event.clientX - svgRect.left;
+    const clickY = event.clientY - svgRect.top;
+    
+    // Переводим в проценты относительно размера SVG (учитывая масштаб)
+    const x = (clickX / zoom - panOffset.x) / (svgRect.width / zoom) * 100;
+    const y = (clickY / zoom - panOffset.y) / (svgRect.height / zoom) * 100;
 
     if (event.button === 0) {
       // Левый клик - добавляем точку
