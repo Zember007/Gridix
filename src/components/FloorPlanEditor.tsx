@@ -346,19 +346,19 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     if (!isDrawing && !isEditing) return;
     
     const svg = svgRef.current;
-    const image = imageRef.current;
-    if (!svg || !image) return;
+    const container = containerRef.current;
+    if (!svg || !container) return;
 
-    // Получаем границы SVG элемента
-    const svgRect = svg.getBoundingClientRect();
+    // Получаем границы контейнера
+    const containerRect = container.getBoundingClientRect();
     
-    // Вычисляем координаты клика относительно SVG
-    const clickX = event.clientX - svgRect.left;
-    const clickY = event.clientY - svgRect.top;
+    // Вычисляем координаты клика относительно контейнера без учета трансформации
+    const rawClickX = event.clientX - containerRect.left;
+    const rawClickY = event.clientY - containerRect.top;
     
-    // Переводим в проценты относительно размера SVG (учитывая масштаб)
-    const x = (clickX / zoom - panOffset.x) / (svgRect.width / zoom) * 100;
-    const y = (clickY / zoom - panOffset.y) / (svgRect.height / zoom) * 100;
+    // Учитываем зум и панорамирование
+    const x = (rawClickX / zoom - panOffset.x) / (containerRect.width / zoom) * 100;
+    const y = (rawClickY / zoom - panOffset.y) / (containerRect.height / zoom) * 100;
 
     if (event.button === 0) {
       // Левый клик - добавляем точку
@@ -418,13 +418,13 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       const deltaY = event.clientY - lastPanPoint.y;
       
       setPanOffset(prev => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
+        x: prev.x + deltaX / zoom,
+        y: prev.y + deltaY / zoom
       }));
       
       setLastPanPoint({ x: event.clientX, y: event.clientY });
     }
-  }, [isPanning, lastPanPoint]);
+  }, [isPanning, lastPanPoint, zoom]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
@@ -935,6 +935,10 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                       className={`${getApartmentClass(apartment.status)} cursor-pointer hover:apartment-hover transition-all ${
                         editingApartmentId === apartment.id ? 'opacity-50' : ''
                       }`}
+                      fill={getStatusColor(apartment.status)}
+                      fillOpacity={selectedApartment === apartment.id ? 0.6 : 0.3}
+                      stroke={getStatusColor(apartment.status)}
+                      strokeWidth="0.1"
                       onClick={(e) => {
                         e.stopPropagation();
                         selectApartment(apartment.id);
@@ -965,7 +969,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                       fill={getStatusColor(apartmentData.status)}
                       fillOpacity="0.4"
                       stroke={getStatusColor(apartmentData.status)}
-                      strokeWidth="0.2"
+                      strokeWidth="0.1"
                       strokeDasharray="0.5,0.5"
                     />
                     {currentPolygon.map((point, index) => (
@@ -973,10 +977,10 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="0.3"
+                        r="0.2"
                         fill={getStatusColor(apartmentData.status)}
                         stroke="white"
-                        strokeWidth="0.1"
+                        strokeWidth="0.05"
                         className="cursor-pointer hover:opacity-80"
                       />
                     ))}

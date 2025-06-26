@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -124,19 +123,19 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     if (!isDrawing || currentFloor === null) return;
 
     const svg = svgRef.current;
-    const image = imageRef.current;
-    if (!svg || !image) return;
+    const container = containerRef.current;
+    if (!svg || !container) return;
 
-    // Получаем границы SVG элемента
-    const svgRect = svg.getBoundingClientRect();
+    // Получаем границы контейнера
+    const containerRect = container.getBoundingClientRect();
     
-    // Вычисляем координаты клика относительно SVG
-    const clickX = event.clientX - svgRect.left;
-    const clickY = event.clientY - svgRect.top;
+    // Вычисляем координаты клика относительно контейнера без учета трансформации
+    const rawClickX = event.clientX - containerRect.left;
+    const rawClickY = event.clientY - containerRect.top;
     
-    // Переводим в проценты относительно размера SVG (учитывая масштаб)
-    const x = (clickX / zoom - panOffset.x) / (svgRect.width / zoom) * 100;
-    const y = (clickY / zoom - panOffset.y) / (svgRect.height / zoom) * 100;
+    // Учитываем зум и панорамирование
+    const x = (rawClickX / zoom - panOffset.x) / (containerRect.width / zoom) * 100;
+    const y = (rawClickY / zoom - panOffset.y) / (containerRect.height / zoom) * 100;
 
     if (event.button === 0) {
       // Левый клик - добавляем точку
@@ -183,13 +182,13 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       const deltaY = event.clientY - lastPanPoint.y;
       
       setPanOffset(prev => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
+        x: prev.x + deltaX / zoom,
+        y: prev.y + deltaY / zoom
       }));
       
       setLastPanPoint({ x: event.clientX, y: event.clientY });
     }
-  }, [isPanning, lastPanPoint]);
+  }, [isPanning, lastPanPoint, zoom]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
@@ -426,7 +425,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floor.color}
                       fillOpacity={selectedFloor === floor.id ? 0.6 : 0.3}
                       stroke={floor.color}
-                      strokeWidth="0.2"
+                      strokeWidth="0.1"
                       className="cursor-pointer hover:fill-opacity-50 transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -458,7 +457,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                       fillOpacity="0.4"
                       stroke={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      strokeWidth="0.2"
+                      strokeWidth="0.1"
                       strokeDasharray="1,1"
                     />
                     {currentPolygon.map((point, index) => (
@@ -466,10 +465,10 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="0.5"
+                        r="0.3"
                         fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                         stroke="white"
-                        strokeWidth="0.1"
+                        strokeWidth="0.05"
                       />
                     ))}
                   </>
