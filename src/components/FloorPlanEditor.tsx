@@ -344,35 +344,34 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
 
   const handleSVGClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
     if (!isDrawing && !isEditing) return;
-    event.preventDefault();
-
+    
     const svg = svgRef.current;
     const image = imageRef.current;
     if (!svg || !image) return;
 
-    const rect = svg.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
     
-    // Учитываем масштабирование и панорамирование
-    const x = ((event.clientX - imageRect.left) / (imageRect.width * zoom) - panOffset.x / (imageRect.width * zoom)) * 100;
-    const y = ((event.clientY - imageRect.top) / (imageRect.height * zoom) - panOffset.y / (imageRect.height * zoom)) * 100;
+    // Корректное вычисление координат с учетом зума и панорамирования
+    const x = ((event.clientX - imageRect.left) / zoom - panOffset.x) / imageRect.width * 100;
+    const y = ((event.clientY - imageRect.top) / zoom - panOffset.y) / imageRect.height * 100;
 
-    if (event.button === 2) {
-      // Правый клик - удаляем последнюю точку
-      event.preventDefault();
-      if (currentPolygon.length > 0) {
-        setCurrentPolygon(prev => prev.slice(0, -1));
-        toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
-      }
-    } else if (event.button === 0) {
+    if (event.button === 0) {
       // Левый клик - добавляем точку
+      event.preventDefault();
       setCurrentPolygon(prev => [...prev, { x, y }]);
     }
-  }, [isDrawing, isEditing, currentPolygon, zoom, panOffset]);
+  }, [isDrawing, isEditing, zoom, panOffset]);
 
   const handleSVGContextMenu = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDrawing && !isEditing) return;
+    
     event.preventDefault();
-  }, []);
+    // Правый клик - удаляем последнюю точку
+    if (currentPolygon.length > 0) {
+      setCurrentPolygon(prev => prev.slice(0, -1));
+      toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
+    }
+  }, [isDrawing, isEditing, currentPolygon.length]);
 
   const removeLastPoint = () => {
     if (currentPolygon.length > 0) {
@@ -884,7 +883,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                 Масштаб: {Math.round(zoom * 100)}%
               </span>
               <span className="text-xs text-real-estate-500 ml-4">
-                Ctrl + клик или колесико мыши для панорамирования
+                Ctrl + клик для панорамирования
               </span>
             </div>
 
@@ -903,7 +902,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                 alt={`Floor ${currentFloor} plan`}
                 className="block"
                 style={{
-                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                  transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
                   transformOrigin: '0 0',
                   maxWidth: '100%',
                   maxHeight: '600px',
@@ -919,7 +918,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                 onContextMenu={handleSVGContextMenu}
                 style={{
                   cursor: (isDrawing || isEditing) ? 'crosshair' : 'default',
-                  transform: `scale(${zoom}) translate(${panOffset.x / zoom}px, ${panOffset.y / zoom}px)`,
+                  transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
                   transformOrigin: '0 0'
                 }}
               >
@@ -935,11 +934,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         e.stopPropagation();
                         selectApartment(apartment.id);
                       }}
-                      style={{
-                        strokeWidth: 0.2
-                      }}
                     />
-                    {/* Apartment label */}
                     {apartment.polygon.length > 0 && (
                       <text
                         x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}

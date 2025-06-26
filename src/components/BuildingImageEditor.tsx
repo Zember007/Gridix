@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Trash2, Edit, Eye, Square } from 'lucide-react';
+import { Upload, Trash2, Edit, Eye, Square, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,10 +28,15 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
   const [currentPolygon, setCurrentPolygon] = useState<{ x: number; y: number }[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const floorColors = [
     '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
@@ -45,7 +50,6 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
 
   const loadProjectData = async () => {
     try {
-      // Загружаем данные проекта
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('building_image_url')
@@ -58,7 +62,6 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         setBuildingImage(project.building_image_url);
       }
 
-      // Загружаем этажи здания
       const { data: buildingFloors, error: floorsError } = await supabase
         .from('building_floors')
         .select('*')
@@ -92,7 +95,6 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         onImageUpload(imageUrl);
         setFloorPolygons([]);
         
-        // Сохраняем изображение в базу данных
         try {
           const { error } = await supabase
             .from('projects')
@@ -115,7 +117,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     setCurrentPolygon([]);
     setIsDrawing(true);
     setSelectedFloor(null);
-    toast.info(`Выделите ${floorNumber}-й этаж на изображении`);
+    toast.info(`Выделите ${floorNumber}-й этаж на изображении. Левый клик - добавить точку, правый - удалить последнюю`);
   };
 
   const handleSVGClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
@@ -125,14 +127,68 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     const image = imageRef.current;
     if (!svg || !image) return;
 
-    const rect = svg.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
     
-    const x = ((event.clientX - imageRect.left) / imageRect.width) * 100;
-    const y = ((event.clientY - imageRect.top) / imageRect.height) * 100;
+    // Корректное вычисление координат с учетом зума и панорамирования
+    const x = ((event.clientX - imageRect.left) / zoom - panOffset.x) / imageRect.width * 100;
+    const y = ((event.clientY - imageRect.top) / zoom - panOffset.y) / imageRect.height * 100;
 
-    setCurrentPolygon(prev => [...prev, { x, y }]);
-  }, [isDrawing, currentFloor]);
+    if (event.button === 0) {
+      // Левый клик - добавляем точку
+      event.preventDefault();
+      setCurrentPolygon(prev => [...prev, { x, y }]);
+    }
+  }, [isDrawing, currentFloor, zoom, panOffset]);
+
+  const handleSVGContextMenu = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDrawing || currentFloor === null) return;
+    
+    event.preventDefault();
+    // Правый клик - удаляем последнюю точку
+    if (currentPolygon.length > 0) {
+      setCurrentPolygon(prev => prev.slice(0, -1));
+      toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
+    }
+  }, [isDrawing, currentFloor, currentPolygon.length]);
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.5, 5));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.5, 0.5));
+  };
+
+  const resetZoom = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button === 1 || (event.button === 0 && event.ctrlKey)) {
+      event.preventDefault();
+      setIsPanning(true);
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      const deltaX = event.clientX - lastPanPoint.x;
+      const deltaY = event.clientY - lastPanPoint.y;
+      
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  }, [isPanning, lastPanPoint]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
 
   const finishDrawing = async () => {
     if (currentPolygon.length < 3 || currentFloor === null) {
@@ -150,14 +206,12 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         color: floorColors[(currentFloor - 1) % floorColors.length]
       };
 
-      // Удаляем существующий этаж, если есть
       await supabase
         .from('building_floors')
         .delete()
         .eq('project_id', projectId)
         .eq('floor_number', currentFloor);
 
-      // Создаем новый этаж
       const { error } = await supabase
         .from('building_floors')
         .insert({
@@ -285,10 +339,10 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
           {isDrawing && (
             <div className="flex items-center gap-2 p-3 bg-real-estate-50 rounded-lg">
               <div className="text-sm text-real-estate-700">
-                Кликайте по изображению для выделения {currentFloor}-го этажа
+                Кликайте по изображению для выделения {currentFloor}-го этажа. Точек: {currentPolygon.length}
               </div>
               <div className="flex gap-2 ml-auto">
-                <Button size="sm" onClick={finishDrawing} disabled={saving}>
+                <Button size="sm" onClick={finishDrawing} disabled={saving || currentPolygon.length < 3}>
                   {saving ? 'Сохранение...' : 'Завершить'}
                 </Button>
                 <Button size="sm" variant="outline" onClick={cancelDrawing}>
@@ -304,19 +358,60 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       {buildingImage && (
         <Card>
           <CardContent className="pt-6">
-            <div className="relative inline-block">
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button size="sm" variant="outline" onClick={handleZoomIn}>
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleZoomOut}>
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetZoom}>
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Сброс
+              </Button>
+              <span className="text-sm text-real-estate-600 ml-2">
+                Масштаб: {Math.round(zoom * 100)}%
+              </span>
+              <span className="text-xs text-real-estate-500 ml-4">
+                Ctrl + клик для панорамирования
+              </span>
+            </div>
+
+            <div 
+              ref={containerRef}
+              className="relative inline-block overflow-hidden rounded-lg shadow-lg border"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+            >
               <img
                 ref={imageRef}
                 src={buildingImage}
                 alt="Building"
-                className="max-w-full max-h-[600px] object-contain rounded-lg shadow-lg"
+                className="block"
+                style={{
+                  transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+                  transformOrigin: '0 0',
+                  maxWidth: '100%',
+                  maxHeight: '600px',
+                  objectFit: 'contain'
+                }}
               />
               <svg
                 ref={svgRef}
-                className="absolute top-0 left-0 w-full h-full cursor-crosshair"
+                className="absolute top-0 left-0 w-full h-full"
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
                 onClick={handleSVGClick}
+                onContextMenu={handleSVGContextMenu}
+                style={{
+                  cursor: isDrawing ? 'crosshair' : 'default',
+                  transform: `scale(${zoom}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+                  transformOrigin: '0 0'
+                }}
               >
                 {/* Existing floor polygons */}
                 {floorPolygons.map(floor => (
@@ -326,14 +421,13 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floor.color}
                       fillOpacity={selectedFloor === floor.id ? 0.6 : 0.3}
                       stroke={floor.color}
-                      strokeWidth="0.5"
+                      strokeWidth="0.2"
                       className="cursor-pointer hover:fill-opacity-50 transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         selectFloor(floor.id);
                       }}
                     />
-                    {/* Floor label */}
                     {floor.polygon.length > 0 && (
                       <text
                         x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
@@ -359,7 +453,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                       fillOpacity="0.4"
                       stroke={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      strokeWidth="0.5"
+                      strokeWidth="0.2"
                       strokeDasharray="1,1"
                     />
                     {currentPolygon.map((point, index) => (
@@ -367,10 +461,10 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="0.8"
+                        r="0.5"
                         fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                         stroke="white"
-                        strokeWidth="0.2"
+                        strokeWidth="0.1"
                       />
                     ))}
                   </>
