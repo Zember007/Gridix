@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Home, Maximize, Ruble, Users } from 'lucide-react';
+import { X, Home, Maximize, Ruler, Users } from 'lucide-react';
 
 interface ApartmentDetailsPanelProps {
   apartment: {
@@ -88,7 +88,7 @@ const ApartmentDetailsPanel = ({ apartment, onClose }: ApartmentDetailsPanelProp
 
         {apartment.price && apartment.price > 0 && (
           <div className="text-center p-4 bg-gradient-to-r from-real-estate-50 to-real-estate-100 rounded-lg">
-            <Ruble className="h-6 w-6 mx-auto mb-2 text-real-estate-600" />
+            <Ruler className="h-6 w-6 mx-auto mb-2 text-real-estate-600" />
             <div className="text-sm text-real-estate-600 mb-1">Цена</div>
             <div className="text-2xl font-bold text-real-estate-900">
               {apartment.price.toLocaleString()} ₽
