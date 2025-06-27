@@ -348,7 +348,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     const svg = svgRef.current;
     if (!svg) return;
 
-    // Получаем размеры SVG в пикселях
+    // Получаем размеры SVG элемента на странице
     const svgRect = svg.getBoundingClientRect();
     
     // Вычисляем координаты клика относительно SVG
@@ -376,6 +376,29 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
       toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
     }
   }, [isDrawing, isEditing, currentPolygon.length]);
+
+  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (event.ctrlKey) {
+      event.preventDefault();
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const mouseX = event.clientX - containerRect.left;
+      const mouseY = event.clientY - containerRect.top;
+
+      const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.5), 5);
+
+      // Вычисляем новое смещение для зума к позиции курсора
+      const zoomRatio = newZoom / zoom;
+      const newPanX = mouseX - (mouseX - panOffset.x) * zoomRatio;
+      const newPanY = mouseY - (mouseY - panOffset.y) * zoomRatio;
+
+      setZoom(newZoom);
+      setPanOffset({ x: newPanX, y: newPanY });
+    }
+  }, [zoom, panOffset]);
 
   const removeLastPoint = () => {
     if (currentPolygon.length > 0) {
@@ -887,7 +910,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                 Масштаб: {Math.round(zoom * 100)}%
               </span>
               <span className="text-xs text-real-estate-500 ml-4">
-                Ctrl + клик для панорамирования
+                Ctrl + клик для панорамирования, Ctrl + колесико для масштаба
               </span>
             </div>
 
@@ -898,6 +921,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
               style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
             >
               <img
@@ -931,13 +955,14 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                   <g key={apartment.id}>
                     <path
                       d={polygonToPath(apartment.polygon)}
-                      className={`${getApartmentClass(apartment.status)} cursor-pointer hover:apartment-hover transition-all ${
+                      className={`${getApartmentClass(apartment.status)} cursor-pointer transition-all duration-300 ease-in-out hover:fill-opacity-70 hover:stroke-width-[0.15] hover:drop-shadow-lg ${
                         editingApartmentId === apartment.id ? 'opacity-50' : ''
                       }`}
                       fill={getStatusColor(apartment.status)}
-                      fillOpacity={selectedApartment === apartment.id ? 0.6 : 0.3}
+                      fillOpacity={selectedApartment === apartment.id ? 0.7 : 0.4}
                       stroke={getStatusColor(apartment.status)}
-                      strokeWidth="0.05"
+                      strokeWidth="0.1"
+                      filter="url(#glow)"
                       onClick={(e) => {
                         e.stopPropagation();
                         selectApartment(apartment.id);
@@ -950,9 +975,10 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill="white"
-                        fontSize="1"
+                        fontSize="1.2"
                         fontWeight="bold"
-                        className="pointer-events-none"
+                        className="pointer-events-none drop-shadow-lg"
+                        filter="url(#textShadow)"
                       >
                         {apartment.number}
                       </text>
@@ -966,25 +992,40 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                     <path
                       d={polygonToPath(currentPolygon)}
                       fill={getStatusColor(apartmentData.status)}
-                      fillOpacity="0.4"
+                      fillOpacity="0.5"
                       stroke={getStatusColor(apartmentData.status)}
-                      strokeWidth="0.05"
+                      strokeWidth="0.1"
                       strokeDasharray="0.5,0.5"
+                      className="animate-pulse"
                     />
                     {currentPolygon.map((point, index) => (
                       <circle
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="1"
+                        r="0.5"
                         fill={getStatusColor(apartmentData.status)}
                         stroke="white"
                         strokeWidth="0.1"
-                        className="cursor-pointer hover:opacity-80"
+                        className="cursor-pointer hover:opacity-80 animate-pulse drop-shadow-sm"
                       />
                     ))}
                   </>
                 )}
+
+                {/* SVG Filters for enhanced visuals */}
+                <defs>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="0.1" result="coloredBlur"/>
+                    <feMerge> 
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0.1" dy="0.1" stdDeviation="0.1" floodColor="rgba(0,0,0,0.5)"/>
+                  </filter>
+                </defs>
               </svg>
             </div>
           </CardContent>

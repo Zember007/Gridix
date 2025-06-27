@@ -123,10 +123,9 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     if (!isDrawing || currentFloor === null) return;
 
     const svg = svgRef.current;
-    const image = imageRef.current;
-    if (!svg || !image) return;
+    if (!svg) return;
 
-    // Получаем размеры SVG в пикселях
+    // Получаем размеры SVG элемента на странице
     const svgRect = svg.getBoundingClientRect();
     
     // Вычисляем координаты клика относительно SVG
@@ -154,6 +153,29 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       toast.info(`Удалена точка. Осталось ${currentPolygon.length - 1} точек`);
     }
   }, [isDrawing, currentFloor, currentPolygon.length]);
+
+  const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (event.ctrlKey) {
+      event.preventDefault();
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const mouseX = event.clientX - containerRect.left;
+      const mouseY = event.clientY - containerRect.top;
+
+      const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.5), 5);
+
+      // Вычисляем новое смещение для зума к позиции курсора
+      const zoomRatio = newZoom / zoom;
+      const newPanX = mouseX - (mouseX - panOffset.x) * zoomRatio;
+      const newPanY = mouseY - (mouseY - panOffset.y) * zoomRatio;
+
+      setZoom(newZoom);
+      setPanOffset({ x: newPanX, y: newPanY });
+    }
+  }, [zoom, panOffset]);
 
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev * 1.5, 5));
@@ -378,7 +400,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                 Масштаб: {Math.round(zoom * 100)}%
               </span>
               <span className="text-xs text-real-estate-500 ml-4">
-                Ctrl + клик для панорамирования
+                Ctrl + клик для панорамирования, Ctrl + колесико для масштаба
               </span>
             </div>
 
@@ -389,6 +411,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
               style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
             >
               <img
@@ -423,10 +446,11 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                     <path
                       d={polygonToPath(floor.polygon)}
                       fill={floor.color}
-                      fillOpacity={selectedFloor === floor.id ? 0.6 : 0.3}
+                      fillOpacity={selectedFloor === floor.id ? 0.7 : 0.4}
                       stroke={floor.color}
-                      strokeWidth="0.05"
-                      className="cursor-pointer hover:fill-opacity-50 transition-all"
+                      strokeWidth="0.1"
+                      className="cursor-pointer transition-all duration-300 ease-in-out hover:fill-opacity-60 hover:stroke-width-[0.15] hover:drop-shadow-lg"
+                      filter="url(#glow)"
                       onClick={(e) => {
                         e.stopPropagation();
                         selectFloor(floor.id);
@@ -441,7 +465,8 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                         fill="white"
                         fontSize="2"
                         fontWeight="bold"
-                        className="pointer-events-none"
+                        className="pointer-events-none drop-shadow-lg"
+                        filter="url(#textShadow)"
                       >
                         {floor.id}
                       </text>
@@ -455,24 +480,40 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                     <path
                       d={polygonToPath(currentPolygon)}
                       fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      fillOpacity="0.4"
+                      fillOpacity="0.5"
                       stroke={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      strokeWidth="0.05"
+                      strokeWidth="0.1"
                       strokeDasharray="1,1"
+                      className="animate-pulse"
                     />
                     {currentPolygon.map((point, index) => (
                       <circle
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="1"
+                        r="0.5"
                         fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                         stroke="white"
                         strokeWidth="0.1"
+                        className="animate-pulse drop-shadow-sm"
                       />
                     ))}
                   </>
                 )}
+
+                {/* SVG Filters for enhanced visuals */}
+                <defs>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="0.1" result="coloredBlur"/>
+                    <feMerge> 
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0.1" dy="0.1" stdDeviation="0.1" floodColor="rgba(0,0,0,0.5)"/>
+                  </filter>
+                </defs>
               </svg>
             </div>
           </CardContent>
