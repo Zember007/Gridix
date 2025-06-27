@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Trash2, Edit, Eye, Square, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import PolygonCustomizationSettings, { PolygonSettings } from './PolygonCustomizationSettings';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -31,16 +32,34 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [polygonSettings, setPolygonSettings] = useState<PolygonSettings>({
+    colors: {
+      available: '#3b82f6',
+      sold: '#ef4444',
+      reserved: '#f59e0b'
+    },
+    hoverEffects: {
+      scale: true,
+      colorChange: true,
+      opacityChange: true,
+      glow: true
+    },
+    display: {
+      showNumbers: true,
+      showTooltip: false,
+      showArea: false,
+      showPrice: false
+    },
+    opacity: {
+      normal: 0.4,
+      hover: 0.7
+    }
+  });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const floorColors = [
-    '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
-    '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
-  ];
 
   // Загружаем существующие данные при монтировании компонента
   useEffect(() => {
@@ -60,6 +79,14 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       window.removeEventListener("wheel", handleWheel);
     };
   }, []);
+
+  // Обновляем цвета этажей при изменении настроек
+  useEffect(() => {
+    setFloorPolygons(prev => prev.map(floor => ({
+      ...floor,
+      color: polygonSettings.colors.available
+    })));
+  }, [polygonSettings.colors.available]);
 
   const loadProjectData = async () => {
     try {
@@ -84,11 +111,11 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       if (floorsError) throw floorsError;
 
       if (buildingFloors) {
-        const floors = buildingFloors.map(floor => ({
+        const floors = buildingFloors.map((floor, index) => ({
           id: floor.floor_number,
           name: `${floor.floor_number}-й этаж`,
           polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : [],
-          color: floor.color
+          color: polygonSettings.colors.available
         }));
         setFloorPolygons(floors);
       }
@@ -243,7 +270,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         id: currentFloor,
         name: `${currentFloor}-й этаж`,
         polygon: currentPolygon,
-        color: floorColors[(currentFloor - 1) % floorColors.length]
+        color: polygonSettings.colors.available
       };
 
       await supabase
@@ -314,8 +341,32 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
   };
 
+  const getPolygonStyles = (isSelected: boolean, isHovered: boolean) => {
+    const baseStyles = {
+      fill: polygonSettings.colors.available,
+      fillOpacity: isSelected ? polygonSettings.opacity.hover : polygonSettings.opacity.normal,
+      stroke: polygonSettings.colors.available,
+      strokeWidth: "0.05",
+      cursor: "pointer",
+      transition: "all 0.3s ease-in-out"
+    };
+
+    if (isHovered && polygonSettings.hoverEffects.opacityChange) {
+      baseStyles.fillOpacity = polygonSettings.opacity.hover;
+    }
+
+    return baseStyles;
+  };
+
   return (
     <div className="space-y-6">
+      {/* Customization Settings */}
+      <PolygonCustomizationSettings
+        settings={polygonSettings}
+        onSettingsChange={setPolygonSettings}
+        isBuilding={true}
+      />
+
       {/* Image Upload */}
       <div className="flex items-center gap-4">
         <Button
@@ -459,18 +510,20 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                   <g key={floor.id}>
                     <path
                       d={polygonToPath(floor.polygon)}
-                      fill={floor.color}
-                      fillOpacity={selectedFloor === floor.id ? 0.7 : 0.4}
-                      stroke={floor.color}
-                      strokeWidth="0.1"
-                      className="cursor-pointer transition-all duration-300 ease-in-out hover:fill-opacity-60 hover:stroke-width-[0.15] hover:drop-shadow-lg"
-                      filter="url(#glow)"
+                      {...getPolygonStyles(selectedFloor === floor.id, false)}
+                      className={`
+                        transition-all duration-300 ease-in-out
+                        ${polygonSettings.hoverEffects.scale ? 'hover:scale-[1.02]' : ''}
+                        ${polygonSettings.hoverEffects.colorChange ? 'hover:brightness-110' : ''}
+                        ${polygonSettings.hoverEffects.glow ? 'hover:drop-shadow-lg' : ''}
+                      `}
+                      filter={polygonSettings.hoverEffects.glow ? "url(#glow)" : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
                         selectFloor(floor.id);
                       }}
                     />
-                    {floor.polygon.length > 0 && (
+                    {floor.polygon.length > 0 && polygonSettings.display.showNumbers && (
                       <text
                         x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
                         y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
@@ -493,11 +546,11 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                   <>
                     <path
                       d={polygonToPath(currentPolygon)}
-                      fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
+                      fill={polygonSettings.colors.available}
                       fillOpacity="0.5"
-                      stroke={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      strokeWidth="0.1"
-                      strokeDasharray="1,1"
+                      stroke={polygonSettings.colors.available}
+                      strokeWidth="0.05"
+                      strokeDasharray="0.5,0.5"
                       className="animate-pulse"
                     />
                     {currentPolygon.map((point, index) => (
@@ -506,9 +559,9 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                         cx={point.x}
                         cy={point.y}
                         r="0.5"
-                        fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
+                        fill={polygonSettings.colors.available}
                         stroke="white"
-                        strokeWidth="0.1"
+                        strokeWidth="0.05"
                         className="animate-pulse drop-shadow-sm"
                       />
                     ))}

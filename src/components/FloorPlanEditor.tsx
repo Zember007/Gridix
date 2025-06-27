@@ -9,6 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, Trash2, Edit, Eye, Square, Home, Save, X, Copy, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import PolygonCustomizationSettings, { PolygonSettings } from './PolygonCustomizationSettings';
+import ApartmentTooltip from './ApartmentTooltip';
+import ApartmentDetailsPanel from './ApartmentDetailsPanel';
 
 interface FloorPlanEditorProps {
   projectId: string;
@@ -40,6 +43,11 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
   const [editingApartmentId, setEditingApartmentId] = useState<string | null>(null);
   const [currentPolygon, setCurrentPolygon] = useState<{ x: number; y: number }[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<string | null>(null);
+  const [detailsApartment, setDetailsApartment] = useState<Apartment | null>(null);
+  const [tooltipData, setTooltipData] = useState<{
+    apartment: Apartment;
+    position: { x: number; y: number };
+  } | null>(null);
   const [apartmentData, setApartmentData] = useState<{
     number: string;
     status: 'available' | 'sold' | 'reserved';
@@ -59,6 +67,29 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [polygonSettings, setPolygonSettings] = useState<PolygonSettings>({
+    colors: {
+      available: '#22c55e',
+      sold: '#ef4444',
+      reserved: '#f59e0b'
+    },
+    hoverEffects: {
+      scale: true,
+      colorChange: true,
+      opacityChange: true,
+      glow: true
+    },
+    display: {
+      showNumbers: true,
+      showTooltip: true,
+      showArea: true,
+      showPrice: true
+    },
+    opacity: {
+      normal: 0.4,
+      hover: 0.7
+    }
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -334,6 +365,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     setIsEditing(false);
     setEditingApartmentId(null);
     setSelectedApartment(null);
+    setDetailsApartment(null);
     toast.info('Кликайте левой кнопкой для добавления точек, правой - для удаления последней точки');
   };
 
@@ -346,6 +378,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     setIsDrawing(false);
     setEditingApartmentId(apartmentId);
     setSelectedApartment(null);
+    setDetailsApartment(null);
     setApartmentData({
       number: apartment.number,
       status: apartment.status,
@@ -691,6 +724,25 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
 
   const selectApartment = (apartmentId: string) => {
     setSelectedApartment(selectedApartment === apartmentId ? null : apartmentId);
+    
+    // Show apartment details panel
+    const apartment = currentFloorPlan?.apartments.find(apt => apt.id === apartmentId);
+    if (apartment) {
+      setDetailsApartment(apartment);
+    }
+  };
+
+  const handleApartmentHover = (apartment: Apartment, event: React.MouseEvent) => {
+    if (polygonSettings.display.showTooltip) {
+      setTooltipData({
+        apartment,
+        position: { x: event.clientX, y: event.clientY }
+      });
+    }
+  };
+
+  const handleApartmentLeave = () => {
+    setTooltipData(null);
   };
 
   const polygonToPath = (polygon: { x: number; y: number }[]) => {
@@ -698,34 +750,31 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
   };
 
-  const getApartmentClass = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'apartment-available';
-      case 'sold':
-        return 'apartment-sold';
-      case 'reserved':
-        return 'apartment-reserved';
-      default:
-        return 'apartment-available';
-    }
+  const getStatusColor = (status: string) => {
+    return polygonSettings.colors[status as keyof typeof polygonSettings.colors] || polygonSettings.colors.available;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available':
-        return '#22c55e';
-      case 'sold':
-        return '#ef4444';
-      case 'reserved':
-        return '#f59e0b';
-      default:
-        return '#22c55e';
-    }
+  const getPolygonStyles = (apartment: Apartment, isSelected: boolean) => {
+    const color = getStatusColor(apartment.status);
+    return {
+      fill: color,
+      fillOpacity: isSelected ? polygonSettings.opacity.hover : polygonSettings.opacity.normal,
+      stroke: color,
+      strokeWidth: '0.05',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease-in-out'
+    };
   };
 
   return (
     <div className="space-y-6">
+      {/* Customization Settings */}
+      <PolygonCustomizationSettings
+        settings={polygonSettings}
+        onSettingsChange={setPolygonSettings}
+        isBuilding={false}
+      />
+
       {/* Floor Selection */}
       <Card>
         <CardContent className="pt-6">
@@ -969,20 +1018,23 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                   <g key={apartment.id}>
                     <path
                       d={polygonToPath(apartment.polygon)}
-                      className={`${getApartmentClass(apartment.status)} cursor-pointer transition-all duration-300 ease-in-out hover:fill-opacity-70 hover:stroke-width-[0.15] hover:drop-shadow-lg ${
-                        editingApartmentId === apartment.id ? 'opacity-50' : ''
-                      }`}
-                      fill={getStatusColor(apartment.status)}
-                      fillOpacity={selectedApartment === apartment.id ? 0.7 : 0.4}
-                      stroke={getStatusColor(apartment.status)}
-                      strokeWidth="0.1"
-                      filter="url(#glow)"
+                      {...getPolygonStyles(apartment, selectedApartment === apartment.id)}
+                      className={`
+                        transition-all duration-300 ease-in-out
+                        ${polygonSettings.hoverEffects.scale ? 'hover:scale-[1.02]' : ''}
+                        ${polygonSettings.hoverEffects.colorChange ? 'hover:brightness-110' : ''}
+                        ${polygonSettings.hoverEffects.glow ? 'hover:drop-shadow-lg' : ''}
+                        ${editingApartmentId === apartment.id ? 'opacity-50' : ''}
+                      `}
+                      filter={polygonSettings.hoverEffects.glow ? "url(#glow)" : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
                         selectApartment(apartment.id);
                       }}
+                      onMouseEnter={(e) => handleApartmentHover(apartment, e)}
+                      onMouseLeave={handleApartmentLeave}
                     />
-                    {apartment.polygon.length > 0 && (
+                    {apartment.polygon.length > 0 && polygonSettings.display.showNumbers && (
                       <text
                         x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
                         y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
@@ -1008,7 +1060,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                       fill={getStatusColor(apartmentData.status)}
                       fillOpacity="0.5"
                       stroke={getStatusColor(apartmentData.status)}
-                      strokeWidth="0.1"
+                      strokeWidth="0.05"
                       strokeDasharray="0.5,0.5"
                       className="animate-pulse"
                     />
@@ -1020,7 +1072,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
                         r="0.5"
                         fill={getStatusColor(apartmentData.status)}
                         stroke="white"
-                        strokeWidth="0.1"
+                        strokeWidth="0.05"
                         className="cursor-pointer hover:opacity-80 animate-pulse drop-shadow-sm"
                       />
                     ))}
@@ -1046,8 +1098,8 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
         </Card>
       )}
 
-      {/* Apartments List */}
-      {currentFloorPlan && currentFloorPlan.apartments.length > 0 && (
+      {/* Apartments List - только если не выбрана квартира */}
+      {currentFloorPlan && currentFloorPlan.apartments.length > 0 && !detailsApartment && (
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold text-real-estate-900 mb-4">
@@ -1122,6 +1174,34 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Apartment Details Panel */}
+      <ApartmentDetailsPanel
+        apartment={detailsApartment}
+        onClose={() => {
+          setDetailsApartment(null);
+          setSelectedApartment(null);
+        }}
+      />
+
+      {/* Tooltip */}
+      {tooltipData && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: tooltipData.position.x + 10,
+            top: tooltipData.position.y - 10
+          }}
+        >
+          <ApartmentTooltip
+            apartment={tooltipData.apartment}
+            settings={{
+              showArea: polygonSettings.display.showArea,
+              showPrice: polygonSettings.display.showPrice
+            }}
+          />
+        </div>
       )}
     </div>
   );
