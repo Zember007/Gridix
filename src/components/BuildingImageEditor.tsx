@@ -123,26 +123,26 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     if (!isDrawing || currentFloor === null) return;
 
     const svg = svgRef.current;
-    const container = containerRef.current;
-    if (!svg || !container) return;
+    const image = imageRef.current;
+    if (!svg || !image) return;
 
-    // Получаем границы контейнера
-    const containerRect = container.getBoundingClientRect();
+    // Получаем размеры SVG в пикселях
+    const svgRect = svg.getBoundingClientRect();
     
-    // Вычисляем координаты клика относительно контейнера без учета трансформации
-    const rawClickX = event.clientX - containerRect.left;
-    const rawClickY = event.clientY - containerRect.top;
+    // Вычисляем координаты клика относительно SVG
+    const clientX = event.clientX - svgRect.left;
+    const clientY = event.clientY - svgRect.top;
     
-    // Учитываем зум и панорамирование
-    const x = (rawClickX / zoom - panOffset.x) / (containerRect.width / zoom) * 100;
-    const y = (rawClickY / zoom - panOffset.y) / (containerRect.height / zoom) * 100;
+    // Преобразуем в проценты от 0 до 100
+    const x = (clientX / svgRect.width) * 100;
+    const y = (clientY / svgRect.height) * 100;
 
     if (event.button === 0) {
       // Левый клик - добавляем точку
       event.preventDefault();
       setCurrentPolygon(prev => [...prev, { x, y }]);
     }
-  }, [isDrawing, currentFloor, zoom, panOffset]);
+  }, [isDrawing, currentFloor]);
 
   const handleSVGContextMenu = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
     if (!isDrawing || currentFloor === null) return;
@@ -425,7 +425,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floor.color}
                       fillOpacity={selectedFloor === floor.id ? 0.6 : 0.3}
                       stroke={floor.color}
-                      strokeWidth="0.1"
+                      strokeWidth="0.05"
                       className="cursor-pointer hover:fill-opacity-50 transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -457,7 +457,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                       fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                       fillOpacity="0.4"
                       stroke={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
-                      strokeWidth="0.1"
+                      strokeWidth="0.05"
                       strokeDasharray="1,1"
                     />
                     {currentPolygon.map((point, index) => (
@@ -465,10 +465,10 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
                         key={index}
                         cx={point.x}
                         cy={point.y}
-                        r="0.3"
+                        r="1"
                         fill={floorColors[((currentFloor || 1) - 1) % floorColors.length]}
                         stroke="white"
-                        strokeWidth="0.05"
+                        strokeWidth="0.1"
                       />
                     ))}
                   </>
