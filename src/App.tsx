@@ -14,6 +14,7 @@ import ProjectEditor from "./components/ProjectEditor";
 const queryClient = new QueryClient();
 
 const App = () => (
+  
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -37,6 +38,8 @@ const App = () => (
 const ProjectEditorWrapper = ({ isNew = false }: { isNew?: boolean }) => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+
+  
   
   return (
     <ProjectEditor 

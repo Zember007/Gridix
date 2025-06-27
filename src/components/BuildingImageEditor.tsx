@@ -47,6 +47,20 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     loadProjectData();
   }, [projectId]);
 
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    };
+  
+    window.addEventListener("wheel", handleWheel, { passive: false });
+  
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
   const loadProjectData = async () => {
     try {
       const { data: project, error: projectError } = await supabase
@@ -120,7 +134,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
   };
 
   const handleSVGClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
-    if (!isDrawing || currentFloor === null) return;
+    if (!isDrawing || currentFloor === null || event.ctrlKey) return;
 
     const svg = svgRef.current;
     if (!svg) return;

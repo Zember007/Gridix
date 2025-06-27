@@ -72,6 +72,20 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
     loadFloorData();
   }, [projectId, currentFloor]);
 
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    };
+  
+    window.addEventListener("wheel", handleWheel, { passive: false });
+  
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
   const loadFloorData = async () => {
     try {
       // Загружаем план этажа
@@ -343,7 +357,7 @@ const FloorPlanEditor = ({ projectId, floors, sameLayoutForAllFloors = false }: 
   };
 
   const handleSVGClick = useCallback((event: React.MouseEvent<SVGSVGElement>) => {
-    if (!isDrawing && !isEditing) return;
+    if ((!isDrawing && !isEditing ) || event.ctrlKey) return;
     
     const svg = svgRef.current;
     if (!svg) return;
