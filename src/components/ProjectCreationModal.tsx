@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,9 +7,11 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Upload, FileSpreadsheet, Settings, Building2, Download, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/ExcelColumnMapper';
+import ExcelUrlImporter from '@/components/ExcelUrlImporter';
 import * as XLSX from 'xlsx';
 
 interface ProjectCreationModalProps {
@@ -27,8 +30,10 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
   const [progress, setProgress] = useState(0);
   const [showColumnMapper, setShowColumnMapper] = useState(false);
   const [showLayoutQuestion, setShowLayoutQuestion] = useState(false);
+  const [showUrlImporter, setShowUrlImporter] = useState(false);
   const [sameLayoutForAllFloors, setSameLayoutForAllFloors] = useState<boolean | null>(null);
   const [excelColumns, setExcelColumns] = useState<string[]>([]);
+  const [importMethod, setImportMethod] = useState<'file' | 'url'>('file');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +56,9 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
           
-          // Берем первый лист
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           
-          // Конвертируем в JSON
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
           
           if (jsonData.length < 2) {
@@ -64,14 +67,11 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             return;
           }
 
-          // Первая строка - заголовки
           const headers = jsonData[0].filter(header => header && header.toString().trim() !== '');
           console.log('Извлеченные заголовки:', headers);
           
-          // Остальные строки - данные
           const rows = jsonData.slice(1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
           
-          // Преобразуем в объекты
           const processedData = rows.map(row => {
             const obj: any = {};
             headers.forEach((header, index) => {
@@ -101,7 +101,6 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
         setIsProcessing(false);
       };
 
-      // Симуляция прогресса
       const progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) {
@@ -125,6 +124,13 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
       toast.error('Ошибка при загрузке файла');
       setIsProcessing(false);
     }
+  };
+
+  const handleUrlImport = (data: ImportedRow[], columns: string[]) => {
+    setImportedData(data);
+    setExcelColumns(columns);
+    setShowUrlImporter(false);
+    setShowColumnMapper(true);
   };
 
   const downloadTemplate = () => {
@@ -157,10 +163,12 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     setImportedData([]);
     setShowColumnMapper(false);
     setShowLayoutQuestion(false);
+    setShowUrlImporter(false);
     setSameLayoutForAllFloors(null);
     setExcelColumns([]);
     setProgress(0);
     setIsProcessing(false);
+    setImportMethod('file');
     onClose();
   };
 
@@ -188,6 +196,35 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             excelColumns={excelColumns}
             importedData={importedData}
             onComplete={handleCloseModal}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (showUrlImporter) {
+    return (
+      <Dialog open={open} onOpenChange={handleCloseModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="flex items-center gap-2">
+                  <Link className="h-6 w-6 text-real-estate-600" />
+                  Импорт по ссылке
+                </DialogTitle>
+                <DialogDescription>
+                  Импортируйте данные из Excel файла по прямой ссылке
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowUrlImporter(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <ExcelUrlImporter 
+            onDataImported={handleUrlImport}
+            onClose={() => setShowUrlImporter(false)}
           />
         </DialogContent>
       </Dialog>
@@ -310,42 +347,78 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isProcessing}
-                  className="bg-real-estate-600 hover:bg-real-estate-700"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isProcessing ? 'Обработка...' : 'Загрузить Excel файл'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={downloadTemplate}
-                  className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Скачать шаблон
-                </Button>
-              </div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-
-              {isProcessing && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Обработка файла...</span>
-                    <span>{progress}%</span>
+              <Tabs value={importMethod} onValueChange={(value) => setImportMethod(value as 'file' | 'url')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="file" className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Загрузить файл
+                  </TabsTrigger>
+                  <TabsTrigger value="url" className="flex items-center gap-2">
+                    <Link className="h-4 w-4" />
+                    По ссылке
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="file" className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isProcessing}
+                      className="bg-real-estate-600 hover:bg-real-estate-700"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isProcessing ? 'Обработка...' : 'Загрузить Excel файл'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={downloadTemplate}
+                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Скачать шаблон
+                    </Button>
                   </div>
-                  <Progress value={progress} className="w-full" />
-                </div>
-              )}
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+
+                  {isProcessing && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Обработка файла...</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="w-full" />
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="url" className="space-y-4">
+                  <Button
+                    onClick={() => setShowUrlImporter(true)}
+                    className="w-full bg-real-estate-600 hover:bg-real-estate-700"
+                  >
+                    <Link className="h-4 w-4 mr-2" />
+                    Импорт по ссылке
+                  </Button>
+                  
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      <strong>Преимущества импорта по ссылке:</strong>
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-blue-600 mt-1">
+                      <li>Автоматическая синхронизация при изменении данных</li>
+                      <li>Не нужно загружать файл повторно</li>
+                      <li>Данные всегда актуальны</li>
+                    </ul>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
               <div className="text-sm text-real-estate-600 bg-real-estate-50 p-3 rounded-md">
                 <p><strong>Поддерживаемые форматы:</strong> Excel (.xlsx, .xls) и CSV</p>

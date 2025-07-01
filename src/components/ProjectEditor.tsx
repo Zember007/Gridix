@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Building2, Image, Layout } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layout, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
+import ProjectSyncManager from '@/components/ProjectSyncManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -171,7 +171,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               General
@@ -183,6 +183,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
               Floor Plans
+            </TabsTrigger>
+            <TabsTrigger value="sync" className="flex items-center gap-2" disabled={isNew}>
+              <RefreshCw className="h-4 w-4" />
+              Sync
             </TabsTrigger>
           </TabsList>
 
@@ -280,6 +284,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sync" className="space-y-6">
+            <ProjectSyncManager projectId={projectId} />
           </TabsContent>
         </Tabs>
       </div>
