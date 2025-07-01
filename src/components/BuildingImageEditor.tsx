@@ -81,7 +81,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       }
 
       if (projectData.building_polygon_settings) {
-        setPolygonSettings(projectData.building_polygon_settings as PolygonSettings);
+        setPolygonSettings(projectData.building_polygon_settings as unknown as PolygonSettings);
       }
 
       // Load building floors
@@ -96,7 +96,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       const transformedFloors = (floorsData || []).map(floor => ({
         id: floor.id,
         floor_number: floor.floor_number,
-        polygon: Array.isArray(floor.polygon) ? floor.polygon as Point[] : [],
+        polygon: Array.isArray(floor.polygon) ? floor.polygon as unknown as Point[] : [],
         color: floor.color || '#3b82f6'
       }));
 
@@ -178,7 +178,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         const { error } = await supabase
           .from('building_floors')
           .update({
-            polygon: currentPolygon,
+            polygon: currentPolygon as unknown as any,
             color: floorColor
           })
           .eq('id', existingFloor.id);
@@ -197,7 +197,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
           .insert({
             project_id: projectId,
             floor_number: editingFloor,
-            polygon: currentPolygon,
+            polygon: currentPolygon as unknown as any,
             color: floorColor
           })
           .select()

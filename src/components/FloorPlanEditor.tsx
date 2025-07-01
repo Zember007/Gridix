@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,12 +66,18 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<string | null>(null);
   const [currentPolygon, setCurrentPolygon] = useState<Point[]>([]);
-  const [apartmentData, setApartmentData] = useState({
+  const [apartmentData, setApartmentData] = useState<{
+    number: string;
+    rooms: number;
+    area: number;
+    price: number;
+    status: 'available' | 'sold' | 'reserved';
+  }>({
     number: '',
     rooms: 1,
     area: 0,
     price: 0,
-    status: 'available' as const
+    status: 'available'
   });
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -123,7 +130,7 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
         area: Number(apt.area),
         price: Number(apt.price) || 0,
         status: apt.status as 'available' | 'sold' | 'reserved',
-        polygon: Array.isArray(apt.polygon) ? apt.polygon as Point[] : []
+        polygon: Array.isArray(apt.polygon) ? apt.polygon as unknown as Point[] : []
       }));
 
       setApartments(transformedApartments);
@@ -144,7 +151,7 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
       if (error) throw error;
 
       if (data?.polygon_settings) {
-        setPolygonSettings(data.polygon_settings as PolygonSettings);
+        setPolygonSettings(data.polygon_settings as unknown as PolygonSettings);
       }
     } catch (error) {
       console.error('Error loading polygon settings:', error);
@@ -248,7 +255,7 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon
+            polygon: currentPolygon as unknown as any
           })
           .eq('id', existingApartment.id);
 
@@ -271,7 +278,7 @@ const FloorPlanEditor = ({ projectId, floors }: FloorPlanEditorProps) => {
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon
+            polygon: currentPolygon as unknown as any
           })
           .select()
           .single();

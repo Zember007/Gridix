@@ -89,7 +89,7 @@ const PolygonCustomizationSettings = ({
         if (error) throw error;
         
         if (data?.building_polygon_settings) {
-          setSettings(data.building_polygon_settings as PolygonSettings);
+          setSettings(data.building_polygon_settings as unknown as PolygonSettings);
         }
       } else {
         if (!floorNumber) return;
@@ -104,7 +104,7 @@ const PolygonCustomizationSettings = ({
         if (error) throw error;
         
         if (data?.polygon_settings) {
-          setSettings(data.polygon_settings as PolygonSettings);
+          setSettings(data.polygon_settings as unknown as PolygonSettings);
         }
       }
     } catch (error) {
@@ -118,7 +118,7 @@ const PolygonCustomizationSettings = ({
       if (type === 'building') {
         const { error } = await supabase
           .from('projects')
-          .update({ building_polygon_settings: settings })
+          .update({ building_polygon_settings: settings as unknown as any })
           .eq('id', projectId);
 
         if (error) throw error;
@@ -127,7 +127,7 @@ const PolygonCustomizationSettings = ({
 
         const { error } = await supabase
           .from('floor_plans')
-          .update({ polygon_settings: settings })
+          .update({ polygon_settings: settings as unknown as any })
           .eq('project_id', projectId)
           .eq('floor_number', floorNumber);
 
