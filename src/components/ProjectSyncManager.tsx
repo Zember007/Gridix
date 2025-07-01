@@ -36,13 +36,13 @@ const ProjectSyncManager = ({ projectId }: ProjectSyncManagerProps) => {
   const loadSyncStatus = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_sync_settings')
+        .from('project_sync_settings' as any)
         .select('*')
         .eq('project_id', projectId)
         .maybeSingle();
 
       if (error) throw error;
-      setSyncStatus(data);
+      setSyncStatus(data as SyncStatus | null);
     } catch (error) {
       console.error('Ошибка загрузки настроек синхронизации:', error);
     } finally {
@@ -56,7 +56,7 @@ const ProjectSyncManager = ({ projectId }: ProjectSyncManagerProps) => {
     setIsUpdating(true);
     try {
       const { error } = await supabase
-        .from('project_sync_settings')
+        .from('project_sync_settings' as any)
         .update({ 
           is_active: active,
           status: active ? 'active' : 'paused'

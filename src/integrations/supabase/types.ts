@@ -145,6 +145,59 @@ export type Database = {
           },
         ]
       }
+      project_sync_settings: {
+        Row: {
+          column_mapping: Json
+          created_at: string
+          error_message: string | null
+          excel_url: string
+          id: string
+          is_active: boolean
+          last_sync: string | null
+          next_sync: string | null
+          project_id: string
+          status: string
+          sync_interval: number
+          updated_at: string
+        }
+        Insert: {
+          column_mapping?: Json
+          created_at?: string
+          error_message?: string | null
+          excel_url: string
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          next_sync?: string | null
+          project_id: string
+          status?: string
+          sync_interval?: number
+          updated_at?: string
+        }
+        Update: {
+          column_mapping?: Json
+          created_at?: string
+          error_message?: string | null
+          excel_url?: string
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          next_sync?: string | null
+          project_id?: string
+          status?: string
+          sync_interval?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_sync_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           building_image_url: string | null
@@ -180,6 +233,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          project_id: string
+          records_added: number | null
+          records_deleted: number | null
+          records_processed: number | null
+          records_updated: number | null
+          status: string
+          sync_settings_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          project_id: string
+          records_added?: number | null
+          records_deleted?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          status: string
+          sync_settings_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          project_id?: string
+          records_added?: number | null
+          records_deleted?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          status?: string
+          sync_settings_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_logs_sync_settings_id_fkey"
+            columns: ["sync_settings_id"]
+            isOneToOne: false
+            referencedRelation: "project_sync_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
