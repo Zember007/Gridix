@@ -1,6 +1,5 @@
-
 import { Badge } from '@/components/ui/badge';
-import { Home, Maximize, Ruble } from 'lucide-react';
+import { Home, Maximize, BadgeRussianRuble } from 'lucide-react';
 
 interface ApartmentTooltipProps {
   apartment: {
@@ -69,7 +68,7 @@ const ApartmentTooltip = ({ apartment, settings }: ApartmentTooltipProps) => {
         
         {settings.showPrice && apartment.price && apartment.price > 0 && (
           <div className="flex items-center gap-1 font-medium text-real-estate-700">
-            <Ruble className="h-3 w-3" />
+            <BadgeRussianRuble className="h-3 w-3" />
             <span>{apartment.price.toLocaleString()} руб.</span>
           </div>
         )}
