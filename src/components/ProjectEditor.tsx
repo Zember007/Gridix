@@ -276,7 +276,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               <CardContent>
                 <FloorPlanEditor 
                   projectId={projectId}
-                  floors={projectData.floors}
+                  floorNumber={1}
                 />
               </CardContent>
             </Card>
