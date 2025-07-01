@@ -1,15 +1,15 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Palette, MousePointer, Eye, Settings } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-export interface PolygonSettings {
+interface PolygonSettings {
   colors: {
     available: string;
     sold: string;
@@ -34,270 +34,288 @@ export interface PolygonSettings {
 }
 
 interface PolygonCustomizationSettingsProps {
-  settings: PolygonSettings;
-  onSettingsChange: (settings: PolygonSettings) => void;
-  isBuilding?: boolean;
+  projectId: string;
+  type: 'building' | 'floor';
+  floorNumber?: number;
+  onSettingsChange?: (settings: PolygonSettings) => void;
 }
 
-const PolygonCustomizationSettings = ({ 
-  settings, 
-  onSettingsChange, 
-  isBuilding = false 
-}: PolygonCustomizationSettingsProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const defaultSettings: PolygonSettings = {
+  colors: {
+    available: '#3b82f6',
+    sold: '#ef4444',
+    reserved: '#f59e0b'
+  },
+  hoverEffects: {
+    scale: false,
+    colorChange: true,
+    opacityChange: true,
+    glow: true
+  },
+  display: {
+    showNumbers: true,
+    showTooltip: false,
+    showArea: false,
+    showPrice: false
+  },
+  opacity: {
+    normal: 0.4,
+    hover: 0.7
+  }
+};
 
-  const updateSettings = (path: string, value: any) => {
-    const keys = path.split('.');
-    const newSettings = { ...settings };
-    let current = newSettings;
-    
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i] as keyof typeof current] as any;
+const PolygonCustomizationSettings = ({ 
+  projectId, 
+  type, 
+  floorNumber,
+  onSettingsChange 
+}: PolygonCustomizationSettingsProps) => {
+  const [settings, setSettings] = useState<PolygonSettings>(defaultSettings);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, [projectId, type, floorNumber]);
+
+  const loadSettings = async () => {
+    try {
+      if (type === 'building') {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('building_polygon_settings')
+          .eq('id', projectId)
+          .single();
+
+        if (error) throw error;
+        
+        if (data?.building_polygon_settings) {
+          setSettings(data.building_polygon_settings as PolygonSettings);
+        }
+      } else {
+        if (!floorNumber) return;
+        
+        const { data, error } = await supabase
+          .from('floor_plans')
+          .select('polygon_settings')
+          .eq('project_id', projectId)
+          .eq('floor_number', floorNumber)
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data?.polygon_settings) {
+          setSettings(data.polygon_settings as PolygonSettings);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading polygon settings:', error);
     }
-    
-    current[keys[keys.length - 1] as keyof typeof current] = value;
-    onSettingsChange(newSettings);
   };
 
-  const presetColors = [
-    { name: 'Зеленый', value: '#22c55e' },
-    { name: 'Синий', value: '#3b82f6' },
-    { name: 'Красный', value: '#ef4444' },
-    { name: 'Оранжевый', value: '#f59e0b' },
-    { name: 'Фиолетовый', value: '#8b5cf6' },
-    { name: 'Розовый', value: '#ec4899' },
-    { name: 'Серый', value: '#6b7280' },
-  ];
+  const saveSettings = async () => {
+    setLoading(true);
+    try {
+      if (type === 'building') {
+        const { error } = await supabase
+          .from('projects')
+          .update({ building_polygon_settings: settings })
+          .eq('id', projectId);
+
+        if (error) throw error;
+      } else {
+        if (!floorNumber) return;
+
+        const { error } = await supabase
+          .from('floor_plans')
+          .update({ polygon_settings: settings })
+          .eq('project_id', projectId)
+          .eq('floor_number', floorNumber);
+
+        if (error) throw error;
+      }
+
+      toast.success('Настройки сохранены');
+      onSettingsChange?.(settings);
+    } catch (error) {
+      console.error('Error saving polygon settings:', error);
+      toast.error('Ошибка сохранения настроек');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSettings = (path: string, value: any) => {
+    setSettings(prev => {
+      const newSettings = { ...prev };
+      const keys = path.split('.');
+      let current = newSettings as any;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        current = current[keys[i]];
+      }
+      
+      current[keys[keys.length - 1]] = value;
+      return newSettings;
+    });
+  };
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            {isBuilding ? 'Настройки этажей здания' : 'Настройки квартир'}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? 'Скрыть' : 'Показать'}
-          </Button>
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">
+          Настройки полигонов {type === 'building' ? 'здания' : 'этажа'}
+        </CardTitle>
       </CardHeader>
-      
-      {isExpanded && (
-        <CardContent className="space-y-6">
-          {/* Color Settings */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Palette className="h-4 w-4" />
-              <Label className="text-sm font-medium">Цвета полигонов</Label>
+      <CardContent className="space-y-6">
+        {/* Цвета статусов */}
+        <div className="space-y-4">
+          <h4 className="font-medium">Цвета статусов</h4>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Свободна</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={settings.colors.available}
+                  onChange={(e) => updateSettings('colors.available', e.target.value)}
+                  className="w-8 h-8 rounded border cursor-pointer"
+                />
+                <span className="text-sm text-gray-600">{settings.colors.available}</span>
+              </div>
             </div>
-            
-            {!isBuilding ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {Object.entries(settings.colors).map(([status, color]) => (
-                  <div key={status} className="space-y-2">
-                    <Label className="text-xs">
-                      {status === 'available' ? 'Доступные' : 
-                       status === 'sold' ? 'Проданные' : 'Забронированные'}
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={color}
-                        onChange={(e) => updateSettings(`colors.${status}`, e.target.value)}
-                        className="w-16 h-8 p-0 border-0"
-                      />
-                      <Select
-                        value={color}
-                        onValueChange={(value) => updateSettings(`colors.${status}`, value)}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {presetColors.map((preset) => (
-                            <SelectItem key={preset.value} value={preset.value}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-4 h-4 rounded" 
-                                  style={{ backgroundColor: preset.value }}
-                                />
-                                {preset.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ))}
+            <div className="space-y-2">
+              <Label>Продана</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={settings.colors.sold}
+                  onChange={(e) => updateSettings('colors.sold', e.target.value)}
+                  className="w-8 h-8 rounded border cursor-pointer"
+                />
+                <span className="text-sm text-gray-600">{settings.colors.sold}</span>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-xs">Единый цвет для всех этажей</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="color"
-                    value={settings.colors.available}
-                    onChange={(e) => updateSettings('colors.available', e.target.value)}
-                    className="w-16 h-8 p-0 border-0"
-                  />
-                  <Select
-                    value={settings.colors.available}
-                    onValueChange={(value) => updateSettings('colors.available', value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {presetColors.map((preset) => (
-                        <SelectItem key={preset.value} value={preset.value}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-4 h-4 rounded" 
-                              style={{ backgroundColor: preset.value }}
-                            />
-                            {preset.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Hover Effects */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <MousePointer className="h-4 w-4" />
-              <Label className="text-sm font-medium">Эффекты при наведении</Label>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="scale-effect"
-                  checked={settings.hoverEffects.scale}
-                  onCheckedChange={(checked) => updateSettings('hoverEffects.scale', checked)}
+            <div className="space-y-2">
+              <Label>Бронь</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={settings.colors.reserved}
+                  onChange={(e) => updateSettings('colors.reserved', e.target.value)}
+                  className="w-8 h-8 rounded border cursor-pointer"
                 />
-                <Label htmlFor="scale-effect" className="text-sm">Увеличение</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="color-effect"
-                  checked={settings.hoverEffects.colorChange}
-                  onCheckedChange={(checked) => updateSettings('hoverEffects.colorChange', checked)}
-                />
-                <Label htmlFor="color-effect" className="text-sm">Изменение цвета</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="opacity-effect"
-                  checked={settings.hoverEffects.opacityChange}
-                  onCheckedChange={(checked) => updateSettings('hoverEffects.opacityChange', checked)}
-                />
-                <Label htmlFor="opacity-effect" className="text-sm">Изменение прозрачности</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="glow-effect"
-                  checked={settings.hoverEffects.glow}
-                  onCheckedChange={(checked) => updateSettings('hoverEffects.glow', checked)}
-                />
-                <Label htmlFor="glow-effect" className="text-sm">Свечение</Label>
+                <span className="text-sm text-gray-600">{settings.colors.reserved}</span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Opacity Settings */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Прозрачность</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs">Обычная ({Math.round(settings.opacity.normal * 100)}%)</Label>
-                <Input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={settings.opacity.normal}
-                  onChange={(e) => updateSettings('opacity.normal', parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">При наведении ({Math.round(settings.opacity.hover * 100)}%)</Label>
-                <Input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={settings.opacity.hover}
-                  onChange={(e) => updateSettings('opacity.hover', parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
+        <Separator />
+
+        {/* Эффекты при наведении */}
+        <div className="space-y-4">
+          <h4 className="font-medium">Эффекты при наведении</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
+              <Label>Изменение цвета</Label>
+              <Switch
+                checked={settings.hoverEffects.colorChange}
+                onCheckedChange={(checked) => updateSettings('hoverEffects.colorChange', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Изменение прозрачности</Label>
+              <Switch
+                checked={settings.hoverEffects.opacityChange}
+                onCheckedChange={(checked) => updateSettings('hoverEffects.opacityChange', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Свечение</Label>
+              <Switch
+                checked={settings.hoverEffects.glow}
+                onCheckedChange={(checked) => updateSettings('hoverEffects.glow', checked)}
+              />
             </div>
           </div>
+        </div>
 
-          {/* Display Settings */}
-          {!isBuilding && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Eye className="h-4 w-4" />
-                <Label className="text-sm font-medium">Отображение информации</Label>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-numbers"
-                    checked={settings.display.showNumbers}
-                    onCheckedChange={(checked) => updateSettings('display.showNumbers', checked)}
-                  />
-                  <Label htmlFor="show-numbers" className="text-sm">Номера квартир</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-tooltip"
-                    checked={settings.display.showTooltip}
-                    onCheckedChange={(checked) => updateSettings('display.showTooltip', checked)}
-                  />
-                  <Label htmlFor="show-tooltip" className="text-sm">Всплывающие подсказки</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-area"
-                    checked={settings.display.showArea}
-                    onCheckedChange={(checked) => updateSettings('display.showArea', checked)}
-                  />
-                  <Label htmlFor="show-area" className="text-sm">Площадь в подсказке</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="show-price"
-                    checked={settings.display.showPrice}
-                    onCheckedChange={(checked) => updateSettings('display.showPrice', checked)}
-                  />
-                  <Label htmlFor="show-price" className="text-sm">Цена в подсказке</Label>
-                </div>
-              </div>
+        <Separator />
+
+        {/* Отображение информации */}
+        <div className="space-y-4">
+          <h4 className="font-medium">Отображение информации</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between">
+              <Label>Показывать номера</Label>
+              <Switch
+                checked={settings.display.showNumbers}
+                onCheckedChange={(checked) => updateSettings('display.showNumbers', checked)}
+              />
             </div>
-          )}
-        </CardContent>
-      )}
+            <div className="flex items-center justify-between">
+              <Label>Всплывающие подсказки</Label>
+              <Switch
+                checked={settings.display.showTooltip}
+                onCheckedChange={(checked) => updateSettings('display.showTooltip', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Показывать площадь</Label>
+              <Switch
+                checked={settings.display.showArea}
+                onCheckedChange={(checked) => updateSettings('display.showArea', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Показывать цену</Label>
+              <Switch
+                checked={settings.display.showPrice}
+                onCheckedChange={(checked) => updateSettings('display.showPrice', checked)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Настройки прозрачности */}
+        <div className="space-y-4">
+          <h4 className="font-medium">Прозрачность</h4>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Обычное состояние: {Math.round(settings.opacity.normal * 100)}%</Label>
+              <Slider
+                value={[settings.opacity.normal]}
+                onValueChange={([value]) => updateSettings('opacity.normal', value)}
+                max={1}
+                min={0}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>При наведении: {Math.round(settings.opacity.hover * 100)}%</Label>
+              <Slider
+                value={[settings.opacity.hover]}
+                onValueChange={([value]) => updateSettings('opacity.hover', value)}
+                max={1}
+                min={0}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <Button 
+          onClick={saveSettings} 
+          disabled={loading}
+          className="w-full"
+        >
+          {loading ? 'Сохранение...' : 'Сохранить настройки'}
+        </Button>
+      </CardContent>
     </Card>
   );
 };

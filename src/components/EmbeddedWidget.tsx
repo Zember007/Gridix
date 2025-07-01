@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, X } from 'lucide-react';
+import ApartmentTooltip from './ApartmentTooltip';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Project {
@@ -49,6 +49,9 @@ const EmbeddedWidget = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [polygonSettings, setPolygonSettings] = useState<any>(null);
+  const [buildingPolygonSettings, setBuildingPolygonSettings] = useState<any>(null);
+  const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
 
   // Widget configuration from URL params
   const showLegend = searchParams.get('legend') !== 'false';
@@ -104,7 +107,7 @@ const EmbeddedWidget = () => {
       
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('*')
+        .select('*, building_polygon_settings')
         .eq('id', projectId)
         .single();
 
@@ -115,6 +118,10 @@ const EmbeddedWidget = () => {
       
       console.log('Widget - Project loaded:', projectData);
       setProject(projectData);
+
+      if (projectData.building_polygon_settings) {
+        setBuildingPolygonSettings(projectData.building_polygon_settings);
+      }
 
       const { data: floorsData, error: floorsError } = await supabase
         .from('building_floors')
@@ -157,7 +164,7 @@ const EmbeddedWidget = () => {
       
       const { data, error } = await supabase
         .from('floor_plans')
-        .select('*')
+        .select('*, polygon_settings')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor)
         .maybeSingle();
@@ -169,6 +176,10 @@ const EmbeddedWidget = () => {
       
       console.log('Widget - Floor plan loaded:', data);
       setFloorPlan(data);
+
+      if (data?.polygon_settings) {
+        setPolygonSettings(data.polygon_settings);
+      }
     } catch (error) {
       console.error('Widget - Error loading floor plan:', error);
     }
@@ -227,12 +238,41 @@ const EmbeddedWidget = () => {
   };
 
   const getStatusColor = (status: string) => {
+    if (polygonSettings?.colors) {
+      switch (status) {
+        case 'available': return polygonSettings.colors.available;
+        case 'sold': return polygonSettings.colors.sold;
+        case 'reserved': return polygonSettings.colors.reserved;
+        default: return polygonSettings.colors.available;
+      }
+    }
+
     switch (status) {
       case 'available': return '#22c55e';
       case 'sold': return '#ef4444';
       case 'reserved': return '#f59e0b';
       default: return '#22c55e';
     }
+  };
+
+  const getPolygonStyle = (status: string, isSelected: boolean = false, isHovered: boolean = false) => {
+    const settings = selectedFloor ? polygonSettings : buildingPolygonSettings;
+    if (!settings) return {};
+
+    const baseOpacity = settings.opacity?.normal || 0.4;
+    const hoverOpacity = settings.opacity?.hover || 0.7;
+    const opacity = isHovered ? hoverOpacity : isSelected ? 0.8 : baseOpacity;
+
+    let style: React.CSSProperties = {
+      fillOpacity: opacity,
+      transition: 'all 0.3s ease'
+    };
+
+    if (isHovered && settings.hoverEffects?.glow) {
+      style.filter = `drop-shadow(0 0 8px ${getStatusColor(status)}66)`;
+    }
+
+    return style;
   };
 
   const getStatusText = (status: string) => {
@@ -321,7 +361,6 @@ const EmbeddedWidget = () => {
                     >
                       {buildingFloors.map(floor => {
                         const path = polygonToPath(floor.polygon);
-                        console.log(`Widget - Rendering floor ${floor.floor_number} with path:`, path);
                         
                         if (!path) return null;
                         
@@ -330,24 +369,26 @@ const EmbeddedWidget = () => {
                             <path
                               d={path}
                               fill={floor.color}
-                              fillOpacity="0.3"
                               stroke={floor.color}
                               strokeWidth="0.5"
+                              style={getPolygonStyle('available')}
                               className="hover:fill-opacity-60 transition-all cursor-pointer"
                               onClick={() => handleFloorClick(floor.floor_number)}
                             />
-                            <text
-                              x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                              y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {floor.floor_number}
-                            </text>
+                            {buildingPolygonSettings?.display?.showNumbers !== false && (
+                              <text
+                                x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                                y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fill="white"
+                                fontSize="2"
+                                fontWeight="bold"
+                                className="pointer-events-none"
+                              >
+                                {floor.floor_number}
+                              </text>
+                            )}
                           </g>
                         );
                       })}
@@ -371,7 +412,6 @@ const EmbeddedWidget = () => {
                     >
                       {apartments.map(apartment => {
                         const path = polygonToPath(apartment.polygon);
-                        console.log(`Widget - Rendering apartment ${apartment.apartment_number} with path:`, path);
                         
                         if (!path) return null;
                         
@@ -380,28 +420,55 @@ const EmbeddedWidget = () => {
                             <path
                               d={path}
                               fill={getStatusColor(apartment.status)}
-                              fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
                               stroke={getStatusColor(apartment.status)}
                               strokeWidth="0.3"
-                              className="hover:fill-opacity-70 transition-all cursor-pointer"
+                              style={getPolygonStyle(
+                                apartment.status, 
+                                selectedApartment?.id === apartment.id,
+                                hoveredApartment?.id === apartment.id
+                              )}
+                              className="transition-all cursor-pointer"
                               onClick={() => handleApartmentClick(apartment)}
+                              onMouseEnter={() => setHoveredApartment(apartment)}
+                              onMouseLeave={() => setHoveredApartment(null)}
                             />
-                            <text
-                              x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                              y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="1.2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {apartment.apartment_number}
-                            </text>
+                            {polygonSettings?.display?.showNumbers !== false && (
+                              <text
+                                x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
+                                y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fill="white"
+                                fontSize="1.2"
+                                fontWeight="bold"
+                                className="pointer-events-none"
+                              >
+                                {apartment.apartment_number}
+                              </text>
+                            )}
                           </g>
                         );
                       })}
                     </svg>
+
+                    {/* Tooltip */}
+                    {hoveredApartment && polygonSettings?.display?.showTooltip && (
+                      <div className="absolute pointer-events-none z-10">
+                        <ApartmentTooltip
+                          apartment={{
+                            number: hoveredApartment.apartment_number,
+                            status: hoveredApartment.status,
+                            area: hoveredApartment.area,
+                            rooms: hoveredApartment.rooms,
+                            price: hoveredApartment.price
+                          }}
+                          settings={{
+                            showArea: polygonSettings.display?.showArea || false,
+                            showPrice: polygonSettings.display?.showPrice || false
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 

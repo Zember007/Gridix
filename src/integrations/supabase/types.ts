@@ -111,6 +111,7 @@ export type Database = {
           floor_polygons: Json | null
           id: string
           image_url: string | null
+          polygon_settings: Json | null
           project_id: string
           updated_at: string
         }
@@ -120,6 +121,7 @@ export type Database = {
           floor_polygons?: Json | null
           id?: string
           image_url?: string | null
+          polygon_settings?: Json | null
           project_id: string
           updated_at?: string
         }
@@ -129,6 +131,7 @@ export type Database = {
           floor_polygons?: Json | null
           id?: string
           image_url?: string | null
+          polygon_settings?: Json | null
           project_id?: string
           updated_at?: string
         }
@@ -145,29 +148,35 @@ export type Database = {
       projects: {
         Row: {
           building_image_url: string | null
+          building_polygon_settings: Json | null
           created_at: string
           description: string | null
           floors: number
           id: string
           name: string
+          polygon_settings: Json | null
           updated_at: string
         }
         Insert: {
           building_image_url?: string | null
+          building_polygon_settings?: Json | null
           created_at?: string
           description?: string | null
           floors?: number
           id?: string
           name: string
+          polygon_settings?: Json | null
           updated_at?: string
         }
         Update: {
           building_image_url?: string | null
+          building_polygon_settings?: Json | null
           created_at?: string
           description?: string | null
           floors?: number
           id?: string
           name?: string
+          polygon_settings?: Json | null
           updated_at?: string
         }
         Relationships: []

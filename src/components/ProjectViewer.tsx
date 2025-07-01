@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building2, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
+import ApartmentDetailsPanel from './ApartmentDetailsPanel';
+import ApartmentTooltip from './ApartmentTooltip';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Project {
@@ -49,6 +50,9 @@ const ProjectViewer = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [polygonSettings, setPolygonSettings] = useState<any>(null);
+  const [buildingPolygonSettings, setBuildingPolygonSettings] = useState<any>(null);
+  const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
 
   useEffect(() => {
     if (projectId) {
@@ -99,7 +103,7 @@ const ProjectViewer = () => {
       
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('*')
+        .select('*, building_polygon_settings')
         .eq('id', projectId)
         .single();
 
@@ -110,6 +114,10 @@ const ProjectViewer = () => {
       
       console.log('Project loaded:', projectData);
       setProject(projectData);
+
+      if (projectData.building_polygon_settings) {
+        setBuildingPolygonSettings(projectData.building_polygon_settings);
+      }
 
       // Load building floors
       const { data: floorsData, error: floorsError } = await supabase
@@ -154,7 +162,7 @@ const ProjectViewer = () => {
       
       const { data, error } = await supabase
         .from('floor_plans')
-        .select('*')
+        .select('*, polygon_settings')
         .eq('project_id', projectId)
         .eq('floor_number', selectedFloor)
         .maybeSingle();
@@ -166,6 +174,10 @@ const ProjectViewer = () => {
       
       console.log('Floor plan loaded:', data);
       setFloorPlan(data);
+
+      if (data?.polygon_settings) {
+        setPolygonSettings(data.polygon_settings);
+      }
     } catch (error) {
       console.error('Error loading floor plan:', error);
     }
@@ -224,6 +236,16 @@ const ProjectViewer = () => {
   };
 
   const getStatusColor = (status: string) => {
+    if (polygonSettings?.colors) {
+      switch (status) {
+        case 'available': return polygonSettings.colors.available;
+        case 'sold': return polygonSettings.colors.sold;
+        case 'reserved': return polygonSettings.colors.reserved;
+        default: return polygonSettings.colors.available;
+      }
+    }
+
+    // Fallback colors
     switch (status) {
       case 'available': return '#22c55e';
       case 'sold': return '#ef4444';
@@ -253,6 +275,26 @@ const ProjectViewer = () => {
   const handleApartmentClick = (apartment: Apartment) => {
     console.log('Apartment clicked:', apartment);
     setSelectedApartment(apartment);
+  };
+
+  const getPolygonStyle = (status: string, isSelected: boolean = false, isHovered: boolean = false) => {
+    const settings = selectedFloor ? polygonSettings : buildingPolygonSettings;
+    if (!settings) return {};
+
+    const baseOpacity = settings.opacity?.normal || 0.4;
+    const hoverOpacity = settings.opacity?.hover || 0.7;
+    const opacity = isHovered ? hoverOpacity : isSelected ? 0.8 : baseOpacity;
+
+    let style: React.CSSProperties = {
+      fillOpacity: opacity,
+      transition: 'all 0.3s ease'
+    };
+
+    if (isHovered && settings.hoverEffects?.glow) {
+      style.filter = `drop-shadow(0 0 8px ${getStatusColor(status)}66)`;
+    }
+
+    return style;
   };
 
   if (loading) {
@@ -346,24 +388,26 @@ const ProjectViewer = () => {
                             <path
                               d={path}
                               fill={floor.color}
-                              fillOpacity="0.3"
                               stroke={floor.color}
                               strokeWidth="0.5"
+                              style={getPolygonStyle('available')}
                               className="hover:fill-opacity-60 transition-all cursor-pointer"
                               onClick={() => handleFloorClick(floor.floor_number)}
                             />
-                            <text
-                              x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                              y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {floor.floor_number}
-                            </text>
+                            {buildingPolygonSettings?.display?.showNumbers !== false && (
+                              <text
+                                x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                                y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fill="white"
+                                fontSize="2"
+                                fontWeight="bold"
+                                className="pointer-events-none"
+                              >
+                                {floor.floor_number}
+                              </text>
+                            )}
                           </g>
                         );
                       })}
@@ -396,28 +440,55 @@ const ProjectViewer = () => {
                             <path
                               d={path}
                               fill={getStatusColor(apartment.status)}
-                              fillOpacity={selectedApartment?.id === apartment.id ? 0.8 : 0.4}
                               stroke={getStatusColor(apartment.status)}
                               strokeWidth="0.3"
-                              className="hover:fill-opacity-70 transition-all cursor-pointer"
+                              style={getPolygonStyle(
+                                apartment.status, 
+                                selectedApartment?.id === apartment.id,
+                                hoveredApartment?.id === apartment.id
+                              )}
+                              className="transition-all cursor-pointer"
                               onClick={() => handleApartmentClick(apartment)}
+                              onMouseEnter={() => setHoveredApartment(apartment)}
+                              onMouseLeave={() => setHoveredApartment(null)}
                             />
-                            <text
-                              x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                              y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="1.2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {apartment.apartment_number}
-                            </text>
+                            {polygonSettings?.display?.showNumbers !== false && (
+                              <text
+                                x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
+                                y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fill="white"
+                                fontSize="1.2"
+                                fontWeight="bold"
+                                className="pointer-events-none"
+                              >
+                                {apartment.apartment_number}
+                              </text>
+                            )}
                           </g>
                         );
                       })}
                     </svg>
+
+                    {/* Tooltip */}
+                    {hoveredApartment && polygonSettings?.display?.showTooltip && (
+                      <div className="absolute pointer-events-none z-10">
+                        <ApartmentTooltip
+                          apartment={{
+                            number: hoveredApartment.apartment_number,
+                            status: hoveredApartment.status,
+                            area: hoveredApartment.area,
+                            rooms: hoveredApartment.rooms,
+                            price: hoveredApartment.price
+                          }}
+                          settings={{
+                            showArea: polygonSettings.display?.showArea || false,
+                            showPrice: polygonSettings.display?.showPrice || false
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -440,37 +511,39 @@ const ProjectViewer = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Floor Selection */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Floors</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Array.from({ length: project.floors }, (_, i) => i + 1).map(floorNum => {
-                    const hasFloor = buildingFloors.some(f => f.floor_number === floorNum);
-                    const hasFloorPlan = selectedFloor === floorNum && floorPlan;
-                    
-                    return (
-                      <Button
-                        key={floorNum}
-                        size="sm"
-                        variant={selectedFloor === floorNum ? "default" : "outline"}
-                        onClick={() => setSelectedFloor(selectedFloor === floorNum ? null : floorNum)}
-                        disabled={!hasFloor}
-                        className={`${
-                          hasFloor 
-                            ? selectedFloor === floorNum
-                              ? 'bg-real-estate-600 hover:bg-real-estate-700'
-                              : 'border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50'
-                            : 'opacity-50 cursor-not-allowed'
-                        }`}
-                      >
-                        Floor {floorNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Hide floor selection when apartment is selected */}
+            {!selectedApartment && (
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-real-estate-900 mb-4">Floors</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Array.from({ length: project.floors }, (_, i) => i + 1).map(floorNum => {
+                      const hasFloor = buildingFloors.some(f => f.floor_number === floorNum);
+                      const hasFloorPlan = selectedFloor === floorNum && floorPlan;
+                      
+                      return (
+                        <Button
+                          key={floorNum}
+                          size="sm"
+                          variant={selectedFloor === floorNum ? "default" : "outline"}
+                          onClick={() => setSelectedFloor(selectedFloor === floorNum ? null : floorNum)}
+                          disabled={!hasFloor}
+                          className={`${
+                            hasFloor 
+                              ? selectedFloor === floorNum
+                                ? 'bg-real-estate-600 hover:bg-real-estate-700'
+                                : 'border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50'
+                              : 'opacity-50 cursor-not-allowed'
+                          }`}
+                        >
+                          Floor {floorNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Apartment Details */}
             {selectedApartment && (
@@ -552,6 +625,21 @@ const ProjectViewer = () => {
           </div>
         </div>
       </div>
+
+      {/* Apartment Details Panel */}
+      {selectedApartment && (
+        <ApartmentDetailsPanel
+          apartment={{
+            id: selectedApartment.id,
+            number: selectedApartment.apartment_number,
+            status: selectedApartment.status,
+            area: selectedApartment.area,
+            rooms: selectedApartment.rooms,
+            price: selectedApartment.price
+          }}
+          onClose={() => setSelectedApartment(null)}
+        />
+      )}
     </div>
   );
 };
