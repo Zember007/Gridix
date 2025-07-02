@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,7 +58,11 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          // Читаем данные с заголовками
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+            header: 1,
+            defval: '' // Заполняем пустые ячейки пустой строкой
+          }) as any[][];
           
           if (jsonData.length < 2) {
             toast.error('Файл должен содержать как минимум заголовки и одну строку данных');
@@ -67,22 +70,38 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             return;
           }
 
-          const headers = jsonData[0].filter(header => header && header.toString().trim() !== '');
-          console.log('Извлеченные заголовки:', headers);
+          // Первая строка - это заголовки
+          const rawHeaders = jsonData[0] || [];
+          const headers = rawHeaders
+            .map((header, index) => {
+              // Если заголовок пустой, используем позицию столбца
+              if (!header || header.toString().trim() === '') {
+                return `Столбец ${index + 1}`;
+              }
+              return header.toString().trim();
+            })
+            .filter(header => header !== '');
+
+          console.log('Извлеченные заголовки из первой строки:', headers);
+
+          // Остальные строки - это данные
+          const dataRows = jsonData.slice(1).filter(row => 
+            row && row.some(cell => cell !== null && cell !== undefined && cell !== '')
+          );
           
-          const rows = jsonData.slice(1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
-          
-          const processedData = rows.map(row => {
+          const processedData = dataRows.map((row, rowIndex) => {
             const obj: any = {};
             headers.forEach((header, index) => {
-              obj[header] = row[index] || '';
+              const cellValue = row[index];
+              obj[header] = cellValue !== null && cellValue !== undefined ? cellValue.toString() : '';
             });
             return obj;
           });
 
           console.log('Обработанные данные:', processedData.slice(0, 3));
+          console.log('Заголовки для маппинга:', headers);
           
-          setExcelColumns(headers.map(h => h.toString()));
+          setExcelColumns(headers);
           setImportedData(processedData);
           setShowColumnMapper(true);
           setProgress(100);
