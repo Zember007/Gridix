@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +15,11 @@ interface SyncStatus {
   is_active: boolean;
   last_sync: string | null;
   next_sync: string | null;
-  status: 'active' | 'error' | 'paused';
+  status: string; // Changed from union type to string to match database
   error_message?: string;
+  column_mapping: any;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ProjectSyncManagerProps {
