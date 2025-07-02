@@ -67,50 +67,24 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // Читаем данные с заголовками
+      // Читаем данные как JSON с первой строкой в качестве заголовков
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        header: 1,
         defval: '' // Заполняем пустые ячейки пустой строкой
-      }) as any[][];
+      }) as any[];
       
-      if (jsonData.length < 2) {
-        toast.error('Файл должен содержать как минимум заголовки и одну строку данных');
+      if (jsonData.length === 0) {
+        toast.error('Файл не содержит данных');
         return;
       }
 
-      // Первая строка - это заголовки
-      const rawHeaders = jsonData[0] || [];
-      const headers = rawHeaders
-        .map((header, index) => {
-          // Если заголовок пустой, используем позицию столбца
-          if (!header || header.toString().trim() === '') {
-            return `Столбец ${index + 1}`;
-          }
-          return header.toString().trim();
-        })
-        .filter(header => header !== '');
-
-      console.log('Извлеченные заголовки из первой строки:', headers);
-
-      // Остальные строки - это данные
-      const dataRows = jsonData.slice(1).filter(row => 
-        row && row.some(cell => cell !== null && cell !== undefined && cell !== '')
-      );
+      // Получаем заголовки из первой записи
+      const headers = Object.keys(jsonData[0]).filter(header => header.trim() !== '');
       
-      const processedData = dataRows.map((row, rowIndex) => {
-        const obj: any = {};
-        headers.forEach((header, index) => {
-          const cellValue = row[index];
-          obj[header] = cellValue !== null && cellValue !== undefined ? cellValue.toString() : '';
-        });
-        return obj;
-      });
-
-      console.log('Обработанные данные:', processedData.slice(0, 3));
-      console.log('Заголовки для маппинга:', headers);
+      console.log('Извлеченные заголовки:', headers);
+      console.log('Обработанные данные:', jsonData.slice(0, 3));
       
-      onDataImported(processedData, headers);
-      toast.success(`Импортировано ${processedData.length} записей`);
+      onDataImported(jsonData, headers);
+      toast.success(`Импортировано ${jsonData.length} записей`);
       
     } catch (error) {
       console.error('Ошибка импорта:', error);
