@@ -18,7 +18,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
   const [excelUrl, setExcelUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [autoSync, setAutoSync] = useState(false);
-  const [syncInterval, setSyncInterval] = useState('300'); // в секундах
+  const [syncInterval, setSyncInterval] = useState('300');
   const [testConnection, setTestConnection] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
 
   const testExcelConnection = async () => {
@@ -67,19 +67,49 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // Читаем данные как JSON с первой строкой в качестве заголовков
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-        defval: '' // Заполняем пустые ячейки пустой строкой
-      }) as any[];
+      // Получаем диапазон данных
+      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+      
+      // Читаем первую строку как заголовки
+      const headers: string[] = [];
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        const cell = worksheet[cellAddress];
+        const headerValue = cell ? String(cell.v).trim() : '';
+        if (headerValue) {
+          headers.push(headerValue);
+        }
+      }
+      
+      if (headers.length === 0) {
+        toast.error('Не найдены заголовки в первой строке');
+        return;
+      }
+
+      // Читаем данные начиная со второй строки
+      const jsonData: any[] = [];
+      for (let row = 1; row <= range.e.r; row++) {
+        const rowData: any = {};
+        let hasData = false;
+        
+        for (let col = 0; col < headers.length; col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+          const cell = worksheet[cellAddress];
+          const cellValue = cell ? cell.v : '';
+          rowData[headers[col]] = cellValue;
+          if (cellValue) hasData = true;
+        }
+        
+        if (hasData) {
+          jsonData.push(rowData);
+        }
+      }
       
       if (jsonData.length === 0) {
         toast.error('Файл не содержит данных');
         return;
       }
 
-      // Получаем заголовки из первой записи
-      const headers = Object.keys(jsonData[0]).filter(header => header.trim() !== '');
-      
       console.log('Извлеченные заголовки:', headers);
       console.log('Обработанные данные:', jsonData.slice(0, 3));
       
