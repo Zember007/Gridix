@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,9 +55,10 @@ interface PolygonSettings {
 interface FloorPlanEditorProps {
   projectId: string;
   floorNumber: number;
+  onFloorChange?: (floor: number) => void;
 }
 
-const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
+const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEditorProps) => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<string | null>(null);
@@ -173,7 +173,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       if (data?.polygon_settings) {
         setPolygonSettings(data.polygon_settings as unknown as PolygonSettings);
       } else {
-        // Установим настройки по умолчанию
         const defaultSettings: PolygonSettings = {
           colors: {
             available: '#22c55e',
@@ -210,6 +209,24 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
     setLoading(true);
     try {
+      // Создаем Storage bucket если его нет
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'project-images');
+      
+      if (!bucketExists) {
+        const { error: bucketError } = await supabase.storage.createBucket('project-images', {
+          public: true,
+          allowedMimeTypes: ['image/*'],
+          fileSizeLimit: 10485760 // 10MB
+        });
+        
+        if (bucketError) {
+          console.error('Error creating bucket:', bucketError);
+          toast.error('Ошибка создания хранилища для изображений');
+          return;
+        }
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.${fileExt}`;
 
@@ -314,21 +331,30 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             .eq('project_id', projectId)
             .eq('floor_number', targetFloor);
 
-          // Создаем новые квартиры
-          const apartmentsToInsert = apartments.map(apt => ({
-            project_id: projectId,
-            floor_number: targetFloor,
-            apartment_number: apt.apartment_number.replace(/^\d+/, targetFloor.toString()),
-            rooms: apt.rooms,
-            area: apt.area,
-            price: apt.price,
-            status: apt.status,
-            polygon: apt.polygon as any
-          }));
+          // Создаем новые квартиры с уникальными номерами
+          for (const apt of apartments) {
+            // Генерируем уникальный номер квартиры для каждого этажа
+            const baseNumber = apt.apartment_number.replace(/^\d+/, '');
+            const newApartmentNumber = `${targetFloor}${baseNumber}`;
+            
+            const { error } = await supabase
+              .from('apartments')
+              .insert({
+                project_id: projectId,
+                floor_number: targetFloor,
+                apartment_number: newApartmentNumber,
+                rooms: apt.rooms,
+                area: apt.area,
+                price: apt.price,
+                status: apt.status,
+                polygon: apt.polygon as any
+              });
 
-          await supabase
-            .from('apartments')
-            .insert(apartmentsToInsert);
+            if (error) {
+              console.error('Error inserting apartment:', error);
+              // Продолжаем с другими квартирами
+            }
+          }
         }
       }
 
@@ -591,7 +617,26 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         {/* Main editor */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">План этажа {floorNumber}</h3>
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-semibold">План этажа</h3>
+              {onFloorChange && allFloors.length > 1 && (
+                <Select
+                  value={floorNumber.toString()}
+                  onValueChange={(value) => onFloorChange(parseInt(value))}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allFloors.map(floor => (
+                      <SelectItem key={floor} value={floor.toString()}>
+                        Этаж {floor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
