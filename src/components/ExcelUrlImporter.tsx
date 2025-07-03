@@ -72,8 +72,8 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       
       // Читаем первую строку как заголовки
       const headers: string[] = [];
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      for (let col = range.s.c + 1; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
         const cell = worksheet[cellAddress];
         const headerValue = cell ? String(cell.v).trim() : '';
         if (headerValue) {
@@ -88,15 +88,15 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
 
       // Читаем данные начиная со второй строки
       const jsonData: any[] = [];
-      for (let row = 1; row <= range.e.r; row++) {
+      for (let row = 2; row <= range.e.r; row++) {
         const rowData: any = {};
         let hasData = false;
         
-        for (let col = 0; col < headers.length; col++) {
+        for (let col = 1; col < headers.length; col++) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
           const cell = worksheet[cellAddress];
           const cellValue = cell ? cell.v : '';
-          rowData[headers[col]] = cellValue;
+          rowData[headers[col - 1]] = cellValue;
           if (cellValue) hasData = true;
         }
         
