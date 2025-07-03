@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -237,7 +238,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
           .from('floor_plans')
           .update({ 
             image_url: newImageUrl,
-            polygon_settings: polygonSettings
+            polygon_settings: polygonSettings as any
           })
           .eq('id', existingPlan.id);
 
@@ -249,7 +250,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             project_id: projectId,
             floor_number: floorNumber,
             image_url: newImageUrl,
-            polygon_settings: polygonSettings
+            polygon_settings: polygonSettings as any
           });
 
         if (insertError) throw insertError;
@@ -289,7 +290,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
               .from('floor_plans')
               .update({ 
                 image_url: imageUrl,
-                polygon_settings: polygonSettings
+                polygon_settings: polygonSettings as any
               })
               .eq('id', existingPlan.id);
           } else {
@@ -299,7 +300,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                 project_id: projectId,
                 floor_number: targetFloor,
                 image_url: imageUrl,
-                polygon_settings: polygonSettings
+                polygon_settings: polygonSettings as any
               });
           }
         }
@@ -322,7 +323,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             area: apt.area,
             price: apt.price,
             status: apt.status,
-            polygon: apt.polygon as unknown as any
+            polygon: apt.polygon as any
           }));
 
           await supabase
@@ -397,7 +398,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon as unknown as any
+            polygon: currentPolygon as any
           })
           .select()
           .single();
@@ -425,7 +426,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon as unknown as any
+            polygon: currentPolygon as any
           })
           .eq('id', existingApartment.id);
 
