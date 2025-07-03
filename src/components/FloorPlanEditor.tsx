@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Plus, Trash2, Save, Edit3, Settings, X, Undo2, RotateCcw } from 'lucide-react';
+import { Upload, Plus, Trash2, Save, Edit3, Settings, X, Undo2, RotateCcw, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
@@ -81,6 +81,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
   const [polygonSettings, setPolygonSettings] = useState<PolygonSettings | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
+  const [allFloors, setAllFloors] = useState<number[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -88,7 +89,25 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     loadFloorPlan();
     loadApartments();
     loadPolygonSettings();
+    loadProjectFloors();
   }, [projectId, floorNumber]);
+
+  const loadProjectFloors = async () => {
+    try {
+      const { data: projectData, error } = await supabase
+        .from('projects')
+        .select('floors')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+
+      const floors = Array.from({ length: projectData.floors }, (_, i) => i + 1);
+      setAllFloors(floors);
+    } catch (error) {
+      console.error('Error loading project floors:', error);
+    }
+  };
 
   const loadFloorPlan = async () => {
     try {
@@ -103,9 +122,12 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       
       if (data?.image_url) {
         setImageUrl(data.image_url);
+      } else {
+        setImageUrl('');
       }
     } catch (error) {
       console.error('Error loading floor plan:', error);
+      toast.error('Ошибка загрузки плана этажа');
     }
   };
 
@@ -132,6 +154,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
       setApartments(transformedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
+      toast.error('Ошибка загрузки квартир');
     }
   };
 
@@ -148,6 +171,32 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
 
       if (data?.polygon_settings) {
         setPolygonSettings(data.polygon_settings as unknown as PolygonSettings);
+      } else {
+        // Установим настройки по умолчанию
+        const defaultSettings: PolygonSettings = {
+          colors: {
+            available: '#22c55e',
+            sold: '#ef4444',
+            reserved: '#f59e0b'
+          },
+          hoverEffects: {
+            scale: false,
+            colorChange: true,
+            opacityChange: true,
+            glow: true
+          },
+          display: {
+            showNumbers: true,
+            showTooltip: true,
+            showArea: false,
+            showPrice: false
+          },
+          opacity: {
+            normal: 0.4,
+            hover: 0.7
+          }
+        };
+        setPolygonSettings(defaultSettings);
       }
     } catch (error) {
       console.error('Error loading polygon settings:', error);
@@ -161,7 +210,7 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     setLoading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${projectId}/floor-${floorNumber}.${fileExt}`;
+      const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('project-images')
@@ -184,18 +233,26 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
         .maybeSingle();
 
       if (existingPlan) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('floor_plans')
-          .update({ image_url: newImageUrl })
+          .update({ 
+            image_url: newImageUrl,
+            polygon_settings: polygonSettings
+          })
           .eq('id', existingPlan.id);
+
+        if (updateError) throw updateError;
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('floor_plans')
           .insert({
             project_id: projectId,
             floor_number: floorNumber,
-            image_url: newImageUrl
+            image_url: newImageUrl,
+            polygon_settings: polygonSettings
           });
+
+        if (insertError) throw insertError;
       }
 
       toast.success('План этажа загружен');
@@ -207,10 +264,85 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     }
   };
 
+  const duplicateToAllFloors = async () => {
+    if (!imageUrl && apartments.length === 0) {
+      toast.error('Нет данных для дублирования');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const floorsToUpdate = allFloors.filter(f => f !== floorNumber);
+      
+      for (const targetFloor of floorsToUpdate) {
+        // Дублируем план этажа
+        if (imageUrl) {
+          const { data: existingPlan } = await supabase
+            .from('floor_plans')
+            .select('id')
+            .eq('project_id', projectId)
+            .eq('floor_number', targetFloor)
+            .maybeSingle();
+
+          if (existingPlan) {
+            await supabase
+              .from('floor_plans')
+              .update({ 
+                image_url: imageUrl,
+                polygon_settings: polygonSettings
+              })
+              .eq('id', existingPlan.id);
+          } else {
+            await supabase
+              .from('floor_plans')
+              .insert({
+                project_id: projectId,
+                floor_number: targetFloor,
+                image_url: imageUrl,
+                polygon_settings: polygonSettings
+              });
+          }
+        }
+
+        // Дублируем квартиры
+        if (apartments.length > 0) {
+          // Удаляем существующие квартиры на целевом этаже
+          await supabase
+            .from('apartments')
+            .delete()
+            .eq('project_id', projectId)
+            .eq('floor_number', targetFloor);
+
+          // Создаем новые квартиры
+          const apartmentsToInsert = apartments.map(apt => ({
+            project_id: projectId,
+            floor_number: targetFloor,
+            apartment_number: apt.apartment_number.replace(/^\d+/, targetFloor.toString()),
+            rooms: apt.rooms,
+            area: apt.area,
+            price: apt.price,
+            status: apt.status,
+            polygon: apt.polygon as unknown as any
+          }));
+
+          await supabase
+            .from('apartments')
+            .insert(apartmentsToInsert);
+        }
+      }
+
+      toast.success('План и полигоны продублированы на все этажи');
+    } catch (error) {
+      console.error('Error duplicating to all floors:', error);
+      toast.error('Ошибка дублирования на все этажи');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getImageCoordinates = (clientX: number, clientY: number): Point => {
     if (!imageRef.current || !svgRef.current) return { x: 0, y: 0 };
 
-    const imageRect = imageRef.current.getBoundingClientRect();
     const svgRect = svgRef.current.getBoundingClientRect();
 
     const x = ((clientX - svgRect.left) / svgRect.width) * 100;
@@ -225,7 +357,6 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
     const point = getImageCoordinates(event.clientX, event.clientY);
     const newPolygon = [...currentPolygon, point];
     
-    // Сохраняем состояние в историю
     setPolygonHistory(prev => [...prev, currentPolygon]);
     setCurrentPolygon(newPolygon);
   };
@@ -463,6 +594,14 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                onClick={duplicateToAllFloors}
+                disabled={loading || (!imageUrl && apartments.length === 0)}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Дублировать на все этажи
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => setShowSettings(true)}
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -673,6 +812,11 @@ const FloorPlanEditor = ({ projectId, floorNumber }: FloorPlanEditorProps) => {
                     src={imageUrl}
                     alt={`Floor ${floorNumber} plan`}
                     className="max-w-full max-h-[600px] object-contain rounded-lg"
+                    onLoad={() => console.log('Floor plan image loaded successfully')}
+                    onError={(e) => {
+                      console.error('Floor plan image failed to load:', e);
+                      toast.error('Не удалось загрузить изображение плана');
+                    }}
                   />
                   <svg
                     ref={svgRef}
