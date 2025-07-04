@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -177,7 +176,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       
       // Перенаправляем на созданный проект
       setTimeout(() => {
-        window.location.href = `/admin/projects/${project.id}`;
+        window.location.href = `/admin/project/${project.id}`;
       }, 1000);
       
     } catch (error) {

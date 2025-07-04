@@ -1,6 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,42 +48,39 @@ serve(async (req) => {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    
-    // Используем xlsx для парсинга (нужно импортировать или использовать веб-версию)
-    // Для простоты предполагаем, что данные уже обработаны
-    // В реальной реализации здесь был бы парсинг Excel файла
-    
-    const mockExcelData = [
-      {
-        'Apt Num': 201,
-        'Apt S': 51.5,
-        'Apt Price': 71070,
-        'F_Floor': 2,
-        'Apt Free': 1,
-        'Apt Res': 0,
-        'Status': 'publish'
-      }
-    ];
+    let excelData = [];
+    try {
+      // Парсим Excel-файл
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+    } catch (e) {
+      throw new Error("Ошибка парсинга Excel-файла: " + (e?.message || e));
+    }
+
+    // Получаем маппинг столбцов из настроек
+    const mapping = syncSettings.column_mapping || {};
+    // mapping = { apartmentNumber: 'Apt Num', area: 'Apt S', ... }
 
     let recordsProcessed = 0;
     let recordsAdded = 0;
     let recordsUpdated = 0;
     let recordsDeleted = 0;
 
-    // Обрабатываем данные
-    for (const row of mockExcelData) {
+    for (const row of excelData) {
       recordsProcessed++;
-      
-      const apartmentNumber = row['Apt Num']?.toString();
-      const area = parseFloat(row['Apt S']) || 0;
-      const price = parseFloat(row['Apt Price']) || 0;
-      const floorNumber = parseInt(row['F_Floor']) || 1;
-      const isAvailable = row['Apt Free'] === 1;
-      const isReserved = row['Apt Res'] === 1;
-      
-      let status = 'available';
-      if (isReserved) status = 'reserved';
-      else if (!isAvailable) status = 'sold';
+      // Используем маппинг для получения значений
+      const apartmentNumber = row[mapping.apartmentNumber]?.toString() || row["apartmentNumber"]?.toString();
+      const area = parseFloat(row[mapping.area] || row["area"] || 0) || 0;
+      const price = parseFloat(row[mapping.price] || row["price"] || 0) || 0;
+      const floorNumber = parseInt(row[mapping.floor] || row["floor"] || 1) || 1;
+      const rooms = parseInt(row[mapping.rooms] || row["rooms"] || 1) || 1;
+      const statusRaw = (row[mapping.status] || row["status"] || "").toString().toLowerCase();
+      let status = "available";
+      if (["sold", "продана", "продано", "нет", "n", "0"].includes(statusRaw)) status = "sold";
+      else if (["reserved", "забронирована", "забронировано", "hold", "резерв", "1"].includes(statusRaw)) status = "reserved";
+      // Можно добавить больше условий по необходимости
 
       if (!apartmentNumber) continue;
 
@@ -104,6 +101,7 @@ serve(async (req) => {
             area,
             price,
             status,
+            rooms,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingApartment.id);
@@ -121,7 +119,7 @@ serve(async (req) => {
             project_id: projectId,
             apartment_number: apartmentNumber,
             floor_number: floorNumber,
-            rooms: 1, // По умолчанию
+            rooms,
             area,
             price,
             status,

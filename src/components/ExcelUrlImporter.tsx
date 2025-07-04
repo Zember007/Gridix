@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,67 +70,33 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       // Получаем диапазон данных
       const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
       
-      // Читаем первую строку как заголовки, пропуская первый столбец
       const headers: string[] = [];
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: col });
+      for (let col = range.s.c + 1; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
         const cell = worksheet[cellAddress];
         const headerValue = cell ? String(cell.v).trim() : '';
-        
-        // Пропускаем пустые заголовки и системные столбцы
-        if (headerValue && headerValue !== 'A' && headerValue !== 'B' && headerValue !== 'C') {
+        if (headerValue) {
           headers.push(headerValue);
         }
       }
       
-      // Если заголовки похожи на системные (A, B, C и т.д.), читаем вторую строку
-      if (headers.length === 0 || headers.every(h => h.match(/^[A-Z]$/))) {
-        headers.length = 0;
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col });
-          const cell = worksheet[cellAddress];
-          const headerValue = cell ? String(cell.v).trim() : '';
-          if (headerValue && !headerValue.match(/^[A-Z]$/)) {
-            headers.push(headerValue);
-          }
-        }
-      }
-      
       if (headers.length === 0) {
-        toast.error('Не найдены валидные заголовки в файле');
+        toast.error('Не найдены заголовки в первой строке');
         return;
       }
 
-      // Определяем начальную строку данных
-      let dataStartRow = range.s.r + 1;
-      
-      // Если первая строка содержала системные заголовки, данные начинаются со второй строки
-      if (headers.some(h => !h.match(/^[A-Z]$/))) {
-        dataStartRow = 2;
-      }
-
-      // Читаем данные
+      // Читаем данные начиная со второй строки
       const jsonData: any[] = [];
-      for (let row = dataStartRow; row <= range.e.r; row++) {
+      for (let row = 2; row <= range.e.r; row++) {
         const rowData: any = {};
         let hasData = false;
-        let headerIndex = 0;
         
-        for (let col = range.s.c; col <= range.e.c && headerIndex < headers.length; col++) {
+        for (let col = 1; col < headers.length; col++) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
           const cell = worksheet[cellAddress];
           const cellValue = cell ? cell.v : '';
-          
-          // Skip system columns in data rows too
-          const headerCellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: col });
-          const headerCell = worksheet[headerCellAddress];
-          const headerValue = headerCell ? String(headerCell.v).trim() : '';
-          
-          if (headerValue && headerValue !== 'A' && headerValue !== 'B' && headerValue !== 'C') {
-            rowData[headers[headerIndex]] = cellValue;
-            if (cellValue) hasData = true;
-            headerIndex++;
-          }
+          rowData[headers[col - 1]] = cellValue;
+          if (cellValue) hasData = true;
         }
         
         if (hasData) {
