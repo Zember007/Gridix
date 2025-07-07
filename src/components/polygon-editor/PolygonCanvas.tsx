@@ -23,6 +23,7 @@ const PolygonCanvas = ({
   className = ""
 }: PolygonCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [dragPoint, setDragPoint] = useState<{shapeIndex: number, pointIndex: number} | null>(null);
@@ -30,44 +31,69 @@ const PolygonCanvas = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<Point>({ x: 0, y: 0 });
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
 
+  // Получаем координаты на canvas с учетом масштаба и сдвига
   const getCanvasCoordinates = useCallback((clientX: number, clientY: number): Point => {
     if (!canvasRef.current) return { x: 0, y: 0 };
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = ((clientX - rect.left - pan.x) / zoom);
-    const y = ((clientY - rect.top - pan.y) / zoom);
+    const x = (clientX - rect.left - pan.x) / zoom;
+    const y = (clientY - rect.top - pan.y) / zoom;
     
     return { x, y };
   }, [zoom, pan]);
 
-  const getImageCoordinates = useCallback((canvasPoint: Point): Point => {
-    if (!imageRef.current || !canvasRef.current) return canvasPoint;
-    
-    const canvas = canvasRef.current;
-    const image = imageRef.current;
-    
-    const scaleX = image.naturalWidth / canvas.width;
-    const scaleY = image.naturalHeight / canvas.height;
+  // Преобразуем координаты canvas в проценты относительно изображения
+  const canvasToPercent = useCallback((point: Point): Point => {
+    if (!imageRef.current) return point;
     
     return {
-      x: (canvasPoint.x * scaleX / image.naturalWidth) * 100,
-      y: (canvasPoint.y * scaleY / image.naturalHeight) * 100
+      x: (point.x / canvasSize.width) * 100,
+      y: (point.y / canvasSize.height) * 100
     };
-  }, []);
+  }, [canvasSize]);
 
-  const getCanvasPointFromImage = useCallback((imagePoint: Point): Point => {
-    if (!imageRef.current || !canvasRef.current) return imagePoint;
-    
-    const canvas = canvasRef.current;
-    const image = imageRef.current;
-    
+  // Преобразуем проценты в координаты canvas
+  const percentToCanvas = useCallback((point: Point): Point => {
     return {
-      x: (imagePoint.x / 100) * image.naturalWidth * canvas.width / image.naturalWidth,
-      y: (imagePoint.y / 100) * image.naturalHeight * canvas.height / image.naturalHeight
+      x: (point.x / 100) * canvasSize.width,
+      y: (point.y / 100) * canvasSize.height
     };
-  }, []);
+  }, [canvasSize]);
 
+  // Инициализация canvas при загрузке изображения
+  useEffect(() => {
+    if (!imageUrl) return;
+
+    const image = new Image();
+    image.onload = () => {
+      imageRef.current = image;
+      
+      // Подгоняем размер canvas под изображение с сохранением пропорций
+      const maxWidth = 800;
+      const maxHeight = 600;
+      const aspectRatio = image.width / image.height;
+      
+      let newWidth = maxWidth;
+      let newHeight = maxWidth / aspectRatio;
+      
+      if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = maxHeight * aspectRatio;
+      }
+      
+      setCanvasSize({ width: newWidth, height: newHeight });
+      
+      if (canvasRef.current) {
+        canvasRef.current.width = newWidth;
+        canvasRef.current.height = newHeight;
+      }
+    };
+    image.src = imageUrl;
+  }, [imageUrl]);
+
+  // Отрисовка canvas
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const image = imageRef.current;
@@ -84,13 +110,13 @@ const PolygonCanvas = ({
     ctx.scale(zoom, zoom);
     
     // Рисуем изображение
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
     
     // Рисуем существующие фигуры
     shapes.forEach((shape, shapeIndex) => {
       if (shape.points.length === 0) return;
       
-      const canvasPoints = shape.points.map(p => getCanvasPointFromImage(p));
+      const canvasPoints = shape.points.map(p => percentToCanvas(p));
       
       ctx.beginPath();
       ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
@@ -98,23 +124,26 @@ const PolygonCanvas = ({
       for (let i = 1; i < canvasPoints.length; i++) {
         ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
       }
-      ctx.closePath();
+      
+      if (shape.type !== 'polygon' || canvasPoints.length > 2) {
+        ctx.closePath();
+      }
       
       ctx.fillStyle = shape.color + '40';
       ctx.fill();
       ctx.strokeStyle = shape.color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / zoom;
       ctx.stroke();
       
       // Рисуем точки для выбранной фигуры
       if (shape.isSelected && activeTool === 'select') {
         canvasPoints.forEach((point, pointIndex) => {
           ctx.beginPath();
-          ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+          ctx.arc(point.x, point.y, 6 / zoom, 0, 2 * Math.PI);
           ctx.fillStyle = '#3b82f6';
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2 / zoom;
           ctx.stroke();
         });
       }
@@ -122,42 +151,56 @@ const PolygonCanvas = ({
     
     // Рисуем текущую фигуру
     if (currentShape && currentShape.points.length > 0) {
-      const canvasPoints = currentShape.points.map(p => getCanvasPointFromImage(p));
+      const canvasPoints = currentShape.points.map(p => percentToCanvas(p));
       
-      ctx.beginPath();
-      ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
-      
-      for (let i = 1; i < canvasPoints.length; i++) {
-        ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
-      }
-      
-      if (currentShape.type !== 'polygon' || canvasPoints.length > 2) {
+      if (currentShape.type === 'polygon') {
+        // Для полигона рисуем линии между всеми точками
+        ctx.beginPath();
+        ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+        for (let i = 1; i < canvasPoints.length; i++) {
+          ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+        }
+        
+        ctx.strokeStyle = currentShape.color;
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        // Для других фигур рисуем замкнутую область
+        ctx.beginPath();
+        ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+        for (let i = 1; i < canvasPoints.length; i++) {
+          ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+        }
         ctx.closePath();
+        
+        ctx.fillStyle = currentShape.color + '40';
+        ctx.fill();
+        ctx.strokeStyle = currentShape.color;
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
-      
-      ctx.fillStyle = currentShape.color + '40';
-      ctx.fill();
-      ctx.strokeStyle = currentShape.color;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.stroke();
-      ctx.setLineDash([]);
       
       // Рисуем точки
       canvasPoints.forEach(point => {
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+        ctx.arc(point.x, point.y, 4 / zoom, 0, 2 * Math.PI);
         ctx.fillStyle = '#3b82f6';
         ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1 / zoom;
+        ctx.stroke();
       });
     }
     
     ctx.restore();
-  }, [shapes, currentShape, activeTool, zoom, pan, getCanvasPointFromImage]);
+  }, [shapes, currentShape, activeTool, zoom, pan, canvasSize, percentToCanvas]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const point = getCanvasCoordinates(e.clientX, e.clientY);
-    const imagePoint = getImageCoordinates(point);
     
     if (e.button === 2) return; // Правая кнопка мыши
     
@@ -169,13 +212,13 @@ const PolygonCanvas = ({
     }
     
     if (activeTool === 'select') {
-      // Проверяем, клик по точке существующей фигуры
+      // Проверяем клик по точке существующей фигуры
       for (let shapeIndex = 0; shapeIndex < shapes.length; shapeIndex++) {
         const shape = shapes[shapeIndex];
         if (!shape.isSelected) continue;
         
-        const canvasPoints = shape.points.map(p => getCanvasPointFromImage(p));
-        const nearestPointIndex = findNearestPoint(point, canvasPoints, 8);
+        const canvasPoints = shape.points.map(p => percentToCanvas(p));
+        const nearestPointIndex = findNearestPoint(point, canvasPoints, 10 / zoom);
         
         if (nearestPointIndex !== null) {
           setDragPoint({ shapeIndex, pointIndex: nearestPointIndex });
@@ -184,10 +227,10 @@ const PolygonCanvas = ({
         }
       }
       
-      // Проверяем, клик внутри фигуры
+      // Проверяем клик внутри фигуры
       const newShapes = shapes.map(shape => ({ ...shape, isSelected: false }));
       for (let i = shapes.length - 1; i >= 0; i--) {
-        const canvasPoints = shapes[i].points.map(p => getCanvasPointFromImage(p));
+        const canvasPoints = shapes[i].points.map(p => percentToCanvas(p));
         if (isPointInsidePolygon(point, canvasPoints)) {
           newShapes[i].isSelected = true;
           onShapeUpdate(newShapes);
@@ -200,18 +243,20 @@ const PolygonCanvas = ({
     }
     
     if (activeTool === 'polygon') {
+      const percentPoint = canvasToPercent(point);
+      
       if (!currentShape) {
         onCurrentShapeUpdate({
           id: Date.now().toString(),
           type: 'polygon',
-          points: [imagePoint],
+          points: [percentPoint],
           color: '#3b82f6',
           isSelected: false
         });
       } else {
         onCurrentShapeUpdate({
           ...currentShape,
-          points: [...currentShape.points, imagePoint]
+          points: [...currentShape.points, percentPoint]
         });
       }
       return;
@@ -219,10 +264,11 @@ const PolygonCanvas = ({
     
     if (activeTool === 'circle' || activeTool === 'rectangle') {
       setIsDrawing(true);
+      const percentPoint = canvasToPercent(point);
       onCurrentShapeUpdate({
         id: Date.now().toString(),
         type: activeTool,
-        points: [imagePoint],
+        points: [percentPoint],
         color: '#3b82f6',
         isSelected: false
       });
@@ -240,23 +286,23 @@ const PolygonCanvas = ({
     
     if (dragPoint && isDrawing) {
       const point = getCanvasCoordinates(e.clientX, e.clientY);
-      const imagePoint = getImageCoordinates(point);
+      const percentPoint = canvasToPercent(point);
       
       const newShapes = [...shapes];
-      newShapes[dragPoint.shapeIndex].points[dragPoint.pointIndex] = imagePoint;
+      newShapes[dragPoint.shapeIndex].points[dragPoint.pointIndex] = percentPoint;
       onShapeUpdate(newShapes);
       return;
     }
     
     if (isDrawing && currentShape && (activeTool === 'circle' || activeTool === 'rectangle')) {
       const point = getCanvasCoordinates(e.clientX, e.clientY);
-      const imagePoint = getImageCoordinates(point);
+      const percentPoint = canvasToPercent(point);
       
       let newPoints: Point[];
       if (activeTool === 'circle') {
-        newPoints = createCircleFromTwoPoints(currentShape.points[0], imagePoint);
+        newPoints = createCircleFromTwoPoints(currentShape.points[0], percentPoint);
       } else {
-        newPoints = createRectangleFromTwoPoints(currentShape.points[0], imagePoint);
+        newPoints = createRectangleFromTwoPoints(currentShape.points[0], percentPoint);
       }
       
       onCurrentShapeUpdate({
@@ -273,7 +319,7 @@ const PolygonCanvas = ({
     }
     
     if (isDrawing && (activeTool === 'circle' || activeTool === 'rectangle')) {
-      if (currentShape) {
+      if (currentShape && currentShape.points.length > 0) {
         onShapeUpdate([...shapes, currentShape]);
         onCurrentShapeUpdate(null);
       }
@@ -311,8 +357,23 @@ const PolygonCanvas = ({
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
-      const deltaZoom = e.deltaY > 0 ? 0.9 : 1.1;
-      setZoom(prev => Math.max(0.1, Math.min(5, prev * deltaZoom)));
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.max(0.1, Math.min(5, zoom * zoomFactor));
+      
+      // Зумим к позиции мыши
+      const zoomRatio = newZoom / zoom;
+      setPan(prev => ({
+        x: mouseX - (mouseX - prev.x) * zoomRatio,
+        y: mouseY - (mouseY - prev.y) * zoomRatio
+      }));
+      
+      setZoom(newZoom);
     }
   };
 
@@ -320,31 +381,25 @@ const PolygonCanvas = ({
     drawCanvas();
   }, [drawCanvas]);
 
-  useEffect(() => {
-    const image = new Image();
-    image.onload = () => {
-      imageRef.current = image;
-      if (canvasRef.current) {
-        canvasRef.current.width = image.width;
-        canvasRef.current.height = image.height;
-        drawCanvas();
-      }
-    };
-    image.src = imageUrl;
-  }, [imageUrl, drawCanvas]);
-
   return (
-    <canvas
-      ref={canvasRef}
-      className={`border rounded-lg cursor-crosshair ${className}`}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onContextMenu={handleRightClick}
-      onDoubleClick={handleDoubleClick}
-      onWheel={handleWheel}
-      style={{ maxWidth: '100%', maxHeight: '600px' }}
-    />
+    <div ref={containerRef} className="relative">
+      <canvas
+        ref={canvasRef}
+        className={`border rounded-lg cursor-crosshair ${className}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleRightClick}
+        onDoubleClick={handleDoubleClick}
+        onWheel={handleWheel}
+        style={{ width: canvasSize.width, height: canvasSize.height }}
+      />
+      
+      {/* Индикатор масштаба */}
+      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+        {Math.round(zoom * 100)}%
+      </div>
+    </div>
   );
 };
 

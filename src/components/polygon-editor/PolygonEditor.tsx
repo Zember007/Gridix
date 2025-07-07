@@ -148,31 +148,32 @@ const PolygonEditor = ({
         
         <Card>
           <CardContent className="p-4">
-            <div className="space-y-2">
-              <div className="text-sm text-gray-600">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <strong>Управление:</strong>
-                    <ul className="text-xs space-y-1">
-                      <li>• Ctrl + колесико - масштаб</li>
-                      <li>• Правая кнопка - удалить точку</li>
+                    <ul className="text-xs space-y-1 mt-1">
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Ctrl</kbd> + колесико - масштаб</li>
+                      <li>• Правая кнопка - удалить последнюю точку</li>
                       <li>• Двойной клик - завершить полигон</li>
-                      <li>• Enter - завершить фигуру</li>
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Enter</kbd> - завершить фигуру</li>
+                      <li>• Перетаскивание точек в режиме выбора</li>
                     </ul>
                   </div>
                   <div>
                     <strong>Горячие клавиши:</strong>
-                    <ul className="text-xs space-y-1">
-                      <li>• V - выбор, P - полигон</li>
-                      <li>• C - круг, R - прямоугольник</li>
-                      <li>• M - перемещение</li>
-                      <li>• Ctrl+Z - отмена</li>
+                    <ul className="text-xs space-y-1 mt-1">
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">V</kbd> - выбор, <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">P</kbd> - полигон</li>
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">C</kbd> - круг, <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">R</kbd> - прямоугольник</li>
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">M</kbd> - перемещение</li>
+                      <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Ctrl+Z</kbd> - отмена</li>
                     </ul>
                   </div>
                 </div>
               </div>
               
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-hidden bg-gray-100">
                 <PolygonCanvas
                   imageUrl={imageUrl}
                   shapes={shapes}
