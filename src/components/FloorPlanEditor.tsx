@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ interface PolygonSettings {
   hoverEffects: {
     scale: boolean;
     colorChange: boolean;
+    opacityChange: boolean;
     glow: boolean;
   };
   display: {
