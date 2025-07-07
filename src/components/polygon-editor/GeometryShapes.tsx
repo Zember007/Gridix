@@ -21,15 +21,19 @@ export const createCircleFromTwoPoints = (start: Point, end: Point): Point[] => 
   const centerY = start.y;
   const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
   
+  // Минимальный радиус для предотвращения нестабильности
+  const minRadius = 1;
+  const finalRadius = Math.max(radius, minRadius);
+  
   // Создаем точки окружности
   const points: Point[] = [];
-  const segments = 32; // Количество сегментов для окружности
+  const segments = 24; // Уменьшено количество сегментов для лучшей производительности
   
   for (let i = 0; i < segments; i++) {
     const angle = (i / segments) * 2 * Math.PI;
     points.push({
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle)
+      x: centerX + finalRadius * Math.cos(angle),
+      y: centerY + finalRadius * Math.sin(angle)
     });
   }
   

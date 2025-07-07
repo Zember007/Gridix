@@ -298,11 +298,21 @@ const PolygonCanvas = ({
       const point = getCanvasCoordinates(e.clientX, e.clientY);
       const percentPoint = canvasToPercent(point);
       
+      // Проверяем, что точка достаточно далеко от начальной для стабильности
+      const startPoint = currentShape.points[0];
+      const distance = Math.sqrt(
+        Math.pow(percentPoint.x - startPoint.x, 2) + 
+        Math.pow(percentPoint.y - startPoint.y, 2)
+      );
+      
+      // Минимальное расстояние для предотвращения нестабильности
+      if (distance < 0.5) return;
+      
       let newPoints: Point[];
       if (activeTool === 'circle') {
-        newPoints = createCircleFromTwoPoints(currentShape.points[0], percentPoint);
+        newPoints = createCircleFromTwoPoints(startPoint, percentPoint);
       } else {
-        newPoints = createRectangleFromTwoPoints(currentShape.points[0], percentPoint);
+        newPoints = createRectangleFromTwoPoints(startPoint, percentPoint);
       }
       
       onCurrentShapeUpdate({
@@ -319,7 +329,7 @@ const PolygonCanvas = ({
     }
     
     if (isDrawing && (activeTool === 'circle' || activeTool === 'rectangle')) {
-      if (currentShape && currentShape.points.length > 0) {
+      if (currentShape && currentShape.points.length > 1) {
         onShapeUpdate([...shapes, currentShape]);
         onCurrentShapeUpdate(null);
       }
