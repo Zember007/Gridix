@@ -120,6 +120,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     setProjectData(prev => ({ ...prev, building_image_url: imageUrl }));
   };
 
+  const [floorNumber, setFloorNumber] = useState(1);
+
+  // Функция для обработки смены этажа
+  const handleFloorChange = (floorNumber: number) => {
+    setFloorNumber(floorNumber);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
@@ -280,7 +287,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               <CardContent>
                 <FloorPlanEditor 
                   projectId={projectId}
-                  floorNumber={1}
+                  floorNumber={floorNumber}
+                  onFloorChange={handleFloorChange}
                 />
               </CardContent>
             </Card>
