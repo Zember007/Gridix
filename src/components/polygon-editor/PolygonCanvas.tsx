@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Point, Shape, createCircleFromTwoPoints, createRectangleFromTwoPoints, findNearestPoint, isPointInsidePolygon } from './GeometryShapes';
 import { PolygonTool } from './PolygonToolbar';
@@ -329,9 +328,18 @@ const PolygonCanvas = ({
     }
     
     if (isDrawing && (activeTool === 'circle' || activeTool === 'rectangle')) {
-      if (currentShape && currentShape.points.length > 1) {
-        onShapeUpdate([...shapes, currentShape]);
-        onCurrentShapeUpdate(null);
+      // Сохраняем фигуру если у неё есть достаточно точек и правильная геометрия
+      if (currentShape && currentShape.points.length >= 3) {
+        // Проверяем, что фигура имеет минимальный размер
+        const firstPoint = currentShape.points[0];
+        const hasValidSize = currentShape.points.some(p => 
+          Math.abs(p.x - firstPoint.x) > 1 || Math.abs(p.y - firstPoint.y) > 1
+        );
+        
+        if (hasValidSize) {
+          onShapeUpdate([...shapes, currentShape]);
+          onCurrentShapeUpdate(null);
+        }
       }
     }
     
