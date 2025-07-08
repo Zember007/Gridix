@@ -19,6 +19,7 @@ export type Database = {
           apartment_number: string
           area: number
           created_at: string
+          custom_fields: Json | null
           floor_number: number
           floor_plan_id: string | null
           id: string
@@ -33,6 +34,7 @@ export type Database = {
           apartment_number: string
           area?: number
           created_at?: string
+          custom_fields?: Json | null
           floor_number: number
           floor_plan_id?: string | null
           id?: string
@@ -47,6 +49,7 @@ export type Database = {
           apartment_number?: string
           area?: number
           created_at?: string
+          custom_fields?: Json | null
           floor_number?: number
           floor_plan_id?: string | null
           id?: string
@@ -143,6 +146,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "floor_plans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_custom_fields: {
+        Row: {
+          created_at: string
+          field_label: string
+          field_name: string
+          field_options: Json | null
+          field_type: string
+          id: string
+          is_required: boolean
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_label: string
+          field_name: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_label?: string
+          field_name?: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_custom_fields_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"

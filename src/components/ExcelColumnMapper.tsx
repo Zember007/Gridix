@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,12 +23,22 @@ interface ColumnMapping {
   area: string;
   price: string;
   status: string;
+  [key: string]: string; // для кастомных полей
 }
 
 interface ProjectData {
   name: string;
   description: string;
   floors: number;
+}
+
+interface CustomField {
+  id: string;
+  field_name: string;
+  field_label: string;
+  field_type: 'text' | 'number' | 'select' | 'boolean';
+  is_required: boolean;
+  field_options?: string[];
 }
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
@@ -46,6 +57,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     floors: 1
   });
 
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [isCreating, setIsCreating] = useState(false);
 
   const fieldLabels = {
@@ -58,6 +70,20 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   };
 
   const requiredFields = ['apartmentNumber', 'floor', 'rooms', 'area'];
+
+  // Загружаем кастомные поля, если создаем проект на основе существующего
+  useEffect(() => {
+    if (projectData.name) {
+      loadCustomFields();
+    }
+  }, [projectData.name]);
+
+  const loadCustomFields = async () => {
+    // Пока мы создаем новый проект, кастомные поля будут добавлены позже
+    // Но оставим возможность их настройки в будущем
+    setCustomFields([]);
+  };
+
   const isValid = requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
 
   const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
@@ -139,6 +165,29 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           ? (String(row[columnMapping.status]) || 'available') 
           : 'available';
 
+        // Собираем кастомные поля
+        const customFieldsData: Record<string, any> = {};
+        customFields.forEach(field => {
+          const mappedColumn = columnMapping[field.field_name];
+          if (mappedColumn && mappedColumn !== '__none__') {
+            let value = row[mappedColumn];
+            
+            // Преобразуем значение в зависимости от типа поля
+            switch (field.field_type) {
+              case 'number':
+                value = parseFloat(String(value)) || 0;
+                break;
+              case 'boolean':
+                value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'да';
+                break;
+              default:
+                value = String(value || '');
+            }
+            
+            customFieldsData[field.field_name] = value;
+          }
+        });
+
         console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}`);
 
         return {
@@ -150,7 +199,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           price: price,
           status: status === 'продана' || status === 'sold' ? 'sold' : 
                  status === 'забронирована' || status === 'reserved' ? 'reserved' : 'available',
-          polygon: [] // Пустой полигон, будет заполнен позже при редактировании
+          polygon: [], // Пустой полигон, будет заполнен позже при редактировании
+          custom_fields: customFieldsData
         };
       });
 
@@ -186,6 +236,15 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       setIsCreating(false);
     }
   };
+
+  // Объединяем стандартные поля и кастомные поля для маппинга
+  const allFields = { ...fieldLabels };
+  customFields.forEach(field => {
+    allFields[field.field_name] = field.field_label;
+  });
+
+  const allRequiredFields = [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
+  const isValidWithCustom = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
 
   return (
     <div className="space-y-6">
@@ -234,7 +293,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </CardContent>
       </Card>
 
-      {/* Соотнесение столбцов */}
+      {/* Соотнести столбцы */}
       <Card>
         <CardHeader>
           <CardTitle>Соотнести столбцы Excel</CardTitle>
@@ -244,8 +303,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.entries(fieldLabels).map(([field, label]) => {
-              const isRequired = requiredFields.includes(field);
+            {Object.entries(allFields).map(([field, label]) => {
+              const isRequired = allRequiredFields.includes(field);
               const currentValue = columnMapping[field as keyof ColumnMapping];
               
               return (
@@ -298,7 +357,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-3 font-semibold text-real-estate-900">Статус</th>
-                  {Object.entries(fieldLabels).map(([field, label]) => (
+                  {Object.entries(allFields).map(([field, label]) => (
                     <th key={field} className="text-left p-3 font-semibold text-real-estate-900">
                       {label}
                     </th>
@@ -311,7 +370,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                     <td className="p-3">
                       <Check className="h-5 w-5 text-success-500" />
                     </td>
-                    {Object.entries(fieldLabels).map(([field]) => {
+                    {Object.entries(allFields).map(([field]) => {
                       const columnName = columnMapping[field as keyof ColumnMapping];
                       const value = columnName && columnName !== '__none__' ? row[columnName] : '';
                       return (
@@ -340,7 +399,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </Button>
         <Button
           onClick={createProjectWithData}
-          disabled={!isValid || !projectData.name.trim() || isCreating}
+          disabled={!isValidWithCustom || !projectData.name.trim() || isCreating}
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           {isCreating ? 'Создание проекта...' : 'Создать проект с данными'}

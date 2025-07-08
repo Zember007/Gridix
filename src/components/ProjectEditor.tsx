@@ -5,13 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Building2, Image, Layout, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layout, RefreshCw, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
 import ProjectSyncManager from '@/components/ProjectSyncManager';
+import CustomFieldsManager from '@/components/CustomFieldsManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -178,7 +179,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[750px]">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               General
@@ -190,6 +191,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
               Floor Plans
+            </TabsTrigger>
+            <TabsTrigger value="fields" className="flex items-center gap-2" disabled={isNew}>
+              <Settings className="h-4 w-4" />
+              Custom Fields
             </TabsTrigger>
             <TabsTrigger value="sync" className="flex items-center gap-2" disabled={isNew}>
               <RefreshCw className="h-4 w-4" />
@@ -250,7 +255,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 {isNew && (
                   <div className="bg-real-estate-50 p-4 rounded-lg">
                     <p className="text-sm text-real-estate-700">
-                      After creating the project, you'll be able to upload building images and configure floor plans.
+                      After creating the project, you'll be able to upload building images, configure floor plans, and set up custom fields.
                     </p>
                   </div>
                 )}
@@ -292,6 +297,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="fields" className="space-y-6">
+            <CustomFieldsManager projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="sync" className="space-y-6">
