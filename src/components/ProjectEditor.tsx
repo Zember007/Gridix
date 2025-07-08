@@ -44,6 +44,22 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   }, [projectId, isNew]);
 
+  useEffect(() => {
+    window.addEventListener('wheel', function (e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', function (e) {
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      });
+    }
+  }, [])
+
   const loadProject = async () => {
     try {
       const { data, error } = await supabase
@@ -53,7 +69,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         .single();
 
       if (error) throw error;
-      
+
       setProjectData({
         name: data.name,
         description: data.description || '',
@@ -89,7 +105,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           .single();
 
         if (error) throw error;
-        
+
         toast.success('Project created');
         // Navigate to edit the created project
         navigate(`/admin/project/${data.id}`);
@@ -142,8 +158,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={onBack}
                 className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
@@ -163,7 +179,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </div>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleSave}
               disabled={saving}
               className="bg-real-estate-600 hover:bg-real-estate-700"
@@ -219,7 +235,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="floors">Number of Floors</Label>
                       <Input
@@ -233,7 +249,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -267,7 +283,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <BuildingImageEditor 
+                <BuildingImageEditor
                   projectId={projectId}
                   floors={projectData.floors}
                   onImageUpload={handleBuildingImageUpload}
@@ -285,7 +301,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <FloorPlanEditor 
+                <FloorPlanEditor
                   projectId={projectId}
                   floorNumber={floorNumber}
                   onFloorChange={handleFloorChange}
