@@ -39,6 +39,7 @@ interface Apartment {
   price: number;
   status: 'available' | 'sold' | 'reserved';
   polygon: { x: number; y: number }[];
+  custom_fields: Json | null;
 }
 
 const ProjectViewer = () => {
@@ -213,7 +214,8 @@ const ProjectViewer = () => {
           status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
             ? apt.status 
             : 'available',
-          polygon: polygon
+          polygon: polygon,
+          custom_fields: apt.custom_fields
         };
       });
 
@@ -629,15 +631,19 @@ const ProjectViewer = () => {
       {/* Apartment Details Panel */}
       {selectedApartment && (
         <ApartmentDetailsPanel
-          apartment={{
-            id: selectedApartment.id,
-            number: selectedApartment.apartment_number,
-            status: selectedApartment.status,
-            area: selectedApartment.area,
-            rooms: selectedApartment.rooms,
-            price: selectedApartment.price
-          }}
+          apartment={selectedApartment}
+          projectId={projectId!}
           onClose={() => setSelectedApartment(null)}
+          onUpdate={(updatedApartment) => {
+            setApartments(prev => prev.map(apt => 
+              apt.id === updatedApartment.id ? updatedApartment : apt
+            ));
+            setSelectedApartment(updatedApartment);
+          }}
+          onDelete={(apartmentId) => {
+            setApartments(prev => prev.filter(apt => apt.id !== apartmentId));
+            setSelectedApartment(null);
+          }}
         />
       )}
     </div>

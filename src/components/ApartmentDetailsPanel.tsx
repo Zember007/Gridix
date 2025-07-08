@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,7 @@ import { X, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
+import type { Json } from '@/integrations/supabase/types';
 
 interface Apartment {
   id: string;
@@ -19,7 +19,7 @@ interface Apartment {
   area: number;
   price: number | null;
   status: string;
-  custom_fields: Record<string, any>;
+  custom_fields: Json | null;
 }
 
 interface ApartmentDetailsPanelProps {
@@ -51,7 +51,14 @@ const ApartmentDetailsPanel = ({
         price: apartment.price,
         status: apartment.status
       });
-      setCustomFieldsData(apartment.custom_fields || {});
+      
+      // Convert Json type to Record<string, any>
+      const customFields = apartment.custom_fields;
+      if (customFields && typeof customFields === 'object' && !Array.isArray(customFields)) {
+        setCustomFieldsData(customFields as Record<string, any>);
+      } else {
+        setCustomFieldsData({});
+      }
     }
   }, [apartment]);
 
@@ -80,9 +87,10 @@ const ApartmentDetailsPanel = ({
 
       if (error) throw error;
 
-      const updatedApartment = {
+      const updatedApartment: Apartment = {
         ...apartment,
-        ...data
+        ...data,
+        custom_fields: data.custom_fields
       };
 
       onUpdate(updatedApartment);
