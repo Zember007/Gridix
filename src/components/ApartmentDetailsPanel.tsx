@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,9 +77,15 @@ const ApartmentDetailsPanel = ({
 
       if (error) throw error;
 
+      // Ensure the status is properly cast to the expected type
+      const validStatus = (['available', 'sold', 'reserved'].includes(data.status)) 
+        ? data.status as 'available' | 'sold' | 'reserved'
+        : 'available';
+
       const updatedApartment: Apartment = {
         ...apartment,
         ...data,
+        status: validStatus,
         polygon: apartment.polygon, // Keep existing polygon
         custom_fields: data.custom_fields
       };
@@ -221,7 +228,12 @@ const ApartmentDetailsPanel = ({
                 <Label htmlFor="status">Статус</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                  onValueChange={(value: string) => {
+                    const validStatus = (['available', 'sold', 'reserved'].includes(value)) 
+                      ? value as 'available' | 'sold' | 'reserved'
+                      : 'available';
+                    setFormData(prev => ({ ...prev, status: validStatus }));
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
