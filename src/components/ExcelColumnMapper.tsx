@@ -1,13 +1,15 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle, ArrowRight } from 'lucide-react';
+import { Check, AlertCircle, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import CustomFieldsManager from '@/components/CustomFieldsManager';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -22,12 +24,22 @@ interface ColumnMapping {
   area: string;
   price: string;
   status: string;
+  [key: string]: string; // для кастомных полей
 }
 
 interface ProjectData {
   name: string;
   description: string;
   floors: number;
+}
+
+interface CustomField {
+  id?: string;
+  field_name: string;
+  field_label: string;
+  field_type: 'text' | 'number' | 'select' | 'boolean';
+  is_required: boolean;
+  field_options?: string[];
 }
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
@@ -46,6 +58,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     floors: 1
   });
 
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [tempProjectId, setTempProjectId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const fieldLabels = {
@@ -58,6 +72,44 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   };
 
   const requiredFields = ['apartmentNumber', 'floor', 'rooms', 'area'];
+
+  // Создаем временный проект для настройки кастомных полей
+  useEffect(() => {
+    createTempProject();
+  }, []);
+
+  const createTempProject = async () => {
+    try {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: 'temp_project_' + Date.now(),
+          description: 'Временный проект для настройки импорта',
+          floors: 1
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setTempProjectId(project.id);
+    } catch (error) {
+      console.error('Error creating temp project:', error);
+    }
+  };
+
+  const handleCustomFieldsChange = (fields: CustomField[]) => {
+    setCustomFields(fields);
+    
+    // Добавляем кастомные поля в маппинг
+    const newMapping = { ...columnMapping };
+    fields.forEach(field => {
+      if (!newMapping[field.field_name]) {
+        newMapping[field.field_name] = '';
+      }
+    });
+    setColumnMapping(newMapping);
+  };
+
   const isValid = requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
 
   const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
@@ -91,7 +143,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       console.log('Максимальный этаж:', maxFloor);
 
-      // Создаем проект
+      // Создаем реальный проект
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert([{
@@ -104,6 +156,26 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       if (projectError) throw projectError;
       console.log('Проект создан:', project);
+
+      // Копируем кастомные поля из временного проекта в реальный
+      if (customFields.length > 0 && tempProjectId) {
+        const customFieldsData = customFields.map(field => ({
+          project_id: project.id,
+          field_name: field.field_name,
+          field_label: field.field_label,
+          field_type: field.field_type,
+          is_required: field.is_required,
+          field_options: field.field_options
+        }));
+
+        const { error: fieldsError } = await supabase
+          .from('project_custom_fields')
+          .insert(customFieldsData);
+
+        if (fieldsError) {
+          console.error('Ошибка при копировании кастомных полей:', fieldsError);
+        }
+      }
 
       // Создаем этажи здания для визуализации
       const floorData = [];
@@ -139,6 +211,29 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           ? (String(row[columnMapping.status]) || 'available') 
           : 'available';
 
+        // Собираем кастомные поля
+        const customFieldsData: Record<string, any> = {};
+        customFields.forEach(field => {
+          const mappedColumn = columnMapping[field.field_name];
+          if (mappedColumn && mappedColumn !== '__none__') {
+            let value = row[mappedColumn];
+            
+            // Преобразуем значение в зависимости от типа поля
+            switch (field.field_type) {
+              case 'number':
+                value = parseFloat(String(value)) || 0;
+                break;
+              case 'boolean':
+                value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'да';
+                break;
+              default:
+                value = String(value || '');
+            }
+            
+            customFieldsData[field.field_name] = value;
+          }
+        });
+
         console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}`);
 
         return {
@@ -150,7 +245,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           price: price,
           status: status === 'продана' || status === 'sold' ? 'sold' : 
                  status === 'забронирована' || status === 'reserved' ? 'reserved' : 'available',
-          polygon: [] // Пустой полигон, будет заполнен позже при редактировании
+          polygon: [], // Пустой полигон, будет заполнен позже при редактировании
+          custom_fields: customFieldsData
         };
       });
 
@@ -161,6 +257,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         .insert(apartmentData);
 
       if (apartmentError) throw apartmentError;
+
+      // Удаляем временный проект
+      if (tempProjectId) {
+        await supabase.from('projects').delete().eq('id', tempProjectId);
+      }
 
       // Группируем квартиры по этажам для отчета
       const apartmentsByFloor = apartmentData.reduce((acc, apt) => {
@@ -186,6 +287,19 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       setIsCreating(false);
     }
   };
+
+  // Объединяем стандартные поля и кастомные поля для маппинга
+  const allFields = { ...fieldLabels };
+  customFields.forEach(field => {
+    allFields[field.field_name] = field.field_label;
+  });
+
+  const allRequiredFields = [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
+  const isValidWithCustom = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+
+  if (!tempProjectId) {
+    return <div className="p-4 text-center">Инициализация...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -234,7 +348,13 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </CardContent>
       </Card>
 
-      {/* Соотнесение столбцов */}
+      {/* Настройка кастомных полей */}
+      <CustomFieldsManager 
+        projectId={tempProjectId}
+        onFieldsChange={handleCustomFieldsChange}
+      />
+
+      {/* Соотнести столбцы */}
       <Card>
         <CardHeader>
           <CardTitle>Соотнести столбцы Excel</CardTitle>
@@ -244,8 +364,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.entries(fieldLabels).map(([field, label]) => {
-              const isRequired = requiredFields.includes(field);
+            {Object.entries(allFields).map(([field, label]) => {
+              const isRequired = allRequiredFields.includes(field);
               const currentValue = columnMapping[field as keyof ColumnMapping];
               
               return (
@@ -298,7 +418,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-3 font-semibold text-real-estate-900">Статус</th>
-                  {Object.entries(fieldLabels).map(([field, label]) => (
+                  {Object.entries(allFields).map(([field, label]) => (
                     <th key={field} className="text-left p-3 font-semibold text-real-estate-900">
                       {label}
                     </th>
@@ -311,7 +431,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                     <td className="p-3">
                       <Check className="h-5 w-5 text-success-500" />
                     </td>
-                    {Object.entries(fieldLabels).map(([field]) => {
+                    {Object.entries(allFields).map(([field]) => {
                       const columnName = columnMapping[field as keyof ColumnMapping];
                       const value = columnName && columnName !== '__none__' ? row[columnName] : '';
                       return (
@@ -340,7 +460,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </Button>
         <Button
           onClick={createProjectWithData}
-          disabled={!isValid || !projectData.name.trim() || isCreating}
+          disabled={!isValidWithCustom || !projectData.name.trim() || isCreating}
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           {isCreating ? 'Создание проекта...' : 'Создать проект с данными'}

@@ -1,17 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Plus, Trash2, Save, Edit3, Settings, X, Undo2, RotateCcw, Copy } from 'lucide-react';
+import { Upload, Plus, Trash2, Edit3, Settings, X, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import ApartmentStatsPanel from './ApartmentStatsPanel';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import PolygonEditor from './polygon-editor/PolygonEditor';
 
 interface Point {
   x: number;
@@ -62,8 +63,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [imageUrl, setImageUrl] = useState<string>('');
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<string | null>(null);
-  const [currentPolygon, setCurrentPolygon] = useState<Point[]>([]);
-  const [polygonHistory, setPolygonHistory] = useState<Point[][]>([]);
   const [apartmentData, setApartmentData] = useState<{
     number: string;
     rooms: number;
@@ -79,12 +78,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   });
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPolygonEditor, setShowPolygonEditor] = useState(false);
+  const [editingPolygon, setEditingPolygon] = useState<Point[]>([]);
   const [polygonSettings, setPolygonSettings] = useState<PolygonSettings | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     loadFloorPlan();
@@ -209,24 +208,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
     setLoading(true);
     try {
-      // Создаем Storage bucket если его нет
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === 'project-images');
-      
-      if (!bucketExists) {
-        const { error: bucketError } = await supabase.storage.createBucket('project-images', {
-          public: true,
-          allowedMimeTypes: ['image/*'],
-          fileSizeLimit: 10485760 // 10MB
-        });
-        
-        if (bucketError) {
-          console.error('Error creating bucket:', bucketError);
-          toast.error('Ошибка создания хранилища для изображений');
-          return;
-        }
-      }
-
       const fileExt = file.name.split('.').pop();
       const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.${fileExt}`;
 
@@ -293,7 +274,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const floorsToUpdate = allFloors.filter(f => f !== floorNumber);
       
       for (const targetFloor of floorsToUpdate) {
-        // Дублируем план этажа
         if (imageUrl) {
           const { data: existingPlan } = await supabase
             .from('floor_plans')
@@ -322,37 +302,32 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           }
         }
 
-        // Дублируем квартиры
         if (apartments.length > 0) {
-          // Удаляем существующие квартиры на целевом этаже
           await supabase
             .from('apartments')
             .delete()
             .eq('project_id', projectId)
             .eq('floor_number', targetFloor);
 
-          // Создаем новые квартиры с уникальными номерами
           for (const apt of apartments) {
-            // Генерируем уникальный номер квартиры для каждого этажа
             const baseNumber = apt.apartment_number.replace(/^\d+/, '');
-            const newApartmentNumber = `${targetFloor}${baseNumber}`;
+            const newApartmentNumber = `${targetFloor}${baseNumber.padStart(2, '0')}`;
             
-            const { error } = await supabase
-              .from('apartments')
-              .insert({
-                project_id: projectId,
-                floor_number: targetFloor,
-                apartment_number: newApartmentNumber,
-                rooms: apt.rooms,
-                area: apt.area,
-                price: apt.price,
-                status: apt.status,
-                polygon: apt.polygon as any
-              });
-
-            if (error) {
+            try {
+              await supabase
+                .from('apartments')
+                .insert({
+                  project_id: projectId,
+                  floor_number: targetFloor,
+                  apartment_number: newApartmentNumber,
+                  rooms: apt.rooms,
+                  area: apt.area,
+                  price: apt.price,
+                  status: apt.status,
+                  polygon: apt.polygon as any
+                });
+            } catch (error) {
               console.error('Error inserting apartment:', error);
-              // Продолжаем с другими квартирами
             }
           }
         }
@@ -367,47 +342,38 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  const getImageCoordinates = (clientX: number, clientY: number): Point => {
-    if (!imageRef.current || !svgRef.current) return { x: 0, y: 0 };
-
-    const svgRect = svgRef.current.getBoundingClientRect();
-
-    const x = ((clientX - svgRect.left) / svgRect.width) * 100;
-    const y = ((clientY - svgRect.top) / svgRect.height) * 100;
-
-    return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
-  };
-
-  const handleSvgClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    if (editingApartment === null) return;
-
-    const point = getImageCoordinates(event.clientX, event.clientY);
-    const newPolygon = [...currentPolygon, point];
-    
-    setPolygonHistory(prev => [...prev, currentPolygon]);
-    setCurrentPolygon(newPolygon);
-  };
-
-  const undoLastPoint = () => {
-    if (currentPolygon.length > 0) {
-      setPolygonHistory(prev => [...prev, currentPolygon]);
-      setCurrentPolygon(prev => prev.slice(0, -1));
-    } else if (polygonHistory.length > 0) {
-      const lastState = polygonHistory[polygonHistory.length - 1];
-      setCurrentPolygon(lastState);
-      setPolygonHistory(prev => prev.slice(0, -1));
+  const startEditingApartment = (apartmentId: string | null) => {
+    if (apartmentId === 'new') {
+      setEditingApartment('new');
+      setApartmentData({
+        number: '',
+        rooms: 1,
+        area: 0,
+        price: 0,
+        status: 'available'
+      });
+      setEditingPolygon([]);
+      setShowPolygonEditor(true);
+    } else if (apartmentId) {
+      const apartment = apartments.find(apt => apt.id === apartmentId);
+      if (apartment) {
+        setEditingApartment(apartmentId);
+        setApartmentData({
+          number: apartment.apartment_number,
+          rooms: apartment.rooms,
+          area: apartment.area,
+          price: apartment.price,
+          status: apartment.status
+        });
+        setEditingPolygon(apartment.polygon);
+        setShowPolygonEditor(true);
+      }
     }
+    setSelectedApartment(null);
   };
 
-  const clearPolygon = () => {
-    if (currentPolygon.length > 0) {
-      setPolygonHistory(prev => [...prev, currentPolygon]);
-    }
-    setCurrentPolygon([]);
-  };
-
-  const saveApartment = async () => {
-    if (!editingApartment || currentPolygon.length < 3 || !apartmentData.number) {
+  const handlePolygonSave = async (points: Point[]) => {
+    if (!editingApartment || points.length < 3 || !apartmentData.number) {
       toast.error('Заполните все поля и создайте полигон (минимум 3 точки)');
       return;
     }
@@ -424,7 +390,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon as any
+            polygon: points as any
           })
           .select()
           .single();
@@ -438,7 +404,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           area: Number(data.area),
           price: Number(data.price),
           status: data.status as 'available' | 'sold' | 'reserved',
-          polygon: currentPolygon
+          polygon: points
         }]);
       } else {
         const existingApartment = apartments.find(apt => apt.id === editingApartment);
@@ -452,7 +418,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: currentPolygon as any
+            polygon: points as any
           })
           .eq('id', existingApartment.id);
 
@@ -460,7 +426,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
         setApartments(prev => prev.map(apt => 
           apt.id === existingApartment.id 
-            ? { ...apt, ...apartmentData, polygon: currentPolygon }
+            ? { ...apt, ...apartmentData, polygon: points }
             : apt
         ));
       }
@@ -473,34 +439,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  const startEditingApartment = (apartmentId: string | null) => {
-    if (apartmentId === 'new') {
-      setEditingApartment('new');
-      setApartmentData({
-        number: '',
-        rooms: 1,
-        area: 0,
-        price: 0,
-        status: 'available'
-      });
-      setCurrentPolygon([]);
-      setPolygonHistory([]);
-    } else if (apartmentId) {
-      const apartment = apartments.find(apt => apt.id === apartmentId);
-      if (apartment) {
-        setEditingApartment(apartmentId);
-        setApartmentData({
-          number: apartment.apartment_number,
-          rooms: apartment.rooms,
-          area: apartment.area,
-          price: apartment.price,
-          status: apartment.status
-        });
-        setCurrentPolygon(apartment.polygon);
-        setPolygonHistory([]);
-      }
-    }
-    setSelectedApartment(null);
+  const handlePolygonCancel = () => {
+    resetEditing();
   };
 
   const deleteApartment = async (apartmentId: string) => {
@@ -522,8 +462,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const resetEditing = () => {
     setEditingApartment(null);
-    setCurrentPolygon([]);
-    setPolygonHistory([]);
+    setEditingPolygon([]);
+    setShowPolygonEditor(false);
     setApartmentData({
       number: '',
       rooms: 1,
@@ -611,6 +551,97 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     );
   }
 
+  if (showPolygonEditor) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">
+            Редактирование полигона - {editingApartment === 'new' ? 'Новая квартира' : `Квартира №${apartmentData.number}`}
+          </h3>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-md">Параметры квартиры</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="apt-number">Номер квартиры</Label>
+                <Input
+                  id="apt-number"
+                  value={apartmentData.number}
+                  onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
+                  placeholder="Например: 101"
+                />
+              </div>
+              <div>
+                <Label htmlFor="apt-rooms">Комнат</Label>
+                <Select
+                  value={apartmentData.rooms.toString()}
+                  onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: parseInt(value) }))}
+                >
+                  <SelectTrigger id="apt-rooms">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map(num => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="apt-area">Площадь (м²)</Label>
+                <Input
+                  id="apt-area"
+                  type="number"
+                  value={apartmentData.area}
+                  onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="apt-price">Цена (₽)</Label>
+                <Input
+                  id="apt-price"
+                  type="number"
+                  value={apartmentData.price}
+                  onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="apt-status">Статус</Label>
+                <Select
+                  value={apartmentData.status}
+                  onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger id="apt-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Свободна</SelectItem>
+                    <SelectItem value="reserved">Бронь</SelectItem>
+                    <SelectItem value="sold">Продана</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <PolygonEditor
+          imageUrl={imageUrl}
+          existingPolygons={editingPolygon}
+          onSave={handlePolygonSave}
+          onCancel={handlePolygonCancel}
+          polygonColor={getStatusColor(apartmentData.status)}
+        />
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -693,122 +724,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   Добавить квартиру
                 </Button>
 
-                {editingApartment && (
-                  <div className="p-4 bg-blue-50 rounded-lg space-y-4">
-                    <h4 className="font-medium text-blue-900">
-                      {editingApartment === 'new' ? 'Новая квартира' : 'Редактирование квартиры'}
-                    </h4>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="apt-number">Номер квартиры</Label>
-                        <Input
-                          id="apt-number"
-                          value={apartmentData.number}
-                          onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
-                          placeholder="Например: 101"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="apt-rooms">Комнат</Label>
-                        <Select
-                          value={apartmentData.rooms.toString()}
-                          onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: parseInt(value) }))}
-                        >
-                          <SelectTrigger id="apt-rooms">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[1, 2, 3, 4, 5].map(num => (
-                              <SelectItem key={num} value={num.toString()}>
-                                {num}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="apt-area">Площадь (м²)</Label>
-                        <Input
-                          id="apt-area"
-                          type="number"
-                          value={apartmentData.area}
-                          onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="apt-price">Цена (₽)</Label>
-                        <Input
-                          id="apt-price"
-                          type="number"
-                          value={apartmentData.price}
-                          onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label htmlFor="apt-status">Статус</Label>
-                        <Select
-                          value={apartmentData.status}
-                          onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
-                        >
-                          <SelectTrigger id="apt-status">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="available">Свободна</SelectItem>
-                            <SelectItem value="reserved">Бронь</SelectItem>
-                            <SelectItem value="sold">Продана</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-blue-700">
-                      Кликайте на план, чтобы создать полигон квартиры. 
-                      Текущих точек: {currentPolygon.length}
-                    </p>
-
-                    <div className="flex gap-2 flex-wrap">
-                      <Button size="sm" onClick={saveApartment}>
-                        <Save className="h-3 w-3 mr-1" />
-                        Сохранить
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={resetEditing}>
-                        Отмена
-                      </Button>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={undoLastPoint}
-                            disabled={currentPolygon.length === 0 && polygonHistory.length === 0}
-                          >
-                            <Undo2 className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Отменить последнюю точку</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={clearPolygon}
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Очистить полигон</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                )}
-
                 {/* Apartments List */}
                 <div className="space-y-2">
                   <h4 className="font-medium">Квартиры на этаже:</h4>
@@ -848,13 +763,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             </CardContent>
           </Card>
 
-          {/* Image Editor */}
+          {/* Image Viewer */}
           {imageUrl && (
             <Card>
               <CardContent className="p-6">
                 <div className="relative inline-block max-w-full">
                   <img
-                    ref={imageRef}
                     src={imageUrl}
                     alt={`Floor ${floorNumber} plan`}
                     className="max-w-full max-h-[600px] object-contain rounded-lg"
@@ -865,11 +779,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     }}
                   />
                   <svg
-                    ref={svgRef}
-                    className="absolute top-0 left-0 w-full h-full cursor-crosshair"
+                    className="absolute top-0 left-0 w-full h-full"
                     viewBox="0 0 100 100"
                     preserveAspectRatio="none"
-                    onClick={handleSvgClick}
                   >
                     {/* Existing apartments */}
                     {apartments.map(apartment => {
@@ -937,32 +849,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                         </g>
                       );
                     })}
-
-                    {/* Current polygon being drawn */}
-                    {currentPolygon.length > 0 && (
-                      <>
-                        {currentPolygon.length > 2 && (
-                          <path
-                            d={polygonToPath(currentPolygon)}
-                            fill="rgba(59, 130, 246, 0.3)"
-                            stroke="#3b82f6"
-                            strokeWidth="0.5"
-                            strokeDasharray="2,2"
-                          />
-                        )}
-                        {currentPolygon.map((point, index) => (
-                          <circle
-                            key={index}
-                            cx={point.x}
-                            cy={point.y}
-                            r="0.5"
-                            fill="#3b82f6"
-                            stroke="white"
-                            strokeWidth="0.2"
-                          />
-                        ))}
-                      </>
-                    )}
                   </svg>
                 </div>
               </CardContent>
