@@ -13,6 +13,7 @@ import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
 import ProjectSyncManager from '@/components/ProjectSyncManager';
 import CustomFieldsManager from '@/components/CustomFieldsManager';
+import ProjectApartmentsManager from '@/components/ProjectApartmentsManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -179,7 +180,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-[750px]">
+          <TabsList className="grid w-full grid-cols-6 lg:w-[900px]">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               General
@@ -191,6 +192,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
               Floor Plans
+            </TabsTrigger>
+            <TabsTrigger value="apartments" className="flex items-center gap-2" disabled={isNew}>
+              <Building2 className="h-4 w-4" />
+              Apartments
             </TabsTrigger>
             <TabsTrigger value="fields" className="flex items-center gap-2" disabled={isNew}>
               <Settings className="h-4 w-4" />
@@ -297,6 +302,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="apartments" className="space-y-6">
+            <ProjectApartmentsManager projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="fields" className="space-y-6">
