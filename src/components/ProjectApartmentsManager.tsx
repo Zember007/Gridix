@@ -12,10 +12,25 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
 import type { Apartment } from '@/types/apartment';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
 }
+
+// Helper function to convert database polygon to our type
+const convertPolygonFromDb = (polygon: Json | null): { x: number; y: number }[] => {
+  if (!polygon || !Array.isArray(polygon)) return [];
+  return polygon.map((point: any) => ({
+    x: typeof point?.x === 'number' ? point.x : 0,
+    y: typeof point?.y === 'number' ? point.y : 0
+  }));
+};
+
+// Helper function to convert our polygon type to database type
+const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
+  return polygon as Json;
+};
 
 const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -49,12 +64,18 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
       if (error) throw error;
 
-      const formattedApartments = data.map(apt => ({
-        ...apt,
+      const formattedApartments: Apartment[] = data.map(apt => ({
+        id: apt.id,
+        apartment_number: apt.apartment_number,
+        floor_number: apt.floor_number,
+        rooms: apt.rooms,
+        area: apt.area,
+        price: apt.price,
         status: (['available', 'sold', 'reserved'].includes(apt.status)) 
           ? apt.status as 'available' | 'sold' | 'reserved'
           : 'available',
-        polygon: Array.isArray(apt.polygon) ? apt.polygon : []
+        polygon: convertPolygonFromDb(apt.polygon),
+        custom_fields: apt.custom_fields
       }));
 
       setApartments(formattedApartments);
@@ -72,11 +93,22 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       return;
     }
 
+    if (!apartmentData.floor_number || apartmentData.floor_number < 1) {
+      toast.error('Номер этажа обязателен');
+      return;
+    }
+
     try {
       const saveData = {
-        ...apartmentData,
+        apartment_number: apartmentData.apartment_number.trim(),
+        floor_number: apartmentData.floor_number,
+        rooms: apartmentData.rooms || 1,
+        area: apartmentData.area || 0,
+        price: apartmentData.price,
+        status: apartmentData.status || 'available',
+        polygon: convertPolygonToDb(apartmentData.polygon || []),
+        custom_fields: customFieldsData as Json,
         project_id: projectId,
-        custom_fields: customFieldsData,
         updated_at: new Date().toISOString()
       };
 
@@ -90,11 +122,17 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         if (error) throw error;
 
         const newApt: Apartment = {
-          ...data,
+          id: data.id,
+          apartment_number: data.apartment_number,
+          floor_number: data.floor_number,
+          rooms: data.rooms,
+          area: data.area,
+          price: data.price,
           status: (['available', 'sold', 'reserved'].includes(data.status)) 
             ? data.status as 'available' | 'sold' | 'reserved'
             : 'available',
-          polygon: Array.isArray(data.polygon) ? data.polygon : []
+          polygon: convertPolygonFromDb(data.polygon),
+          custom_fields: data.custom_fields
         };
 
         setApartments(prev => [...prev, newApt]);
@@ -121,11 +159,17 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         if (error) throw error;
 
         const updatedApt: Apartment = {
-          ...data,
+          id: data.id,
+          apartment_number: data.apartment_number,
+          floor_number: data.floor_number,
+          rooms: data.rooms,
+          area: data.area,
+          price: data.price,
           status: (['available', 'sold', 'reserved'].includes(data.status)) 
             ? data.status as 'available' | 'sold' | 'reserved'
             : 'available',
-          polygon: Array.isArray(data.polygon) ? data.polygon : []
+          polygon: convertPolygonFromDb(data.polygon),
+          custom_fields: data.custom_fields
         };
 
         setApartments(prev => 
