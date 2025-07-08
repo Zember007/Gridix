@@ -9,18 +9,7 @@ import { X, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
-import type { Json } from '@/integrations/supabase/types';
-
-interface Apartment {
-  id: string;
-  apartment_number: string;
-  floor_number: number;
-  rooms: number;
-  area: number;
-  price: number | null;
-  status: string;
-  custom_fields: Json | null;
-}
+import type { Apartment } from '@/types/apartment';
 
 interface ApartmentDetailsPanelProps {
   apartment: Apartment | null;
@@ -90,6 +79,7 @@ const ApartmentDetailsPanel = ({
       const updatedApartment: Apartment = {
         ...apartment,
         ...data,
+        polygon: apartment.polygon, // Keep existing polygon
         custom_fields: data.custom_fields
       };
 

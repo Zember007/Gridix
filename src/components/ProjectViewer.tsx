@@ -8,6 +8,7 @@ import { Building2, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ApartmentDetailsPanel from './ApartmentDetailsPanel';
 import ApartmentTooltip from './ApartmentTooltip';
+import type { Apartment } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Project {
@@ -29,17 +30,6 @@ interface FloorPlan {
   id: string;
   floor_number: number;
   image_url: string;
-}
-
-interface Apartment {
-  id: string;
-  apartment_number: string;
-  rooms: number;
-  area: number;
-  price: number;
-  status: 'available' | 'sold' | 'reserved';
-  polygon: { x: number; y: number }[];
-  custom_fields: Json | null;
 }
 
 const ProjectViewer = () => {
@@ -208,6 +198,7 @@ const ProjectViewer = () => {
         return {
           id: apt.id,
           apartment_number: apt.apartment_number,
+          floor_number: apt.floor_number,
           rooms: apt.rooms,
           area: Number(apt.area),
           price: Number(apt.price) || 0,
@@ -586,7 +577,7 @@ const ProjectViewer = () => {
                       <span className="font-medium">{selectedApartment.area} m²</span>
                     </div>
                     
-                    {selectedApartment.price > 0 && (
+                    {selectedApartment.price && selectedApartment.price > 0 && (
                       <div className="flex justify-between">
                         <span className="text-real-estate-600">Price:</span>
                         <span className="font-bold text-real-estate-900">
