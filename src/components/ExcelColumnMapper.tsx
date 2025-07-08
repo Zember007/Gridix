@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle, ArrowRight } from 'lucide-react';
+import { Check, AlertCircle, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import CustomFieldsManager from '@/components/CustomFieldsManager';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -33,7 +34,7 @@ interface ProjectData {
 }
 
 interface CustomField {
-  id: string;
+  id?: string;
   field_name: string;
   field_label: string;
   field_type: 'text' | 'number' | 'select' | 'boolean';
@@ -58,6 +59,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   });
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [tempProjectId, setTempProjectId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const fieldLabels = {
@@ -71,17 +73,41 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
   const requiredFields = ['apartmentNumber', 'floor', 'rooms', 'area'];
 
-  // Загружаем кастомные поля, если создаем проект на основе существующего
+  // Создаем временный проект для настройки кастомных полей
   useEffect(() => {
-    if (projectData.name) {
-      loadCustomFields();
-    }
-  }, [projectData.name]);
+    createTempProject();
+  }, []);
 
-  const loadCustomFields = async () => {
-    // Пока мы создаем новый проект, кастомные поля будут добавлены позже
-    // Но оставим возможность их настройки в будущем
-    setCustomFields([]);
+  const createTempProject = async () => {
+    try {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: 'temp_project_' + Date.now(),
+          description: 'Временный проект для настройки импорта',
+          floors: 1
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setTempProjectId(project.id);
+    } catch (error) {
+      console.error('Error creating temp project:', error);
+    }
+  };
+
+  const handleCustomFieldsChange = (fields: CustomField[]) => {
+    setCustomFields(fields);
+    
+    // Добавляем кастомные поля в маппинг
+    const newMapping = { ...columnMapping };
+    fields.forEach(field => {
+      if (!newMapping[field.field_name]) {
+        newMapping[field.field_name] = '';
+      }
+    });
+    setColumnMapping(newMapping);
   };
 
   const isValid = requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
@@ -117,7 +143,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       console.log('Максимальный этаж:', maxFloor);
 
-      // Создаем проект
+      // Создаем реальный проект
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert([{
@@ -130,6 +156,26 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       if (projectError) throw projectError;
       console.log('Проект создан:', project);
+
+      // Копируем кастомные поля из временного проекта в реальный
+      if (customFields.length > 0 && tempProjectId) {
+        const customFieldsData = customFields.map(field => ({
+          project_id: project.id,
+          field_name: field.field_name,
+          field_label: field.field_label,
+          field_type: field.field_type,
+          is_required: field.is_required,
+          field_options: field.field_options
+        }));
+
+        const { error: fieldsError } = await supabase
+          .from('project_custom_fields')
+          .insert(customFieldsData);
+
+        if (fieldsError) {
+          console.error('Ошибка при копировании кастомных полей:', fieldsError);
+        }
+      }
 
       // Создаем этажи здания для визуализации
       const floorData = [];
@@ -212,6 +258,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       if (apartmentError) throw apartmentError;
 
+      // Удаляем временный проект
+      if (tempProjectId) {
+        await supabase.from('projects').delete().eq('id', tempProjectId);
+      }
+
       // Группируем квартиры по этажам для отчета
       const apartmentsByFloor = apartmentData.reduce((acc, apt) => {
         acc[apt.floor_number] = (acc[apt.floor_number] || 0) + 1;
@@ -245,6 +296,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
   const allRequiredFields = [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
   const isValidWithCustom = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+
+  if (!tempProjectId) {
+    return <div className="p-4 text-center">Инициализация...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -292,6 +347,12 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           </div>
         </CardContent>
       </Card>
+
+      {/* Настройка кастомных полей */}
+      <CustomFieldsManager 
+        projectId={tempProjectId}
+        onFieldsChange={handleCustomFieldsChange}
+      />
 
       {/* Соотнести столбцы */}
       <Card>
