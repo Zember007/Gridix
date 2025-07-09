@@ -252,34 +252,43 @@ export type Database = {
       }
       projects: {
         Row: {
+          address: string | null
           building_image_url: string | null
           building_polygon_settings: Json | null
           created_at: string
           description: string | null
           floors: number
           id: string
+          latitude: number | null
+          longitude: number | null
           name: string
           polygon_settings: Json | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           building_image_url?: string | null
           building_polygon_settings?: Json | null
           created_at?: string
           description?: string | null
           floors?: number
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name: string
           polygon_settings?: Json | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           building_image_url?: string | null
           building_polygon_settings?: Json | null
           created_at?: string
           description?: string | null
           floors?: number
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           polygon_settings?: Json | null
           updated_at?: string
