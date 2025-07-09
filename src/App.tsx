@@ -10,6 +10,8 @@ import ProjectsGalleryPage from "./pages/ProjectsGalleryPage";
 import EmbedProjectWidget from "./pages/EmbedProjectWidget";
 import EmbedProjectsGallery from "./pages/EmbedProjectsGallery";
 import EmbedProjectsMap from "./pages/EmbedProjectsMap";
+import AdminPage from "./pages/AdminPage";
+import ProjectEditorPage from "./pages/ProjectEditorPage";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/project/new" element={<ProjectEditorPage />} />
+          <Route path="/admin/project/:projectId" element={<ProjectEditorPage />} />
           <Route path="/project/:projectId" element={<ProjectWidgetPage />} />
           <Route path="/projects" element={<ProjectsGalleryPage />} />
           <Route path="/embed/project/:projectId" element={<EmbedProjectWidget />} />
