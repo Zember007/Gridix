@@ -7,7 +7,6 @@ import { Upload, Plus, Trash2, Save, Edit3, Settings, Undo2, RotateCcw } from 'l
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import BuildingPolygonSettingsComponent from './BuildingPolygonSettings';
-import ApartmentStatsPanel from './ApartmentStatsPanel';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
@@ -160,7 +159,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
 
     const point = getImageCoordinates(event.clientX, event.clientY);
     const newPolygon = [...currentPolygon, point];
-    
+
     // Сохраняем состояние в историю
     setPolygonHistory(prev => [...prev, currentPolygon]);
     setCurrentPolygon(newPolygon);
@@ -205,8 +204,8 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
 
         if (error) throw error;
 
-        setBuildingFloors(prev => prev.map(f => 
-          f.id === existingFloor.id 
+        setBuildingFloors(prev => prev.map(f =>
+          f.id === existingFloor.id
             ? { ...f, polygon: currentPolygon, color: floorColor }
             : f
         ));
@@ -246,7 +245,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
     setEditingFloor(floorNumber);
     setCurrentPolygon([]);
     setPolygonHistory([]);
-    
+
     const existingFloor = buildingFloors.find(f => f.floor_number === floorNumber);
     if (existingFloor) {
       setCurrentPolygon(existingFloor.polygon);
@@ -320,247 +319,241 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main editor */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Изображение здания</h3>
-            <Button
-              variant="outline"
-              onClick={() => setShowSettings(true)}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Настройки
-            </Button>
-          </div>
+      <div className="lg:col-span-3 space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Изображение здания</h3>
+          <Button
+            variant="outline"
+            onClick={() => setShowSettings(true)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Настройки
+          </Button>
+        </div>
 
-          {/* Image Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-md">Загрузка изображения</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="building-image">Изображение здания</Label>
-                  <Input
-                    id="building-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={loading}
-                  />
-                </div>
-                {loading && <p className="text-sm text-gray-600">Загрузка...</p>}
+        {/* Image Upload */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-md">Загрузка изображения</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="building-image">Изображение здания</Label>
+                <Input
+                  id="building-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={loading}
+                />
               </div>
-            </CardContent>
-          </Card>
+              {loading && <p className="text-sm text-gray-600">Загрузка...</p>}
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Floor Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-md">Управление этажами</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-2">
-                  {Array.from({ length: floors }, (_, i) => i + 1).map(floorNum => {
-                    const existingFloor = buildingFloors.find(f => f.floor_number === floorNum);
-                    const isEditing = editingFloor === floorNum;
-                    
-                    return (
-                      <div key={floorNum} className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant={isEditing ? "default" : existingFloor ? "secondary" : "outline"}
-                          onClick={() => startEditingFloor(floorNum)}
-                          className="flex-1"
-                        >
-                          <Edit3 className="h-3 w-3 mr-1" />
-                          Этаж {floorNum}
-                        </Button>
-                        {existingFloor && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => deleteFloor(existingFloor.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+        {/* Floor Controls */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-md">Управление этажами</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: floors }, (_, i) => i + 1).map(floorNum => {
+                  const existingFloor = buildingFloors.find(f => f.floor_number === floorNum);
+                  const isEditing = editingFloor === floorNum;
 
-                {editingFloor && (
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 mb-2">
-                      Редактирование этажа {editingFloor}
-                    </p>
-                    <p className="text-sm text-blue-700 mb-3">
-                      Кликайте на изображение, чтобы создать полигон этажа. 
-                      Текущих точек: {currentPolygon.length}
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <Button size="sm" onClick={finishPolygon} disabled={currentPolygon.length < 3}>
-                        <Save className="h-3 w-3 mr-1" />
-                        Сохранить полигон
-                      </Button>
+                  return (
+                    <div key={floorNum} className="flex items-center gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingFloor(null);
-                          setCurrentPolygon([]);
-                          setPolygonHistory([]);
-                        }}
+                        variant={isEditing ? "default" : existingFloor ? "secondary" : "outline"}
+                        onClick={() => startEditingFloor(floorNum)}
+                        className="flex-1"
                       >
-                        Отмена
+                        <Edit3 className="h-3 w-3 mr-1" />
+                        Этаж {floorNum}
                       </Button>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={undoLastPoint}
-                            disabled={currentPolygon.length === 0 && polygonHistory.length === 0}
-                          >
-                            <Undo2 className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Отменить последнюю точку</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={clearPolygon}
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Очистить полигон</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      {existingFloor && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteFloor(existingFloor.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
+
+              {editingFloor && (
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 mb-2">
+                    Редактирование этажа {editingFloor}
+                  </p>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Кликайте на изображение, чтобы создать полигон этажа.
+                    Текущих точек: {currentPolygon.length}
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" onClick={finishPolygon} disabled={currentPolygon.length < 3}>
+                      <Save className="h-3 w-3 mr-1" />
+                      Сохранить полигон
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingFloor(null);
+                        setCurrentPolygon([]);
+                        setPolygonHistory([]);
+                      }}
+                    >
+                      Отмена
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={undoLastPoint}
+                          disabled={currentPolygon.length === 0 && polygonHistory.length === 0}
+                        >
+                          <Undo2 className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Отменить последнюю точку</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={clearPolygon}
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Очистить полигон</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Image Editor */}
+        {imageUrl && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="relative inline-block max-w-full">
+                <img
+                  ref={imageRef}
+                  src={imageUrl}
+                  alt="Building"
+                  className="max-w-full max-h-[600px] object-contain rounded-lg"
+                />
+                <svg
+                  ref={svgRef}
+                  className="absolute top-0 left-0 w-full h-full cursor-crosshair"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  onClick={handleSvgClick}
+                >
+                  {/* Existing floor polygons */}
+                  {buildingFloors.map(floor => {
+                    const path = polygonToPath(floor.polygon);
+                    if (!path) return null;
+
+                    const isHovered = hoveredFloor === floor.id;
+
+                    return (
+                      <g key={floor.id}>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <path
+                              d={path}
+                              fill={floor.color}
+                              stroke={floor.color}
+                              strokeWidth="0.5"
+                              style={getPolygonStyle(floor.floor_number, isHovered)}
+                              className="hover:fill-opacity-60 transition-all cursor-pointer"
+                              onMouseEnter={() => setHoveredFloor(floor.id)}
+                              onMouseLeave={() => setHoveredFloor(null)}
+                            />
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-48">
+                            <div className="space-y-2">
+                              <h4 className="font-semibold">Этаж {floor.floor_number}</h4>
+                              <p className="text-sm text-gray-600">
+                                Цвет: {floor.color}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Точек полигона: {floor.polygon.length}
+                              </p>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                        {polygonSettings?.display.showNumbers && (
+                          <text
+                            x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
+                            y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fill="white"
+                            fontSize="3"
+                            fontWeight="bold"
+                            className="pointer-events-none"
+                          >
+                            {floor.floor_number}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+
+                  {/* Current polygon being drawn */}
+                  {currentPolygon.length > 0 && (
+                    <>
+                      {currentPolygon.length > 2 && (
+                        <path
+                          d={polygonToPath(currentPolygon)}
+                          fill="rgba(59, 130, 246, 0.3)"
+                          stroke="#3b82f6"
+                          strokeWidth="0.5"
+                          strokeDasharray="2,2"
+                        />
+                      )}
+                      {currentPolygon.map((point, index) => (
+                        <circle
+                          key={index}
+                          cx={point.x}
+                          cy={point.y}
+                          r="0.5"
+                          fill="#3b82f6"
+                          stroke="white"
+                          strokeWidth="0.2"
+                        />
+                      ))}
+                    </>
+                  )}
+                </svg>
               </div>
             </CardContent>
           </Card>
-
-          {/* Image Editor */}
-          {imageUrl && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="relative inline-block max-w-full">
-                  <img
-                    ref={imageRef}
-                    src={imageUrl}
-                    alt="Building"
-                    className="max-w-full max-h-[600px] object-contain rounded-lg"
-                  />
-                  <svg
-                    ref={svgRef}
-                    className="absolute top-0 left-0 w-full h-full cursor-crosshair"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    onClick={handleSvgClick}
-                  >
-                    {/* Existing floor polygons */}
-                    {buildingFloors.map(floor => {
-                      const path = polygonToPath(floor.polygon);
-                      if (!path) return null;
-                      
-                      const isHovered = hoveredFloor === floor.id;
-                      
-                      return (
-                        <g key={floor.id}>
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <path
-                                d={path}
-                                fill={floor.color}
-                                stroke={floor.color}
-                                strokeWidth="0.5"
-                                style={getPolygonStyle(floor.floor_number, isHovered)}
-                                className="hover:fill-opacity-60 transition-all cursor-pointer"
-                                onMouseEnter={() => setHoveredFloor(floor.id)}
-                                onMouseLeave={() => setHoveredFloor(null)}
-                              />
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-48">
-                              <div className="space-y-2">
-                                <h4 className="font-semibold">Этаж {floor.floor_number}</h4>
-                                <p className="text-sm text-gray-600">
-                                  Цвет: {floor.color}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Точек полигона: {floor.polygon.length}
-                                </p>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                          {polygonSettings?.display.showNumbers && (
-                            <text
-                              x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                              y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="3"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {floor.floor_number}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-
-                    {/* Current polygon being drawn */}
-                    {currentPolygon.length > 0 && (
-                      <>
-                        {currentPolygon.length > 2 && (
-                          <path
-                            d={polygonToPath(currentPolygon)}
-                            fill="rgba(59, 130, 246, 0.3)"
-                            stroke="#3b82f6"
-                            strokeWidth="0.5"
-                            strokeDasharray="2,2"
-                          />
-                        )}
-                        {currentPolygon.map((point, index) => (
-                          <circle
-                            key={index}
-                            cx={point.x}
-                            cy={point.y}
-                            r="0.5"
-                            fill="#3b82f6"
-                            stroke="white"
-                            strokeWidth="0.2"
-                          />
-                        ))}
-                      </>
-                    )}
-                  </svg>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Sidebar with stats */}
-        <div className="space-y-4">
-          <ApartmentStatsPanel projectId={projectId} />
-        </div>
+        )}
       </div>
+
+
     </TooltipProvider>
   );
 };

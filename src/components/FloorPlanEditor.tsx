@@ -9,7 +9,6 @@ import { Upload, Plus, Trash2, Edit3, Settings, X, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
-import ApartmentStatsPanel from './ApartmentStatsPanel';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import PolygonEditor from './polygon-editor/PolygonEditor';
@@ -119,7 +118,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
-      
+
       if (data?.image_url) {
         setImageUrl(data.image_url);
       } else {
@@ -234,7 +233,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       if (existingPlan) {
         const { error: updateError } = await supabase
           .from('floor_plans')
-          .update({ 
+          .update({
             image_url: newImageUrl,
             polygon_settings: polygonSettings as any
           })
@@ -272,7 +271,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     setLoading(true);
     try {
       const floorsToUpdate = allFloors.filter(f => f !== floorNumber);
-      
+
       for (const targetFloor of floorsToUpdate) {
         if (imageUrl) {
           const { data: existingPlan } = await supabase
@@ -285,7 +284,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           if (existingPlan) {
             await supabase
               .from('floor_plans')
-              .update({ 
+              .update({
                 image_url: imageUrl,
                 polygon_settings: polygonSettings as any
               })
@@ -312,7 +311,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           for (const apt of apartments) {
             const baseNumber = apt.apartment_number.replace(/^\d+/, '');
             const newApartmentNumber = `${targetFloor}${baseNumber.padStart(2, '0')}`;
-            
+
             try {
               await supabase
                 .from('apartments')
@@ -424,8 +423,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
         if (error) throw error;
 
-        setApartments(prev => prev.map(apt => 
-          apt.id === existingApartment.id 
+        setApartments(prev => prev.map(apt =>
+          apt.id === existingApartment.id
             ? { ...apt, ...apartmentData, polygon: points }
             : apt
         ));
@@ -501,7 +500,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
     let baseOpacity = polygonSettings.opacity.normal;
     const hoverOpacity = polygonSettings.opacity.hover;
-    
+
     if (isSelected) {
       baseOpacity = 0.8;
     } else if (isHovered && polygonSettings.hoverEffects.opacityChange) {
@@ -559,7 +558,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             Редактирование полигона - {editingApartment === 'new' ? 'Новая квартира' : `Квартира №${apartmentData.number}`}
           </h3>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="text-md">Параметры квартиры</CardTitle>
@@ -787,10 +786,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     {apartments.map(apartment => {
                       const path = polygonToPath(apartment.polygon);
                       if (!path) return null;
-                      
+
                       const isSelected = selectedApartment?.id === apartment.id;
                       const isHovered = hoveredApartment === apartment.id;
-                      
+
                       return (
                         <g key={apartment.id}>
                           <HoverCard>
@@ -856,62 +855,57 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
-          <ApartmentStatsPanel projectId={projectId} selectedFloor={floorNumber} />
-          
-          {/* Selected Apartment Details */}
-          {selectedApartment && !editingApartment && (
-            <Card>
-              <CardHeader className="pb-3">
+
+        {selectedApartment && !editingApartment && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-md">Квартира №{selectedApartment.apartment_number}</CardTitle>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedApartment(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Статус:</span>
+                <Badge variant={selectedApartment.status === 'available' ? 'default' : selectedApartment.status === 'sold' ? 'destructive' : 'secondary'}>
+                  {selectedApartment.status === 'available' ? 'Свободна' : selectedApartment.status === 'sold' ? 'Продана' : 'Бронь'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Комнат:</span>
+                <span className="font-medium">{selectedApartment.rooms}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Площадь:</span>
+                <span className="font-medium">{selectedApartment.area} м²</span>
+              </div>
+              {selectedApartment.price > 0 && (
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-md">Квартира №{selectedApartment.apartment_number}</CardTitle>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setSelectedApartment(null)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <span className="text-sm text-gray-600">Цена:</span>
+                  <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} ₽</span>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Статус:</span>
-                  <Badge variant={selectedApartment.status === 'available' ? 'default' : selectedApartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                    {selectedApartment.status === 'available' ? 'Свободна' : selectedApartment.status === 'sold' ? 'Продана' : 'Бронь'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Комнат:</span>
-                  <span className="font-medium">{selectedApartment.rooms}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Площадь:</span>
-                  <span className="font-medium">{selectedApartment.area} м²</span>
-                </div>
-                {selectedApartment.price > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Цена:</span>
-                    <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} ₽</span>
-                  </div>
-                )}
-                <div className="pt-2 border-t">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => startEditingApartment(selectedApartment.id)}
-                    className="w-full"
-                    disabled={!!editingApartment}
-                  >
-                    <Edit3 className="h-3 w-3 mr-1" />
-                    Редактировать
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              )}
+              <div className="pt-2 border-t">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => startEditingApartment(selectedApartment.id)}
+                  className="w-full"
+                  disabled={!!editingApartment}
+                >
+                  <Edit3 className="h-3 w-3 mr-1" />
+                  Редактировать
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </TooltipProvider>
   );
