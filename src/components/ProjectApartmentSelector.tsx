@@ -27,9 +27,10 @@ interface Project {
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
+  embedMode?: boolean;
 }
 
-const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
+const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApartmentSelectorProps) => {
   const { t } = useLanguage();
   
   const [project, setProject] = useState<Project | null>(null);
@@ -37,16 +38,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Filters
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
-  
-  // View mode
   const [viewMode, setViewMode] = useState<'floor-plan' | 'table'>('floor-plan');
 
   useEffect(() => {
@@ -86,7 +83,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
       
-      // Set initial price range based on data
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
           .map(apt => apt.price || 0)
@@ -108,33 +104,27 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const applyFilters = () => {
     let filtered = apartments;
 
-    // Floor filter
     if (selectedFloor !== 'all') {
       filtered = filtered.filter(apt => apt.floor_number === parseInt(selectedFloor));
     }
 
-    // Rooms filter
     if (selectedRooms !== 'all') {
       filtered = filtered.filter(apt => apt.rooms === parseInt(selectedRooms));
     }
 
-    // Status filter
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(apt => apt.status === selectedStatus);
     }
 
-    // Only available filter
     if (showOnlyAvailable) {
       filtered = filtered.filter(apt => apt.status === 'available');
     }
 
-    // Price range filter
     filtered = filtered.filter(apt => {
       const price = apt.price || 0;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(apt =>
         apt.apartment_number.toLowerCase().includes(searchQuery.toLowerCase())
@@ -180,10 +170,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${embedMode ? '' : 'container mx-auto px-4 py-8'}`}>
       {/* Header with filters */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-6">
+      <div className={`border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${embedMode ? '' : 'sticky top-0'} z-50`}>
+        <div className={`${embedMode ? 'px-4' : 'container mx-auto px-4'} py-6`}>
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-foreground mb-2">{project.name}</h1>
             {project.address && (
@@ -299,7 +289,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       </div>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className={`${embedMode ? 'px-4' : 'container mx-auto px-4'} py-8`}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Floor plan / Table */}
           <div className="lg:col-span-3">

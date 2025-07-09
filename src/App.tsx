@@ -8,8 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProjectWidgetPage from "./pages/ProjectWidgetPage";
 import ProjectsGalleryPage from "./pages/ProjectsGalleryPage";
-import EmbedProjectWidget from "./pages/EmbedProjectWidget";
-import EmbedProjectsGallery from "./pages/EmbedProjectsGallery";
 import EmbedProjectsMap from "./pages/EmbedProjectsMap";
 import AdminPage from "./pages/AdminPage";
 import ProjectEditorPage from "./pages/ProjectEditorPage";
@@ -29,8 +27,9 @@ const App = () => (
             <Route path="/admin/project/:projectId" element={<ProjectEditorPage />} />
             <Route path="/project/:projectId" element={<ProjectWidgetPage />} />
             <Route path="/projects" element={<ProjectsGalleryPage />} />
-            <Route path="/embed/project/:projectId" element={<EmbedProjectWidget />} />
-            <Route path="/embed/projects" element={<EmbedProjectsGallery />} />
+            {/* Embed routes - используют те же компоненты но в embed режиме */}
+            <Route path="/embed/project/:projectId" element={<ProjectWidgetPage embedMode={true} />} />
+            <Route path="/embed/projects" element={<ProjectsGalleryPage embedMode={true} />} />
             <Route path="/embed/projects/map" element={<EmbedProjectsMap />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
