@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import ApartmentFilters from './ApartmentFilters';
 import ApartmentList from './ApartmentList';
 import FloorPlanView from './FloorPlanView';
 import BuildingFacadeView from './BuildingFacadeView';
-import { Apartment } from '@/types/apartment';
+import { Apartment, normalizeApartmentData } from '@/types/apartment';
 
 interface ProjectWidgetProps {
   projectId: string;
@@ -83,11 +82,8 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
 
       if (apartmentsError) throw apartmentsError;
       
-      const processedApartments = apartmentsData.map(apt => ({
-        ...apt,
-        polygon: Array.isArray(apt.polygon) ? apt.polygon as { x: number; y: number }[] : []
-      }));
-      
+      // Нормализуем данные квартир
+      const processedApartments = apartmentsData.map(normalizeApartmentData);
       setApartments(processedApartments);
 
       // Инициализируем диапазоны фильтров

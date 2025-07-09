@@ -11,4 +11,21 @@ export interface Apartment {
   status: 'available' | 'sold' | 'reserved';
   polygon: { x: number; y: number }[];
   custom_fields: Json | null;
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+  floor_plan_id: string | null;
+}
+
+// Функция для преобразования данных из Supabase в правильный формат
+export function normalizeApartmentData(data: any): Apartment {
+  return {
+    ...data,
+    status: data.status as 'available' | 'sold' | 'reserved',
+    polygon: Array.isArray(data.polygon) ? data.polygon as { x: number; y: number }[] : [],
+    price: data.price ? Number(data.price) : null,
+    area: Number(data.area),
+    rooms: Number(data.rooms),
+    floor_number: Number(data.floor_number)
+  };
 }
