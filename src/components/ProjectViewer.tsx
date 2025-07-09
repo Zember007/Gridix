@@ -8,7 +8,7 @@ import { Building2, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ApartmentDetailsPanel from './ApartmentDetailsPanel';
 import ApartmentTooltip from './ApartmentTooltip';
-import type { Apartment } from '@/types/apartment';
+import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Project {
@@ -191,25 +191,8 @@ const ProjectViewer = () => {
       
       console.log('Raw apartments data:', data);
       
-      const transformedApartments: Apartment[] = (data || []).map(apt => {
-        const polygon = parsePolygon(apt.polygon);
-        console.log(`Apartment ${apt.apartment_number} polygon:`, polygon);
-        
-        return {
-          id: apt.id,
-          apartment_number: apt.apartment_number,
-          floor_number: apt.floor_number,
-          rooms: apt.rooms,
-          area: Number(apt.area),
-          price: Number(apt.price) || 0,
-          status: (apt.status === 'available' || apt.status === 'sold' || apt.status === 'reserved') 
-            ? apt.status 
-            : 'available',
-          polygon: polygon,
-          custom_fields: apt.custom_fields
-        };
-      });
-
+      // Use normalizeApartmentData to ensure proper type casting
+      const transformedApartments = (data || []).map(normalizeApartmentData);
       console.log('Transformed apartments:', transformedApartments);
       setApartments(transformedApartments);
     } catch (error) {

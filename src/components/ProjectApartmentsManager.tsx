@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +10,7 @@ import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
-import type { Apartment } from '@/types/apartment';
+import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ProjectApartmentsManagerProps {
@@ -64,20 +63,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
       if (error) throw error;
 
-      const formattedApartments: Apartment[] = data.map(apt => ({
-        id: apt.id,
-        apartment_number: apt.apartment_number,
-        floor_number: apt.floor_number,
-        rooms: apt.rooms,
-        area: apt.area,
-        price: apt.price,
-        status: (['available', 'sold', 'reserved'].includes(apt.status)) 
-          ? apt.status as 'available' | 'sold' | 'reserved'
-          : 'available',
-        polygon: convertPolygonFromDb(apt.polygon),
-        custom_fields: apt.custom_fields
-      }));
-
+      // Use the normalizeApartmentData function to ensure proper type casting
+      const formattedApartments = data.map(normalizeApartmentData);
       setApartments(formattedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
@@ -121,20 +108,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
         if (error) throw error;
 
-        const newApt: Apartment = {
-          id: data.id,
-          apartment_number: data.apartment_number,
-          floor_number: data.floor_number,
-          rooms: data.rooms,
-          area: data.area,
-          price: data.price,
-          status: (['available', 'sold', 'reserved'].includes(data.status)) 
-            ? data.status as 'available' | 'sold' | 'reserved'
-            : 'available',
-          polygon: convertPolygonFromDb(data.polygon),
-          custom_fields: data.custom_fields
-        };
-
+        // Use normalizeApartmentData to ensure proper type casting
+        const newApt = normalizeApartmentData(data);
         setApartments(prev => [...prev, newApt]);
         setIsAddingNew(false);
         setNewApartment({
@@ -158,20 +133,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
         if (error) throw error;
 
-        const updatedApt: Apartment = {
-          id: data.id,
-          apartment_number: data.apartment_number,
-          floor_number: data.floor_number,
-          rooms: data.rooms,
-          area: data.area,
-          price: data.price,
-          status: (['available', 'sold', 'reserved'].includes(data.status)) 
-            ? data.status as 'available' | 'sold' | 'reserved'
-            : 'available',
-          polygon: convertPolygonFromDb(data.polygon),
-          custom_fields: data.custom_fields
-        };
-
+        // Use normalizeApartmentData to ensure proper type casting
+        const updatedApt = normalizeApartmentData(data);
         setApartments(prev => 
           prev.map(apt => apt.id === editingApartment.id ? updatedApt : apt)
         );
