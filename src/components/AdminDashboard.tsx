@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,19 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const handleCreateNew = () => {
+    navigate('/admin/project/new');
+  };
+
+  const handleEditProject = (projectId: string, isNew: boolean) => {
+    if (isNew) {
+      navigate('/admin/project/new');
+    } else {
+      navigate(`/admin/project/${projectId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +56,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <ProjectList />
+        <ProjectList 
+          onCreateNew={handleCreateNew}
+          onEditProject={handleEditProject}
+        />
       </div>
     </div>
   );
