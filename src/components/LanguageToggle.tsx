@@ -16,6 +16,7 @@ const languages = {
 };
 
 export const LanguageToggle = () => {
+  
   const { language, setLanguage } = useLanguage();
 
   return (

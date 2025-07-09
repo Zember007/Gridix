@@ -1,6 +1,6 @@
 
 import ProjectsGallery from '@/components/ProjectsGallery';
-import LanguageToggle from "@/components/LanguageToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 interface ProjectsGalleryPageProps {
   embedMode?: boolean;

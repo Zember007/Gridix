@@ -1,7 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
-import LanguageToggle from "@/components/LanguageToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 interface ProjectWidgetPageProps {
   embedMode?: boolean;
