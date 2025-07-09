@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Home, Ruler, DollarSign } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentTableProps {
   apartments: Apartment[];
@@ -11,6 +12,8 @@ interface ApartmentTableProps {
 }
 
 const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) => {
+  const { t } = useLanguage();
+
   const formatPrice = (price: number | null) => {
     if (!price) return '—';
     return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -19,11 +22,11 @@ const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Доступно</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t('common.available')}</Badge>;
       case 'reserved':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Забронировано</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{t('common.reserved')}</Badge>;
       case 'sold':
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Продано</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">{t('common.sold')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -33,8 +36,8 @@ const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) 
     return (
       <div className="text-center py-12">
         <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-lg text-muted-foreground">Квартиры не найдены</p>
-        <p className="text-sm text-muted-foreground">Измените фильтры для поиска</p>
+        <p className="text-lg text-muted-foreground">{t('project.notFoundApartments')}</p>
+        <p className="text-sm text-muted-foreground">{t('project.changeFilters')}</p>
       </div>
     );
   }
@@ -42,21 +45,21 @@ const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) 
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">Список квартир</h2>
-        <p className="text-sm text-muted-foreground">Найдено: {apartments.length} квартир</p>
+        <h2 className="text-xl font-semibold">{t('project.apartmentsList')}</h2>
+        <p className="text-sm text-muted-foreground">{t('project.found')}: {apartments.length} {t('project.apartments')}</p>
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Номер</TableHead>
-              <TableHead>Этаж</TableHead>
-              <TableHead>Комнаты</TableHead>
-              <TableHead>Площадь</TableHead>
-              <TableHead>Цена</TableHead>
-              <TableHead>₽/м²</TableHead>
-              <TableHead>Статус</TableHead>
+              <TableHead>{t('apartment.number')}</TableHead>
+              <TableHead>{t('apartment.floor')}</TableHead>
+              <TableHead>{t('apartment.rooms')}</TableHead>
+              <TableHead>{t('apartment.area')}</TableHead>
+              <TableHead>{t('apartment.price')}</TableHead>
+              <TableHead>{t('apartment.pricePerSqm')}</TableHead>
+              <TableHead>{t('apartment.status')}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -80,12 +83,12 @@ const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) 
                   </div>
                 </TableCell>
                 <TableCell>
-                  {apartment.rooms === 0 ? 'Студия' : `${apartment.rooms} комн.`}
+                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Ruler className="h-4 w-4 text-muted-foreground" />
-                    {apartment.area} м²
+                    {apartment.area} {t('apartment.sqm')}
                   </div>
                 </TableCell>
                 <TableCell className="font-medium">
@@ -111,7 +114,7 @@ const ApartmentTable = ({ apartments, onApartmentSelect }: ApartmentTableProps) 
                       onApartmentSelect(apartment);
                     }}
                   >
-                    Подробнее
+                    {t('common.more')}
                   </Button>
                 </TableCell>
               </TableRow>

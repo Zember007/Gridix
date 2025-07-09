@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Search, Building2, Home, MapPin, Ruler, DollarSign } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import ApartmentTable from './ApartmentTable';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
@@ -30,6 +30,8 @@ interface ProjectApartmentSelectorProps {
 }
 
 const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
+  const { t } = useLanguage();
+  
   const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
@@ -171,7 +173,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Загрузка проекта...</p>
+          <p className="text-muted-foreground">{t('project.loading')}</p>
         </div>
       </div>
     );
@@ -195,16 +197,16 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
             {/* Floor filter */}
             <div className="space-y-2">
-              <Label htmlFor="floor-select">Этаж</Label>
+              <Label htmlFor="floor-select">{t('project.floor')}</Label>
               <Select value={selectedFloor} onValueChange={setSelectedFloor}>
                 <SelectTrigger id="floor-select">
-                  <SelectValue placeholder="Все этажи" />
+                  <SelectValue placeholder={t('project.allFloors')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все этажи</SelectItem>
+                  <SelectItem value="all">{t('project.allFloors')}</SelectItem>
                   {getUniqueFloors().map(floor => (
                     <SelectItem key={floor} value={floor.toString()}>
-                      {floor} этаж
+                      {floor} {t('project.floor').toLowerCase()}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -213,16 +215,16 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
             {/* Rooms filter */}
             <div className="space-y-2">
-              <Label htmlFor="rooms-select">Комнаты</Label>
+              <Label htmlFor="rooms-select">{t('project.rooms')}</Label>
               <Select value={selectedRooms} onValueChange={setSelectedRooms}>
                 <SelectTrigger id="rooms-select">
-                  <SelectValue placeholder="Все типы" />
+                  <SelectValue placeholder={t('project.allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все типы</SelectItem>
+                  <SelectItem value="all">{t('project.allTypes')}</SelectItem>
                   {getUniqueRoomCounts().map(rooms => (
                     <SelectItem key={rooms} value={rooms.toString()}>
-                      {rooms === 0 ? 'Студия' : `${rooms} комн.`}
+                      {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -231,28 +233,28 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
             {/* Status filter */}
             <div className="space-y-2">
-              <Label htmlFor="status-select">Статус</Label>
+              <Label htmlFor="status-select">{t('project.status')}</Label>
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger id="status-select">
-                  <SelectValue placeholder="Все статусы" />
+                  <SelectValue placeholder={t('project.allStatuses')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все статусы</SelectItem>
-                  <SelectItem value="available">Доступно</SelectItem>
-                  <SelectItem value="reserved">Забронировано</SelectItem>
-                  <SelectItem value="sold">Продано</SelectItem>
+                  <SelectItem value="all">{t('project.allStatuses')}</SelectItem>
+                  <SelectItem value="available">{t('common.available')}</SelectItem>
+                  <SelectItem value="reserved">{t('common.reserved')}</SelectItem>
+                  <SelectItem value="sold">{t('common.sold')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="search-input">Поиск</Label>
+              <Label htmlFor="search-input">{t('common.search')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search-input"
-                  placeholder="Номер квартиры"
+                  placeholder={t('project.apartmentNumber')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -262,7 +264,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
             {/* Price range */}
             <div className="space-y-2 md:col-span-2">
-              <Label>Цена: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
+              <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
               <Slider
                 value={priceRange}
                 onValueChange={setPriceRange}
@@ -282,14 +284,14 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   checked={showOnlyAvailable}
                   onCheckedChange={setShowOnlyAvailable}
                 />
-                <Label htmlFor="available-only">Только доступные</Label>
+                <Label htmlFor="available-only">{t('project.onlyAvailable')}</Label>
               </div>
             </div>
 
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'floor-plan' | 'table')}>
               <TabsList>
-                <TabsTrigger value="floor-plan">План этажа</TabsTrigger>
-                <TabsTrigger value="table">Таблица</TabsTrigger>
+                <TabsTrigger value="floor-plan">{t('project.floorPlan')}</TabsTrigger>
+                <TabsTrigger value="table">{t('project.table')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -327,18 +329,18 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Сводка
+                  {t('project.summary')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">{getAvailableCount()}</div>
-                    <div className="text-sm text-muted-foreground">Доступно</div>
+                    <div className="text-sm text-muted-foreground">{t('common.available')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-foreground">{filteredApartments.length}</div>
-                    <div className="text-sm text-muted-foreground">Всего</div>
+                    <div className="text-sm text-muted-foreground">{t('project.total')}</div>
                   </div>
                 </div>
                 
@@ -347,12 +349,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     <div className="text-lg font-semibold text-foreground">
                       {formatPrice(getAveragePrice())} ₽
                     </div>
-                    <div className="text-sm text-muted-foreground">Средняя цена</div>
+                    <div className="text-sm text-muted-foreground">{t('project.averagePrice')}</div>
                   </div>
                 )}
 
                 <Button className="w-full" size="lg">
-                  Связаться с менеджером
+                  {t('project.contactManager')}
                 </Button>
               </CardContent>
             </Card>
@@ -360,20 +362,20 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
             {/* Legend */}
             <Card>
               <CardHeader>
-                <CardTitle>Легенда</CardTitle>
+                <CardTitle>{t('project.legend')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-green-500 rounded"></div>
-                  <span className="text-sm">Доступно</span>
+                  <span className="text-sm">{t('common.available')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                  <span className="text-sm">Забронировано</span>
+                  <span className="text-sm">{t('common.reserved')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                  <span className="text-sm">Продано</span>
+                  <span className="text-sm">{t('common.sold')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -385,14 +387,14 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Home className="h-5 w-5" />
-                      Квартира {selectedApartment.apartment_number}
+                      {t('apartment.number')} {selectedApartment.apartment_number}
                     </span>
                     <Badge variant={
                       selectedApartment.status === 'available' ? 'default' :
                       selectedApartment.status === 'reserved' ? 'secondary' : 'destructive'
                     }>
-                      {selectedApartment.status === 'available' ? 'Доступно' :
-                       selectedApartment.status === 'reserved' ? 'Забронировано' : 'Продано'}
+                      {selectedApartment.status === 'available' ? t('common.available') :
+                       selectedApartment.status === 'reserved' ? t('common.reserved') : t('common.sold')}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -400,20 +402,20 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedApartment.floor_number} этаж</span>
+                      <span>{selectedApartment.floor_number} {t('apartment.floor').toLowerCase()}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Home className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedApartment.rooms === 0 ? 'Студия' : `${selectedApartment.rooms} комн.`}</span>
+                      <span>{selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.room')}`}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Ruler className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedApartment.area} м²</span>
+                      <span>{selectedApartment.area} {t('apartment.sqm')}</span>
                     </div>
                     {selectedApartment.price && (
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span>{Math.round((selectedApartment.price) / selectedApartment.area).toLocaleString()} ₽/м²</span>
+                        <span>{Math.round((selectedApartment.price) / selectedApartment.area).toLocaleString()} {t('apartment.pricePerSqm')}</span>
                       </div>
                     )}
                   </div>
@@ -427,11 +429,11 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   )}
 
                   <Button className="w-full" disabled={selectedApartment.status !== 'available'}>
-                    {selectedApartment.status === 'available' ? 'Забронировать' : 'Недоступно'}
+                    {selectedApartment.status === 'available' ? t('common.reserve') : t('common.unavailable')}
                   </Button>
                   
                   <Button variant="outline" className="w-full">
-                    Подробнее
+                    {t('common.more')}
                   </Button>
                 </CardContent>
               </Card>

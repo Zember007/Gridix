@@ -1,12 +1,14 @@
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Settings, BarChart3, Upload, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const goToAdmin = () => {
     navigate('/admin');
@@ -22,12 +24,15 @@ const Index = () => {
               <Building2 className="h-8 w-8 text-real-estate-600" />
               <h1 className="text-2xl font-bold text-real-estate-900">RealEstate SaaS</h1>
             </div>
-            <Button 
-              onClick={goToAdmin}
-              className="bg-real-estate-600 hover:bg-real-estate-700"
-            >
-              Login to Panel
-            </Button>
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <Button 
+                onClick={goToAdmin}
+                className="bg-real-estate-600 hover:bg-real-estate-700"
+              >
+                {t('nav.admin')}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -36,12 +41,11 @@ const Index = () => {
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-5xl font-bold text-real-estate-900 mb-6">
-            Create Interactive
-            <span className="block text-real-estate-600">Real Estate Floor Plans</span>
+            {t('landing.title')}
+            <span className="block text-real-estate-600">{t('landing.subtitle')}</span>
           </h2>
           <p className="text-xl text-real-estate-700 mb-8 max-w-3xl mx-auto">
-            Professional platform for creating interactive building and apartment floor plans 
-            with Excel data integration and embeddable widgets
+            {t('landing.description')}
           </p>
           <div className="flex gap-4 justify-center">
             <Button 
@@ -49,14 +53,14 @@ const Index = () => {
               className="bg-real-estate-600 hover:bg-real-estate-700 text-lg px-8 py-4"
               onClick={goToAdmin}
             >
-              Get Started
+              {t('landing.getStarted')}
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               className="border-real-estate-600 text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
             >
-              View Demo
+              {t('landing.viewDemo')}
             </Button>
           </div>
         </div>
@@ -66,15 +70,15 @@ const Index = () => {
       <section className="py-16 bg-white/50">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center text-real-estate-900 mb-12">
-            Platform Features
+            {t('landing.features')}
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Upload className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Plan Upload</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.planUpload')}</CardTitle>
                 <CardDescription>
-                  Upload high-resolution building images and floor plans
+                  {t('landing.planUploadDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -82,9 +86,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Settings className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Interactive Editing</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.interactiveEditing')}</CardTitle>
                 <CardDescription>
-                  Outline floors with polygons and create interactive apartment zones
+                  {t('landing.interactiveEditingDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -92,9 +96,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <BarChart3 className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Excel Integration</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.excelIntegration')}</CardTitle>
                 <CardDescription>
-                  Import apartment data from Excel files with automatic synchronization
+                  {t('landing.excelIntegrationDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -102,9 +106,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Eye className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Embeddable Widget</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.embeddableWidget')}</CardTitle>
                 <CardDescription>
-                  Easily integrate interactive plans into any website with one line of code
+                  {t('landing.embeddableWidgetDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -112,9 +116,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Users className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Status Management</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.statusManagement')}</CardTitle>
                 <CardDescription>
-                  Track apartment statuses: available, sold, reserved
+                  {t('landing.statusManagementDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -122,9 +126,9 @@ const Index = () => {
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Building2 className="h-12 w-12 text-real-estate-600 mb-4" />
-                <CardTitle className="text-real-estate-900">Multi-Project</CardTitle>
+                <CardTitle className="text-real-estate-900">{t('landing.multiProject')}</CardTitle>
                 <CardDescription>
-                  Manage multiple real estate projects from a single dashboard
+                  {t('landing.multiProjectDesc')}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -136,17 +140,17 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-r from-real-estate-600 to-real-estate-800">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-4xl font-bold text-white mb-6">
-            Ready to Start?
+            {t('landing.readyToStart')}
           </h3>
           <p className="text-xl text-real-estate-100 mb-8 max-w-2xl mx-auto">
-            Create your first interactive real estate project today
+            {t('landing.readyToStartDesc')}
           </p>
           <Button 
             size="lg" 
             className="bg-white text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
             onClick={goToAdmin}
           >
-            Enter Admin Panel
+            {t('landing.enterAdmin')}
           </Button>
         </div>
       </section>
@@ -159,7 +163,7 @@ const Index = () => {
             <span className="text-lg font-semibold">RealEstate SaaS</span>
           </div>
           <p className="text-real-estate-300">
-            © 2024 RealEstate SaaS. Professional real estate solutions.
+            {t('landing.copyright')}
           </p>
         </div>
       </footer>

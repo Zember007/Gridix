@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Building2 } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -23,6 +23,7 @@ interface BuildingFloor {
 }
 
 const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect }: ApartmentFloorPlanProps) => {
+  const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
 
@@ -68,15 +69,15 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
         <Building2 className="h-16 w-16 mb-4" />
-        <p className="text-lg font-medium">План здания не загружен</p>
-        <p className="text-sm">Обратитесь к администратору для загрузки плана</p>
+        <p className="text-lg font-medium">{t('project.noBuildingPlan')}</p>
+        <p className="text-sm">{t('project.contactAdmin')}</p>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <h2 className="text-xl font-semibold mb-6">Интерактивный план здания</h2>
+      <h2 className="text-xl font-semibold mb-6">{t('project.interactivePlan')}</h2>
       
       {project.building_image_url ? (
         <div className="relative bg-gray-50 rounded-lg overflow-hidden">
@@ -158,9 +159,9 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
       {/* Tooltip for hovered apartment */}
       {hoveredApartment && (
         <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg border max-w-xs">
-          <div className="font-medium">Квартира {hoveredApartment.apartment_number}</div>
+          <div className="font-medium">{t('apartment.number')} {hoveredApartment.apartment_number}</div>
           <div className="text-sm text-muted-foreground">
-            {hoveredApartment.rooms === 0 ? 'Студия' : `${hoveredApartment.rooms} комн.`} • {hoveredApartment.area} м²
+            {hoveredApartment.rooms === 0 ? t('apartment.studio') : `${hoveredApartment.rooms} ${t('apartment.room')}`} • {hoveredApartment.area} {t('apartment.sqm')}
           </div>
           {hoveredApartment.price && (
             <div className="text-sm font-medium text-primary">
