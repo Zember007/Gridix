@@ -20,6 +20,7 @@ interface FloorPlan {
 
 const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }: FloorPlanViewProps) => {
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +49,11 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
     }
   };
 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setImageSize({ width: img.clientWidth, height: img.clientHeight });
+  };
+
   const getApartmentColor = (apartment: Apartment) => {
     switch (apartment.status) {
       case 'available': return '#3b82f6';
@@ -55,6 +61,13 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
       case 'sold': return '#ef4444';
       default: return '#6b7280';
     }
+  };
+
+  const convertToViewBox = (polygon: { x: number; y: number }[], imageWidth: number, imageHeight: number) => {
+    return polygon.map(point => ({
+      x: (point.x / 100) * imageWidth,
+      y: (point.y / 100) * imageHeight
+    }));
   };
 
   if (loading) {
@@ -94,17 +107,26 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
               src={floorPlan.image_url} 
               alt={`План ${floorNumber} этажа`}
               className="w-full h-auto max-h-[600px] object-contain"
+              onLoad={handleImageLoad}
             />
             
             {/* Overlay с квартирами */}
-            <div className="absolute inset-0">
-              <svg className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
+            {imageSize.width > 0 && (
+              <svg 
+                className="absolute inset-0 w-full h-full"
+                viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+                preserveAspectRatio="none"
+              >
                 {apartments.map((apartment) => {
                   if (!apartment.polygon || apartment.polygon.length < 3) return null;
                   
-                  const points = apartment.polygon
+                  const convertedPolygon = convertToViewBox(apartment.polygon, imageSize.width, imageSize.height);
+                  const points = convertedPolygon
                     .map(point => `${point.x},${point.y}`)
                     .join(' ');
+
+                  const centerX = convertedPolygon.reduce((sum, p) => sum + p.x, 0) / convertedPolygon.length;
+                  const centerY = convertedPolygon.reduce((sum, p) => sum + p.y, 0) / convertedPolygon.length;
 
                   return (
                     <g key={apartment.id}>
@@ -114,27 +136,24 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
                         fillOpacity={0.3}
                         stroke={getApartmentColor(apartment)}
                         strokeWidth={2}
-                        className="cursor-pointer hover:fillOpacity-50 transition-all"
+                        className="cursor-pointer hover:fill-opacity-50 transition-all"
                         onClick={() => onApartmentSelect(apartment)}
                       />
-                      {/* Номер квартиры */}
-                      {apartment.polygon.length > 0 && (
-                        <text
-                          x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                          y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          className="fill-white font-bold text-sm pointer-events-none"
-                          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
-                        >
-                          {apartment.apartment_number}
-                        </text>
-                      )}
+                      <text
+                        x={centerX}
+                        y={centerY}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        className="fill-white font-bold text-sm pointer-events-none"
+                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
+                      >
+                        {apartment.apartment_number}
+                      </text>
                     </g>
                   );
                 })}
               </svg>
-            </div>
+            )}
           </div>
         </div>
 

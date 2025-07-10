@@ -42,6 +42,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
+  const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [viewMode, setViewMode] = useState<'floor-plan' | 'table'>('floor-plan');
@@ -80,18 +81,29 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
       if (error) throw error;
       
+      console.log('Loaded apartments:', data); // Отладка
+      
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
+      setFilteredApartments(normalizedApartments); // Устанавливаем все квартиры по умолчанию
       
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
           .map(apt => apt.price || 0)
           .filter(price => price > 0);
         
+        const areas = normalizedApartments.map(apt => apt.area);
+        
         if (prices.length > 0) {
           const minPrice = Math.min(...prices);
           const maxPrice = Math.max(...prices);
           setPriceRange([minPrice, maxPrice]);
+        }
+        
+        if (areas.length > 0) {
+          const minArea = Math.min(...areas);
+          const maxArea = Math.max(...areas);
+          setAreaRange([minArea, maxArea]);
         }
       }
     } catch (error) {
@@ -102,7 +114,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   };
 
   const applyFilters = () => {
-    let filtered = apartments;
+    let filtered = [...apartments];
+
+    console.log('Applying filters to', filtered.length, 'apartments'); // Отладка
 
     if (selectedFloor !== 'all') {
       filtered = filtered.filter(apt => apt.floor_number === parseInt(selectedFloor));
@@ -122,7 +136,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
     filtered = filtered.filter(apt => {
       const price = apt.price || 0;
-      return price >= priceRange[0] && price <= priceRange[1];
+      const area = apt.area || 0;
+      return price >= priceRange[0] && price <= priceRange[1] &&
+             area >= areaRange[0] && area <= areaRange[1];
     });
 
     if (searchQuery) {
@@ -131,6 +147,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       );
     }
 
+    console.log('Filtered apartments:', filtered.length); // Отладка
     setFilteredApartments(filtered);
   };
 
@@ -156,6 +173,19 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU').format(price);
+  };
+
+  const handleContactManager = () => {
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    const phone = settings.contact_phone;
+    const name = settings.contact_name || 'менеджером';
+    
+    if (phone) {
+      const message = encodeURIComponent(`Здравствуйте! Интересует проект ${project?.name}. Можете предоставить дополнительную информацию?`);
+      window.open(`https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${message}`, '_blank');
+    } else {
+      alert('Контактная информация менеджера не настроена');
+    }
   };
 
   if (loading || !project) {
@@ -253,14 +283,27 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
             </div>
 
             {/* Price range */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
               <Slider
                 value={priceRange}
                 onValueChange={setPriceRange}
-                max={10000000}
+                max={Math.max(10000000, priceRange[1])}
                 min={0}
                 step={100000}
+                className="w-full"
+              />
+            </div>
+
+            {/* Area range */}
+            <div className="space-y-2">
+              <Label>Площадь: {areaRange[0]} - {areaRange[1]} м²</Label>
+              <Slider
+                value={areaRange}
+                onValueChange={setAreaRange}
+                max={Math.max(200, areaRange[1])}
+                min={0}
+                step={5}
                 className="w-full"
               />
             </div>
@@ -343,7 +386,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                   </div>
                 )}
 
-                <Button className="w-full" size="lg">
+                <Button className="w-full" size="lg" onClick={handleContactManager}>
                   {t('project.contactManager')}
                 </Button>
               </CardContent>

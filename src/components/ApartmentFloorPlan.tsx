@@ -5,6 +5,7 @@ import { Building2 } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import FloorPlanView from '@/components/FloorPlanView';
+import PolygonEditor from './polygon-editor/PolygonEditor';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -28,6 +29,9 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [isEditingBuilding, setIsEditingBuilding] = useState(false);
+  const [editingFloor, setEditingFloor] = useState<number | null>(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     loadBuildingFloors();
@@ -54,6 +58,52 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
     }
   };
 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setImageSize({ width: img.clientWidth, height: img.clientHeight });
+  };
+
+  const convertToViewBox = (polygon: { x: number; y: number }[], imageWidth: number, imageHeight: number) => {
+    return polygon.map(point => ({
+      x: (point.x / 100) * imageWidth,
+      y: (point.y / 100) * imageHeight
+    }));
+  };
+
+  const handlePolygonSave = async (points: { x: number; y: number }[]) => {
+    if (!editingFloor) return;
+    
+    try {
+      const existingFloor = buildingFloors.find(f => f.floor_number === editingFloor);
+      
+      if (existingFloor) {
+        const { error } = await supabase
+          .from('building_floors')
+          .update({ polygon: points })
+          .eq('id', existingFloor.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('building_floors')
+          .insert({
+            project_id: projectId,
+            floor_number: editingFloor,
+            polygon: points,
+            color: '#3b82f6'
+          });
+
+        if (error) throw error;
+      }
+
+      await loadBuildingFloors();
+      setIsEditingBuilding(false);
+      setEditingFloor(null);
+    } catch (error) {
+      console.error('Error saving polygon:', error);
+    }
+  };
+
   const getFloorApartments = (floorNumber: number) => {
     return apartments.filter(apt => apt.floor_number === floorNumber);
   };
@@ -64,6 +114,11 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
 
   const handleBackToBuilding = () => {
     setSelectedFloor(null);
+  };
+
+  const handleEditFloor = (floorNumber: number) => {
+    setEditingFloor(floorNumber);
+    setIsEditingBuilding(true);
   };
 
   // Если выбран этаж, показываем план этажа
@@ -79,12 +134,53 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
             ← {t('project.backToBuilding')}
           </button>
           <h2 className="text-xl font-semibold">{selectedFloor} {t('project.floor')}</h2>
+          <button
+            onClick={() => handleEditFloor(selectedFloor)}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Редактировать полигон этажа
+          </button>
         </div>
         <FloorPlanView
           projectId={projectId}
           floorNumber={selectedFloor}
           apartments={floorApartments}
           onApartmentSelect={onApartmentSelect}
+        />
+      </div>
+    );
+  }
+
+  // Если редактируем здание
+  if (isEditingBuilding && project.building_image_url) {
+    const existingPolygon = buildingFloors.find(f => f.floor_number === editingFloor)?.polygon || [];
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              setIsEditingBuilding(false);
+              setEditingFloor(null);
+            }}
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            ← Назад к плану здания
+          </button>
+          <h2 className="text-xl font-semibold">
+            Редактирование полигона {editingFloor} этажа
+          </h2>
+        </div>
+        
+        <PolygonEditor
+          imageUrl={project.building_image_url}
+          existingPolygons={existingPolygon}
+          onSave={handlePolygonSave}
+          onCancel={() => {
+            setIsEditingBuilding(false);
+            setEditingFloor(null);
+          }}
+          polygonColor="#3b82f6"
         />
       </div>
     );
@@ -111,20 +207,22 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
               src={project.building_image_url} 
               alt={`План ${project.name}`}
               className="w-full h-auto object-contain max-h-[600px]"
+              onLoad={handleImageLoad}
             />
           </div>
           
           {/* SVG overlay for interactive floors */}
-          {buildingFloors.length > 0 && (
+          {buildingFloors.length > 0 && imageSize.width > 0 && (
             <svg 
               className="absolute inset-0 w-full h-full"
-              viewBox="0 0 100 100" 
+              viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
               preserveAspectRatio="none"
             >
               {buildingFloors.map((floor) => {
                 if (!floor.polygon || floor.polygon.length < 3) return null;
                 
-                const points = floor.polygon
+                const convertedPolygon = convertToViewBox(floor.polygon, imageSize.width, imageSize.height);
+                const points = convertedPolygon
                   .map(point => `${point.x},${point.y}`)
                   .join(' ');
 
@@ -139,6 +237,9 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
                   else fillColor = '#f59e0b'; // partially available - yellow
                 }
 
+                const centerX = convertedPolygon.reduce((sum, p) => sum + p.x, 0) / convertedPolygon.length;
+                const centerY = convertedPolygon.reduce((sum, p) => sum + p.y, 0) / convertedPolygon.length;
+
                 return (
                   <g key={floor.id}>
                     <polygon
@@ -146,24 +247,22 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
                       fill={fillColor}
                       fillOpacity={0.3}
                       stroke={fillColor}
-                      strokeWidth={0.5}
+                      strokeWidth={2}
                       className="cursor-pointer hover:fill-opacity-50 transition-all"
                       onClick={() => handleFloorClick(floor.floor_number)}
                     />
                     {/* Floor number label */}
-                    {floor.polygon.length > 0 && (
-                      <text
-                        x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                        y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="fill-white font-bold pointer-events-none"
-                        fontSize="2"
-                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
-                      >
-                        {floor.floor_number}
-                      </text>
-                    )}
+                    <text
+                      x={centerX}
+                      y={centerY}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="fill-white font-bold pointer-events-none"
+                      fontSize="16"
+                      style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
+                    >
+                      {floor.floor_number}
+                    </text>
                   </g>
                 );
               })}
