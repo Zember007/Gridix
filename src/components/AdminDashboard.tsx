@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Building2, Settings, Code, BarChart3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProjectList from './ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
@@ -14,6 +15,19 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
+  const navigate = useNavigate();
+
+  const handleCreateNew = () => {
+    navigate('/admin/project/new');
+  };
+
+  const handleEditProject = (projectId: string, isNew: boolean) => {
+    if (isNew) {
+      navigate('/admin/project/new');
+    } else {
+      navigate(`/admin/project/${projectId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +71,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
           <div className="mt-6">
             <TabsContent value="projects" className="space-y-6">
-              <ProjectList />
+              <ProjectList 
+                onCreateNew={handleCreateNew}
+                onEditProject={handleEditProject}
+              />
             </TabsContent>
 
             <TabsContent value="widgets" className="space-y-6">
