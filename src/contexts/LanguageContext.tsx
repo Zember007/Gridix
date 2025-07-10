@@ -1,7 +1,173 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Language = 'ru' | 'en' | 'ka';
+export type Language = 'ru' | 'en' | 'ka';
+
+interface Translations {
+  [key: string]: {
+    [key in Language]: string;
+  };
+}
+
+const translations: Translations = {
+  // Navigation
+  'nav.projects': {
+    ru: 'Проекты',
+    en: 'Projects',
+    ka: 'პროექტები'
+  },
+  'nav.about': {
+    ru: 'О нас',
+    en: 'About',
+    ka: 'ჩვენს შესახებ'
+  },
+  'nav.contact': {
+    ru: 'Контакты',
+    en: 'Contact',
+    ka: 'კონტაქტი'
+  },
+
+  // Project
+  'project.apartments': {
+    ru: 'квартир',
+    en: 'apartments',
+    ka: 'ბინები'
+  },
+  'project.floors': {
+    ru: 'этажей',
+    en: 'floors',
+    ka: 'სართულები'
+  },
+  'project.available': {
+    ru: 'Доступно',
+    en: 'Available',
+    ka: 'ხელმისაწვდომია'
+  },
+  'project.reserved': {
+    ru: 'Забронировано',
+    en: 'Reserved',
+    ka: 'დაჯავშნული'
+  },
+  'project.sold': {
+    ru: 'Продано',
+    en: 'Sold',
+    ka: 'გაყიდული'
+  },
+  'project.price': {
+    ru: 'Цена',
+    en: 'Price',
+    ka: 'ფასი'
+  },
+  'project.area': {
+    ru: 'Площадь',
+    en: 'Area',
+    ka: 'ართული'
+  },
+  'project.rooms': {
+    ru: 'Комнаты',
+    en: 'Rooms',
+    ka: 'ოთახები'
+  },
+  'project.floor': {
+    ru: 'Этаж',
+    en: 'Floor',
+    ka: 'სართული'
+  },
+  'project.contactManager': {
+    ru: 'Связаться с менеджером',
+    en: 'Contact Manager',
+    ka: 'დაკავშირება მენეჯერთან'
+  },
+  'project.backToBuilding': {
+    ru: 'Назад к зданию',
+    en: 'Back to Building',
+    ka: 'შენობაზე დაბრუნება'
+  },
+  'project.noBuildingPlan': {
+    ru: 'План здания не настроен',
+    en: 'Building plan not configured',
+    ka: 'შენობის გეგმა არ არის კონფიგურირებული'
+  },
+  'project.contactAdmin': {
+    ru: 'Обратитесь к администратору',
+    en: 'Contact administrator',
+    ka: 'დაუკავშირდით ადმინისტრატორს'
+  },
+  'project.interactivePlan': {
+    ru: 'Интерактивный план',
+    en: 'Interactive Plan',
+    ka: 'ინტერაქტიული გეგმა'
+  },
+
+  // Filters
+  'filters.search': {
+    ru: 'Поиск...',
+    en: 'Search...',
+    ka: 'ძებნა...'
+  },
+  'filters.city': {
+    ru: 'Город',
+    en: 'City',
+    ka: 'ქალაქი'
+  },
+  'filters.allCities': {
+    ru: 'Все города',
+    en: 'All cities',
+    ka: 'ყველა ქალაქი'
+  },
+  'filters.status': {
+    ru: 'Статус',
+    en: 'Status',
+    ka: 'სტატუსი'
+  },
+  'filters.allStatuses': {
+    ru: 'Все статусы',
+    en: 'All statuses',
+    ka: 'ყველა სტატუსი'
+  },
+  'filters.priceRange': {
+    ru: 'Диапазон цен',
+    en: 'Price range',
+    ka: 'ფასის დიაპაზონი'
+  },
+  'filters.minPrice': {
+    ru: 'Мин. цена',
+    en: 'Min price',
+    ka: 'მინ. ფასი'
+  },
+  'filters.maxPrice': {
+    ru: 'Макс. цена',
+    en: 'Max price',
+    ka: 'მაქს. ფასი'
+  },
+  'filters.applyFilters': {
+    ru: 'Применить фильтры',
+    en: 'Apply filters',
+    ka: 'ფილტრების გამოყენება'
+  },
+  'filters.resetFilters': {
+    ru: 'Сбросить фильтры',
+    en: 'Reset filters',
+    ka: 'ფილტრების გადატვირთვა'
+  },
+
+  // Statistics
+  'stats.totalProjects': {
+    ru: 'Всего проектов',
+    en: 'Total projects',
+    ka: 'სულ პროექტები'
+  },
+  'stats.totalApartments': {
+    ru: 'Всего квартир',
+    en: 'Total apartments',
+    ka: 'სულ ბინები'
+  },
+  'stats.availableApartments': {
+    ru: 'Доступные квартиры',
+    en: 'Available apartments',
+    ka: 'ხელმისაწვდომი ბინები'
+  }
+};
 
 interface LanguageContextType {
   language: Language;
@@ -11,198 +177,23 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations = {
-  ru: {
-    // Общие
-    'common.back': 'Назад',
-    'common.save': 'Сохранить',
-    'common.cancel': 'Отмена',
-    'common.delete': 'Удалить',
-    'common.edit': 'Редактировать',
-    'common.loading': 'Загрузка...',
-    'common.error': 'Ошибка',
-    'common.success': 'Успешно',
-    
-    // Админка
-    'admin.dashboard': 'Панель управления',
-    
-    // Проект
-    'project.interactivePlan': 'Интерактивный план',
-    'project.noBuildingPlan': 'План здания не загружен',
-    'project.contactAdmin': 'Обратитесь к администратору для загрузки плана',
-    'project.backToBuilding': 'Назад к зданию',
-    'project.floor': 'этаж',
-    'project.contactManager': 'Связаться с менеджером',
-    
-    // Квартира
-    'apartment.number': 'Квартира',
-    'apartment.room': 'комн.',
-    'apartment.rooms': 'Комнаты',
-    'apartment.studio': 'Студия',
-    'apartment.sqm': 'м²',
-    'apartment.floor': 'Этаж',
-    'apartment.floorSuffix': 'этаж',
-    'apartment.area': 'Площадь',
-    'apartment.price': 'Цена',
-    'apartment.status': 'Статус',
-    'apartment.statusAvailable': 'Доступно',
-    'apartment.statusReserved': 'Забронировано',
-    'apartment.statusSold': 'Продано',
-    
-    // Фильтры
-    'filters.title': 'Фильтры',
-    'filters.clear': 'Очистить',
-    'filters.allStatuses': 'Все статусы',
-    'filters.allRooms': 'Все комнаты',
-    'filters.allFloors': 'Все этажи',
-    'filters.priceFrom': 'Цена от',
-    'filters.priceTo': 'Цена до',
-    'filters.areaFrom': 'Площадь от',
-    'filters.areaTo': 'Площадь до',
-    
-    // Таблица
-    'table.apartment': 'Квартира',
-    'table.floor': 'Этаж',
-    'table.rooms': 'Комнаты',
-    'table.area': 'Площадь',
-    'table.price': 'Цена',
-    'table.pricePerSqm': '₽/м²',
-    'table.status': 'Статус',
-    'table.noResults': 'Квартир не найдено',
-    'table.selectView': 'Выберите вид отображения'
-  },
-  en: {
-    // Common
-    'common.back': 'Back',
-    'common.save': 'Save',
-    'common.cancel': 'Cancel',
-    'common.delete': 'Delete',
-    'common.edit': 'Edit',
-    'common.loading': 'Loading...',
-    'common.error': 'Error',
-    'common.success': 'Success',
-    
-    // Admin
-    'admin.dashboard': 'Admin Dashboard',
-    
-    // Project
-    'project.interactivePlan': 'Interactive Plan',
-    'project.noBuildingPlan': 'Building plan not uploaded',
-    'project.contactAdmin': 'Contact administrator to upload plan',
-    'project.backToBuilding': 'Back to building',
-    'project.floor': 'floor',
-    'project.contactManager': 'Contact Manager',
-    
-    // Apartment
-    'apartment.number': 'Apartment',
-    'apartment.room': 'room',
-    'apartment.rooms': 'Rooms',
-    'apartment.studio': 'Studio',
-    'apartment.sqm': 'sqm',
-    'apartment.floor': 'Floor',
-    'apartment.floorSuffix': 'floor',
-    'apartment.area': 'Area',
-    'apartment.price': 'Price',
-    'apartment.status': 'Status',
-    'apartment.statusAvailable': 'Available',
-    'apartment.statusReserved': 'Reserved',
-    'apartment.statusSold': 'Sold',
-    
-    // Filters
-    'filters.title': 'Filters',
-    'filters.clear': 'Clear',
-    'filters.allStatuses': 'All statuses',
-    'filters.allRooms': 'All rooms',
-    'filters.allFloors': 'All floors',
-    'filters.priceFrom': 'Price from',
-    'filters.priceTo': 'Price to',
-    'filters.areaFrom': 'Area from',
-    'filters.areaTo': 'Area to',
-    
-    // Table
-    'table.apartment': 'Apartment',
-    'table.floor': 'Floor',
-    'table.rooms': 'Rooms',
-    'table.area': 'Area',
-    'table.price': 'Price',
-    'table.pricePerSqm': '$/sqm',
-    'table.status': 'Status',
-    'table.noResults': 'No apartments found',
-    'table.selectView': 'Select display view'
-  },
-  ka: {
-    // Common
-    'common.back': 'უკან',
-    'common.save': 'შენახვა',
-    'common.cancel': 'გაუქმება',
-    'common.delete': 'წაშლა',
-    'common.edit': 'რედაქტირება',
-    'common.loading': 'იტვირთება...',
-    'common.error': 'შეცდომა',
-    'common.success': 'წარმატება',
-    
-    // Admin
-    'admin.dashboard': 'ადმინისტრაციული პანელი',
-    
-    // Project
-    'project.interactivePlan': 'ინტერაქტიული გეგმა',
-    'project.noBuildingPlan': 'შენობის გეგმა არ არის ატვირთული',
-    'project.contactAdmin': 'დაუკავშირდით ადმინისტრატორს გეგმის ასატვირთად',
-    'project.backToBuilding': 'უკან შენობაზე',
-    'project.floor': 'სართული',
-    'project.contactManager': 'მენეჯერთან კონტაქტი',
-    
-    // Apartment
-    'apartment.number': 'ბინა',
-    'apartment.room': 'ოთახი',
-    'apartment.rooms': 'ოთახები',
-    'apartment.studio': 'სტუდია',
-    'apartment.sqm': 'კვ.მ',
-    'apartment.floor': 'სართული',
-    'apartment.floorSuffix': 'სართული',
-    'apartment.area': 'ფართობი',
-    'apartment.price': 'ფასი',
-    'apartment.status': 'სტატუსი',
-    'apartment.statusAvailable': 'ხელმისაწვდომი',
-    'apartment.statusReserved': 'დაჯავშნული',
-    'apartment.statusSold': 'გაყიდული',
-    
-    // Filters
-    'filters.title': 'ფილტრები',
-    'filters.clear': 'გასუფთავება',
-    'filters.allStatuses': 'ყველა სტატუსი',
-    'filters.allRooms': 'ყველა ოთახი',
-    'filters.allFloors': 'ყველა სართული',
-    'filters.priceFrom': 'ფასი დან',
-    'filters.priceTo': 'ფასი მდე',
-    'filters.areaFrom': 'ფართობი დან',
-    'filters.areaTo': 'ფართობი მდე',
-    
-    // Table
-    'table.apartment': 'ბინა',
-    'table.floor': 'სართული',
-    'table.rooms': 'ოთახები',
-    'table.area': 'ფართობი',
-    'table.price': 'ფასი',
-    'table.pricePerSqm': 'ლ/კვ.მ',
-    'table.status': 'სტატუსი',
-    'table.noResults': 'ბინები ვერ მოიძებნა',
-    'table.selectView': 'აირჩიეთ ჩვენების ტიპი'
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
   }
+  return context;
 };
 
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved as Language) || 'ru';
-  });
+interface LanguageProviderProps {
+  children: ReactNode;
+}
 
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>('ru');
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    return translations[key]?.[language] || key;
   };
 
   return (
@@ -210,12 +201,4 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {children}
     </LanguageContext.Provider>
   );
-};
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
 };

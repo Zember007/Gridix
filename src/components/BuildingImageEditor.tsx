@@ -1,5 +1,4 @@
-
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,7 +49,13 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
         .eq('project_id', projectId)
         .order('floor_number');
 
-      setBuildingFloors(floors || []);
+      // Normalize the polygon data to match the expected type
+      const normalizedFloors = (floors || []).map(floor => ({
+        ...floor,
+        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
+      }));
+
+      setBuildingFloors(normalizedFloors);
     } catch (error) {
       console.error('Error loading building data:', error);
     }
@@ -252,7 +257,7 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
       {isEditing && buildingImage && (
         <PolygonEditor
           imageUrl={buildingImage}
-          existingPolygon={buildingFloors.find(f => f.floor_number === selectedFloor)?.polygon || []}
+          existingPolygons={buildingFloors.find(f => f.floor_number === selectedFloor)?.polygon || []}
           onSave={handlePolygonSave}
           onCancel={() => setIsEditing(false)}
           title={`Настройка полигона для ${selectedFloor} этажа`}

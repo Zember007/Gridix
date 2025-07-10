@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Home, Filter, Grid3X3, Map } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import ApartmentFilters from './ApartmentFilters';
+import ApartmentFilters, { ApartmentFilters as ApartmentFiltersType } from './ApartmentFilters';
 import ApartmentList from './ApartmentList';
 import FloorPlanView from './FloorPlanView';
 import BuildingFacadeView from './BuildingFacadeView';
@@ -27,14 +28,6 @@ interface Project {
   longitude: number | null;
 }
 
-interface FilterState {
-  rooms: number[];
-  status: string[];
-  priceRange: [number, number];
-  areaRange: [number, number];
-  floor: number[];
-}
-
 const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => {
   const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -42,7 +35,7 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('list');
   const [selectedFloor, setSelectedFloor] = useState(1);
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<ApartmentFiltersType>({
     rooms: [],
     status: [],
     priceRange: [0, 0],

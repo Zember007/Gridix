@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, Image as ImageIcon, Copy, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Apartment } from '@/types/apartment';
+import { Apartment, normalizeApartmentData } from '@/types/apartment';
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -49,7 +48,10 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         .order('apartment_number', { ascending: true });
 
       if (error) throw error;
-      setApartments(data || []);
+      
+      // Normalize the apartment data to match the Apartment type
+      const normalizedApartments = (data || []).map(normalizeApartmentData);
+      setApartments(normalizedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
     } finally {
