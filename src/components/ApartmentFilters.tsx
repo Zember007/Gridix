@@ -1,203 +1,163 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Filter, X } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
-
-interface FilterState {
-  rooms: number[];
-  status: string[];
-  priceRange: [number, number];
-  areaRange: [number, number];
-  floor: number[];
-}
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentFiltersProps {
   apartments: Apartment[];
-  filters: FilterState;
-  onFiltersChange: (filters: FilterState) => void;
+  onFiltersChange: (filters: ApartmentFilters) => void;
 }
 
-const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFiltersProps) => {
-  const [tempPriceRange, setTempPriceRange] = useState(filters.priceRange);
-  const [tempAreaRange, setTempAreaRange] = useState(filters.areaRange);
+export interface ApartmentFilters {
+  status: string;
+  rooms: string;
+  minPrice: number | null;
+  maxPrice: number | null;
+  minArea: number | null;
+  maxArea: number | null;
+  floor: string;
+}
 
-  const availableRooms = Array.from(new Set(apartments.map(apt => apt.rooms))).sort();
-  const availableFloors = Array.from(new Set(apartments.map(apt => apt.floor_number))).sort();
-  const statusOptions = [
-    { value: 'available', label: 'Доступно', color: 'bg-green-100 text-green-800' },
-    { value: 'reserved', label: 'Забронировано', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'sold', label: 'Продано', color: 'bg-red-100 text-red-800' }
-  ];
+const ApartmentFilters = ({ apartments, onFiltersChange }: ApartmentFiltersProps) => {
+  const { t } = useLanguage();
+  const [filters, setFilters] = useState<ApartmentFilters>({
+    status: '',
+    rooms: '',
+    minPrice: null,
+    maxPrice: null,
+    minArea: null,
+    maxArea: null,
+    floor: ''
+  });
 
-  const prices = apartments.map(apt => apt.price || 0).filter(p => p > 0);
-  const areas = apartments.map(apt => apt.area);
-  
-  const priceMin = prices.length > 0 ? Math.min(...prices) : 0;
-  const priceMax = prices.length > 0 ? Math.max(...prices) : 0;
-  const areaMin = Math.min(...areas);
-  const areaMax = Math.max(...areas);
-
-  const toggleRoom = (room: number) => {
-    const newRooms = filters.rooms.includes(room)
-      ? filters.rooms.filter(r => r !== room)
-      : [...filters.rooms, room];
-    onFiltersChange({ ...filters, rooms: newRooms });
+  const handleFilterChange = (key: keyof ApartmentFilters, value: any) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    onFiltersChange(newFilters);
   };
 
-  const toggleStatus = (status: string) => {
-    const newStatus = filters.status.includes(status)
-      ? filters.status.filter(s => s !== status)
-      : [...filters.status, status];
-    onFiltersChange({ ...filters, status: newStatus });
-  };
-
-  const toggleFloor = (floor: number) => {
-    const newFloors = filters.floor.includes(floor)
-      ? filters.floor.filter(f => f !== floor)
-      : [...filters.floor, floor];
-    onFiltersChange({ ...filters, floor: newFloors });
-  };
-
-  const clearAllFilters = () => {
-    const clearedFilters: FilterState = {
-      rooms: [],
-      status: [],
-      priceRange: [priceMin, priceMax],
-      areaRange: [areaMin, areaMax],
-      floor: []
+  const clearFilters = () => {
+    const emptyFilters: ApartmentFilters = {
+      status: '',
+      rooms: '',
+      minPrice: null,
+      maxPrice: null,
+      minArea: null,
+      maxArea: null,
+      floor: ''
     };
-    onFiltersChange(clearedFilters);
-    setTempPriceRange([priceMin, priceMax]);
-    setTempAreaRange([areaMin, areaMax]);
+    setFilters(emptyFilters);
+    onFiltersChange(emptyFilters);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU').format(price);
-  };
-
-  const hasActiveFilters = filters.rooms.length > 0 || filters.status.length > 0 || filters.floor.length > 0;
+  // Получаем уникальные значения для фильтров
+  const uniqueRooms = [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
+  const uniqueFloors = [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
 
   return (
-    <div className="space-y-6">
-      {hasActiveFilters && (
+    <Card>
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Активные фильтры</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAllFilters}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <X className="h-3 w-3 mr-1" />
-            Очистить все
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            {t('filters.title')}
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="h-4 w-4 mr-1" />
+            {t('filters.clear')}
           </Button>
         </div>
-      )}
-
-      {/* Количество комнат */}
-      <div>
-        <Label className="text-sm font-medium mb-3 block">Количество комнат</Label>
-        <div className="flex flex-wrap gap-2">
-          {availableRooms.map(room => (
-            <Button
-              key={room}
-              variant={filters.rooms.includes(room) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleRoom(room)}
-              className="text-sm"
-            >
-              {room === 0 ? 'Студия' : `${room} комн.`}
-            </Button>
-          ))}
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="status">{t('apartment.status')}</Label>
+          <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('filters.allStatuses')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('filters.allStatuses')}</SelectItem>
+              <SelectItem value="available">{t('apartment.statusAvailable')}</SelectItem>
+              <SelectItem value="reserved">{t('apartment.statusReserved')}</SelectItem>
+              <SelectItem value="sold">{t('apartment.statusSold')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      <Separator />
-
-      {/* Статус */}
-      <div>
-        <Label className="text-sm font-medium mb-3 block">Статус</Label>
-        <div className="space-y-2">
-          {statusOptions.map(option => (
-            <div key={option.value} className="flex items-center gap-2">
-              <Button
-                variant={filters.status.includes(option.value) ? "default" : "outline"}
-                size="sm"
-                onClick={() => toggleStatus(option.value)}
-                className="flex-1 justify-start text-sm"
-              >
-                {option.label}
-              </Button>
-            </div>
-          ))}
+        <div>
+          <Label htmlFor="rooms">{t('apartment.rooms')}</Label>
+          <Select value={filters.rooms} onValueChange={(value) => handleFilterChange('rooms', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('filters.allRooms')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('filters.allRooms')}</SelectItem>
+              {uniqueRooms.map(rooms => (
+                <SelectItem key={rooms} value={rooms.toString()}>
+                  {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      <Separator />
-
-      {/* Этаж */}
-      <div>
-        <Label className="text-sm font-medium mb-3 block">Этаж</Label>
-        <div className="grid grid-cols-4 gap-2">
-          {availableFloors.map(floor => (
-            <Button
-              key={floor}
-              variant={filters.floor.includes(floor) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleFloor(floor)}
-              className="text-sm"
-            >
-              {floor}
-            </Button>
-          ))}
+        <div>
+          <Label htmlFor="floor">{t('apartment.floor')}</Label>
+          <Select value={filters.floor} onValueChange={(value) => handleFilterChange('floor', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('filters.allFloors')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('filters.allFloors')}</SelectItem>
+              {uniqueFloors.map(floor => (
+                <SelectItem key={floor} value={floor.toString()}>
+                  {floor} {t('apartment.floorSuffix')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      {prices.length > 0 && (
-        <>
-          <Separator />
-          
-          {/* Цена */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">
-              Цена: {formatPrice(tempPriceRange[0])} - {formatPrice(tempPriceRange[1])} ₽
-            </Label>
-            <Slider
-              value={tempPriceRange}
-              onValueChange={(value) => setTempPriceRange(value as [number, number])}
-              onValueCommit={(value) => onFiltersChange({ ...filters, priceRange: value as [number, number] })}
-              min={priceMin}
-              max={priceMax}
-              step={Math.max(1, Math.round((priceMax - priceMin) / 100))}
-              className="w-full"
-            />
-          </div>
-        </>
-      )}
+        <div>
+          <Label htmlFor="minPrice">{t('filters.priceFrom')}</Label>
+          <Input
+            id="minPrice"
+            type="number"
+            placeholder="0"
+            value={filters.minPrice || ''}
+            onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : null)}
+          />
+        </div>
 
-      <Separator />
+        <div>
+          <Label htmlFor="maxPrice">{t('filters.priceTo')}</Label>
+          <Input
+            id="maxPrice"
+            type="number"
+            placeholder="∞"
+            value={filters.maxPrice || ''}
+            onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : null)}
+          />
+        </div>
 
-      {/* Площадь */}
-      <div>
-        <Label className="text-sm font-medium mb-3 block">
-          Площадь: {tempAreaRange[0]} - {tempAreaRange[1]} м²
-        </Label>
-        <Slider
-          value={tempAreaRange}
-          onValueChange={(value) => setTempAreaRange(value as [number, number])}
-          onValueCommit={(value) => onFiltersChange({ ...filters, areaRange: value as [number, number] })}
-          min={areaMin}
-          max={areaMax}
-          step={1}
-          className="w-full"
-        />
-      </div>
-    </div>
+        <div>
+          <Label htmlFor="minArea">{t('filters.areaFrom')}</Label>
+          <Input
+            id="minArea"
+            type="number"
+            placeholder="0"
+            value={filters.minArea || ''}
+            onChange={(e) => handleFilterChange('minArea', e.target.value ? Number(e.target.value) : null)}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

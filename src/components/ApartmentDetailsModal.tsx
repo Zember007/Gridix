@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Home, Ruler, DollarSign, Phone, Mail } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentDetailsModalProps {
   apartment: Apartment;
@@ -14,6 +15,8 @@ interface ApartmentDetailsModalProps {
 }
 
 const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsModalProps) => {
+  const { t } = useLanguage();
+
   const formatPrice = (price: number | null) => {
     if (!price) return 'Цена по запросу';
     return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
@@ -22,13 +25,28 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Доступно</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t('apartment.statusAvailable')}</Badge>;
       case 'reserved':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Забронировано</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{t('apartment.statusReserved')}</Badge>;
       case 'sold':
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Продано</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">{t('apartment.statusSold')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleContactManager = () => {
+    // Получаем контактную информацию из настроек
+    const settings = localStorage.getItem('admin_settings');
+    if (settings) {
+      const { contact_phone } = JSON.parse(settings);
+      if (contact_phone) {
+        window.open(`tel:${contact_phone}`, '_self');
+      } else {
+        window.open('tel:+7999123456', '_self'); // Fallback номер
+      }
+    } else {
+      window.open('tel:+7999123456', '_self'); // Fallback номер
     }
   };
 
@@ -38,7 +56,7 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl">
-              Квартира {apartment.apartment_number}
+              {t('apartment.number')} {apartment.apartment_number}
             </DialogTitle>
             {getStatusBadge(apartment.status)}
           </div>
@@ -51,7 +69,7 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
               <CardContent className="p-4 text-center">
                 <MapPin className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
                 <div className="text-lg font-semibold">{apartment.floor_number}</div>
-                <div className="text-sm text-muted-foreground">Этаж</div>
+                <div className="text-sm text-muted-foreground">{t('apartment.floor')}</div>
               </CardContent>
             </Card>
 
@@ -59,17 +77,17 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
               <CardContent className="p-4 text-center">
                 <Home className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
                 <div className="text-lg font-semibold">
-                  {apartment.rooms === 0 ? 'Студия' : `${apartment.rooms} комн.`}
+                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
                 </div>
-                <div className="text-sm text-muted-foreground">Комнаты</div>
+                <div className="text-sm text-muted-foreground">{t('apartment.rooms')}</div>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="p-4 text-center">
                 <Ruler className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <div className="text-lg font-semibold">{apartment.area} м²</div>
-                <div className="text-sm text-muted-foreground">Площадь</div>
+                <div className="text-lg font-semibold">{apartment.area} {t('apartment.sqm')}</div>
+                <div className="text-sm text-muted-foreground">{t('apartment.area')}</div>
               </CardContent>
             </Card>
 
@@ -81,7 +99,7 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
                     Math.round(apartment.price / apartment.area).toLocaleString('ru-RU') : '—'
                   }
                 </div>
-                <div className="text-sm text-muted-foreground">₽/м²</div>
+                <div className="text-sm text-muted-foreground">{t('table.pricePerSqm')}</div>
               </CardContent>
             </Card>
           </div>
@@ -116,24 +134,24 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
                       <span className="font-medium">{apartment.apartment_number}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Этаж:</span>
+                      <span className="text-muted-foreground">{t('apartment.floor')}:</span>
                       <span className="font-medium">{apartment.floor_number}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Комнаты:</span>
+                      <span className="text-muted-foreground">{t('apartment.rooms')}:</span>
                       <span className="font-medium">
-                        {apartment.rooms === 0 ? 'Студия' : `${apartment.rooms} комн.`}
+                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Общая площадь:</span>
-                      <span className="font-medium">{apartment.area} м²</span>
+                      <span className="font-medium">{apartment.area} {t('apartment.sqm')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Статус:</span>
+                      <span className="text-muted-foreground">{t('apartment.status')}:</span>
                       <span className="font-medium">
-                        {apartment.status === 'available' ? 'Доступно' :
-                         apartment.status === 'reserved' ? 'Забронировано' : 'Продано'}
+                        {apartment.status === 'available' ? t('apartment.statusAvailable') :
+                         apartment.status === 'reserved' ? t('apartment.statusReserved') : t('apartment.statusSold')}
                       </span>
                     </div>
                   </div>
@@ -192,9 +210,9 @@ const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsMod
             >
               {apartment.status === 'available' ? 'Забронировать квартиру' : 'Квартира недоступна'}
             </Button>
-            <Button variant="outline" size="lg" className="flex items-center gap-2">
+            <Button variant="outline" size="lg" className="flex items-center gap-2" onClick={handleContactManager}>
               <Phone className="h-4 w-4" />
-              Позвонить
+              {t('project.contactManager')}
             </Button>
             <Button variant="outline" size="lg" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />

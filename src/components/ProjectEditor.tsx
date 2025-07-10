@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,15 +6,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Building2, Image, Layout, RefreshCw, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layout, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import BuildingImageEditor from '@/components/BuildingImageEditor';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
-import ProjectSyncManager from '@/components/ProjectSyncManager';
 import CustomFieldsManager from '@/components/CustomFieldsManager';
 import ProjectApartmentsManager from '@/components/ProjectApartmentsManager';
+import ApartmentPhotosManager from '@/components/ApartmentPhotosManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -140,7 +141,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   const [floorNumber, setFloorNumber] = useState(1);
 
-  // Функция для обработки смены этажа
   const handleFloorChange = (floorNumber: number) => {
     setFloorNumber(floorNumber);
   };
@@ -167,16 +167,16 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Projects
+                Назад к проектам
               </Button>
               <div className="flex items-center gap-3">
                 <Building2 className="h-8 w-8 text-real-estate-600" />
                 <div>
                   <h1 className="text-2xl font-bold text-real-estate-900">
-                    {isNew ? 'New Project' : projectData.name}
+                    {isNew ? 'Новый проект' : projectData.name}
                   </h1>
                   {!isNew && (
-                    <p className="text-sm text-real-estate-600">Editing project</p>
+                    <p className="text-sm text-real-estate-600">Редактирование проекта</p>
                   )}
                 </div>
               </div>
@@ -187,7 +187,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
         </div>
@@ -199,55 +199,55 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsList className="grid w-full grid-cols-6 lg:w-[900px]">
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              General
+              Основное
             </TabsTrigger>
             <TabsTrigger value="building" className="flex items-center gap-2" disabled={isNew}>
               <Image className="h-4 w-4" />
-              Building
+              Здание
             </TabsTrigger>
             <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
               <Layout className="h-4 w-4" />
-              Floor Plans
+              Планы этажей
             </TabsTrigger>
             <TabsTrigger value="apartments" className="flex items-center gap-2" disabled={isNew}>
               <Building2 className="h-4 w-4" />
-              Apartments
+              Квартиры
+            </TabsTrigger>
+            <TabsTrigger value="photos" className="flex items-center gap-2" disabled={isNew}>
+              <Image className="h-4 w-4" />
+              Фотографии
             </TabsTrigger>
             <TabsTrigger value="fields" className="flex items-center gap-2" disabled={isNew}>
               <Settings className="h-4 w-4" />
-              Custom Fields
-            </TabsTrigger>
-            <TabsTrigger value="sync" className="flex items-center gap-2" disabled={isNew}>
-              <RefreshCw className="h-4 w-4" />
-              Sync
+              Поля
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
+                <CardTitle>Основная информация</CardTitle>
                 <CardDescription>
-                  Configure the basic parameters of your project
+                  Настройте основные параметры вашего проекта
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="name">Project Name*</Label>
+                      <Label htmlFor="name">Название проекта*</Label>
                       <Input
                         id="name"
                         value={projectData.name}
                         onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Complex Name"
+                        placeholder="Название комплекса"
                         className="mt-1"
                         required
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="floors">Number of Floors</Label>
+                      <Label htmlFor="floors">Количество этажей</Label>
                       <Input
                         id="floors"
                         type="number"
@@ -261,12 +261,12 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Описание</Label>
                     <Textarea
                       id="description"
                       value={projectData.description}
                       onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Brief description of the residential complex..."
+                      placeholder="Краткое описание жилого комплекса..."
                       rows={4}
                       className="mt-1"
                     />
@@ -276,7 +276,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 {isNew && (
                   <div className="bg-real-estate-50 p-4 rounded-lg">
                     <p className="text-sm text-real-estate-700">
-                      After creating the project, you'll be able to upload building images, configure floor plans, and set up custom fields.
+                      После создания проекта вы сможете загрузить изображения здания, настроить планы этажей и установить пользовательские поля.
                     </p>
                   </div>
                 )}
@@ -287,9 +287,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsContent value="building" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Building Image</CardTitle>
+                <CardTitle>Изображение здания</CardTitle>
                 <CardDescription>
-                  Upload building image and configure interactive floor zones
+                  Загрузите изображение здания и настройте интерактивные зоны этажей
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -305,9 +305,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsContent value="floors" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Floor Plans</CardTitle>
+                <CardTitle>Планы этажей</CardTitle>
                 <CardDescription>
-                  Upload floor plans and configure interactive apartment zones
+                  Загрузите планы этажей и настройте интерактивные зоны квартир
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -324,12 +324,12 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <ProjectApartmentsManager projectId={projectId} />
           </TabsContent>
 
-          <TabsContent value="fields" className="space-y-6">
-            <CustomFieldsManager projectId={projectId} />
+          <TabsContent value="photos" className="space-y-6">
+            <ApartmentPhotosManager projectId={projectId} />
           </TabsContent>
 
-          <TabsContent value="sync" className="space-y-6">
-            <ProjectSyncManager projectId={projectId} />
+          <TabsContent value="fields" className="space-y-6">
+            <CustomFieldsManager projectId={projectId} />
           </TabsContent>
         </Tabs>
       </div>

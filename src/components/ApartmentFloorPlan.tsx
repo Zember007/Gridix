@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Building2 } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import FloorPlanView from '@/components/FloorPlanView';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -25,7 +27,7 @@ interface BuildingFloor {
 const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
-  const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
+  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
 
   useEffect(() => {
     loadBuildingFloors();
@@ -52,18 +54,41 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return '#22c55e';
-      case 'reserved': return '#f59e0b';
-      case 'sold': return '#6b7280';
-      default: return '#22c55e';
-    }
-  };
-
   const getFloorApartments = (floorNumber: number) => {
     return apartments.filter(apt => apt.floor_number === floorNumber);
   };
+
+  const handleFloorClick = (floorNumber: number) => {
+    setSelectedFloor(floorNumber);
+  };
+
+  const handleBackToBuilding = () => {
+    setSelectedFloor(null);
+  };
+
+  // Если выбран этаж, показываем план этажа
+  if (selectedFloor) {
+    const floorApartments = getFloorApartments(selectedFloor);
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleBackToBuilding}
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            ← {t('project.backToBuilding')}
+          </button>
+          <h2 className="text-xl font-semibold">{selectedFloor} {t('project.floor')}</h2>
+        </div>
+        <FloorPlanView
+          projectId={projectId}
+          floorNumber={selectedFloor}
+          apartments={floorApartments}
+          onApartmentSelect={onApartmentSelect}
+        />
+      </div>
+    );
+  }
 
   if (!project.building_image_url && buildingFloors.length === 0) {
     return (
@@ -123,11 +148,7 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
                       stroke={fillColor}
                       strokeWidth={0.5}
                       className="cursor-pointer hover:fill-opacity-50 transition-all"
-                      onClick={() => {
-                        if (floorApartments.length > 0) {
-                          onApartmentSelect(floorApartments[0]);
-                        }
-                      }}
+                      onClick={() => handleFloorClick(floor.floor_number)}
                     />
                     {/* Floor number label */}
                     {floor.polygon.length > 0 && (
@@ -153,21 +174,6 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect 
         <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg text-muted-foreground">
           <Building2 className="h-16 w-16 mb-4" />
           <p className="text-lg font-medium">Изображение плана не загружено</p>
-        </div>
-      )}
-
-      {/* Tooltip for hovered apartment */}
-      {hoveredApartment && (
-        <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg border max-w-xs">
-          <div className="font-medium">{t('apartment.number')} {hoveredApartment.apartment_number}</div>
-          <div className="text-sm text-muted-foreground">
-            {hoveredApartment.rooms === 0 ? t('apartment.studio') : `${hoveredApartment.rooms} ${t('apartment.room')}`} • {hoveredApartment.area} {t('apartment.sqm')}
-          </div>
-          {hoveredApartment.price && (
-            <div className="text-sm font-medium text-primary">
-              {hoveredApartment.price.toLocaleString('ru-RU')} ₽
-            </div>
-          )}
         </div>
       )}
     </div>
