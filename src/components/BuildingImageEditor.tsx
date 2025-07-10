@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -260,7 +261,6 @@ const BuildingImageEditor = ({ projectId, floors, onImageUpload }: BuildingImage
           existingPolygons={buildingFloors.find(f => f.floor_number === selectedFloor)?.polygon || []}
           onSave={handlePolygonSave}
           onCancel={() => setIsEditing(false)}
-          title={`Настройка полигона для ${selectedFloor} этажа`}
         />
       )}
     </div>
