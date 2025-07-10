@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,15 +5,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, Building2, Image, Layout, Settings } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Upload, Camera } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import BuildingImageEditor from '@/components/BuildingImageEditor';
-import FloorPlanEditor from '@/components/FloorPlanEditor';
-import CustomFieldsManager from '@/components/CustomFieldsManager';
-import ProjectApartmentsManager from '@/components/ProjectApartmentsManager';
-import ApartmentPhotosManager from '@/components/ApartmentPhotosManager';
+import { useNavigate } from 'react-router-dom';
+import ProjectApartmentsManager from './ProjectApartmentsManager';
+import FloorPlanEditor from './FloorPlanEditor';
+import BuildingImageEditor from './BuildingImageEditor';
+import CustomFieldsManager from './CustomFieldsManager';
+import DataImport from './DataImport';
+import ProjectSyncManager from './ProjectSyncManager';
+import ApartmentPhotosManager from './ApartmentPhotosManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -22,23 +25,32 @@ interface ProjectEditorProps {
   onBack: () => void;
 }
 
-interface ProjectData {
+interface Project {
+  id: string;
   name: string;
   description: string;
+  address: string;
   floors: number;
   building_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
-  const [projectData, setProjectData] = useState<ProjectData>({
+  const [project, setProject] = useState<Project>({
+    id: '',
     name: '',
     description: '',
+    address: '',
     floors: 1,
-    building_image_url: null
+    building_image_url: null,
+    latitude: null,
+    longitude: null
   });
-  const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,22 +58,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       loadProject();
     }
   }, [projectId, isNew]);
-
-  useEffect(() => {
-    window.addEventListener('wheel', function (e) {
-      if (e.ctrlKey) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    return () => {
-      window.removeEventListener('wheel', function (e) {
-        if (e.ctrlKey) {
-          e.preventDefault();
-        }
-      });
-    }
-  }, [])
 
   const loadProject = async () => {
     try {
@@ -72,264 +68,292 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         .single();
 
       if (error) throw error;
-
-      setProjectData({
-        name: data.name,
+      
+      setProject({
+        id: data.id,
+        name: data.name || '',
         description: data.description || '',
-        floors: data.floors,
-        building_image_url: data.building_image_url
+        address: data.address || '',
+        floors: data.floors || 1,
+        building_image_url: data.building_image_url,
+        latitude: data.latitude,
+        longitude: data.longitude
       });
     } catch (error) {
       console.error('Error loading project:', error);
-      toast.error('Error loading project');
+      toast.error('Ошибка загрузки проекта');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!projectData.name.trim()) {
-      toast.error('Please enter project name');
+    if (!project.name.trim()) {
+      toast.error('Название проекта обязательно');
       return;
     }
 
     setSaving(true);
     try {
+      const saveData = {
+        name: project.name.trim(),
+        description: project.description || null,
+        address: project.address || null,
+        floors: project.floors,
+        building_image_url: project.building_image_url,
+        latitude: project.latitude,
+        longitude: project.longitude,
+        updated_at: new Date().toISOString()
+      };
+
       if (isNew) {
         const { data, error } = await supabase
           .from('projects')
-          .insert([{
-            name: projectData.name.trim(),
-            description: projectData.description.trim() || null,
-            floors: projectData.floors,
-            building_image_url: projectData.building_image_url
-          }])
+          .insert([saveData])
           .select()
           .single();
 
         if (error) throw error;
-
-        toast.success('Project created');
-        // Navigate to edit the created project
+        
+        setProject(prev => ({ ...prev, id: data.id }));
+        toast.success('Проект создан');
         navigate(`/admin/project/${data.id}`);
       } else {
         const { error } = await supabase
           .from('projects')
-          .update({
-            name: projectData.name.trim(),
-            description: projectData.description.trim() || null,
-            floors: projectData.floors,
-            building_image_url: projectData.building_image_url,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', projectId);
+          .update(saveData)
+          .eq('id', project.id);
 
         if (error) throw error;
-        toast.success('Project saved');
+        toast.success('Проект сохранен');
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error('Error saving project');
+      toast.error('Ошибка сохранения проекта');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleBuildingImageUpload = (imageUrl: string) => {
-    setProjectData(prev => ({ ...prev, building_image_url: imageUrl }));
+  const toggleFloorCollapse = (floor: number) => {
+    setFloorStates(prev => ({
+      ...prev,
+      [floor]: !prev[floor]
+    }));
   };
 
-  const [floorNumber, setFloorNumber] = useState(1);
+  const renderFloorPlanTabs = () => {
+    if (isNew || !project.id) return null;
 
-  const handleFloorChange = (floorNumber: number) => {
-    setFloorNumber(floorNumber);
+    const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
+
+    return (
+      <div className="space-y-3">
+        {floors.map((floor) => {
+          const isOpen = floorStates[floor] || false;
+          
+          return (
+            <Collapsible key={floor} open={isOpen} onOpenChange={() => toggleFloorCollapse(floor)}>
+              <Card className="overflow-hidden">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {isOpen ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                          <Layers3 className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm">Этаж {floor}</CardTitle>
+                          <CardDescription className="text-xs">
+                            Редактирование планировки {floor} этажа
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        План
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0">
+                    <FloorPlanEditor 
+                      projectId={project.id}
+                      floorNumber={floor}
+                    />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          );
+        })}
+      </div>
+    );
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
-        <Building2 className="h-8 w-8 text-real-estate-600 animate-pulse" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-real-estate-200">
+    <div className="min-h-screen bg-background">
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="text-real-estate-600 hover:text-real-estate-700 hover:bg-real-estate-50"
-              >
+              <Button variant="ghost" size="sm" onClick={onBack}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Назад к проектам
+                Назад
               </Button>
-              <div className="flex items-center gap-3">
-                <Building2 className="h-8 w-8 text-real-estate-600" />
-                <div>
-                  <h1 className="text-2xl font-bold text-real-estate-900">
-                    {isNew ? 'Новый проект' : projectData.name}
-                  </h1>
-                  {!isNew && (
-                    <p className="text-sm text-real-estate-600">Редактирование проекта</p>
-                  )}
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  {isNew ? 'Новый проект' : project.name}
+                </h1>
+                <p className="text-muted-foreground">
+                  {isNew ? 'Создание нового проекта' : 'Редактирование проекта'}
+                </p>
               </div>
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-real-estate-600 hover:bg-real-estate-700"
-            >
+            <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-[900px]">
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-7 mb-6">
+            <TabsTrigger value="basic" className="text-xs">
+              <Building2 className="h-3 w-3 mr-1" />
               Основное
             </TabsTrigger>
-            <TabsTrigger value="building" className="flex items-center gap-2" disabled={isNew}>
-              <Image className="h-4 w-4" />
+            <TabsTrigger value="building" className="text-xs" disabled={isNew}>
+              <Image className="h-3 w-3 mr-1" />
               Здание
             </TabsTrigger>
-            <TabsTrigger value="floors" className="flex items-center gap-2" disabled={isNew}>
-              <Layout className="h-4 w-4" />
-              Планы этажей
+            <TabsTrigger value="floors" className="text-xs" disabled={isNew}>
+              <Layers3 className="h-3 w-3 mr-1" />
+              Этажи
             </TabsTrigger>
-            <TabsTrigger value="apartments" className="flex items-center gap-2" disabled={isNew}>
-              <Building2 className="h-4 w-4" />
+            <TabsTrigger value="apartments" className="text-xs" disabled={isNew}>
+              <Settings className="h-3 w-3 mr-1" />
               Квартиры
             </TabsTrigger>
-            <TabsTrigger value="photos" className="flex items-center gap-2" disabled={isNew}>
-              <Image className="h-4 w-4" />
-              Фотографии
+            <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
+              <Camera className="h-3 w-3 mr-1" />
+              Фото
             </TabsTrigger>
-            <TabsTrigger value="fields" className="flex items-center gap-2" disabled={isNew}>
-              <Settings className="h-4 w-4" />
-              Поля
+            <TabsTrigger value="import" className="text-xs" disabled={isNew}>
+              <Upload className="h-3 w-3 mr-1" />
+              Импорт
+            </TabsTrigger>
+            <TabsTrigger value="sync" className="text-xs" disabled={isNew}>
+              <Settings className="h-3 w-3 mr-1" />
+              Синхр.
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-6">
+          <TabsContent value="basic" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Основная информация</CardTitle>
-                <CardDescription>
-                  Настройте основные параметры вашего проекта
-                </CardDescription>
+                <CardDescription>Основные параметры проекта</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Название проекта*</Label>
-                      <Input
-                        id="name"
-                        value={projectData.name}
-                        onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Название комплекса"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="floors">Количество этажей</Label>
-                      <Input
-                        id="floors"
-                        type="number"
-                        value={projectData.floors}
-                        onChange={(e) => setProjectData(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
-                        min="1"
-                        max="50"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Описание</Label>
-                    <Textarea
-                      id="description"
-                      value={projectData.description}
-                      onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Краткое описание жилого комплекса..."
-                      rows={4}
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="name">Название проекта *</Label>
+                  <Input
+                    id="name"
+                    value={project.name}
+                    onChange={(e) => setProject(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Название жилого комплекса"
+                  />
                 </div>
-
-                {isNew && (
-                  <div className="bg-real-estate-50 p-4 rounded-lg">
-                    <p className="text-sm text-real-estate-700">
-                      После создания проекта вы сможете загрузить изображения здания, настроить планы этажей и установить пользовательские поля.
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <Label htmlFor="description">Описание</Label>
+                  <Textarea
+                    id="description"
+                    value={project.description}
+                    onChange={(e) => setProject(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Описание проекта..."
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="address">Адрес</Label>
+                  <Input
+                    id="address"
+                    value={project.address}
+                    onChange={(e) => setProject(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Адрес проекта"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="floors">Количество этажей *</Label>
+                  <Input
+                    id="floors"
+                    type="number"
+                    min="1"
+                    value={project.floors}
+                    onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="building" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Изображение здания</CardTitle>
-                <CardDescription>
-                  Загрузите изображение здания и настройте интерактивные зоны этажей
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BuildingImageEditor
-                  projectId={projectId}
-                  floors={projectData.floors}
-                  onImageUpload={handleBuildingImageUpload}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="building">
+            <BuildingImageEditor 
+              projectId={project.id}
+              currentImageUrl={project.building_image_url}
+              onImageUpdate={(imageUrl) => setProject(prev => ({ ...prev, building_image_url: imageUrl }))}
+            />
           </TabsContent>
 
-          <TabsContent value="floors" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Планы этажей</CardTitle>
-                <CardDescription>
-                  Загрузите планы этажей и настройте интерактивные зоны квартир
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FloorPlanEditor
-                  projectId={projectId}
-                  floorNumber={floorNumber}
-                  onFloorChange={handleFloorChange}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="floors">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Планы этажей</CardTitle>
+                  <CardDescription>
+                    Управление планировками этажей. Нажмите на этаж для редактирования.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {renderFloorPlanTabs()}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="apartments" className="space-y-6">
-            <ProjectApartmentsManager projectId={projectId} />
+          <TabsContent value="apartments">
+            <div className="space-y-4">
+              <ProjectApartmentsManager projectId={project.id} />
+              <CustomFieldsManager projectId={project.id} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="photos" className="space-y-6">
-            <ApartmentPhotosManager projectId={projectId} />
+          <TabsContent value="photos">
+            <ApartmentPhotosManager projectId={project.id} />
           </TabsContent>
 
-          <TabsContent value="fields" className="space-y-6">
-            <CustomFieldsManager projectId={projectId} />
+          <TabsContent value="import">
+            <DataImport projectId={project.id} />
+          </TabsContent>
+
+          <TabsContent value="sync">
+            <ProjectSyncManager projectId={project.id} />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +50,6 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
       if (error) throw error;
       
-      // Normalize the apartment data to match the Apartment type
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
     } catch (error) {
@@ -61,9 +61,15 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
   const loadPhotos = async () => {
     try {
-      // В реальном проекте здесь будет запрос к таблице apartment_photos
-      // Пока что используем заглушку
-      setPhotos([]);
+      const { data, error } = await supabase
+        .from('apartment_photos')
+        .select('*')
+        .eq('apartment_id', selectedApartment)
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      
+      setPhotos(data || []);
     } catch (error) {
       console.error('Error loading photos:', error);
     }
@@ -75,9 +81,9 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
     setUploading(true);
     try {
-      for (const file of Array.from(files)) {
+      const uploadPromises = Array.from(files).map(async (file, index) => {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${selectedApartment}-${Date.now()}.${fileExt}`;
+        const fileName = `${selectedApartment}-${Date.now()}-${index}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('project-images')
@@ -89,10 +95,18 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           .from('project-images')
           .getPublicUrl(`apartments/${fileName}`);
 
-        // В реальном проекте здесь будет добавление записи в таблицу apartment_photos
-        console.log('Photo uploaded:', publicUrl);
-      }
+        const { error: insertError } = await supabase
+          .from('apartment_photos')
+          .insert({
+            apartment_id: selectedApartment,
+            image_url: publicUrl,
+            order_index: photos.length + index
+          });
 
+        if (insertError) throw insertError;
+      });
+
+      await Promise.all(uploadPromises);
       toast.success('Фотографии загружены');
       loadPhotos();
     } catch (error) {
@@ -100,6 +114,32 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       toast.error('Ошибка загрузки фотографий');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
+    try {
+      // Удаляем из базы данных
+      const { error: dbError } = await supabase
+        .from('apartment_photos')
+        .delete()
+        .eq('id', photoId);
+
+      if (dbError) throw dbError;
+
+      // Удаляем из хранилища
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        await supabase.storage
+          .from('project-images')
+          .remove([`apartments/${fileName}`]);
+      }
+
+      toast.success('Фото удалено');
+      loadPhotos();
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      toast.error('Ошибка удаления фото');
     }
   };
 
@@ -111,7 +151,22 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         apt.floor_number === floorNumber && apt.id !== selectedApartment
       );
 
-      // В реальном проекте здесь будет дублирование фотографий
+      const duplicatePromises = floorApartments.map(async (apartment) => {
+        const photoPromises = photos.map(async (photo) => {
+          return supabase
+            .from('apartment_photos')
+            .insert({
+              apartment_id: apartment.id,
+              image_url: photo.image_url,
+              description: photo.description,
+              order_index: photo.order_index
+            });
+        });
+        
+        await Promise.all(photoPromises);
+      });
+
+      await Promise.all(duplicatePromises);
       toast.success(`Фотографии продублированы для ${floorApartments.length} квартир на ${floorNumber} этаже`);
     } catch (error) {
       console.error('Error duplicating photos:', error);
@@ -123,7 +178,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </CardContent>
       </Card>
     );
@@ -168,7 +223,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                   disabled={uploading}
                   className="mt-1"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Можно выбрать несколько файлов одновременно
                 </p>
               </div>
@@ -197,7 +252,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
               </div>
 
               {photos.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <ImageIcon className="h-12 w-12 mx-auto mb-2" />
                   <p>Фотографии не загружены</p>
                   <p className="text-sm">Загрузите фотографии для выбранной квартиры</p>
@@ -215,10 +270,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                         variant="destructive"
                         size="sm"
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => {
-                          // В реальном проекте здесь будет удаление фото
-                          toast.success('Фото удалено');
-                        }}
+                        onClick={() => handleDeletePhoto(photo.id, photo.image_url)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

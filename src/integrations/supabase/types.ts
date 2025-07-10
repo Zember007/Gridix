@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          company_description: string | null
+          company_name: string | null
+          contact_address: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_description?: string | null
+          company_name?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          company_description?: string | null
+          company_name?: string | null
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      apartment_photos: {
+        Row: {
+          apartment_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_photos_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apartments: {
         Row: {
           apartment_number: string

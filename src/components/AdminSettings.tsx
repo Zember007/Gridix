@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, User, Phone, Mail, Building } from 'lucide-react';
+import { Save, User, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AdminSettings {
+  id?: string;
   company_name: string;
   company_description: string;
   contact_name: string;
@@ -37,14 +38,30 @@ const AdminSettings = () => {
 
   const loadSettings = async () => {
     try {
-      // В реальном проекте здесь будет загрузка настроек из базы данных
-      // Пока что используем localStorage
-      const savedSettings = localStorage.getItem('admin_settings');
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setSettings({
+          id: data.id,
+          company_name: data.company_name || '',
+          company_description: data.company_description || '',
+          contact_name: data.contact_name || '',
+          contact_phone: data.contact_phone || '',
+          contact_email: data.contact_email || '',
+          contact_address: data.contact_address || ''
+        });
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+      toast.error('Ошибка загрузки настроек');
     } finally {
       setLoading(false);
     }
@@ -53,8 +70,34 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // В реальном проекте здесь будет сохранение в базу данных
-      localStorage.setItem('admin_settings', JSON.stringify(settings));
+      const saveData = {
+        company_name: settings.company_name,
+        company_description: settings.company_description,
+        contact_name: settings.contact_name,
+        contact_phone: settings.contact_phone,
+        contact_email: settings.contact_email,
+        contact_address: settings.contact_address,
+        updated_at: new Date().toISOString()
+      };
+
+      if (settings.id) {
+        const { error } = await supabase
+          .from('admin_settings')
+          .update(saveData)
+          .eq('id', settings.id);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('admin_settings')
+          .insert([saveData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        setSettings(prev => ({ ...prev, id: data.id }));
+      }
+
       toast.success('Настройки сохранены');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -71,7 +114,7 @@ const AdminSettings = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -81,7 +124,7 @@ const AdminSettings = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Настройки</h1>
-          <p className="text-gray-600">Управление настройками аккаунта и контактной информацией</p>
+          <p className="text-muted-foreground">Управление настройками компании и контактной информацией</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
