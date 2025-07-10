@@ -1,224 +1,95 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Home, Ruler, DollarSign, Phone, Mail } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 
 interface ApartmentDetailsModalProps {
-  apartment: Apartment;
-  open: boolean;
+  apartment: Apartment | null;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const ApartmentDetailsModal = ({ apartment, open, onClose }: ApartmentDetailsModalProps) => {
+const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsModalProps) => {
   const { t } = useLanguage();
 
-  const formatPrice = (price: number | null) => {
-    if (!price) return 'Цена по запросу';
-    return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
-  };
+  if (!apartment) return null;
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t('apartment.statusAvailable')}</Badge>;
-      case 'reserved':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{t('apartment.statusReserved')}</Badge>;
-      case 'sold':
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">{t('apartment.statusSold')}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      case 'sold': return 'bg-red-100 text-red-800';
+      case 'reserved': return 'bg-yellow-100 text-yellow-800';
+      case 'available': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleContactManager = () => {
-    // Получаем контактную информацию из настроек
-    const settings = localStorage.getItem('admin_settings');
-    if (settings) {
-      const { contact_phone } = JSON.parse(settings);
-      if (contact_phone) {
-        window.open(`tel:${contact_phone}`, '_self');
-      } else {
-        window.open('tel:+7999123456', '_self'); // Fallback номер
-      }
-    } else {
-      window.open('tel:+7999123456', '_self'); // Fallback номер
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'sold': return t('apartment.sold');
+      case 'reserved': return t('apartment.reserved');
+      case 'available': return t('apartment.available');
+      default: return status;
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl">
-              {t('apartment.number')} {apartment.apartment_number}
-            </DialogTitle>
-            {getStatusBadge(apartment.status)}
-          </div>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{t('apartment.number')} {apartment.apartment_number}</span>
+            <Badge className={getStatusColor(apartment.status)}>
+              {getStatusLabel(apartment.status)}
+            </Badge>
+          </DialogTitle>
         </DialogHeader>
-
+        
         <div className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <MapPin className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <div className="text-lg font-semibold">{apartment.floor_number}</div>
-                <div className="text-sm text-muted-foreground">{t('apartment.floor')}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4 text-center">
-                <Home className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <div className="text-lg font-semibold">
-                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
-                </div>
-                <div className="text-sm text-muted-foreground">{t('apartment.rooms')}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4 text-center">
-                <Ruler className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <div className="text-lg font-semibold">{apartment.area} {t('apartment.sqm')}</div>
-                <div className="text-sm text-muted-foreground">{t('apartment.area')}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4 text-center">
-                <DollarSign className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <div className="text-lg font-semibold">
-                  {apartment.price ? 
-                    Math.round(apartment.price / apartment.area).toLocaleString('ru-RU') : '—'
-                  }
-                </div>
-                <div className="text-sm text-muted-foreground">{t('table.pricePerSqm')}</div>
-              </CardContent>
-            </Card>
+          {/* Фотографии квартиры */}
+          <ApartmentPhotosViewer apartmentId={apartment.id} />
+          
+          {/* Основная информация */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.floor')}</h3>
+              <p className="text-lg">{apartment.floor_number}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.rooms')}</h3>
+              <p className="text-lg">{apartment.rooms}</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.area')}</h3>
+              <p className="text-lg">{apartment.area} м²</p>
+            </div>
+            {apartment.price && (
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
+                <p className="text-lg font-semibold">{apartment.price.toLocaleString()} ₽</p>
+              </div>
+            )}
           </div>
 
-          {/* Price */}
-          {apartment.price && (
-            <Card className="border-primary">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-primary mb-2">
-                  {formatPrice(apartment.price)}
+          {/* Дополнительные поля */}
+          {apartment.custom_fields && Object.keys(apartment.custom_fields).length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="font-medium mb-3">{t('apartment.additionalInfo')}</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {Object.entries(apartment.custom_fields).map(([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span className="text-muted-foreground capitalize">{key}:</span>
+                      <span>{String(value)}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-muted-foreground">Полная стоимость квартиры</div>
-              </CardContent>
-            </Card>
+              </div>
+            </>
           )}
-
-          {/* Tabs with details */}
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="description">Описание</TabsTrigger>
-              <TabsTrigger value="layout">Планировка</TabsTrigger>
-              <TabsTrigger value="gallery">Галерея</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="description" className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Характеристики квартиры</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Номер квартиры:</span>
-                      <span className="font-medium">{apartment.apartment_number}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('apartment.floor')}:</span>
-                      <span className="font-medium">{apartment.floor_number}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('apartment.rooms')}:</span>
-                      <span className="font-medium">
-                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Общая площадь:</span>
-                      <span className="font-medium">{apartment.area} {t('apartment.sqm')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('apartment.status')}:</span>
-                      <span className="font-medium">
-                        {apartment.status === 'available' ? t('apartment.statusAvailable') :
-                         apartment.status === 'reserved' ? t('apartment.statusReserved') : t('apartment.statusSold')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Custom fields */}
-                  {apartment.custom_fields && typeof apartment.custom_fields === 'object' && (
-                    <div className="mt-6 pt-6 border-t">
-                      <h4 className="font-medium mb-3">Дополнительные характеристики</h4>
-                      <div className="space-y-2">
-                        {Object.entries(apartment.custom_fields).map(([key, value]) => (
-                          value && (
-                            <div key={key} className="flex justify-between">
-                              <span className="text-muted-foreground capitalize">{key}:</span>
-                              <span className="font-medium">{String(value)}</span>
-                            </div>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="layout">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Home className="h-16 w-16 mx-auto mb-4" />
-                    <p className="text-lg">Планировка квартиры</p>
-                    <p className="text-sm">Изображение планировки будет загружено позже</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="gallery">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Home className="h-16 w-16 mx-auto mb-4" />
-                    <p className="text-lg">Галерея изображений</p>
-                    <p className="text-sm">Фотографии квартиры будут загружены позже</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* Action buttons */}
-          <div className="flex gap-4">
-            <Button 
-              className="flex-1" 
-              size="lg"
-              disabled={apartment.status !== 'available'}
-            >
-              {apartment.status === 'available' ? 'Забронировать квартиру' : 'Квартира недоступна'}
-            </Button>
-            <Button variant="outline" size="lg" className="flex items-center gap-2" onClick={handleContactManager}>
-              <Phone className="h-4 w-4" />
-              {t('project.contactManager')}
-            </Button>
-            <Button variant="outline" size="lg" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Написать
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

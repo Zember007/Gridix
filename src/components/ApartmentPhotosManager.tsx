@@ -119,7 +119,6 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
     try {
-      // Удаляем из базы данных
       const { error: dbError } = await supabase
         .from('apartment_photos')
         .delete()
@@ -127,7 +126,6 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
       if (dbError) throw dbError;
 
-      // Удаляем из хранилища
       const fileName = imageUrl.split('/').pop();
       if (fileName) {
         await supabase.storage
@@ -143,15 +141,22 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
     }
   };
 
-  const duplicatePhotosToFloor = async (floorNumber: number) => {
+  const duplicatePhotosToSimilarApartments = async () => {
     if (!selectedApartment || photos.length === 0) return;
 
     try {
-      const floorApartments = apartments.filter(apt => 
-        apt.floor_number === floorNumber && apt.id !== selectedApartment
+      const currentApartment = apartments.find(apt => apt.id === selectedApartment);
+      if (!currentApartment) return;
+
+      const apartmentNumber = currentApartment.apartment_number;
+      const baseNumber = apartmentNumber.replace(/^\d+/, '');
+      
+      const similarApartments = apartments.filter(apt => 
+        apt.apartment_number.endsWith(baseNumber) && 
+        apt.id !== selectedApartment
       );
 
-      const duplicatePromises = floorApartments.map(async (apartment) => {
+      const duplicatePromises = similarApartments.map(async (apartment) => {
         const photoPromises = photos.map(async (photo) => {
           return supabase
             .from('apartment_photos')
@@ -167,7 +172,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       });
 
       await Promise.all(duplicatePromises);
-      toast.success(`Фотографии продублированы для ${floorApartments.length} квартир на ${floorNumber} этаже`);
+      toast.success(`Фотографии продублированы для ${similarApartments.length} похожих квартир`);
     } catch (error) {
       console.error('Error duplicating photos:', error);
       toast.error('Ошибка дублирования фотографий');
@@ -190,7 +195,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         <CardHeader>
           <CardTitle>Управление фотографиями квартир</CardTitle>
           <CardDescription>
-            Загружайте фотографии для квартир и дублируйте их по этажам
+            Загружайте фотографии для квартир и дублируйте их между этажами
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -228,27 +233,16 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                 </p>
               </div>
 
-              <div className="flex gap-2 flex-wrap">
-                {apartments
-                  .reduce((floors: number[], apt) => {
-                    if (!floors.includes(apt.floor_number)) {
-                      floors.push(apt.floor_number);
-                    }
-                    return floors;
-                  }, [])
-                  .sort((a, b) => a - b)
-                  .map((floor) => (
-                    <Button
-                      key={floor}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => duplicatePhotosToFloor(floor)}
-                      disabled={photos.length === 0}
-                    >
-                      <Copy className="h-4 w-4 mr-1" />
-                      Дублировать на {floor} этаж
-                    </Button>
-                  ))}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={duplicatePhotosToSimilarApartments}
+                  disabled={photos.length === 0}
+                >
+                  <Copy className="h-4 w-4 mr-1" />
+                  Дублировать на похожие квартиры
+                </Button>
               </div>
 
               {photos.length === 0 ? (

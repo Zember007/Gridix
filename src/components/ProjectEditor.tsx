@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -15,8 +16,6 @@ import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
 import CustomFieldsManager from './CustomFieldsManager';
-import DataImport from './DataImport';
-import ProjectSyncManager from './ProjectSyncManager';
 import ApartmentPhotosManager from './ApartmentPhotosManager';
 
 interface ProjectEditorProps {
@@ -148,7 +147,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {floors.map((floor) => {
           const isOpen = floorStates[floor] || false;
           
@@ -156,25 +155,25 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <Collapsible key={floor} open={isOpen} onOpenChange={() => toggleFloorCollapse(floor)}>
               <Card className="overflow-hidden">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors py-3">
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors py-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           {isOpen ? (
-                            <ChevronDown className="h-4 w-4" />
+                            <ChevronDown className="h-3 w-3" />
                           ) : (
-                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className="h-3 w-3" />
                           )}
-                          <Layers3 className="h-4 w-4" />
+                          <Layers3 className="h-3 w-3" />
                         </div>
                         <div>
-                          <CardTitle className="text-sm">Этаж {floor}</CardTitle>
+                          <CardTitle className="text-xs">Этаж {floor}</CardTitle>
                           <CardDescription className="text-xs">
-                            Редактирование планировки {floor} этажа
+                            Планировка {floor} этажа
                           </CardDescription>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs px-1">
                         План
                       </Badge>
                     </div>
@@ -233,7 +232,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="basic" className="text-xs">
               <Building2 className="h-3 w-3 mr-1" />
               Основное
@@ -253,14 +252,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
               <Camera className="h-3 w-3 mr-1" />
               Фото
-            </TabsTrigger>
-            <TabsTrigger value="import" className="text-xs" disabled={isNew}>
-              <Upload className="h-3 w-3 mr-1" />
-              Импорт
-            </TabsTrigger>
-            <TabsTrigger value="sync" className="text-xs" disabled={isNew}>
-              <Settings className="h-3 w-3 mr-1" />
-              Синхр.
             </TabsTrigger>
           </TabsList>
 
@@ -346,14 +337,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           <TabsContent value="photos">
             <ApartmentPhotosManager projectId={project.id} />
-          </TabsContent>
-
-          <TabsContent value="import">
-            <DataImport projectId={project.id} />
-          </TabsContent>
-
-          <TabsContent value="sync">
-            <ProjectSyncManager projectId={project.id} />
           </TabsContent>
         </Tabs>
       </div>

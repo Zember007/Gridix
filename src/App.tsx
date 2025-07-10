@@ -26,9 +26,11 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/projects" element={<ProjectsGalleryPage />} />
               <Route path="/widget/:projectId" element={<ProjectWidgetPage />} />
+              <Route path="/project/:projectId" element={<ProjectWidgetPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin/project/:projectId" element={<ProjectEditorPage />} />
               <Route path="/embed/projects" element={<EmbedProjectsPage />} />
+              <Route path="/embed/project/:projectId" element={<ProjectWidgetPage embedMode={true} />} />
               <Route path="/embed/projects-map" element={<EmbedProjectsMap />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

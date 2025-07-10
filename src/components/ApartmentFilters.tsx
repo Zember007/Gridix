@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -11,7 +10,7 @@ import { Apartment } from '@/types/apartment';
 
 export interface ApartmentFilters {
   rooms: number[];
-  status: string[];
+  onlyAvailable: boolean;
   priceRange: [number, number];
   areaRange: [number, number];
   floor: number[];
@@ -27,12 +26,24 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
   const [localFilters, setLocalFilters] = useState<ApartmentFilters>(filters);
 
   useEffect(() => {
-    setLocalFilters(filters);
-  }, [filters]);
+    // Инициализируем фильтры с полными диапазонами цен и площади
+    const prices = apartments.map(apt => apt.price || 0).filter(p => p > 0);
+    const areas = apartments.map(apt => apt.area);
+    
+    const defaultFilters: ApartmentFilters = {
+      rooms: [],
+      onlyAvailable: true, // по умолчанию включен
+      priceRange: prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0],
+      areaRange: [Math.min(...areas), Math.max(...areas)],
+      floor: []
+    };
+    
+    setLocalFilters(defaultFilters);
+    onFiltersChange(defaultFilters);
+  }, [apartments]);
 
   const uniqueRooms = [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
   const uniqueFloors = [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
-  const statuses = ['available', 'reserved', 'sold'];
 
   const handleRoomToggle = (room: number) => {
     const newRooms = localFilters.rooms.includes(room)
@@ -40,14 +51,6 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
       : [...localFilters.rooms, room];
     
     setLocalFilters({ ...localFilters, rooms: newRooms });
-  };
-
-  const handleStatusToggle = (status: string) => {
-    const newStatus = localFilters.status.includes(status)
-      ? localFilters.status.filter(s => s !== status)
-      : [...localFilters.status, status];
-    
-    setLocalFilters({ ...localFilters, status: newStatus });
   };
 
   const handleFloorToggle = (floor: number) => {
@@ -76,7 +79,7 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
     
     const defaultFilters: ApartmentFilters = {
       rooms: [],
-      status: [],
+      onlyAvailable: true,
       priceRange: prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0],
       areaRange: [Math.min(...areas), Math.max(...areas)],
       floor: []
@@ -86,14 +89,10 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
     onFiltersChange(defaultFilters);
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'available': return 'Доступно';
-      case 'reserved': return 'Забронировано';
-      case 'sold': return 'Продано';
-      default: return status;
-    }
-  };
+  const minPrice = Math.min(...apartments.map(apt => apt.price || 0).filter(p => p > 0));
+  const maxPrice = Math.max(...apartments.map(apt => apt.price || 0).filter(p => p > 0));
+  const minArea = Math.min(...apartments.map(apt => apt.area));
+  const maxArea = Math.max(...apartments.map(apt => apt.area));
 
   return (
     <div className="space-y-6">
@@ -103,6 +102,22 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
           <X className="h-4 w-4 mr-1" />
           Сбросить
         </Button>
+      </div>
+
+      {/* Только доступные */}
+      <div>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="onlyAvailable"
+            checked={localFilters.onlyAvailable}
+            onCheckedChange={(checked) => 
+              setLocalFilters({ ...localFilters, onlyAvailable: !!checked })
+            }
+          />
+          <Label htmlFor="onlyAvailable" className="text-sm">
+            Только доступные квартиры
+          </Label>
+        </div>
       </div>
 
       {/* Комнаты */}
@@ -118,25 +133,6 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
             >
               {room}
             </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Статус */}
-      <div>
-        <Label className="text-sm font-medium mb-2 block">Статус</Label>
-        <div className="space-y-2">
-          {statuses.map(status => (
-            <div key={status} className="flex items-center space-x-2">
-              <Checkbox
-                id={status}
-                checked={localFilters.status.includes(status)}
-                onCheckedChange={() => handleStatusToggle(status)}
-              />
-              <Label htmlFor={status} className="text-sm">
-                {getStatusText(status)}
-              </Label>
-            </div>
           ))}
         </div>
       </div>
@@ -159,35 +155,39 @@ const ApartmentFilters = ({ apartments, filters, onFiltersChange }: ApartmentFil
       </div>
 
       {/* Цена */}
-      {localFilters.priceRange[1] > 0 && (
+      {maxPrice > 0 && (
         <div>
-          <Label className="text-sm font-medium mb-2 block">
+          <Label className="text-sm font-medium mb-3 block">
             Цена: {localFilters.priceRange[0].toLocaleString()} - {localFilters.priceRange[1].toLocaleString()} ₽
           </Label>
-          <Slider
-            value={localFilters.priceRange}
-            onValueChange={handlePriceRangeChange}
-            min={Math.min(...apartments.map(apt => apt.price || 0).filter(p => p > 0))}
-            max={Math.max(...apartments.map(apt => apt.price || 0).filter(p => p > 0))}
-            step={10000}
-            className="w-full"
-          />
+          <div className="px-2">
+            <Slider
+              value={localFilters.priceRange}
+              onValueChange={handlePriceRangeChange}
+              min={minPrice}
+              max={maxPrice}
+              step={10000}
+              className="w-full"
+            />
+          </div>
         </div>
       )}
 
       {/* Площадь */}
       <div>
-        <Label className="text-sm font-medium mb-2 block">
+        <Label className="text-sm font-medium mb-3 block">
           Площадь: {localFilters.areaRange[0]} - {localFilters.areaRange[1]} м²
         </Label>
-        <Slider
-          value={localFilters.areaRange}
-          onValueChange={handleAreaRangeChange}
-          min={Math.min(...apartments.map(apt => apt.area))}
-          max={Math.max(...apartments.map(apt => apt.area))}
-          step={1}
-          className="w-full"
-        />
+        <div className="px-2">
+          <Slider
+            value={localFilters.areaRange}
+            onValueChange={handleAreaRangeChange}
+            min={minArea}
+            max={maxArea}
+            step={1}
+            className="w-full"
+          />
+        </div>
       </div>
 
       <Button onClick={applyFilters} className="w-full">
