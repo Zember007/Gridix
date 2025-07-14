@@ -40,7 +40,6 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [loading, setLoading] = useState(true);
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
   const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +53,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
   useEffect(() => {
     applyFilters();
-  }, [apartments, selectedFloor, selectedRooms, selectedStatus, priceRange, searchQuery, showOnlyAvailable]);
+  }, [apartments, selectedFloor, selectedRooms, priceRange, searchQuery, showOnlyAvailable]);
 
   const loadProject = async () => {
     try {
@@ -126,9 +125,6 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       filtered = filtered.filter(apt => apt.rooms === parseInt(selectedRooms));
     }
 
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(apt => apt.status === selectedStatus);
-    }
 
     if (showOnlyAvailable) {
       filtered = filtered.filter(apt => apt.status === 'available');
@@ -247,22 +243,6 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                       {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Status filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status-select">{t('project.status')}</Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger id="status-select">
-                  <SelectValue placeholder={t('project.allStatuses')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('project.allStatuses')}</SelectItem>
-                  <SelectItem value="available">{t('common.available')}</SelectItem>
-                  <SelectItem value="reserved">{t('common.reserved')}</SelectItem>
-                  <SelectItem value="sold">{t('common.sold')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
