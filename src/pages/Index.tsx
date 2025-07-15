@@ -2,12 +2,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, Settings, BarChart3, Upload, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 const Index = () => {
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
 
   const goToAdmin = () => {

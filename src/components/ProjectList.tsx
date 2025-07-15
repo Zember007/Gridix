@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Project {
   id: string;
@@ -24,6 +25,7 @@ interface ProjectListProps {
 const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadProjects();
@@ -104,18 +106,18 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="h-16 w-16 text-real-estate-300 mb-4" />
             <h3 className="text-xl font-semibold text-real-estate-900 mb-2">
-              Нет проектов
+              {t('projectList.noProjects')}
             </h3>
             <p className="text-real-estate-600 text-center mb-6 max-w-md">
-              Создайте свой первый проект недвижимости с интерактивными планами этажей и квартир
+              {t('projectList.createFirstDescription')}
             </p>
-            <Button 
+            <Button
               onClick={onCreateNew}
               className="bg-real-estate-600 hover:bg-real-estate-700"
               size="lg"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Создать первый проект
+              {t('projectList.createFirst')}
             </Button>
           </CardContent>
         </Card>

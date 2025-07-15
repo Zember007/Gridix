@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Building2, Settings, Code, BarChart3 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import ProjectList from './ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -15,7 +16,8 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
+  const { t } = useLanguage();
 
   const handleCreateNew = () => {
     navigate('/admin/project/new');
@@ -37,11 +39,11 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={onBack}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Назад
+                {t('admin.back')}
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">Панель управления</h1>
-                <p className="text-muted-foreground">Управление проектами и настройками</p>
+                <h1 className="text-2xl font-bold">{t('admin.dashboard')}</h1>
+                <p className="text-muted-foreground">{t('admin.dashboardDescription')}</p>
               </div>
             </div>
           </div>
@@ -53,19 +55,19 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Проекты
+              {t('admin.projects')}
             </TabsTrigger>
             <TabsTrigger value="widgets" className="flex items-center gap-2">
               <Code className="h-4 w-4" />
-              Виджеты
+              {t('admin.widgets')}
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Аналитика
+              {t('admin.analytics')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Настройки
+              {t('admin.settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -84,13 +86,13 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             <TabsContent value="analytics" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Аналитика</CardTitle>
+                  <CardTitle>{t('admin.analytics')}</CardTitle>
                   <CardDescription>
-                    Статистика по проектам и квартирам
+                    {t('admin.analyticsDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Функция аналитики будет добавлена позже</p>
+                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
                 </CardContent>
               </Card>
             </TabsContent>

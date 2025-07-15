@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Home, Maximize, Banknote, MapPin } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -11,6 +12,8 @@ interface ApartmentListProps {
 }
 
 const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) => {
+  const { t } = useLanguage();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available': return 'bg-green-100 text-green-800 border-green-200';
@@ -22,15 +25,15 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'available': return 'Доступно';
-      case 'reserved': return 'Забронировано';
-      case 'sold': return 'Продано';
+      case 'available': return t('apartment.available');
+      case 'reserved': return t('apartment.reserved');
+      case 'sold': return t('apartment.sold');
       default: return status;
     }
   };
 
   const formatPrice = (price: number | null) => {
-    if (!price) return 'Цена по запросу';
+    if (!price) return t('common.priceOnRequest');
     return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
   };
 
@@ -40,10 +43,10 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Home className="h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-500 text-center">
-            По вашим критериям квартиры не найдены
+            {t('project.notFoundApartments')}
           </p>
           <p className="text-sm text-gray-400 text-center mt-1">
-            Попробуйте изменить фильтры поиска
+            {t('project.changeFilters')}
           </p>
         </CardContent>
       </Card>
@@ -54,7 +57,7 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Найдено квартир: <span className="font-semibold">{apartments.length}</span>
+          {t('project.found')}: <span className="font-semibold">{apartments.length}</span> {t('project.apartments')}
         </p>
       </div>
 
@@ -83,12 +86,12 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    <span>{apartment.floor_number} этаж</span>
+                    <span>{apartment.floor_number} {t('apartment.floor')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Home className="h-3 w-3" />
                     <span>
-                      {apartment.rooms === 0 ? 'Студия' : `${apartment.rooms} комн.`}
+                      {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
                     </span>
                   </div>
                 </div>
@@ -96,7 +99,7 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Maximize className="h-3 w-3" />
-                    <span>{apartment.area} м²</span>
+                    <span>{apartment.area} {t('apartment.sqm')}</span>
                   </div>
                   {apartment.price && (
                     <div className="flex items-center gap-1">
@@ -113,12 +116,12 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
                 <div className="text-lg font-bold text-blue-600">
                   {formatPrice(apartment.price)}
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  Подробнее
+                  {t('common.more')}
                 </Button>
               </div>
 

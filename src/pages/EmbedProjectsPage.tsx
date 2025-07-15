@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, MapPin, Eye } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface Project {
   id: string;
@@ -17,6 +19,7 @@ interface Project {
 const EmbedProjectsPage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadProjects();
@@ -52,16 +55,21 @@ const EmbedProjectsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Language Toggle */}
+      <div className="flex justify-end p-4">
+        <LanguageToggle />
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Проекты недвижимости</h1>
-          <p className="text-muted-foreground">Выберите проект для просмотра доступных квартир</p>
+          <h1 className="text-3xl font-bold mb-2">{t('embed.title')}</h1>
+          <p className="text-muted-foreground">{t('embed.subtitle')}</p>
         </div>
 
         {projects.length === 0 ? (
           <Card>
             <CardContent className="flex items-center justify-center h-32">
-              <p className="text-muted-foreground">Проекты не найдены</p>
+              <p className="text-muted-foreground">{t('embed.noProjects')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -95,14 +103,14 @@ const EmbedProjectsPage = () => {
                       </div>
                     )}
                     <div className="text-sm text-muted-foreground">
-                      Этажей: {project.floors}
+                      {t('embed.floors')}: {project.floors}
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => handleViewProject(project.id)}
                       className="w-full"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      Посмотреть квартиры
+                      {t('embed.viewApartments')}
                     </Button>
                   </div>
                 </CardContent>
