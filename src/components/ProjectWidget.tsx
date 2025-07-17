@@ -37,7 +37,6 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [filters, setFilters] = useState<ApartmentFiltersType>({
     rooms: [],
-    status: [],
     priceRange: [0, 0],
     areaRange: [0, 0],
     floor: []
@@ -54,7 +53,7 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
   const loadProjectData = async () => {
     try {
       setLoading(true);
-      
+
       // Загружаем проект
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
@@ -74,7 +73,7 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
         .order('apartment_number');
 
       if (apartmentsError) throw apartmentsError;
-      
+
       // Нормализуем данные квартир
       const processedApartments = apartmentsData.map(normalizeApartmentData);
       setApartments(processedApartments);
@@ -83,7 +82,9 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
       if (processedApartments.length > 0) {
         const prices = processedApartments.map(apt => apt.price || 0).filter(p => p > 0);
         const areas = processedApartments.map(apt => apt.area);
-        
+        console.log('Prices:', prices);
+        console.log('Areas:', areas);
+
         setFilters(prev => ({
           ...prev,
           priceRange: prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : [0, 0],
@@ -120,7 +121,7 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
     }
 
     if (filters.areaRange[0] > 0 || filters.areaRange[1] > 0) {
-      filtered = filtered.filter(apt => 
+      filtered = filtered.filter(apt =>
         apt.area >= filters.areaRange[0] && apt.area <= filters.areaRange[1]
       );
     }
@@ -253,7 +254,7 @@ const ProjectWidget = ({ projectId, showHeader = true }: ProjectWidgetProps) => 
               </TabsList>
 
               <TabsContent value="list" className="mt-4">
-                <ApartmentList 
+                <ApartmentList
                   apartments={filteredApartments}
                   onApartmentSelect={(apartment) => {
                     console.log('Selected apartment:', apartment);

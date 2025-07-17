@@ -25,7 +25,7 @@ interface ProjectListProps {
 const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     loadProjects();
@@ -69,11 +69,11 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   };
 
   const viewProject = (projectId: string) => {
-    window.open(`/project/${projectId}`, '_blank');
+    window.open(`/${language}/project/${projectId}`, '_blank');
   };
 
   const getWidgetUrl = (projectId: string) => {
-    return `${window.location.origin}/embed/project/${projectId}`;
+    return `/${language}/embed/project/${projectId}`;
   };
 
   const copyWidgetCode = (projectId: string) => {

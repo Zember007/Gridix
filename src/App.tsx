@@ -52,7 +52,6 @@ function App() {
               <Route path="/ge/admin" element={<AdminPage />} />
               <Route path="/ge/admin/project/:projectId" element={<ProjectEditorPage />} />
 
-              {/* Embed routes - no language prefix needed for these */}
               <Route path="/embed/projects" element={<EmbedProjectsPage />} />
               <Route path="/embed/project/:projectId" element={<ProjectWidgetPage embedMode={true} />} />
               <Route path="/embed/projects-map" element={<EmbedProjectsMap />} />
