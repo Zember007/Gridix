@@ -143,8 +143,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       );
     }
 
-    console.log('Filtered apartments:', filtered.length); // Отладка
-    setFilteredApartments(filtered);
+/*     console.log('Filtered apartments:', filtered.length); // Отладка
+    setFilteredApartments(filtered); */
   };
 
   const getUniqueFloors = () => {
@@ -183,6 +183,11 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       alert('Контактная информация менеджера не настроена');
     }
   };
+
+  const minPrice = Math.min(...apartments.map(apt => apt.price || 0).filter(p => p > 0));
+  const maxPrice = Math.max(...apartments.map(apt => apt.price || 0).filter(p => p > 0));
+  const minArea = Math.min(...apartments.map(apt => apt.area));
+  const maxArea = Math.max(...apartments.map(apt => apt.area));
 
   if (loading || !project) {
     return (
@@ -268,8 +273,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
               <Slider
                 value={priceRange}
                 onValueChange={setPriceRange}
-                max={Math.max(10000000, priceRange[1])}
-                min={0}
+                max={maxPrice}
+                min={minPrice}
                 step={100000}
                 className="w-full"
               />
@@ -281,8 +286,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
               <Slider
                 value={areaRange}
                 onValueChange={setAreaRange}
-                max={Math.max(200, areaRange[1])}
-                min={0}
+                max={maxArea}
+                min={minArea}
                 step={5}
                 className="w-full"
               />
@@ -459,7 +464,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       {selectedApartment && (
         <ApartmentDetailsModal
           apartment={selectedApartment}
-          open={!!selectedApartment}
+          open={selectedApartment}
           onClose={() => setSelectedApartment(null)}
         />
       )}
