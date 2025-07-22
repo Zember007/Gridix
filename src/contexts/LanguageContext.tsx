@@ -1,11 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Language,
-  getLanguageFromPath,
+  getLanguageFromUrlParam,
   addLanguageToPath,
   removeLanguageFromPath,
+  getLanguageParam,
   DEFAULT_LANGUAGE
 } from '@/lib/language-utils';
 
@@ -118,6 +119,136 @@ const translations: Translations = {
     ru: 'Загрузка...',
     en: 'Loading...',
     ka: 'იტვირთება...'
+  },
+  'project.parameters': {
+    ru: 'Параметры',
+    en: 'Parameters',
+    ka: 'პარამეტრები'
+  },
+  'project.resetFilters': {
+    ru: 'Сбросить фильтры',
+    en: 'Reset filters',
+    ka: 'ფილტრების გაუქმება'
+  },
+  'project.facade': {
+    ru: 'Фасад',
+    en: 'Facade',
+    ka: 'ფასადი'
+  },
+  'project.listView': {
+    ru: 'Списком',
+    en: 'List view',
+    ka: 'სიის სახით'
+  },
+  'project.layouts': {
+    ru: 'Планировки',
+    en: 'Layouts',
+    ka: 'პლანირებები'
+  },
+  'project.layout': {
+    ru: 'Планировка',
+    en: 'Layout',
+    ka: 'პლანირება'
+  },
+  'project.type': {
+    ru: 'Тип',
+    en: 'Type',
+    ka: 'ტიპი'
+  },
+  'project.location': {
+    ru: 'Расположение',
+    en: 'Location',
+    ka: 'მდებარეობა'
+  },
+  'project.finishing': {
+    ru: 'Отделка',
+    en: 'Finishing',
+    ka: 'მოწყობა'
+  },
+  'project.sampleLocation': {
+    ru: 'Вид на море',
+    en: 'Sea view',
+    ka: 'ზღვის ხედი'
+  },
+  'project.of': {
+    ru: 'из',
+    en: 'of',
+    ka: '-დან'
+  },
+  'project.onRequest': {
+    ru: 'По запросу',
+    en: 'On request',
+    ka: 'მოთხოვნისთანა'
+  },
+  'project.installmentFrom': {
+    ru: 'В рассрочку от 700$',
+    en: 'Installment from $700',
+    ka: 'განვადებით $700-დან'
+  },
+  'project.blackFrame': {
+    ru: 'Черный каркас',
+    en: 'Black frame',
+    ka: 'შავი ჩარჩო'
+  },
+  'project.showMore': {
+    ru: 'Показать еще {{count}} из {{total}} вариантов',
+    en: 'Show {{count}} more of {{total}} options',
+    ka: 'აჩვენე კიდევ {{count}} {{total}}-დან'
+  },
+  'project.viewApartments': {
+    ru: 'Смотреть {{count}} вариантов',
+    en: 'View {{count}} options',
+    ka: 'იხილე {{count}} ვარიანტი'
+  },
+  'project.contactMessage': {
+    ru: 'Здравствуйте! Интересует проект {{projectName}}. Можете предоставить дополнительную информацию?',
+    en: 'Hello! I am interested in the {{projectName}} project. Can you provide additional information?',
+    ka: 'გამარჯობა! მაინტერესებს {{projectName}} პროექტი. შეგიძლიათ დამატებითი ინფორმაცია მოგვაწოდოთ?'
+  },
+  'project.noContactInfo': {
+    ru: 'Контактная информация менеджера не настроена',
+    en: 'Manager contact information not configured',
+    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული'
+  },
+  'apartment.rooms': {
+    ru: 'комнаты',
+    en: 'rooms',
+    ka: 'ოთახები'
+  },
+  'project.selectFloor': {
+    ru: 'Выберите этаж',
+    en: 'Select floor',
+    ka: 'აირჩიეთ სართული'
+  },
+  'project.apartmentsList': {
+    ru: 'Список квартир',
+    en: 'Apartments list',
+    ka: 'ბინების სია'
+  },
+  'project.noImage': {
+    ru: 'Изображение не загружено',
+    en: 'No image loaded',
+    ka: 'სურათი არ არის ჩატვირთული'
+  },
+  'project.priceRange': {
+    ru: 'Диапазон цен',
+    en: 'Price range',
+    ka: 'ფასების დიაპაზონი'
+  },
+  'project.areaRange': {
+    ru: 'Диапазон площадей',
+    en: 'Area range',
+    ka: 'ფართობების დიაპაზონი'
+  },
+  'project.layoutPreview': {
+    ru: 'Предпросмотр планировки',
+    en: 'Layout preview',
+    ka: 'განლაგების გადახედვა'
+  },
+  'common.reserve': {
+    ru: 'Забронировать',
+    en: 'Reserve',
+    ka: 'დაჯავშნა'
   },
 
   // Filters
@@ -356,11 +487,6 @@ const translations: Translations = {
     en: 'Floor',
     ka: 'სართული'
   },
-  'apartment.rooms': {
-    ru: 'Комнаты',
-    en: 'Rooms',
-    ka: 'ოთახები'
-  },
   'apartment.room': {
     ru: 'комн.',
     en: 'room',
@@ -427,11 +553,6 @@ const translations: Translations = {
     ru: 'Попробуйте изменить фильтры поиска',
     en: 'Try changing your search filters',
     ka: 'სცადეთ ძებნის ფილტრების შეცვლა'
-  },
-  'project.apartmentsList': {
-    ru: 'Список квартир',
-    en: 'Apartments List',
-    ka: 'ბინების სია'
   },
   'project.found': {
     ru: 'Найдено',
@@ -751,19 +872,20 @@ interface LanguageProviderProps {
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
 
-  // Initialize language from URL or default
+  // Initialize language from URL parameter or default
   const [language, setLanguageState] = useState<Language>(() => {
-    return getLanguageFromPath(location.pathname);
+    return getLanguageFromUrlParam(lang);
   });
 
-  // Update language when URL changes
+  // Update language when URL parameter changes
   useEffect(() => {
-    const urlLanguage = getLanguageFromPath(location.pathname);
+    const urlLanguage = getLanguageFromUrlParam(lang);
     if (urlLanguage !== language) {
       setLanguageState(urlLanguage);
     }
-  }, [location.pathname, language]);
+  }, [lang, language]);
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
@@ -778,8 +900,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     navigate(newPath, { replace: true });
   };
 
-  const t = (key: string): string => {
-    return translations[key]?.[language] || key;
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    const translation = translations[key]?.[language] || key;
+    
+    if (params) {
+      return Object.keys(params).reduce((text, param) => {
+        return text.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
+      }, translation);
+    }
+    
+    return translation;
   };
 
   return (

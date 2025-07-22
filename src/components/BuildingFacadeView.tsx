@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Navigation } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Building2, Maximize2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 
@@ -10,13 +9,12 @@ interface BuildingFacadeViewProps {
   project: {
     id: string;
     name: string;
-    address: string;
-    latitude: number | null;
-    longitude: number | null;
     building_image_url: string | null;
   };
   apartments: Apartment[];
+  onFloorSelect?: (floor: number) => void;
   onApartmentSelect: (apartment: Apartment) => void;
+  filtersRef?: React.RefObject<HTMLDivElement>;
 }
 
 interface BuildingFloor {
@@ -26,13 +24,98 @@ interface BuildingFloor {
   color: string;
 }
 
-const BuildingFacadeView = ({ projectId, project, apartments, onApartmentSelect }: BuildingFacadeViewProps) => {
+const COLLAPSED_HEIGHT = 288;
+
+const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef }: BuildingFacadeViewProps) => {
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [containerHeight, setContainerHeight] = useState(COLLAPSED_HEIGHT);
+  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0, naturalWidth: 0, naturalHeight: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const updateHeight = useCallback(() => {
+    if (isExpanded && filtersRef?.current) {
+      const filtersHeight = filtersRef.current.offsetHeight;
+      const newHeight = window.innerHeight - filtersHeight - 20; // 20px margin
+      setContainerHeight(Math.max(newHeight, 400));
+    } else {
+      setContainerHeight(COLLAPSED_HEIGHT);
+    }
+  }, [isExpanded, filtersRef]);
+
+  const updateImageDimensions = useCallback(() => {
+    if (imgRef.current && containerRef.current) {
+      const img = imgRef.current;
+      const container = containerRef.current;
+      
+      // Get natural image dimensions
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      
+      // Calculate displayed image dimensions (object-contain behavior)
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+      
+      const containerAspectRatio = containerWidth / containerHeight;
+      const imageAspectRatio = naturalWidth / naturalHeight;
+      
+      let displayedWidth, displayedHeight;
+      
+      if (containerAspectRatio > imageAspectRatio) {
+        // Container is wider than image - height fills container, width is scaled
+        displayedHeight = containerHeight;
+        displayedWidth = displayedHeight * imageAspectRatio;
+      } else {
+        // Container is taller than image - width fills container, height is scaled
+        displayedWidth = containerWidth;
+        displayedHeight = displayedWidth / imageAspectRatio;
+      }
+      
+      setImgDimensions({
+        width: displayedWidth,
+        height: displayedHeight,
+        naturalWidth,
+        naturalHeight
+      });
+    }
+  }, []);
 
   useEffect(() => {
     loadBuildingFloors();
   }, [projectId]);
+
+  useEffect(() => {
+    updateHeight();
+    const handleResize = () => {
+      updateHeight();
+      updateImageDimensions();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateHeight, updateImageDimensions]);
+
+  useEffect(() => {
+    // Update dimensions after height change
+    const timer = setTimeout(updateImageDimensions, 100);
+    return () => clearTimeout(timer);
+  }, [containerHeight, updateImageDimensions]);
+
+  useEffect(() => {
+    // Setup ResizeObserver for container
+    if (!containerRef.current) return;
+    
+    const resizeObserver = new ResizeObserver(() => {
+      updateImageDimensions();
+    });
+    
+    resizeObserver.observe(containerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, [updateImageDimensions]);
 
   const loadBuildingFloors = async () => {
     try {
@@ -66,156 +149,154 @@ const BuildingFacadeView = ({ projectId, project, apartments, onApartmentSelect 
   const getFloorStatusColor = (floorNumber: number) => {
     const floorApartments = getFloorApartments(floorNumber);
     if (floorApartments.length === 0) return '#6b7280';
-    
     const availableCount = floorApartments.filter(apt => apt.status === 'available').length;
     const totalCount = floorApartments.length;
-    
-    if (availableCount === totalCount) return '#3b82f6'; // Все доступны
-    if (availableCount === 0) return '#ef4444'; // Все проданы
-    return '#f59e0b'; // Частично доступны
+    if (availableCount === totalCount) return '#22c55e';
+    if (availableCount === 0) return '#ef4444';
+    return '#f59e0b';
+  };
+
+  const handleFloorClick = (floorNumber: number) => {
+    if (onFloorSelect) {
+      onFloorSelect(floorNumber);
+    } else {
+      const floorApartments = getFloorApartments(floorNumber);
+      if (floorApartments.length > 0) {
+        onApartmentSelect(floorApartments[0]);
+      }
+    }
+  };
+
+  const handleImageLoad = () => {
+    updateImageDimensions();
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </CardContent>
-      </Card>
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
+      </div>
     );
   }
 
+  if (!project.building_image_url) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+        <div className="text-center text-gray-500">
+          <Building2 className="h-16 w-16 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Изображение фасада не загружено</h3>
+          <p className="text-sm">Обратитесь к администратору для загрузки изображения</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate SVG position to overlay exactly on the displayed image
+  const containerRect = containerRef.current?.getBoundingClientRect();
+  const svgLeft = containerRect ? (containerRect.width - imgDimensions.width) / 2 : 0;
+  const svgTop = containerRect ? (containerRect.height - imgDimensions.height) / 2 : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Фасад здания */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-semibold text-real-estate-900">
-                Фасад здания
-              </CardTitle>
-              {project.address && (
-                <div className="flex items-center text-sm text-real-estate-600 mt-2">
-                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                  <span>{project.address}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="p-4">
-          {project.building_image_url ? (
-            <div className="relative bg-real-estate-50 rounded-lg overflow-hidden">
-              {/* Fixed container for the image */}
-              <div className="w-full" style={{ maxHeight: '500px' }}>
-                <img 
-                  src={project.building_image_url} 
-                  alt={`Фасад ${project.name}`}
-                  className="w-full h-auto object-contain"
-                  style={{ maxHeight: '500px' }}
+    <div
+      ref={containerRef}
+      className={`relative w-full mx-auto transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'}`}
+      style={{
+        height: containerHeight,
+        minHeight: 200,
+        width: '100%',
+        maxWidth: '100vw',
+        boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
+      }}
+    >
+      <img
+        ref={imgRef}
+        src={project.building_image_url}
+        alt={project.name}
+        className="w-full h-full object-contain transition-all duration-500"
+        onLoad={handleImageLoad}
+        draggable={false}
+      />
+      
+      {/* SVG полигоны - точно поверх отображаемого изображения */}
+      {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
+        <svg
+          className="absolute"
+          style={{
+            left: svgLeft,
+            top: svgTop,
+            width: imgDimensions.width,
+            height: imgDimensions.height,
+            pointerEvents: 'auto',
+            zIndex: 2
+          }}
+          viewBox="0 0 100 100"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {buildingFloors.map((floor) => {
+            if (!floor.polygon || floor.polygon.length < 3) return null;
+            
+            // Полигоны уже в процентах (0-100), используем их напрямую
+            const points = floor.polygon
+              .map(point => `${point.x},${point.y}`)
+              .join(' ');
+
+            const floorApartments = getFloorApartments(floor.floor_number);
+            const statusColor = getFloorStatusColor(floor.floor_number);
+            const isHovered = hoveredFloor === floor.floor_number;
+            
+            // Центр полигона для текста
+            const centerX = floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length;
+            const centerY = floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length;
+            
+            return (
+              <g key={floor.id}>
+                <polygon
+                  points={points}
+                  fill={statusColor}
+                  fillOpacity={isHovered ? 0.6 : 0.4}
+                  stroke={statusColor}
+                  strokeWidth={isHovered ? 0.3 : 0.2}
+                  className="cursor-pointer transition-all"
+                  onClick={() => handleFloorClick(floor.floor_number)}
+                  onMouseEnter={() => setHoveredFloor(floor.floor_number)}
+                  onMouseLeave={() => setHoveredFloor(null)}
+                  style={{ pointerEvents: 'auto' }}
                 />
-              </div>
-              
-              {/* SVG overlay - positioned absolutely but constrained */}
-              {buildingFloors.length > 0 && (
-                <svg 
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  viewBox="0 0 100 100" 
-                  preserveAspectRatio="none"
+                <text
+                  x={centerX}
+                  y={centerY}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="fill-white font-bold select-none pointer-events-none"
+                  fontSize={isHovered ? "4" : "3"}
+                  style={{ 
+                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+                    filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.5))'
+                  }}
                 >
-                  {buildingFloors.map((floor) => {
-                    if (!floor.polygon || floor.polygon.length < 3) return null;
-                    
-                    const points = floor.polygon
-                      .map(point => `${point.x},${point.y}`)
-                      .join(' ');
-
-                    const floorApartments = getFloorApartments(floor.floor_number);
-                    const statusColor = getFloorStatusColor(floor.floor_number);
-
-                    return (
-                      <g key={floor.id}>
-                        <polygon
-                          points={points}
-                          fill={statusColor}
-                          fillOpacity={0.3}
-                          stroke={statusColor}
-                          strokeWidth={0.5}
-                          className="cursor-pointer hover:fill-opacity-50 transition-all pointer-events-auto"
-                          onClick={() => {
-                            if (floorApartments.length > 0) {
-                              onApartmentSelect(floorApartments[0]);
-                            }
-                          }}
-                        />
-                        {/* Номер этажа */}
-                        {floor.polygon.length > 0 && (
-                          <text
-                            x={floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length}
-                            y={floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            className="fill-white font-bold pointer-events-none"
-                            fontSize="2"
-                            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
-                          >
-                            {floor.floor_number}
-                          </text>
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-real-estate-500 bg-real-estate-50 rounded-lg">
-              <Navigation className="h-12 w-12 mb-4" />
-              <p className="text-lg font-medium">Изображение фасада не загружено</p>
-              <p className="text-sm mt-1">Обратитесь к администратору для загрузки изображения</p>
-            </div>
-          )}
-
-          {/* Легенда */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-600 rounded opacity-60 flex-shrink-0"></div>
-              <span>Все квартиры доступны</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-600 rounded opacity-60 flex-shrink-0"></div>
-              <span>Частично доступны</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-600 rounded opacity-60 flex-shrink-0"></div>
-              <span>Все проданы</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Карта расположения */}
-      {project.latitude && project.longitude && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-real-estate-900">
-              Расположение на карте
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-64 bg-real-estate-100 rounded-lg flex items-center justify-center">
-              <div className="text-center text-real-estate-500">
-                <MapPin className="h-8 w-8 mx-auto mb-2" />
-                <p className="font-medium">Интеграция с картой</p>
-                <p className="text-sm mt-1">
-                  Координаты: {project.latitude.toFixed(6)}, {project.longitude.toFixed(6)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  {floor.floor_number}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
+      
+      {!isExpanded && (
+        <button
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-4 flex items-center justify-center z-10"
+          onClick={() => setIsExpanded(true)}
+        >
+          <Maximize2 className="h-7 w-7 text-gray-900" />
+        </button>
+      )}
+      {isExpanded && (
+        <button
+          className="absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 flex items-center justify-center z-20"
+          onClick={() => setIsExpanded(false)}
+        >
+          <X className="h-6 w-6 text-gray-900" />
+        </button>
       )}
     </div>
   );

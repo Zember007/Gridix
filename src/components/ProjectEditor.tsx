@@ -300,6 +300,30 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="latitude">Широта (latitude)</Label>
+                  <Input
+                    id="latitude"
+                    type="number"
+                    step="0.000001"
+                    value={project.latitude ?? ''}
+                    onChange={(e) => setProject(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                    placeholder="Например: 55.7558"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Пример: 55.7558 (Москва)</p>
+                </div>
+                <div>
+                  <Label htmlFor="longitude">Долгота (longitude)</Label>
+                  <Input
+                    id="longitude"
+                    type="number"
+                    step="0.000001"
+                    value={project.longitude ?? ''}
+                    onChange={(e) => setProject(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                    placeholder="Например: 37.6176"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Пример: 37.6176 (Москва)</p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

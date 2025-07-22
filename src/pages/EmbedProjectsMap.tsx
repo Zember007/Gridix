@@ -1,12 +1,12 @@
 
-import ProjectsMap from '@/components/ProjectsMap';
+import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
 
 const EmbedProjectsMap = () => {
   return (
-    <div className="bg-gray-50 min-h-screen p-4">
-      <ProjectsMap
-        onProjectSelect={(projectId) => {
-          window.open(`/embed/project/${projectId}`, '_blank');
+    <div className="bg-white min-h-screen">
+      <InteractiveProjectsMap
+        onProjectSelect={(project) => {
+          window.open(`/embed/project/${project.id}`, '_blank');
         }}
       />
     </div>

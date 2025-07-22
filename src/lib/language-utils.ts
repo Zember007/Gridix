@@ -26,20 +26,31 @@ export const DEFAULT_LANGUAGE: Language = 'ru';
 export const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_CONFIG) as Language[];
 
 /**
- * Extract language from URL path
+ * Get language from URL parameter (e.g., 'ru' from '/ru/projects')
  */
-export function getLanguageFromPath(pathname: string): Language {
-  const segments = pathname.split('/').filter(Boolean);
-  const firstSegment = segments[0];
+export function getLanguageFromUrlParam(langParam: string | undefined): Language {
+  if (!langParam) return DEFAULT_LANGUAGE;
   
-  // Check if first segment matches any language prefix
+  // Find language by URL prefix
   for (const [lang, config] of Object.entries(LANGUAGE_CONFIG)) {
-    if (config.urlPrefix === `/${firstSegment}`) {
+    if (config.urlPrefix === `/${langParam}`) {
       return lang as Language;
     }
   }
   
   return DEFAULT_LANGUAGE;
+}
+
+/**
+ * Extract language from URL path (legacy support)
+ */
+export function getLanguageFromPath(pathname: string): Language {
+  const segments = pathname.split('/').filter(Boolean);
+  const firstSegment = segments[0];
+  
+  if (!firstSegment) return DEFAULT_LANGUAGE;
+  
+  return getLanguageFromUrlParam(firstSegment);
 }
 
 /**
@@ -83,6 +94,13 @@ export function getLanguagePrefix(language: Language): string {
 }
 
 /**
+ * Get language prefix without leading slash (for URL params)
+ */
+export function getLanguageParam(language: Language): string {
+  return LANGUAGE_CONFIG[language].urlPrefix.slice(1); // Remove leading slash
+}
+
+/**
  * Check if path has language prefix
  */
 export function hasLanguagePrefix(pathname: string): boolean {
@@ -91,5 +109,16 @@ export function hasLanguagePrefix(pathname: string): boolean {
   
   return Object.values(LANGUAGE_CONFIG).some(
     config => config.urlPrefix === `/${firstSegment}`
+  );
+}
+
+/**
+ * Validate if a URL parameter is a valid language
+ */
+export function isValidLanguageParam(langParam: string | undefined): langParam is Language {
+  if (!langParam) return false;
+  
+  return Object.values(LANGUAGE_CONFIG).some(
+    config => config.urlPrefix === `/${langParam}`
   );
 }

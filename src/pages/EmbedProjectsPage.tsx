@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, MapPin, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
 
 interface Project {
   id: string;
@@ -14,11 +15,14 @@ interface Project {
   address: string | null;
   floors: number;
   building_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const EmbedProjectsPage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -29,7 +33,7 @@ const EmbedProjectsPage = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, description, address, floors, building_image_url')
+        .select('id, name, description, address, floors, building_image_url, latitude, longitude')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -47,70 +51,178 @@ const EmbedProjectsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
       </div>
     );
   }
 
+  // Если выбран режим карты, отображаем InteractiveProjectsMap
+  if (viewMode === 'map') {
+    return (
+      <InteractiveProjectsMap
+        onProjectSelect={(project) => {
+          handleViewProject(project.id);
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Language Toggle */}
-      <div className="flex justify-end p-4">
-        <LanguageToggle />
+    <div className="min-h-screen bg-white">
+      {/* Header with filters */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">НАШИ ПРОЕКТЫ</h1>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                size="sm"
+                className={viewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                onClick={() => setViewMode('grid')}
+              >
+                Плитка
+              </Button>
+              <Button 
+                variant={viewMode === 'map' ? 'default' : 'outline'} 
+                size="sm"
+                className={viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                onClick={() => setViewMode('map')}
+              >
+                На карте
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Parameters filter */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
+              <SlidersHorizontal className="h-4 w-4 text-gray-600" />
+              <Select defaultValue="all">
+                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
+                  <SelectValue placeholder="Параметры" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все параметры</SelectItem>
+                  <SelectItem value="studio">Студия</SelectItem>
+                  <SelectItem value="1">1 комната</SelectItem>
+                  <SelectItem value="2">2 комнаты</SelectItem>
+                  <SelectItem value="3">3 комнаты</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Price filter */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
+              <DollarSign className="h-4 w-4 text-gray-600" />
+              <Select defaultValue="all">
+                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
+                  <SelectValue placeholder="Стоимость" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Любая стоимость</SelectItem>
+                  <SelectItem value="low">До 100 000$</SelectItem>
+                  <SelectItem value="medium">100 000$ - 200 000$</SelectItem>
+                  <SelectItem value="high">От 200 000$</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Delivery date filter */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
+              <Calendar className="h-4 w-4 text-gray-600" />
+              <Select defaultValue="all">
+                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
+                  <SelectValue placeholder="Срок сдачи" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Любой срок</SelectItem>
+                  <SelectItem value="2024">2024 год</SelectItem>
+                  <SelectItem value="2025">2025 год</SelectItem>
+                  <SelectItem value="2026">2026 год</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Reset filters */}
+            <Button variant="ghost" size="sm" className="text-gray-600">
+              Сбросить фильтр
+            </Button>
+
+            {/* Main CTA */}
+            <Button className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ml-auto">
+              Смотреть {projects.length} вариантов
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{t('embed.title')}</h1>
-          <p className="text-muted-foreground">{t('embed.subtitle')}</p>
-        </div>
-
+      {/* Content */}
+      <div className="container mx-auto px-6 py-8">
+        {/* Grid view */}
         {projects.length === 0 ? (
-          <Card>
-            <CardContent className="flex items-center justify-center h-32">
-              <p className="text-muted-foreground">{t('embed.noProjects')}</p>
-            </CardContent>
-          </Card>
+          <div className="text-center py-16">
+            <p className="text-gray-500">Проекты не найдены</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <Card key={project.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {project.building_image_url && (
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={project.building_image_url}
-                      alt={project.name}
-                      className="w-full h-full object-cover"
-                    />
+              <Card key={project.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white rounded-2xl">
+                <CardContent className="p-0">
+                  {/* Project image */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    {project.building_image_url ? (
+                      <img
+                        src={project.building_image_url}
+                        alt={project.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600" />
+                    )}
+                    
+                    {/* Badges */}
+                    <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700">
+                        Рассрочка 0%
+                      </div>
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700">
+                        первый взнос от 5%
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4">
+                      <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-white">
+                        <div className="text-xs opacity-80">старт продаж</div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    {project.name}
-                  </CardTitle>
-                  {project.description && (
-                    <CardDescription>{project.description}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+
+                  {/* Project info */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#1E1E1E] transition-colors">
+                      {project.name}
+                    </h3>
+                    
+                    <div className="text-gray-600 text-sm mb-4">
+                      ОТ {Math.floor(Math.random() * 2000) + 1000}$ М²
+                    </div>
+
                     {project.address && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                         <MapPin className="h-4 w-4" />
                         {project.address}
                       </div>
                     )}
-                    <div className="text-sm text-muted-foreground">
-                      {t('embed.floors')}: {project.floors}
-                    </div>
+
                     <Button
                       onClick={() => handleViewProject(project.id)}
-                      className="w-full"
+                      className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white py-3 rounded-lg font-medium"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      {t('embed.viewApartments')}
+                      Смотреть квартиры
                     </Button>
                   </div>
                 </CardContent>

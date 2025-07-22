@@ -94,12 +94,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="mb-4">
-          <h3 className="font-semibold mb-2">План {floorNumber} этажа</h3>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>Квартир на этаже: {apartments.length}</span>
-          </div>
-        </div>
+ 
 
         <div className="relative bg-gray-50 rounded-lg overflow-hidden">
           <div className="relative">

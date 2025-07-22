@@ -1,10 +1,11 @@
-
 import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { Icon, LatLngBounds } from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Building2, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
+import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -17,12 +18,44 @@ interface Project {
   longitude: number | null;
 }
 
-interface ProjectsMapProps {
+interface InteractiveProjectsMapProps {
   onProjectSelect?: (project: Project) => void;
   selectedProjectId?: string;
 }
 
-const ProjectsMap = ({ onProjectSelect, selectedProjectId }: ProjectsMapProps) => {
+// Кастомная иконка для маркеров проектов
+const createCustomIcon = (project: Project, isSelected: boolean = false) => {
+  const iconSize = isSelected ? 60 : 50;
+  
+  return new Icon({
+    iconUrl: project.building_image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjAiIGZpbGw9IiMxRTFFMUUiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgMjFoMTh2LTJIM3Yyem0wLTE2aDMuNUw3IDlsMy41LTRIMTd2MTJIM3Y5eiIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4KPC9zdmc+',
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize / 2, iconSize / 2],
+    popupAnchor: [0, -iconSize / 2],
+    className: isSelected ? 'selected-project-marker' : 'project-marker'
+  });
+};
+
+// Компонент для автоматической подгонки карты под маркеры
+const FitBounds = ({ projects }: { projects: Project[] }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      const validProjects = projects.filter(p => p.latitude && p.longitude);
+      if (validProjects.length > 0) {
+        const bounds = new LatLngBounds(
+          validProjects.map(p => [p.latitude!, p.longitude!])
+        );
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [projects, map]);
+
+  return null;
+};
+
+const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId }: InteractiveProjectsMapProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -53,7 +86,7 @@ const ProjectsMap = ({ onProjectSelect, selectedProjectId }: ProjectsMapProps) =
     window.open(`/widget/${projectId}`, '_blank');
   };
 
-  const handleProjectClick = (project: Project) => {
+  const handleMarkerClick = (project: Project) => {
     setSelectedProject(project);
     onProjectSelect?.(project);
   };
@@ -65,6 +98,14 @@ const ProjectsMap = ({ onProjectSelect, selectedProjectId }: ProjectsMapProps) =
       </div>
     );
   }
+
+  // Центр карты - средняя точка всех проектов или дефолтные координаты
+  const mapCenter = projects.length > 0 
+    ? [
+        projects.reduce((sum, p) => sum + (p.latitude || 0), 0) / projects.length,
+        projects.reduce((sum, p) => sum + (p.longitude || 0), 0) / projects.length
+      ] as [number, number]
+    : [41.7151, 44.8271] as [number, number]; // Тбилиси как дефолт
 
   return (
     <div className="min-h-screen bg-white">
@@ -147,71 +188,78 @@ const ProjectsMap = ({ onProjectSelect, selectedProjectId }: ProjectsMapProps) =
         </div>
       </div>
 
-      {/* Map content */}
-      <div className="relative h-[80vh] bg-gradient-to-br from-blue-200 via-blue-100 to-green-100">
-        {/* Map background image/placeholder */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI4MDAiIHZpZXdCb3g9IjAgMCAxMjAwIDgwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyMDAiIGhlaWdodD0iODAwIiBmaWxsPSIjRjBGOEZGIi8+CjxwYXRoIGQ9Ik0xMDAgNjAwSDExMDBWNjUwSDEwMFY2MDBaIiBmaWxsPSIjRTBFN0ZGIi8+CjxwYXRoIGQ9Ik0yMDAgNDAwSDYwMFY0NTBIMjAwVjQwMFoiIGZpbGw9IiNEMURGRkYiLz4KPC9zdmc+')"
-          }}
-        />
-
-        {/* Project markers */}
-        {projects.map((project, index) => {
-          const isSelected = selectedProjectId === project.id || selectedProject?.id === project.id;
+      {/* Interactive Map */}
+      <div className="relative h-[80vh]">
+        <MapContainer
+          center={mapCenter}
+          zoom={10}
+          style={{ height: '100%', width: '100%' }}
+          className="z-0"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
           
-          // Mock positioning based on index (in real app would use actual coordinates)
-          const positions = [
-            { left: '25%', top: '30%' },
-            { left: '45%', top: '50%' },
-            { left: '65%', top: '25%' },
-            { left: '30%', top: '65%' },
-            { left: '70%', top: '70%' },
-            { left: '15%', top: '45%' },
-          ];
+          {/* Автоматическая подгонка под маркеры */}
+          <FitBounds projects={projects} />
           
-          const position = positions[index % positions.length];
-          
-          return (
-            <div
-              key={project.id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-              style={{ left: position.left, top: position.top }}
-              onClick={() => handleProjectClick(project)}
-            >
-              {/* Project marker */}
-              <div className={`relative ${isSelected ? 'z-20' : 'z-10'}`}>
-                <div className={`w-24 h-24 rounded-full overflow-hidden border-4 shadow-lg transition-all duration-300 ${
-                  isSelected ? 'border-[#1E1E1E] scale-110' : 'border-white hover:border-gray-300 hover:scale-105'
-                }`}>
-                  {project.building_image_url ? (
-                    <img
-                      src={project.building_image_url}
-                      alt={project.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                      <Building2 className="h-8 w-8 text-white" />
+          {/* Маркеры проектов */}
+          {projects.map((project) => {
+            if (!project.latitude || !project.longitude) return null;
+            
+            const isSelected = selectedProjectId === project.id || selectedProject?.id === project.id;
+            
+            return (
+              <Marker
+                key={project.id}
+                position={[project.latitude, project.longitude]}
+                icon={createCustomIcon(project, isSelected)}
+                eventHandlers={{
+                  click: () => handleMarkerClick(project),
+                }}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <h3 className="font-bold text-lg mb-2">{project.name}</h3>
+                    
+                    {project.building_image_url && (
+                      <img
+                        src={project.building_image_url}
+                        alt={project.name}
+                        className="w-full h-32 object-cover rounded-lg mb-3"
+                      />
+                    )}
+                    
+                    {project.address && (
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{project.address}</span>
+                      </div>
+                    )}
+                    
+                    <div className="text-sm text-gray-600 mb-3">
+                      ОТ {Math.floor(Math.random() * 2000) + 1000}$ М²
                     </div>
-                  )}
-                </div>
-                
-                {/* Project name label */}
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1 text-sm font-medium text-gray-900 shadow-md">
-                    {project.name}
+                    
+                    <Button
+                      onClick={() => handleViewProject(project.id)}
+                      className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                      size="sm"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Смотреть квартиры
+                    </Button>
                   </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
 
         {/* Selected project info panel */}
         {selectedProject && (
-          <div className="absolute bottom-6 left-6 right-6 md:left-6 md:right-auto md:w-96">
+          <div className="absolute bottom-6 left-6 right-6 md:left-6 md:right-auto md:w-96 z-10">
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -263,4 +311,4 @@ const ProjectsMap = ({ onProjectSelect, selectedProjectId }: ProjectsMapProps) =
   );
 };
 
-export default ProjectsMap;
+export default InteractiveProjectsMap; 
