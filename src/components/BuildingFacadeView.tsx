@@ -191,10 +191,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     );
   }
 
-  // Calculate SVG position to overlay exactly on the displayed image
-  const containerRect = containerRef.current?.getBoundingClientRect();
-  const svgLeft = containerRect ? (containerRect.width - imgDimensions.width) / 2 : 0;
-  const svgTop = containerRect ? (containerRect.height - imgDimensions.height) / 2 : 0;
+
+
 
   return (
     <div
@@ -220,17 +218,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       {/* SVG полигоны - точно поверх отображаемого изображения */}
       {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
         <svg
-          className="absolute"
-          style={{
-            left: svgLeft,
-            top: svgTop,
-            width: imgDimensions.width,
-            height: imgDimensions.height,
-            pointerEvents: 'auto',
-            zIndex: 2
-          }}
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 w-full h-full"
+        viewBox={`0 0 ${imgDimensions.width} ${imgDimensions.height}`}
+        preserveAspectRatio="none"
         >
           {buildingFloors.map((floor) => {
             if (!floor.polygon || floor.polygon.length < 3) return null;
