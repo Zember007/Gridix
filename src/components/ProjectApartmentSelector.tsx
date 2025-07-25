@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
+import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 
 interface Project {
   id: string;
@@ -133,7 +134,11 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     }
 
     if (selectedRooms !== 'all') {
-      filtered = filtered.filter(apt => apt.rooms === parseInt(selectedRooms));
+      if (selectedRooms === '4+') {
+        filtered = filtered.filter(apt => apt.rooms >= 4);
+      } else {
+        filtered = filtered.filter(apt => apt.rooms === parseInt(selectedRooms));
+      }
     }
 
     if (showOnlyAvailable) {
@@ -375,7 +380,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
             <div className="relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 overflow-hidden">
               {viewMode === 'facade' ? (
                 // Building facade view with interactive floor polygons
-                <div className="w-full h-full bg-white">
+                <div className="w-full bg-white">
                   <BuildingFacadeView
                     projectId={projectId}
                     project={project}
@@ -387,6 +392,163 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                     onApartmentSelect={setSelectedApartment}
                     filtersRef={filtersRef}
                   />
+                  
+                  {/* Layout gallery below facade when not expanded */}
+                  <div className="container mx-auto px-6 py-8">
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-bold text-gray-900">{t('project.layouts')}</h3>
+                      
+                      {/* Layout type filters */}
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                        <Button
+                          variant={selectedRooms === 'all' ? 'default' : 'outline'}
+                          size="sm"
+                          className={selectedRooms === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                          onClick={() => setSelectedRooms('all')}
+                        >
+                          {t('project.allTypes')}
+                        </Button>
+                        <Button
+                          variant={selectedRooms === '0' ? 'default' : 'outline'}
+                          size="sm"
+                          className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                          onClick={() => setSelectedRooms('0')}
+                        >
+                          {t('apartment.studio')}
+                        </Button>
+                        {getUniqueRoomCounts().filter(rooms => rooms > 0).map(rooms => (
+                          <Button
+                            key={rooms}
+                            variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
+                            size="sm"
+                            className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => setSelectedRooms(rooms.toString())}
+                          >
+                            {rooms}
+                          </Button>
+                        ))}
+                        <Button
+                          variant={selectedRooms === '4+' ? 'default' : 'outline'}
+                          size="sm"
+                          className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                          onClick={() => {
+                            // Handle 4+ rooms filter
+                            const fourPlusApartments = apartments.filter(apt => apt.rooms >= 4);
+                            if (fourPlusApartments.length > 0) {
+                              setSelectedRooms('4+');
+                            }
+                          }}
+                        >
+                          4+
+                        </Button>
+                      </div>
+                      
+                      {/* Layout cards grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {(() => {
+                          // Group apartments by type (rooms + area)
+                          const layoutGroups: { [key: string]: Apartment[] } = {};
+                          
+                          let apartmentsToShow = apartments;
+                          if (selectedRooms !== 'all') {
+                            if (selectedRooms === '4+') {
+                              apartmentsToShow = apartments.filter(apt => apt.rooms >= 4);
+                            } else {
+                              apartmentsToShow = apartments.filter(apt => apt.rooms === parseInt(selectedRooms));
+                            }
+                          }
+                          
+                          apartmentsToShow.forEach(apt => {
+                            const key = `${apt.rooms}-rooms`;
+                            if (!layoutGroups[key]) {
+                              layoutGroups[key] = [];
+                            }
+                            layoutGroups[key].push(apt);
+                          });
+                          
+                          return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
+                            const representativeApt = apartmentGroup[0];
+                            const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
+                            const totalCount = apartmentGroup.length;
+                            
+                            return (
+                              <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                <div className="aspect-[4/3] bg-gray-100 relative">
+                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} />
+                                  
+                                  {/* Status badge */}
+                                  <div className="absolute top-2 right-2 z-10">
+                                    <Badge 
+                                      variant={availableCount > 0 ? 'default' : 'secondary'}
+                                      className={availableCount > 0 ? 'bg-green-500' : 'bg-gray-500'}
+                                    >
+                                      {availableCount > 0 ? `${availableCount} ${t('common.available')}` : t('common.unavailable')}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                
+                                <CardContent className="p-4">
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-lg">
+                                      {representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                    </h4>
+                                    
+                                    <div className="text-sm text-gray-600">
+                                      <span className="flex items-center gap-1">
+                                        <Ruler className="h-4 w-4" />
+                                        {(() => {
+                                          const areas = apartmentGroup.map(apt => apt.area);
+                                          const minArea = Math.min(...areas);
+                                          const maxArea = Math.max(...areas);
+                                          return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
+                                        })()}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Price range */}
+                                    {(() => {
+                                      const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
+                                      if (prices.length > 0) {
+                                        const minPrice = Math.min(...prices);
+                                        const maxPrice = Math.max(...prices);
+                                        return (
+                                          <div className="font-bold text-lg">
+                                            {minPrice === maxPrice 
+                                              ? `${formatPrice(minPrice)} ₽`
+                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ₽`
+                                            }
+                                          </div>
+                                        );
+                                      }
+                                      return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
+                                    })()}
+                                    
+                                    <Button 
+                                      className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                                      onClick={() => {
+                                        // Set filters and switch to list view
+                                        setSelectedRooms(representativeApt.rooms >= 4 ? '4+' : representativeApt.rooms.toString());
+                                        setViewMode('list');
+                                      }}
+                                    >
+                                      Смотреть {totalCount} {totalCount === 1 ? 'вариант' : 'вариантов'}
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          });
+                        })()}
+                      </div>
+                      
+                      {apartments.length === 0 && (
+                        <div className="text-center py-12">
+                          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-600">{t('project.noApartments')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 // Floor plan view for specific floor
@@ -440,54 +602,106 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
           {selectedApartment && (
             <div className="bg-gray-50 border-t">
               <div className="container mx-auto px-6 py-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Home className="h-5 w-5" />
-                        {t('apartment.number')} {selectedApartment.apartment_number}
-                      </span>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Apartment Layout Images */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-gray-900">{t('project.layouts')}</h3>
                       <Button variant="ghost" size="sm" onClick={() => setSelectedApartment(null)}>
                         <X className="h-4 w-4" />
                       </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-500">{t('project.type')}</div>
-                        <div className="font-semibold">
-                          {selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.rooms')}`}
-                        </div>
+                    </div>
+                    
+                    {/* Layout type filter buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-[#1E1E1E] text-white"
+                      >
+                        {t('apartment.studio')}
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-gray-300">1</Button>
+                      <Button variant="outline" size="sm" className="border-gray-300">2</Button>
+                      <Button variant="outline" size="sm" className="border-gray-300">3</Button>
+                      <Button variant="outline" size="sm" className="border-gray-300">4+</Button>
+                    </div>
+                    
+                                         {/* Apartment Photos Viewer */}
+                     <div className="space-y-4">
+                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} />
+                     </div>
+                  </div>
+
+                  {/* Apartment Details */}
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Home className="h-5 w-5 text-gray-600" />
+                        <span className="text-lg font-semibold">
+                          {t('apartment.number')} {selectedApartment.apartment_number}
+                        </span>
                       </div>
-                      <div className="space-y-2">
+                      <p className="text-gray-600">{selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.rooms')}`}</p>
+                    </div>
+
+                    {/* Key details */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
                         <div className="text-sm text-gray-500">{t('project.area')}</div>
-                        <div className="font-semibold">{selectedApartment.area} м²</div>
+                        <div className="font-semibold text-lg">{selectedApartment.area} м²</div>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <div className="text-sm text-gray-500">{t('project.floor')}</div>
-                        <div className="font-semibold">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
+                        <div className="font-semibold text-lg">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-500">{t('project.price')}</div>
-                        <div className="font-semibold text-lg">
-                          {selectedApartment.price ? `${formatPrice(selectedApartment.price)} ₽` : t('project.onRequest')}
-                        </div>
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-500">{t('project.location')}</div>
+                        <div className="font-semibold">{t('project.sampleLocation')}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-500">{t('project.finishing')}</div>
+                        <div className="font-semibold">{t('project.blackFrame')}</div>
                       </div>
                     </div>
-                    <div className="flex gap-3 mt-6">
+
+                    {/* Price */}
+                    <div className="bg-white rounded-lg p-4 border">
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-500">{t('project.price')}</div>
+                        <div className="font-bold text-2xl">
+                          {selectedApartment.price ? `${formatPrice(selectedApartment.price)} ₽` : t('project.onRequest')}
+                        </div>
+                        <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3">
                       <Button 
-                        className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                        className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
                         disabled={selectedApartment.status !== 'available'}
                       >
                         {selectedApartment.status === 'available' ? t('common.reserve') : t('common.unavailable')}
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" className="flex-1">
                         {t('common.more')}
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    {/* Additional actions */}
+                    <div className="flex items-center justify-center gap-4 pt-2">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <Share className="h-4 w-4" />
+                        <span className="text-sm">Поделиться</span>
+                      </Button>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        <span className="text-sm">В избранное</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

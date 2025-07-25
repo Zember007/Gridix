@@ -32,7 +32,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [containerHeight, setContainerHeight] = useState(COLLAPSED_HEIGHT);
-  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0, naturalWidth: 0, naturalHeight: 0 });
+  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0});
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -49,37 +49,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const updateImageDimensions = useCallback(() => {
     if (imgRef.current && containerRef.current) {
       const img = imgRef.current;
-      const container = containerRef.current;
-      
-      // Get natural image dimensions
-      const naturalWidth = img.naturalWidth;
-      const naturalHeight = img.naturalHeight;
-      
-      // Calculate displayed image dimensions (object-contain behavior)
-      const containerRect = container.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-      
-      const containerAspectRatio = containerWidth / containerHeight;
-      const imageAspectRatio = naturalWidth / naturalHeight;
-      
-      let displayedWidth, displayedHeight;
-      
-      if (containerAspectRatio > imageAspectRatio) {
-        // Container is wider than image - height fills container, width is scaled
-        displayedHeight = containerHeight;
-        displayedWidth = displayedHeight * imageAspectRatio;
-      } else {
-        // Container is taller than image - width fills container, height is scaled
-        displayedWidth = containerWidth;
-        displayedHeight = displayedWidth / imageAspectRatio;
-      }
+      const filtersHeight = filtersRef.current.offsetHeight;
+      const newHeight = window.innerHeight - filtersHeight - 20; 
+       const height_res = newHeight;
+       const width_res = ( img.naturalWidth / img.naturalHeight) * newHeight;
+    
       
       setImgDimensions({
-        width: displayedWidth,
-        height: displayedHeight,
-        naturalWidth,
-        naturalHeight
+        width: width_res,
+        height: height_res
       });
     }
   }, []);
@@ -89,7 +67,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [projectId]);
 
   useEffect(() => {
-    updateHeight();
+    updateHeight()
     const handleResize = () => {
       updateHeight();
       updateImageDimensions();
@@ -99,9 +77,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [updateHeight, updateImageDimensions]);
 
   useEffect(() => {
-    // Update dimensions after height change
-    const timer = setTimeout(updateImageDimensions, 100);
-    return () => clearTimeout(timer);
+    updateImageDimensions()
   }, [containerHeight, updateImageDimensions]);
 
   useEffect(() => {
@@ -167,8 +143,22 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
   };
 
-  const handleImageLoad = () => {
-    updateImageDimensions();
+
+
+  // Находим границы всех полигонов для масштабирования
+  const getPolygonBounds = () => {
+    let minX = 100, minY = 100, maxX = 0, maxY = 0;
+    buildingFloors.forEach(floor => {
+      if (floor.polygon && floor.polygon.length > 0) {
+        floor.polygon.forEach(point => {
+          minX = Math.min(minX, point.x);
+          minY = Math.min(minY, point.y);
+          maxX = Math.max(maxX, point.x);
+          maxY = Math.max(maxY, point.y);
+        });
+      }
+    });
+    return { minX, minY, maxX, maxY };
   };
 
   if (loading) {
@@ -197,10 +187,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   return (
     <div
       ref={containerRef}
-      className={`relative w-full mx-auto transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'}`}
+      className={`relative w-full mx-auto h-[288px] transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'}`}
       style={{
         height: containerHeight,
-        minHeight: 200,
         width: '100%',
         maxWidth: '100vw',
         boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
@@ -210,25 +199,34 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         ref={imgRef}
         src={project.building_image_url}
         alt={project.name}
-        className="w-full h-full object-contain transition-all duration-500"
-        onLoad={handleImageLoad}
+        className={`w-full h-full  transition-all duration-500 ${isExpanded ? 'object-contain' : 'object-cover'}`}
+        onLoad={updateImageDimensions}
         draggable={false}
       />
       
       {/* SVG полигоны - точно поверх отображаемого изображения */}
       {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
         <svg
-        className="absolute inset-0 w-full h-full"
-        viewBox={`0 0 ${imgDimensions.width} ${imgDimensions.height}`}
-        preserveAspectRatio="none"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: imgDimensions.width,
+            height: imgDimensions.height,
+          
+          }}
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
         >
+          {/* Debug rectangle to see SVG bounds */}
+          <rect x="0" y="0" width="100" height="100" fill="none" />
           {buildingFloors.map((floor) => {
             if (!floor.polygon || floor.polygon.length < 3) return null;
             
-            // Полигоны уже в процентах (0-100), используем их напрямую
+            // Используем исходные координаты полигонов (они уже в процентах 0-100)
             const points = floor.polygon
               .map(point => `${point.x},${point.y}`)
               .join(' ');
+              
+            console.log(`Floor ${floor.floor_number} polygon:`, floor.polygon, 'points:', points);
 
             const floorApartments = getFloorApartments(floor.floor_number);
             const statusColor = getFloorStatusColor(floor.floor_number);
@@ -275,7 +273,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       {!isExpanded && (
         <button
           className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-4 flex items-center justify-center z-10"
-          onClick={() => setIsExpanded(true)}
+          onClick={() => {setIsExpanded(true)}}
         >
           <Maximize2 className="h-7 w-7 text-gray-900" />
         </button>
