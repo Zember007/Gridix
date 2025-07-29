@@ -374,11 +374,16 @@ export type Database = {
           description: string | null
           floors: number
           id: string
+          is_featured: boolean
+          is_public: boolean
           latitude: number | null
           longitude: number | null
           name: string
           polygon_settings: Json | null
+          slug: string | null
           updated_at: string
+          user_id: string | null
+          view_count: number
         }
         Insert: {
           address?: string | null
@@ -388,11 +393,16 @@ export type Database = {
           description?: string | null
           floors?: number
           id?: string
+          is_featured?: boolean
+          is_public?: boolean
           latitude?: number | null
           longitude?: number | null
           name: string
           polygon_settings?: Json | null
+          slug?: string | null
           updated_at?: string
+          user_id?: string | null
+          view_count?: number
         }
         Update: {
           address?: string | null
@@ -402,13 +412,112 @@ export type Database = {
           description?: string | null
           floors?: number
           id?: string
+          is_featured?: boolean
+          is_public?: boolean
           latitude?: number | null
           longitude?: number | null
           name?: string
           polygon_settings?: Json | null
+          slug?: string | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          project_id: string
+          referrer: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          project_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          project_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_logs: {
         Row: {
