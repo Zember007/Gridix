@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { addLanguageToPath, getLanguageFromPath } from '@/lib/language-utils';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -20,8 +21,10 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
   }
 
   if (requireAuth && !user) {
-    // Перенаправляем на страницу авторизации с сохранением текущего пути
-    return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    // Получаем текущий язык из URL и создаем правильный путь для авторизации
+    const currentLanguage = getLanguageFromPath(location.pathname);
+    const authPath = addLanguageToPath('/auth', currentLanguage);
+    return <Navigate to={`${authPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return <>{children}</>;

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { AuthForm } from '@/components/Auth/AuthForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 const AuthPage = () => {
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
   const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
   
@@ -12,7 +13,13 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate(redirectTo);
+      // Если redirect содержит языковой префикс, используем его напрямую
+      // Иначе добавляем языковой префикс
+      if (redirectTo.match(/^\/(ru|en|ge)\//)) {
+        window.location.href = redirectTo;
+      } else {
+        navigate('/admin');
+      }
     }
   }, [user, loading, navigate, redirectTo]);
 
@@ -31,7 +38,13 @@ const AuthPage = () => {
   return (
     <AuthForm 
       redirectTo={redirectTo}
-      onSuccess={() => navigate(redirectTo)}
+      onSuccess={() => {
+        if (redirectTo.match(/^\/(ru|en|ge)\//)) {
+          window.location.href = redirectTo;
+        } else {
+          navigate('/admin');
+        }
+      }}
     />
   );
 };

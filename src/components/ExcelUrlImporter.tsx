@@ -17,8 +17,6 @@ interface ExcelUrlImporterProps {
 const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) => {
   const [excelUrl, setExcelUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [autoSync, setAutoSync] = useState(false);
-  const [syncInterval, setSyncInterval] = useState('300');
   const [testConnection, setTestConnection] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
 
   const testExcelConnection = async () => {
@@ -174,46 +172,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
             )}
           </div>
 
-          <div className="bg-real-estate-50 p-4 rounded-lg space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="auto-sync" className="font-medium">
-                  Автоматическая синхронизация
-                </Label>
-                <p className="text-sm text-real-estate-600">
-                  Отслеживать изменения в Excel файле и автоматически обновлять данные
-                </p>
-              </div>
-              <Switch
-                id="auto-sync"
-                checked={autoSync}
-                onCheckedChange={setAutoSync}
-              />
-            </div>
-
-            {autoSync && (
-              <div>
-                <Label htmlFor="sync-interval">Интервал синхронизации</Label>
-                <Select value={syncInterval} onValueChange={setSyncInterval}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="60">1 минута</SelectItem>
-                    <SelectItem value="300">5 минут</SelectItem>
-                    <SelectItem value="600">10 минут</SelectItem>
-                    <SelectItem value="1800">30 минут</SelectItem>
-                    <SelectItem value="3600">1 час</SelectItem>
-                    <SelectItem value="21600">6 часов</SelectItem>
-                    <SelectItem value="86400">24 часа</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-real-estate-600 mt-1">
-                  Система будет проверять изменения каждые {getSyncIntervalLabel(syncInterval)}
-                </p>
-              </div>
-            )}
-          </div>
+   
 
           <div className="bg-amber-50 p-4 rounded-lg">
             <div className="flex gap-2">

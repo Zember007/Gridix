@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Language,
   getLanguageFromUrlParam,
+  getLanguageFromPath,
   addLanguageToPath,
   removeLanguageFromPath,
   getLanguageParam,
@@ -815,6 +816,21 @@ const translations: Translations = {
     en: 'Create first project',
     ka: 'პირველი პროექტის შექმნა'
   },
+  'projectList.createNew': {
+    ru: 'Создать проект',
+    en: 'Create project',
+    ka: 'პროექტის შექმნა'
+  },
+  'projectList.projects': {
+    ru: 'Проекты',
+    en: 'Projects',
+    ka: 'პროექტები'
+  },
+  'projectList.manageDescription': {
+    ru: 'Управление проектами недвижимости',
+    en: 'Manage real estate projects',
+    ka: 'უძრავი ქონების პროექტების მართვა'
+  },
 
   // Embed Projects Page
   'embed.title': {
@@ -841,6 +857,43 @@ const translations: Translations = {
     ru: 'Посмотреть квартиры',
     en: 'View apartments',
     ka: 'ბინების ნახვა'
+  },
+
+  // Project Creation Modal
+  'modal.createProject': {
+    ru: 'Создать новый проект',
+    en: 'Create new project',
+    ka: 'ახალი პროექტის შექმნა'
+  },
+  'modal.chooseMethod': {
+    ru: 'Выберите способ создания проекта',
+    en: 'Choose project creation method',
+    ka: 'აირჩიეთ პროექტის შექმნის მეთოდი'
+  },
+  'modal.manualSetup': {
+    ru: 'Ручная настройка',
+    en: 'Manual setup',
+    ka: 'ხელით კონფიგურაცია'
+  },
+  'modal.manualSetupDesc': {
+    ru: 'Создать проект с нуля и настроить все самостоятельно',
+    en: 'Create project from scratch and configure everything manually',
+    ka: 'შექმენით პროექტი ნულიდან და ყველაფერი ხელით კონფიგურაცია'
+  },
+  'modal.startManual': {
+    ru: 'Начать ручное создание',
+    en: 'Start manual creation',
+    ka: 'ხელით შექმნის დაწყება'
+  },
+  'modal.importExcel': {
+    ru: 'Импорт из Excel',
+    en: 'Import from Excel',
+    ka: 'Excel-იდან იმპორტი'
+  },
+  'modal.importExcelDesc': {
+    ru: 'Загрузить Excel файл с данными квартир и автоматически создать проект',
+    en: 'Upload Excel file with apartment data and automatically create project',
+    ka: 'ატვირთეთ Excel ფაილი ბინების მონაცემებით და ავტომატურად შექმენით პროექტი'
   }
 };
 
@@ -867,20 +920,24 @@ interface LanguageProviderProps {
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { lang } = useParams<{ lang: string }>();
 
-  // Initialize language from URL parameter or default
+  // Get language from URL path directly
+  const getCurrentLanguageFromURL = () => {
+    return getLanguageFromPath(location.pathname);
+  };
+
+  // Initialize language from URL path or default
   const [language, setLanguageState] = useState<Language>(() => {
-    return getLanguageFromUrlParam(lang);
+    return getCurrentLanguageFromURL();
   });
 
-  // Update language when URL parameter changes
+  // Update language when URL changes
   useEffect(() => {
-    const urlLanguage = getLanguageFromUrlParam(lang);
+    const urlLanguage = getCurrentLanguageFromURL();
     if (urlLanguage !== language) {
       setLanguageState(urlLanguage);
     }
-  }, [lang, language]);
+  }, [location.pathname, language]);
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;

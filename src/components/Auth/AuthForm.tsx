@@ -57,10 +57,6 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
         toast.success('Добро пожаловать!');
         onSuccess?.();
-        
-        if (redirectTo) {
-          window.location.href = redirectTo;
-        }
       }
     } catch (error: any) {
       console.error('Auth error:', error);

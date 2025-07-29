@@ -33,16 +33,29 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 
   const loadProjects = async () => {
     try {
-      const { data, error } = await supabase
+      // Добавляем таймаут для запроса проектов
+      const queryPromise = supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Projects query timeout after 5 seconds')), 5000)
+      );
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
       if (error) throw error;
       setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
-      toast.error('Ошибка загрузки проектов');
+      if (error instanceof Error && error.message.includes('timeout')) {
+        toast.error('Загрузка проектов заняла слишком много времени');
+      } else {
+        toast.error('Ошибка загрузки проектов');
+      }
+      // При ошибке устанавливаем пустой массив проектов
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -122,7 +135,23 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* Header with Create New Project Button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-real-estate-900">{t('projectList.projects')}</h2>
+              <p className="text-real-estate-600">{t('projectList.manageDescription')}</p>
+            </div>
+            <Button
+              onClick={onCreateNew}
+              className="bg-real-estate-600 hover:bg-real-estate-700"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              {t('projectList.createNew')}
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
             <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-real-estate-200">
               <CardHeader className="pb-4">
@@ -206,6 +235,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
               </CardContent>
             </Card>
           ))}
+          </div>
         </div>
       )}
     </div>

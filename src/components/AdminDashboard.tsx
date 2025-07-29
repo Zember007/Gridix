@@ -7,6 +7,7 @@ import { ArrowLeft, Building2, Settings, Code, BarChart3 } from 'lucide-react';
 import ProjectList from './ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
+import ProjectCreationModal from './ProjectCreationModal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
@@ -16,10 +17,20 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
 
   const handleCreateNew = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+  };
+
+  const handleManualCreate = () => {
+    setShowCreateModal(false);
     navigate('/admin/project/new');
   };
 
@@ -103,6 +114,13 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           </div>
         </Tabs>
       </div>
+
+      {/* Project Creation Modal */}
+      <ProjectCreationModal
+        open={showCreateModal}
+        onClose={handleCloseCreateModal}
+        onManualCreate={handleManualCreate}
+      />
     </div>
   );
 };

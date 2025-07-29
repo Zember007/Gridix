@@ -10,6 +10,7 @@ import { Check, AlertCircle, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CustomFieldsManager from '@/components/CustomFieldsManager';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -61,6 +62,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [tempProjectId, setTempProjectId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const { navigate } = useLanguageNavigation();
 
   const fieldLabels = {
     apartmentNumber: 'Номер квартиры',
@@ -277,7 +279,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       
       // Перенаправляем на созданный проект
       setTimeout(() => {
-        window.location.href = `/admin/project/${project.id}`;
+        navigate(`/admin/project/${project.id}`);
       }, 1000);
       
     } catch (error) {

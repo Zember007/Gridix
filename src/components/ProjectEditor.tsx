@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
@@ -50,7 +50,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
 
   useEffect(() => {
     if (!isNew && projectId) {

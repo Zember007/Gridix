@@ -1,15 +1,15 @@
 
-import { useNavigate } from 'react-router-dom';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import AdminDashboard from '@/components/AdminDashboard';
 
 const AdminPage = () => {
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
 
-  const handleBack = () => {
+  const goBack = () => {
     navigate('/');
   };
 
-  return <AdminDashboard onBack={handleBack} />;
+  return <AdminDashboard onBack={goBack} />;
 };
 
 export default AdminPage;

@@ -41,14 +41,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     // Получаем текущую сессию
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserProfile(session.user.id);
+      if (session?.user && !profileLoaded) {
+        loadUserProfile(session.user.id, session.user);
       } else {
         setLoading(false);
       }
@@ -61,10 +62,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user) {
-        await loadUserProfile(session.user.id);
-      } else {
+      if (session?.user && !profileLoaded) {
+        await loadUserProfile(session.user.id, session.user);
+      } else if (!session?.user) {
         setUserProfile(null);
+        setProfileLoaded(false);
         setLoading(false);
       }
     });
@@ -72,23 +74,97 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadUserProfile = async (userId: string) => {
+  const loadUserProfile = async (userId: string, currentUser?: any) => {
+    if (profileLoaded) return; // Предотвращаем дублирование запросов
+    
     try {
-      const { data, error } = await supabase
+      // Делаем запрос к профилю с таймаутом
+      const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 5000)
+      );
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
       if (error) {
-        console.error('Error loading user profile:', error);
-        return;
-      }
+        // Если профиль не найден, создаем базовый профиль
+        if (error.code === 'PGRST116') {
+          try {
+            const { data: newProfile, error: createError } = await supabase
+              .from('user_profiles')
+              .insert([{
+                id: userId,
+                email: currentUser?.email || null,
+                full_name: currentUser?.user_metadata?.full_name || null,
+                company_name: currentUser?.user_metadata?.company_name || null,
+                phone: currentUser?.user_metadata?.phone || null
+              }])
+              .select()
+              .single();
 
-      setUserProfile(data);
+            if (createError) {
+              // Если создание профиля не удалось, создаем минимальный профиль локально
+              setUserProfile({
+                id: userId,
+                email: currentUser?.email || null,
+                full_name: currentUser?.user_metadata?.full_name || null,
+                avatar_url: null,
+                company_name: currentUser?.user_metadata?.company_name || null,
+                phone: currentUser?.user_metadata?.phone || null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            } else {
+              setUserProfile(newProfile);
+            }
+          } catch (createErr) {
+            // Fallback: создаем минимальный профиль локально
+            setUserProfile({
+              id: userId,
+              email: currentUser?.email || null,
+              full_name: currentUser?.user_metadata?.full_name || null,
+              avatar_url: null,
+              company_name: currentUser?.user_metadata?.company_name || null,
+              phone: currentUser?.user_metadata?.phone || null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          }
+        } else {
+          // Для других ошибок тоже создаем fallback профиль
+          setUserProfile({
+            id: userId,
+            email: currentUser?.email || null,
+            full_name: currentUser?.user_metadata?.full_name || null,
+            avatar_url: null,
+            company_name: currentUser?.user_metadata?.company_name || null,
+            phone: currentUser?.user_metadata?.phone || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      } else {
+        setUserProfile(data);
+      }
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      // Создаем fallback профиль для любых ошибок
+      setUserProfile({
+        id: userId,
+        email: currentUser?.email || null,
+        full_name: currentUser?.user_metadata?.full_name || null,
+        avatar_url: null,
+        company_name: currentUser?.user_metadata?.company_name || null,
+        phone: currentUser?.user_metadata?.phone || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     } finally {
+      setProfileLoaded(true);
       setLoading(false);
     }
   };

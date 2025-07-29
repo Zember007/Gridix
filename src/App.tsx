@@ -39,7 +39,6 @@ function App() {
               <Route path="/:lang/project/:projectId" element={<LanguageWrapper><ProjectWidgetPage /></LanguageWrapper>} />
               
               {/* Auth routes */}
-              <Route path="/auth" element={<AuthPage />} />
               <Route path="/:lang/auth" element={<LanguageWrapper><AuthPage /></LanguageWrapper>} />
               
               {/* Protected admin routes */}

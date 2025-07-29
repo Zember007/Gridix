@@ -1,15 +1,16 @@
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import ProjectEditor from '@/components/ProjectEditor';
+import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 const ProjectEditorPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
+  const { navigate } = useLanguageNavigation();
   
   const isNew = !projectId || projectId === 'new';
   const actualProjectId = isNew ? '' : projectId;
 
-  const handleBack = () => {
+  const goBack = () => {
     navigate('/admin');
   };
 
@@ -17,7 +18,7 @@ const ProjectEditorPage = () => {
     <ProjectEditor 
       projectId={actualProjectId}
       isNew={isNew}
-      onBack={handleBack}
+      onBack={goBack}
     />
   );
 };

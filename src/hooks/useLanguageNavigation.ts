@@ -1,4 +1,4 @@
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { addLanguageToPath, removeLanguageFromPath, getLanguageParam } from '@/lib/language-utils';
 
@@ -10,7 +10,6 @@ export const useLanguageNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
-  const { lang } = useParams<{ lang: string }>();
 
   /**
    * Navigate to a path with the current language prefix
@@ -38,7 +37,7 @@ export const useLanguageNavigation = () => {
    * Get current language parameter from URL
    */
   const getCurrentLanguageParam = () => {
-    return lang || getLanguageParam(language);
+    return getLanguageParam(language);
   };
 
   return {
