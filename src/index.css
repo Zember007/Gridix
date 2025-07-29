@@ -176,3 +176,62 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile optimizations */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Touch optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* SVG Touch optimizations */
+svg polygon {
+  touch-action: manipulation;
+}
+
+svg text {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Mobile interactive elements */
+@media (max-width: 768px) {
+  .apartment-available,
+  .apartment-sold,
+  .apartment-reserved {
+    stroke-width: 0.3 !important;
+  }
+  
+  .apartment-hover {
+    stroke-width: 0.4 !important;
+  }
+  
+  /* Larger touch targets on mobile */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better tap highlighting */
+  * {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Mobile responsive utilities */
+@media (max-width: 768px) {
+  .mobile-center {
+    text-align: center;
+  }
+  
+  .mobile-stack {
+    flex-direction: column;
+  }
+}

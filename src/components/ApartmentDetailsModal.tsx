@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 
 interface ApartmentDetailsModalProps {
@@ -14,6 +15,7 @@ interface ApartmentDetailsModalProps {
 
 const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsModalProps) => {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   if (!apartment) return null;
 
@@ -37,10 +39,10 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[90vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{t('apartment.number')} {apartment.apartment_number}</span>
+          <DialogTitle className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
+            <span className={isMobile ? 'text-lg' : ''}>{t('apartment.number')} {apartment.apartment_number}</span>
             <Badge className={getStatusColor(apartment.status)}>
               {getStatusLabel(apartment.status)}
             </Badge>
@@ -52,7 +54,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
           <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
           
           {/* Основная информация */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
             <div>
               <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.floor')}</h3>
               <p className="text-lg">{apartment.floor_number}</p>

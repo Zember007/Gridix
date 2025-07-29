@@ -5,10 +5,12 @@ import { Building2, Users, Settings, BarChart3, Upload, Eye } from 'lucide-react
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   const goToAdmin = () => {
     navigate('/admin');
@@ -19,16 +21,17 @@ const Index = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-real-estate-200">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
             <div className="flex items-center gap-3">
-              <Building2 className="h-8 w-8 text-real-estate-600" />
-              <h1 className="text-2xl font-bold text-real-estate-900">RealEstate SaaS</h1>
+              <Building2 className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} text-real-estate-600`} />
+              <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-real-estate-900`}>RealEstate SaaS</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={`flex ${isMobile ? 'justify-center' : ''} items-center gap-2`}>
               <LanguageToggle />
               <Button 
                 onClick={goToAdmin}
                 className="bg-real-estate-600 hover:bg-real-estate-700"
+                size={isMobile ? 'sm' : 'default'}
               >
                 {t('nav.admin')}
               </Button>
@@ -38,27 +41,27 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20">
+      <section className={`${isMobile ? 'py-12' : 'py-20'}`}>
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold text-real-estate-900 mb-6">
+          <h2 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold text-real-estate-900 mb-6`}>
             {t('landing.title')}
             <span className="block text-real-estate-600">{t('landing.subtitle')}</span>
           </h2>
-          <p className="text-xl text-real-estate-700 mb-8 max-w-3xl mx-auto">
+          <p className={`${isMobile ? 'text-base' : 'text-xl'} text-real-estate-700 mb-8 max-w-3xl mx-auto`}>
             {t('landing.description')}
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-4'} justify-center ${isMobile ? 'px-4' : ''}`}>
             <Button 
-              size="lg" 
-              className="bg-real-estate-600 hover:bg-real-estate-700 text-lg px-8 py-4"
+              size={isMobile ? 'default' : 'lg'} 
+              className={`bg-real-estate-600 hover:bg-real-estate-700 ${isMobile ? 'text-base px-6 py-3' : 'text-lg px-8 py-4'}`}
               onClick={goToAdmin}
             >
               {t('landing.getStarted')}
             </Button>
             <Button 
-              size="lg" 
+              size={isMobile ? 'default' : 'lg'} 
               variant="outline" 
-              className="border-real-estate-600 text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
+              className={`border-real-estate-600 text-real-estate-600 hover:bg-real-estate-50 ${isMobile ? 'text-base px-6 py-3' : 'text-lg px-8 py-4'}`}
             >
               {t('landing.viewDemo')}
             </Button>
@@ -67,12 +70,12 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-white/50">
+      <section className={`${isMobile ? 'py-12' : 'py-16'} bg-white/50`}>
         <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center text-real-estate-900 mb-12">
+          <h3 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-center text-real-estate-900 ${isMobile ? 'mb-8' : 'mb-12'}`}>
             {t('landing.features')}
           </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'md:grid-cols-2 lg:grid-cols-3 gap-8'}`}>
             <Card className="border-real-estate-200 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Upload className="h-12 w-12 text-real-estate-600 mb-4" />
@@ -137,17 +140,17 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-real-estate-600 to-real-estate-800">
+      <section className={`${isMobile ? 'py-12' : 'py-20'} bg-gradient-to-r from-real-estate-600 to-real-estate-800`}>
         <div className="container mx-auto px-4 text-center">
-          <h3 className="text-4xl font-bold text-white mb-6">
+          <h3 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold text-white mb-6`}>
             {t('landing.readyToStart')}
           </h3>
-          <p className="text-xl text-real-estate-100 mb-8 max-w-2xl mx-auto">
+          <p className={`${isMobile ? 'text-base' : 'text-xl'} text-real-estate-100 mb-8 max-w-2xl mx-auto`}>
             {t('landing.readyToStartDesc')}
           </p>
           <Button 
-            size="lg" 
-            className="bg-white text-real-estate-600 hover:bg-real-estate-50 text-lg px-8 py-4"
+            size={isMobile ? 'default' : 'lg'} 
+            className={`bg-white text-real-estate-600 hover:bg-real-estate-50 ${isMobile ? 'text-base px-6 py-3' : 'text-lg px-8 py-4'}`}
             onClick={goToAdmin}
           >
             {t('landing.enterAdmin')}
@@ -156,13 +159,13 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-real-estate-900 text-real-estate-100 py-8">
+      <footer className={`bg-real-estate-900 text-real-estate-100 ${isMobile ? 'py-6' : 'py-8'}`}>
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Building2 className="h-6 w-6" />
-            <span className="text-lg font-semibold">RealEstate SaaS</span>
+            <Building2 className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
+            <span className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>RealEstate SaaS</span>
           </div>
-          <p className="text-real-estate-300">
+          <p className={`text-real-estate-300 ${isMobile ? 'text-sm' : ''}`}>
             {t('landing.copyright')}
           </p>
         </div>

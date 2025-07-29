@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Search, Building2, Home, MapPin, Ruler, DollarSign, SlidersHorizontal, Calendar, Eye, List, Grid, Share, Heart, Maximize2, X } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
@@ -32,6 +34,7 @@ interface ProjectApartmentSelectorProps {
 
 const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApartmentSelectorProps) => {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   
   const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -45,8 +48,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list'>('facade');
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -193,168 +196,249 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     );
   }
 
+  // Filters component for reuse between mobile sheet and desktop inline
+  const FiltersContent = () => (
+    <div className={isMobile ? "space-y-6" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end"}>
+      {/* Rooms filter */}
+      <div className="space-y-2">
+        <Label>{t('project.rooms')}</Label>
+        <Select value={selectedRooms} onValueChange={setSelectedRooms}>
+          <SelectTrigger>
+            <SelectValue placeholder={t('project.allTypes')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+            {getUniqueRoomCounts().map(rooms => (
+              <SelectItem key={rooms} value={rooms.toString()}>
+                {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Floor filter (only for facade and list views) */}
+      {viewMode !== 'floor-plan' && (
+        <div className="space-y-2">
+          <Label>{t('project.floor')}</Label>
+          <Select value={selectedFloor} onValueChange={setSelectedFloor}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('project.allFloors')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('project.allFloors')}</SelectItem>
+              {getUniqueFloors().map(floor => (
+                <SelectItem key={floor} value={floor.toString()}>
+                  {floor} {t('project.floor').toLowerCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="space-y-2">
+        <Label>{t('common.search')}</Label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder={t('project.apartmentNumber')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Price range */}
+      <div className="space-y-2">
+        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
+        <Slider
+          value={priceRange}
+          onValueChange={setPriceRange}
+          max={maxPrice}
+          min={minPrice}
+          step={100000}
+          className="w-full"
+        />
+      </div>
+
+      {/* Area range */}
+      <div className="space-y-2">
+        <Label>{t('project.area')}: {areaRange[0]} - {areaRange[1]} м²</Label>
+        <Slider
+          value={areaRange}
+          onValueChange={setAreaRange}
+          max={maxArea}
+          min={minArea}
+          step={1}
+          className="w-full"
+        />
+      </div>
+
+      {/* Available only switch */}
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={showOnlyAvailable}
+          onCheckedChange={setShowOnlyAvailable}
+        />
+        <Label>{t('project.onlyAvailable')}</Label>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Top filters bar - always visible */}
+      {/* Top header bar - always visible */}
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 md:px-6 py-4">
           {/* View mode buttons */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={viewMode === 'facade' ? 'default' : 'outline'} 
-                size="sm" 
-                className={viewMode === 'facade' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                onClick={() => setViewMode('facade')}
-              >
-                <Building2 className="h-4 w-4 mr-1" />
-                {t('project.facade')}
-              </Button>
-              <Button 
-                variant={viewMode === 'floor-plan' ? 'default' : 'outline'} 
-                size="sm"
-                className={viewMode === 'floor-plan' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                onClick={() => setViewMode('floor-plan')}
-              >
-                <Grid className="h-4 w-4 mr-1" />
-                {t('project.floorPlan')}
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'} 
-                size="sm"
-                className={viewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4 mr-1" />
-                {t('project.listView')}
-              </Button>
+          <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'} mb-4`}>
+            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
+            <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
+                             <Button 
+                 variant={viewMode === 'facade' ? 'default' : 'outline'} 
+                 size="sm" 
+                 className={`${viewMode === 'facade' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                 onClick={() => setViewMode('facade')}
+               >
+                 <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                 {!isMobile && t('project.facade')}
+               </Button>
+               <Button 
+                 variant={viewMode === 'floor-plan' ? 'default' : 'outline'} 
+                 size="sm"
+                 className={`${viewMode === 'floor-plan' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                 onClick={() => setViewMode('floor-plan')}
+               >
+                 <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                 {!isMobile && t('project.floorPlan')}
+               </Button>
+               <Button 
+                 variant={viewMode === 'list' ? 'default' : 'outline'} 
+                 size="sm"
+                 className={`${viewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                 onClick={() => setViewMode('list')}
+               >
+                 <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                 {!isMobile && t('project.listView')}
+               </Button>
+               
+               {/* Mobile filters button */}
+               {isMobile && (
+                 <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                   <SheetTrigger asChild>
+                     <Button variant="outline" size="sm" className="text-xs px-2">
+                       <SlidersHorizontal className="h-3 w-3" />
+                     </Button>
+                   </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[80vh]">
+                    <SheetHeader>
+                      <SheetTitle>{t('project.filters')}</SheetTitle>
+                      <SheetDescription>
+                        {t('project.filtersDescription')}
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6 overflow-y-auto">
+                      <FiltersContent />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-            {/* Rooms filter */}
-            <div className="space-y-2">
-              <Label>{t('project.rooms')}</Label>
-              <Select value={selectedRooms} onValueChange={setSelectedRooms}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('project.allTypes')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('project.allTypes')}</SelectItem>
-                  {getUniqueRoomCounts().map(rooms => (
-                    <SelectItem key={rooms} value={rooms.toString()}>
-                      {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Floor filter (only for facade and list views) */}
-            {viewMode !== 'floor-plan' && (
-              <div className="space-y-2">
-                <Label>{t('project.floor')}</Label>
-                <Select value={selectedFloor} onValueChange={setSelectedFloor}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('project.allFloors')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('project.allFloors')}</SelectItem>
-                    {getUniqueFloors().map(floor => (
-                      <SelectItem key={floor} value={floor.toString()}>
-                        {floor} {t('project.floor').toLowerCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="space-y-2">
-              <Label>{t('common.search')}</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={t('project.apartmentNumber')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Price range */}
-            <div className="space-y-2">
-              <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
-              <Slider
-                value={priceRange}
-                onValueChange={setPriceRange}
-                max={maxPrice}
-                min={minPrice}
-                step={100000}
-                className="w-full"
-              />
-            </div>
-
-            {/* Available only switch */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={showOnlyAvailable}
-                onCheckedChange={setShowOnlyAvailable}
-              />
-              <Label>{t('project.onlyAvailable')}</Label>
-            </div>
-          </div>
+          {/* Desktop Filters */}
+          {!isMobile && (
+            <FiltersContent />
+          )}
         </div>
       </div>
 
       {/* Content based on view mode */}
       {viewMode === 'list' ? (
-        // List view - full screen list without hero section
-        <div className="container mx-auto px-6 py-8">
+        // List view - responsive layout
+        <div className="container mx-auto px-4 md:px-6 py-8">
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">{t('project.apartmentsList')}</h2>
-            <div className="space-y-4">
-              {/* Table header */}
-              <div className="grid grid-cols-5 gap-4 py-3 text-sm text-gray-500 border-b">
-                <div>{t('project.layout')}</div>
-                <div>{t('project.type')}</div>
-                <div>{t('project.area')}</div>
-                <div>{t('project.floor')}</div>
-                <div>{t('project.price')}</div>
-              </div>
-              
-              {/* Apartment rows */}
-              {filteredApartments.map((apartment) => (
-                <div key={apartment.id} className="grid grid-cols-5 gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="h-8 w-8 text-gray-400" />
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium">{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span>{apartment.area} м²</span>
-                  </div>
+            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
             
-                  <div className="flex items-center">
-                    <span>{apartment.floor_number} {t('project.of')} {project.floors}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div>
-                      <div className="font-bold text-lg">{apartment.price ? `${formatPrice(apartment.price)} ₽` : t('project.onRequest')}</div>
-                      <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
+            {isMobile ? (
+              // Mobile card layout
+              <div className="space-y-4">
+                {filteredApartments.map((apartment) => (
+                  <Card key={apartment.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <Building2 className="h-6 w-6 text-gray-400" />
+                          </div>
+                        </div>
+                        <div className="flex-grow space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-sm">
+                              {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                            </span>
+                            <Badge 
+                              variant={apartment.status === 'available' ? 'default' : 'secondary'}
+                              className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
+                            >
+                              {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div>{apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}</div>
+                            <div className="font-bold text-sm text-gray-900">
+                              {apartment.price ? `${formatPrice(apartment.price)} ₽` : t('project.onRequest')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              // Desktop table layout
+              <div className="space-y-4">
+                {/* Table header */}
+                <div className="hidden md:grid grid-cols-5 gap-4 py-3 text-sm text-gray-500 border-b">
+                  <div>{t('project.layout')}</div>
+                  <div>{t('project.type')}</div>
+                  <div>{t('project.area')}</div>
+                  <div>{t('project.floor')}</div>
+                  <div>{t('project.price')}</div>
+                </div>
+                
+                {/* Apartment rows */}
+                {filteredApartments.map((apartment) => (
+                  <div key={apartment.id} className="grid grid-cols-5 gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                    <div className="flex items-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Building2 className="h-8 w-8 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="font-medium">{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span>{apartment.area} м²</span>
+                    </div>
+              
+                    <div className="flex items-center">
+                      <span>{apartment.floor_number} {t('project.of')} {project.floors}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div>
+                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(apartment.price)} ₽` : t('project.onRequest')}</div>
+                        <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
+                      </div>
                     </div>
                   </div>
-           
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -380,12 +464,12 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                   />
                   
                   {/* Layout gallery below facade when not expanded */}
-                  <div className="container mx-auto px-6 py-8">
+                  <div className="container mx-auto px-4 md:px-6 py-8">
                     <div className="space-y-6">
-                      <h3 className="text-xl font-bold text-gray-900">{t('project.layouts')}</h3>
+                      <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h3>
                       
                       {/* Layout type filters */}
-                      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                         <Button
                           variant={selectedRooms === 'all' ? 'default' : 'outline'}
                           size="sm"
@@ -430,7 +514,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                       </div>
                       
                       {/* Layout cards grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
                         {(() => {
                           // Group apartments by type (rooms + area)
                           const layoutGroups: { [key: string]: Apartment[] } = {};
@@ -551,13 +635,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                 </div>
               )}
 
-              {/* Expand button */}
-              <Button
-                className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 rounded-full p-3"
-                onClick={() => setIsFullscreen(true)}
-              >
-                <Maximize2 className="h-5 w-5" />
-              </Button>
+     
             </div>
 
             {/* Floor selector for floor-plan mode */}
@@ -677,48 +755,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
         </>
       )}
 
-      {/* Fullscreen modal */}
-      {isFullscreen && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-          <Button
-            className="absolute top-4 right-4 bg-white text-black rounded-full p-2 z-10"
-            onClick={() => setIsFullscreen(false)}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          
-          <div className="w-full h-full p-8">
-            {viewMode === 'facade' ? (
-              <div className="w-full h-full bg-white rounded-lg">
-                <BuildingFacadeView
-                  projectId={projectId}
-                  project={project}
-                  apartments={filteredApartments}
-                  onFloorSelect={(floor) => {
-                    setSelectedFloorForPlan(floor);
-                    setViewMode('floor-plan');
-                    setIsFullscreen(false);
-                  }}
-                  onApartmentSelect={setSelectedApartment}
-                  filtersRef={filtersRef}
-                />
-              </div>
-            ) : (
-              <div className="w-full h-full bg-white rounded-lg p-4">
-                <ApartmentFloorPlan
-                  projectId={projectId}
-                  project={project}
-                  apartments={filteredApartments.filter(apt => 
-                    selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
-                  )}
-                  onApartmentSelect={setSelectedApartment}
-                  selectedFloorNumber={selectedFloorForPlan}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+
 
       <ApartmentDetailsModal
         apartment={selectedApartment}

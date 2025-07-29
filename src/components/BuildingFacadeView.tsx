@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Building2, Maximize2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -27,6 +28,7 @@ interface BuildingFloor {
 const COLLAPSED_HEIGHT = 288;
 
 const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef }: BuildingFacadeViewProps) => {
+  const isMobile = useIsMobile();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
@@ -39,12 +41,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const updateHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
       const filtersHeight = filtersRef.current.offsetHeight;
-      const newHeight = window.innerHeight - filtersHeight - 20; // 20px margin
-      setContainerHeight(Math.max(newHeight, 400));
+      const margin = isMobile ? 10 : 20;
+      const newHeight = window.innerHeight - filtersHeight - margin;
+      const minHeight = isMobile ? 300 : 400;
+      setContainerHeight(Math.max(newHeight, minHeight));
     } else {
-      setContainerHeight(COLLAPSED_HEIGHT);
+      const collapsedHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
+      setContainerHeight(collapsedHeight);
     }
-  }, [isExpanded, filtersRef]);
+  }, [isExpanded, filtersRef, isMobile]);
 
   const updateImageDimensions = useCallback(() => {
     if (imgRef.current && containerRef.current) {
@@ -143,6 +148,18 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
   };
 
+  const handleFloorTouch = (floorNumber: number) => {
+    // For mobile devices, show hover state on touch
+    if (isMobile) {
+      setHoveredFloor(floorNumber);
+      // Clear hover state after a delay
+      setTimeout(() => {
+        setHoveredFloor(null);
+      }, 1500);
+    }
+    handleFloorClick(floorNumber);
+  };
+
 
 
   // Находим границы всех полигонов для масштабирования
@@ -187,7 +204,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   return (
     <div
       ref={containerRef}
-      className={`relative w-full mx-auto h-[288px] transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'}`}
+      className={`relative w-full mx-auto transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'} ${isMobile ? 'touch-manipulation' : ''}`}
       style={{
         height: containerHeight,
         width: '100%',
@@ -243,12 +260,17 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   fill={statusColor}
                   fillOpacity={isHovered ? 0.6 : 0.4}
                   stroke={statusColor}
-                  strokeWidth={isHovered ? 0.3 : 0.2}
+                  strokeWidth={isHovered ? (isMobile ? 0.4 : 0.3) : (isMobile ? 0.3 : 0.2)}
                   className="cursor-pointer transition-all"
                   onClick={() => handleFloorClick(floor.floor_number)}
-                  onMouseEnter={() => setHoveredFloor(floor.floor_number)}
-                  onMouseLeave={() => setHoveredFloor(null)}
-                  style={{ pointerEvents: 'auto' }}
+                  onTouchStart={() => isMobile && setHoveredFloor(floor.floor_number)}
+                  onTouchEnd={() => handleFloorTouch(floor.floor_number)}
+                  onMouseEnter={() => !isMobile && setHoveredFloor(floor.floor_number)}
+                  onMouseLeave={() => !isMobile && setHoveredFloor(null)}
+                  style={{ 
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation'
+                  }}
                 />
                 <text
                   x={centerX}
@@ -256,7 +278,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   textAnchor="middle"
                   dominantBaseline="middle"
                   className="fill-white font-bold select-none pointer-events-none"
-                  fontSize={isHovered ? "4" : "3"}
+                  fontSize={
+                    isMobile 
+                      ? (isHovered ? "5" : "4") 
+                      : (isHovered ? "4" : "3")
+                  }
                   style={{ 
                     textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
                     filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.5))'
@@ -272,18 +298,24 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       
       {!isExpanded && (
         <button
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-4 flex items-center justify-center z-10"
+          className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full md:flex hidden items-center justify-center z-10 transition-all ${
+            isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+          }`}
           onClick={() => {setIsExpanded(true)}}
+          style={{ touchAction: 'manipulation' }}
         >
-          <Maximize2 className="h-7 w-7 text-gray-900" />
+          <Maximize2 className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-7 w-7'}`} />
         </button>
       )}
       {isExpanded && (
         <button
-          className="absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 flex items-center justify-center z-20"
+          className={`absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${
+            isMobile ? 'p-3 active:scale-95' : 'p-3 hover:scale-105'
+          }`}
           onClick={() => setIsExpanded(false)}
+          style={{ touchAction: 'manipulation' }}
         >
-          <X className="h-6 w-6 text-gray-900" />
+          <X className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-6 w-6'}`} />
         </button>
       )}
     </div>

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
-import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FloorPlanViewProps {
