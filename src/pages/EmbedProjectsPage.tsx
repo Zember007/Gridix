@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
 
 interface Project {
@@ -74,15 +75,16 @@ const EmbedProjectsPage = () => {
       <div className="bg-white border-b">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">НАШИ ПРОЕКТЫ</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t('embed.title')}</h1>
             <div className="flex items-center gap-2">
+              <LanguageToggle />
               <Button 
                 variant={viewMode === 'grid' ? 'default' : 'outline'} 
                 size="sm"
                 className={viewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('grid')}
               >
-                Плитка
+                {t('project.listView')}
               </Button>
               <Button 
                 variant={viewMode === 'map' ? 'default' : 'outline'} 
@@ -90,7 +92,7 @@ const EmbedProjectsPage = () => {
                 className={viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('map')}
               >
-                На карте
+                {t('gallery.open')}
               </Button>
             </div>
           </div>
@@ -102,14 +104,14 @@ const EmbedProjectsPage = () => {
               <SlidersHorizontal className="h-4 w-4 text-gray-600" />
               <Select defaultValue="all">
                 <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Параметры" />
+                  <SelectValue placeholder={t('project.parameters')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все параметры</SelectItem>
-                  <SelectItem value="studio">Студия</SelectItem>
-                  <SelectItem value="1">1 комната</SelectItem>
-                  <SelectItem value="2">2 комнаты</SelectItem>
-                  <SelectItem value="3">3 комнаты</SelectItem>
+                  <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+                  <SelectItem value="studio">{t('apartment.studio')}</SelectItem>
+                  <SelectItem value="1">1 {t('apartment.room')}</SelectItem>
+                  <SelectItem value="2">2 {t('apartment.rooms')}</SelectItem>
+                  <SelectItem value="3">3 {t('apartment.rooms')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -119,13 +121,13 @@ const EmbedProjectsPage = () => {
               <DollarSign className="h-4 w-4 text-gray-600" />
               <Select defaultValue="all">
                 <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Стоимость" />
+                  <SelectValue placeholder={t('gallery.cost')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Любая стоимость</SelectItem>
-                  <SelectItem value="low">До 100 000$</SelectItem>
-                  <SelectItem value="medium">100 000$ - 200 000$</SelectItem>
-                  <SelectItem value="high">От 200 000$</SelectItem>
+                  <SelectItem value="all">{t('gallery.anyCost')}</SelectItem>
+                  <SelectItem value="low">{t('gallery.upTo5M')}</SelectItem>
+                  <SelectItem value="medium">{t('gallery.from5To10M')}</SelectItem>
+                  <SelectItem value="high">{t('gallery.from10M')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -135,25 +137,25 @@ const EmbedProjectsPage = () => {
               <Calendar className="h-4 w-4 text-gray-600" />
               <Select defaultValue="all">
                 <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Срок сдачи" />
+                  <SelectValue placeholder={t('gallery.salesStart')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Любой срок</SelectItem>
-                  <SelectItem value="2024">2024 год</SelectItem>
-                  <SelectItem value="2025">2025 год</SelectItem>
-                  <SelectItem value="2026">2026 год</SelectItem>
+                  <SelectItem value="all">{t('gallery.salesStart')}</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                  <SelectItem value="2025">2025</SelectItem>
+                  <SelectItem value="2026">2026</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Reset filters */}
             <Button variant="ghost" size="sm" className="text-gray-600">
-              Сбросить фильтр
+              {t('filters.resetFilters')}
             </Button>
 
             {/* Main CTA */}
             <Button className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ml-auto">
-              Смотреть {projects.length} вариантов
+              {t('project.viewApartments', { count: projects.length })}
             </Button>
           </div>
         </div>
@@ -164,7 +166,7 @@ const EmbedProjectsPage = () => {
         {/* Grid view */}
         {projects.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-500">Проекты не найдены</p>
+            <p className="text-gray-500">{t('embed.noProjects')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -186,16 +188,16 @@ const EmbedProjectsPage = () => {
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                       <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700">
-                        Рассрочка 0%
+                        {t('gallery.installment0')}
                       </div>
                       <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700">
-                        первый взнос от 5%
+                        {t('gallery.downPayment')}
                       </div>
                     </div>
 
                     <div className="absolute bottom-4 left-4">
                       <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-white">
-                        <div className="text-xs opacity-80">старт продаж</div>
+                        <div className="text-xs opacity-80">{t('gallery.salesStart')}</div>
                       </div>
                     </div>
                   </div>
@@ -207,7 +209,7 @@ const EmbedProjectsPage = () => {
                     </h3>
                     
                     <div className="text-gray-600 text-sm mb-4">
-                      ОТ {Math.floor(Math.random() * 2000) + 1000}$ М²
+                      {t('gallery.from')} {Math.floor(Math.random() * 2000) + 1000}$ {t('apartment.sqm')}
                     </div>
 
                     {project.address && (
@@ -222,7 +224,7 @@ const EmbedProjectsPage = () => {
                       className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white py-3 rounded-lg font-medium"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      Смотреть квартиры
+                      {t('embed.viewApartments')}
                     </Button>
                   </div>
                 </CardContent>

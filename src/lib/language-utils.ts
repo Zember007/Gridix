@@ -21,7 +21,7 @@ export const LANGUAGE_CONFIG = {
   }
 } as const;
 
-export const DEFAULT_LANGUAGE: Language = 'ru';
+export const DEFAULT_LANGUAGE: Language = 'en';
 
 export const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_CONFIG) as Language[];
 

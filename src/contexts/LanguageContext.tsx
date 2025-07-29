@@ -8,7 +8,8 @@ import {
   addLanguageToPath,
   removeLanguageFromPath,
   getLanguageParam,
-  DEFAULT_LANGUAGE
+  DEFAULT_LANGUAGE,
+  LANGUAGE_CONFIG
 } from '@/lib/language-utils';
 
 interface Translations {
@@ -950,6 +951,43 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     // Navigate to new URL
     navigate(newPath, { replace: true });
+  };
+
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    const translation = translations[key]?.[language] || key;
+    
+    if (params) {
+      return Object.keys(params).reduce((text, param) => {
+        return text.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
+      }, translation);
+    }
+    
+    return translation;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+// Embed Language Provider for standalone widgets (without URL routing)
+export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  // Initialize language from localStorage or default
+  const [language, setLanguageState] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem('embed-language');
+    if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
+      return savedLanguage as Language;
+    }
+    return DEFAULT_LANGUAGE;
+  });
+
+  const setLanguage = (newLanguage: Language) => {
+    if (newLanguage === language) return;
+    
+    setLanguageState(newLanguage);
+    localStorage.setItem('embed-language', newLanguage);
   };
 
   const t = (key: string, params?: Record<string, string | number>): string => {

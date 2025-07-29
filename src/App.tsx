@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider, EmbedLanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DEFAULT_LANGUAGE, getLanguagePrefix } from "@/lib/language-utils";
 import LanguageWrapper from "@/components/LanguageWrapper";
@@ -27,45 +27,47 @@ function App() {
         <Toaster />
         <BrowserRouter>
           <AuthProvider>
-            <LanguageProvider>
-              <Routes>
+            <Routes>
               {/* Default route - redirect to default language */}
               <Route path="/" element={<Navigate to={getLanguagePrefix(DEFAULT_LANGUAGE)} replace />} />
 
               {/* Language-specific routes with :lang parameter */}
-              <Route path="/:lang" element={<LanguageWrapper><Index /></LanguageWrapper>} />
-              <Route path="/:lang/projects" element={<LanguageWrapper><ProjectsGalleryPage /></LanguageWrapper>} />
-              <Route path="/:lang/widget/:projectId" element={<LanguageWrapper><ProjectWidgetPage /></LanguageWrapper>} />
-              <Route path="/:lang/project/:projectId" element={<LanguageWrapper><ProjectWidgetPage /></LanguageWrapper>} />
+              <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/projects" element={<LanguageProvider><LanguageWrapper><ProjectsGalleryPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/widget/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
               
               {/* Auth routes */}
-              <Route path="/:lang/auth" element={<LanguageWrapper><AuthPage /></LanguageWrapper>} />
+              <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={
-                <LanguageWrapper>
-                  <ProtectedRoute>
-                    <AdminPage />
-                  </ProtectedRoute>
-                </LanguageWrapper>
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
               } />
               <Route path="/:lang/admin/project/:projectId" element={
-                <LanguageWrapper>
-                  <ProtectedRoute>
-                    <ProjectEditorPage />
-                  </ProtectedRoute>
-                </LanguageWrapper>
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <ProjectEditorPage />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
               } />
 
-              {/* Embed routes without language prefix */}
-              <Route path="/embed/projects" element={<EmbedProjectsPage />} />
-              <Route path="/embed/project/:projectId" element={<ProjectWidgetPage embedMode={true} />} />
-              <Route path="/embed/projects-map" element={<EmbedProjectsMap />} />
+              {/* Embed routes without language prefix but with EmbedLanguageProvider */}
+              <Route path="/embed/projects" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
+              <Route path="/embed/project/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage embedMode={true} /></EmbedLanguageProvider>} />
+              <Route path="/embed/projects-map" element={<EmbedLanguageProvider><EmbedProjectsMap /></EmbedLanguageProvider>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
-              </Routes>
-            </LanguageProvider>
+            </Routes>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

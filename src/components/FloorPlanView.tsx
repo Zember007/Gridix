@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import PolygonEditor from './polygon-editor/PolygonEditor';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -22,6 +23,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadFloorPlan();
@@ -156,15 +158,15 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
         <div className="mt-4 flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-blue-600 rounded opacity-60"></div>
-            <span>Доступно</span>
+            <span>{t('project.available')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-yellow-600 rounded opacity-60"></div>
-            <span>Забронировано</span>
+            <span>{t('project.reserved')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-red-600 rounded opacity-60"></div>
-            <span>Продано</span>
+            <span>{t('project.sold')}</span>
           </div>
         </div>
       </CardContent>

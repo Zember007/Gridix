@@ -25,11 +25,9 @@ const ProjectWidgetPage = ({ embedMode = false }: ProjectWidgetPageProps) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {!embedMode && (
-        <div className="flex justify-end p-4">
-          <LanguageToggle />
-        </div>
-      )}
+      <div className="flex justify-end p-4">
+        <LanguageToggle />
+      </div>
       <ProjectApartmentSelector projectId={projectId} embedMode={embedMode} />
     </div>
   );
