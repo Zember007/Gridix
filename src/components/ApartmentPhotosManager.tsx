@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Image as ImageIcon, Copy, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload, Image as ImageIcon, Copy, Trash2, Layout, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import LayoutPhotosManager from './LayoutPhotosManager';
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -191,14 +193,27 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Управление фотографиями квартир</CardTitle>
-          <CardDescription>
-            Загружайте фотографии для квартир и дублируйте их между этажами
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Tabs defaultValue="apartments" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="apartments" className="flex items-center gap-2">
+            <Home className="h-4 w-4" />
+            Индивидуальные фотографии
+          </TabsTrigger>
+          <TabsTrigger value="layouts" className="flex items-center gap-2">
+            <Layout className="h-4 w-4" />
+            Фотографии планировок
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="apartments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Управление фотографиями квартир</CardTitle>
+              <CardDescription>
+                Загружайте индивидуальные фотографии для конкретных квартир
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
           <div>
             <Label htmlFor="apartment-select">Выберите квартиру</Label>
             <Select value={selectedApartment} onValueChange={setSelectedApartment}>
@@ -276,6 +291,12 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+        
+        <TabsContent value="layouts">
+          <LayoutPhotosManager projectId={projectId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

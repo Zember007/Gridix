@@ -15,6 +15,7 @@ interface ApartmentFloorPlanProps {
   };
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
+  selectedFloorNumber?: number;
 }
 
 interface BuildingFloor {
@@ -24,20 +25,16 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
-  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
 
   useEffect(() => {
     loadBuildingFloors();
   }, [projectId]);
 
-  useEffect(() => {
-    if (buildingFloors.length > 0 && selectedFloor === null) {
-      setSelectedFloor(buildingFloors[0].floor_number);
-    }
-  }, [buildingFloors]);
+  // Определяем выбранный этаж: используем переданный prop или первый доступный этаж
+  const selectedFloor = selectedFloorNumber || (buildingFloors.length > 0 ? buildingFloors[0].floor_number : null);
 
   const loadBuildingFloors = async () => {
     try {

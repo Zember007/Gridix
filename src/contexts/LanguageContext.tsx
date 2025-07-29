@@ -185,11 +185,6 @@ const translations: Translations = {
     en: 'Installment from $700',
     ka: 'განვადებით $700-დან'
   },
-  'project.blackFrame': {
-    ru: 'Черный каркас',
-    en: 'Black frame',
-    ka: 'შავი ჩარჩო'
-  },
   'project.showMore': {
     ru: 'Показать еще {{count}} из {{total}} вариантов',
     en: 'Show {{count}} more of {{total}} options',

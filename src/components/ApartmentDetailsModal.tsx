@@ -49,7 +49,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
         
         <div className="space-y-6">
           {/* Фотографии квартиры */}
-          <ApartmentPhotosViewer apartmentId={apartment.id} />
+          <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
           
           {/* Основная информация */}
           <div className="grid grid-cols-2 gap-4">

@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, Image as ImageIcon, Layout } from 'lucide-react';
 
 interface ApartmentPhoto {
   id: string;
@@ -13,30 +14,95 @@ interface ApartmentPhoto {
   order_index: number;
 }
 
-interface ApartmentPhotosViewerProps {
-  apartmentId: string;
+interface LayoutPhoto {
+  id: string;
+  project_id: string;
+  layout_type: string;
+  image_url: string;
+  description?: string;
+  order_index: number;
 }
 
-const ApartmentPhotosViewer = ({ apartmentId }: ApartmentPhotosViewerProps) => {
-  const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
+interface CombinedPhoto {
+  id: string;
+  image_url: string;
+  description?: string;
+  order_index: number;
+  type: 'layout' | 'apartment';
+}
+
+interface ApartmentPhotosViewerProps {
+  apartmentId: string;
+  projectId?: string;
+}
+
+const ApartmentPhotosViewer = ({ apartmentId, projectId }: ApartmentPhotosViewerProps) => {
+  const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPhotos();
-  }, [apartmentId]);
+  }, [apartmentId, projectId]);
+
+  const getLayoutType = (rooms: number): string => {
+    return rooms === 0 ? 'studio' : `${rooms}-room`;
+  };
 
   const loadPhotos = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      
+      // Загружаем информацию о квартире
+      const { data: apartmentData, error: apartmentError } = await supabase
+        .from('apartments')
+        .select('rooms, project_id')
+        .eq('id', apartmentId)
+        .single();
+
+      if (apartmentError) throw apartmentError;
+
+      const currentProjectId = projectId || apartmentData.project_id;
+      const layoutType = getLayoutType(apartmentData.rooms);
+
+      // Загружаем фотографии планировки
+      const { data: layoutPhotos, error: layoutError } = await supabase
+        .from('layout_photos')
+        .select('*')
+        .eq('project_id', currentProjectId)
+        .eq('layout_type', layoutType)
+        .order('order_index', { ascending: true });
+
+      if (layoutError) throw layoutError;
+
+      // Загружаем индивидуальные фотографии квартиры
+      const { data: apartmentPhotos, error: apartmentPhotosError } = await supabase
         .from('apartment_photos')
         .select('*')
         .eq('apartment_id', apartmentId)
         .order('order_index', { ascending: true });
 
-      if (error) throw error;
+      if (apartmentPhotosError) throw apartmentPhotosError;
       
-      setPhotos(data || []);
+      // Объединяем фотографии: сначала планировки, затем индивидуальные
+      const combinedPhotos: CombinedPhoto[] = [
+        ...(layoutPhotos || []).map((photo: LayoutPhoto) => ({
+          id: photo.id,
+          image_url: photo.image_url,
+          description: photo.description,
+          order_index: photo.order_index,
+          type: 'layout' as const
+        })),
+        ...(apartmentPhotos || []).map((photo: ApartmentPhoto) => ({
+          id: photo.id,
+          image_url: photo.image_url,
+          description: photo.description,
+          order_index: photo.order_index,
+          type: 'apartment' as const
+        }))
+      ];
+      
+      setPhotos(combinedPhotos);
       setCurrentPhotoIndex(0);
     } catch (error) {
       console.error('Error loading photos:', error);
@@ -87,6 +153,21 @@ const ApartmentPhotosViewer = ({ apartmentId }: ApartmentPhotosViewerProps) => {
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
             className="w-full h-64 object-cover rounded-lg"
           />
+          
+          {/* Бейдж для типа фотографии */}
+          <Badge 
+            variant={photos[currentPhotoIndex].type === 'layout' ? 'default' : 'secondary'}
+            className="absolute top-2 left-2"
+          >
+            {photos[currentPhotoIndex].type === 'layout' ? (
+              <>
+                <Layout className="h-3 w-3 mr-1" />
+                Планировка
+              </>
+            ) : (
+              'Квартира'
+            )}
+          </Badge>
           
           {photos.length > 1 && (
             <>

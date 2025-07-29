@@ -302,15 +302,47 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         }
 
         if (apartments.length > 0) {
+          // Удаляем существующие квартиры на целевом этаже
           await supabase
             .from('apartments')
             .delete()
             .eq('project_id', projectId)
             .eq('floor_number', targetFloor);
 
+          // Получаем все существующие номера квартир в проекте для проверки уникальности
+          const { data: existingApartments } = await supabase
+            .from('apartments')
+            .select('apartment_number')
+            .eq('project_id', projectId);
+          
+          const existingNumbers = new Set(existingApartments?.map(apt => apt.apartment_number) || []);
+
           for (const apt of apartments) {
-            const baseNumber = apt.apartment_number.replace(/^\d+/, '');
-            const newApartmentNumber = `${targetFloor}${baseNumber.padStart(2, '0')}`;
+            // Улучшенная логика генерации номера квартиры
+            let newApartmentNumber: string;
+            
+            // Пытаемся сначала создать номер в формате этаж + номер квартиры
+            const originalNumber = apt.apartment_number;
+            
+            // Если номер уже начинается с номера этажа, заменяем этаж
+            if (originalNumber.startsWith(floorNumber.toString())) {
+              const apartmentPart = originalNumber.substring(floorNumber.toString().length);
+              newApartmentNumber = `${targetFloor}${apartmentPart}`;
+            } else {
+              // Иначе добавляем номер этажа в начало
+              newApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}`;
+            }
+
+            // Проверяем уникальность и при необходимости генерируем новый номер
+            let counter = 1;
+            let finalApartmentNumber = newApartmentNumber;
+            while (existingNumbers.has(finalApartmentNumber)) {
+              finalApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}_${counter}`;
+              counter++;
+            }
+
+            // Добавляем новый номер в набор для следующих проверок
+            existingNumbers.add(finalApartmentNumber);
 
             try {
               await supabase
@@ -318,7 +350,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 .insert({
                   project_id: projectId,
                   floor_number: targetFloor,
-                  apartment_number: newApartmentNumber,
+                  apartment_number: finalApartmentNumber,
                   rooms: apt.rooms,
                   area: apt.area,
                   price: apt.price,
@@ -326,7 +358,11 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   polygon: apt.polygon as any
                 });
             } catch (error) {
-              console.error('Error inserting apartment:', error);
+              console.error('Error inserting apartment:', error, {
+                apartmentNumber: finalApartmentNumber,
+                targetFloor,
+                originalNumber
+              });
             }
           }
         }

@@ -46,7 +46,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list'>('facade');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number>(1);
+  const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
   useEffect(() => {
     // Set default floor when apartments load
-    if (apartments.length > 0 && selectedFloorForPlan === 1) {
+    if (apartments.length > 0 && selectedFloorForPlan === null) {
       const uniqueFloors = getUniqueFloors();
       if (uniqueFloors.length > 0) {
         setSelectedFloorForPlan(uniqueFloors[0]);
@@ -319,19 +319,17 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
             <h2 className="text-2xl font-bold text-gray-900">{t('project.apartmentsList')}</h2>
             <div className="space-y-4">
               {/* Table header */}
-              <div className="grid grid-cols-7 gap-4 py-3 text-sm text-gray-500 border-b">
+              <div className="grid grid-cols-5 gap-4 py-3 text-sm text-gray-500 border-b">
                 <div>{t('project.layout')}</div>
                 <div>{t('project.type')}</div>
                 <div>{t('project.area')}</div>
-                <div>{t('project.location')}</div>
                 <div>{t('project.floor')}</div>
                 <div>{t('project.price')}</div>
-                <div>{t('project.finishing')}</div>
               </div>
               
               {/* Apartment rows */}
               {filteredApartments.map((apartment) => (
-                <div key={apartment.id} className="grid grid-cols-7 gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                <div key={apartment.id} className="grid grid-cols-5 gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
                   <div className="flex items-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                       <Building2 className="h-8 w-8 text-gray-400" />
@@ -343,9 +341,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                   <div className="flex items-center">
                     <span>{apartment.area} м²</span>
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-gray-600">{t('project.sampleLocation')}</span>
-                  </div>
+            
                   <div className="flex items-center">
                     <span>{apartment.floor_number} {t('project.of')} {project.floors}</span>
                   </div>
@@ -355,17 +351,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                       <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-gray-600">{t('project.blackFrame')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Share className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                  </div>
+           
                 </div>
               ))}
             </div>
@@ -474,7 +460,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                             return (
                               <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
                                 <div className="aspect-[4/3] bg-gray-100 relative">
-                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} />
+                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} projectId={projectId} />
                                   
                                   {/* Status badge */}
                                   <div className="absolute top-2 right-2 z-10">
@@ -557,9 +543,10 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                     projectId={projectId}
                     project={project}
                     apartments={filteredApartments.filter(apt => 
-                      selectedFloorForPlan ? apt.floor_number === selectedFloorForPlan : true
+                      selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
                     )}
                     onApartmentSelect={setSelectedApartment}
+                    selectedFloorNumber={selectedFloorForPlan}
                   />
                 </div>
               )}
@@ -606,30 +593,18 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                   {/* Apartment Layout Images */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-gray-900">{t('project.layouts')}</h3>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms}-${t('apartment.rooms')}`}
+                      </h3>
                       <Button variant="ghost" size="sm" onClick={() => setSelectedApartment(null)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    
-                    {/* Layout type filter buttons */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-[#1E1E1E] text-white"
-                      >
-                        {t('apartment.studio')}
-                      </Button>
-                      <Button variant="outline" size="sm" className="border-gray-300">1</Button>
-                      <Button variant="outline" size="sm" className="border-gray-300">2</Button>
-                      <Button variant="outline" size="sm" className="border-gray-300">3</Button>
-                      <Button variant="outline" size="sm" className="border-gray-300">4+</Button>
-                    </div>
+                  
                     
                                          {/* Apartment Photos Viewer */}
                      <div className="space-y-4">
-                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} />
+                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} />
                      </div>
                   </div>
 
@@ -655,14 +630,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                         <div className="text-sm text-gray-500">{t('project.floor')}</div>
                         <div className="font-semibold text-lg">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
                       </div>
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-500">{t('project.location')}</div>
-                        <div className="font-semibold">{t('project.sampleLocation')}</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-500">{t('project.finishing')}</div>
-                        <div className="font-semibold">{t('project.blackFrame')}</div>
-                      </div>
+                   
+                    
                     </div>
 
                     {/* Price */}
@@ -740,9 +709,10 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                   projectId={projectId}
                   project={project}
                   apartments={filteredApartments.filter(apt => 
-                    selectedFloorForPlan ? apt.floor_number === selectedFloorForPlan : true
+                    selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
                   )}
                   onApartmentSelect={setSelectedApartment}
+                  selectedFloorNumber={selectedFloorForPlan}
                 />
               </div>
             )}
