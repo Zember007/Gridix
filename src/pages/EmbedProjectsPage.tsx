@@ -92,7 +92,8 @@ const EmbedProjectsPage = () => {
                 className={viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('map')}
               >
-                {t('gallery.open')}
+                {/* {t('gallery.open')} */}
+                На карте
               </Button>
             </div>
           </div>
