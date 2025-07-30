@@ -30,6 +30,7 @@ const ProjectSyncManager = ({ projectId }: ProjectSyncManagerProps) => {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastSyncWarnings, setLastSyncWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     loadSyncStatus();
@@ -92,13 +93,21 @@ const ProjectSyncManager = ({ projectId }: ProjectSyncManagerProps) => {
     setIsUpdating(true);
     try {
       // Вызываем edge function для синхронизации
-      const { error } = await supabase.functions.invoke('sync-project-data', {
+      const { data, error } = await supabase.functions.invoke('sync-project-data', {
         body: { projectId, syncId: syncStatus.id }
       });
 
       if (error) throw error;
 
-      toast.success('Синхронизация запущена');
+      // Сохраняем предупреждения о статусах если они есть
+      if (data?.data?.statusValidationWarnings && data.data.statusValidationWarnings.length > 0) {
+        setLastSyncWarnings(data.data.statusValidationWarnings);
+        toast.warning(`Синхронизация завершена с предупреждениями о статусах (${data.data.statusValidationWarnings.length})`);
+      } else {
+        setLastSyncWarnings([]);
+        toast.success('Синхронизация выполнена успешно');
+      }
+      
       // Обновляем статус через несколько секунд
       setTimeout(loadSyncStatus, 3000);
     } catch (error) {
@@ -225,6 +234,22 @@ const ProjectSyncManager = ({ projectId }: ProjectSyncManagerProps) => {
             <p className="text-sm text-red-700">
               <strong>Ошибка:</strong> {syncStatus.error_message}
             </p>
+          </div>
+        )}
+
+        {lastSyncWarnings.length > 0 && (
+          <div className="bg-yellow-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-yellow-800 mb-2">
+              <AlertCircle className="h-4 w-4" />
+              <span className="font-medium">Предупреждения о статусах ({lastSyncWarnings.length})</span>
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {lastSyncWarnings.map((warning, index) => (
+                <p key={index} className="text-xs text-yellow-700">
+                  {warning}
+                </p>
+              ))}
+            </div>
           </div>
         )}
 

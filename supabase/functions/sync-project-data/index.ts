@@ -67,6 +67,7 @@ serve(async (req) => {
     let recordsAdded = 0;
     let recordsUpdated = 0;
     let recordsDeleted = 0;
+    let statusValidationWarnings: string[] = [];
 
     for (const row of excelData) {
       recordsProcessed++;
@@ -76,11 +77,45 @@ serve(async (req) => {
       const price = parseFloat(row[mapping.price] || row["price"] || 0) || 0;
       const floorNumber = parseInt(row[mapping.floor] || row["floor"] || 1) || 1;
       const rooms = parseInt(row[mapping.rooms] || row["rooms"] || 1) || 1;
-      const statusRaw = (row[mapping.status] || row["status"] || "").toString().toLowerCase();
+      const statusRaw = (row[mapping.status] || row["status"] || "").toString().toLowerCase().trim();
+      
+      // Улучшенная валидация статусов
       let status = "available";
-      if (["sold", "продана", "продано", "нет", "n", "0"].includes(statusRaw)) status = "sold";
-      else if (["reserved", "забронирована", "забронировано", "hold", "резерв", "1"].includes(statusRaw)) status = "reserved";
-      // Можно добавить больше условий по необходимости
+      let statusValidationWarning = "";
+      
+      const statusMapping: { [key: string]: string } = {
+        // Статус "продана"
+        "sold": "sold",
+        "продана": "sold", 
+        "продано": "sold",
+        "нет": "sold",
+        "n": "sold",
+        "0": "sold",
+        "no": "sold",
+        // Статус "забронирована"
+        "reserved": "reserved",
+        "забронирована": "reserved",
+        "забронировано": "reserved", 
+        "hold": "reserved",
+        "резерв": "reserved",
+        "1": "reserved",
+        // Статус "свободна"
+        "available": "available",
+        "свободна": "available",
+        "свободно": "available",
+        "да": "available",
+        "yes": "available",
+        "2": "available"
+      };
+
+      if (statusRaw && statusMapping[statusRaw]) {
+        status = statusMapping[statusRaw];
+      } else if (statusRaw) {
+        // Неизвестный статус - логируем предупреждение
+        statusValidationWarning = `Неизвестный статус "${statusRaw}" для квартиры ${apartmentNumber}, используется "available"`;
+        console.warn(statusValidationWarning);
+        statusValidationWarnings.push(statusValidationWarning);
+      }
 
       if (!apartmentNumber) continue;
 
@@ -174,17 +209,19 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        stats: {
+        message: `Синхронизация завершена успешно`,
+        data: {
           recordsProcessed,
           recordsAdded,
           recordsUpdated,
           recordsDeleted,
-          executionTime
+          executionTime,
+          statusValidationWarnings
         }
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
 

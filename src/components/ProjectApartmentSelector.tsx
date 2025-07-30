@@ -641,10 +641,10 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
             {/* Floor selector for floor-plan mode */}
             {viewMode === 'floor-plan' && (
               <div className="bg-white border-b py-4">
-                <div className="container mx-auto px-6">
-                  <div className="flex items-center justify-center gap-2">
+                <div className="mx-auto px-6">
+                  <div className="flex items-center justify-center gap-2 flex-col">
                     <Label className="text-sm font-medium">{t('project.selectFloor')}:</Label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getUniqueFloors().map(floor => (
                         <Button
                           key={floor}
@@ -736,17 +736,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                       </Button>
                     </div>
 
-                    {/* Additional actions */}
-                    <div className="flex items-center justify-center gap-4 pt-2">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                        <Share className="h-4 w-4" />
-                        <span className="text-sm">Поделиться</span>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                        <Heart className="h-4 w-4" />
-                        <span className="text-sm">В избранное</span>
-                      </Button>
-                    </div>
+                    
                   </div>
                 </div>
               </div>

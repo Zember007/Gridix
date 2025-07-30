@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle, ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { Check, AlertCircle, ArrowRight, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CustomFieldsManager from '@/components/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -43,6 +44,17 @@ interface CustomField {
   field_options?: string[];
 }
 
+interface StatusMapping {
+  [key: string]: 'available' | 'sold' | 'reserved' | 'invalid';
+}
+
+interface StatusValidationResult {
+  validCount: number;
+  invalidCount: number;
+  invalidStatuses: string[];
+  statusDistribution: { [key: string]: number };
+}
+
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     apartmentNumber: '',
@@ -63,6 +75,29 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [tempProjectId, setTempProjectId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const { navigate } = useLanguageNavigation();
+
+  // Status validation states
+  const [statusMapping, setStatusMapping] = useState<StatusMapping>({
+    'available': 'available',
+    'свободна': 'available',
+    'свободно': 'available',
+    'да': 'available',
+    'yes': 'available',
+    '1': 'available',
+    'sold': 'sold', 
+    'продана': 'sold',
+    'продано': 'sold',
+    'нет': 'sold',
+    'no': 'sold',
+    '0': 'sold',
+    'reserved': 'reserved',
+    'забронирована': 'reserved',
+    'забронировано': 'reserved',
+    'hold': 'reserved',
+    'резерв': 'reserved'
+  });
+  const [statusValidation, setStatusValidation] = useState<StatusValidationResult | null>(null);
+  const [showStatusValidation, setShowStatusValidation] = useState(false);
 
   const fieldLabels = {
     apartmentNumber: 'Номер квартиры',
@@ -98,6 +133,69 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       console.error('Error creating temp project:', error);
     }
   };
+
+  // Status validation functions
+  const validateStatuses = () => {
+    if (!columnMapping.status || columnMapping.status === '__none__') {
+      setStatusValidation(null);
+      return;
+    }
+
+    const statusDistribution: { [key: string]: number } = {};
+    const invalidStatuses: string[] = [];
+    let validCount = 0;
+    let invalidCount = 0;
+
+    importedData.forEach((row) => {
+      const statusValue = String(row[columnMapping.status] || '').toLowerCase().trim();
+      
+      if (!statusValue) return;
+
+      // Подсчитываем распределение статусов
+      statusDistribution[statusValue] = (statusDistribution[statusValue] || 0) + 1;
+
+      // Проверяем валидность статуса
+      if (statusMapping[statusValue] && statusMapping[statusValue] !== 'invalid') {
+        validCount++;
+      } else {
+        invalidCount++;
+        if (!invalidStatuses.includes(statusValue)) {
+          invalidStatuses.push(statusValue);
+        }
+      }
+    });
+
+    setStatusValidation({
+      validCount,
+      invalidCount,
+      invalidStatuses,
+      statusDistribution
+    });
+  };
+
+  const updateStatusMapping = (originalValue: string, mappedValue: 'available' | 'sold' | 'reserved' | 'invalid') => {
+    setStatusMapping(prev => ({
+      ...prev,
+      [originalValue.toLowerCase()]: mappedValue
+    }));
+  };
+
+  const addCustomStatusMapping = (originalValue: string) => {
+    if (!originalValue.trim()) return;
+    
+    const key = originalValue.toLowerCase().trim();
+    if (!statusMapping[key]) {
+      setStatusMapping(prev => ({
+        ...prev,
+        [key]: 'available' // по умолчанию
+      }));
+    }
+  };
+
+  // Валидируем статусы при изменении маппинга колонки статуса
+  useEffect(() => {
+    validateStatuses();
+  }, [columnMapping.status, statusMapping, importedData]);
 
   const handleCustomFieldsChange = (fields: CustomField[]) => {
     setCustomFields(fields);
@@ -209,9 +307,18 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         const price = columnMapping.price && columnMapping.price !== '__none__' 
           ? (parseInt(String(row[columnMapping.price])) || 0) 
           : 0;
-        const status = columnMapping.status && columnMapping.status !== '__none__' 
-          ? (String(row[columnMapping.status]) || 'available') 
-          : 'available';
+        
+        // Используем валидацию статусов
+        let status: 'available' | 'sold' | 'reserved' = 'available';
+        if (columnMapping.status && columnMapping.status !== '__none__') {
+          const statusValue = String(row[columnMapping.status] || '').toLowerCase().trim();
+          const mappedStatus = statusMapping[statusValue];
+          if (mappedStatus && mappedStatus !== 'invalid') {
+            status = mappedStatus;
+          } else if (statusValue) {
+            console.warn(`Неизвестный статус "${statusValue}" для квартиры ${apartmentNumber}, используется "available"`);
+          }
+        }
 
         // Собираем кастомные поля
         const customFieldsData: Record<string, any> = {};
@@ -236,7 +343,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           }
         });
 
-        console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}`);
+        console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}, статус ${status}`);
 
         return {
           project_id: project.id,
@@ -244,10 +351,9 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           floor_number: floorNumber,
           rooms: rooms,
           area: area,
-          price: price,
-          status: status === 'продана' || status === 'sold' ? 'sold' : 
-                 status === 'забронирована' || status === 'reserved' ? 'reserved' : 'available',
-          polygon: [], // Пустой полигон, будет заполнен позже при редактировании
+          price: price || null,
+          status: status,
+          polygon: [],
           custom_fields: customFieldsData
         };
       });
@@ -405,6 +511,166 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           </div>
         </CardContent>
       </Card>
+
+      {/* Валидация статусов */}
+      {columnMapping.status && columnMapping.status !== '__none__' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Валидация статусов квартир
+              {statusValidation && statusValidation.invalidCount > 0 && (
+                <Badge variant="destructive" className="flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {statusValidation.invalidCount} неизвестных
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              Настройте соответствие значений статусов из Excel к стандартным статусам
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {statusValidation && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{statusValidation.validCount}</div>
+                  <div className="text-sm text-gray-600">Валидных статусов</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{statusValidation.invalidCount}</div>
+                  <div className="text-sm text-gray-600">Неизвестных статусов</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{Object.keys(statusValidation.statusDistribution).length}</div>
+                  <div className="text-sm text-gray-600">Уникальных значений</div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Настройка мапинга статусов</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStatusValidation(!showStatusValidation)}
+                >
+                  {showStatusValidation ? 'Скрыть детали' : 'Показать детали'}
+                </Button>
+              </div>
+
+              {showStatusValidation && (
+                <div className="space-y-4 border rounded-lg p-4">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Распределение статусов в данных:</Label>
+                    {statusValidation && Object.entries(statusValidation.statusDistribution).map(([value, count]) => {
+                      const currentMapping = statusMapping[value.toLowerCase()];
+                      const isInvalid = !currentMapping || currentMapping === 'invalid';
+                      
+                      return (
+                        <div key={value} className="flex items-center gap-4 p-3 border rounded-lg bg-white">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">"{value}"</span>
+                              <Badge variant="outline" className="text-xs">
+                                {count} шт.
+                              </Badge>
+                              {isInvalid && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Неизвестный
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <ArrowRight className="h-4 w-4 text-gray-400" />
+                            <Select
+                              value={currentMapping || 'invalid'}
+                              onValueChange={(mappedValue: 'available' | 'sold' | 'reserved' | 'invalid') => 
+                                updateStatusMapping(value, mappedValue)
+                              }
+                            >
+                              <SelectTrigger className="w-40">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="available">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                    Свободна
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="reserved">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                                    Забронирована
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="sold">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                                    Продана
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="invalid">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-gray-500 rounded"></div>
+                                    Игнорировать
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <Label className="text-sm font-medium">Добавить новый мапинг:</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        placeholder="Значение из Excel"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            addCustomStatusMapping(e.currentTarget.value);
+                            e.currentTarget.value = '';
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          addCustomStatusMapping(input.value);
+                          input.value = '';
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {statusValidation && statusValidation.invalidCount > 0 && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-yellow-800">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="font-medium">Внимание!</span>
+                  </div>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Обнаружены неизвестные статусы: {statusValidation.invalidStatuses.join(', ')}. 
+                    Квартиры с неизвестными статусами будут импортированы со статусом "Свободна".
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Предварительный просмотр данных */}
       <Card>

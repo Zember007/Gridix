@@ -38,6 +38,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // Floor popup state
+  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+
   const updateHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
       const filtersHeight = filtersRef.current.offsetHeight;
@@ -98,6 +103,25 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     return () => resizeObserver.disconnect();
   }, [updateImageDimensions]);
 
+  // Handle escape key to close popup
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showPopup) {
+        setShowPopup(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showPopup]);
+
+  // Close popup when switching between expanded/collapsed modes
+  useEffect(() => {
+    if (showPopup && !isExpanded) {
+      setShowPopup(false);
+    }
+  }, [isExpanded, showPopup]);
+
   const loadBuildingFloors = async () => {
     try {
       setLoading(true);
@@ -127,6 +151,20 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     return apartments.filter(apt => apt.floor_number === floorNumber);
   };
 
+  const getFloorStats = (floorNumber: number) => {
+    const floorApartments = getFloorApartments(floorNumber);
+    const available = floorApartments.filter(apt => apt.status === 'available').length;
+    const sold = floorApartments.filter(apt => apt.status === 'sold').length;
+    const reserved = floorApartments.filter(apt => apt.status === 'reserved').length;
+    
+    return {
+      total: floorApartments.length,
+      available,
+      sold,
+      reserved
+    };
+  };
+
   const getFloorStatusColor = (floorNumber: number) => {
     const floorApartments = getFloorApartments(floorNumber);
     if (floorApartments.length === 0) return '#6b7280';
@@ -135,6 +173,103 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     if (availableCount === totalCount) return '#22c55e';
     if (availableCount === 0) return '#ef4444';
     return '#f59e0b';
+  };
+
+  // Floor Popup Component
+  const FloorPopup = ({ floorNumber, position }: { floorNumber: number; position: { x: number; y: number } }) => {
+    const stats = getFloorStats(floorNumber);
+    
+    // Position popup to the left of the polygon
+    const popupWidth = 256; // min-w-64 = 16rem = 256px
+    const popupHeight = 160; // estimated height
+    const margin = 20;
+    
+    // Позиционируем слева от полигона с отступом
+    let adjustedX = position.x - popupWidth - 20;
+    let adjustedY = position.y;
+    
+    // Проверяем границы экрана и корректируем при необходимости
+    if (adjustedX < margin) {
+      // Если слева не помещается, показываем справа от полигона
+      adjustedX = position.x + 20;
+    }
+    
+    // Центрируем всплывающее окно по вертикали относительно позиции полигона
+    adjustedY = position.y - popupHeight / 2;
+    
+    // Проверяем вертикальные границы
+    if (adjustedY < margin) {
+      adjustedY = margin;
+    } else if (adjustedY + popupHeight > window.innerHeight - margin) {
+      adjustedY = window.innerHeight - popupHeight - margin;
+    }
+    
+    const isOnRight = position.x - popupWidth - 20 < margin;
+    
+    return (
+      <div
+        className="absolute z-30 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64"
+        style={{
+          left: adjustedX,
+          top: adjustedY,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {floorNumber} этаж
+          </h3>
+          <button
+            onClick={() => setShowPopup(false)}
+            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Всего квартир:</span>
+            <span className="font-medium">{stats.total}</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            <div className="text-center">
+              <div className="w-3 h-3 bg-green-500 rounded mx-auto mb-1"></div>
+              <div className="text-xs text-gray-600">Свободные</div>
+              <div className="font-semibold text-green-600">{stats.available}</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-3 h-3 bg-yellow-500 rounded mx-auto mb-1"></div>
+              <div className="text-xs text-gray-600">Забронированные</div>
+              <div className="font-semibold text-yellow-600">{stats.reserved}</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-3 h-3 bg-red-500 rounded mx-auto mb-1"></div>
+              <div className="text-xs text-gray-600">Проданные</div>
+              <div className="font-semibold text-red-600">{stats.sold}</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Стрелка указывающая на полигон */}
+        {!isOnRight ? (
+          // Стрелка справа (попап слева от полигона)
+          <div className="absolute top-1/2 left-full transform -translate-y-1/2">
+            <div className="w-0 h-0 border-t-8 border-b-8 border-l-8 border-t-transparent border-b-transparent border-l-white"></div>
+            <div className="w-0 h-0 border-t-8 border-b-8 border-l-8 border-t-transparent border-b-transparent border-l-gray-200 -ml-px"></div>
+          </div>
+        ) : (
+          // Стрелка слева (попап справа от полигона)
+          <div className="absolute top-1/2 right-full transform -translate-y-1/2">
+            <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-gray-200"></div>
+            <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-white ml-px"></div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleFloorClick = (floorNumber: number) => {
@@ -148,8 +283,72 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
   };
 
-  const handleFloorTouch = (floorNumber: number) => {
-    // For mobile devices, show hover state on touch
+  const handleFloorHover = (floorNumber: number, event: React.MouseEvent) => {
+    if (isMobile || !isExpanded) return; // Показываем только в расширенном режиме на десктопе
+    
+    if (!containerRef.current) return;
+    
+    // Находим полигон для данного этажа
+    const floor = buildingFloors.find(f => f.floor_number === floorNumber);
+    if (!floor || !floor.polygon || floor.polygon.length === 0) return;
+    
+    // Вычисляем границы полигона
+    const polygonBounds = {
+      minX: Math.min(...floor.polygon.map(p => p.x)),
+      maxX: Math.max(...floor.polygon.map(p => p.x)),
+      minY: Math.min(...floor.polygon.map(p => p.y)),
+      maxY: Math.max(...floor.polygon.map(p => p.y))
+    };
+    
+    // Преобразуем координаты полигона из процентов SVG в пиксели контейнера
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
+    // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
+    let svgLeft, svgTop, svgWidth, svgHeight;
+    
+    if (isExpanded && imgDimensions.width > 0) {
+      svgWidth = imgDimensions.width;
+      svgHeight = imgDimensions.height;
+      svgLeft = (containerRect.width - svgWidth) / 2;
+      svgTop = (containerRect.height - svgHeight) / 2;
+    } else {
+      // В свернутом режиме используем размеры контейнера
+      svgWidth = containerRect.width;
+      svgHeight = containerRect.height;
+      svgLeft = 0;
+      svgTop = 0;
+    }
+    
+    // Переводим проценты полигона в пиксели
+    const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth;
+    const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
+    
+    setSelectedFloor(floorNumber);
+    setPopupPosition({ x: polygonLeftPx, y: polygonCenterY });
+    setShowPopup(true);
+  };
+
+  const handleFloorLeave = () => {
+    if (isMobile || !isExpanded) return;
+    setShowPopup(false);
+  };
+
+  const handleSVGFloorClick = (floorNumber: number) => {
+    // Закрываем попап если он открыт
+    setShowPopup(false);
+    // Выполняем обычное действие клика
+    handleFloorClick(floorNumber);
+  };
+
+  const handleSVGFloorHover = (floorNumber: number, event: React.MouseEvent<SVGPolygonElement>) => {
+    if (isMobile || !isExpanded) return;
+    
+    setHoveredFloor(floorNumber);
+    handleFloorHover(floorNumber, event);
+  };
+
+  const handleFloorTouch = (floorNumber: number, event?: React.TouchEvent) => {
+    // For mobile devices, show hover state on touch and then navigate
     if (isMobile) {
       setHoveredFloor(floorNumber);
       // Clear hover state after a delay
@@ -160,6 +359,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     handleFloorClick(floorNumber);
   };
 
+  // Close popup when clicking outside
+  const handleContainerClick = (event: React.MouseEvent) => {
+    if (showPopup && event.target === event.currentTarget) {
+      setShowPopup(false);
+    }
+  };
 
 
   // Находим границы всех полигонов для масштабирования
@@ -243,15 +448,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               .map(point => `${point.x},${point.y}`)
               .join(' ');
               
-            console.log(`Floor ${floor.floor_number} polygon:`, floor.polygon, 'points:', points);
 
-            const floorApartments = getFloorApartments(floor.floor_number);
             const statusColor = getFloorStatusColor(floor.floor_number);
             const isHovered = hoveredFloor === floor.floor_number;
             
-            // Центр полигона для текста
-            const centerX = floor.polygon.reduce((sum, p) => sum + p.x, 0) / floor.polygon.length;
-            const centerY = floor.polygon.reduce((sum, p) => sum + p.y, 0) / floor.polygon.length;
+            
             
             return (
               <g key={floor.id}>
@@ -262,34 +463,35 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   stroke={statusColor}
                   strokeWidth={isHovered ? (isMobile ? 0.4 : 0.3) : (isMobile ? 0.3 : 0.2)}
                   className="cursor-pointer transition-all"
-                  onClick={() => handleFloorClick(floor.floor_number)}
-                  onTouchStart={() => isMobile && setHoveredFloor(floor.floor_number)}
-                  onTouchEnd={() => handleFloorTouch(floor.floor_number)}
-                  onMouseEnter={() => !isMobile && setHoveredFloor(floor.floor_number)}
-                  onMouseLeave={() => !isMobile && setHoveredFloor(null)}
+                  onClick={(e) => handleSVGFloorClick(floor.floor_number)}
+                  onTouchStart={(e) => {
+                    if (isMobile) {
+                      setHoveredFloor(floor.floor_number);
+                      handleFloorTouch(floor.floor_number, e);
+                    }
+                  }}
+                  onTouchEnd={() => {
+                    if (isMobile) {
+                      setTimeout(() => setHoveredFloor(null), 1500);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isMobile && isExpanded) {
+                      handleSVGFloorHover(floor.floor_number, e);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (!isMobile && isExpanded) {
+                      setHoveredFloor(null);
+                      handleFloorLeave();
+                    }
+                  }}
                   style={{ 
                     pointerEvents: 'auto',
                     touchAction: 'manipulation'
                   }}
                 />
-                <text
-                  x={centerX}
-                  y={centerY}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="fill-white font-bold select-none pointer-events-none"
-                  fontSize={
-                    isMobile 
-                      ? (isHovered ? "5" : "4") 
-                      : (isHovered ? "4" : "3")
-                  }
-                  style={{ 
-                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                    filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.5))'
-                  }}
-                >
-                  {floor.floor_number}
-                </text>
+             
               </g>
             );
           })}
@@ -317,6 +519,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         >
           <X className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-6 w-6'}`} />
         </button>
+      )}
+      {showPopup && selectedFloor !== null && popupPosition && (
+        <FloorPopup floorNumber={selectedFloor} position={popupPosition} />
       )}
     </div>
   );
