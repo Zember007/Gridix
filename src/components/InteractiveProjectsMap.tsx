@@ -83,12 +83,11 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId }: Interact
   };
 
   const handleViewProject = (projectId: string) => {
-    window.open(`/widget/${projectId}`, '_blank');
+    window.open(`/embed/project/${projectId}`, '_blank');
   };
 
   const handleMarkerClick = (project: Project) => {
     setSelectedProject(project);
-    onProjectSelect?.(project);
   };
 
   if (loading) {
