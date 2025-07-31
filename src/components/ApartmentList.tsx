@@ -5,14 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Home, Maximize, Banknote, MapPin } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { useProjectCurrency } from '@/hooks/useProjectCache';
 
 interface ApartmentListProps {
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
+  projectId?: string; // Добавляем ID проекта для получения информации о валюте
 }
 
-const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) => {
+const ApartmentList = ({ apartments, onApartmentSelect, projectId }: ApartmentListProps) => {
   const { t } = useLanguage();
+  const { currency, loading: currencyLoading } = useProjectCurrency(projectId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,7 +38,7 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
 
   const formatPrice = (price: number | null) => {
     if (!price) return t('common.priceOnRequest');
-    return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
+    return formatPriceWithCurrency(price, currency);
   };
 
   if (apartments.length === 0) {
@@ -105,7 +109,7 @@ const ApartmentList = ({ apartments, onApartmentSelect }: ApartmentListProps) =>
                     <div className="flex items-center gap-1">
                       <Banknote className="h-3 w-3" />
                       <span className="text-xs">
-                        {Math.round(apartment.price / apartment.area).toLocaleString('ru-RU')} ₽/м²
+                        {formatPriceWithCurrency(apartment.price / apartment.area, currency)}
                       </span>
                     </div>
                   )}

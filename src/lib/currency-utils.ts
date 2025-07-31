@@ -57,3 +57,20 @@ export const formatPrice = (price: number, currency: CurrencyType): string => {
 export const isValidCurrency = (currency: string): currency is CurrencyType => {
   return Object.keys(CURRENCIES).includes(currency as CurrencyType);
 };
+
+export const getCurrencySymbolSafe = (currency: string | null): string => {
+  if (!currency) return '₽'; // Default to ruble if no currency specified
+  return isValidCurrency(currency) ? getCurrencySymbol(currency) : '₽';
+};
+
+export const formatPriceWithCurrency = (price: number, currency: string | null, locale: string = 'ru-RU'): string => {
+  if (!price) return 'Цена по запросу';
+  
+  const symbol = getCurrencySymbolSafe(currency);
+  const formatter = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  
+  return `${formatter.format(price)} ${symbol}`;
+};

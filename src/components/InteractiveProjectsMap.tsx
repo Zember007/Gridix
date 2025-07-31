@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
 
 interface Project {
   id: string;
   name: string;
   description: string | null;
   address: string | null;
-  floors: number;
   building_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  currency: string | null;
+  min_price: number | null;
 }
 
 interface InteractiveProjectsMapProps {
@@ -58,41 +60,16 @@ const FitBounds = ({ projects }: { projects: Project[] }) => {
 };
 
 const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: InteractiveProjectsMapProps) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { t } = useLanguage();
-
-  useEffect(() => {
-    loadProjects();
-  }, [userId]);
-
-  const loadProjects = async () => {
-    try {
-      let query = supabase
-        .from('projects')
-        .select('id, name, description, address, floors, building_image_url, latitude, longitude')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null);
-
-      // Если указан userId, фильтруем по пользователю
-      if (userId) {
-        query = query.eq('user_id', userId).eq('is_public', true);
-      } else {
-        // Иначе показываем только публичные проекты
-        query = query.eq('is_public', true);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  // Используем оптимизированный хук для получения проектов
+  const { projects: allProjects, loading, error } = useProjectsWithPrices(userId);
+  
+  // Фильтруем проекты только с координатами для отображения на карте
+  const projects = allProjects.filter(project => 
+    project.latitude !== null && project.longitude !== null
+  );
 
   const handleViewProject = (projectId: string) => {
     window.open(`/embed/project/${projectId}`, '_blank');
@@ -120,88 +97,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
     : [41.7151, 44.8271] as [number, number]; // Тбилиси как дефолт
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header with filters */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">НАШИ ПРОЕКТЫ</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="border-gray-300">
-                Плитка
-              </Button>
-              <Button variant="default" size="sm" className="bg-[#1E1E1E] text-white">
-                На карте
-              </Button>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Parameters filter */}
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
-              <SlidersHorizontal className="h-4 w-4 text-gray-600" />
-              <Select defaultValue="all">
-                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Параметры" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все параметры</SelectItem>
-                  <SelectItem value="studio">Студия</SelectItem>
-                  <SelectItem value="1">1 комната</SelectItem>
-                  <SelectItem value="2">2 комнаты</SelectItem>
-                  <SelectItem value="3">3 комнаты</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Price filter */}
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
-              <DollarSign className="h-4 w-4 text-gray-600" />
-              <Select defaultValue="all">
-                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Стоимость" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Любая стоимость</SelectItem>
-                  <SelectItem value="low">До 100 000$</SelectItem>
-                  <SelectItem value="medium">100 000$ - 200 000$</SelectItem>
-                  <SelectItem value="high">От 200 000$</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Delivery date filter */}
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border">
-              <Calendar className="h-4 w-4 text-gray-600" />
-              <Select defaultValue="all">
-                <SelectTrigger className="border-0 shadow-none h-auto p-0 bg-transparent">
-                  <SelectValue placeholder="Срок сдачи" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Любой срок</SelectItem>
-                  <SelectItem value="2024">2024 год</SelectItem>
-                  <SelectItem value="2025">2025 год</SelectItem>
-                  <SelectItem value="2026">2026 год</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Reset filters */}
-            <Button variant="ghost" size="sm" className="text-gray-600">
-              Сбросить фильтр
-            </Button>
-
-            {/* Main CTA */}
-            <Button className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ml-auto">
-              Смотреть {projects.length} вариантов
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Map */}
-      <div className="relative h-[80vh]">
+    <div className="relative h-[80vh]">
         <MapContainer
           center={mapCenter}
           zoom={10}
@@ -251,7 +147,11 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
                     )}
                     
                     <div className="text-sm text-gray-600 mb-3">
-                      ОТ {Math.floor(Math.random() * 2000) + 1000}$ М²
+                      {project.min_price ? (
+                        <>ОТ {formatPriceWithCurrency(project.min_price, project.currency)}</>
+                      ) : (
+                        <span className="text-gray-400">Цена по запросу</span>
+                      )}
                     </div>
                     
                     <Button
@@ -302,7 +202,11 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
                     )}
                     
                     <div className="text-sm text-gray-600 mb-4">
-                      ОТ {Math.floor(Math.random() * 2000) + 1000}$ М²
+                      {selectedProject.min_price ? (
+                        <>ОТ {formatPriceWithCurrency(selectedProject.min_price, selectedProject.currency)}</>
+                      ) : (
+                        <span className="text-gray-400">Цена по запросу</span>
+                      )}
                     </div>
                     
                     <Button
@@ -319,7 +223,6 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
           </div>
         )}
       </div>
-    </div>
   );
 };
 

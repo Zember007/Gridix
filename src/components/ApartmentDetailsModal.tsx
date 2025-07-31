@@ -6,6 +6,8 @@ import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
+
 
 interface ApartmentDetailsModalProps {
   apartment: Apartment | null;
@@ -70,7 +72,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
             {apartment.price && (
               <div>
                 <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
-                <p className="text-lg font-semibold">{apartment.price.toLocaleString()} ₽</p>
+                <p className="text-lg font-semibold">{apartment.price.toLocaleString()} </p>
               </div>
             )}
           </div>

@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,68 +8,34 @@ import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
 
 interface Project {
   id: string;
   name: string;
   description: string | null;
   address: string | null;
-  floors: number;
   building_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  currency: string | null;
+  min_price: number | null;
 }
 
 const EmbedProjectsPage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-  const [userNotFound, setUserNotFound] = useState(false);
   const { t } = useLanguage();
-
-  useEffect(() => {
-    if (userId) {
-      loadProjects();
-    }
-  }, [userId]);
-
-  const loadProjects = async () => {
-    if (!userId) return;
-
-    try {
-      // Сначала проверяем существует ли пользователь
-      const { data: userProfile, error: userError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (userError || !userProfile) {
-        setUserNotFound(true);
-        setLoading(false);
-        return;
-      }
-
-      // Загружаем проекты пользователя
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, description, address, floors, building_image_url, latitude, longitude')
-        .eq('user_id', userId)
-        .eq('is_public', true) // Показываем только публичные проекты
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  // Используем объединенный оптимизированный хук
+  const { projects, loading, error, userExists } = useProjectsWithPrices(userId);
+  
+  // Состояние для отображения
+  const userNotFound = userExists === false;
 
   const handleViewProject = (projectId: string) => {
-    window.open(`/widget/${projectId}`, '_blank');
+    window.open(`/embed/project/${projectId}`, '_blank');
   };
 
   if (loading) {
@@ -93,16 +58,7 @@ const EmbedProjectsPage = () => {
   }
 
   // Если выбран режим карты, отображаем InteractiveProjectsMap
-  if (viewMode === 'map') {
-    return (
-      <InteractiveProjectsMap
-        userId={userId}
-        onProjectSelect={(project) => {
-          handleViewProject(project.id);
-        }}
-      />
-    );
-  }
+  
 
   return (
     <div className="min-h-screen bg-white">
@@ -197,7 +153,18 @@ const EmbedProjectsPage = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-6 py-8">
+     
+
+      {
+viewMode === 'map' ?
+    <InteractiveProjectsMap
+      userId={userId}
+      onProjectSelect={(project) => {
+        handleViewProject(project.id);
+      }}
+    />
+ :
+ <div className="container mx-auto px-6 py-8">
         {/* Grid view */}
         {projects.length === 0 ? (
           <div className="text-center py-16">
@@ -244,7 +211,13 @@ const EmbedProjectsPage = () => {
                     </h3>
                     
                     <div className="text-gray-600 text-sm mb-4">
-                      {t('gallery.from')} {Math.floor(Math.random() * 2000) + 1000}$ {t('apartment.sqm')}
+                      {project.min_price !== null ? (
+                        <>
+                          {t('gallery.from')} {formatPriceWithCurrency(project.min_price, project.currency)}
+                        </>
+                      ) : (
+                        <span className="text-gray-400">{t('gallery.priceOnRequest')}</span>
+                      )}
                     </div>
 
                     {project.address && (
@@ -268,6 +241,7 @@ const EmbedProjectsPage = () => {
           </div>
         )}
       </div>
+      }
     </div>
   );
 };

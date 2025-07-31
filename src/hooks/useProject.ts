@@ -13,6 +13,7 @@ interface Project {
   latitude: number | null;
   longitude: number | null;
   slug: string | null;
+  currency: string | null;
   is_public: boolean;
   is_featured: boolean;
   view_count: number;
