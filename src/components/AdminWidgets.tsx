@@ -186,24 +186,24 @@ const AdminWidgets = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Прямые ссылки</CardTitle>
+          <CardTitle>{t('adminWidgets.links')}</CardTitle>
           <CardDescription>
-            Используйте эти ссылки для прямого доступа к виджетам
+            {t('adminWidgets.linksDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Галерея всех проектов:</Label>
+            <Label>{t('adminWidgets.allProjects')}</Label>
             <div className="flex items-center gap-2">
               <Input
-                value={`${window.location.origin}/embed/projects`}
+                value={`${window.location.origin}/embed/projects/${user?.id}`}
                 readOnly
                 className="bg-gray-50"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`${window.location.origin}/embed/projects`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/embed/projects/${user?.id}`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
@@ -212,7 +212,7 @@ const AdminWidgets = () => {
 
           {selectedProject !== 'all' && (
             <div className="space-y-2">
-              <Label>Выбранный проект:</Label>
+              <Label>{t('adminWidgets.selectedProject')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   value={`${window.location.origin}/embed/project/${selectedProject}`}

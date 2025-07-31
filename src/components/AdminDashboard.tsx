@@ -8,6 +8,7 @@ import ProjectList from './ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
 import ProjectCreationModal from './ProjectCreationModal';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -59,6 +60,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
               </div>
             </div>
+            <LanguageToggle />
           </div>
         </div>
       </div>

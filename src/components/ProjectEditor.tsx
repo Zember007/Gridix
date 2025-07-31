@@ -14,6 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
@@ -35,6 +38,7 @@ interface Project {
   building_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
+  currency: CurrencyType;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -46,7 +50,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     floors: 1,
     building_image_url: null,
     latitude: null,
-    longitude: null
+    longitude: null,
+    currency: DEFAULT_CURRENCY
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -82,7 +87,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         floors: data.floors || 1,
         building_image_url: data.building_image_url,
         latitude: data.latitude,
-        longitude: data.longitude
+        longitude: data.longitude,
+        currency: data.currency || DEFAULT_CURRENCY
       });
     } catch (error) {
       console.error('Error loading project:', error);
@@ -119,6 +125,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         building_image_url: project.building_image_url,
         latitude: project.latitude,
         longitude: project.longitude,
+        currency: project.currency,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -246,26 +253,29 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     <div className="min-h-screen bg-background">
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                {t('projectEditor.back')}
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {isNew ? t('projectEditor.newProject') : project.name}
-                </h1>
-                <p className="text-muted-foreground">
-                  {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
-                </p>
+                      <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={onBack}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t('projectEditor.back')}
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    {isNew ? t('projectEditor.newProject') : project.name}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <LanguageToggle />
+                <Button onClick={handleSave} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? t('projectEditor.saving') : t('projectEditor.save')}
+                </Button>
               </div>
             </div>
-            <Button onClick={handleSave} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? t('projectEditor.saving') : t('projectEditor.save')}
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -340,28 +350,44 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="latitude">Широта (latitude)</Label>
+                  <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>
                   <Input
                     id="latitude"
                     type="number"
                     step="0.000001"
                     value={project.latitude ?? ''}
                     onChange={(e) => setProject(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder="Например: 55.7558"
+                    placeholder={t('projectEditor.latitudePlaceholder')}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Пример: 55.7558 (Москва)</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.latitudeExample')}</p>
                 </div>
                 <div>
-                  <Label htmlFor="longitude">Долгота (longitude)</Label>
+                  <Label htmlFor="longitude">{t('projectEditor.longitude')}</Label>
                   <Input
                     id="longitude"
                     type="number"
                     step="0.000001"
                     value={project.longitude ?? ''}
                     onChange={(e) => setProject(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder="Например: 37.6176"
+                    placeholder={t('projectEditor.longitudePlaceholder')}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Пример: 37.6176 (Москва)</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.longitudeExample')}</p>
+                </div>
+                <div>
+                  <Label htmlFor="currency">{t('projectEditor.currency')}</Label>
+                  <Select value={project.currency} onValueChange={(value: CurrencyType) => setProject(prev => ({ ...prev, currency: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('projectEditor.currency')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(CURRENCIES).map(([code, info]) => (
+                        <SelectItem key={code} value={code}>
+                          {t(info.translationKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -379,9 +405,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Планы этажей</CardTitle>
+                  <CardTitle>{t('projectEditor.floorPlans')}</CardTitle>
                   <CardDescription>
-                    Управление планировками этажей. Нажмите на этаж для редактирования.
+                    {t('projectEditor.floorPlansDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

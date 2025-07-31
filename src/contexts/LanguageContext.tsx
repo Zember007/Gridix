@@ -87,6 +87,11 @@ const translations: Translations = {
     en: 'Contact Manager',
     ka: 'დაკავშირება მენეჯერთან'
   },
+  'project.contactManagerNotConfigured': {
+    ru: 'Контактная информация менеджера не настроена',
+    en: 'Manager contact information not configured',
+    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული'
+  },
   'project.backToBuilding': {
     ru: 'Назад к зданию',
     en: 'Back to Building',
@@ -1157,6 +1162,26 @@ const translations: Translations = {
     en: 'Loading...',
     ka: 'ჩატვირთვა...'
   },
+  'adminWidgets.links': {
+    ru: 'Прямые ссылки',
+    en: 'Direct links',
+    ka: 'პირდაპირი ბმულები'
+  },
+  'adminWidgets.linksDesc': {
+    ru: 'Используйте эти ссылки для прямого доступа к виджетам',
+    en: 'Use these links to access the widgets directly',
+    ka: 'ვიჯეტების პირდაპირი წვდომისთვის გამოიყენეთ ეს ბმულები'
+  },
+  'adminWidgets.selectedProject': {
+    ru: 'Выбранный проект',
+    en: 'Selected project',
+    ka: 'აირჩილა პროექტი'
+  },
+  'adminWidgets.allProjectsDesc': {
+    ru: 'Галерея всех проектов',
+    en: 'Gallery of all projects',
+    ka: 'ყველა პროექტის გალერეა'
+  },
 
   // Interactive Map
   'map.loading': {
@@ -1238,6 +1263,210 @@ const translations: Translations = {
     ru: 'Фото',
     en: 'Photos',
     ka: 'ფოტოები'
+  },
+  'projectEditor.latitude': {
+    ru: 'Широта (latitude)',
+    en: 'Latitude',
+    ka: 'განედი'
+  },
+  'projectEditor.longitude': {
+    ru: 'Долгота (longitude)',
+    en: 'Longitude',
+    ka: 'გრძედი'
+  },
+  'projectEditor.latitudePlaceholder': {
+    ru: 'Например: 55.7558',
+    en: 'Example: 55.7558',
+    ka: 'მაგალითი: 55.7558'
+  },
+  'projectEditor.longitudePlaceholder': {
+    ru: 'Например: 37.6176',
+    en: 'Example: 37.6176',
+    ka: 'მაგალითი: 37.6176'
+  },
+  'projectEditor.latitudeExample': {
+    ru: 'Пример: 55.7558 (Москва)',
+    en: 'Example: 55.7558 (Moscow)',
+    ka: 'მაგალითი: 55.7558 (მოსკოვი)'
+  },
+  'projectEditor.longitudeExample': {
+    ru: 'Пример: 37.6176 (Москва)',
+    en: 'Example: 37.6176 (Moscow)',
+    ka: 'მაგალითი: 37.6176 (მოსკოვი)'
+  },
+  'projectEditor.floorPlans': {
+    ru: 'Планы этажей',
+    en: 'Floor plans',
+    ka: 'სართულების გეგმები'
+  },
+  'projectEditor.floorPlansDesc': {
+    ru: 'Управление планировками этажей. Нажмите на этаж для редактирования.',
+    en: 'Manage floor layouts. Click on a floor to edit.',
+    ka: 'სართულების განლაგების მართვა. რედაქტირებისთვის დააჭირეთ სართულს.'
+  },
+  'projectEditor.currency': {
+    ru: 'Валюта',
+    en: 'Currency',
+    ka: 'ვალუტა'
+  },
+  'projectEditor.currencyDesc': {
+    ru: 'Выберите валюту для отображения цен в проекте',
+    en: 'Select currency for displaying prices in the project',
+    ka: 'აირჩიეთ ვალუტა პროექტში ფასების საჩვენებლად'
+  },
+
+  // Currencies
+  'currency.rub': {
+    ru: 'Российский рубль (₽)',
+    en: 'Russian Ruble (₽)',
+    ka: 'რუსული რუბლი (₽)'
+  },
+  'currency.usd': {
+    ru: 'Доллар США ($)',
+    en: 'US Dollar ($)',
+    ka: 'აშშ დოლარი ($)'
+  },
+  'currency.eur': {
+    ru: 'Евро (€)',
+    en: 'Euro (€)',
+    ka: 'ევრო (€)'
+  },
+  'currency.gel': {
+    ru: 'Грузинский лари (₾)',
+    en: 'Georgian Lari (₾)',
+    ka: 'ქართული ლარი (₾)'
+  },
+
+  // Admin Settings
+  'adminSettings.title': {
+    ru: 'Настройки',
+    en: 'Settings',
+    ka: 'პარამეტრები'
+  },
+  'adminSettings.description': {
+    ru: 'Управление настройками компании и контактной информацией',
+    en: 'Manage company settings and contact information',
+    ka: 'კომპანიის პარამეტრების და საკონტაქტო ინფორმაციის მართვა'
+  },
+  'adminSettings.save': {
+    ru: 'Сохранить',
+    en: 'Save',
+    ka: 'შენახვა'
+  },
+  'adminSettings.saving': {
+    ru: 'Сохранение...',
+    en: 'Saving...',
+    ka: 'შენახვა...'
+  },
+  'adminSettings.settingsSaved': {
+    ru: 'Настройки сохранены',
+    en: 'Settings saved',
+    ka: 'პარამეტრები შენახულია'
+  },
+  'adminSettings.errorLoading': {
+    ru: 'Ошибка загрузки настроек',
+    en: 'Error loading settings',
+    ka: 'პარამეტრების ჩატვირთვის შეცდომა'
+  },
+  'adminSettings.errorSaving': {
+    ru: 'Ошибка сохранения настроек',
+    en: 'Error saving settings',
+    ka: 'პარამეტრების შენახვის შეცდომა'
+  },
+  'adminSettings.authRequired': {
+    ru: 'Необходима авторизация для работы с настройками',
+    en: 'Authentication required to work with settings',
+    ka: 'პარამეტრებთან მუშაობისთვის ავტორიზაცია საჭიროა'
+  },
+  'adminSettings.company': {
+    ru: 'Компания',
+    en: 'Company',
+    ka: 'კომპანია'
+  },
+  'adminSettings.contacts': {
+    ru: 'Контакты менеджера',
+    en: 'Manager contacts',
+    ka: 'მენეჯერის კონტაქტები'
+  },
+  'adminSettings.companyInfo': {
+    ru: 'Информация о компании',
+    en: 'Company information',
+    ka: 'კომპანიის ინფორმაცია'
+  },
+  'adminSettings.companyInfoDesc': {
+    ru: 'Основная информация о вашей компании',
+    en: 'Basic information about your company',
+    ka: 'თქვენი კომპანიის ძირითადი ინფორმაცია'
+  },
+  'adminSettings.companyName': {
+    ru: 'Название компании',
+    en: 'Company name',
+    ka: 'კომპანიის სახელი'
+  },
+  'adminSettings.companyNamePlaceholder': {
+    ru: 'ООО «Название компании»',
+    en: 'LLC "Company Name"',
+    ka: 'LLC "კომპანიის სახელი"'
+  },
+  'adminSettings.companyDescription': {
+    ru: 'Описание компании',
+    en: 'Company description',
+    ka: 'კომპანიის აღწერა'
+  },
+  'adminSettings.companyDescriptionPlaceholder': {
+    ru: 'Краткое описание деятельности компании...',
+    en: 'Brief description of company activities...',
+    ka: 'კომპანიის საქმიანობის მოკლე აღწერა...'
+  },
+  'adminSettings.companyAddress': {
+    ru: 'Адрес компании',
+    en: 'Company address',
+    ka: 'კომპანიის მისამართი'
+  },
+  'adminSettings.companyAddressPlaceholder': {
+    ru: 'г. Город, ул. Улица, д. 1',
+    en: 'City, Street, 1',
+    ka: 'ქალაქი, ქუჩა, 1'
+  },
+  'adminSettings.managerContacts': {
+    ru: 'Контактная информация менеджера',
+    en: 'Manager contact information',
+    ka: 'მენეჯერის საკონტაქტო ინფორმაცია'
+  },
+  'adminSettings.managerContactsDesc': {
+    ru: 'Эта информация будет отображаться клиентам для связи',
+    en: 'This information will be displayed to clients for contact',
+    ka: 'ეს ინფორმაცია მომხმარებლებს კონტაქტისთვის გამოჩნდება'
+  },
+  'adminSettings.managerName': {
+    ru: 'Имя менеджера',
+    en: 'Manager name',
+    ka: 'მენეჯერის სახელი'
+  },
+  'adminSettings.managerNamePlaceholder': {
+    ru: 'Иван Иванов',
+    en: 'John Doe',
+    ka: 'ივანე ივანოვი'
+  },
+  'adminSettings.managerPhone': {
+    ru: 'Телефон менеджера',
+    en: 'Manager phone',
+    ka: 'მენეჯერის ტელეფონი'
+  },
+  'adminSettings.managerPhonePlaceholder': {
+    ru: '+7 (999) 123-45-67',
+    en: '+1 (555) 123-4567',
+    ka: '+995 599 123 456'
+  },
+  'adminSettings.managerEmail': {
+    ru: 'Email менеджера',
+    en: 'Manager email',
+    ka: 'მენეჯერის ელფოსტა'
+  },
+  'adminSettings.managerEmailPlaceholder': {
+    ru: 'manager@company.com',
+    en: 'manager@company.com',
+    ka: 'manager@company.com'
   }
 };
 

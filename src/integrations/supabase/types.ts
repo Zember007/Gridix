@@ -371,6 +371,7 @@ export type Database = {
           building_image_url: string | null
           building_polygon_settings: Json | null
           created_at: string
+          currency: Database["public"]["Enums"]["currency_type"] | null
           description: string | null
           floors: number
           id: string
@@ -390,6 +391,7 @@ export type Database = {
           building_image_url?: string | null
           building_polygon_settings?: Json | null
           created_at?: string
+          currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
           id?: string
@@ -409,6 +411,7 @@ export type Database = {
           building_image_url?: string | null
           building_polygon_settings?: Json | null
           created_at?: string
+          currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
           id?: string
@@ -584,7 +587,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      currency_type: "EUR" | "GEL" | "RUB" | "USD"
     }
     CompositeTypes: {
       [_ in never]: never

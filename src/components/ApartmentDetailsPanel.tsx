@@ -9,12 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { X, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { CurrencyType, getCurrencySymbol } from '@/lib/currency-utils';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
 import type { Apartment } from '@/types/apartment';
 
 interface ApartmentDetailsPanelProps {
   apartment: Apartment | null;
   projectId: string;
+  projectCurrency?: CurrencyType;
   onClose: () => void;
   onUpdate: (apartment: Apartment) => void;
   onDelete: (apartmentId: string) => void;
@@ -23,6 +26,7 @@ interface ApartmentDetailsPanelProps {
 const ApartmentDetailsPanel = ({ 
   apartment, 
   projectId,
+  projectCurrency = 'USD',
   onClose, 
   onUpdate, 
   onDelete 
@@ -30,6 +34,7 @@ const ApartmentDetailsPanel = ({
   const [formData, setFormData] = useState<Partial<Apartment>>({});
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (apartment) {
@@ -215,7 +220,7 @@ const ApartmentDetailsPanel = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="price">Цена (руб.)</Label>
+                <Label htmlFor="price">{t('project.price')} ({getCurrencySymbol(projectCurrency)})</Label>
                 <Input
                   id="price"
                   type="number"
