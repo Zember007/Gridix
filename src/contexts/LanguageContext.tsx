@@ -895,6 +895,349 @@ const translations: Translations = {
     ru: 'Загрузить Excel файл с данными квартир и автоматически создать проект',
     en: 'Upload Excel file with apartment data and automatically create project',
     ka: 'ატვირთეთ Excel ფაილი ბინების მონაცემებით და ავტომატურად შექმენით პროექტი'
+  },
+
+  // Project Editor
+  'projectEditor.newProject': {
+    ru: 'Новый проект',
+    en: 'New project',
+    ka: 'ახალი პროექტი'
+  },
+  'projectEditor.editProject': {
+    ru: 'Редактирование проекта',
+    en: 'Edit project',
+    ka: 'პროექტის რედაქტირება'
+  },
+  'projectEditor.createNewProject': {
+    ru: 'Создание нового проекта',
+    en: 'Creating new project',
+    ka: 'ახალი პროექტის შექმნა'
+  },
+  'projectEditor.projectNameRequired': {
+    ru: 'Название проекта обязательно',
+    en: 'Project name is required',
+    ka: 'პროექტის სახელი საჭიროა'
+  },
+  'projectEditor.authRequired': {
+    ru: 'Необходима авторизация для работы с проектом',
+    en: 'Authentication required to work with project',
+    ka: 'პროექტთან მუშაობისთვის ავტორიზაცია საჭიროა'
+  },
+  'projectEditor.authRequiredCreate': {
+    ru: 'Необходима авторизация для создания проекта',
+    en: 'Authentication required to create project',
+    ka: 'პროექტის შექმნისთვის ავტორიზაცია საჭიროა'
+  },
+  'projectEditor.authRequiredEdit': {
+    ru: 'Необходима авторизация для редактирования проекта',
+    en: 'Authentication required to edit project',
+    ka: 'პროექტის რედაქტირებისთვის ავტორიზაცია საჭიროა'
+  },
+  'projectEditor.projectCreated': {
+    ru: 'Проект создан',
+    en: 'Project created',
+    ka: 'პროექტი შეიქმნა'
+  },
+  'projectEditor.projectSaved': {
+    ru: 'Проект сохранен',
+    en: 'Project saved',
+    ka: 'პროექტი შენახულია'
+  },
+  'projectEditor.errorLoading': {
+    ru: 'Ошибка загрузки проекта',
+    en: 'Error loading project',
+    ka: 'პროექტის ჩატვირთვის შეცდომა'
+  },
+  'projectEditor.errorSaving': {
+    ru: 'Ошибка сохранения проекта',
+    en: 'Error saving project',
+    ka: 'პროექტის შენახვის შეცდომა'
+  },
+  'projectEditor.accessDenied': {
+    ru: 'Доступ запрещен',
+    en: 'Access denied',
+    ka: 'წვდომა უარყოფილია'
+  },
+  'projectEditor.noEditRights': {
+    ru: 'У вас нет прав на редактирование этого проекта',
+    en: 'You do not have permission to edit this project',
+    ka: 'ამ პროექტის რედაქტირების უფლება არ გაქვთ'
+  },
+  'projectEditor.back': {
+    ru: 'Назад',
+    en: 'Back',
+    ka: 'უკან'
+  },
+  'projectEditor.save': {
+    ru: 'Сохранить',
+    en: 'Save',
+    ka: 'შენახვა'
+  },
+  'projectEditor.saving': {
+    ru: 'Сохранение...',
+    en: 'Saving...',
+    ka: 'შენახვა...'
+  },
+  'projectEditor.basicInfo': {
+    ru: 'Основная информация',
+    en: 'Basic information',
+    ka: 'ძირითადი ინფორმაცია'
+  },
+  'projectEditor.projectName': {
+    ru: 'Название проекта',
+    en: 'Project name',
+    ka: 'პროექტის სახელი'
+  },
+  'projectEditor.description': {
+    ru: 'Описание',
+    en: 'Description',
+    ka: 'აღწერა'
+  },
+  'projectEditor.address': {
+    ru: 'Адрес',
+    en: 'Address',
+    ka: 'მისამართი'
+  },
+  'projectEditor.floors': {
+    ru: 'Количество этажей',
+    en: 'Number of floors',
+    ka: 'სართულების რაოდენობა'
+  },
+  'projectEditor.buildingImage': {
+    ru: 'Изображение здания',
+    en: 'Building image',
+    ka: 'შენობის სურათი'
+  },
+  'projectEditor.floorPlan': {
+    ru: 'План этажа',
+    en: 'Floor plan',
+    ka: 'სართულის გეგმა'
+  },
+  'projectEditor.floor': {
+    ru: 'Этаж',
+    en: 'Floor',
+    ka: 'სართული'
+  },
+  'projectEditor.floorPlanDesc': {
+    ru: 'Планировка {floor} этажа',
+    en: 'Floor {floor} layout',
+    ka: 'სართული {floor} განლაგება'
+  },
+  'projectEditor.plan': {
+    ru: 'План',
+    en: 'Plan',
+    ka: 'გეგმა'
+  },
+
+  // Project List
+  'projectList.deleteConfirm': {
+    ru: 'Вы уверены, что хотите удалить проект "{name}"?',
+    en: 'Are you sure you want to delete project "{name}"?',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ პროექტის "{name}" წაშლა?'
+  },
+  'projectList.projectDeleted': {
+    ru: 'Проект удален',
+    en: 'Project deleted',
+    ka: 'პროექტი წაშლილია'
+  },
+  'projectList.errorDeleting': {
+    ru: 'Ошибка удаления проекта',
+    en: 'Error deleting project',
+    ka: 'პროექტის წაშლის შეცდომა'
+  },
+  'projectList.errorLoading': {
+    ru: 'Ошибка загрузки проектов',
+    en: 'Error loading projects',
+    ka: 'პროექტების ჩატვირთვის შეცდომა'
+  },
+  'projectList.timeoutError': {
+    ru: 'Загрузка проектов заняла слишком много времени',
+    en: 'Loading projects took too long',
+    ka: 'პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა'
+  },
+  'projectList.authRequired': {
+    ru: 'Необходима авторизация',
+    en: 'Authentication required',
+    ka: 'ავტორიზაცია საჭიროა'
+  },
+  'projectList.viewProject': {
+    ru: 'Посмотреть проект',
+    en: 'View project',
+    ka: 'პროექტის ნახვა'
+  },
+  'projectList.editProject': {
+    ru: 'Редактировать проект',
+    en: 'Edit project',
+    ka: 'პროექტის რედაქტირება'
+  },
+  'projectList.deleteProject': {
+    ru: 'Удалить проект',
+    en: 'Delete project',
+    ka: 'პროექტის წაშლა'
+  },
+  'projectList.copyWidgetCode': {
+    ru: 'Копировать код виджета',
+    en: 'Copy widget code',
+    ka: 'ვიჯეტის კოდის კოპირება'
+  },
+  'projectList.widgetCodeCopied': {
+    ru: 'Код виджета скопирован',
+    en: 'Widget code copied',
+    ka: 'ვიჯეტის კოდი კოპირებულია'
+  },
+  'projectList.created': {
+    ru: 'Создан',
+    en: 'Created',
+    ka: 'შეიქმნა'
+  },
+  'projectList.updated': {
+    ru: 'Обновлен',
+    en: 'Updated',
+    ka: 'განახლებულია'
+  },
+  'projectList.floors': {
+    ru: 'Этажей',
+    en: 'Floors',
+    ka: 'სართულები'
+  },
+  'projectList.apartments': {
+    ru: 'Квартир',
+    en: 'Apartments',
+    ka: 'ბინები'
+  },
+
+  // Admin Widgets
+  'adminWidgets.embedCode': {
+    ru: 'Код для вставки',
+    en: 'Embed code',
+    ka: 'ჩასასმელი კოდი'
+  },
+  'adminWidgets.embedCodeDesc': {
+    ru: 'Скопируйте этот код и вставьте на ваш сайт',
+    en: 'Copy this code and paste it on your website',
+    ka: 'დააკოპირეთ ეს კოდი და ჩასვით თქვენს საიტზე'
+  },
+  'adminWidgets.width': {
+    ru: 'Ширина',
+    en: 'Width',
+    ka: 'სიგანე'
+  },
+  'adminWidgets.height': {
+    ru: 'Высота',
+    en: 'Height',
+    ka: 'სიმაღლე'
+  },
+  'adminWidgets.selectProject': {
+    ru: 'Выберите проект',
+    en: 'Select project',
+    ka: 'აირჩიეთ პროექტი'
+  },
+  'adminWidgets.allProjects': {
+    ru: 'Все проекты (галерея)',
+    en: 'All projects (gallery)',
+    ka: 'ყველა პროექტი (გალერეა)'
+  },
+  'adminWidgets.copyCode': {
+    ru: 'Копировать код',
+    en: 'Copy code',
+    ka: 'კოდის კოპირება'
+  },
+  'adminWidgets.codeCopied': {
+    ru: 'Код скопирован в буфер обмена',
+    en: 'Code copied to clipboard',
+    ka: 'კოდი კოპირებულია ბუფერში'
+  },
+  'adminWidgets.preview': {
+    ru: 'Предварительный просмотр',
+    en: 'Preview',
+    ka: 'წინასწარი ნახვა'
+  },
+  'adminWidgets.loading': {
+    ru: 'Загрузка...',
+    en: 'Loading...',
+    ka: 'ჩატვირთვა...'
+  },
+
+  // Interactive Map
+  'map.loading': {
+    ru: 'Загрузка карты...',
+    en: 'Loading map...',
+    ka: 'რუკის ჩატვირთვა...'
+  },
+  'map.noProjects': {
+    ru: 'Нет проектов для отображения',
+    en: 'No projects to display',
+    ka: 'საჩვენებელი პროექტები არ არის'
+  },
+  'map.viewProject': {
+    ru: 'Посмотреть проект',
+    en: 'View project',
+    ka: 'პროექტის ნახვა'
+  },
+  'map.projectInfo': {
+    ru: 'Информация о проекте',
+    en: 'Project information',
+    ka: 'პროექტის ინფორმაცია'
+  },
+
+  // Embed Pages
+  'embed.userNotFound': {
+    ru: 'Пользователь не найден',
+    en: 'User not found',
+    ka: 'მომხმარებელი ვერ მოიძებნა'
+  },
+  'embed.userNotFoundDesc': {
+    ru: 'Указанный пользователь не существует или не имеет публичных проектов.',
+    en: 'The specified user does not exist or has no public projects.',
+    ka: 'მითითებული მომხმარებელი არ არსებობს ან არ აქვს საჯარო პროექტები.'
+  },
+  'embed.projects': {
+    ru: 'Проекты ({count})',
+    en: 'Projects ({count})',
+    ka: 'პროექტები ({count})'
+  },
+  'embed.onMap': {
+    ru: 'На карте',
+    en: 'On map',
+    ka: 'რუკაზე'
+  },
+  'embed.listView': {
+    ru: 'Список',
+    en: 'List view',
+    ka: 'სიის ხედი'
+  },
+  'embed.resetFilters': {
+    ru: 'Сбросить фильтры',
+    en: 'Reset filters',
+    ka: 'ფილტრების გაუქმება'
+  },
+
+  // Admin Widgets (additional)
+  'adminWidgets.title': {
+    ru: 'Виджеты',
+    en: 'Widgets',
+    ka: 'ვიჯეტები'
+  },
+  'adminWidgets.description': {
+    ru: 'Создание и настройка встраиваемых виджетов для ваших проектов',
+    en: 'Create and configure embeddable widgets for your projects',
+    ka: 'თქვენი პროექტებისთვის ჩასასმელი ვიჯეტების შექმნა და კონფიგურაცია'
+  },
+  'adminWidgets.settings': {
+    ru: 'Настройки виджета',
+    en: 'Widget settings',
+    ka: 'ვიჯეტის პარამეტრები'
+  },
+  'adminWidgets.settingsDesc': {
+    ru: 'Выберите проект и настройте параметры виджета',
+    en: 'Select project and configure widget parameters',
+    ka: 'აირჩიეთ პროექტი და დააკონფიგურირეთ ვიჯეტის პარამეტრები'
+  },
+  // Project Editor (additional)
+  'projectEditor.photos': {
+    ru: 'Фото',
+    en: 'Photos',
+    ka: 'ფოტოები'
   }
 };
 

@@ -85,8 +85,8 @@ const EmbedProjectsPage = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Пользователь не найден</h1>
-          <p className="text-gray-600">Указанный пользователь не существует или не имеет публичных проектов.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('embed.userNotFound')}</h1>
+          <p className="text-gray-600">{t('embed.userNotFoundDesc')}</p>
         </div>
       </div>
     );
@@ -119,7 +119,7 @@ const EmbedProjectsPage = () => {
                 className={viewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('grid')}
               >
-                {t('project.listView')}
+                {t('embed.listView')}
               </Button>
               <Button 
                 variant={(viewMode as string) === 'map' ? 'default' : 'outline'} 
@@ -127,8 +127,7 @@ const EmbedProjectsPage = () => {
                 className={(viewMode as string) === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('map')}
               >
-                {/* {t('gallery.open')} */}
-                На карте
+                {t('embed.onMap')}
               </Button>
             </div>
           </div>
@@ -186,12 +185,12 @@ const EmbedProjectsPage = () => {
 
             {/* Reset filters */}
             <Button variant="ghost" size="sm" className="text-gray-600">
-              {t('filters.resetFilters')}
+              {t('embed.resetFilters')}
             </Button>
 
             {/* Main CTA */}
             <Button className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ml-auto">
-              Проекты ({projects.length})
+              {t('embed.projects').replace('{count}', projects.length.toString())}
             </Button>
           </div>
         </div>

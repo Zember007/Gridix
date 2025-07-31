@@ -9,6 +9,7 @@ import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Project {
   id: string;
@@ -22,6 +23,7 @@ const AdminWidgets = () => {
   const [widgetHeight, setWidgetHeight] = useState('600px');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -69,7 +71,7 @@ const AdminWidgets = () => {
 
   const copyEmbedCode = () => {
     navigator.clipboard.writeText(generateEmbedCode());
-    toast.success('Код скопирован в буфер обмена');
+    toast.success(t('adminWidgets.codeCopied'));
   };
 
   const openPreview = () => {
@@ -89,6 +91,7 @@ const AdminWidgets = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2">{t('adminWidgets.loading')}</span>
       </div>
     );
   }
@@ -96,27 +99,27 @@ const AdminWidgets = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Виджеты</h1>
-        <p className="text-gray-600">Создание и настройка встраиваемых виджетов для ваших проектов</p>
+        <h1 className="text-2xl font-bold">{t('adminWidgets.title')}</h1>
+        <p className="text-gray-600">{t('adminWidgets.description')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Настройки виджета</CardTitle>
+            <CardTitle>{t('adminWidgets.settings')}</CardTitle>
             <CardDescription>
-              Выберите проект и настройте параметры виджета
+              {t('adminWidgets.settingsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="project-select">Выберите проект</Label>
+              <Label htmlFor="project-select">{t('adminWidgets.selectProject')}</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все проекты (галерея)</SelectItem>
+                  <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -128,7 +131,7 @@ const AdminWidgets = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="widget-width">Ширина</Label>
+                <Label htmlFor="widget-width">{t('adminWidgets.width')}</Label>
                 <Input
                   id="widget-width"
                   value={widgetWidth}
@@ -138,7 +141,7 @@ const AdminWidgets = () => {
               </div>
 
               <div>
-                <Label htmlFor="widget-height">Высота</Label>
+                <Label htmlFor="widget-height">{t('adminWidgets.height')}</Label>
                 <Input
                   id="widget-height"
                   value={widgetHeight}
@@ -151,11 +154,11 @@ const AdminWidgets = () => {
             <div className="flex gap-2">
               <Button onClick={openPreview} variant="outline" className="flex-1">
                 <Eye className="h-4 w-4 mr-2" />
-                Предварительный просмотр
+                {t('adminWidgets.preview')}
               </Button>
               <Button onClick={copyEmbedCode} className="flex-1">
                 <Copy className="h-4 w-4 mr-2" />
-                Скопировать код
+                {t('adminWidgets.copyCode')}
               </Button>
             </div>
           </CardContent>
@@ -165,10 +168,10 @@ const AdminWidgets = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Code className="h-5 w-5" />
-              Код для встраивания
+              {t('adminWidgets.embedCode')}
             </CardTitle>
             <CardDescription>
-              Скопируйте этот код и вставьте на ваш сайт
+              {t('adminWidgets.embedCodeDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>

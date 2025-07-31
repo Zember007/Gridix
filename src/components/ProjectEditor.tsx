@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
@@ -54,6 +55,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [accessError, setAccessError] = useState<string | null>(null);
   const { navigate } = useLanguageNavigation();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const loadProject = useCallback(async () => {
     try {
@@ -67,7 +69,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       
       // Проверяем права на редактирование
       if (!user || data.user_id !== user.id) {
-        setAccessError('У вас нет прав на редактирование этого проекта');
+        setAccessError(t('projectEditor.noEditRights'));
         setLoading(false);
         return;
       }
@@ -84,7 +86,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       });
     } catch (error) {
       console.error('Error loading project:', error);
-      toast.error('Ошибка загрузки проекта');
+      toast.error(t('projectEditor.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -98,12 +100,12 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
   const handleSave = async () => {
     if (!project.name.trim()) {
-      toast.error('Название проекта обязательно');
+      toast.error(t('projectEditor.projectNameRequired'));
       return;
     }
 
     if (!user) {
-      toast.error('Необходима авторизация для работы с проектом');
+      toast.error(t('projectEditor.authRequired'));
       return;
     }
 
@@ -132,7 +134,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         if (error) throw error;
         
         setProject(prev => ({ ...prev, id: data.id }));
-        toast.success('Проект создан');
+        toast.success(t('projectEditor.projectCreated'));
         navigate(`/admin/project/${data.id}`);
       } else {
         const { error } = await supabase
@@ -142,11 +144,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           .eq('user_id', user.id); // Проверяем владельца
 
         if (error) throw error;
-        toast.success('Проект сохранен');
+        toast.success(t('projectEditor.projectSaved'));
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error('Ошибка сохранения проекта');
+      toast.error(t('projectEditor.errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -221,24 +223,24 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     );
   }
 
-  if (accessError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-red-600">Доступ запрещен</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">{accessError}</p>
-            <Button onClick={onBack} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться назад
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+        if (accessError) {
+        return (
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-center text-red-600">{t('projectEditor.accessDenied')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-center text-muted-foreground">{accessError}</p>
+                <Button onClick={onBack} className="w-full">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t('projectEditor.back')}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      }
 
   return (
     <div className="min-h-screen bg-background">
@@ -248,20 +250,20 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={onBack}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Назад
+                {t('projectEditor.back')}
               </Button>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {isNew ? 'Новый проект' : project.name}
+                  {isNew ? t('projectEditor.newProject') : project.name}
                 </h1>
                 <p className="text-muted-foreground">
-                  {isNew ? 'Создание нового проекта' : 'Редактирование проекта'}
+                  {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
                 </p>
               </div>
             </div>
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Сохранение...' : 'Сохранить'}
+              {saving ? t('projectEditor.saving') : t('projectEditor.save')}
             </Button>
           </div>
         </div>
@@ -272,63 +274,63 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="basic" className="text-xs">
               <Building2 className="h-3 w-3 mr-1" />
-              Основное
+              {t('projectEditor.basicInfo')}
             </TabsTrigger>
             <TabsTrigger value="building" className="text-xs" disabled={isNew}>
               <Image className="h-3 w-3 mr-1" />
-              Здание
+              {t('projectEditor.buildingImage')}
             </TabsTrigger>
             <TabsTrigger value="floors" className="text-xs" disabled={isNew}>
               <Layers3 className="h-3 w-3 mr-1" />
-              Этажи
+              {t('projectEditor.floors')}
             </TabsTrigger>
             <TabsTrigger value="apartments" className="text-xs" disabled={isNew}>
               <Settings className="h-3 w-3 mr-1" />
-              Квартиры
+              {t('projectList.apartments')}
             </TabsTrigger>
             <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
               <Camera className="h-3 w-3 mr-1" />
-              Фото
+              {t('projectEditor.photos')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Основная информация</CardTitle>
-                <CardDescription>Основные параметры проекта</CardDescription>
+                <CardTitle>{t('projectEditor.basicInfo')}</CardTitle>
+                <CardDescription>{t('projectEditor.basicInfo')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Название проекта *</Label>
+                  <Label htmlFor="name">{t('projectEditor.projectName')} *</Label>
                   <Input
                     id="name"
                     value={project.name}
                     onChange={(e) => setProject(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Название жилого комплекса"
+                    placeholder={t('projectEditor.projectName')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Описание</Label>
+                  <Label htmlFor="description">{t('projectEditor.description')}</Label>
                   <Textarea
                     id="description"
                     value={project.description}
                     onChange={(e) => setProject(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Описание проекта..."
+                    placeholder={t('projectEditor.description')}
                     rows={3}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="address">Адрес</Label>
+                  <Label htmlFor="address">{t('projectEditor.address')}</Label>
                   <Input
                     id="address"
                     value={project.address}
                     onChange={(e) => setProject(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Адрес проекта"
+                    placeholder={t('projectEditor.address')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="floors">Количество этажей *</Label>
+                  <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
                   <Input
                     id="floors"
                     type="number"

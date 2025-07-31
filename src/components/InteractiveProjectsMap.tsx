@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Project {
   id: string;
@@ -60,6 +61,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadProjects();
@@ -104,6 +106,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
     return (
       <div className="h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
+        <span className="ml-2">{t('map.loading')}</span>
       </div>
     );
   }

@@ -57,9 +57,9 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
     } catch (error) {
       console.error('Error loading projects:', error);
       if (error instanceof Error && error.message.includes('timeout')) {
-        toast.error('Загрузка проектов заняла слишком много времени');
+        toast.error(t('projectList.timeoutError'));
       } else {
-        toast.error('Ошибка загрузки проектов');
+        toast.error(t('projectList.errorLoading'));
       }
       // При ошибке устанавливаем пустой массив проектов
       setProjects([]);
@@ -70,11 +70,11 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 
   const deleteProject = async (projectId: string, projectName: string) => {
     if (!user) {
-      toast.error('Необходима авторизация');
+      toast.error(t('projectList.authRequired'));
       return;
     }
 
-    if (!confirm(`Вы уверены, что хотите удалить проект "${projectName}"?`)) {
+    if (!confirm(t('projectList.deleteConfirm', { name: projectName }))) {
       return;
     }
 
@@ -87,10 +87,10 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 
       if (error) throw error;
       setProjects(prev => prev.filter(p => p.id !== projectId));
-      toast.success('Проект удален');
+      toast.success(t('projectList.projectDeleted'));
     } catch (error) {
       console.error('Error deleting project:', error);
-      toast.error('Ошибка удаления проекта');
+      toast.error(t('projectList.errorDeleting'));
     }
   };
 
@@ -113,7 +113,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
 </iframe>`;
     
     navigator.clipboard.writeText(widgetCode);
-    toast.success('Код виджета скопирован в буфер обмена');
+    toast.success(t('projectList.widgetCodeCopied'));
   };
 
   if (loading) {

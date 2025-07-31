@@ -2,6 +2,7 @@
 import { useParams } from 'react-router-dom';
 import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const EmbedProjectsMap = () => {
   const { userId } = useParams<{ userId: string }>();
