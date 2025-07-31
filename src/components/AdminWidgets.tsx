@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 
 interface Project {
   id: string;
@@ -21,6 +22,7 @@ const AdminWidgets = () => {
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [widgetWidth, setWidgetWidth] = useState('100%');
   const [widgetHeight, setWidgetHeight] = useState('600px');
+  const [defaultLanguage, setDefaultLanguage] = useState<Language>('ru');
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -55,9 +57,9 @@ const AdminWidgets = () => {
     let embedUrl = '';
     
     if (selectedProject === 'all') {
-      embedUrl = `${baseUrl}/embed/projects/${user?.id}`;
+      embedUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
-      embedUrl = `${baseUrl}/embed/project/${selectedProject}`;
+      embedUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
     }
 
     return `<iframe 
@@ -79,9 +81,9 @@ const AdminWidgets = () => {
     let previewUrl = '';
     
     if (selectedProject === 'all') {
-      previewUrl = `${baseUrl}/embed/projects/${user?.id}`;
+      previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
-      previewUrl = `${baseUrl}/embed/project/${selectedProject}`;
+      previewUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
     }
 
     window.open(previewUrl, '_blank');
@@ -149,6 +151,23 @@ const AdminWidgets = () => {
                   placeholder="600px"
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="default-language">{t('adminWidgets.defaultLanguage')}</Label>
+              <Select value={defaultLanguage} onValueChange={(value: Language) => setDefaultLanguage(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('adminWidgets.defaultLanguage')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                    <SelectItem key={code} value={code}>
+                      {config.flag} {t(`language.${code}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">{t('adminWidgets.defaultLanguageDesc')}</p>
             </div>
 
             <div className="flex gap-2">

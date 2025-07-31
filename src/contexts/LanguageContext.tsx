@@ -1337,6 +1337,35 @@ const translations: Translations = {
     ka: 'ქართული ლარი (₾)'
   },
 
+  // Widget Languages
+  'adminWidgets.defaultLanguage': {
+    ru: 'Язык по умолчанию',
+    en: 'Default language',
+    ka: 'ნაგულისხმევი ენა'
+  },
+  'adminWidgets.defaultLanguageDesc': {
+    ru: 'Выберите язык по умолчанию для виджета',
+    en: 'Select default language for the widget',
+    ka: 'აირჩიეთ ნაგულისხმევი ენა ვიჯეტისთვის'
+  },
+
+  // Languages
+  'language.ru': {
+    ru: 'Русский',
+    en: 'Russian',
+    ka: 'რუსული'
+  },
+  'language.en': {
+    ru: 'English',
+    en: 'English',
+    ka: 'ინგლისური'
+  },
+  'language.ka': {
+    ru: 'ქართული',
+    en: 'Georgian',
+    ka: 'ქართული'
+  },
+
   // Admin Settings
   'adminSettings.title': {
     ru: 'Настройки',
@@ -1546,12 +1575,21 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
 // Embed Language Provider for standalone widgets (without URL routing)
 export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  // Initialize language from localStorage or default
+  // Initialize language from URL query parameter, localStorage or default
   const [language, setLanguageState] = useState<Language>(() => {
+    // First, check for lang query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get('lang');
+    if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
+      return langParam as Language;
+    }
+    
+    // Then check localStorage
     const savedLanguage = localStorage.getItem('embed-language');
     if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
       return savedLanguage as Language;
     }
+    
     return DEFAULT_LANGUAGE;
   });
 
