@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import LayoutPhotosManager from './LayoutPhotosManager';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -30,6 +31,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const [photos, setPhotos] = useState<ApartmentPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadApartments();
@@ -80,6 +82,12 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || !selectedApartment) return;
+
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      toast.error('Необходимо войти в систему для загрузки фотографий');
+      return;
+    }
 
     setUploading(true);
     try {

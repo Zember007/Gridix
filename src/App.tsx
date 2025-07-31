@@ -62,8 +62,10 @@ function App() {
 
               {/* Embed routes without language prefix but with EmbedLanguageProvider */}
               <Route path="/embed/projects" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
+              <Route path="/embed/projects/:userId" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
               <Route path="/embed/project/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage embedMode={true} /></EmbedLanguageProvider>} />
               <Route path="/embed/projects-map" element={<EmbedLanguageProvider><EmbedProjectsMap /></EmbedLanguageProvider>} />
+              <Route path="/embed/projects-map/:userId" element={<EmbedLanguageProvider><EmbedProjectsMap /></EmbedLanguageProvider>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

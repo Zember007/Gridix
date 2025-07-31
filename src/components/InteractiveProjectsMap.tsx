@@ -21,6 +21,7 @@ interface Project {
 interface InteractiveProjectsMapProps {
   onProjectSelect?: (project: Project) => void;
   selectedProjectId?: string;
+  userId?: string;
 }
 
 // Кастомная иконка для маркеров проектов
@@ -55,23 +56,32 @@ const FitBounds = ({ projects }: { projects: Project[] }) => {
   return null;
 };
 
-const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId }: InteractiveProjectsMapProps) => {
+const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: InteractiveProjectsMapProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [userId]);
 
   const loadProjects = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('projects')
         .select('id, name, description, address, floors, building_image_url, latitude, longitude')
         .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        .order('created_at', { ascending: false });
+        .not('longitude', 'is', null);
+
+      // Если указан userId, фильтруем по пользователю
+      if (userId) {
+        query = query.eq('user_id', userId).eq('is_public', true);
+      } else {
+        // Иначе показываем только публичные проекты
+        query = query.eq('is_public', true);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setProjects(data || []);

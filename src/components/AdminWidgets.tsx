@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Project {
   id: string;
@@ -20,16 +21,22 @@ const AdminWidgets = () => {
   const [widgetWidth, setWidgetWidth] = useState('100%');
   const [widgetHeight, setWidgetHeight] = useState('600px');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (user) {
+      loadProjects();
+    }
+  }, [user]);
 
   const loadProjects = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('projects')
         .select('id, name')
+        .eq('user_id', user.id)
         .order('name');
 
       if (error) throw error;
@@ -46,7 +53,7 @@ const AdminWidgets = () => {
     let embedUrl = '';
     
     if (selectedProject === 'all') {
-      embedUrl = `${baseUrl}/embed/projects`;
+      embedUrl = `${baseUrl}/embed/projects/${user?.id}`;
     } else {
       embedUrl = `${baseUrl}/embed/project/${selectedProject}`;
     }
@@ -70,7 +77,7 @@ const AdminWidgets = () => {
     let previewUrl = '';
     
     if (selectedProject === 'all') {
-      previewUrl = `${baseUrl}/embed/projects`;
+      previewUrl = `${baseUrl}/embed/projects/${user?.id}`;
     } else {
       previewUrl = `${baseUrl}/embed/project/${selectedProject}`;
     }

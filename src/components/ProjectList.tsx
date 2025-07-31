@@ -7,6 +7,7 @@ import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Project {
   id: string;
@@ -26,17 +27,23 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (user) {
+      loadProjects();
+    }
+  }, [user]);
 
   const loadProjects = async () => {
+    if (!user) return;
+    
     try {
       // Добавляем таймаут для запроса проектов
       const queryPromise = supabase
         .from('projects')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       const timeoutPromise = new Promise((_, reject) => 
@@ -62,6 +69,11 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   };
 
   const deleteProject = async (projectId: string, projectName: string) => {
+    if (!user) {
+      toast.error('Необходима авторизация');
+      return;
+    }
+
     if (!confirm(`Вы уверены, что хотите удалить проект "${projectName}"?`)) {
       return;
     }
@@ -70,7 +82,8 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', projectId);
+        .eq('id', projectId)
+        .eq('user_id', user.id); // Проверяем владельца
 
       if (error) throw error;
       setProjects(prev => prev.filter(p => p.id !== projectId));

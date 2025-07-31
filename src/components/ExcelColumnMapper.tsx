@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CustomFieldsManager from '@/components/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -56,6 +57,8 @@ interface StatusValidationResult {
 }
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
+  const { user } = useAuth();
+
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     apartmentNumber: '',
     floor: '',
@@ -249,7 +252,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         .insert([{
           name: projectData.name.trim(),
           description: projectData.description.trim() || null,
-          floors: Math.max(maxFloor, projectData.floors)
+          floors: Math.max(maxFloor, projectData.floors),
+           user_id: user.id 
         }])
         .select()
         .single();

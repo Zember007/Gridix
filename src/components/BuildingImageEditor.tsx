@@ -8,6 +8,7 @@ import { Upload, Save, Trash2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonEditor from './polygon-editor/PolygonEditor';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -30,6 +31,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [uploading, setUploading] = useState(false);
   const [floors, setFloors] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   const loadBuildingData = useCallback(async () => {
     try {
@@ -69,6 +71,12 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !projectId) return;
+
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      toast.error('Необходимо войти в систему для загрузки изображений');
+      return;
+    }
 
     setUploading(true);
     try {

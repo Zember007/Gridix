@@ -8,6 +8,7 @@ import { Upload, Image as ImageIcon, Trash2, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutPhotosManagerProps {
   projectId: string;
@@ -35,6 +36,7 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
   const [photos, setPhotos] = useState<LayoutPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadApartments();
@@ -99,6 +101,12 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || !selectedLayoutType) return;
+
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      toast.error('Необходимо войти в систему для загрузки фотографий');
+      return;
+    }
 
     setUploading(true);
     try {

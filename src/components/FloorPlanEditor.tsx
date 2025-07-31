@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import PolygonEditor from './polygon-editor/PolygonEditor';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Point {
   x: number;
@@ -83,6 +84,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadFloorPlan();
@@ -204,6 +207,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      toast.error('Необходимо войти в систему для загрузки планов этажей');
+      return;
+    }
 
     setLoading(true);
     try {

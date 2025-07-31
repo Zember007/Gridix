@@ -202,13 +202,37 @@ $$ LANGUAGE plpgsql;
 3. Настройте политики для bucket:
 
 ```sql
--- Политики для project-images bucket
-INSERT INTO storage.buckets (id, name, public) VALUES ('project-images', 'project-images', true);
+-- Создание bucket если не существует
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('project-images', 'project-images', true)
+ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "Anyone can view images" ON storage.objects FOR SELECT USING (bucket_id = 'project-images');
-CREATE POLICY "Authenticated users can upload images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
-CREATE POLICY "Users can update own images" ON storage.objects FOR UPDATE USING (bucket_id = 'project-images' AND auth.uid()::text = (storage.foldername(name))[1]);
-CREATE POLICY "Users can delete own images" ON storage.objects FOR DELETE USING (bucket_id = 'project-images' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Удаляем старые политики если они есть
+DROP POLICY IF EXISTS "Anyone can view images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own images" ON storage.objects;
+
+-- Новые политики для project-images bucket
+-- Просмотр изображений - доступно всем
+CREATE POLICY "Anyone can view project images" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'project-images');
+
+-- Загрузка изображений - доступно аутентифицированным пользователям
+CREATE POLICY "Authenticated users can upload project images" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
+
+-- Обновление изображений - доступно аутентифицированным пользователям
+CREATE POLICY "Authenticated users can update project images" 
+ON storage.objects FOR UPDATE 
+USING (bucket_id = 'project-images' AND auth.role() = 'authenticated');
+
+-- Удаление изображений - доступно аутентифицированным пользователям
+CREATE POLICY "Authenticated users can delete project images" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'project-images' AND auth.role() = 'authenticated');
 ```
 
 ## 2. Новые URL-схемы

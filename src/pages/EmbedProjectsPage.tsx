@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,20 +22,42 @@ interface Project {
 }
 
 const EmbedProjectsPage = () => {
+  const { userId } = useParams<{ userId: string }>();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [userNotFound, setUserNotFound] = useState(false);
   const { t } = useLanguage();
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (userId) {
+      loadProjects();
+    }
+  }, [userId]);
 
   const loadProjects = async () => {
+    if (!userId) return;
+
     try {
+      // Сначала проверяем существует ли пользователь
+      const { data: userProfile, error: userError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (userError || !userProfile) {
+        setUserNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      // Загружаем проекты пользователя
       const { data, error } = await supabase
         .from('projects')
         .select('id, name, description, address, floors, building_image_url, latitude, longitude')
+        .eq('user_id', userId)
+        .eq('is_public', true) // Показываем только публичные проекты
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -58,10 +81,22 @@ const EmbedProjectsPage = () => {
     );
   }
 
+  if (userNotFound) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Пользователь не найден</h1>
+          <p className="text-gray-600">Указанный пользователь не существует или не имеет публичных проектов.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Если выбран режим карты, отображаем InteractiveProjectsMap
   if (viewMode === 'map') {
     return (
       <InteractiveProjectsMap
+        userId={userId}
         onProjectSelect={(project) => {
           handleViewProject(project.id);
         }}
@@ -87,9 +122,9 @@ const EmbedProjectsPage = () => {
                 {t('project.listView')}
               </Button>
               <Button 
-                variant={viewMode === 'map' ? 'default' : 'outline'} 
+                variant={(viewMode as string) === 'map' ? 'default' : 'outline'} 
                 size="sm"
-                className={viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                className={(viewMode as string) === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                 onClick={() => setViewMode('map')}
               >
                 {/* {t('gallery.open')} */}
@@ -156,7 +191,7 @@ const EmbedProjectsPage = () => {
 
             {/* Main CTA */}
             <Button className="bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ml-auto">
-              {t('project.viewApartments', { count: projects.length })}
+              Проекты ({projects.length})
             </Button>
           </div>
         </div>

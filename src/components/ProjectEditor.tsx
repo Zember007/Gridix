@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, Chev
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
+import { useAuth } from '@/contexts/AuthContext';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
@@ -50,15 +51,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
+  const [accessError, setAccessError] = useState<string | null>(null);
   const { navigate } = useLanguageNavigation();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (!isNew && projectId) {
-      loadProject();
-    }
-  }, [projectId, isNew]);
-
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -67,6 +64,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         .single();
 
       if (error) throw error;
+      
+      // Проверяем права на редактирование
+      if (!user || data.user_id !== user.id) {
+        setAccessError('У вас нет прав на редактирование этого проекта');
+        setLoading(false);
+        return;
+      }
       
       setProject({
         id: data.id,
@@ -84,11 +88,22 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, user]);
+
+  useEffect(() => {
+    if (!isNew && projectId) {
+      loadProject();
+    }
+  }, [projectId, isNew, loadProject]);
 
   const handleSave = async () => {
     if (!project.name.trim()) {
       toast.error('Название проекта обязательно');
+      return;
+    }
+
+    if (!user) {
+      toast.error('Необходима авторизация для работы с проектом');
       return;
     }
 
@@ -102,10 +117,12 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         building_image_url: project.building_image_url,
         latitude: project.latitude,
         longitude: project.longitude,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
 
       if (isNew) {
+
         const { data, error } = await supabase
           .from('projects')
           .insert([saveData])
@@ -121,7 +138,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         const { error } = await supabase
           .from('projects')
           .update(saveData)
-          .eq('id', project.id);
+          .eq('id', project.id)
+          .eq('user_id', user.id); // Проверяем владельца
 
         if (error) throw error;
         toast.success('Проект сохранен');
@@ -199,6 +217,25 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (accessError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-red-600">Доступ запрещен</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">{accessError}</p>
+            <Button onClick={onBack} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Вернуться назад
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
