@@ -1496,6 +1496,23 @@ const translations: Translations = {
     ru: 'manager@company.com',
     en: 'manager@company.com',
     ka: 'manager@company.com'
+  },
+
+  // Auth
+  'auth.signOut': {
+    ru: 'Выйти',
+    en: 'Sign Out',
+    ka: 'გასვლა'
+  },
+  'auth.signIn': {
+    ru: 'Войти',
+    en: 'Sign In',
+    ka: 'შესვლა'
+  },
+  'auth.signUp': {
+    ru: 'Регистрация',
+    en: 'Sign Up',
+    ka: 'რეგისტრაცია'
   }
 };
 

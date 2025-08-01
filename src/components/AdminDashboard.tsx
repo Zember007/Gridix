@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Building2, Settings, Code, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User } from 'lucide-react';
 import ProjectList from './ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
@@ -12,6 +12,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -23,6 +24,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
+  const { user, userProfile, signOut } = useAuth();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -45,6 +47,15 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,7 +71,28 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
               </div>
             </div>
-            <LanguageToggle />
+            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-4'}`}>
+              {/* User Info */}
+              <div className={`flex items-center gap-2 ${isMobile ? 'self-end' : ''}`}>
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {userProfile?.email || user?.email || 'Unknown user'}
+                </span>
+              </div>
+              
+              {/* Sign Out Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSignOut}
+                className={`flex items-center gap-2 ${isMobile ? 'self-end' : ''}`}
+              >
+                <LogOut className="h-4 w-4" />
+                {isMobile ? '' : t('auth.signOut')}
+              </Button>
+              
+              <LanguageToggle />
+            </div>
           </div>
         </div>
       </div>
