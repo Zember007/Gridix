@@ -10,6 +10,8 @@ interface PolygonCanvasProps {
   onShapeUpdate: (shapes: Shape[]) => void;
   onCurrentShapeUpdate: (shape: Shape | null) => void;
   className?: string;
+  onSaveCurrentShape?: () => void;
+  onClearAll?: () => void;
 }
 
 const PolygonCanvas = ({
@@ -19,7 +21,9 @@ const PolygonCanvas = ({
   activeTool,
   onShapeUpdate,
   onCurrentShapeUpdate,
-  className = ""
+  className = "",
+  onSaveCurrentShape,
+  onClearAll
 }: PolygonCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,9 +115,12 @@ const PolygonCanvas = ({
     // Рисуем изображение
     ctx.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
     
-    // Рисуем существующие фигуры
+    // Рисуем существующие фигуры (только завершенные фигуры, которые не являются currentShape)
     shapes.forEach((shape, shapeIndex) => {
       if (shape.points.length === 0) return;
+      
+      // Если это текущая фигура, не рисуем её здесь (она будет нарисована отдельно)
+      if (currentShape && shape.id === currentShape.id) return;
       
       const canvasPoints = shape.points.map(p => percentToCanvas(p));
       
@@ -134,16 +141,24 @@ const PolygonCanvas = ({
       ctx.lineWidth = 2 / zoom;
       ctx.stroke();
       
-      // Рисуем точки для выбранной фигуры
+      // Рисуем точки для завершенных фигур в режиме select
       if (shape.isSelected && activeTool === 'select') {
-        canvasPoints.forEach((point, pointIndex) => {
+        canvasPoints.forEach((point, index) => {
+          const handleSize = 8 / zoom;
           ctx.beginPath();
-          ctx.arc(point.x, point.y, 6 / zoom, 0, 2 * Math.PI);
+          ctx.rect(point.x - handleSize/2, point.y - handleSize/2, handleSize, handleSize);
           ctx.fillStyle = '#3b82f6';
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 2 / zoom;
           ctx.stroke();
+          
+          // Добавляем номер точки для удобности
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `${12 / zoom}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText((index + 1).toString(), point.x, point.y);
         });
       }
     });
@@ -153,18 +168,39 @@ const PolygonCanvas = ({
       const canvasPoints = currentShape.points.map(p => percentToCanvas(p));
       
       if (currentShape.type === 'polygon') {
-        // Для полигона рисуем линии между всеми точками
-        ctx.beginPath();
-        ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
-        for (let i = 1; i < canvasPoints.length; i++) {
-          ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+        if (currentShape.isSelected && canvasPoints.length >= 3) {
+          // Для завершенного полигона рисуем как обычную фигуру
+          ctx.beginPath();
+          ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+          for (let i = 1; i < canvasPoints.length; i++) {
+            ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+          }
+          ctx.closePath();
+          
+          ctx.fillStyle = currentShape.color + '40';
+          ctx.fill();
+          ctx.strokeStyle = currentShape.color;
+          ctx.lineWidth = 2 / zoom;
+          ctx.stroke();
+        } else {
+          // Для незавершенного полигона рисуем линии между точками
+          ctx.beginPath();
+          ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+          for (let i = 1; i < canvasPoints.length; i++) {
+            ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+          }
+          
+          // Если есть минимум 3 точки, показываем линию к первой точке для замыкания
+          if (canvasPoints.length >= 3) {
+            ctx.lineTo(canvasPoints[0].x, canvasPoints[0].y);
+          }
+          
+          ctx.strokeStyle = currentShape.color;
+          ctx.lineWidth = 2 / zoom;
+          ctx.setLineDash([5 / zoom, 5 / zoom]);
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
-        
-        ctx.strokeStyle = currentShape.color;
-        ctx.lineWidth = 2 / zoom;
-        ctx.setLineDash([5 / zoom, 5 / zoom]);
-        ctx.stroke();
-        ctx.setLineDash([]);
       } else {
         // Для других фигур рисуем замкнутую область
         ctx.beginPath();
@@ -184,14 +220,34 @@ const PolygonCanvas = ({
       }
       
       // Рисуем точки
-      canvasPoints.forEach(point => {
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 4 / zoom, 0, 2 * Math.PI);
-        ctx.fillStyle = '#3b82f6';
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1 / zoom;
-        ctx.stroke();
+      canvasPoints.forEach((point, index) => {
+        if (currentShape.isSelected && activeTool === 'select') {
+          // Для завершенных фигур в режиме select рисуем "грабли" (handles)
+          const handleSize = 8 / zoom;
+          ctx.beginPath();
+          ctx.rect(point.x - handleSize/2, point.y - handleSize/2, handleSize, handleSize);
+          ctx.fillStyle = '#3b82f6';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2 / zoom;
+          ctx.stroke();
+          
+          // Добавляем номер точки для удобности
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `${12 / zoom}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText((index + 1).toString(), point.x, point.y);
+        } else {
+          // Для незавершенных фигур или в других режимах рисуем обычные точки
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 4 / zoom, 0, 2 * Math.PI);
+          ctx.fillStyle = '#3b82f6';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1 / zoom;
+          ctx.stroke();
+        }
       });
     }
     
@@ -211,33 +267,54 @@ const PolygonCanvas = ({
     }
     
     if (activeTool === 'select') {
-      // Проверяем клик по точке существующей фигуры
-      for (let shapeIndex = 0; shapeIndex < shapes.length; shapeIndex++) {
-        const shape = shapes[shapeIndex];
-        if (!shape.isSelected) continue;
-        
-        const canvasPoints = shape.points.map(p => percentToCanvas(p));
-        const nearestPointIndex = findNearestPoint(point, canvasPoints, 10 / zoom);
+      // Проверяем клик по точке текущей завершенной фигуры
+      if (currentShape && currentShape.isSelected) {
+        const canvasPoints = currentShape.points.map(p => percentToCanvas(p));
+        const nearestPointIndex = findNearestPoint(point, canvasPoints, 15 / zoom);
         
         if (nearestPointIndex !== null) {
-          setDragPoint({ shapeIndex, pointIndex: nearestPointIndex });
+          console.log('Нашли точку для перетаскивания:', nearestPointIndex);
+          setDragPoint({ shapeIndex: 0, pointIndex: nearestPointIndex });
           setIsDrawing(true);
           return;
         }
-      }
-      
-      // Проверяем клик внутри фигуры
-      const newShapes = shapes.map(shape => ({ ...shape, isSelected: false }));
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const canvasPoints = shapes[i].points.map(p => percentToCanvas(p));
+        
+        // Проверяем клик внутри завершенной фигуры
         if (isPointInsidePolygon(point, canvasPoints)) {
-          newShapes[i].isSelected = true;
-          onShapeUpdate(newShapes);
+          // Остаемся на той же фигуре
           return;
         }
       }
       
-      onShapeUpdate(newShapes);
+      // Проверяем клик по фигурам в списке shapes
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const shape = shapes[i];
+        const canvasPoints = shape.points.map(p => percentToCanvas(p));
+        
+        // Проверяем клик по точкам
+        const nearestPointIndex = findNearestPoint(point, canvasPoints, 15 / zoom);
+        if (nearestPointIndex !== null) {
+          console.log('Нашли точку для перетаскивания в shapes:', nearestPointIndex);
+          setDragPoint({ shapeIndex: i, pointIndex: nearestPointIndex });
+          setIsDrawing(true);
+          onCurrentShapeUpdate(shape);
+          return;
+        }
+        
+        // Проверяем клик внутри фигуры
+        if (isPointInsidePolygon(point, canvasPoints)) {
+          onCurrentShapeUpdate(shape);
+          return;
+        }
+      }
+      
+      // Если кликнули вне всех фигур, очищаем всё
+      if (onClearAll) {
+        onClearAll();
+      } else {
+        onShapeUpdate([]);
+        onCurrentShapeUpdate(null);
+      }
       return;
     }
     
@@ -245,6 +322,12 @@ const PolygonCanvas = ({
       const percentPoint = canvasToPercent(point);
       
       if (!currentShape) {
+        // Начинаем новый полигон, удаляем ВСЕ существующие фигуры
+        if (onClearAll) {
+          onClearAll();
+        } else {
+          onShapeUpdate([]);
+        }
         onCurrentShapeUpdate({
           id: Date.now().toString(),
           type: 'polygon',
@@ -252,11 +335,51 @@ const PolygonCanvas = ({
           color: '#3b82f6',
           isSelected: false
         });
+      } else if (currentShape.isSelected) {
+        // Если фигура уже завершена, клик вне её области начинает новую фигуру
+        const canvasPoints = currentShape.points.map(p => percentToCanvas(p));
+        
+        if (!isPointInsidePolygon(point, canvasPoints)) {
+          // Удаляем ВСЕ старые фигуры и начинаем новую
+          if (onClearAll) {
+            onClearAll();
+          } else {
+            onShapeUpdate([]);
+          }
+          onCurrentShapeUpdate({
+            id: Date.now().toString(),
+            type: 'polygon',
+            points: [percentPoint],
+            color: '#3b82f6',
+            isSelected: false
+          });
+        }
       } else {
-        onCurrentShapeUpdate({
-          ...currentShape,
-          points: [...currentShape.points, percentPoint]
-        });
+        // Проверяем, не кликнули ли мы на первую точку (замыкание полигона)
+        const firstPoint = currentShape.points[0];
+        const distance = Math.sqrt(
+          Math.pow(percentPoint.x - firstPoint.x, 2) + 
+          Math.pow(percentPoint.y - firstPoint.y, 2)
+        );
+        
+        // Если кликнули близко к первой точке и у нас есть минимум 3 точки
+        if (distance < 2 && currentShape.points.length >= 3) {
+          // Замыкаем полигон
+          const completedShape = {
+            ...currentShape,
+            isSelected: true
+          };
+          
+          // Добавляем завершенную фигуру в список и делаем её текущей для редактирования
+          onShapeUpdate([completedShape]);
+          onCurrentShapeUpdate(completedShape);
+        } else {
+          // Добавляем новую точку к полигону
+          onCurrentShapeUpdate({
+            ...currentShape,
+            points: [...currentShape.points, percentPoint]
+          });
+        }
       }
       return;
     }
@@ -264,6 +387,12 @@ const PolygonCanvas = ({
     if (activeTool === 'circle' || activeTool === 'rectangle') {
       setIsDrawing(true);
       const percentPoint = canvasToPercent(point);
+      
+      // Очищаем все фигуры только если начинаем новую
+      if (onClearAll) {
+        onClearAll();
+      }
+      
       onCurrentShapeUpdate({
         id: Date.now().toString(),
         type: activeTool,
@@ -287,9 +416,25 @@ const PolygonCanvas = ({
       const point = getCanvasCoordinates(e.clientX, e.clientY);
       const percentPoint = canvasToPercent(point);
       
-      const newShapes = [...shapes];
-      newShapes[dragPoint.shapeIndex].points[dragPoint.pointIndex] = percentPoint;
-      onShapeUpdate(newShapes);
+      console.log('Перетаскивание точки:', dragPoint.pointIndex, 'в позицию:', percentPoint);
+      
+      // Обновляем точку в фигуре
+      if (currentShape) {
+        const newPoints = [...currentShape.points];
+        newPoints[dragPoint.pointIndex] = percentPoint;
+        
+        const updatedShape = {
+          ...currentShape,
+          points: newPoints
+        };
+        
+        onCurrentShapeUpdate(updatedShape);
+        
+        // Обновляем фигуру в списке shapes
+        const newShapes = [...shapes];
+        newShapes[dragPoint.shapeIndex] = updatedShape;
+        onShapeUpdate(newShapes);
+      }
       return;
     }
     
@@ -337,8 +482,12 @@ const PolygonCanvas = ({
         );
         
         if (hasValidSize) {
-          onShapeUpdate([...shapes, currentShape]);
-          onCurrentShapeUpdate(null);
+          const completedShape = {
+            ...currentShape,
+            isSelected: true
+          };
+          onShapeUpdate([completedShape]);
+          onCurrentShapeUpdate(completedShape);
         }
       }
     }
@@ -353,24 +502,63 @@ const PolygonCanvas = ({
     if (activeTool === 'polygon' && currentShape && currentShape.points.length > 0) {
       // Убираем последнюю точку
       const newPoints = currentShape.points.slice(0, -1);
+      
       if (newPoints.length === 0) {
+        // Если точек не осталось, удаляем фигуру
+        onShapeUpdate([]);
         onCurrentShapeUpdate(null);
-      } else {
+      } else if (newPoints.length < 3) {
+        // Если осталось меньше 3 точек, возвращаем в режим рисования
         onCurrentShapeUpdate({
           ...currentShape,
-          points: newPoints
+          points: newPoints,
+          isSelected: false
         });
+        
+        // Удаляем из списка фигур
+        onShapeUpdate([]);
+      } else {
+        // Обновляем фигуру
+        const updatedShape = {
+          ...currentShape,
+          points: newPoints
+        };
+        
+        if (currentShape.isSelected) {
+          // Обновляем в списке фигур
+          onShapeUpdate([updatedShape]);
+        }
+        
+        onCurrentShapeUpdate(updatedShape);
       }
     }
   };
 
   const handleDoubleClick = () => {
-    if (activeTool === 'polygon' && currentShape && currentShape.points.length >= 3) {
-      // Завершаем полигон
-      onShapeUpdate([...shapes, currentShape]);
-      onCurrentShapeUpdate(null);
-    }
+    // Двойной клик ничего не делает, завершение только через замыкание или кнопку "Сохранить"
   };
+
+  // Функция для завершения текущего полигона через кнопку "Сохранить"
+  const completeCurrentPolygon = useCallback(() => {
+    if (currentShape && !currentShape.isSelected && currentShape.points.length >= 3) {
+      const completedShape = {
+        ...currentShape,
+        isSelected: true
+      };
+      
+      onShapeUpdate([completedShape]);
+      onCurrentShapeUpdate(completedShape);
+      return true;
+    }
+    return false;
+  }, [currentShape, onShapeUpdate, onCurrentShapeUpdate]);
+
+  // Экспортируем функцию для использования в toolbar
+  useEffect(() => {
+    if (onSaveCurrentShape) {
+      (window as unknown as Record<string, unknown>).completeCurrentPolygon = completeCurrentPolygon;
+    }
+  }, [completeCurrentPolygon, onSaveCurrentShape]);
 
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey) {
@@ -403,7 +591,10 @@ const PolygonCanvas = ({
     <div ref={containerRef} className="relative">
       <canvas
         ref={canvasRef}
-        className={`border rounded-lg cursor-crosshair ${className}`}
+        className={`border rounded-lg ${
+          activeTool === 'select' && currentShape?.isSelected ? 'cursor-pointer' :
+          activeTool === 'move' ? 'cursor-move' : 'cursor-crosshair'
+        } ${className}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

@@ -31,7 +31,6 @@ const PolygonToolbar = ({
   const tools = [
     { id: 'select' as const, icon: MousePointer, label: 'Выбор и редактирование', shortcut: 'V' },
     { id: 'polygon' as const, icon: Pentagon, label: 'Полигон (точки)', shortcut: 'P' },
-    { id: 'circle' as const, icon: Circle, label: 'Круг', shortcut: 'C' },
     { id: 'rectangle' as const, icon: Square, label: 'Прямоугольник', shortcut: 'R' },
     { id: 'move' as const, icon: Move, label: 'Перемещение', shortcut: 'M' },
   ];

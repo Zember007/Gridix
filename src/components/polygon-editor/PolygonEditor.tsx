@@ -28,6 +28,13 @@ const PolygonEditor = ({
   const [history, setHistory] = useState<Shape[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  const addToHistory = useCallback((newShapes: Shape[]) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push([...newShapes]);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
   // Инициализация существующими полигонами
   useEffect(() => {
     if (existingPolygons.length > 0) {
@@ -43,37 +50,66 @@ const PolygonEditor = ({
     }
   }, [existingPolygons, polygonColor]);
 
-  const addToHistory = useCallback((newShapes: Shape[]) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push([...newShapes]);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
-
   const handleShapeUpdate = useCallback((newShapes: Shape[]) => {
     setShapes(newShapes);
     addToHistory(newShapes);
   }, [addToHistory]);
 
-  const handleUndo = () => {
+  const handleCurrentShapeUpdate = useCallback((shape: Shape | null) => {
+    setCurrentShape(shape);
+    // Если очищаем текущую фигуру, также очищаем все фигуры в списке
+    if (!shape) {
+      setShapes([]);
+      addToHistory([]);
+    }
+  }, [addToHistory]);
+
+  // Функция для полной очистки всех данных
+  const clearAllData = useCallback(() => {
+    setShapes([]);
+    setCurrentShape(null);
+    setHistory([]);
+    setHistoryIndex(-1);
+  }, []);
+
+  const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
       setShapes(history[historyIndex - 1]);
     }
-  };
+  }, [historyIndex, history]);
 
   const handleClear = () => {
-    setShapes([]);
-    setCurrentShape(null);
-    addToHistory([]);
+    clearAllData();
     toast.success('Все полигоны очищены');
   };
 
   const handleSave = () => {
-    // Объединяем все фигуры в один полигон или берем выбранную
-    const selectedShape = shapes.find(s => s.isSelected);
-    const pointsToSave = selectedShape ? selectedShape.points :
-      shapes.length > 0 ? shapes[shapes.length - 1].points : [];
+    // Сначала пытаемся завершить текущий полигон, если он есть
+    if (currentShape && !currentShape.isSelected && currentShape.points.length >= 3) {
+      const completedShape = {
+        ...currentShape,
+        isSelected: true
+      };
+      setShapes([completedShape]);
+      setCurrentShape(completedShape);
+      addToHistory([completedShape]);
+      toast.success('Полигон завершен и готов к сохранению');
+      return;
+    }
+
+    // Если полигон уже завершен, сохраняем его
+    // Приоритет: currentShape > shapes с isSelected
+    let pointsToSave: Point[] = [];
+    
+    if (currentShape && currentShape.isSelected) {
+      pointsToSave = currentShape.points;
+    } else {
+      const selectedShape = shapes.find(s => s.isSelected);
+      if (selectedShape) {
+        pointsToSave = selectedShape.points;
+      }
+    }
 
     if (pointsToSave.length < 3) {
       toast.error('Полигон должен содержать минимум 3 точки');
@@ -97,6 +133,8 @@ const PolygonEditor = ({
           break;
         case 'p':
           setActiveTool('polygon');
+          // При переключении на полигон очищаем все фигуры
+          clearAllData();
           break;
         case 'c':
           setActiveTool('circle');
@@ -108,10 +146,16 @@ const PolygonEditor = ({
           setActiveTool('move');
           break;
         case 'enter':
-          if (currentShape && currentShape.points.length >= 3) {
-            setShapes(prev => [...prev, currentShape]);
-            setCurrentShape(null);
-            addToHistory([...shapes, currentShape]);
+          if (currentShape && !currentShape.isSelected && currentShape.points.length >= 3) {
+            // Завершаем полигон
+            const completedShape = {
+              ...currentShape,
+              isSelected: true
+            };
+            setShapes([completedShape]);
+            setCurrentShape(completedShape);
+            addToHistory([completedShape]);
+            toast.success('Полигон завершен');
           }
           break;
         case 'escape':
@@ -122,7 +166,7 @@ const PolygonEditor = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [shapes, currentShape, addToHistory]);
+  }, [shapes, currentShape, addToHistory, handleUndo]);
 
   if (!imageUrl) {
     return (
@@ -154,9 +198,10 @@ const PolygonEditor = ({
                 <ul className="text-xs space-y-1 mt-1">
                   <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Ctrl</kbd> + колесико - масштаб</li>
                   <li>• Правая кнопка - удалить последнюю точку</li>
-                  <li>• Двойной клик - завершить полигон</li>
-                  <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Enter</kbd> - завершить фигуру</li>
-                  <li>• Перетаскивание точек в режиме выбора</li>
+                  <li>• Клик на первую точку - замкнуть полигон</li>
+                  <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Enter</kbd> или кнопка "Сохранить" - завершить полигон</li>
+                  <li>• Перетаскивание квадратных "граблей" - редактирование точек</li>
+                  <li>• Клик вне фигуры - начать новую фигуру</li>
                 </ul>
               </div>
 
@@ -167,7 +212,8 @@ const PolygonEditor = ({
                   currentShape={currentShape}
                   activeTool={activeTool}
                   onShapeUpdate={handleShapeUpdate}
-                  onCurrentShapeUpdate={setCurrentShape}
+                  onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                  onClearAll={clearAllData}
                   className="w-full"
                 />
               </div>
