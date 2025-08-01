@@ -14,6 +14,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Point {
   x: number;
@@ -88,6 +89,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { project } = useProject(projectId);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadFloorPlan();
@@ -125,7 +127,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       }
     } catch (error) {
       console.error('Error loading floor plan:', error);
-      toast.error('Ошибка загрузки плана этажа');
+      toast.error(t('floorPlan.loadFloorPlanError'));
     }
   };
 
@@ -152,7 +154,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       setApartments(transformedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
-      toast.error('Ошибка загрузки квартир');
+      toast.error(t('floorPlan.loadApartmentsError'));
     }
   };
 
@@ -206,7 +208,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
     // Проверяем аутентификацию пользователя
     if (!user) {
-      toast.error('Необходимо войти в систему для загрузки планов этажей');
+      toast.error(t('floorPlan.upload.authRequired'));
       return;
     }
 
@@ -258,10 +260,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         if (insertError) throw insertError;
       }
 
-      toast.success('План этажа загружен');
+      toast.success(t('floorPlan.upload.success'));
     } catch (error) {
       console.error('Error uploading floor plan:', error);
-      toast.error('Ошибка загрузки плана этажа');
+      toast.error(t('floorPlan.upload.error'));
     } finally {
       setLoading(false);
     }
@@ -269,7 +271,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const duplicateToAllFloors = async () => {
     if (!imageUrl && apartments.length === 0) {
-      toast.error('Нет данных для дублирования');
+      toast.error(t('floorPlan.duplicate.noData'));
       return;
     }
 
@@ -373,10 +375,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         }
       }
 
-      toast.success('План и полигоны продублированы на все этажи');
+      toast.success(t('floorPlan.duplicate.success'));
     } catch (error) {
       console.error('Error duplicating to all floors:', error);
-      toast.error('Ошибка дублирования на все этажи');
+      toast.error(t('floorPlan.duplicate.error'));
     } finally {
       setLoading(false);
     }
@@ -414,7 +416,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const handlePolygonSave = async (points: Point[]) => {
     if (!editingApartment || points.length < 3 || !apartmentData.number) {
-      toast.error('Заполните все поля и создайте полигон (минимум 3 точки)');
+      toast.error(t('floorPlan.apartments.fillAllFields'));
       return;
     }
 
@@ -472,10 +474,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       }
 
       resetEditing();
-      toast.success('Квартира сохранена');
+      toast.success(t('floorPlan.apartments.saveSuccess'));
     } catch (error) {
       console.error('Error saving apartment:', error);
-      toast.error('Ошибка сохранения квартиры');
+      toast.error(t('floorPlan.apartments.saveError'));
     }
   };
 
@@ -493,10 +495,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       if (error) throw error;
 
       setApartments(prev => prev.filter(apt => apt.id !== apartmentId));
-      toast.success('Квартира удалена');
+      toast.success(t('floorPlan.apartments.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting apartment:', error);
-      toast.error('Ошибка удаления квартиры');
+      toast.error(t('floorPlan.apartments.deleteError'));
     }
   };
 
@@ -573,12 +575,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Настройки полигонов этажа {floorNumber}</h3>
+          <h3 className="text-lg font-semibold">{t('floorPlan.settings.title', { floor: floorNumber })}</h3>
           <Button
             variant="outline"
             onClick={() => setShowSettings(false)}
           >
-            Назад к редактору
+            {t('floorPlan.settings.backToEditor')}
           </Button>
         </div>
         <PolygonCustomizationSettings
@@ -596,27 +598,30 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
-            Редактирование полигона - {editingApartment === 'new' ? 'Новая квартира' : `Квартира №${apartmentData.number}`}
+            {editingApartment === 'new' 
+              ? t('floorPlan.apartments.newApartment') 
+              : t('floorPlan.apartments.editApartment', { number: apartmentData.number })
+            }
           </h3>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-md">Параметры квартиры</CardTitle>
+            <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="apt-number">Номер квартиры</Label>
+                <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
                 <Input
                   id="apt-number"
                   value={apartmentData.number}
                   onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
-                  placeholder="Например: 101"
+                  placeholder={t('floorPlan.apartments.numberPlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="apt-rooms">Комнат</Label>
+                <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
                 <Select
                   value={apartmentData.rooms.toString()}
                   onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: parseInt(value) }))}
@@ -634,7 +639,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </Select>
               </div>
               <div>
-                <Label htmlFor="apt-area">Площадь (м²)</Label>
+                <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
                 <Input
                   id="apt-area"
                   type="number"
@@ -643,7 +648,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 />
               </div>
               <div>
-                <Label htmlFor="apt-price">Цена (₽)</Label>
+                <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
                 <Input
                   id="apt-price"
                   type="number"
@@ -652,7 +657,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="apt-status">Статус</Label>
+                <Label htmlFor="apt-status">{t('floorPlan.apartments.status')}</Label>
                 <Select
                   value={apartmentData.status}
                   onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
@@ -661,9 +666,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="available">Свободна</SelectItem>
-                    <SelectItem value="reserved">Бронь</SelectItem>
-                    <SelectItem value="sold">Продана</SelectItem>
+                    <SelectItem value="available">{t('floorPlan.apartments.available')}</SelectItem>
+                    <SelectItem value="reserved">{t('floorPlan.apartments.reserved')}</SelectItem>
+                    <SelectItem value="sold">{t('floorPlan.apartments.sold')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -689,7 +694,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h3 className="text-lg font-semibold">План этажа</h3>
+              <h3 className="text-lg font-semibold">{t('floorPlan.title')}</h3>
               {onFloorChange && allFloors.length > 1 && (
                 <Select
                   value={floorNumber.toString()}
@@ -701,7 +706,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   <SelectContent>
                     {allFloors.map(floor => (
                       <SelectItem key={floor} value={floor.toString()}>
-                        Этаж {floor}
+                        {t('floorPlan.title')} {floor}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -715,14 +720,14 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 disabled={loading || (!imageUrl && apartments.length === 0)}
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Дублировать на все этажи
+                {t('floorPlan.duplicateToAllFloors')}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowSettings(true)}
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Настройки
+                {t('floorPlan.settings')}
               </Button>
             </div>
           </div>
@@ -730,12 +735,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           {/* Image Upload */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-md">Загрузка плана этажа</CardTitle>
+              <CardTitle className="text-md">{t('floorPlan.upload.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="floor-image">План этажа {floorNumber}</Label>
+                  <Label htmlFor="floor-image">{t('floorPlan.upload.floorPlan', { floor: floorNumber })}</Label>
                   <Input
                     id="floor-image"
                     type="file"
@@ -744,7 +749,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     disabled={loading}
                   />
                 </div>
-                {loading && <p className="text-sm text-gray-600">Загрузка...</p>}
+                {loading && <p className="text-sm text-gray-600">{t('floorPlan.upload.loading')}</p>}
               </div>
             </CardContent>
           </Card>
@@ -752,7 +757,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           {/* Apartment Controls */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-md">Управление квартирами</CardTitle>
+              <CardTitle className="text-md">{t('floorPlan.apartments.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -761,21 +766,21 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   disabled={!!editingApartment}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Добавить квартиру
+                  {t('floorPlan.apartments.add')}
                 </Button>
 
                 {/* Apartments List */}
                 <div className="space-y-2">
-                  <h4 className="font-medium">Квартиры на этаже:</h4>
+                  <h4 className="font-medium">{t('floorPlan.apartments.list')}</h4>
                   <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                     {apartments.map(apartment => (
                       <div key={apartment.id} className="flex items-center justify-between p-2 border rounded">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">№{apartment.apartment_number}</span>
                           <Badge variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                            {apartment.status === 'available' ? 'Свободна' : apartment.status === 'sold' ? 'Продана' : 'Бронь'}
+                            {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
                           </Badge>
-                          <span className="text-sm text-gray-600">{apartment.rooms} комн., {apartment.area} м²</span>
+                          <span className="text-sm text-gray-600">{apartment.rooms} {t('floorPlan.apartments.roomsShort')}, {apartment.area} м²</span>
                         </div>
                         <div className="flex gap-1">
                           <Button
@@ -815,7 +820,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     onLoad={() => console.log('Floor plan image loaded successfully')}
                     onError={(e) => {
                       console.error('Floor plan image failed to load:', e);
-                      toast.error('Не удалось загрузить изображение плана');
+                      toast.error(t('floorPlan.image.loadError'));
                     }}
                   />
                   <svg
@@ -854,19 +859,19 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                               <div className="space-y-2">
                                 <h4 className="font-semibold">Квартира №{apartment.apartment_number}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <span className="text-gray-600">Комнат:</span>
+                                  <span className="text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
                                   <span>{apartment.rooms}</span>
-                                  <span className="text-gray-600">Площадь:</span>
+                                  <span className="text-gray-600">{t('floorPlan.apartments.area')}:</span>
                                   <span>{apartment.area} м²</span>
                                   {apartment.price > 0 && (
                                     <>
-                                      <span className="text-gray-600">Цена:</span>
+                                      <span className="text-gray-600">{t('floorPlan.apartments.price')}:</span>
                                       <span>{new Intl.NumberFormat('ru-RU').format(apartment.price)} ₽</span>
                                     </>
                                   )}
-                                  <span className="text-gray-600">Статус:</span>
+                                  <span className="text-gray-600">{t('floorPlan.apartments.status')}:</span>
                                   <Badge variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                                    {apartment.status === 'available' ? 'Свободна' : apartment.status === 'sold' ? 'Продана' : 'Бронь'}
+                                    {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
                                   </Badge>
                                 </div>
                               </div>
@@ -913,22 +918,22 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Статус:</span>
+                <span className="text-sm text-gray-600">{t('floorPlan.apartments.status')}:</span>
                 <Badge variant={selectedApartment.status === 'available' ? 'default' : selectedApartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                  {selectedApartment.status === 'available' ? 'Свободна' : selectedApartment.status === 'sold' ? 'Продана' : 'Бронь'}
+                  {selectedApartment.status === 'available' ? t('floorPlan.apartments.available') : selectedApartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Комнат:</span>
+                <span className="text-sm text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
                 <span className="font-medium">{selectedApartment.rooms}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Площадь:</span>
+                <span className="text-sm text-gray-600">{t('floorPlan.apartments.area')}:</span>
                 <span className="font-medium">{selectedApartment.area} м²</span>
               </div>
               {selectedApartment.price > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Цена:</span>
+                  <span className="text-sm text-gray-600">{t('floorPlan.apartments.price')}:</span>
                   <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} ₽</span>
                 </div>
               )}
@@ -941,7 +946,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   disabled={!!editingApartment}
                 >
                   <Edit3 className="h-3 w-3 mr-1" />
-                  Редактировать
+                  {t('buildingImage.floors.edit')}
                 </Button>
               </div>
             </CardContent>

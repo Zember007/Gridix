@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
@@ -37,6 +38,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+  const { t } = useLanguage();
 
   const [newApartment, setNewApartment] = useState<Partial<Apartment>>({
     apartment_number: '',
@@ -68,7 +70,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       setApartments(formattedApartments);
     } catch (error) {
       console.error('Error loading apartments:', error);
-      toast.error('Ошибка загрузки квартир');
+      toast.error(t('apartmentsManager.loadError'));
     } finally {
       setLoading(false);
     }
@@ -76,12 +78,12 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
   const handleSaveApartment = async (apartmentData: Partial<Apartment>, isNew: boolean = false) => {
     if (!apartmentData.apartment_number?.trim()) {
-      toast.error('Номер квартиры обязателен');
+      toast.error(t('apartmentsManager.numberRequired'));
       return;
     }
 
     if (!apartmentData.floor_number || apartmentData.floor_number < 1) {
-      toast.error('Номер этажа обязателен');
+      toast.error(t('apartmentsManager.floorRequired'));
       return;
     }
 
@@ -122,7 +124,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           polygon: [],
           custom_fields: {}
         });
-        toast.success('Квартира добавлена');
+        toast.success(t('apartmentsManager.saveSuccess'));
       } else if (editingApartment) {
         const { data, error } = await supabase
           .from('apartments')
@@ -139,18 +141,18 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           prev.map(apt => apt.id === editingApartment.id ? updatedApt : apt)
         );
         setEditingApartment(null);
-        toast.success('Квартира обновлена');
+        toast.success(t('apartmentsManager.updateSuccess'));
       }
 
       setCustomFieldsData({});
     } catch (error) {
       console.error('Error saving apartment:', error);
-      toast.error('Ошибка сохранения квартиры');
+      toast.error(t('apartmentsManager.saveError'));
     }
   };
 
   const handleDeleteApartment = async (apartmentId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить эту квартиру?')) return;
+    if (!confirm(t('apartmentsManager.deleteConfirm'))) return;
 
     try {
       const { error } = await supabase
@@ -161,10 +163,10 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       if (error) throw error;
 
       setApartments(prev => prev.filter(apt => apt.id !== apartmentId));
-      toast.success('Квартира удалена');
+      toast.success(t('apartmentsManager.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting apartment:', error);
-      toast.error('Ошибка удаления квартиры');
+      toast.error(t('apartmentsManager.deleteError'));
     }
   };
 
@@ -179,9 +181,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'sold': return 'Продана';
-      case 'reserved': return 'Забронирована';
-      case 'available': return 'Свободна';
+      case 'sold': return t('apartmentsManager.sold');
+      case 'reserved': return t('apartmentsManager.reserved');
+      case 'available': return t('apartmentsManager.available');
       default: return status;
     }
   };
@@ -190,7 +192,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="apartment_number">Номер квартиры*</Label>
+          <Label htmlFor="apartment_number">{t('apartmentsManager.apartmentNumber')}</Label>
           <Input
             id="apartment_number"
             value={apartment.apartment_number || ''}
@@ -205,7 +207,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           />
         </div>
         <div>
-          <Label htmlFor="floor_number">Этаж*</Label>
+          <Label htmlFor="floor_number">{t('apartmentsManager.floorNumber')}</Label>
           <Input
             id="floor_number"
             type="number"
@@ -225,7 +227,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="rooms">Комнат*</Label>
+          <Label htmlFor="rooms">{t('apartmentsManager.rooms')}</Label>
           <Input
             id="rooms"
             type="number"
@@ -242,7 +244,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           />
         </div>
         <div>
-          <Label htmlFor="area">Площадь (м²)*</Label>
+          <Label htmlFor="area">{t('apartmentsManager.area')}</Label>
           <Input
             id="area"
             type="number"
@@ -263,7 +265,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="price">Цена (руб.)</Label>
+          <Label htmlFor="price">{t('apartmentsManager.price')}</Label>
           <Input
             id="price"
             type="number"
@@ -280,7 +282,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           />
         </div>
         <div>
-          <Label htmlFor="status">Статус</Label>
+          <Label htmlFor="status">{t('apartmentsManager.status')}</Label>
           <Select
             value={apartment.status}
             onValueChange={(value: string) => {
@@ -298,9 +300,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="available">Свободна</SelectItem>
-              <SelectItem value="reserved">Забронирована</SelectItem>
-              <SelectItem value="sold">Продана</SelectItem>
+              <SelectItem value="available">{t('apartmentsManager.available')}</SelectItem>
+              <SelectItem value="reserved">{t('apartmentsManager.reserved')}</SelectItem>
+              <SelectItem value="sold">{t('apartmentsManager.sold')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -319,7 +321,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           <Save className="h-4 w-4 mr-2" />
-          Сохранить
+          {t('apartmentsManager.save')}
         </Button>
         <Button
           variant="outline"
@@ -343,14 +345,14 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           }}
         >
           <X className="h-4 w-4 mr-2" />
-          Отмена
+          {t('apartmentsManager.cancel')}
         </Button>
       </div>
     </div>
   );
 
   if (loading) {
-    return <div className="p-4 text-center">Загрузка квартир...</div>;
+    return <div className="p-4 text-center">{t('apartmentsManager.loading')}</div>;
   }
 
   return (
@@ -358,9 +360,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Квартиры проекта</CardTitle>
+            <CardTitle>{t('apartmentsManager.title')}</CardTitle>
             <CardDescription>
-              Управление квартирами и их характеристиками
+              {t('apartmentsManager.description')}
             </CardDescription>
           </div>
           <Button
@@ -368,7 +370,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
             className="bg-real-estate-600 hover:bg-real-estate-700"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Добавить квартиру
+            {t('apartmentsManager.addApartment')}
           </Button>
         </div>
       </CardHeader>
@@ -377,7 +379,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         {isAddingNew && (
           <Card className="border-dashed">
             <CardHeader>
-              <CardTitle className="text-lg">Новая квартира</CardTitle>
+              <CardTitle className="text-lg">{t('apartmentsManager.newApartment')}</CardTitle>
             </CardHeader>
             <CardContent>
               {renderApartmentForm(newApartment, true)}
@@ -398,26 +400,26 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">
-                        Квартира {apartment.apartment_number}
+                        {t('apartmentsManager.apartment', { number: apartment.apartment_number })}
                       </CardTitle>
                       <Badge className={getStatusColor(apartment.status)}>
                         {getStatusLabel(apartment.status)}
                       </Badge>
                     </div>
                     <CardDescription>
-                      Этаж {apartment.floor_number} • {apartment.rooms} комн.
+                      {t('apartmentsManager.floor', { floor: apartment.floor_number })} • {t('apartmentsManager.roomsShort', { rooms: apartment.rooms })}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Площадь:</span>
-                        <span>{apartment.area} м²</span>
+                        <span className="text-gray-600">{t('apartmentsManager.area')}:</span>
+                        <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
                       </div>
                       {apartment.price && (
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Цена:</span>
-                          <span>{apartment.price.toLocaleString()} руб.</span>
+                          <span className="text-gray-600">{t('apartmentsManager.price')}:</span>
+                          <span>{t('apartmentsManager.priceValue', { price: apartment.price.toLocaleString() })}</span>
                         </div>
                       )}
                     </div>
@@ -452,8 +454,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
         {apartments.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p>Квартиры не добавлены</p>
-            <p className="text-sm">Нажмите "Добавить квартиру" чтобы начать</p>
+            <p>{t('apartmentsManager.noApartments')}</p>
+            <p className="text-sm">{t('apartmentsManager.noApartmentsDesc')}</p>
           </div>
         )}
       </CardContent>

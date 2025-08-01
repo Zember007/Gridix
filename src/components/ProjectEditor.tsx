@@ -191,14 +191,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           <Layers3 className="h-3 w-3" />
                         </div>
                         <div>
-                          <CardTitle className="text-xs">Этаж {floor}</CardTitle>
+                          <CardTitle className="text-xs">{t('projectEditor.floor')} {floor}</CardTitle>
                           <CardDescription className="text-xs">
-                            Планировка {floor} этажа
+                            {t('projectEditor.floorPlanDesc', { floor })}
                           </CardDescription>
                         </div>
                       </div>
                       <Badge variant="outline" className="text-xs px-1">
-                        План
+                        {t('projectEditor.plan')}
                       </Badge>
                     </div>
                   </CardHeader>

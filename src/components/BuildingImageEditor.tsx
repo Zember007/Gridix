@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -34,6 +35,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { project } = useProject(projectId);
+  const { t } = useLanguage();
 
   const loadBuildingData = useCallback(async () => {
     try {
@@ -70,7 +72,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
     // Проверяем аутентификацию пользователя
     if (!user) {
-      toast.error('Необходимо войти в систему для загрузки изображений');
+      toast.error(t('buildingImage.authRequired'));
       return;
     }
 
@@ -98,10 +100,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
       setBuildingImage(publicUrl);
       onImageUpdate?.(publicUrl);
-      toast.success('Изображение здания загружено');
+      toast.success(t('buildingImage.uploadSuccess'));
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Ошибка загрузки изображения');
+      toast.error(t('buildingImage.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -133,10 +135,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
       await loadBuildingData();
       setIsEditing(false);
-      toast.success(`Полигон для ${selectedFloor} этажа сохранен`);
+      toast.success(t('buildingImage.polygon.saveSuccess', { floor: selectedFloor }));
     } catch (error) {
       console.error('Error saving polygon:', error);
-      toast.error('Ошибка сохранения полигона');
+      toast.error(t('buildingImage.polygon.saveError'));
     }
   };
 
@@ -150,10 +152,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       if (error) throw error;
 
       await loadBuildingData();
-      toast.success('Полигон этажа удален');
+      toast.success(t('buildingImage.polygon.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting polygon:', error);
-      toast.error('Ошибка удаления полигона');
+      toast.error(t('buildingImage.polygon.deleteError'));
     }
   };
 
@@ -173,9 +175,9 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Изображение здания</CardTitle>
+          <CardTitle className="text-lg">{t('buildingImage.title')}</CardTitle>
           <CardDescription>
-            Загрузите изображение фасада здания для настройки этажей
+            {t('buildingImage.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -194,7 +196,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
               disabled={uploading}
             >
               <Upload className="h-4 w-4 mr-2" />
-              {uploading ? 'Загружается...' : 'Загрузить изображение'}
+              {uploading ? t('buildingImage.uploading') : t('buildingImage.upload')}
             </Button>
           </div>
 
@@ -213,15 +215,15 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       {buildingImage && (
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Настройка этажей</CardTitle>
+            <CardTitle className="text-lg">{t('buildingImage.floors.title')}</CardTitle>
             <CardDescription>
-              Выберите этаж и отметьте его область на изображении здания
+              {t('buildingImage.floors.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label htmlFor="floor-select" className="text-sm font-medium">Этаж:</Label>
+                <Label htmlFor="floor-select" className="text-sm font-medium">{t('buildingImage.floors.floor')}</Label>
                 <select
                   id="floor-select"
                   value={selectedFloor}
@@ -242,17 +244,17 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 size="sm"
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
-                Редактировать
+                {t('buildingImage.floors.edit')}
               </Button>
             </div>
 
             {buildingFloors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">Настроенные этажи:</h4>
+                <h4 className="font-medium text-sm">{t('buildingImage.floors.configured')}</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {buildingFloors.map((floor) => (
                     <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
-                      <span>{floor.floor_number} этаж</span>
+                      <span>{t('buildingImage.floors.floorNumber', { floor: floor.floor_number })}</span>
                       <Button
                         variant="ghost"
                         size="sm"

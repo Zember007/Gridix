@@ -1513,13 +1513,673 @@ const translations: Translations = {
     ru: 'Регистрация',
     en: 'Sign Up',
     ka: 'რეგისტრაცია'
+  },
+
+  // Building Image Editor
+  'buildingImage.title': {
+    ru: 'Изображение здания',
+    en: 'Building Image',
+    ka: 'შენობის სურათი'
+  },
+  'buildingImage.description': {
+    ru: 'Загрузите изображение фасада здания для настройки этажей',
+    en: 'Upload building facade image for floor configuration',
+    ka: 'ატვირთეთ შენობის ფასადის სურათი სართულების კონფიგურაციისთვის'
+  },
+  'buildingImage.upload': {
+    ru: 'Загрузить изображение',
+    en: 'Upload Image',
+    ka: 'სურათის ატვირთვა'
+  },
+  'buildingImage.uploading': {
+    ru: 'Загружается...',
+    en: 'Uploading...',
+    ka: 'იტვირთება...'
+  },
+  'buildingImage.uploadSuccess': {
+    ru: 'Изображение здания загружено',
+    en: 'Building image uploaded',
+    ka: 'შენობის სურათი ატვირთულია'
+  },
+  'buildingImage.uploadError': {
+    ru: 'Ошибка загрузки изображения',
+    en: 'Error uploading image',
+    ka: 'სურათის ატვირთვის შეცდომა'
+  },
+  'buildingImage.authRequired': {
+    ru: 'Необходимо войти в систему для загрузки изображений',
+    en: 'Authentication required to upload images',
+    ka: 'სურათების ატვირთვისთვის ავტორიზაცია საჭიროა'
+  },
+  'buildingImage.floors.title': {
+    ru: 'Настройка этажей',
+    en: 'Floor Configuration',
+    ka: 'სართულების კონფიგურაცია'
+  },
+  'buildingImage.floors.description': {
+    ru: 'Выберите этаж и отметьте его область на изображении здания',
+    en: 'Select a floor and mark its area on the building image',
+    ka: 'აირჩიეთ სართული და მონიშნეთ მისი ზონა შენობის სურათზე'
+  },
+  'buildingImage.floors.floor': {
+    ru: 'Этаж:',
+    en: 'Floor:',
+    ka: 'სართული:'
+  },
+  'buildingImage.floors.edit': {
+    ru: 'Редактировать',
+    en: 'Edit',
+    ka: 'რედაქტირება'
+  },
+  'buildingImage.floors.configured': {
+    ru: 'Настроенные этажи:',
+    en: 'Configured floors:',
+    ka: 'კონფიგურირებული სართულები:'
+  },
+  'buildingImage.floors.floorNumber': {
+    ru: '{floor} этаж',
+    en: 'Floor {floor}',
+    ka: 'სართული {floor}'
+  },
+  'buildingImage.polygon.saveSuccess': {
+    ru: 'Полигон для {floor} этажа сохранен',
+    en: 'Polygon for floor {floor} saved',
+    ka: 'სართული {floor}-ის პოლიგონი შენახულია'
+  },
+  'buildingImage.polygon.saveError': {
+    ru: 'Ошибка сохранения полигона',
+    en: 'Error saving polygon',
+    ka: 'პოლიგონის შენახვის შეცდომა'
+  },
+  'buildingImage.polygon.deleteSuccess': {
+    ru: 'Полигон этажа удален',
+    en: 'Floor polygon deleted',
+    ka: 'სართულის პოლიგონი წაშლილია'
+  },
+  'buildingImage.polygon.deleteError': {
+    ru: 'Ошибка удаления полигона',
+    en: 'Error deleting polygon',
+    ka: 'პოლიგონის წაშლის შეცდომა'
+  },
+
+  // Floor Plan Editor
+  'floorPlan.title': {
+    ru: 'План этажа',
+    en: 'Floor Plan',
+    ka: 'სართულის გეგმა'
+  },
+  'floorPlan.duplicateToAllFloors': {
+    ru: 'Дублировать на все этажи',
+    en: 'Duplicate to all floors',
+    ka: 'ყველა სართულზე დუბლირება'
+  },
+  'floorPlan.settings': {
+    ru: 'Настройки',
+    en: 'Settings',
+    ka: 'პარამეტრები'
+  },
+  'floorPlan.upload.title': {
+    ru: 'Загрузка плана этажа',
+    en: 'Floor Plan Upload',
+    ka: 'სართულის გეგმის ატვირთვა'
+  },
+  'floorPlan.upload.floorPlan': {
+    ru: 'План этажа {floor}',
+    en: 'Floor {floor} plan',
+    ka: 'სართული {floor} გეგმა'
+  },
+  'floorPlan.upload.loading': {
+    ru: 'Загрузка...',
+    en: 'Loading...',
+    ka: 'იტვირთება...'
+  },
+  'floorPlan.upload.success': {
+    ru: 'План этажа загружен',
+    en: 'Floor plan uploaded',
+    ka: 'სართულის გეგმა ატვირთულია'
+  },
+  'floorPlan.upload.error': {
+    ru: 'Ошибка загрузки плана этажа',
+    en: 'Error uploading floor plan',
+    ka: 'სართულის გეგმის ატვირთვის შეცდომა'
+  },
+  'floorPlan.upload.authRequired': {
+    ru: 'Необходимо войти в систему для загрузки планов этажей',
+    en: 'Authentication required to upload floor plans',
+    ka: 'სართულების გეგმების ატვირთვისთვის ავტორიზაცია საჭიროა'
+  },
+  'floorPlan.apartments.title': {
+    ru: 'Управление квартирами',
+    en: 'Apartment Management',
+    ka: 'ბინების მართვა'
+  },
+  'floorPlan.apartments.add': {
+    ru: 'Добавить квартиру',
+    en: 'Add Apartment',
+    ka: 'ბინის დამატება'
+  },
+  'floorPlan.apartments.list': {
+    ru: 'Квартиры на этаже:',
+    en: 'Apartments on floor:',
+    ka: 'ბინები სართულზე:'
+  },
+  'floorPlan.apartments.available': {
+    ru: 'Свободна',
+    en: 'Available',
+    ka: 'ხელმისაწვდომია'
+  },
+  'floorPlan.apartments.sold': {
+    ru: 'Продана',
+    en: 'Sold',
+    ka: 'გაყიდული'
+  },
+  'floorPlan.apartments.reserved': {
+    ru: 'Бронь',
+    en: 'Reserved',
+    ka: 'დაჯავშნული'
+  },
+  'floorPlan.apartments.roomsShort': {
+    ru: 'комн.',
+    en: 'rooms',
+    ka: 'ოთახი'
+  },
+  'floorPlan.apartments.saveSuccess': {
+    ru: 'Квартира сохранена',
+    en: 'Apartment saved',
+    ka: 'ბინა შენახულია'
+  },
+  'floorPlan.apartments.saveError': {
+    ru: 'Ошибка сохранения квартиры',
+    en: 'Error saving apartment',
+    ka: 'ბინის შენახვის შეცდომა'
+  },
+  'floorPlan.apartments.deleteSuccess': {
+    ru: 'Квартира удалена',
+    en: 'Apartment deleted',
+    ka: 'ბინა წაშლილია'
+  },
+  'floorPlan.apartments.deleteError': {
+    ru: 'Ошибка удаления квартиры',
+    en: 'Error deleting apartment',
+    ka: 'ბინის წაშლის შეცდომა'
+  },
+  'floorPlan.apartments.fillAllFields': {
+    ru: 'Заполните все поля и создайте полигон (минимум 3 точки)',
+    en: 'Fill all fields and create polygon (minimum 3 points)',
+    ka: 'შეავსეთ ყველა ველი და შექმენით პოლიგონი (მინიმუმ 3 წერტილი)'
+  },
+  'floorPlan.apartments.newApartment': {
+    ru: 'Новая квартира',
+    en: 'New Apartment',
+    ka: 'ახალი ბინა'
+  },
+  'floorPlan.apartments.editApartment': {
+    ru: 'Редактирование полигона - Квартира №{number}',
+    en: 'Edit Polygon - Apartment #{number}',
+    ka: 'პოლიგონის რედაქტირება - ბინა №{number}'
+  },
+  'floorPlan.apartments.parameters': {
+    ru: 'Параметры квартиры',
+    en: 'Apartment Parameters',
+    ka: 'ბინის პარამეტრები'
+  },
+  'floorPlan.apartments.number': {
+    ru: 'Номер квартиры',
+    en: 'Apartment Number',
+    ka: 'ბინის ნომერი'
+  },
+  'floorPlan.apartments.numberPlaceholder': {
+    ru: 'Например: 101',
+    en: 'Example: 101',
+    ka: 'მაგალითი: 101'
+  },
+  'floorPlan.apartments.rooms': {
+    ru: 'Комнат',
+    en: 'Rooms',
+    ka: 'ოთახები'
+  },
+  'floorPlan.apartments.area': {
+    ru: 'Площадь (м²)',
+    en: 'Area (m²)',
+    ka: 'ფართობი (მ²)'
+  },
+  'floorPlan.apartments.price': {
+    ru: 'Цена (₽)',
+    en: 'Price (₽)',
+    ka: 'ფასი (₽)'
+  },
+  'floorPlan.apartments.status': {
+    ru: 'Статус',
+    en: 'Status',
+    ka: 'სტატუსი'
+  },
+  'floorPlan.settings.title': {
+    ru: 'Настройки полигонов этажа {floor}',
+    en: 'Floor {floor} Polygon Settings',
+    ka: 'სართული {floor} პოლიგონების პარამეტრები'
+  },
+  'floorPlan.settings.backToEditor': {
+    ru: 'Назад к редактору',
+    en: 'Back to Editor',
+    ka: 'რედაქტორზე დაბრუნება'
+  },
+  'floorPlan.duplicate.success': {
+    ru: 'План и полигоны продублированы на все этажи',
+    en: 'Plan and polygons duplicated to all floors',
+    ka: 'გეგმა და პოლიგონები დუბლირებულია ყველა სართულზე'
+  },
+  'floorPlan.duplicate.error': {
+    ru: 'Ошибка дублирования на все этажи',
+    en: 'Error duplicating to all floors',
+    ka: 'ყველა სართულზე დუბლირების შეცდომა'
+  },
+  'floorPlan.duplicate.noData': {
+    ru: 'Нет данных для дублирования',
+    en: 'No data to duplicate',
+    ka: 'დუბლირებისთვის მონაცემები არ არის'
+  },
+  'floorPlan.loading.error': {
+    ru: 'Ошибка загрузки плана этажа',
+    en: 'Error loading floor plan',
+    ka: 'სართულის გეგმის ჩატვირთვის შეცდომა'
+  },
+  'floorPlan.apartments.loading.error': {
+    ru: 'Ошибка загрузки квартир',
+    en: 'Error loading apartments',
+    ka: 'ბინების ჩატვირთვის შეცდომა'
+  },
+  'floorPlan.image.loadError': {
+    ru: 'Не удалось загрузить изображение плана',
+    en: 'Failed to load plan image',
+    ka: 'გეგმის სურათის ჩატვირთვა ვერ მოხერხდა'
+  },
+
+  // Project Apartments Manager
+  'apartmentsManager.title': {
+    ru: 'Квартиры проекта',
+    en: 'Project Apartments',
+    ka: 'პროექტის ბინები'
+  },
+  'apartmentsManager.description': {
+    ru: 'Управление квартирами и их характеристиками',
+    en: 'Manage apartments and their characteristics',
+    ka: 'ბინების და მათი მახასიათებლების მართვა'
+  },
+  'apartmentsManager.addApartment': {
+    ru: 'Добавить квартиру',
+    en: 'Add Apartment',
+    ka: 'ბინის დამატება'
+  },
+  'apartmentsManager.newApartment': {
+    ru: 'Новая квартира',
+    en: 'New Apartment',
+    ka: 'ახალი ბინა'
+  },
+  'apartmentsManager.apartmentNumber': {
+    ru: 'Номер квартиры*',
+    en: 'Apartment Number*',
+    ka: 'ბინის ნომერი*'
+  },
+  'apartmentsManager.floorNumber': {
+    ru: 'Этаж*',
+    en: 'Floor*',
+    ka: 'სართული*'
+  },
+  'apartmentsManager.rooms': {
+    ru: 'Комнат*',
+    en: 'Rooms*',
+    ka: 'ოთახები*'
+  },
+  'apartmentsManager.area': {
+    ru: 'Площадь (м²)*',
+    en: 'Area (m²)*',
+    ka: 'ფართობი (მ²)*'
+  },
+  'apartmentsManager.price': {
+    ru: 'Цена (руб.)',
+    en: 'Price (RUB)',
+    ka: 'ფასი (რუბ.)'
+  },
+  'apartmentsManager.status': {
+    ru: 'Статус',
+    en: 'Status',
+    ka: 'სტატუსი'
+  },
+  'apartmentsManager.save': {
+    ru: 'Сохранить',
+    en: 'Save',
+    ka: 'შენახვა'
+  },
+  'apartmentsManager.cancel': {
+    ru: 'Отмена',
+    en: 'Cancel',
+    ka: 'გაუქმება'
+  },
+  'apartmentsManager.apartment': {
+    ru: 'Квартира {number}',
+    en: 'Apartment {number}',
+    ka: 'ბინა {number}'
+  },
+  'apartmentsManager.floor': {
+    ru: 'Этаж {floor}',
+    en: 'Floor {floor}',
+    ka: 'სართული {floor}'
+  },
+  'apartmentsManager.roomsShort': {
+    ru: '{rooms} комн.',
+    en: '{rooms} rooms',
+    ka: '{rooms} ოთახი'
+  },
+  'apartmentsManager.areaValue': {
+    ru: '{area} м²',
+    en: '{area} m²',
+    ka: '{area} მ²'
+  },
+  'apartmentsManager.priceValue': {
+    ru: '{price} руб.',
+    en: '{price} RUB',
+    ka: '{price} რუბ.'
+  },
+  'apartmentsManager.sold': {
+    ru: 'Продана',
+    en: 'Sold',
+    ka: 'გაყიდული'
+  },
+  'apartmentsManager.reserved': {
+    ru: 'Забронирована',
+    en: 'Reserved',
+    ka: 'დაჯავშნული'
+  },
+  'apartmentsManager.available': {
+    ru: 'Свободна',
+    en: 'Available',
+    ka: 'ხელმისაწვდომია'
+  },
+  'apartmentsManager.loading': {
+    ru: 'Загрузка квартир...',
+    en: 'Loading apartments...',
+    ka: 'ბინების ჩატვირთვა...'
+  },
+  'apartmentsManager.saveSuccess': {
+    ru: 'Квартира добавлена',
+    en: 'Apartment added',
+    ka: 'ბინა დამატებულია'
+  },
+  'apartmentsManager.updateSuccess': {
+    ru: 'Квартира обновлена',
+    en: 'Apartment updated',
+    ka: 'ბინა განახლებულია'
+  },
+  'apartmentsManager.deleteSuccess': {
+    ru: 'Квартира удалена',
+    en: 'Apartment deleted',
+    ka: 'ბინა წაშლილია'
+  },
+  'apartmentsManager.loadingError': {
+    ru: 'Ошибка загрузки квартир',
+    en: 'Error loading apartments',
+    ka: 'ბინების ჩატვირთვის შეცდომა'
+  },
+  'apartmentsManager.saveError': {
+    ru: 'Ошибка сохранения квартиры',
+    en: 'Error saving apartment',
+    ka: 'ბინის შენახვის შეცდომა'
+  },
+  'apartmentsManager.deleteError': {
+    ru: 'Ошибка удаления квартиры',
+    en: 'Error deleting apartment',
+    ka: 'ბინის წაშლის შეცდომა'
+  },
+  'apartmentsManager.numberRequired': {
+    ru: 'Номер квартиры обязателен',
+    en: 'Apartment number is required',
+    ka: 'ბინის ნომერი საჭიროა'
+  },
+  'apartmentsManager.floorRequired': {
+    ru: 'Номер этажа обязателен',
+    en: 'Floor number is required',
+    ka: 'სართულის ნომერი საჭიროა'
+  },
+  'apartmentsManager.deleteConfirm': {
+    ru: 'Вы уверены, что хотите удалить эту квартиру?',
+    en: 'Are you sure you want to delete this apartment?',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ ამ ბინის წაშლა?'
+  },
+  'apartmentsManager.noApartments': {
+    ru: 'Квартиры не добавлены',
+    en: 'No apartments added',
+    ka: 'ბინები არ არის დამატებული'
+  },
+  'apartmentsManager.noApartmentsDesc': {
+    ru: 'Нажмите "Добавить квартиру" чтобы начать',
+    en: 'Click "Add Apartment" to start',
+    ka: 'დააჭირეთ "ბინის დამატება" დასაწყებად'
+  },
+
+  // Custom Fields Manager
+  'customFields.title': {
+    ru: 'Кастомные поля',
+    en: 'Custom Fields',
+    ka: 'მორგებული ველები'
+  },
+  'customFields.description': {
+    ru: 'Создайте дополнительные поля для квартир в вашем проекте',
+    en: 'Create additional fields for apartments in your project',
+    ka: 'შექმენით დამატებითი ველები თქვენი პროექტის ბინებისთვის'
+  },
+  'customFields.addField': {
+    ru: 'Добавить кастомное поле',
+    en: 'Add Custom Field',
+    ka: 'მორგებული ველის დამატება'
+  },
+  'customFields.fieldName': {
+    ru: 'Название поля*',
+    en: 'Field Name*',
+    ka: 'ველის სახელი*'
+  },
+  'customFields.fieldNamePlaceholder': {
+    ru: 'Например: Балкон',
+    en: 'Example: Balcony',
+    ka: 'მაგალითი: აივანი'
+  },
+  'customFields.fieldType': {
+    ru: 'Тип поля',
+    en: 'Field Type',
+    ka: 'ველის ტიპი'
+  },
+  'customFields.fieldTypeText': {
+    ru: 'Текст',
+    en: 'Text',
+    ka: 'ტექსტი'
+  },
+  'customFields.fieldTypeNumber': {
+    ru: 'Число',
+    en: 'Number',
+    ka: 'რიცხვი'
+  },
+  'customFields.fieldTypeSelect': {
+    ru: 'Выбор из списка',
+    en: 'Select from list',
+    ka: 'სიიდან არჩევა'
+  },
+  'customFields.fieldTypeBoolean': {
+    ru: 'Да/Нет',
+    en: 'Yes/No',
+    ka: 'დიახ/არა'
+  },
+  'customFields.options': {
+    ru: 'Варианты выбора (по одному на строку)',
+    en: 'Options (one per line)',
+    ka: 'ვარიანტები (ერთი ხაზზე)'
+  },
+  'customFields.optionsPlaceholder': {
+    ru: 'Опция 1\nОпция 2\nОпция 3',
+    en: 'Option 1\nOption 2\nOption 3',
+    ka: 'ვარიანტი 1\nვარიანტი 2\nვარიანტი 3'
+  },
+  'customFields.required': {
+    ru: 'Обязательное поле',
+    en: 'Required field',
+    ka: 'სავალდებულო ველი'
+  },
+  'customFields.save': {
+    ru: 'Сохранить',
+    en: 'Save',
+    ka: 'შენახვა'
+  },
+  'customFields.cancel': {
+    ru: 'Отмена',
+    en: 'Cancel',
+    ka: 'გაუქმება'
+  },
+  'customFields.loading': {
+    ru: 'Загрузка кастомных полей...',
+    en: 'Loading custom fields...',
+    ka: 'მორგებული ველების ჩატვირთვა...'
+  },
+  'customFields.saveSuccess': {
+    ru: 'Поле добавлено',
+    en: 'Field added',
+    ka: 'ველი დამატებულია'
+  },
+  'customFields.updateSuccess': {
+    ru: 'Поле обновлено',
+    en: 'Field updated',
+    ka: 'ველი განახლებულია'
+  },
+  'customFields.deleteSuccess': {
+    ru: 'Поле удалено',
+    en: 'Field deleted',
+    ka: 'ველი წაშლილია'
+  },
+  'customFields.loadingError': {
+    ru: 'Ошибка загрузки кастомных полей',
+    en: 'Error loading custom fields',
+    ka: 'მორგებული ველების ჩატვირთვის შეცდომა'
+  },
+  'customFields.saveError': {
+    ru: 'Ошибка сохранения поля',
+    en: 'Error saving field',
+    ka: 'ველის შენახვის შეცდომა'
+  },
+  'customFields.deleteError': {
+    ru: 'Ошибка удаления поля',
+    en: 'Error deleting field',
+    ka: 'ველის წაშლის შეცდომა'
+  },
+  'customFields.enterFieldName': {
+    ru: 'Введите название поля',
+    en: 'Enter field name',
+    ka: 'შეიყვანეთ ველის სახელი'
+  },
+  'customFields.requiredBadge': {
+    ru: 'Обязательно',
+    en: 'Required',
+    ka: 'სავალდებულო'
+  },
+
+  // Apartment Photos Manager
+  'photosManager.individualPhotos': {
+    ru: 'Индивидуальные фотографии',
+    en: 'Individual Photos',
+    ka: 'ინდივიდუალური ფოტოები'
+  },
+  'photosManager.layoutPhotos': {
+    ru: 'Фотографии планировок',
+    en: 'Layout Photos',
+    ka: 'განლაგების ფოტოები'
+  },
+  'photosManager.title': {
+    ru: 'Управление фотографиями квартир',
+    en: 'Apartment Photos Management',
+    ka: 'ბინების ფოტოების მართვა'
+  },
+  'photosManager.description': {
+    ru: 'Загружайте индивидуальные фотографии для конкретных квартир',
+    en: 'Upload individual photos for specific apartments',
+    ka: 'ატვირთეთ ინდივიდუალური ფოტოები კონკრეტული ბინებისთვის'
+  },
+  'photosManager.selectApartment': {
+    ru: 'Выберите квартиру',
+    en: 'Select Apartment',
+    ka: 'აირჩიეთ ბინა'
+  },
+  'photosManager.selectApartmentPlaceholder': {
+    ru: 'Выберите квартиру для редактирования',
+    en: 'Select apartment to edit',
+    ka: 'აირჩიეთ ბინა რედაქტირებისთვის'
+  },
+  'photosManager.apartmentOption': {
+    ru: 'Квартира {number} ({floor} этаж)',
+    en: 'Apartment {number} (Floor {floor})',
+    ka: 'ბინა {number} (სართული {floor})'
+  },
+  'photosManager.uploadPhotos': {
+    ru: 'Загрузить фотографии',
+    en: 'Upload Photos',
+    ka: 'ფოტოების ატვირთვა'
+  },
+  'photosManager.uploadMultiple': {
+    ru: 'Можно выбрать несколько файлов одновременно',
+    en: 'You can select multiple files at once',
+    ka: 'შეგიძლიათ რამდენიმე ფაილი ერთდროულად აირჩიოთ'
+  },
+  'photosManager.duplicateToSimilar': {
+    ru: 'Дублировать на похожие квартиры',
+    en: 'Duplicate to similar apartments',
+    ka: 'მსგავს ბინებზე დუბლირება'
+  },
+  'photosManager.noPhotos': {
+    ru: 'Фотографии не загружены',
+    en: 'No photos uploaded',
+    ka: 'ფოტოები არ არის ატვირთული'
+  },
+  'photosManager.noPhotosDesc': {
+    ru: 'Загрузите фотографии для выбранной квартиры',
+    en: 'Upload photos for the selected apartment',
+    ka: 'ატვირთეთ ფოტოები არჩეული ბინისთვის'
+  },
+  'photosManager.uploadSuccess': {
+    ru: 'Фотографии загружены',
+    en: 'Photos uploaded',
+    ka: 'ფოტოები ატვირთულია'
+  },
+  'photosManager.uploadError': {
+    ru: 'Ошибка загрузки фотографий',
+    en: 'Error uploading photos',
+    ka: 'ფოტოების ატვირთვის შეცდომა'
+  },
+  'photosManager.deleteSuccess': {
+    ru: 'Фото удалено',
+    en: 'Photo deleted',
+    ka: 'ფოტო წაშლილია'
+  },
+  'photosManager.deleteError': {
+    ru: 'Ошибка удаления фото',
+    en: 'Error deleting photo',
+    ka: 'ფოტოს წაშლის შეცდომა'
+  },
+  'photosManager.duplicateSuccess': {
+    ru: 'Фотографии продублированы для {count} похожих квартир',
+    en: 'Photos duplicated for {count} similar apartments',
+    ka: 'ფოტოები დუბლირებულია {count} მსგავსი ბინისთვის'
+  },
+  'photosManager.duplicateError': {
+    ru: 'Ошибка дублирования фотографий',
+    en: 'Error duplicating photos',
+    ka: 'ფოტოების დუბლირების შეცდომა'
+  },
+  'photosManager.authRequired': {
+    ru: 'Необходимо войти в систему для загрузки фотографий',
+    en: 'Authentication required to upload photos',
+    ka: 'ფოტოების ატვირთვისთვის ავტორიზაცია საჭიროა'
   }
 };
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -1576,7 +2236,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     
     if (params) {
       return Object.keys(params).reduce((text, param) => {
-        return text.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
+        return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
       }, translation);
     }
     
@@ -1622,7 +2282,7 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
     
     if (params) {
       return Object.keys(params).reduce((text, param) => {
-        return text.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
+        return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
       }, translation);
     }
     

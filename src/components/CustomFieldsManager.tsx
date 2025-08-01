@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CustomField {
   id?: string;
@@ -30,6 +31,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
   const [editingField, setEditingField] = useState<CustomField | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   const [newField, setNewField] = useState<CustomField>({
     field_name: '',
@@ -66,7 +68,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
       onFieldsChange?.(formattedFields);
     } catch (error) {
       console.error('Error loading custom fields:', error);
-      toast.error('Ошибка загрузки кастомных полей');
+      toast.error(t('customFields.loadError'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
 
   const handleSaveField = async (field: CustomField) => {
     if (!field.field_label.trim()) {
-      toast.error('Введите название поля');
+      toast.error(t('customFields.enterFieldName'));
       return;
     }
 
@@ -103,7 +105,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
           .eq('id', field.id);
 
         if (error) throw error;
-        toast.success('Поле обновлено');
+        toast.success(t('customFields.updateSuccess'));
       } else {
         // Создание нового поля
         const { error } = await supabase
@@ -118,7 +120,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
           }]);
 
         if (error) throw error;
-        toast.success('Поле добавлено');
+        toast.success(t('customFields.saveSuccess'));
       }
 
       setIsAdding(false);
@@ -133,7 +135,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
       loadCustomFields();
     } catch (error) {
       console.error('Error saving field:', error);
-      toast.error('Ошибка сохранения поля');
+      toast.error(t('customFields.saveError'));
     }
   };
 
@@ -145,11 +147,11 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
         .eq('id', fieldId);
 
       if (error) throw error;
-      toast.success('Поле удалено');
+      toast.success(t('customFields.deleteSuccess'));
       loadCustomFields();
     } catch (error) {
       console.error('Error deleting field:', error);
-      toast.error('Ошибка удаления поля');
+      toast.error(t('customFields.deleteError'));
     }
   };
 
@@ -157,7 +159,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
     <div className="space-y-4 p-4 border rounded-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="field_label">Название поля*</Label>
+          <Label htmlFor="field_label">{t('customFields.fieldName')}</Label>
           <Input
             id="field_label"
             value={field.field_label}
@@ -169,12 +171,12 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
                 setEditingField(updatedField);
               }
             }}
-            placeholder="Например: Балкон"
+            placeholder={t('customFields.fieldNamePlaceholder')}
           />
         </div>
         
         <div>
-          <Label htmlFor="field_type">Тип поля</Label>
+          <Label htmlFor="field_type">{t('customFields.fieldType')}</Label>
           <Select
             value={field.field_type}
             onValueChange={(value: any) => {
@@ -190,10 +192,10 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">Текст</SelectItem>
-              <SelectItem value="number">Число</SelectItem>
-              <SelectItem value="select">Выбор из списка</SelectItem>
-              <SelectItem value="boolean">Да/Нет</SelectItem>
+              <SelectItem value="text">{t('customFields.fieldTypeText')}</SelectItem>
+              <SelectItem value="number">{t('customFields.fieldTypeNumber')}</SelectItem>
+              <SelectItem value="select">{t('customFields.fieldTypeSelect')}</SelectItem>
+              <SelectItem value="boolean">{t('customFields.fieldTypeBoolean')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -201,7 +203,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
 
       {field.field_type === 'select' && (
         <div>
-          <Label>Варианты выбора (по одному на строку)</Label>
+          <Label>{t('customFields.options')}</Label>
           <textarea
             className="w-full mt-1 p-2 border rounded resize-none"
             rows={3}
@@ -215,7 +217,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
                 setEditingField(updatedField);
               }
             }}
-            placeholder="Опция 1&#10;Опция 2&#10;Опция 3"
+            placeholder={t('customFields.optionsPlaceholder')}
           />
         </div>
       )}
@@ -233,7 +235,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
             }
           }}
         />
-        <Label htmlFor="is_required">Обязательное поле</Label>
+        <Label htmlFor="is_required">{t('customFields.required')}</Label>
       </div>
 
       <div className="flex gap-2">
@@ -242,7 +244,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           <Check className="h-4 w-4 mr-2" />
-          Сохранить
+          {t('customFields.save')}
         </Button>
         <Button
           variant="outline"
@@ -262,22 +264,22 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
           }}
         >
           <X className="h-4 w-4 mr-2" />
-          Отмена
+          {t('customFields.cancel')}
         </Button>
       </div>
     </div>
   );
 
   if (loading) {
-    return <div className="p-4 text-center">Загрузка кастомных полей...</div>;
+    return <div className="p-4 text-center">{t('customFields.loading')}</div>;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Кастомные поля</CardTitle>
+        <CardTitle>{t('customFields.title')}</CardTitle>
         <CardDescription>
-          Создайте дополнительные поля для квартир в вашем проекте
+          {t('customFields.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -292,11 +294,11 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
                   <div>
                     <div className="font-medium">{field.field_label}</div>
                     <div className="text-sm text-gray-500">
-                      {field.field_type === 'text' && 'Текст'}
-                      {field.field_type === 'number' && 'Число'}
-                      {field.field_type === 'select' && 'Выбор из списка'}
-                      {field.field_type === 'boolean' && 'Да/Нет'}
-                      {field.is_required && <Badge variant="destructive" className="ml-2 text-xs">Обязательно</Badge>}
+                      {field.field_type === 'text' && t('customFields.fieldTypeText')}
+                      {field.field_type === 'number' && t('customFields.fieldTypeNumber')}
+                      {field.field_type === 'select' && t('customFields.fieldTypeSelect')}
+                      {field.field_type === 'boolean' && t('customFields.fieldTypeBoolean')}
+                      {field.is_required && <Badge variant="destructive" className="ml-2 text-xs">{t('customFields.requiredBadge')}</Badge>}
                     </div>
                   </div>
                 </div>
@@ -332,7 +334,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Добавить кастомное поле
+            {t('customFields.addField')}
           </Button>
         )}
       </CardContent>

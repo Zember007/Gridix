@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import LayoutPhotosManager from './LayoutPhotosManager';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -32,6 +33,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadApartments();
@@ -85,7 +87,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
     // Проверяем аутентификацию пользователя
     if (!user) {
-      toast.error('Необходимо войти в систему для загрузки фотографий');
+      toast.error(t('photosManager.authRequired'));
       return;
     }
 
@@ -117,11 +119,11 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       });
 
       await Promise.all(uploadPromises);
-      toast.success('Фотографии загружены');
+      toast.success(t('photosManager.uploadSuccess'));
       loadPhotos();
     } catch (error) {
       console.error('Error uploading photos:', error);
-      toast.error('Ошибка загрузки фотографий');
+      toast.error(t('photosManager.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -143,11 +145,11 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           .remove([`apartments/${fileName}`]);
       }
 
-      toast.success('Фото удалено');
+      toast.success(t('photosManager.deleteSuccess'));
       loadPhotos();
     } catch (error) {
       console.error('Error deleting photo:', error);
-      toast.error('Ошибка удаления фото');
+      toast.error(t('photosManager.deleteError'));
     }
   };
 
@@ -182,10 +184,10 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       });
 
       await Promise.all(duplicatePromises);
-      toast.success(`Фотографии продублированы для ${similarApartments.length} похожих квартир`);
+      toast.success(t('photosManager.duplicateSuccess', { count: similarApartments.length }));
     } catch (error) {
       console.error('Error duplicating photos:', error);
-      toast.error('Ошибка дублирования фотографий');
+      toast.error(t('photosManager.duplicateError'));
     }
   };
 
@@ -205,33 +207,33 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="apartments" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
-            Индивидуальные фотографии
+            {t('photosManager.individualPhotos')}
           </TabsTrigger>
           <TabsTrigger value="layouts" className="flex items-center gap-2">
             <Layout className="h-4 w-4" />
-            Фотографии планировок
+            {t('photosManager.layoutPhotos')}
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="apartments">
           <Card>
             <CardHeader>
-              <CardTitle>Управление фотографиями квартир</CardTitle>
+              <CardTitle>{t('photosManager.title')}</CardTitle>
               <CardDescription>
-                Загружайте индивидуальные фотографии для конкретных квартир
+                {t('photosManager.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="apartment-select">Выберите квартиру</Label>
+            <Label htmlFor="apartment-select">{t('photosManager.selectApartment')}</Label>
             <Select value={selectedApartment} onValueChange={setSelectedApartment}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Выберите квартиру для редактирования" />
+                <SelectValue placeholder={t('photosManager.selectApartmentPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {apartments.map((apartment) => (
                   <SelectItem key={apartment.id} value={apartment.id}>
-                    Квартира {apartment.apartment_number} ({apartment.floor_number} этаж)
+                    {t('photosManager.apartmentOption', { number: apartment.apartment_number, floor: apartment.floor_number })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -241,7 +243,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
           {selectedApartment && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="photo-upload">Загрузить фотографии</Label>
+                <Label htmlFor="photo-upload">{t('photosManager.uploadPhotos')}</Label>
                 <Input
                   id="photo-upload"
                   type="file"
@@ -252,7 +254,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                   className="mt-1"
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Можно выбрать несколько файлов одновременно
+                  {t('photosManager.uploadMultiple')}
                 </p>
               </div>
 
@@ -264,15 +266,15 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
                   disabled={photos.length === 0}
                 >
                   <Copy className="h-4 w-4 mr-1" />
-                  Дублировать на похожие квартиры
+                  {t('photosManager.duplicateToSimilar')}
                 </Button>
               </div>
 
               {photos.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <ImageIcon className="h-12 w-12 mx-auto mb-2" />
-                  <p>Фотографии не загружены</p>
-                  <p className="text-sm">Загрузите фотографии для выбранной квартиры</p>
+                  <p>{t('photosManager.noPhotos')}</p>
+                  <p className="text-sm">{t('photosManager.noPhotosDesc')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
