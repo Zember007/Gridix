@@ -73,7 +73,7 @@ export const useProjectsWithPrices = (userId?: string) => {
 
       // Оптимизированный запрос: получаем проекты с минимальными ценами одним запросом
       // Используем LEFT JOIN с подзапросом для получения минимальной цены
-      const { data, error: supabaseError } = await supabase.rpc('get_projects_with_min_prices', {
+      const { data, error: supabaseError } = await supabase.rpc('get_projects_with_min_prices' as any, {
         user_id_param: userId
       });
 

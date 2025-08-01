@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -41,41 +41,79 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  
+  // Используем refs для отслеживания состояния загрузки и предотвращения дублирования
+  const loadingProfileRef = useRef<Set<string>>(new Set());
+  const profileLoadedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Получаем текущую сессию
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user && !profileLoaded) {
-        loadUserProfile(session.user.id, session.user);
-      } else {
-        setLoading(false);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Получаем текущую сессию
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user.id, session.user);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initializeAuth();
 
     // Слушаем изменения авторизации
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user && !profileLoaded) {
+      if (session?.user) {
         await loadUserProfile(session.user.id, session.user);
-      } else if (!session?.user) {
+      } else {
         setUserProfile(null);
-        setProfileLoaded(false);
+        // Очищаем кэш при выходе
+        profileLoadedRef.current.clear();
+        loadingProfileRef.current.clear();
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const loadUserProfile = async (userId: string, currentUser?: any) => {
-    if (profileLoaded) return; // Предотвращаем дублирование запросов
+  const loadUserProfile = async (userId: string, currentUser: User) => {
+    // Проверяем, не загружается ли уже профиль для этого пользователя
+    if (loadingProfileRef.current.has(userId)) {
+      return;
+    }
+    
+    // Проверяем, не загружен ли уже профиль для этого пользователя
+    if (profileLoadedRef.current.has(userId)) {
+      setLoading(false);
+      return;
+    }
+
+    // Добавляем userId в множество загружающихся профилей
+    loadingProfileRef.current.add(userId);
     
     try {
       // Делаем запрос к профилю с таймаутом
@@ -85,11 +123,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('id', userId)
         .single();
       
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 5000)
       );
       
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
       if (error) {
         // Если профиль не найден, создаем базовый профиль
@@ -152,6 +190,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUserProfile(data);
       }
     } catch (error) {
+      console.error('Error loading user profile:', error);
       // Создаем fallback профиль для любых ошибок
       setUserProfile({
         id: userId,
@@ -164,7 +203,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         updated_at: new Date().toISOString()
       });
     } finally {
-      setProfileLoaded(true);
+      // Удаляем userId из множества загружающихся профилей
+      loadingProfileRef.current.delete(userId);
+      // Добавляем userId в множество загруженных профилей
+      profileLoadedRef.current.add(userId);
       setLoading(false);
     }
   };

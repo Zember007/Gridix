@@ -13,6 +13,7 @@ import CustomFieldsManager from '@/components/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProjectCRUD } from '@/hooks/useProjects';
 
 interface ExcelColumnMapperProps {
   excelColumns: string[];
@@ -58,6 +59,7 @@ interface StatusValidationResult {
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
   const { user } = useAuth();
+  const { createProject } = useProjectCRUD();
 
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     apartmentNumber: '',
@@ -247,18 +249,21 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       console.log('Максимальный этаж:', maxFloor);
 
       // Создаем реальный проект
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert([{
-          name: projectData.name.trim(),
-          description: projectData.description.trim() || null,
-          floors: Math.max(maxFloor, projectData.floors),
-           user_id: user.id 
-        }])
-        .select()
-        .single();
+      const project = await createProject({
+        name: projectData.name.trim(),
+        description: projectData.description.trim() || null,
+        floors: Math.max(maxFloor, projectData.floors),
+        address: null,
+        building_image_url: null,
+        latitude: null,
+        longitude: null,
+        slug: null,
+        currency: null,
+        is_public: false,
+        is_featured: false
+      });
 
-      if (projectError) throw projectError;
+      if (!project) throw new Error('Failed to create project');
       console.log('Проект создан:', project);
 
       // Копируем кастомные поля из временного проекта в реальный

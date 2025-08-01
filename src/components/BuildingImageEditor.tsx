@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProject } from '@/hooks/useProjects';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -32,16 +33,11 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [floors, setFloors] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { project } = useProject(projectId);
 
   const loadBuildingData = useCallback(async () => {
     try {
-      // Load project data including floors count
-      const { data: project } = await supabase
-        .from('projects')
-        .select('building_image_url, floors')
-        .eq('id', projectId)
-        .single();
-
+      // Use cached project data
       if (project) {
         if (project.building_image_url && !buildingImage) {
           setBuildingImage(project.building_image_url);
@@ -162,10 +158,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   };
 
   React.useEffect(() => {
-    if (projectId) {
+    if (projectId && project) {
       loadBuildingData();
     }
-  }, [loadBuildingData, projectId]);
+  }, [loadBuildingData, projectId, project]);
 
   React.useEffect(() => {
     if (currentImageUrl !== buildingImage) {

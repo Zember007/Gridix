@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useProjectCRUD } from '@/hooks/useProjects';
 
 interface PolygonSettings {
   colors: {
@@ -72,6 +73,7 @@ const PolygonCustomizationSettings = ({
 }: PolygonCustomizationSettingsProps) => {
   const [settings, setSettings] = useState<PolygonSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
+  const { updateProject } = useProjectCRUD();
 
   useEffect(() => {
     loadSettings();
@@ -116,12 +118,10 @@ const PolygonCustomizationSettings = ({
     setLoading(true);
     try {
       if (type === 'building') {
-        const { error } = await supabase
-          .from('projects')
-          .update({ building_polygon_settings: settings as unknown as any })
-          .eq('id', projectId);
-
-        if (error) throw error;
+        const success = await updateProject(projectId, { 
+          building_polygon_settings: settings as unknown as any 
+        });
+        if (!success) throw new Error('Failed to update project settings');
       } else {
         if (!floorNumber) return;
 

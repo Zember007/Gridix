@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { MapPin, Home, Search, Filter, Grid3X3, ExternalLink, Building2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { usePublicProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Project as BaseProject } from '@/hooks/useProjects';
 
 interface Project {
   id: string;
@@ -33,75 +34,55 @@ interface ProjectsGalleryProps {
 
 const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect }: ProjectsGalleryProps) => {
   const { t } = useLanguage();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { projects: rawProjects, loading, error } = usePublicProjects();
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedRooms, setSelectedRooms] = useState('');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
 
+  // Обрабатываем проекты для получения дополнительной информации
+  const [projects, setProjects] = useState<Project[]>([]);
+
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (rawProjects.length > 0) {
+      processProjects(rawProjects);
+    }
+  }, [rawProjects]);
 
   useEffect(() => {
     applyFilters();
   }, [projects, searchTerm, selectedCity, selectedStatus, selectedRooms, priceRange]);
 
-  const loadProjects = async () => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          *,
-          apartments (
-            id,
-            status,
-            price,
-            rooms
-          )
-        `);
+  const processProjects = (rawProjects: BaseProject[]) => {
+    const processedProjects = rawProjects.map((project: BaseProject) => {
+      // Здесь можно добавить дополнительную логику обработки проектов
+      // если нужно получить информацию об квартирах, это нужно делать отдельно
+      return {
+        id: project.id,
+        name: project.name,
+        description: project.description || '',
+        address: project.address || '',
+        floors: project.floors,
+        building_image_url: project.building_image_url,
+        latitude: project.latitude,
+        longitude: project.longitude,
+        apartment_count: 0, // Пока оставляем 0, можно добавить отдельный запрос если нужно
+        available_count: 0,
+        price_from: null
+      };
+    });
 
-      if (error) throw error;
+    setProjects(processedProjects);
 
-      const processedProjects = data.map(project => {
-        const apartments = project.apartments || [];
-        const availableApartments = apartments.filter((apt: any) => apt.status === 'available');
-        const prices = apartments.map((apt: any) => apt.price).filter((p: any) => p > 0);
-        
-        return {
-          id: project.id,
-          name: project.name,
-          description: project.description || '',
-          address: project.address || '',
-          floors: project.floors,
-          building_image_url: project.building_image_url,
-          latitude: project.latitude,
-          longitude: project.longitude,
-          apartment_count: apartments.length,
-          available_count: availableApartments.length,
-          price_from: prices.length > 0 ? Math.min(...prices) : null
-        };
-      });
-
-      setProjects(processedProjects);
-
-      // Устанавливаем диапазон цен
-      const allPrices = processedProjects
-        .map(p => p.price_from)
-        .filter((p): p is number => p !== null);
-      
-      if (allPrices.length > 0) {
-        setPriceRange([Math.min(...allPrices), Math.max(...allPrices)]);
-      }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    } finally {
-      setLoading(false);
+    // Устанавливаем диапазон цен
+    const allPrices = processedProjects
+      .map(p => p.price_from)
+      .filter((p): p is number => p !== null);
+    
+    if (allPrices.length > 0) {
+      setPriceRange([Math.min(...allPrices), Math.max(...allPrices)]);
     }
   };
 

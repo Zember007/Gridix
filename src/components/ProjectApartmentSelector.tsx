@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useProject } from '@/hooks/useProjects';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,7 @@ interface ProjectApartmentSelectorProps {
 const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApartmentSelectorProps) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
+  const { project: cachedProject } = useProject(projectId);
   
   const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -55,7 +57,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   useEffect(() => {
     loadProject();
     loadApartments();
-  }, [projectId]);
+  }, [projectId, cachedProject]);
 
   useEffect(() => {
     applyFilters();
@@ -77,14 +79,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
   const loadProject = async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-      setProject(data);
+      if (cachedProject) {
+        setProject(cachedProject);
+      }
     } catch (error) {
       console.error('Error loading project:', error);
     }

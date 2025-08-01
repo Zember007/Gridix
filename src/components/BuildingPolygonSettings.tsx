@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useProjectCRUD } from '@/hooks/useProjects';
 
 interface BuildingPolygonSettings {
   colors: {
@@ -60,6 +61,7 @@ const BuildingPolygonSettingsComponent = ({
 }: BuildingPolygonSettingsProps) => {
   const [settings, setSettings] = useState<BuildingPolygonSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
+  const { updateProject } = useProjectCRUD();
 
   useEffect(() => {
     loadSettings();
@@ -86,15 +88,14 @@ const BuildingPolygonSettingsComponent = ({
   const saveSettings = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ building_polygon_settings: settings as unknown as any })
-        .eq('id', projectId);
+      const success = await updateProject(projectId, { 
+        building_polygon_settings: settings as unknown as any 
+      });
 
-      if (error) throw error;
-
-      toast.success('Настройки здания сохранены');
-      onSettingsChange?.(settings);
+      if (success) {
+        toast.success('Настройки здания сохранены');
+        onSettingsChange?.(settings);
+      }
     } catch (error) {
       console.error('Error saving building polygon settings:', error);
       toast.error('Ошибка сохранения настроек');

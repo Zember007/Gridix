@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProject } from '@/hooks/useProjects';
 
 interface Point {
   x: number;
@@ -86,26 +87,21 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [allFloors, setAllFloors] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { project } = useProject(projectId);
 
   useEffect(() => {
     loadFloorPlan();
     loadApartments();
     loadPolygonSettings();
     loadProjectFloors();
-  }, [projectId, floorNumber]);
+  }, [projectId, floorNumber, project]);
 
   const loadProjectFloors = async () => {
     try {
-      const { data: projectData, error } = await supabase
-        .from('projects')
-        .select('floors')
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-
-      const floors = Array.from({ length: projectData.floors }, (_, i) => i + 1);
-      setAllFloors(floors);
+      if (project) {
+        const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
+        setAllFloors(floors);
+      }
     } catch (error) {
       console.error('Error loading project floors:', error);
     }

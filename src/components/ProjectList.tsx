@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useUserProjects, useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface Project {
   id: string;
@@ -24,49 +24,12 @@ interface ProjectListProps {
 }
 
 const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { projects, loading, error, refresh } = useUserProjects(user?.id);
+  const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
 
-  useEffect(() => {
-    if (user) {
-      loadProjects();
-    }
-  }, [user]);
-
-  const loadProjects = async () => {
-    if (!user) return;
-    
-    try {
-      // Добавляем таймаут для запроса проектов
-      const queryPromise = supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Projects query timeout after 5 seconds')), 5000)
-      );
-      
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      if (error instanceof Error && error.message.includes('timeout')) {
-        toast.error(t('projectList.timeoutError'));
-      } else {
-        toast.error(t('projectList.errorLoading'));
-      }
-      // При ошибке устанавливаем пустой массив проектов
-      setProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Удаляем старую функцию loadProjects, так как теперь используется хук
 
   const deleteProject = async (projectId: string, projectName: string) => {
     if (!user) {
@@ -78,19 +41,9 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId)
-        .eq('user_id', user.id); // Проверяем владельца
-
-      if (error) throw error;
-      setProjects(prev => prev.filter(p => p.id !== projectId));
-      toast.success(t('projectList.projectDeleted'));
-    } catch (error) {
-      console.error('Error deleting project:', error);
-      toast.error(t('projectList.errorDeleting'));
+    const success = await deleteProjectCRUD(projectId);
+    if (success) {
+      refresh(); // Обновляем список проектов
     }
   };
 

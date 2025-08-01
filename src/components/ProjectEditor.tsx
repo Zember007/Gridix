@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
+import { useProject, useProjectCRUD } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
@@ -61,42 +62,38 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { navigate } = useLanguageNavigation();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { project: cachedProject } = useProject(projectId);
+  const { updateProject } = useProjectCRUD();
 
   const loadProject = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-      
-      // Проверяем права на редактирование
-      if (!user || data.user_id !== user.id) {
-        setAccessError(t('projectEditor.noEditRights'));
-        setLoading(false);
-        return;
+      if (cachedProject) {
+        // Проверяем права на редактирование
+        if (!user || cachedProject.user_id !== user.id) {
+          setAccessError(t('projectEditor.noEditRights'));
+          setLoading(false);
+          return;
+        }
+        
+        setProject({
+          id: cachedProject.id,
+          name: cachedProject.name || '',
+          description: cachedProject.description || '',
+          address: cachedProject.address || '',
+          floors: cachedProject.floors || 1,
+          building_image_url: cachedProject.building_image_url,
+          latitude: cachedProject.latitude,
+          longitude: cachedProject.longitude,
+          currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY
+        });
       }
-      
-      setProject({
-        id: data.id,
-        name: data.name || '',
-        description: data.description || '',
-        address: data.address || '',
-        floors: data.floors || 1,
-        building_image_url: data.building_image_url,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        currency: data.currency || DEFAULT_CURRENCY
-      });
     } catch (error) {
       console.error('Error loading project:', error);
       toast.error(t('projectEditor.errorLoading'));
     } finally {
       setLoading(false);
     }
-  }, [projectId, user]);
+  }, [projectId, user, cachedProject]);
 
   useEffect(() => {
     if (!isNew && projectId) {

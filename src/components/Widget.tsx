@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Code, Eye, Settings, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserProjects } from '@/hooks/useProjects';
 
 interface Project {
   id: string;
@@ -18,7 +18,7 @@ interface Project {
 }
 
 const Widget = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { projects, loading } = useUserProjects();
   const [widgetConfig, setWidgetConfig] = useState({
     projectId: '',
     width: '100%',
@@ -34,26 +34,10 @@ const Widget = () => {
   const [customCSS, setCustomCSS] = useState('');
 
   useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-      
-      if (data && data.length > 0 && !widgetConfig.projectId) {
-        setWidgetConfig(prev => ({ ...prev, projectId: data[0].id }));
-      }
-    } catch (error) {
-      console.error('Error loading projects:', error);
+    if (projects && projects.length > 0 && !widgetConfig.projectId) {
+      setWidgetConfig(prev => ({ ...prev, projectId: projects[0].id }));
     }
-  };
+  }, [projects, widgetConfig.projectId]);
 
   const generateWidgetCode = () => {
     if (!widgetConfig.projectId) return '';

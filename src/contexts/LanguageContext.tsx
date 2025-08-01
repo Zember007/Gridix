@@ -1285,14 +1285,14 @@ const translations: Translations = {
     ka: 'მაგალითი: 37.6176'
   },
   'projectEditor.latitudeExample': {
-    ru: 'Пример: 55.7558 (Москва)',
-    en: 'Example: 55.7558 (Moscow)',
-    ka: 'მაგალითი: 55.7558 (მოსკოვი)'
+    ru: 'Пример: 55.7558 (Тбилиси)',
+    en: 'Example: 55.7558 (Tbilisi)',
+    ka: 'მაგალითი: 55.7558 (თბილისი)'
   },
   'projectEditor.longitudeExample': {
-    ru: 'Пример: 37.6176 (Москва)',
-    en: 'Example: 37.6176 (Moscow)',
-    ka: 'მაგალითი: 37.6176 (მოსკოვი)'
+    ru: 'Пример: 37.6176 (Тбилиси)',
+    en: 'Example: 37.6176 (Tbilisi)',
+    ka: 'მაგალითი: 37.6176 (თბილისი)'
   },
   'projectEditor.floorPlans': {
     ru: 'Планы этажей',

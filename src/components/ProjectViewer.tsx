@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useProject } from '@/hooks/useProjects';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ interface FloorPlan {
 
 const ProjectViewer = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const { project: cachedProject } = useProject(projectId);
   const [project, setProject] = useState<Project | null>(null);
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
@@ -49,7 +51,7 @@ const ProjectViewer = () => {
     if (projectId) {
       loadProject();
     }
-  }, [projectId]);
+  }, [projectId, cachedProject]);
 
   useEffect(() => {
     if (selectedFloor && projectId) {
@@ -92,22 +94,13 @@ const ProjectViewer = () => {
     try {
       console.log('Loading project:', projectId);
       
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*, building_polygon_settings')
-        .eq('id', projectId)
-        .single();
+      if (cachedProject) {
+        console.log('Project loaded from cache:', cachedProject);
+        setProject(cachedProject);
 
-      if (projectError) {
-        console.error('Project error:', projectError);
-        throw projectError;
-      }
-      
-      console.log('Project loaded:', projectData);
-      setProject(projectData);
-
-      if (projectData.building_polygon_settings) {
-        setBuildingPolygonSettings(projectData.building_polygon_settings);
+        if (cachedProject.building_polygon_settings) {
+          setBuildingPolygonSettings(cachedProject.building_polygon_settings);
+        }
       }
 
       // Load building floors

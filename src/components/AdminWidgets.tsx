@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
@@ -18,39 +18,13 @@ interface Project {
 }
 
 const AdminWidgets = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [widgetWidth, setWidgetWidth] = useState('100%');
   const [widgetHeight, setWidgetHeight] = useState('600px');
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('ru');
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { t } = useLanguage();
-
-  useEffect(() => {
-    if (user) {
-      loadProjects();
-    }
-  }, [user]);
-
-  const loadProjects = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { projects, loading, error } = useUserProjects(user?.id);
 
   const generateEmbedCode = () => {
     const baseUrl = window.location.origin;
@@ -162,7 +136,7 @@ const AdminWidgets = () => {
                 <SelectContent>
                   {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
                     <SelectItem key={code} value={code}>
-                      {config.flag} {t(`language.${code}` as any)}
+                      {config.flag} {t(`language.${code}` as keyof typeof LANGUAGE_CONFIG)}
                     </SelectItem>
                   ))}
                 </SelectContent>
