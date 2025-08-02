@@ -1314,6 +1314,11 @@ const translations: Translations = {
     en: 'Select currency for displaying prices in the project',
     ka: 'აირჩიეთ ვალუტა პროექტში ფასების საჩვენებლად'
   },
+  'projectEditor.fields': {
+    ru: 'Поля',
+    en: 'Fields',
+    ka: 'ველები'
+  },
 
   // Currencies
   'currency.rub': {
@@ -2033,9 +2038,9 @@ const translations: Translations = {
     ka: 'გაუქმება'
   },
   'customFields.loading': {
-    ru: 'Загрузка кастомных полей...',
-    en: 'Loading custom fields...',
-    ka: 'მორგებული ველების ჩატვირთვა...'
+    ru: 'Загрузка полей...',
+    en: 'Loading fields...',
+    ka: 'მორგებული ჩატვირთვა...'
   },
   'customFields.saveSuccess': {
     ru: 'Поле добавлено',
@@ -2076,6 +2081,91 @@ const translations: Translations = {
     ru: 'Обязательно',
     en: 'Required',
     ka: 'სავალდებულო'
+  },
+  'customFields.fieldsOrder': {
+    ru: 'Порядок полей',
+    en: 'Fields Order',
+    ka: 'ველების წყობა'
+  },
+  'customFields.fieldsOrderDescription': {
+    ru: 'Перетаскивайте поля, чтобы изменить их порядок. Используйте переключатели для управления видимостью.',
+    en: 'Drag fields to change their order. Use toggles to control visibility.',
+    ka: 'გადაათრიეთ ველები მათი წყობის შესაცვლელად. ხილვადობის საკონტროლოდ გამოიყენეთ ღილაკები.'
+  },
+  'customFields.noFields': {
+    ru: 'Поля не настроены',
+    en: 'No fields configured',
+    ka: 'ველები არ არის კონფიგურირებული'
+  },
+  'customFields.orderUpdated': {
+    ru: 'Порядок полей обновлен',
+    en: 'Fields order updated',
+    ka: 'ველების წყობა განახლებულია'
+  },
+  'customFields.orderUpdateError': {
+    ru: 'Ошибка обновления порядка полей',
+    en: 'Error updating fields order',
+    ka: 'ველების წყობის განახლების შეცდომა'
+  },
+  'customFields.visibilityUpdated': {
+    ru: 'Видимость поля обновлена',
+    en: 'Field visibility updated',
+    ka: 'ველის ხილვადობა განახლებულია'
+  },
+  'customFields.visibilityUpdateError': {
+    ru: 'Ошибка обновления видимости поля',
+    en: 'Error updating field visibility',
+    ka: 'ველის ხილვადობის განახლების შეცდომა'
+  },
+  'customFields.hide': {
+    ru: 'Скрыть',
+    en: 'Hide',
+    ka: 'დამალვა'
+  },
+  'customFields.show': {
+    ru: 'Показать',
+    en: 'Show',
+    ka: 'ჩვენება'
+  },
+  'customFields.back': {
+    ru: 'Назад',
+    en: 'Back',
+    ka: 'უკან'
+  },
+  'customFields.allFieldsOrder': {
+    ru: 'Управление полями',
+    en: 'Fields Management',
+    ka: 'ველების მართვა'
+  },
+  'customFields.allFieldsOrderDescription': {
+    ru: 'Управляйте порядком и видимостью всех полей проекта. Перетаскивайте поля для изменения порядка.',
+    en: 'Manage order and visibility of all project fields. Drag fields to change order.',
+    ka: 'მართეთ ყველა პროექტის ველის წყობა და ხილვადობა. გადაათრიეთ ველები წყობის შესაცვლელად.'
+  },
+  'customFields.custom': {
+    ru: 'Кастомное',
+    en: 'Custom',
+    ka: 'მორგებული'
+  },
+  'customFields.builtin': {
+    ru: 'Стандартное',
+    en: 'Built-in',
+    ka: 'სტანდარტული'
+  },
+  'customFields.cannotDeleteBuiltIn': {
+    ru: 'Нельзя удалить стандартное поле',
+    en: 'Cannot delete built-in field',
+    ka: 'სტანდარტული ველის წაშლა შეუძლებელია'
+  },
+  'customFields.cannotEditBuiltIn': {
+    ru: 'Нельзя редактировать стандартное поле',
+    en: 'Cannot edit built-in field',
+    ka: 'სტანდარტული ველის რედაქტირება შეუძლებელია'
+  },
+  'customFields.saving': {
+    ru: 'Сохранение...',
+    en: 'Saving...',
+    ka: 'შენახვა...'
   },
 
   // Apartment Photos Manager

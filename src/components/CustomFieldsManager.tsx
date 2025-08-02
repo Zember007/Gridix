@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,16 +19,25 @@ interface CustomField {
   field_type: 'text' | 'number' | 'select' | 'boolean';
   is_required: boolean;
   field_options?: string[];
+  sort_order: number;
+  is_visible: boolean;
 }
 
 interface CustomFieldsManagerProps {
   projectId: string;
   onFieldsChange?: (fields: CustomField[]) => void;
+  editingField?: CustomField | null;
+  onClose?: () => void;
 }
 
-const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerProps) => {
+const CustomFieldsManager = ({ 
+  projectId, 
+  onFieldsChange, 
+  editingField: initialEditingField = null,
+  onClose 
+}: CustomFieldsManagerProps) => {
   const [fields, setFields] = useState<CustomField[]>([]);
-  const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const [editingField, setEditingField] = useState<CustomField | null>(initialEditingField);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
@@ -38,20 +47,18 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
     field_label: '',
     field_type: 'text',
     is_required: false,
-    field_options: []
+    field_options: [],
+    sort_order: 0,
+    is_visible: true
   });
 
-  useEffect(() => {
-    loadCustomFields();
-  }, [projectId]);
-
-  const loadCustomFields = async () => {
+  const loadCustomFields = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('project_custom_fields')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at');
+        .order('sort_order');
 
       if (error) throw error;
 
@@ -59,9 +66,11 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
-        field_type: field.field_type as any,
+        field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
         is_required: field.is_required,
-        field_options: field.field_options as string[] || []
+        field_options: field.field_options as string[] || [],
+        sort_order: field.sort_order || 0,
+        is_visible: field.is_visible !== false
       }));
 
       setFields(formattedFields);
@@ -72,7 +81,17 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, t, onFieldsChange]);
+
+  useEffect(() => {
+    loadCustomFields();
+  }, [loadCustomFields]);
+
+  useEffect(() => {
+    if (initialEditingField) {
+      setEditingField(initialEditingField);
+    }
+  }, [initialEditingField]);
 
   const generateFieldName = (label: string) => {
     return label
@@ -100,7 +119,9 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
             field_label: field.field_label,
             field_type: field.field_type,
             is_required: field.is_required,
-            field_options: field.field_options
+            field_options: field.field_options,
+            sort_order: field.sort_order,
+            is_visible: field.is_visible
           })
           .eq('id', field.id);
 
@@ -116,7 +137,9 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
             field_label: field.field_label,
             field_type: field.field_type,
             is_required: field.is_required,
-            field_options: field.field_options
+            field_options: field.field_options,
+            sort_order: field.sort_order || fields.length,
+            is_visible: field.is_visible
           }]);
 
         if (error) throw error;
@@ -130,7 +153,9 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
         field_label: '',
         field_type: 'text',
         is_required: false,
-        field_options: []
+        field_options: [],
+        sort_order: 0,
+        is_visible: true
       });
       loadCustomFields();
     } catch (error) {
@@ -179,7 +204,7 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
           <Label htmlFor="field_type">{t('customFields.fieldType')}</Label>
           <Select
             value={field.field_type}
-            onValueChange={(value: any) => {
+            onValueChange={(value: 'text' | 'number' | 'select' | 'boolean') => {
               const updatedField = { ...field, field_type: value };
               if (isNew) {
                 setNewField(updatedField);
@@ -256,11 +281,14 @@ const CustomFieldsManager = ({ projectId, onFieldsChange }: CustomFieldsManagerP
                 field_label: '',
                 field_type: 'text',
                 is_required: false,
-                field_options: []
+                field_options: [],
+                sort_order: 0,
+                is_visible: true
               });
             } else {
               setEditingField(null);
             }
+            onClose?.();
           }}
         >
           <X className="h-4 w-4 mr-2" />

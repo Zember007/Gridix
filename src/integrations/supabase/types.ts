@@ -268,6 +268,53 @@ export type Database = {
           },
         ]
       }
+      project_field_settings: {
+        Row: {
+          created_at: string
+          field_label: string
+          field_name: string
+          field_type: string
+          id: string
+          is_custom: boolean
+          is_visible: boolean
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_label: string
+          field_name: string
+          field_type?: string
+          id?: string
+          is_custom?: boolean
+          is_visible?: boolean
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_label?: string
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_custom?: boolean
+          is_visible?: boolean
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_field_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_custom_fields: {
         Row: {
           created_at: string
@@ -277,7 +324,9 @@ export type Database = {
           field_type: string
           id: string
           is_required: boolean
+          is_visible: boolean
           project_id: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -288,7 +337,9 @@ export type Database = {
           field_type?: string
           id?: string
           is_required?: boolean
+          is_visible?: boolean
           project_id: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -299,7 +350,9 @@ export type Database = {
           field_type?: string
           id?: string
           is_required?: boolean
+          is_visible?: boolean
           project_id?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [

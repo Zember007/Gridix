@@ -21,7 +21,7 @@ import { useProject, useProjectCRUD } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
-import CustomFieldsManager from './CustomFieldsManager';
+import AllFieldsManager from './AllFieldsManager';
 import ApartmentPhotosManager from './ApartmentPhotosManager';
 
 interface ProjectEditorProps {
@@ -59,6 +59,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
   const [accessError, setAccessError] = useState<string | null>(null);
+
   const { navigate } = useLanguageNavigation();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -278,7 +279,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="basic" className="text-xs">
               <Building2 className="h-3 w-3 mr-1" />
               {t('projectEditor.basicInfo')}
@@ -294,6 +295,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="apartments" className="text-xs" disabled={isNew}>
               <Settings className="h-3 w-3 mr-1" />
               {t('projectList.apartments')}
+            </TabsTrigger>
+            <TabsTrigger value="fields" className="text-xs" disabled={isNew}>
+              <Settings className="h-3 w-3 mr-1" />
+              {t('projectEditor.fields')}
             </TabsTrigger>
             <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
               <Camera className="h-3 w-3 mr-1" />
@@ -417,8 +422,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <TabsContent value="apartments">
             <div className="space-y-4">
               <ProjectApartmentsManager projectId={project.id} />
-              <CustomFieldsManager projectId={project.id} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="fields">
+            <AllFieldsManager projectId={project.id} />
           </TabsContent>
 
           <TabsContent value="photos">

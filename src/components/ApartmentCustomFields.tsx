@@ -14,6 +14,8 @@ interface CustomField {
   field_type: 'text' | 'number' | 'select' | 'boolean';
   is_required: boolean;
   field_options?: string[];
+  sort_order: number;
+  is_visible: boolean;
 }
 
 interface ApartmentCustomFieldsProps {
@@ -44,7 +46,8 @@ const ApartmentCustomFields = ({
         .from('project_custom_fields')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at');
+        .eq('is_visible', true)
+        .order('sort_order');
 
       if (error) throw error;
 
@@ -52,9 +55,11 @@ const ApartmentCustomFields = ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
-        field_type: field.field_type as any,
+        field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
         is_required: field.is_required,
-        field_options: field.field_options as string[] || []
+        field_options: field.field_options as string[] || [],
+        sort_order: field.sort_order || 0,
+        is_visible: field.is_visible !== false
       }));
 
       setCustomFields(formattedFields);
