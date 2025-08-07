@@ -709,7 +709,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
           {/* Apartment summary section - only show if apartment is selected */}
           {selectedApartment && (
-            <div className="bg-gray-50 border-t">
+            <div
+            id='apartment-summary'
+            className="bg-gray-50 border-t">
               <div className="container mx-auto px-6 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Apartment Layout Images */}

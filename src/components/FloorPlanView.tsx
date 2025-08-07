@@ -95,32 +95,32 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
   return (
     <Card>
       <CardContent className="p-4">
- 
+
 
         <div className="relative bg-gray-50 rounded-lg overflow-hidden">
           <div className="relative">
-            <img 
-              src={floorPlan.image_url} 
+            <img
+              src={floorPlan.image_url}
               alt={`План ${floorNumber} этажа`}
               className="w-auto mx-auto h-auto max-h-[600px]"
               onLoad={handleImageLoad}
             />
-            
+
             {/* Overlay с квартирами */}
             {imageSize.width > 0 && (
-              <svg 
+              <svg
                 viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 style={{
                   width: imageSize.width,
                   height: imageSize.height,
-                
+
                 }}
                 preserveAspectRatio="none"
               >
                 {apartments.map((apartment) => {
                   if (!apartment.polygon || apartment.polygon.length < 3) return null;
-                  
+
                   const convertedPolygon = convertToViewBox(apartment.polygon, imageSize.width, imageSize.height);
                   const points = convertedPolygon
                     .map(point => `${point.x},${point.y}`)
@@ -138,7 +138,12 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
                         stroke={getApartmentColor(apartment)}
                         strokeWidth={2}
                         className="cursor-pointer hover:fill-opacity-50 transition-all"
-                        onClick={() => onApartmentSelect(apartment)}
+                        onClick={() => {
+                          setTimeout(() => {
+                            document.getElementById('apartment-summary')?.scrollIntoView({ behavior: 'smooth' });
+                          }, 500)
+                          onApartmentSelect(apartment)
+                        }}
                       />
                       <text
                         x={centerX}
