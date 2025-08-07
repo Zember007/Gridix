@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
+
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +22,8 @@ import ApartmentDetailsModal from './ApartmentDetailsModal';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
 
+
+
 interface Project {
   id: string;
   name: string;
@@ -27,6 +31,17 @@ interface Project {
   address: string | null;
   floors: number;
   building_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  slug: string | null;
+  currency: string | null;
+  min_price: number | null;
+  is_public: boolean;
+  is_featured: boolean;
+  view_count: number;
+  user_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ProjectApartmentSelectorProps {
@@ -42,8 +57,10 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
-  const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] = useState(false);
+  const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
+  const [projectLoaded, setProjectLoaded] = useState(false);
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
@@ -55,14 +72,22 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
 
+  // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
-    loadProject();
-    loadApartments();
-  }, [projectId, cachedProject]);
+    if (cachedProject && !projectLoaded) {
+      setProject(cachedProject);
+      setProjectLoaded(true);
+    }
+  }, [cachedProject, projectLoaded]);
 
+  // Загружаем квартиры только когда они нужны (при первом рендере или изменении projectId)
   useEffect(() => {
-    applyFilters();
-  }, [apartments, selectedFloor, selectedRooms, priceRange, areaRange, searchQuery, showOnlyAvailable]);
+    if (projectId && !apartmentsLoaded) {
+      loadApartments();
+    }
+  }, [projectId, apartmentsLoaded]);
+
+
 
   useEffect(() => {
     // Set default floor when apartments load
@@ -88,7 +113,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     }
   };
 
-  const loadApartments = async () => {
+  const loadApartments = useCallback(async () => {
+    if (apartmentsLoaded) return; // Не загружаем повторно
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -100,7 +127,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
+      setApartmentsLoaded(true);
       
+      // Вычисляем диапазоны только один раз
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
           .map(apt => apt.price || 0)
@@ -125,9 +154,9 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, apartmentsLoaded]);
 
-  const applyFilters = () => {
+  const filteredApartments = useMemo(() => {
     let filtered = [...apartments];
 
     if (selectedFloor !== 'all') {
@@ -159,20 +188,20 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       );
     }
 
-    setFilteredApartments(filtered);
-  };
+    return filtered;
+  }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery]);
 
-  const getUniqueFloors = () => {
+  const getUniqueFloors = useCallback(() => {
     return [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
-  };
+  }, [apartments]);
 
-  const getUniqueRoomCounts = () => {
+  const getUniqueRoomCounts = useCallback(() => {
     return [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
-  };
+  }, [apartments]);
 
-  const getAvailableCount = () => {
+  const getAvailableCount = useCallback(() => {
     return filteredApartments.filter(apt => apt.status === 'available').length;
-  };
+  }, [filteredApartments]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU').format(price);

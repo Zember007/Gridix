@@ -102,15 +102,20 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
             <img 
               src={floorPlan.image_url} 
               alt={`План ${floorNumber} этажа`}
-              className="w-full h-auto max-h-[600px] object-contain"
+              className="w-auto mx-auto h-auto max-h-[600px]"
               onLoad={handleImageLoad}
             />
             
             {/* Overlay с квартирами */}
             {imageSize.width > 0 && (
               <svg 
-                className="absolute inset-0 w-full h-full"
                 viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  width: imageSize.width,
+                  height: imageSize.height,
+                
+                }}
                 preserveAspectRatio="none"
               >
                 {apartments.map((apartment) => {

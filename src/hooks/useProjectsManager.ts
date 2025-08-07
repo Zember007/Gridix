@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
   description: string | null;
@@ -14,6 +14,7 @@ interface Project {
   longitude: number | null;
   slug: string | null;
   currency: string | null;
+  min_price: number | null;
   is_public: boolean;
   is_featured: boolean;
   view_count: number;
