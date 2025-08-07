@@ -25,6 +25,7 @@ interface InteractiveProjectsMapProps {
   onProjectSelect?: (project: Project) => void;
   selectedProjectId?: string;
   userId?: string;
+  project?: Project;
 }
 
 // Кастомная иконка для маркеров проектов
@@ -59,7 +60,7 @@ const FitBounds = ({ projects }: { projects: Project[] }) => {
   return null;
 };
 
-const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: InteractiveProjectsMapProps) => {
+const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, project }: InteractiveProjectsMapProps) => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { t } = useLanguage();
   
@@ -67,8 +68,8 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId }: 
   const { projects: allProjects, loading, error } = useProjectsWithPrices(userId);
   
   // Фильтруем проекты только с координатами для отображения на карте
-  const projects = allProjects.filter(project => 
-    project.latitude !== null && project.longitude !== null
+  const projects = project ? [project] : allProjects.filter(project => 
+    project.latitude !== null && project.longitude !== null 
   );
 
   const handleViewProject = (projectId: string) => {

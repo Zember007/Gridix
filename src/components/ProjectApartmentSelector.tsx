@@ -18,6 +18,7 @@ import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
+import InteractiveProjectsMap from './InteractiveProjectsMap';
 
 interface Project {
   id: string;
@@ -49,7 +50,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
-  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list'>('facade');
+  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -321,6 +322,16 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                  <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
                  {!isMobile && t('project.listView')}
                </Button>
+
+               <Button 
+                 variant={viewMode === 'map' ? 'default' : 'outline'} 
+                 size="sm"
+                 className={`${viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                 onClick={() => setViewMode('map')}
+               >
+                 <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                 {!isMobile && t('embed.onMap')}
+               </Button>
                
                {/* Mobile filters button */}
                {isMobile && (
@@ -438,7 +449,14 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
             )}
           </div>
         </div>
-      ) : (
+      ) : viewMode === 'map' ?
+      <>
+      <InteractiveProjectsMap
+     project={project}
+      
+    />
+      </>
+      :(
         // Facade and Floor Plan views with hero section
         <>
           {/* Main visualization area */}
