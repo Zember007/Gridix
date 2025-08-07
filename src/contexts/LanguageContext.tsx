@@ -978,6 +978,11 @@ const translations: Translations = {
     en: 'Save',
     ka: 'შენახვა'
   },
+  'projectEditor.save&continue': {
+    ru: 'Сохранить и продолжить',
+    en: 'Save and continue',
+    ka: 'შენახვა და გაგრძელება'
+  },
   'projectEditor.saving': {
     ru: 'Сохранение...',
     en: 'Saving...',

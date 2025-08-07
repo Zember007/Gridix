@@ -391,8 +391,17 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </Select>
                   <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                 </div>
+
+                {isNew && (
+              <Button onClick={handleSave} disabled={saving} className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? t('projectEditor.saving') : t('projectEditor.save&continue')}
+              </Button>
+            )}
               </CardContent>
+             
             </Card>
+           
           </TabsContent>
 
           <TabsContent value="building">
