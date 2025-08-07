@@ -1743,6 +1743,11 @@ const translations: Translations = {
     en: 'Rooms',
     ka: 'ოთახები'
   },
+  'floorPlan.apartments.studio': {
+    ru: 'Студия',
+    en: 'Studio',
+    ka: 'სტუდიო'
+  },
   'floorPlan.apartments.area': {
     ru: 'Площадь (м²)',
     en: 'Area (m²)',

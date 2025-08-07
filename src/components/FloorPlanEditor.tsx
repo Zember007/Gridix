@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Plus, Trash2, Edit3, Settings, X, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -77,6 +78,17 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     area: 0,
     price: 0,
     status: 'available'
+  });
+  const [fieldErrors, setFieldErrors] = useState<{
+    number: boolean;
+    rooms: boolean;
+    area: boolean;
+    price: boolean;
+  }>({
+    number: false,
+    rooms: false,
+    area: false,
+    price: false
   });
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -238,13 +250,13 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         .maybeSingle();
 
       if (existingPlan) {
-        const { error: updateError } = await supabase
-          .from('floor_plans')
-          .update({
-            image_url: newImageUrl,
-            polygon_settings: polygonSettings as any
-          })
-          .eq('id', existingPlan.id);
+                  const { error: updateError } = await supabase
+            .from('floor_plans')
+            .update({
+              image_url: newImageUrl,
+              polygon_settings: polygonSettings as unknown as Json
+            })
+            .eq('id', existingPlan.id);
 
         if (updateError) throw updateError;
       } else {
@@ -254,7 +266,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             project_id: projectId,
             floor_number: floorNumber,
             image_url: newImageUrl,
-            polygon_settings: polygonSettings as any
+            polygon_settings: polygonSettings as unknown as Json
           });
 
         if (insertError) throw insertError;
@@ -293,7 +305,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               .from('floor_plans')
               .update({
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as any
+                polygon_settings: polygonSettings as unknown as Json
               })
               .eq('id', existingPlan.id);
           } else {
@@ -303,7 +315,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 project_id: projectId,
                 floor_number: targetFloor,
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as any
+                polygon_settings: polygonSettings as unknown as Json
               });
           }
         }
@@ -362,7 +374,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   area: apt.area,
                   price: apt.price,
                   status: apt.status,
-                  polygon: apt.polygon as any
+                  polygon: apt.polygon as unknown as Json
                 });
             } catch (error) {
               console.error('Error inserting apartment:', error, {
@@ -385,6 +397,14 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   };
 
   const startEditingApartment = (apartmentId: string | null) => {
+    // Очищаем ошибки при начале редактирования
+    setFieldErrors({
+      number: false,
+      rooms: false,
+      area: false,
+      price: false
+    });
+
     if (apartmentId === 'new') {
       setEditingApartment('new');
       setApartmentData({
@@ -414,8 +434,25 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     setSelectedApartment(null);
   };
 
+  const validateFields = () => {
+    const errors = {
+      number: !apartmentData.number.trim(),
+      rooms: apartmentData.rooms < 0,
+      area: apartmentData.area <= 0,
+      price: apartmentData.price < 0
+    };
+    
+    setFieldErrors(errors);
+    return !Object.values(errors).some(error => error);
+  };
+
   const handlePolygonSave = async (points: Point[]) => {
-    if (!editingApartment || points.length < 3 || !apartmentData.number) {
+    if (!editingApartment || points.length < 3) {
+      toast.error(t('floorPlan.apartments.fillAllFields'));
+      return;
+    }
+
+    if (!validateFields()) {
       toast.error(t('floorPlan.apartments.fillAllFields'));
       return;
     }
@@ -432,7 +469,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any
+            polygon: points as unknown as Json
           })
           .select()
           .single();
@@ -460,7 +497,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any
+            polygon: points as unknown as Json
           })
           .eq('id', existingApartment.id);
 
@@ -513,6 +550,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       price: 0,
       status: 'available'
     });
+    setFieldErrors({
+      number: false,
+      rooms: false,
+      area: false,
+      price: false
+    });
   };
 
   const polygonToPath = (polygon: Point[]) => {
@@ -550,7 +593,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       baseOpacity = hoverOpacity;
     }
 
-    let style: React.CSSProperties = {
+    const style: React.CSSProperties = {
       fillOpacity: baseOpacity,
       transition: 'all 0.3s ease'
     };
@@ -612,24 +655,30 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
+                <Label htmlFor="apt-number" className={fieldErrors.number ? "text-red-500" : ""}>
+                  {t('floorPlan.apartments.number')}
+                </Label>
                 <Input
                   id="apt-number"
                   value={apartmentData.number}
                   onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
                   placeholder={t('floorPlan.apartments.numberPlaceholder')}
+                  className={fieldErrors.number ? "border-red-500 focus:border-red-500" : ""}
                 />
               </div>
               <div>
-                <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
+                <Label htmlFor="apt-rooms" className={fieldErrors.rooms ? "text-red-500" : ""}>
+                  {t('floorPlan.apartments.rooms')}
+                </Label>
                 <Select
                   value={apartmentData.rooms.toString()}
                   onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: parseInt(value) }))}
                 >
-                  <SelectTrigger id="apt-rooms">
+                  <SelectTrigger id="apt-rooms" className={fieldErrors.rooms ? "border-red-500 focus:border-red-500" : ""}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">{t('floorPlan.apartments.studio')}</SelectItem>
                     {[1, 2, 3, 4, 5].map(num => (
                       <SelectItem key={num} value={num.toString()}>
                         {num}
@@ -639,21 +688,27 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </Select>
               </div>
               <div>
-                <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
+                <Label htmlFor="apt-area" className={fieldErrors.area ? "text-red-500" : ""}>
+                  {t('floorPlan.apartments.area')}
+                </Label>
                 <Input
                   id="apt-area"
                   type="number"
                   value={apartmentData.area}
                   onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                  className={fieldErrors.area ? "border-red-500 focus:border-red-500" : ""}
                 />
               </div>
               <div>
-                <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
+                <Label htmlFor="apt-price" className={fieldErrors.price ? "text-red-500" : ""}>
+                  {t('floorPlan.apartments.price')}
+                </Label>
                 <Input
                   id="apt-price"
                   type="number"
                   value={apartmentData.price}
                   onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  className={fieldErrors.price ? "border-red-500 focus:border-red-500" : ""}
                 />
               </div>
               <div className="col-span-2">
@@ -780,7 +835,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                           <Badge variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}>
                             {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
                           </Badge>
-                          <span className="text-sm text-gray-600">{apartment.rooms} {t('floorPlan.apartments.roomsShort')}, {apartment.area} м²</span>
+                          <span className="text-sm text-gray-600">
+                            {apartment.rooms === 0 ? t('floorPlan.apartments.studio') : `${apartment.rooms} ${t('floorPlan.apartments.roomsShort')}`}, {apartment.area} м²
+                          </span>
                         </div>
                         <div className="flex gap-1">
                           <Button
@@ -860,7 +917,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                                 <h4 className="font-semibold">Квартира №{apartment.apartment_number}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                   <span className="text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                                  <span>{apartment.rooms}</span>
+                                  <span>{apartment.rooms === 0 ? t('floorPlan.apartments.studio') : apartment.rooms}</span>
                                   <span className="text-gray-600">{t('floorPlan.apartments.area')}:</span>
                                   <span>{apartment.area} м²</span>
                                   {apartment.price > 0 && (
@@ -925,7 +982,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                <span className="font-medium">{selectedApartment.rooms}</span>
+                <span className="font-medium">{selectedApartment.rooms === 0 ? t('floorPlan.apartments.studio') : selectedApartment.rooms}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{t('floorPlan.apartments.area')}:</span>
