@@ -4,6 +4,7 @@ import { Building2, Maximize2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -204,70 +205,29 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       adjustedY = window.innerHeight - popupHeight - margin;
     }
     
-    const isOnRight = position.x - popupWidth - 20 < margin;
+
+    const { t } = useLanguage();
     
     return (
       <div
-        className="absolute z-30 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64"
+        className="absolute z-30  uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[100px] h-[105px]"
         style={{
           left: adjustedX,
           top: adjustedY,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {floorNumber} этаж
-          </h3>
-          <button
-            onClick={() => setShowPopup(false)}
-            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <div className="text-center flex items-center justify-center gap-[7px]">
+        {t('project.floor')} <span className='font-bold'>{floorNumber} </span>
         </div>
+
+        <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
+       
+              <div className="text-[32px] leading-[1.1]">{stats.available}</div>
+              {t('project.available')}
+          </div>
         
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Всего квартир:</span>
-            <span className="font-medium">{stats.total}</span>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-3 pt-2">
-            <div className="text-center">
-              <div className="w-3 h-3 bg-green-500 rounded mx-auto mb-1"></div>
-              <div className="text-xs text-gray-600">Свободные</div>
-              <div className="font-semibold text-green-600">{stats.available}</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-3 h-3 bg-yellow-500 rounded mx-auto mb-1"></div>
-              <div className="text-xs text-gray-600">Забронированные</div>
-              <div className="font-semibold text-yellow-600">{stats.reserved}</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-3 h-3 bg-red-500 rounded mx-auto mb-1"></div>
-              <div className="text-xs text-gray-600">Проданные</div>
-              <div className="font-semibold text-red-600">{stats.sold}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Стрелка указывающая на полигон */}
-        {!isOnRight ? (
-          // Стрелка справа (попап слева от полигона)
-          <div className="absolute top-1/2 left-full transform -translate-y-1/2">
-            <div className="w-0 h-0 border-t-8 border-b-8 border-l-8 border-t-transparent border-b-transparent border-l-white"></div>
-            <div className="w-0 h-0 border-t-8 border-b-8 border-l-8 border-t-transparent border-b-transparent border-l-gray-200 -ml-px"></div>
-          </div>
-        ) : (
-          // Стрелка слева (попап справа от полигона)
-          <div className="absolute top-1/2 right-full transform -translate-y-1/2">
-            <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-gray-200"></div>
-            <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-white ml-px"></div>
-          </div>
-        )}
+
       </div>
     );
   };
