@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -104,23 +104,23 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [statusValidation, setStatusValidation] = useState<StatusValidationResult | null>(null);
   const [showStatusValidation, setShowStatusValidation] = useState(false);
 
-  const fieldLabels = {
+  const fieldLabels = useMemo(() => ({
     apartmentNumber: 'Номер квартиры',
     floor: 'Этаж',
     rooms: 'Количество комнат',
     area: 'Площадь (м²)',
     price: 'Цена',
     status: 'Статус'
-  };
+  }), []);
 
-  const requiredFields = ['apartmentNumber', 'floor', 'rooms', 'area'];
+  const requiredFields = useMemo(() => ['apartmentNumber', 'floor', 'rooms', 'area'], []);
 
   // Создаем временный проект для настройки кастомных полей
   useEffect(() => {
     createTempProject();
   }, []);
 
-  const createTempProject = async () => {
+  const createTempProject = useCallback(async () => {
     try {
       const { data: project, error } = await supabase
         .from('projects')
@@ -137,10 +137,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     } catch (error) {
       console.error('Error creating temp project:', error);
     }
-  };
+  }, []);
 
   // Status validation functions
-  const validateStatuses = () => {
+  const validateStatuses = useCallback(() => {
     if (!columnMapping.status || columnMapping.status === '__none__') {
       setStatusValidation(null);
       return;
@@ -176,16 +176,16 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       invalidStatuses,
       statusDistribution
     });
-  };
+  }, [columnMapping.status, statusMapping, importedData]);
 
-  const updateStatusMapping = (originalValue: string, mappedValue: 'available' | 'sold' | 'reserved' | 'invalid') => {
+  const updateStatusMapping = useCallback((originalValue: string, mappedValue: 'available' | 'sold' | 'reserved' | 'invalid') => {
     setStatusMapping(prev => ({
       ...prev,
       [originalValue.toLowerCase()]: mappedValue
     }));
-  };
+  }, []);
 
-  const addCustomStatusMapping = (originalValue: string) => {
+  const addCustomStatusMapping = useCallback((originalValue: string) => {
     if (!originalValue.trim()) return;
     
     const key = originalValue.toLowerCase().trim();
@@ -195,40 +195,49 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         [key]: 'available' // по умолчанию
       }));
     }
-  };
+  }, [statusMapping]);
 
   // Валидируем статусы при изменении маппинга колонки статуса
   useEffect(() => {
-    validateStatuses();
+    // Добавляем debounce для предотвращения множественных вызовов
+    const timeoutId = setTimeout(() => {
+      validateStatuses();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [columnMapping.status, statusMapping, importedData]);
 
-  const handleCustomFieldsChange = (fields: CustomField[]) => {
+  const handleCustomFieldsChange = useCallback((fields: CustomField[]) => {
     setCustomFields(fields);
     
     // Добавляем кастомные поля в маппинг
-    const newMapping = { ...columnMapping };
-    fields.forEach(field => {
-      if (!newMapping[field.field_name]) {
-        newMapping[field.field_name] = '';
-      }
+    setColumnMapping(prev => {
+      const newMapping = { ...prev };
+      fields.forEach(field => {
+        if (!newMapping[field.field_name]) {
+          newMapping[field.field_name] = '';
+        }
+      });
+      return newMapping;
     });
-    setColumnMapping(newMapping);
-  };
+  }, []);
 
-  const isValid = requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+  const isValid = useMemo(() => {
+    return requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+  }, [columnMapping]);
 
-  const handleMappingChange = (field: keyof ColumnMapping, value: string) => {
+  const handleMappingChange = useCallback((field: keyof ColumnMapping, value: string) => {
     setColumnMapping(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const getPreviewValue = (field: keyof ColumnMapping) => {
+  const getPreviewValue = useCallback((field: keyof ColumnMapping) => {
     const columnName = columnMapping[field];
     if (!columnName || columnName === '__none__' || !importedData.length) return 'Нет данных';
     const value = importedData[0][columnName];
     return value !== null && value !== undefined && value !== '' ? value : 'Нет данных';
-  };
+  }, [columnMapping, importedData]);
 
-  const createProjectWithData = async () => {
+  const createProjectWithData = useCallback(async () => {
     if (!isValid || !projectData.name.trim()) {
       toast.error('Пожалуйста, заполните все обязательные поля');
       return;
@@ -403,16 +412,24 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     } finally {
       setIsCreating(false);
     }
-  };
+  }, [isValid, projectData.name, columnMapping, importedData, customFields, tempProjectId, createProject, navigate]);
 
   // Объединяем стандартные поля и кастомные поля для маппинга
-  const allFields = { ...fieldLabels };
-  customFields.forEach(field => {
-    allFields[field.field_name] = field.field_label;
-  });
+  const allFields = useMemo(() => {
+    const fields = { ...fieldLabels };
+    customFields.forEach(field => {
+      fields[field.field_name] = field.field_label;
+    });
+    return fields;
+  }, [customFields]);
 
-  const allRequiredFields = [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
-  const isValidWithCustom = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+  const allRequiredFields = useMemo(() => {
+    return [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
+  }, [customFields]);
+
+  const isValidWithCustom = useMemo(() => {
+    return allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+  }, [allRequiredFields, columnMapping]);
 
   if (!tempProjectId) {
     return <div className="p-4 text-center">Инициализация...</div>;
