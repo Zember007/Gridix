@@ -73,6 +73,11 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const filtersRef = useRef<HTMLDivElement>(null);
   // Отслеживаем, для каких этажей уже подгружены полигоны, чтобы не дёргать повторно
   const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
+  // Кэш предзагруженных фото планировок по типу (rooms) → массив CombinedPhoto
+  const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
+  // Ленивая предзагрузка: начнём только когда секция с планировками попала в видимую область
+  const [shouldPreloadLayouts, setShouldPreloadLayouts] = useState(false);
+  const layoutSectionRef = useRef<HTMLDivElement>(null);
 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
@@ -150,6 +155,59 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       }
     }
   }, [apartments, getUniqueFloors, selectedFloorForPlan]);
+
+  // Следим за видимостью секции планировок, чтобы отложить предзагрузку
+  useEffect(() => {
+    if (!layoutSectionRef.current) return;
+    const el = layoutSectionRef.current;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setShouldPreloadLayouts(true);
+          obs.disconnect();
+        }
+      });
+    }, { root: null, threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Предзагрузка фото планировок одним запросом для всех типов комнат в проекте (для карточек планировок)
+  useEffect(() => {
+    const preloadLayoutPhotos = async () => {
+      if (!projectId || apartments.length === 0 || !shouldPreloadLayouts) return;
+      // Определяем все уникальные типы layout_type для текущего набора квартир
+      const uniqueLayouts = new Set<string>(
+        apartments.map(a => (a.rooms === 0 ? 'studio' : `${a.rooms}-room`))
+      );
+
+      if (uniqueLayouts.size === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('layout_photos')
+          .select('id, project_id, layout_type, image_url, description, order_index')
+          .eq('project_id', projectId)
+          .in('layout_type', Array.from(uniqueLayouts))
+          .order('order_index', { ascending: true });
+
+        if (error) throw error;
+
+        const grouped: Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]> = {};
+        (data || []).forEach(p => {
+          const key = p.layout_type;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push({ id: p.id, image_url: p.image_url, description: p.description || undefined, order_index: p.order_index, type: 'layout' });
+        });
+
+        setPreloadedLayoutPhotosByRooms(grouped);
+      } catch (e) {
+        console.error('Error preloading layout photos:', e);
+      }
+    };
+
+    preloadLayoutPhotos();
+  }, [projectId, apartments, shouldPreloadLayouts]);
 
   useEffect(() => {
     setSelectedApartment(null);
@@ -633,7 +691,17 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                             return (
                               <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
                                 <div className="aspect-[4/3] bg-gray-100 relative">
-                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} projectId={projectId} roomsHint={representativeApt.rooms} />
+                                  {(() => {
+                                    const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${representativeApt.rooms}-room`;
+                                    const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                                    const first = photos[0];
+                                    return first ? (
+                                      <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                           className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
+                                    );
+                                  })()}
                                   
                                   {/* Status badge */}
                                   <div className="absolute top-2 right-2 z-10">

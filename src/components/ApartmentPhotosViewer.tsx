@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,22 +35,36 @@ interface ApartmentPhotosViewerProps {
   apartmentId: string;
   projectId?: string;
   roomsHint?: number; // если известны комнаты, избегаем запроса к apartments
+  preloadedLayoutPhotos?: CombinedPhoto[]; // если переданы, используем их без запросов
+  fetchMode?: 'auto' | 'preloaded-only'; // 'preloaded-only' отключает любые запросы
 }
 
-const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint }: ApartmentPhotosViewerProps) => {
+const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLayoutPhotos, fetchMode = 'auto' }: ApartmentPhotosViewerProps) => {
   const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Если предзагруженные фото планировок переданы, используем их и не делаем запросы
+    if (preloadedLayoutPhotos && preloadedLayoutPhotos.length > 0) {
+      setPhotos(preloadedLayoutPhotos.sort((a, b) => a.order_index - b.order_index));
+      setCurrentPhotoIndex(0);
+      setLoading(false);
+      return;
+    }
+    // Если нужно работать только с предзагруженными, не делаем запрос и ждём пропсы
+    if (fetchMode === 'preloaded-only') {
+      setLoading(true);
+      return;
+    }
     loadPhotos();
-  }, [apartmentId, projectId, roomsHint]);
+  }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos, fetchMode]);
 
   const getLayoutType = (rooms: number): string => {
     return rooms === 0 ? 'studio' : `${rooms}-room`;
   };
 
-  const loadPhotos = async () => {
+  const loadPhotos = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -72,15 +86,27 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint }: ApartmentP
 
       const layoutType = getLayoutType(currentRooms!);
 
-      // Загружаем фотографии планировки
-      const { data: layoutPhotos, error: layoutError } = await supabase
-        .from('layout_photos')
-        .select('*')
-        .eq('project_id', currentProjectId!)
-        .eq('layout_type', layoutType)
-        .order('order_index', { ascending: true });
-
-      if (layoutError) throw layoutError;
+      // Если переданы предзагруженные фото планировок — используем их, иначе загружаем
+      let layoutPhotos: LayoutPhoto[] | null = null;
+      if (preloadedLayoutPhotos && preloadedLayoutPhotos.length > 0) {
+        layoutPhotos = preloadedLayoutPhotos.map(p => ({
+          id: p.id,
+          project_id: currentProjectId!,
+          layout_type: layoutType,
+          image_url: p.image_url,
+          description: p.description || null,
+          order_index: p.order_index
+        }));
+      } else {
+        const { data, error: layoutError } = await supabase
+          .from('layout_photos')
+          .select('*')
+          .eq('project_id', currentProjectId!)
+          .eq('layout_type', layoutType)
+          .order('order_index', { ascending: true });
+        if (layoutError) throw layoutError;
+        layoutPhotos = data || [];
+      }
 
       // Загружаем индивидуальные фотографии квартиры
       const { data: apartmentPhotos, error: apartmentPhotosError } = await supabase
@@ -116,7 +142,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint }: ApartmentP
     } finally {
       setLoading(false);
     }
-  };
+  }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos]);
 
   const nextPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
