@@ -76,8 +76,6 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   // Кэш предзагруженных фото планировок по типу (rooms) → массив CombinedPhoto
   const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
   // Ленивая предзагрузка: начнём только когда секция с планировками попала в видимую область
-  const [shouldPreloadLayouts, setShouldPreloadLayouts] = useState(false);
-  const layoutSectionRef = useRef<HTMLDivElement>(null);
 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
@@ -157,25 +155,12 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   }, [apartments, getUniqueFloors, selectedFloorForPlan]);
 
   // Следим за видимостью секции планировок, чтобы отложить предзагрузку
-  useEffect(() => {
-    if (!layoutSectionRef.current) return;
-    const el = layoutSectionRef.current;
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setShouldPreloadLayouts(true);
-          obs.disconnect();
-        }
-      });
-    }, { root: null, threshold: 0.1 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+
 
   // Предзагрузка фото планировок одним запросом для всех типов комнат в проекте (для карточек планировок)
   useEffect(() => {
     const preloadLayoutPhotos = async () => {
-      if (!projectId || apartments.length === 0 || !shouldPreloadLayouts) return;
+      if (!projectId || apartments.length === 0) return;
       // Определяем все уникальные типы layout_type для текущего набора квартир
       const uniqueLayouts = new Set<string>(
         apartments.map(a => (a.rooms === 0 ? 'studio' : `${a.rooms}-room`))
@@ -199,6 +184,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
           if (!grouped[key]) grouped[key] = [];
           grouped[key].push({ id: p.id, image_url: p.image_url, description: p.description || undefined, order_index: p.order_index, type: 'layout' });
         });
+console.log('grouped', grouped);
 
         setPreloadedLayoutPhotosByRooms(grouped);
       } catch (e) {
@@ -207,7 +193,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     };
 
     preloadLayoutPhotos();
-  }, [projectId, apartments, shouldPreloadLayouts]);
+  }, [projectId, apartments]);
 
   useEffect(() => {
     setSelectedApartment(null);
