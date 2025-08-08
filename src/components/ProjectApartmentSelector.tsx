@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -21,7 +22,7 @@ import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { getCurrencySymbolSafe, isValidCurrency, formatPriceWithCurrency } from '@/lib/currency-utils';
 
 
 
@@ -68,6 +69,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -83,6 +85,10 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     if (cachedProject && !projectLoaded) {
       setProject(cachedProject);
       setProjectLoaded(true);
+      // Устанавливаем валюту по умолчанию как валюту проекта, если валидна
+      if (cachedProject.currency && isValidCurrency(cachedProject.currency)) {
+        setSelectedCurrency(cachedProject.currency);
+      }
     }
   }, [cachedProject, projectLoaded]);
 
@@ -248,6 +254,24 @@ console.log('grouped', grouped);
     }
   }, [viewMode, selectedFloorForPlan, projectId]);
 
+  // Валюты и конвертация
+  const exchangeRates = useMemo(() => ({
+    RUB: 1,
+    USD: 0.011,
+    EUR: 0.01,
+    GEL: 0.03,
+  } as const), []);
+
+  const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(Math.round(price));
+
+  const convertPrice = useCallback((price: number, fromCurrency: string | null | undefined, toCurrency: string): number => {
+    if (!price) return 0;
+    const from = isValidCurrency(String(fromCurrency)) ? String(fromCurrency) as keyof typeof exchangeRates : 'RUB';
+    const to = isValidCurrency(String(toCurrency)) ? String(toCurrency) as keyof typeof exchangeRates : 'RUB';
+    const priceInRub = from === 'RUB' ? price : price / exchangeRates[from];
+    return to === 'RUB' ? priceInRub : priceInRub * exchangeRates[to];
+  }, [exchangeRates]);
+
   const filteredApartments = useMemo(() => {
     let filtered = [...apartments];
 
@@ -269,8 +293,9 @@ console.log('grouped', grouped);
 
     filtered = filtered.filter(apt => {
       const price = apt.price || 0;
+      const convertedPrice = convertPrice(price, project?.currency, selectedCurrency);
       const area = apt.area || 0;
-      return price >= priceRange[0] && price <= priceRange[1] &&
+      return convertedPrice >= priceRange[0] && convertedPrice <= priceRange[1] &&
              area >= areaRange[0] && area <= areaRange[1];
     });
 
@@ -281,7 +306,7 @@ console.log('grouped', grouped);
     }
 
     return filtered;
-  }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery]);
+  }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery, selectedCurrency, project?.currency, convertPrice]);
 
   
 
@@ -293,14 +318,30 @@ console.log('grouped', grouped);
     return filteredApartments.filter(apt => apt.status === 'available').length;
   }, [filteredApartments]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU').format(price);
-  };
 
-  const minPrice = apartments.length > 0 ? Math.min(...apartments.map(apt => apt.price || 0).filter(p => p > 0)) : 0;
-  const maxPrice = apartments.length > 0 ? Math.max(...apartments.map(apt => apt.price || 0).filter(p => p > 0)) : 10000000;
-  const minArea = apartments.length > 0 ? Math.min(...apartments.map(apt => apt.area)) : 0;
-  const maxArea = apartments.length > 0 ? Math.max(...apartments.map(apt => apt.area)) : 200;
+  const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
+    if (apartments.length === 0) {
+      return { minPrice: 0, maxPrice: 10000000, minArea: 0, maxArea: 200 };
+    }
+    const convertedPrices = apartments
+      .map(apt => convertPrice(apt.price || 0, project?.currency, selectedCurrency))
+      .filter(p => p > 0);
+    const areas = apartments.map(apt => apt.area).filter(a => a > 0);
+    return {
+      minPrice: convertedPrices.length > 0 ? Math.min(...convertedPrices) : 0,
+      maxPrice: convertedPrices.length > 0 ? Math.max(...convertedPrices) : 10000000,
+      minArea: areas.length > 0 ? Math.min(...areas) : 0,
+      maxArea: areas.length > 0 ? Math.max(...areas) : 200,
+    };
+  }, [apartments, selectedCurrency, project?.currency, convertPrice]);
+
+  // Обновляем диапазон цен при смене валюты/проекта
+  useEffect(() => {
+    if (apartments.length > 0) {
+      setPriceRange([minPrice, maxPrice]);
+    }
+  }, [selectedCurrency, project?.currency, minPrice, maxPrice, apartments.length]);
+  // minArea/maxArea уже посчитаны выше в useMemo
 
   if (loading || !project) {
     return (
@@ -368,11 +409,36 @@ console.log('grouped', grouped);
         </div>
       </div>
 
+      {/* Currency filter - pill toggles */}
+        {(() => {
+          type Currency = 'RUB' | 'USD' | 'EUR' | 'GEL'
+          const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR']
+          const projectCurrency = (project?.currency || 'RUB') as Currency
+          const list: Currency[] = [...preferredOrder, ...(preferredOrder.includes(projectCurrency as Exclude<Currency, 'RUB'>) ? [] : [projectCurrency])]
+          const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
+          const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
+          return (
+            <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
+              {currenciesToShow.map((c) => (
+                <ToggleGroupItem
+                  key={c}
+                  value={c}
+                  size="sm"
+                  aria-label={c}
+                  className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+                >
+                  {symbol[c]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          )
+        })()}
+
       {/* Price range */}
       <div className="space-y-2">
-        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(project?.currency)}</Label>
+        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(selectedCurrency)}</Label>
         <Slider
-          defaultValue={priceRange}
+          value={priceRange}
           onValueChange={setPriceRange}
           max={maxPrice}
           min={minPrice}
@@ -516,9 +582,9 @@ console.log('grouped', grouped);
                           </div>
                           <div className="text-xs text-gray-600 space-y-1">
                             <div>{apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}</div>
-                            <div className="font-bold text-sm text-gray-900">
-                              {apartment.price ? `${formatPrice(apartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}
-                            </div>
+                              <div className="font-bold text-sm text-gray-900">
+                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                              </div>
                           </div>
                         </div>
                       </div>
@@ -558,7 +624,7 @@ console.log('grouped', grouped);
                     </div>
                     <div className="flex items-center">
                       <div>
-                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(apartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}</div>
+                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}</div>
                         <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
                     </div>
@@ -730,8 +796,8 @@ console.log('grouped', grouped);
                                         return (
                                           <div className="font-bold text-lg">
                                             {minPrice === maxPrice 
-                                              ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(project?.currency)}`
-                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(project?.currency)}`
+                                              ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
                                             }
                                           </div>
                                         );
@@ -865,7 +931,7 @@ console.log('grouped', grouped);
                       <div className="space-y-2">
                         <div className="text-sm text-gray-500">{t('project.price')}</div>
                         <div className="font-bold text-2xl">
-                          {selectedApartment.price ? `${formatPrice(selectedApartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}
+                          {selectedApartment.price ? `${formatPrice(convertPrice(selectedApartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                         </div>
                         <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
