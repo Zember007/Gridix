@@ -572,7 +572,9 @@ console.log('grouped', grouped);
       <>
       <InteractiveProjectsMap
      project={project}
-      
+     onProjectSelect={() => {
+      setViewMode('list');
+     }}
     />
       </>
       :(

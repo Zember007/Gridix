@@ -22,7 +22,7 @@ interface Project {
 }
 
 interface InteractiveProjectsMapProps {
-  onProjectSelect?: (project: Project) => void;
+  onProjectSelect?: (projectId: string) => void;
   selectedProjectId?: string;
   userId?: string;
   project?: Project;
@@ -73,7 +73,11 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
   );
 
   const handleViewProject = (projectId: string) => {
-    window.open(`/embed/project/${projectId}`, '_blank');
+    if(onProjectSelect) {
+      onProjectSelect(projectId);
+    } else {
+      window.open(`/embed/project/${projectId}`, '_blank');
+    }
   };
 
   const handleMarkerClick = (project: Project) => {

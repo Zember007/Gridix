@@ -16,9 +16,7 @@ const EmbedProjectsMap = () => {
       
       <InteractiveProjectsMap
         userId={userId}
-        onProjectSelect={(project) => {
-          window.open(`/embed/project/${project.id}`, '_blank');
-        }}
+        
       />
     </div>
   );

@@ -159,9 +159,7 @@ const EmbedProjectsPage = () => {
 viewMode === 'map' ?
     <InteractiveProjectsMap
       userId={userId}
-      onProjectSelect={(project) => {
-        handleViewProject(project.id);
-      }}
+      
     />
  :
  <div className="container mx-auto px-6 py-8">
