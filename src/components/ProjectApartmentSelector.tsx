@@ -71,6 +71,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
+  // Отслеживаем, для каких этажей уже подгружены полигоны, чтобы не дёргать повторно
+  const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
@@ -80,39 +82,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     }
   }, [cachedProject, projectLoaded]);
 
-  // Загружаем квартиры только когда они нужны (при первом рендере или изменении projectId)
-  useEffect(() => {
-    if (projectId && !apartmentsLoaded) {
-      loadApartments();
-    }
-  }, [projectId, apartmentsLoaded]);
-
-
-
-  useEffect(() => {
-    // Set default floor when apartments load
-    if (apartments.length > 0 && selectedFloorForPlan === null) {
-      const uniqueFloors = getUniqueFloors();
-      if (uniqueFloors.length > 0) {
-        setSelectedFloorForPlan(uniqueFloors[0]);
-      }
-    }
-  }, [apartments]);
-
-  useEffect(() => {
-    setSelectedApartment(null);
-  }, [viewMode]);
-
-  const loadProject = async () => {
-    try {
-      if (cachedProject) {
-        setProject(cachedProject);
-      }
-    } catch (error) {
-      console.error('Error loading project:', error);
-    }
-  };
-
+  // Загрузка списка квартир (без polygon)
   const loadApartments = useCallback(async () => {
     if (apartmentsLoaded) return; // Не загружаем повторно
     
@@ -120,7 +90,8 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       setLoading(true);
       const { data, error } = await supabase
         .from('apartments')
-        .select('*')
+        // Загружаем только необходимые поля без тяжёлого поля polygon
+        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id')
         .eq('project_id', projectId);
 
       if (error) throw error;
@@ -155,6 +126,82 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       setLoading(false);
     }
   }, [projectId, apartmentsLoaded]);
+
+  // Загружаем квартиры только когда они нужны (при первом рендере или изменении projectId)
+  useEffect(() => {
+    if (projectId && !apartmentsLoaded) {
+      loadApartments();
+    }
+  }, [projectId, apartmentsLoaded, loadApartments]);
+
+
+
+  // Уникальные этажи
+  const getUniqueFloors = useCallback(() => {
+    return [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
+  }, [apartments]);
+
+  useEffect(() => {
+    // Set default floor when apartments load
+    if (apartments.length > 0 && selectedFloorForPlan === null) {
+      const uniqueFloors = getUniqueFloors();
+      if (uniqueFloors.length > 0) {
+        setSelectedFloorForPlan(uniqueFloors[0]);
+      }
+    }
+  }, [apartments, getUniqueFloors, selectedFloorForPlan]);
+
+  useEffect(() => {
+    setSelectedApartment(null);
+  }, [viewMode]);
+
+  const loadProject = async () => {
+    try {
+      if (cachedProject) {
+        setProject(cachedProject);
+      }
+    } catch (error) {
+      console.error('Error loading project:', error);
+    }
+  };
+
+  // Ленивая подгрузка полигонов только для выбранного этажа при переходе в режим планов
+  useEffect(() => {
+    const loadPolygonsForFloor = async (floor: number) => {
+      try {
+        const { data, error } = await supabase
+          .from('apartments')
+          .select('id, polygon')
+          .eq('project_id', projectId)
+          .eq('floor_number', floor);
+
+        if (error) throw error;
+
+        if (!data) return;
+
+        // Обновляем только необходимые квартиры, добавляя/заменяя polygon
+        setApartments(prev => prev.map(apt => {
+          const found = data.find(d => d.id === apt.id);
+          if (!found) return apt;
+          return {
+            ...apt,
+            polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : []
+          };
+        }));
+
+        loadedPolygonsForFloorsRef.current.add(floor);
+      } catch (e) {
+        console.error('Error loading polygons for floor:', e);
+      }
+    };
+
+    if (viewMode === 'floor-plan' && selectedFloorForPlan !== null) {
+      const floor = selectedFloorForPlan;
+      if (!loadedPolygonsForFloorsRef.current.has(floor)) {
+        loadPolygonsForFloor(floor);
+      }
+    }
+  }, [viewMode, selectedFloorForPlan, projectId]);
 
   const filteredApartments = useMemo(() => {
     let filtered = [...apartments];
@@ -191,9 +238,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
     return filtered;
   }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery]);
 
-  const getUniqueFloors = useCallback(() => {
-    return [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
-  }, [apartments]);
+  
 
   const getUniqueRoomCounts = useCallback(() => {
     return [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
@@ -588,7 +633,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                             return (
                               <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
                                 <div className="aspect-[4/3] bg-gray-100 relative">
-                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} projectId={projectId} />
+                                  <ApartmentPhotosViewer apartmentId={representativeApt.id} projectId={projectId} roomsHint={representativeApt.rooms} />
                                   
                                   {/* Status badge */}
                                   <div className="absolute top-2 right-2 z-10">
@@ -728,7 +773,7 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
                     
                                          {/* Apartment Photos Viewer */}
                      <div className="space-y-4">
-                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} />
+                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={selectedApartment.rooms} />
                      </div>
                   </div>
 

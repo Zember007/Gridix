@@ -30,32 +30,37 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect,
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
   useEffect(() => {
-    loadBuildingFloors();
+    // Загружаем только список этажей (id, floor_number)
+    const loadFloorsLight = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('building_floors')
+          .select('id, floor_number')
+          .eq('project_id', projectId)
+          .order('floor_number');
+
+        if (error) throw error;
+
+        const processedFloors = (data || []).map((floor: any) => ({
+          id: floor.id,
+          floor_number: floor.floor_number,
+          polygon: [],
+          color: '#000000'
+        }));
+
+        setBuildingFloors(processedFloors);
+      } catch (error) {
+        console.error('Error loading building floors:', error);
+      }
+    };
+
+    loadFloorsLight();
   }, [projectId]);
 
   // Определяем выбранный этаж: используем переданный prop или первый доступный этаж
   const selectedFloor = selectedFloorNumber || (buildingFloors.length > 0 ? buildingFloors[0].floor_number : null);
 
-  const loadBuildingFloors = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('building_floors')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('floor_number');
-
-      if (error) throw error;
-
-      const processedFloors = (data || []).map(floor => ({
-        ...floor,
-        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
-      }));
-
-      setBuildingFloors(processedFloors);
-    } catch (error) {
-      console.error('Error loading building floors:', error);
-    }
-  };
+  // Убрали тяжёлую загрузку полигонов этажей здесь — не требуется для FloorPlanView
 
   if (!buildingFloors.length || selectedFloor === null) {
     return (

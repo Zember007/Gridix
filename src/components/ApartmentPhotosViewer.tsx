@@ -34,16 +34,17 @@ interface CombinedPhoto {
 interface ApartmentPhotosViewerProps {
   apartmentId: string;
   projectId?: string;
+  roomsHint?: number; // если известны комнаты, избегаем запроса к apartments
 }
 
-const ApartmentPhotosViewer = ({ apartmentId, projectId }: ApartmentPhotosViewerProps) => {
+const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint }: ApartmentPhotosViewerProps) => {
   const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPhotos();
-  }, [apartmentId, projectId]);
+  }, [apartmentId, projectId, roomsHint]);
 
   const getLayoutType = (rooms: number): string => {
     return rooms === 0 ? 'studio' : `${rooms}-room`;
@@ -53,23 +54,29 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId }: ApartmentPhotosViewer
     try {
       setLoading(true);
       
-      // Загружаем информацию о квартире
-      const { data: apartmentData, error: apartmentError } = await supabase
-        .from('apartments')
-        .select('rooms, project_id')
-        .eq('id', apartmentId)
-        .single();
+      let currentRooms = roomsHint;
+      let currentProjectId = projectId;
 
-      if (apartmentError) throw apartmentError;
+      if (currentRooms == null || currentProjectId == null) {
+        // Загружаем минимум данных о квартире, если не хватает входных подсказок
+        const { data: apartmentData, error: apartmentError } = await supabase
+          .from('apartments')
+          .select('rooms, project_id')
+          .eq('id', apartmentId)
+          .single();
 
-      const currentProjectId = projectId || apartmentData.project_id;
-      const layoutType = getLayoutType(apartmentData.rooms);
+        if (apartmentError) throw apartmentError;
+        currentRooms = currentRooms ?? apartmentData.rooms;
+        currentProjectId = currentProjectId ?? apartmentData.project_id;
+      }
+
+      const layoutType = getLayoutType(currentRooms!);
 
       // Загружаем фотографии планировки
       const { data: layoutPhotos, error: layoutError } = await supabase
         .from('layout_photos')
         .select('*')
-        .eq('project_id', currentProjectId)
+        .eq('project_id', currentProjectId!)
         .eq('layout_type', layoutType)
         .order('order_index', { ascending: true });
 
