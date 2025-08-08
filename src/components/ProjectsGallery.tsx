@@ -11,6 +11,7 @@ import { MapPin, Home, Search, Filter, Grid3X3, ExternalLink, Building2 } from '
 import { usePublicProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Project as BaseProject } from '@/hooks/useProjects';
+import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 
 interface Project {
   id: string;
@@ -125,7 +126,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
 
   const formatPrice = (price: number | null) => {
     if (!price) return t('common.priceOnRequest');
-    return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
+    return new Intl.NumberFormat('ru-RU').format(price) + ' $';
   };
 
   const cities = Array.from(new Set(

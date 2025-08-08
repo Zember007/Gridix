@@ -15,6 +15,7 @@ import PolygonEditor from './polygon-editor/PolygonEditor';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 
 interface Point {
   x: number;
@@ -866,7 +867,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                                   {apartment.price > 0 && (
                                     <>
                                       <span className="text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                                      <span>{new Intl.NumberFormat('ru-RU').format(apartment.price)} ₽</span>
+                                      <span>{new Intl.NumberFormat('ru-RU').format(apartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
                                     </>
                                   )}
                                   <span className="text-gray-600">{t('floorPlan.apartments.status')}:</span>
@@ -934,7 +935,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               {selectedApartment.price > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                  <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} ₽</span>
+                  <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
                 </div>
               )}
               <div className="pt-2 border-t">

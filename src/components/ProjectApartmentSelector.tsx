@@ -21,6 +21,7 @@ import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
+import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 
 
 
@@ -369,7 +370,7 @@ console.log('grouped', grouped);
 
       {/* Price range */}
       <div className="space-y-2">
-        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} ₽</Label>
+        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(project?.currency)}</Label>
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
@@ -516,7 +517,7 @@ console.log('grouped', grouped);
                           <div className="text-xs text-gray-600 space-y-1">
                             <div>{apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}</div>
                             <div className="font-bold text-sm text-gray-900">
-                              {apartment.price ? `${formatPrice(apartment.price)} ₽` : t('project.onRequest')}
+                              {apartment.price ? `${formatPrice(apartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}
                             </div>
                           </div>
                         </div>
@@ -557,7 +558,7 @@ console.log('grouped', grouped);
                     </div>
                     <div className="flex items-center">
                       <div>
-                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(apartment.price)} ₽` : t('project.onRequest')}</div>
+                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(apartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}</div>
                         <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
                     </div>
@@ -727,8 +728,8 @@ console.log('grouped', grouped);
                                         return (
                                           <div className="font-bold text-lg">
                                             {minPrice === maxPrice 
-                                              ? `${formatPrice(minPrice)} ₽`
-                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ₽`
+                                              ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(project?.currency)}`
+                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(project?.currency)}`
                                             }
                                           </div>
                                         );
@@ -862,7 +863,7 @@ console.log('grouped', grouped);
                       <div className="space-y-2">
                         <div className="text-sm text-gray-500">{t('project.price')}</div>
                         <div className="font-bold text-2xl">
-                          {selectedApartment.price ? `${formatPrice(selectedApartment.price)} ₽` : t('project.onRequest')}
+                          {selectedApartment.price ? `${formatPrice(selectedApartment.price)} ${getCurrencySymbolSafe(project?.currency)}` : t('project.onRequest')}
                         </div>
                         <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
