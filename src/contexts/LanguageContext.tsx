@@ -1275,24 +1275,24 @@ const translations: Translations = {
     ka: 'გრძედი'
   },
   'projectEditor.latitudePlaceholder': {
-    ru: 'Например: 55.7558',
-    en: 'Example: 55.7558',
-    ka: 'მაგალითი: 55.7558'
+    ru: 'Например: 41.6967',
+    en: 'Example: 41.6967',
+    ka: 'მაგალითი: 41.6967'
   },
   'projectEditor.longitudePlaceholder': {
-    ru: 'Например: 37.6176',
-    en: 'Example: 37.6176',
-    ka: 'მაგალითი: 37.6176'
+    ru: 'Например: 44.7896',
+    en: 'Example: 44.7896',
+    ka: 'მაგალითი: 44.7896'
   },
   'projectEditor.latitudeExample': {
-    ru: 'Пример: 55.7558 (Тбилиси)',
-    en: 'Example: 55.7558 (Tbilisi)',
-    ka: 'მაგალითი: 55.7558 (თბილისი)'
+    ru: 'Пример: 41.6967 (Тбилиси)',
+    en: 'Example: 41.6967 (Tbilisi)',
+    ka: 'მაგალითი: 41.6967 (თბილისი)'
   },
   'projectEditor.longitudeExample': {
-    ru: 'Пример: 37.6176 (Тбилиси)',
-    en: 'Example: 37.6176 (Tbilisi)',
-    ka: 'მაგალითი: 37.6176 (თბილისი)'
+    ru: 'Пример: 44.7896 (Тбилиси)',
+    en: 'Example: 44.7896 (Tbilisi)',
+    ka: 'მაგალითი: 44.7896 (თბილისი)'
   },
   'projectEditor.floorPlans': {
     ru: 'Планы этажей',

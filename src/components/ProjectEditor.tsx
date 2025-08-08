@@ -166,6 +166,17 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }));
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData("Text")
+    const parts = text.split(",").map((part) => part.trim())
+
+    if (parts.length === 2) {
+      const [parsedLat, parsedLon] = parts
+      setProject(prev => ({ ...prev, latitude: parseFloat(parsedLat), longitude: parseFloat(parsedLon) }))
+      e.preventDefault() // предотвращаем вставку в одно поле
+    }
+  }
+
   const renderFloorPlanTabs = () => {
     if (isNew || !project.id) return null;
 
@@ -358,6 +369,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     type="number"
                     step="0.000001"
                     value={project.latitude ?? ''}
+                    onPaste={handlePaste}
                     onChange={(e) => setProject(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
                     placeholder={t('projectEditor.latitudePlaceholder')}
                   />
@@ -370,6 +382,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     type="number"
                     step="0.000001"
                     value={project.longitude ?? ''}
+                    onPaste={handlePaste}
                     onChange={(e) => setProject(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
                     placeholder={t('projectEditor.longitudePlaceholder')}
                   />
