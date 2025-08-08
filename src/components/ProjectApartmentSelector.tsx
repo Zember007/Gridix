@@ -372,11 +372,11 @@ console.log('grouped', grouped);
       <div className="space-y-2">
         <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(project?.currency)}</Label>
         <Slider
-          value={priceRange}
+          defaultValue={priceRange}
           onValueChange={setPriceRange}
           max={maxPrice}
           min={minPrice}
-          step={100000}
+          step={1}
           className="w-full"
         />
       </div>
@@ -385,7 +385,7 @@ console.log('grouped', grouped);
       <div className="space-y-2">
         <Label>{t('project.area')}: {areaRange[0]} - {areaRange[1]} м²</Label>
         <Slider
-          value={areaRange}
+          defaultValue={areaRange}
           onValueChange={setAreaRange}
           max={maxArea}
           min={minArea}
