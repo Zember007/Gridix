@@ -36,58 +36,63 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const QUERY_TIMEOUT = 5000;
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Используем refs для отслеживания состояния загрузки и предотвращения дублирования
+
   const loadingProfileRef = useRef<Set<string>>(new Set());
   const profileLoadedRef = useRef<Set<string>>(new Set());
 
+  const createFallbackProfile = (userId: string, currentUser: User): UserProfile => ({
+    id: userId,
+    email: currentUser?.email || null,
+    full_name: currentUser?.user_metadata?.full_name || null,
+    avatar_url: null,
+    company_name: currentUser?.user_metadata?.company_name || null,
+    phone: currentUser?.user_metadata?.phone || null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
   useEffect(() => {
-    let mounted = true;
+    const abortController = new AbortController();
 
     const initializeAuth = async () => {
       try {
-        // Получаем текущую сессию
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
+        if (abortController.signal.aborted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
-          await loadUserProfile(session.user.id, session.user);
+          await loadUserProfile(session.user.id, session.user, session, abortController.signal);
         } else {
           setLoading(false);
         }
       } catch (error) {
+        if (abortController.signal.aborted) return;
         console.error('Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     initializeAuth();
 
-    // Слушаем изменения авторизации
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await loadUserProfile(session.user.id, session.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (abortController.signal.aborted) return;
+
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        await loadUserProfile(newSession.user.id, newSession.user, newSession, abortController.signal);
       } else {
         setUserProfile(null);
-        // Очищаем кэш при выходе
         profileLoadedRef.current.clear();
         loadingProfileRef.current.clear();
         setLoading(false);
@@ -95,119 +100,93 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     return () => {
-      mounted = false;
+      abortController.abort();
       subscription.unsubscribe();
     };
   }, []);
 
-  const loadUserProfile = async (userId: string, currentUser: User) => {
-    // Проверяем, не загружается ли уже профиль для этого пользователя
-    if (loadingProfileRef.current.has(userId)) {
-      return;
-    }
-    
-    // Проверяем, не загружен ли уже профиль для этого пользователя
-    if (profileLoadedRef.current.has(userId)) {
+  const loadUserProfile = async (
+    userId: string,
+    currentUser: User,
+    currentSession: Session,
+    signal: AbortSignal
+  ) => {
+    if (loadingProfileRef.current.has(userId) || profileLoadedRef.current.has(userId)) {
       setLoading(false);
       return;
     }
-
-    // Добавляем userId в множество загружающихся профилей
+  
     loadingProfileRef.current.add(userId);
-    
+    let timeoutId: NodeJS.Timeout | null = null;
+  
     try {
-      // Делаем запрос к профилю с таймаутом
       const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout')), 5000)
-      );
-      
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-
+  
+      timeoutId = setTimeout(() => {
+        throw new Error('Query timeout');
+      }, QUERY_TIMEOUT);
+  
+      // Define the expected Supabase response type
+      const { data, error } = await Promise.race([
+        queryPromise as Promise<{ data: UserProfile | null; error: any }>,
+        new Promise<never>((_, reject) => timeoutId && reject(new Error('Query timeout'))),
+      ]);
+  
+      if (signal.aborted || currentSession !== session) return;
+  
       if (error) {
-        // Если профиль не найден, создаем базовый профиль
         if (error.code === 'PGRST116') {
           try {
             const { data: newProfile, error: createError } = await supabase
               .from('user_profiles')
-              .insert([{
-                id: userId,
-                email: currentUser?.email || null,
-                full_name: currentUser?.user_metadata?.full_name || null,
-                company_name: currentUser?.user_metadata?.company_name || null,
-                phone: currentUser?.user_metadata?.phone || null
-              }])
+              .insert([
+                {
+                  id: userId,
+                  email: currentUser?.email || null,
+                  full_name: currentUser?.user_metadata?.full_name || null,
+                  company_name: currentUser?.user_metadata?.company_name || null,
+                  phone: currentUser?.user_metadata?.phone || null,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                },
+              ])
               .select()
               .single();
-
+  
+            if (signal.aborted || currentSession !== session) return;
+  
             if (createError) {
-              // Если создание профиля не удалось, создаем минимальный профиль локально
-              setUserProfile({
-                id: userId,
-                email: currentUser?.email || null,
-                full_name: currentUser?.user_metadata?.full_name || null,
-                avatar_url: null,
-                company_name: currentUser?.user_metadata?.company_name || null,
-                phone: currentUser?.user_metadata?.phone || null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
+              setUserProfile(createFallbackProfile(userId, currentUser));
             } else {
               setUserProfile(newProfile);
             }
           } catch (createErr) {
-            // Fallback: создаем минимальный профиль локально
-            setUserProfile({
-              id: userId,
-              email: currentUser?.email || null,
-              full_name: currentUser?.user_metadata?.full_name || null,
-              avatar_url: null,
-              company_name: currentUser?.user_metadata?.company_name || null,
-              phone: currentUser?.user_metadata?.phone || null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
+            if (signal.aborted || currentSession !== session) return;
+            setUserProfile(createFallbackProfile(userId, currentUser));
           }
         } else {
-          // Для других ошибок тоже создаем fallback профиль
-          setUserProfile({
-            id: userId,
-            email: currentUser?.email || null,
-            full_name: currentUser?.user_metadata?.full_name || null,
-            avatar_url: null,
-            company_name: currentUser?.user_metadata?.company_name || null,
-            phone: currentUser?.user_metadata?.phone || null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+          setUserProfile(createFallbackProfile(userId, currentUser));
         }
-      } else {
+      } else if (data) {
         setUserProfile(data);
+      } else {
+        setUserProfile(createFallbackProfile(userId, currentUser));
       }
     } catch (error) {
+      if (signal.aborted || currentSession !== session) return;
       console.error('Error loading user profile:', error);
-      // Создаем fallback профиль для любых ошибок
-      setUserProfile({
-        id: userId,
-        email: currentUser?.email || null,
-        full_name: currentUser?.user_metadata?.full_name || null,
-        avatar_url: null,
-        company_name: currentUser?.user_metadata?.company_name || null,
-        phone: currentUser?.user_metadata?.phone || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      setUserProfile(createFallbackProfile(userId, currentUser));
     } finally {
-      // Удаляем userId из множества загружающихся профилей
+      if (timeoutId) clearTimeout(timeoutId);
       loadingProfileRef.current.delete(userId);
-      // Добавляем userId в множество загруженных профилей
       profileLoadedRef.current.add(userId);
-      setLoading(false);
+      if (!signal.aborted && currentSession === session) {
+        setLoading(false);
+      }
     }
   };
 
@@ -221,11 +200,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     if (!user) throw new Error('No user logged in');
+    if (!Object.keys(profileData).length) throw new Error('No profile data provided');
 
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .update(profileData)
+        .update({ ...profileData, updated_at: new Date().toISOString() })
         .eq('id', user.id)
         .select()
         .single();
@@ -253,4 +233,4 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};

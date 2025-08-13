@@ -48,21 +48,18 @@ interface Project {
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
-  embedMode?: boolean;
 }
 
-const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApartmentSelectorProps) => {
+const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-  const { project: cachedProject } = useProject(projectId);
+  const { project } = useProject(projectId);
   
-  const [project, setProject] = useState<Project | null>(null);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  
   const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
-  const [projectLoaded, setProjectLoaded] = useState(false);
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
@@ -82,22 +79,20 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
-    if (cachedProject && !projectLoaded) {
-      setProject(cachedProject);
-      setProjectLoaded(true);
-      // Устанавливаем валюту по умолчанию как валюту проекта, если валидна
-      if (cachedProject.currency && isValidCurrency(cachedProject.currency)) {
-        setSelectedCurrency(cachedProject.currency);
+    console.log('cachedProject', project);
+    
+    if (project) {
+      if (project.currency && isValidCurrency(project.currency)) {
+        setSelectedCurrency(project.currency);
       }
     }
-  }, [cachedProject, projectLoaded]);
+  }, [project]);
 
   // Загрузка списка квартир (без polygon)
   const loadApartments = useCallback(async () => {
     if (apartmentsLoaded) return; // Не загружаем повторно
     
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('apartments')
         // Загружаем только необходимые поля без тяжёлого поля polygon
@@ -132,17 +127,16 @@ const ProjectApartmentSelector = ({ projectId, embedMode = false }: ProjectApart
       }
     } catch (error) {
       console.error('Error loading apartments:', error);
-    } finally {
-      setLoading(false);
     }
   }, [projectId, apartmentsLoaded]);
 
   // Загружаем квартиры только когда они нужны (при первом рендере или изменении projectId)
   useEffect(() => {
-    if (projectId && !apartmentsLoaded) {
+    
+    if (projectId) {
       loadApartments();
     }
-  }, [projectId, apartmentsLoaded, loadApartments]);
+  }, [projectId, loadApartments]);
 
 
 
@@ -206,15 +200,7 @@ console.log('grouped', grouped);
     setSelectedApartment(null);
   }, [viewMode]);
 
-  const loadProject = async () => {
-    try {
-      if (cachedProject) {
-        setProject(cachedProject);
-      }
-    } catch (error) {
-      console.error('Error loading project:', error);
-    }
-  };
+
 
   // Ленивая подгрузка полигонов только для выбранного этажа при переходе в режим планов
   useEffect(() => {
@@ -343,7 +329,7 @@ console.log('grouped', grouped);
   }, [selectedCurrency, project?.currency, minPrice, maxPrice, apartments.length]);
   // minArea/maxArea уже посчитаны выше в useMemo
 
-  if (loading || !project) {
+  if (!project) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">

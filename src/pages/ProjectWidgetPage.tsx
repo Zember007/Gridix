@@ -4,13 +4,12 @@ import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface ProjectWidgetPageProps {
-  embedMode?: boolean;
-}
 
-const ProjectWidgetPage = ({ embedMode = false }: ProjectWidgetPageProps) => {
+
+const ProjectWidgetPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useLanguage();
+  
 
   if (!projectId) {
     return (
@@ -28,7 +27,7 @@ const ProjectWidgetPage = ({ embedMode = false }: ProjectWidgetPageProps) => {
       <div className="flex justify-end p-4">
         <LanguageToggle />
       </div>
-      <ProjectApartmentSelector projectId={projectId} embedMode={embedMode} />
+      <ProjectApartmentSelector projectId={projectId}  />
     </div>
   );
 };

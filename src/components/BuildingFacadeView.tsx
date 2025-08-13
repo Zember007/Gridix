@@ -58,20 +58,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [isExpanded, filtersRef, isMobile]);
 
   const updateImageDimensions = useCallback(() => {
-    if (imgRef.current && containerRef.current) {
-      const img = imgRef.current;
-      const filtersHeight = filtersRef.current.offsetHeight;
-      const newHeight = window.innerHeight - filtersHeight - 20; 
-       const height_res = newHeight;
-       const width_res = ( img.naturalWidth / img.naturalHeight) * newHeight;
-    
-      
-      setImgDimensions({
-        width: width_res,
-        height: height_res
-      });
-    }
-  }, []);
+    if (!imgRef.current || !containerRef.current) return;
+    const img = imgRef.current;
+    const filtersHeight = filtersRef?.current ? filtersRef.current.offsetHeight : 0;
+    const newHeight = Math.max(0, window.innerHeight - filtersHeight - 20);
+    if (img.naturalHeight === 0) return;
+    const height_res = newHeight;
+    const width_res = (img.naturalWidth / img.naturalHeight) * newHeight;
+    setImgDimensions({ width: width_res, height: height_res });
+  }, [filtersRef]);
 
   useEffect(() => {
     loadBuildingFloors();
