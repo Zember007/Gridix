@@ -93,7 +93,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
   }
 
   return (
-    <Card>
+    <Card className='h-full grow'>
       <CardContent className="p-4">
 
 
@@ -143,6 +143,8 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
                             document.getElementById('apartment-summary')?.scrollIntoView({ behavior: 'smooth' });
                           }, 500)
                           onApartmentSelect(apartment)
+                          console.log(apartment);
+                          
                         }}
                       />
                       <text

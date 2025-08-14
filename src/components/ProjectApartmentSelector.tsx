@@ -458,7 +458,7 @@ console.log('grouped', grouped);
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Top header bar - always visible */}
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 md:px-6 py-4">
@@ -506,7 +506,7 @@ console.log('grouped', grouped);
                
                {/* Mobile filters button */}
                {isMobile && (
-                 <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                 <Sheet  open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                    <SheetTrigger asChild>
                      <Button variant="outline" size="sm" className="text-xs px-2">
                        <SlidersHorizontal className="h-3 w-3" />
@@ -519,7 +519,7 @@ console.log('grouped', grouped);
                         {t('project.filtersDescription')}
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="mt-6 overflow-y-auto">
+                    <div className="mt-6 overflow-y-auto py-4">
                       <FiltersContent />
                     </div>
                   </SheetContent>
@@ -538,7 +538,7 @@ console.log('grouped', grouped);
       {/* Content based on view mode */}
       {viewMode === 'list' ? (
         // List view - responsive layout
-        <div className="container mx-auto px-4 md:px-6 py-8">
+        <div className="container mx-auto px-4 md:px-6 py-8 grow">
           <div className="space-y-6">
             <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
             
@@ -633,9 +633,9 @@ console.log('grouped', grouped);
         // Facade and Floor Plan views with hero section
         <>
           {/* Main visualization area */}
-          <div className="relative">
+          <div className="relative grow flex flex-col">
             {/* Hero section with building visualization */}
-            <div className="relative bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 overflow-hidden">
+            <div className="relative overflow-hidden">
               {viewMode === 'facade' ? (
                 // Building facade view with interactive floor polygons
                 <div className="w-full bg-white">
@@ -838,7 +838,7 @@ console.log('grouped', grouped);
 
             {/* Floor selector for floor-plan mode */}
             {viewMode === 'floor-plan' && (
-              <div className="bg-white border-b py-4">
+              <div className="bg-white border-b py-4 ">
                 <div className="mx-auto px-6">
                   <div className="flex items-center justify-center gap-2 flex-col">
                     <Label className="text-sm font-medium">{t('project.selectFloor')}:</Label>

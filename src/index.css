@@ -214,10 +214,7 @@ svg text {
   }
   
   /* Larger touch targets on mobile */
-  button {
-    min-height: 44px;
-    min-width: 44px;
-  }
+
   
   /* Better tap highlighting */
   * {

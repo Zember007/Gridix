@@ -102,7 +102,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
     : [41.7151, 44.8271] as [number, number]; // Тбилиси как дефолт
 
   return (
-    <div className="relative h-[80vh]">
+    <div className="relative h-[80vh] grow">
         <MapContainer
           center={mapCenter}
           zoom={10}
