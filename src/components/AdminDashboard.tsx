@@ -24,7 +24,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-  const { user, userProfile, signOut } = useAuth();
+  const { user, userProfile, signOut, loading } = useAuth();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -145,7 +145,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
-              <AdminSettings />
+              <AdminSettings userProfile={user} loading={loading} />
             </TabsContent>
           </div>
         </Tabs>

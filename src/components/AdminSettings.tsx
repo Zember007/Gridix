@@ -9,83 +9,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, User, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, UserProfile } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
 
 interface AdminSettings {
   id?: string;
   user_id: string;
   company_name: string;
-  company_description: string;
   contact_name: string;
   contact_phone: string;
   contact_email: string;
-  contact_address: string;
   created_at?: string;
   updated_at?: string;
 }
 
-const AdminSettings = () => {
-  const { user } = useAuth();
+const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, loading: boolean }) => {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<AdminSettings>({
-    user_id: user?.id || '',
+    user_id: userProfile?.id || '',
     company_name: '',
-    company_description: '',
     contact_name: '',
     contact_phone: '',
     contact_email: '',
-    contact_address: ''
   });
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadSettings();
+    console.log('userProfile', userProfile);
+
+    if (userProfile) {
+      setSettings({
+        user_id: userProfile.id,
+        company_name: userProfile.user_metadata.company_name || '',
+        contact_name: userProfile.user_metadata.full_name || '',
+        contact_phone: userProfile.user_metadata.phone || '',
+        contact_email: userProfile.email || '',
+      })
     }
-  }, [user]);
+  }, [userProfile]);
 
-  const loadSettings = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data) {
-        setSettings({
-          id: data.id,
-          user_id: data.user_id,
-          company_name: data.company_name || '',
-          company_description: data.company_description || '',
-          contact_name: data.contact_name || '',
-          contact_phone: data.contact_phone || '',
-          contact_email: data.contact_email || '',
-          contact_address: data.contact_address || ''
-        });
-      } else {
-        // Если настроек нет, устанавливаем user_id
-        setSettings(prev => ({ ...prev, user_id: user.id }));
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      toast.error(t('adminSettings.errorLoading'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
-    if (!user) {
+    if (!userProfile) {
       toast.error(t('adminSettings.authRequired'));
       return;
     }
@@ -93,34 +62,20 @@ const AdminSettings = () => {
     setSaving(true);
     try {
       const saveData = {
-        user_id: user.id,
         company_name: settings.company_name,
-        company_description: settings.company_description,
-        contact_name: settings.contact_name,
-        contact_phone: settings.contact_phone,
-        contact_email: settings.contact_email,
-        contact_address: settings.contact_address,
+        full_name: settings.contact_name,
+        phone: settings.contact_phone,
+        email: settings.contact_email,
         updated_at: new Date().toISOString()
       };
 
-      if (settings.id) {
-        const { error } = await supabase
-          .from('admin_settings')
-          .update(saveData)
-          .eq('id', settings.id)
-          .eq('user_id', user.id);
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(saveData)
+        .eq('id', userProfile.id)
 
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from('admin_settings')
-          .insert([saveData])
-          .select()
-          .single();
+      if (error) throw error;
 
-        if (error) throw error;
-        setSettings(prev => ({ ...prev, id: data.id }));
-      }
 
       toast.success(t('adminSettings.settingsSaved'));
     } catch (error) {
@@ -173,12 +128,12 @@ const AdminSettings = () => {
 
         <TabsContent value="company">
           <Card>
-                      <CardHeader>
-            <CardTitle>{t('adminSettings.companyInfo')}</CardTitle>
-            <CardDescription>
-              {t('adminSettings.companyInfoDesc')}
-            </CardDescription>
-          </CardHeader>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.companyInfo')}</CardTitle>
+              <CardDescription>
+                {t('adminSettings.companyInfoDesc')}
+              </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="company_name">{t('adminSettings.companyName')}</Label>
@@ -190,7 +145,7 @@ const AdminSettings = () => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="company_description">{t('adminSettings.companyDescription')}</Label>
                 <Textarea
                   id="company_description"
@@ -209,19 +164,19 @@ const AdminSettings = () => {
                   onChange={(e) => handleInputChange('contact_address', e.target.value)}
                   placeholder={t('adminSettings.companyAddressPlaceholder')}
                 />
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="contacts">
           <Card>
-                      <CardHeader>
-            <CardTitle>{t('adminSettings.managerContacts')}</CardTitle>
-            <CardDescription>
-              {t('adminSettings.managerContactsDesc')}
-            </CardDescription>
-          </CardHeader>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.managerContacts')}</CardTitle>
+              <CardDescription>
+                {t('adminSettings.managerContactsDesc')}
+              </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="contact_name">{t('adminSettings.managerName')}</Label>

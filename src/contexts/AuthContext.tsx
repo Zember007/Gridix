@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useRef } fro
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string | null;
   full_name: string | null;
