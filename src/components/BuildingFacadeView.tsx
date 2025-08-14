@@ -34,7 +34,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [loading, setLoading] = useState(true);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [containerHeight, setContainerHeight] = useState(288);
+  const [containerHeight, setContainerHeight] = useState(COLLAPSED_HEIGHT);
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0});
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -45,19 +45,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [showPopup, setShowPopup] = useState(false);
 
   const updateHeight = useCallback(() => {
-    
     if (isExpanded && filtersRef?.current) {
       const filtersHeight = filtersRef.current.offsetHeight;
       const margin = isMobile ? 10 : 20;
       const newHeight = window.innerHeight - filtersHeight - margin;
       const minHeight = isMobile ? 300 : 400;
-    console.log('newHeight', Math.max(newHeight, minHeight));
-
-      console.log('containerHeight', Math.max(newHeight, minHeight));
+      setContainerHeight(Math.max(newHeight, minHeight));
     } else {
       const collapsedHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
-    console.log('collapsedHeight', collapsedHeight);
-
       setContainerHeight(collapsedHeight);
     }
   }, [isExpanded, filtersRef, isMobile]);
@@ -360,7 +355,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       ref={containerRef}
       className={`relative w-full mx-auto transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'} ${isMobile ? 'touch-manipulation' : ''}`}
       style={{
-        height: containerHeight || 288,
+        height: containerHeight,
         width: '100%',
         maxWidth: '100vw',
         boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
@@ -371,6 +366,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         src={project.building_image_url}
         alt={project.name}
         className={`w-full h-full  transition-all duration-500 ${isExpanded ? 'object-contain' : 'object-cover'}`}
+        onLoad={updateImageDimensions}
         draggable={false}
       />
       

@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Save, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import PolygonEditor from './polygon-editor/PolygonEditor';
+import PolygonCanvas from './polygon-editor/PolygonCanvas';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Shape, Point } from './polygon-editor/GeometryShapes';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -32,6 +33,9 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [floors, setFloors] = useState<number>(1);
+  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [currentShape, setCurrentShape] = useState<Shape | null>(null);
+  const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { project } = useProject(projectId);
@@ -61,10 +65,21 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       }));
 
       setBuildingFloors(normalizedFloors);
+      
+      // Convert floors to shapes for display
+      const floorShapes: Shape[] = normalizedFloors.map(floor => ({
+        id: floor.id,
+        type: 'polygon',
+        points: floor.polygon,
+        color: floor.color || '#3b82f6',
+        isSelected: false
+      }));
+      
+      setShapes(floorShapes);
     } catch (error) {
       console.error('Error loading building data:', error);
     }
-  }, [projectId, buildingImage]);
+  }, [projectId, buildingImage, project]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -109,37 +124,59 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     }
   };
 
-  const handlePolygonSave = async (points: { x: number; y: number }[]) => {
-    try {
-      const existingFloor = buildingFloors.find(f => f.floor_number === selectedFloor);
+  const startEditingFloor = (floorId: string) => {
+    const floor = buildingFloors.find(f => f.id === floorId);
+    if (floor) {
+      setEditingFloorId(floorId);
+      setSelectedFloor(floor.floor_number);
+      setIsEditing(true);
       
-      if (existingFloor) {
-        const { error } = await supabase
-          .from('building_floors')
-          .update({ polygon: points })
-          .eq('id', existingFloor.id);
+      // Set current shape for editing
+      const editingShape: Shape = {
+        id: floor.id,
+        type: 'polygon',
+        points: floor.polygon,
+        color: floor.color || '#3b82f6',
+        isSelected: true
+      };
+      setCurrentShape(editingShape);
+    }
+  };
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('building_floors')
-          .insert({
-            project_id: projectId,
-            floor_number: selectedFloor,
-            polygon: points,
-            color: '#3b82f6'
-          });
 
-        if (error) throw error;
-      }
+
+  const handleCurrentShapeUpdate = (shape: Shape | null) => {
+    setCurrentShape(shape);
+  };
+
+  const handlePolygonSave = async () => {
+    if (!currentShape || !editingFloorId) return;
+
+    try {
+      const { error } = await supabase
+        .from('building_floors')
+        .update({ polygon: currentShape.points as { x: number; y: number }[] })
+        .eq('id', editingFloorId);
+
+      if (error) throw error;
 
       await loadBuildingData();
       setIsEditing(false);
+      setEditingFloorId(null);
+      setCurrentShape(null);
       toast.success(t('buildingImage.polygon.saveSuccess', { floor: selectedFloor }));
     } catch (error) {
       console.error('Error saving polygon:', error);
       toast.error(t('buildingImage.polygon.saveError'));
     }
+  };
+
+  const handlePolygonCancel = () => {
+    setIsEditing(false);
+    setEditingFloorId(null);
+    setCurrentShape(null);
+    // Reload data to reset any changes
+    loadBuildingData();
   };
 
   const deleteFloorPolygon = async (floorId: string) => {
@@ -237,15 +274,44 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* Canvas with all polygons */}
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-sm">{t('buildingImage.floors.canvas')}</h4>
+                {isEditing && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handlePolygonSave}
+                      size="sm"
+                      className="h-8"
+                    >
+                      <Save className="h-3 w-3 mr-1" />
+                      {t('buildingImage.polygon.save')}
+                    </Button>
+                    <Button
+                      onClick={handlePolygonCancel}
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {t('buildingImage.polygon.cancel')}
+                    </Button>
+                  </div>
+                )}
+              </div>
               
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                size="sm"
-              >
-                <ImageIcon className="h-4 w-4 mr-2" />
-                {t('buildingImage.floors.edit')}
-              </Button>
+              <PolygonCanvas
+                imageUrl={buildingImage}
+                shapes={shapes}
+                currentShape={currentShape}
+                activeTool="polygon"
+                onShapeUpdate={() => {}}
+                onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                className="border rounded"
+              />
             </div>
 
             {buildingFloors.length > 0 && (
@@ -255,14 +321,26 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   {buildingFloors.map((floor) => (
                     <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
                       <span>{t('buildingImage.floors.floorNumber', { floor: floor.floor_number })}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteFloorPolygon(floor.id)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditingFloor(floor.id)}
+                          className="h-6 w-6 p-0"
+                          disabled={isEditing}
+                        >
+                          <Edit3 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteFloorPolygon(floor.id)}
+                          className="h-6 w-6 p-0"
+                          disabled={isEditing}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -270,15 +348,6 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
             )}
           </CardContent>
         </Card>
-      )}
-
-      {isEditing && buildingImage && (
-        <PolygonEditor
-          imageUrl={buildingImage}
-          existingPolygons={buildingFloors.find(f => f.floor_number === selectedFloor)?.polygon || []}
-          onSave={handlePolygonSave}
-          onCancel={() => setIsEditing(false)}
-        />
       )}
     </div>
   );
