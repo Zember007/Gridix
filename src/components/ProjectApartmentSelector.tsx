@@ -611,7 +611,6 @@ console.log('grouped', grouped);
                     <div className="flex items-center">
                       <div>
                         <div className="font-bold text-lg">{apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}</div>
-                        <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
                     </div>
                   </div>
@@ -919,7 +918,6 @@ console.log('grouped', grouped);
                         <div className="font-bold text-2xl">
                           {selectedApartment.price ? `${formatPrice(convertPrice(selectedApartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                         </div>
-                        <div className="text-sm text-gray-500">{t('project.installmentFrom')}</div>
                       </div>
                     </div>
 
