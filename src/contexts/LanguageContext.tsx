@@ -82,6 +82,16 @@ const translations: Translations = {
     en: 'Floor',
     ka: 'სართული'
   },
+  'project.number': {
+    ru: 'Номер',
+    en: 'Number',
+    ka: 'ნომერი'
+  },
+  'project.status': {
+    ru: 'Статус',
+    en: 'Status',
+    ka: 'სტატუსი'
+  },
   'project.contactManager': {
     ru: 'Связаться с менеджером',
     en: 'Contact Manager',
@@ -186,6 +196,11 @@ const translations: Translations = {
     ru: 'По запросу',
     en: 'On request',
     ka: 'მოთხოვნისთანა'
+  },
+  'project.additionalInfo': {
+    ru: 'Дополнительная информация',
+    en: 'Additional Information',
+    ka: 'დამატებითი ინფორმაცია'
   },
   'project.installmentFrom': {
     ru: 'В рассрочку от 700$',
@@ -1586,6 +1601,21 @@ const translations: Translations = {
     en: 'Floor {floor}',
     ka: 'სართული {floor}'
   },
+  'buildingImage.floors.addNew': {
+    ru: 'Добавить этаж',
+    en: 'Add Floor',
+    ka: 'სართულის დამატება'
+  },
+  'buildingImage.floors.creatingNew': {
+    ru: 'Создание {floor} этажа',
+    en: 'Creating floor {floor}',
+    ka: 'სართული {floor}-ის შექმნა'
+  },
+  'buildingImage.floors.canvas': {
+    ru: 'Холст для рисования',
+    en: 'Drawing Canvas',
+    ka: 'ნახატის ტილო'
+  },
   'buildingImage.polygon.saveSuccess': {
     ru: 'Полигон для {floor} этажа сохранен',
     en: 'Polygon for floor {floor} saved',
@@ -1595,6 +1625,21 @@ const translations: Translations = {
     ru: 'Ошибка сохранения полигона',
     en: 'Error saving polygon',
     ka: 'პოლიგონის შენახვის შეცდომა'
+  },
+  'buildingImage.polygon.create': {
+    ru: 'Создать',
+    en: 'Create',
+    ka: 'შექმნა'
+  },
+  'buildingImage.polygon.createSuccess': {
+    ru: 'Полигон для {floor} этажа создан',
+    en: 'Polygon for floor {floor} created',
+    ka: 'სართული {floor}-ის პოლიგონი შექმნილია'
+  },
+  'buildingImage.polygon.createError': {
+    ru: 'Ошибка создания полигона',
+    en: 'Error creating polygon',
+    ka: 'პოლიგონის შექმნის შეცდომა'
   },
   'buildingImage.polygon.deleteSuccess': {
     ru: 'Полигон этажа удален',

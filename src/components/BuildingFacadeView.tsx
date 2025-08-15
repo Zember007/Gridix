@@ -150,14 +150,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     };
   };
 
-  const getFloorStatusColor = (floorNumber: number) => {
-    const floorApartments = getFloorApartments(floorNumber);
-    if (floorApartments.length === 0) return '#6b7280';
-    const availableCount = floorApartments.filter(apt => apt.status === 'available').length;
-    const totalCount = floorApartments.length;
-    if (availableCount === totalCount) return '#22c55e';
-    if (availableCount === 0) return '#ef4444';
-    return '#f59e0b';
+  const getFloorStatusColor = () => {
+    return 'green';
   };
 
   // Floor Popup Component
@@ -393,7 +387,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               .join(' ');
               
 
-            const statusColor = getFloorStatusColor(floor.floor_number);
+            const statusColor = getFloorStatusColor();
             const isHovered = hoveredFloor === floor.floor_number;
             
             

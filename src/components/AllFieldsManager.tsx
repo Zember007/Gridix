@@ -1,21 +1,21 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CustomFieldsManager from './CustomFieldsManager';
+import { useFields, FieldSetting } from '@/hooks/useFields';
 
-interface FieldSetting {
+interface CustomField {
   id?: string;
   field_name: string;
   field_label: string;
   field_type: 'text' | 'number' | 'select' | 'boolean';
-  is_custom: boolean;
-  is_visible: boolean;
+  is_required: boolean;
+  field_options?: string[];
   sort_order: number;
+  is_visible: boolean;
 }
 
 interface AllFieldsManagerProps {
@@ -23,73 +23,22 @@ interface AllFieldsManagerProps {
 }
 
 const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
-  const [fields, setFields] = useState<FieldSetting[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingField, setEditingField] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
   const { t } = useLanguage();
+  
+  const {
+    fields,
+    loading,
+    isSaving,
+    updateFieldOrder,
+    updateFieldVisibility,
+    deleteField,
+    refreshFields
+  } = useFields(projectId);
 
-  const loadFieldSettings = useCallback(async () => {
-    try {
-      // Сначала инициализируем стандартные поля для проекта
-      await supabase.rpc('initialize_default_fields', { p_project_id: projectId });
 
-      // Загружаем настройки полей
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('project_field_settings')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('sort_order');
-
-      if (settingsError) throw settingsError;
-
-      // Загружаем кастомные поля
-      const { data: customData, error: customError } = await supabase
-        .from('project_custom_fields')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('sort_order');
-
-      if (customError) throw customError;
-
-      // Объединяем данные
-      const allFields: FieldSetting[] = [
-        ...settingsData.map(field => ({
-          id: field.id,
-          field_name: field.field_name,
-          field_label: field.field_label,
-          field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
-          is_custom: field.is_custom,
-          is_visible: field.is_visible,
-          sort_order: field.sort_order
-        })),
-        ...customData.map(field => ({
-          id: field.id,
-          field_name: field.field_name,
-          field_label: field.field_label,
-          field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
-          is_custom: true,
-          is_visible: field.is_visible !== false,
-          sort_order: field.sort_order || 999
-        }))
-      ];
-
-      // Сортируем по sort_order
-      allFields.sort((a, b) => a.sort_order - b.sort_order);
-      setFields(allFields);
-    } catch (error) {
-      console.error('Error loading field settings:', error);
-      toast.error(t('customFields.loadError'));
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, t]);
-
-  useEffect(() => {
-    loadFieldSettings();
-  }, [loadFieldSettings]);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -119,100 +68,23 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
       sort_order: index
     }));
 
-    setIsSaving(true);
-    try {
-      // Обновляем порядок в базе данных
-      for (const field of updatedFields) {
-        if (field.is_custom) {
-          // Обновляем кастомные поля
-          await supabase
-            .from('project_custom_fields')
-            .update({ sort_order: field.sort_order })
-            .eq('id', field.id);
-        } else {
-          // Обновляем настройки стандартных полей
-          await supabase
-            .from('project_field_settings')
-            .update({ sort_order: field.sort_order })
-            .eq('id', field.id);
-        }
-      }
-      
-      setFields(updatedFields);
-      toast.success(t('customFields.orderUpdated'));
-    } catch (error) {
-      console.error('Error updating field order:', error);
-      toast.error(t('customFields.orderUpdateError'));
-    } finally {
-      setIsSaving(false);
-    }
-
+    await updateFieldOrder(updatedFields);
     setDraggedIndex(null);
-  }, [draggedIndex, fields, t, isSaving]);
+  }, [draggedIndex, fields, isSaving, updateFieldOrder]);
 
   const handleVisibilityToggle = async (field: FieldSetting) => {
-    if (isSaving) return; // Запрещаем изменение во время сохранения
-
-    setIsSaving(true);
-    try {
-      const updatedField = { ...field, is_visible: !field.is_visible };
-      
-      if (field.is_custom) {
-        await supabase
-          .from('project_custom_fields')
-          .update({ is_visible: updatedField.is_visible })
-          .eq('id', field.id);
-      } else {
-        await supabase
-          .from('project_field_settings')
-          .update({ is_visible: updatedField.is_visible })
-          .eq('id', field.id);
-      }
-
-      const updatedFields = fields.map(f => 
-        f.id === field.id ? updatedField : f
-      );
-      
-      setFields(updatedFields);
-      toast.success(t('customFields.visibilityUpdated'));
-    } catch (error) {
-      console.error('Error updating field visibility:', error);
-      toast.error(t('customFields.visibilityUpdateError'));
-    } finally {
-      setIsSaving(false);
-    }
+    await updateFieldVisibility(field);
   };
 
   const handleDeleteField = async (field: FieldSetting) => {
-    if (!field.is_custom || isSaving) {
-      if (!field.is_custom) {
-        toast.error(t('customFields.cannotDeleteBuiltIn'));
-      }
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await supabase
-        .from('project_custom_fields')
-        .delete()
-        .eq('id', field.id);
-
-      const updatedFields = fields.filter(f => f.id !== field.id);
-      setFields(updatedFields);
-      toast.success(t('customFields.deleteSuccess'));
-    } catch (error) {
-      console.error('Error deleting field:', error);
-      toast.error(t('customFields.deleteError'));
-    } finally {
-      setIsSaving(false);
-    }
+    await deleteField(field);
   };
 
   const handleEditField = (field: FieldSetting) => {
     if (!field.is_custom || isSaving) {
       if (!field.is_custom) {
-        toast.error(t('customFields.cannotEditBuiltIn'));
+        // Показываем ошибку через toast, но не импортируем toast
+        console.error(t('customFields.cannotEditBuiltIn'));
       }
       return;
     }
@@ -222,10 +94,10 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
       field_name: field.field_name,
       field_label: field.field_label,
       field_type: field.field_type,
-      is_required: false, // Нужно будет добавить это поле
-      field_options: [],
       sort_order: field.sort_order,
-      is_visible: field.is_visible
+      is_visible: field.is_visible,
+      is_required: field.is_required || false,
+      field_options: field.field_options || []
     });
   };
 
@@ -247,7 +119,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
         <CustomFieldsManager 
           projectId={projectId} 
           onFieldsChange={() => {
-            loadFieldSettings();
+            refreshFields();
           }}
           editingField={editingField}
           onClose={() => {

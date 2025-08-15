@@ -310,68 +310,53 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         }
 
         if (apartments.length > 0) {
-          // Удаляем существующие квартиры на целевом этаже
-          await supabase
-            .from('apartments')
-            .delete()
-            .eq('project_id', projectId)
-            .eq('floor_number', targetFloor);
-
-          // Получаем все существующие номера квартир в проекте для проверки уникальности
+          // Получаем существующие апартаменты на целевом этаже
           const { data: existingApartments } = await supabase
             .from('apartments')
-            .select('apartment_number')
-            .eq('project_id', projectId);
+            .select('id, apartment_number')
+            .eq('project_id', projectId)
+            .eq('floor_number', targetFloor);
           
-          const existingNumbers = new Set(existingApartments?.map(apt => apt.apartment_number) || []);
+          // Создаем Map для быстрого поиска по номеру квартиры
+          const existingApartmentsMap = new Map(
+            existingApartments?.map(apt => [apt.apartment_number, apt.id]) || []
+          );
 
           for (const apt of apartments) {
-            // Улучшенная логика генерации номера квартиры
-            let newApartmentNumber: string;
-            
-            // Пытаемся сначала создать номер в формате этаж + номер квартиры
+            // Генерируем номер квартиры для целевого этажа
+            let targetApartmentNumber: string;
             const originalNumber = apt.apartment_number;
             
             // Если номер уже начинается с номера этажа, заменяем этаж
             if (originalNumber.startsWith(floorNumber.toString())) {
               const apartmentPart = originalNumber.substring(floorNumber.toString().length);
-              newApartmentNumber = `${targetFloor}${apartmentPart}`;
+              targetApartmentNumber = `${targetFloor}${apartmentPart}`;
             } else {
               // Иначе добавляем номер этажа в начало
-              newApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}`;
+              targetApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}`;
             }
 
-            // Проверяем уникальность и при необходимости генерируем новый номер
-            let counter = 1;
-            let finalApartmentNumber = newApartmentNumber;
-            while (existingNumbers.has(finalApartmentNumber)) {
-              finalApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}_${counter}`;
-              counter++;
-            }
-
-            // Добавляем новый номер в набор для следующих проверок
-            existingNumbers.add(finalApartmentNumber);
-
-            try {
-              await supabase
-                .from('apartments')
-                .insert({
-                  project_id: projectId,
-                  floor_number: targetFloor,
-                  apartment_number: finalApartmentNumber,
-                  rooms: apt.rooms,
-                  area: apt.area,
-                  price: apt.price,
-                  status: apt.status,
-                  polygon: apt.polygon as any
+            // Проверяем, существует ли апартамент с таким номером на целевом этаже
+            const existingApartmentId = existingApartmentsMap.get(targetApartmentNumber);
+            
+            if (existingApartmentId) {
+              // Обновляем только polygon существующего апартамента
+              try {
+                await supabase
+                  .from('apartments')
+                  .update({
+                    polygon: apt.polygon as { x: number; y: number }[]
+                  })
+                  .eq('id', existingApartmentId);
+              } catch (error) {
+                console.error('Error updating apartment polygon:', error, {
+                  apartmentId: existingApartmentId,
+                  apartmentNumber: targetApartmentNumber,
+                  targetFloor
                 });
-            } catch (error) {
-              console.error('Error inserting apartment:', error, {
-                apartmentNumber: finalApartmentNumber,
-                targetFloor,
-                originalNumber
-              });
+              }
             }
+            // Если апартамент не существует, игнорируем его (не создаем новый)
           }
         }
       }

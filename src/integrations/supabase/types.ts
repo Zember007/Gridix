@@ -139,6 +139,7 @@ export type Database = {
           floor_plan_id: string | null
           id: string
           polygon: Json | null
+          
           price: number | null
           project_id: string
           rooms: number

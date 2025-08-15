@@ -17,6 +17,7 @@ import { Search, Building2, Home, MapPin, Ruler, DollarSign, SlidersHorizontal, 
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useFields } from '@/hooks/useFields';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
@@ -26,25 +27,6 @@ import { getCurrencySymbolSafe, isValidCurrency, formatPriceWithCurrency } from 
 
 
 
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
-  floors: number;
-  building_image_url: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  slug: string | null;
-  currency: string | null;
-  min_price: number | null;
-  is_public: boolean;
-  is_featured: boolean;
-  view_count: number;
-  user_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -54,11 +36,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
-  
+  const { fields: fieldSettings } = useFields(projectId);
+
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
 
-  
+
   const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
@@ -80,7 +63,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
     console.log('cachedProject', project);
-    
+
     if (project) {
       if (project.currency && isValidCurrency(project.currency)) {
         setSelectedCurrency(project.currency);
@@ -91,34 +74,34 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Загрузка списка квартир (без polygon)
   const loadApartments = useCallback(async () => {
     if (apartmentsLoaded) return; // Не загружаем повторно
-    
+
     try {
       const { data, error } = await supabase
         .from('apartments')
         // Загружаем только необходимые поля без тяжёлого поля polygon
-        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id')
+        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields')
         .eq('project_id', projectId);
 
       if (error) throw error;
-      
+
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
       setApartmentsLoaded(true);
-      
+
       // Вычисляем диапазоны только один раз
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
           .map(apt => apt.price || 0)
           .filter(price => price > 0);
-        
+
         const areas = normalizedApartments.map(apt => apt.area);
-        
+
         if (prices.length > 0) {
           const minPrice = Math.min(...prices);
           const maxPrice = Math.max(...prices);
           setPriceRange([minPrice, maxPrice]);
         }
-        
+
         if (areas.length > 0) {
           const minArea = Math.min(...areas);
           const maxArea = Math.max(...areas);
@@ -130,9 +113,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
   }, [projectId, apartmentsLoaded]);
 
+
   // Загружаем квартиры только когда они нужны (при первом рендере или изменении projectId)
   useEffect(() => {
-    
+
     if (projectId) {
       loadApartments();
     }
@@ -185,7 +169,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           if (!grouped[key]) grouped[key] = [];
           grouped[key].push({ id: p.id, image_url: p.image_url, description: p.description || undefined, order_index: p.order_index, type: 'layout' });
         });
-console.log('grouped', grouped);
+        console.log('grouped', grouped);
 
         setPreloadedLayoutPhotosByRooms(grouped);
       } catch (e) {
@@ -282,7 +266,7 @@ console.log('grouped', grouped);
       const convertedPrice = convertPrice(price, project?.currency, selectedCurrency);
       const area = apt.area || 0;
       return convertedPrice >= priceRange[0] && convertedPrice <= priceRange[1] &&
-             area >= areaRange[0] && area <= areaRange[1];
+        area >= areaRange[0] && area <= areaRange[1];
     });
 
     if (searchQuery) {
@@ -294,7 +278,7 @@ console.log('grouped', grouped);
     return filtered;
   }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery, selectedCurrency, project?.currency, convertPrice]);
 
-  
+
 
   const getUniqueRoomCounts = useCallback(() => {
     return [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
@@ -303,6 +287,55 @@ console.log('grouped', grouped);
   const getAvailableCount = useCallback(() => {
     return filteredApartments.filter(apt => apt.status === 'available').length;
   }, [filteredApartments]);
+
+  // Получаем отображаемые поля в правильном порядке
+  const getVisibleFields = useCallback(() => {
+    return fieldSettings
+      .filter(field => field.is_visible)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [fieldSettings]);
+
+  // Получаем значение кастомного поля из апартамента
+  const getCustomFieldValue = useCallback((apartment: Apartment, fieldName: string) => {
+    if (!apartment.custom_fields) return null;
+
+    const customFields = apartment.custom_fields as Record<string, unknown>;
+    return customFields[fieldName] || null;
+  }, []);
+
+  // Форматируем значение поля для отображения
+  const formatFieldValue = useCallback((value: unknown, fieldType: string, fieldName: string) => {
+    if (value === null || value === undefined) return '-';
+
+    if (fieldName === 'price') {
+      return formatPrice(convertPrice(value as number, project?.currency, selectedCurrency)) + ' ' + getCurrencySymbolSafe(selectedCurrency);
+    }
+
+    if (fieldName === 'area') {
+      return value + ' м²';
+    }
+
+    if (fieldName === 'floor_number') {
+      return value + ' ' + t('project.floor').toLowerCase();
+    }
+
+    if (fieldName === 'rooms') {
+      return value + ' ' + t('apartment.room').toLowerCase();
+    }
+
+
+
+    switch (fieldType) {
+      case 'boolean':
+        return value ? 'Да' : 'Нет';
+      case 'number':
+        return typeof value === 'number' ? value.toString() : String(value);
+      case 'select':
+        return Array.isArray(value) ? value.join(', ') : String(value);
+      default:
+        return String(value);
+    }
+  }, []);
 
 
   const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
@@ -396,29 +429,29 @@ console.log('grouped', grouped);
       </div>
 
       {/* Currency filter - pill toggles */}
-        {(() => {
-          type Currency = 'RUB' | 'USD' | 'EUR' | 'GEL'
-          const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR']
-          const projectCurrency = (project?.currency || 'RUB') as Currency
-          const list: Currency[] = [...preferredOrder, ...(preferredOrder.includes(projectCurrency as Exclude<Currency, 'RUB'>) ? [] : [projectCurrency])]
-          const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
-          const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
-          return (
-            <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
-              {currenciesToShow.map((c) => (
-                <ToggleGroupItem
-                  key={c}
-                  value={c}
-                  size="sm"
-                  aria-label={c}
-                  className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
-                >
-                  {symbol[c]}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          )
-        })()}
+      {(() => {
+        type Currency = 'RUB' | 'USD' | 'EUR' | 'GEL'
+        const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR']
+        const projectCurrency = (project?.currency || 'RUB') as Currency
+        const list: Currency[] = [...preferredOrder, ...(preferredOrder.includes(projectCurrency as Exclude<Currency, 'RUB'>) ? [] : [projectCurrency])]
+        const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
+        const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
+        return (
+          <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
+            {currenciesToShow.map((c) => (
+              <ToggleGroupItem
+                key={c}
+                value={c}
+                size="sm"
+                aria-label={c}
+                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+              >
+                {symbol[c]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )
+      })()}
 
       {/* Price range */}
       <div className="space-y-2">
@@ -466,52 +499,52 @@ console.log('grouped', grouped);
           <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'} mb-4`}>
             <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
             <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
-                             <Button 
-                 variant={viewMode === 'facade' ? 'default' : 'outline'} 
-                 size="sm" 
-                 className={`${viewMode === 'facade' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
-                 onClick={() => setViewMode('facade')}
-               >
-                 <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-                 {!isMobile && t('project.facade')}
-               </Button>
-               <Button 
-                 variant={viewMode === 'floor-plan' ? 'default' : 'outline'} 
-                 size="sm"
-                 className={`${viewMode === 'floor-plan' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
-                 onClick={() => setViewMode('floor-plan')}
-               >
-                 <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-                 {!isMobile && t('project.floorPlan')}
-               </Button>
-               <Button 
-                 variant={viewMode === 'list' ? 'default' : 'outline'} 
-                 size="sm"
-                 className={`${viewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
-                 onClick={() => setViewMode('list')}
-               >
-                 <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-                 {!isMobile && t('project.listView')}
-               </Button>
+              <Button
+                variant={viewMode === 'facade' ? 'default' : 'outline'}
+                size="sm"
+                className={`${viewMode === 'facade' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                onClick={() => setViewMode('facade')}
+              >
+                <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                {!isMobile && t('project.facade')}
+              </Button>
+              <Button
+                variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
+                size="sm"
+                className={`${viewMode === 'floor-plan' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                onClick={() => setViewMode('floor-plan')}
+              >
+                <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                {!isMobile && t('project.floorPlan')}
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                className={`${viewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                onClick={() => setViewMode('list')}
+              >
+                <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                {!isMobile && t('project.listView')}
+              </Button>
 
-               <Button 
-                 variant={viewMode === 'map' ? 'default' : 'outline'} 
-                 size="sm"
-                 className={`${viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
-                 onClick={() => setViewMode('map')}
-               >
-                 <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-                 {!isMobile && t('embed.onMap')}
-               </Button>
-               
-               {/* Mobile filters button */}
-               {isMobile && (
-                 <Sheet  open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                   <SheetTrigger asChild>
-                     <Button variant="outline" size="sm" className="text-xs px-2">
-                       <SlidersHorizontal className="h-3 w-3" />
-                     </Button>
-                   </SheetTrigger>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'outline'}
+                size="sm"
+                className={`${viewMode === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`}
+                onClick={() => setViewMode('map')}
+              >
+                <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                {!isMobile && t('embed.onMap')}
+              </Button>
+
+              {/* Mobile filters button */}
+              {isMobile && (
+                <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs px-2">
+                      <SlidersHorizontal className="h-3 w-3" />
+                    </Button>
+                  </SheetTrigger>
                   <SheetContent side="bottom" className="h-[80vh]">
                     <SheetHeader>
                       <SheetTitle>{t('project.filters')}</SheetTitle>
@@ -541,7 +574,7 @@ console.log('grouped', grouped);
         <div className="container mx-auto px-4 md:px-6 py-8 grow">
           <div className="space-y-6">
             <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
-            
+
             {isMobile ? (
               // Mobile card layout
               <div className="space-y-4">
@@ -559,7 +592,7 @@ console.log('grouped', grouped);
                             <span className="font-medium text-sm">
                               {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
                             </span>
-                            <Badge 
+                            <Badge
                               variant={apartment.status === 'available' ? 'default' : 'secondary'}
                               className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
                             >
@@ -568,9 +601,49 @@ console.log('grouped', grouped);
                           </div>
                           <div className="text-xs text-gray-600 space-y-1">
                             <div>{apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}</div>
-                              <div className="font-bold text-sm text-gray-900">
-                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                              </div>
+                            <div className="font-bold text-sm text-gray-900">
+                              {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                            </div>
+                            {/* Custom fields for mobile */}
+                            {getVisibleFields().slice(0, 2).map((field) => {
+                              let value: unknown = null;
+
+                              if (field.is_custom) {
+                                value = getCustomFieldValue(apartment, field.field_name);
+                              } else {
+                                switch (field.field_name) {
+                                  case 'rooms':
+                                    value = apartment.rooms;
+                                    break;
+                                  case 'area':
+                                    value = apartment.area;
+                                    break;
+                                  case 'price':
+                                    value = apartment.price;
+                                    break;
+                                  case 'status':
+                                    value = apartment.status;
+                                    break;
+                                  case 'floor':
+                                    value = apartment.floor_number;
+                                    break;
+                                  case 'number':
+                                    value = apartment.apartment_number;
+                                    break;
+                                  default:
+                                    value = null;
+
+                                }
+                              }
+
+                              if (value === null) return null;
+
+                              return (
+                                <div key={field.id} className="text-xs text-gray-500">
+                                  {field.field_label}: {formatFieldValue(value, field.field_type, field.field_name)}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -582,37 +655,69 @@ console.log('grouped', grouped);
               // Desktop table layout
               <div className="space-y-4">
                 {/* Table header */}
-                <div className="hidden md:grid grid-cols-5 gap-4 py-3 text-sm text-gray-500 border-b">
-                  <div>{t('project.layout')}</div>
-                  <div>{t('project.type')}</div>
-                  <div>{t('project.area')}</div>
-                  <div>{t('project.floor')}</div>
-                  <div>{t('project.price')}</div>
+                <div className={`hidden md:grid gap-4 py-3 text-sm text-gray-500 border-b`}
+                  style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
+                  <div></div>
+                  {getVisibleFields().map((field) => (
+                    <div key={field.id}>{
+                      field.is_custom ?
+                        field.field_label
+                        :
+                        t(`project.${field.field_name}`)
+                    }</div>
+                  ))}
                 </div>
-                
+
                 {/* Apartment rows */}
                 {filteredApartments.map((apartment) => (
-                  <div key={apartment.id} className="grid grid-cols-5 gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                  <div key={apartment.id}
+                    className="hidden md:grid gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
+                    onClick={() => setSelectedApartment(apartment)}>
                     <div className="flex items-center">
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                         <Building2 className="h-8 w-8 text-gray-400" />
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="font-medium">{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span>{apartment.area} м²</span>
-                    </div>
-              
-                    <div className="flex items-center">
-                      <span>{apartment.floor_number} {t('project.of')} {project.floors}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div>
-                        <div className="font-bold text-lg">{apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}</div>
-                      </div>
-                    </div>
+                   
+                  
+                    {getVisibleFields().map((field) => {
+                      let value: unknown = null;
+                      console.log(field.field_name);
+
+                      if (field.is_custom) {
+                        value = getCustomFieldValue(apartment, field.field_name);
+                      } else {
+                        switch (field.field_name) {
+                          case 'rooms':
+                            value = apartment.rooms;
+                            break;
+                          case 'area':
+                            value = apartment.area;
+                            break;
+                          case 'price':
+                            value = apartment.price;
+                            break;
+                          case 'status':
+                            value = apartment.status;
+                            break;
+                          case 'floor':
+                            value = apartment.floor_number;
+                            break;
+                          case 'number':
+                            value = apartment.apartment_number;
+                            break;
+                          default:
+                            value = null;
+                        }
+                      }
+
+                      return (
+                        <div key={field.id} className="flex items-center">
+                          <span>{formatFieldValue(value, field.field_type, field.field_name)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -620,328 +725,371 @@ console.log('grouped', grouped);
           </div>
         </div>
       ) : viewMode === 'map' ?
-      <>
-      <InteractiveProjectsMap
-     project={project}
-     onProjectSelect={() => {
-      setViewMode('list');
-     }}
-    />
-      </>
-      :(
-        // Facade and Floor Plan views with hero section
         <>
-          {/* Main visualization area */}
-          <div className="relative grow flex flex-col">
-            {/* Hero section with building visualization */}
-            <div className="relative overflow-hidden">
-              {viewMode === 'facade' ? (
-                // Building facade view with interactive floor polygons
-                <div className="w-full bg-white">
-                  <BuildingFacadeView
-                    projectId={projectId}
-                    project={project}
-                    apartments={filteredApartments}
-                    onFloorSelect={(floor) => {
-                      setSelectedFloorForPlan(floor);
-                      setViewMode('floor-plan');
-                    }}
-                    onApartmentSelect={setSelectedApartment}
-                    filtersRef={filtersRef}
-                  />
-                  
-                  {/* Layout gallery below facade when not expanded */}
-                  <div className="container mx-auto px-4 md:px-6 py-8">
-                    <div className="space-y-6">
-                      <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h3>
-                      
-                      {/* Layout type filters */}
-                      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        <Button
-                          variant={selectedRooms === 'all' ? 'default' : 'outline'}
-                          size="sm"
-                          className={selectedRooms === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                          onClick={() => setSelectedRooms('all')}
-                        >
-                          {t('project.allTypes')}
-                        </Button>
-                        <Button
-                          variant={selectedRooms === '0' ? 'default' : 'outline'}
-                          size="sm"
-                          className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                          onClick={() => setSelectedRooms('0')}
-                        >
-                          {t('apartment.studio')}
-                        </Button>
-                        {getUniqueRoomCounts().filter(rooms => rooms > 0).map(rooms => (
+          <InteractiveProjectsMap
+            project={project}
+            onProjectSelect={() => {
+              setViewMode('list');
+            }}
+          />
+        </>
+        : (
+          // Facade and Floor Plan views with hero section
+          <>
+            {/* Main visualization area */}
+            <div className="relative grow flex flex-col">
+              {/* Hero section with building visualization */}
+              <div className="relative overflow-hidden">
+                {viewMode === 'facade' ? (
+                  // Building facade view with interactive floor polygons
+                  <div className="w-full bg-white">
+                    <BuildingFacadeView
+                      projectId={projectId}
+                      project={project}
+                      apartments={filteredApartments}
+                      onFloorSelect={(floor) => {
+                        setSelectedFloorForPlan(floor);
+                        setViewMode('floor-plan');
+                      }}
+                      onApartmentSelect={setSelectedApartment}
+                      filtersRef={filtersRef}
+                    />
+
+                    {/* Layout gallery below facade when not expanded */}
+                    <div className="container mx-auto px-4 md:px-6 py-8">
+                      <div className="space-y-6">
+                        <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h3>
+
+                        {/* Layout type filters */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           <Button
-                            key={rooms}
-                            variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
+                            variant={selectedRooms === 'all' ? 'default' : 'outline'}
                             size="sm"
-                            className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                            onClick={() => setSelectedRooms(rooms.toString())}
+                            className={selectedRooms === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => setSelectedRooms('all')}
                           >
-                            {rooms}
+                            {t('project.allTypes')}
+                          </Button>
+                          <Button
+                            variant={selectedRooms === '0' ? 'default' : 'outline'}
+                            size="sm"
+                            className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => setSelectedRooms('0')}
+                          >
+                            {t('apartment.studio')}
+                          </Button>
+                          {getUniqueRoomCounts().filter(rooms => rooms > 0).map(rooms => (
+                            <Button
+                              key={rooms}
+                              variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
+                              size="sm"
+                              className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                              onClick={() => setSelectedRooms(rooms.toString())}
+                            >
+                              {rooms}
+                            </Button>
+                          ))}
+                          <Button
+                            variant={selectedRooms === '4+' ? 'default' : 'outline'}
+                            size="sm"
+                            className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => {
+                              // Handle 4+ rooms filter
+                              const fourPlusApartments = apartments.filter(apt => apt.rooms >= 4);
+                              if (fourPlusApartments.length > 0) {
+                                setSelectedRooms('4+');
+                              }
+                            }}
+                          >
+                            4+
+                          </Button>
+                        </div>
+
+                        {/* Layout cards grid */}
+                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
+                          {(() => {
+                            // Group apartments by type (rooms + area)
+                            const layoutGroups: { [key: string]: Apartment[] } = {};
+
+                            let apartmentsToShow = apartments;
+                            if (selectedRooms !== 'all') {
+                              if (selectedRooms === '4+') {
+                                apartmentsToShow = apartments.filter(apt => apt.rooms >= 4);
+                              } else {
+                                apartmentsToShow = apartments.filter(apt => apt.rooms === parseInt(selectedRooms));
+                              }
+                            }
+
+                            apartmentsToShow.forEach(apt => {
+                              const key = `${apt.rooms}-rooms`;
+                              if (!layoutGroups[key]) {
+                                layoutGroups[key] = [];
+                              }
+                              layoutGroups[key].push(apt);
+                            });
+
+                            return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
+                              const representativeApt = apartmentGroup[0];
+                              const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
+                              const totalCount = apartmentGroup.length;
+
+                              return (
+                                <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                  <div className="aspect-[4/3] bg-gray-100 relative">
+                                    {(() => {
+                                      const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${representativeApt.rooms}-room`;
+                                      const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                                      const first = photos[0];
+                                      return first ? (
+                                        <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                          className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
+                                      );
+                                    })()}
+
+                                    {/* Status badge */}
+                                    <div className="absolute top-2 right-2 z-10">
+                                      <Badge
+                                        variant={availableCount > 0 ? 'default' : 'secondary'}
+                                        className={availableCount > 0 ? 'bg-green-500' : 'bg-gray-500'}
+                                      >
+                                        {availableCount > 0 ? `${availableCount} ${t('common.available')}` : t('common.unavailable')}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <CardContent className="p-4">
+                                    <div className="space-y-3">
+                                      <h4 className="font-semibold text-lg">
+                                        {representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                      </h4>
+
+                                      <div className="text-sm text-gray-600">
+                                        <span className="flex items-center gap-1">
+                                          <Ruler className="h-4 w-4" />
+                                          {(() => {
+                                            const areas = apartmentGroup.map(apt => apt.area);
+                                            const minArea = Math.min(...areas);
+                                            const maxArea = Math.max(...areas);
+                                            return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
+                                          })()}
+                                        </span>
+                                      </div>
+
+                                      {/* Price range */}
+                                      {(() => {
+                                        const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
+                                        if (prices.length > 0) {
+                                          const minPrice = Math.min(...prices);
+                                          const maxPrice = Math.max(...prices);
+                                          return (
+                                            <div className="font-bold text-lg">
+                                              {minPrice === maxPrice
+                                                ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                                : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                              }
+                                            </div>
+                                          );
+                                        }
+                                        return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
+                                      })()}
+
+                                      <Button
+                                        className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                                        onClick={() => {
+                                          // Set filters and switch to list view
+                                          setSelectedRooms(representativeApt.rooms >= 4 ? '4+' : representativeApt.rooms.toString());
+                                          setViewMode('list');
+                                        }}
+                                      >
+                                        Смотреть {totalCount} {totalCount === 1 ? 'вариант' : 'вариантов'}
+                                      </Button>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            });
+                          })()}
+                        </div>
+
+                        {apartments.length === 0 && (
+                          <div className="text-center py-12">
+                            <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600">{t('project.noApartments')}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Floor plan view for specific floor
+                  <div className="w-full h-full bg-white">
+                    <ApartmentFloorPlan
+                      projectId={projectId}
+                      project={project}
+                      apartments={filteredApartments.filter(apt =>
+                        selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
+                      )}
+                      onApartmentSelect={setSelectedApartment}
+                      selectedFloorNumber={selectedFloorForPlan}
+                    />
+                  </div>
+                )}
+
+
+              </div>
+
+              {/* Floor selector for floor-plan mode */}
+              {viewMode === 'floor-plan' && (
+                <div className="bg-white border-b py-4 ">
+                  <div className="mx-auto px-6">
+                    <div className="flex items-center justify-center gap-2 flex-col">
+                      <Label className="text-sm font-medium">{t('project.selectFloor')}:</Label>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {getUniqueFloors().map(floor => (
+                          <Button
+                            key={floor}
+                            variant={selectedFloorForPlan === floor ? 'default' : 'outline'}
+                            size="sm"
+                            className={selectedFloorForPlan === floor ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => setSelectedFloorForPlan(floor)}
+                          >
+                            {floor}
                           </Button>
                         ))}
-                        <Button
-                          variant={selectedRooms === '4+' ? 'default' : 'outline'}
-                          size="sm"
-                          className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                          onClick={() => {
-                            // Handle 4+ rooms filter
-                            const fourPlusApartments = apartments.filter(apt => apt.rooms >= 4);
-                            if (fourPlusApartments.length > 0) {
-                              setSelectedRooms('4+');
-                            }
-                          }}
-                        >
-                          4+
-                        </Button>
                       </div>
-                      
-                      {/* Layout cards grid */}
-                      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
-                        {(() => {
-                          // Group apartments by type (rooms + area)
-                          const layoutGroups: { [key: string]: Apartment[] } = {};
-                          
-                          let apartmentsToShow = apartments;
-                          if (selectedRooms !== 'all') {
-                            if (selectedRooms === '4+') {
-                              apartmentsToShow = apartments.filter(apt => apt.rooms >= 4);
-                            } else {
-                              apartmentsToShow = apartments.filter(apt => apt.rooms === parseInt(selectedRooms));
-                            }
-                          }
-                          
-                          apartmentsToShow.forEach(apt => {
-                            const key = `${apt.rooms}-rooms`;
-                            if (!layoutGroups[key]) {
-                              layoutGroups[key] = [];
-                            }
-                            layoutGroups[key].push(apt);
-                          });
-                          
-                          return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
-                            const representativeApt = apartmentGroup[0];
-                            const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
-                            const totalCount = apartmentGroup.length;
-                            
-                            return (
-                              <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                <div className="aspect-[4/3] bg-gray-100 relative">
-                                  {(() => {
-                                    const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${representativeApt.rooms}-room`;
-                                    const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                                    const first = photos[0];
-                                    return first ? (
-                                      <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
-                                           className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
-                                    );
-                                  })()}
-                                  
-                                  {/* Status badge */}
-                                  <div className="absolute top-2 right-2 z-10">
-                                    <Badge 
-                                      variant={availableCount > 0 ? 'default' : 'secondary'}
-                                      className={availableCount > 0 ? 'bg-green-500' : 'bg-gray-500'}
-                                    >
-                                      {availableCount > 0 ? `${availableCount} ${t('common.available')}` : t('common.unavailable')}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                
-                                <CardContent className="p-4">
-                                  <div className="space-y-3">
-                                    <h4 className="font-semibold text-lg">
-                                      {representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
-                                    </h4>
-                                    
-                                    <div className="text-sm text-gray-600">
-                                      <span className="flex items-center gap-1">
-                                        <Ruler className="h-4 w-4" />
-                                        {(() => {
-                                          const areas = apartmentGroup.map(apt => apt.area);
-                                          const minArea = Math.min(...areas);
-                                          const maxArea = Math.max(...areas);
-                                          return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
-                                        })()}
-                                      </span>
-                                    </div>
-                                    
-                                    {/* Price range */}
-                                    {(() => {
-                                      const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
-                                      if (prices.length > 0) {
-                                        const minPrice = Math.min(...prices);
-                                        const maxPrice = Math.max(...prices);
-                                        return (
-                                          <div className="font-bold text-lg">
-                                            {minPrice === maxPrice 
-                                              ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
-                                              : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
-                                            }
-                                          </div>
-                                        );
-                                      }
-                                      return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
-                                    })()}
-                                    
-                                    <Button 
-                                      className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
-                                      onClick={() => {
-                                        // Set filters and switch to list view
-                                        setSelectedRooms(representativeApt.rooms >= 4 ? '4+' : representativeApt.rooms.toString());
-                                        setViewMode('list');
-                                      }}
-                                    >
-                                      Смотреть {totalCount} {totalCount === 1 ? 'вариант' : 'вариантов'}
-                                    </Button>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          });
-                        })()}
-                      </div>
-                      
-                      {apartments.length === 0 && (
-                        <div className="text-center py-12">
-                          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-600">{t('project.noApartments')}</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
-              ) : (
-                // Floor plan view for specific floor
-                <div className="w-full h-full bg-white">
-                  <ApartmentFloorPlan
-                    projectId={projectId}
-                    project={project}
-                    apartments={filteredApartments.filter(apt => 
-                      selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
-                    )}
-                    onApartmentSelect={setSelectedApartment}
-                    selectedFloorNumber={selectedFloorForPlan}
-                  />
-                </div>
               )}
-
-     
             </div>
 
-            {/* Floor selector for floor-plan mode */}
-            {viewMode === 'floor-plan' && (
-              <div className="bg-white border-b py-4 ">
-                <div className="mx-auto px-6">
-                  <div className="flex items-center justify-center gap-2 flex-col">
-                    <Label className="text-sm font-medium">{t('project.selectFloor')}:</Label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {getUniqueFloors().map(floor => (
-                        <Button
-                          key={floor}
-                          variant={selectedFloorForPlan === floor ? 'default' : 'outline'}
-                          size="sm"
-                          className={selectedFloorForPlan === floor ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                          onClick={() => setSelectedFloorForPlan(floor)}
-                        >
-                          {floor}
+            {/* Apartment summary section - only show if apartment is selected */}
+            {selectedApartment && (
+              <div
+                id='apartment-summary'
+                className="bg-gray-50 border-t">
+                <div className="container mx-auto px-6 py-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Apartment Layout Images */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms}-${t('apartment.rooms')}`}
+                        </h3>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedApartment(null)}>
+                          <X className="h-4 w-4" />
                         </Button>
-                      ))}
+                      </div>
+
+
+                      {/* Apartment Photos Viewer */}
+                      <div className="space-y-4">
+                        <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={selectedApartment.rooms} />
+                      </div>
+                    </div>
+
+                    {/* Apartment Details */}
+                    <div className="space-y-6">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Home className="h-5 w-5 text-gray-600" />
+                          <span className="text-lg font-semibold">
+                            {t('apartment.number')} {selectedApartment.apartment_number}
+                          </span>
+                        </div>
+                        <p className="text-gray-600">{selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.rooms')}`}</p>
+                      </div>
+
+                      {/* Key details */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-500">{t('project.area')}</div>
+                          <div className="font-semibold text-lg">{selectedApartment.area} м²</div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-500">{t('project.floor')}</div>
+                          <div className="font-semibold text-lg">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
+                        </div>
+                      </div>
+
+                      {/* Custom fields */}
+                      {getVisibleFields().length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-medium text-gray-700">{t('project.additionalInfo')}</h4>
+                          <div className="grid grid-cols-1 gap-3">
+                            {getVisibleFields().map((field) => {
+                              let value: unknown = null;
+
+                              if (field.is_custom) {
+                                // Для кастомных полей берем значение из custom_fields
+                                value = getCustomFieldValue(selectedApartment, field.field_name);
+                              } else {
+                                // Для стандартных полей берем из основных свойств апартамента
+                                switch (field.field_name) {
+                                  case 'rooms':
+                                    value = selectedApartment.rooms;
+                                    break;
+                                  case 'area':
+                                    value = selectedApartment.area;
+                                    break;
+                                  case 'price':
+                                    value = selectedApartment.price;
+                                    break;
+                                  case 'status':
+                                    value = selectedApartment.status;
+                                    break;
+                                  case 'floor':
+                                    value = selectedApartment.floor_number;
+                                    break;
+                                  case 'number':
+                                    value = selectedApartment.apartment_number;
+                                    break;
+                                  default:
+                                    value = null;
+                                }
+                              }
+
+                              return (
+                                <div key={field.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                                  <span className="text-sm text-gray-600">{field.field_label}</span>
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {formatFieldValue(value, field.field_type, field.field_name)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div className="bg-white rounded-lg p-4 border">
+                        <div className="space-y-2">
+                          <div className="text-sm text-gray-500">{t('project.price')}</div>
+                          <div className="font-bold text-2xl">
+                            {selectedApartment.price ? `${formatPrice(convertPrice(selectedApartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <Button
+                        className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white w-full"
+                        disabled={selectedApartment.status !== 'available'}
+                      >
+                        {selectedApartment.status === 'available' ? t('common.reserve') : t('common.unavailable')}
+                      </Button>
+
+
                     </div>
                   </div>
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Apartment summary section - only show if apartment is selected */}
-          {selectedApartment && (
-            <div
-            id='apartment-summary'
-            className="bg-gray-50 border-t">
-              <div className="container mx-auto px-6 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Apartment Layout Images */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms}-${t('apartment.rooms')}`}
-                      </h3>
-                      <Button variant="ghost" size="sm" onClick={() => setSelectedApartment(null)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  
-                    
-                                         {/* Apartment Photos Viewer */}
-                     <div className="space-y-4">
-                       <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={selectedApartment.rooms} />
-                     </div>
-                  </div>
-
-                  {/* Apartment Details */}
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Home className="h-5 w-5 text-gray-600" />
-                        <span className="text-lg font-semibold">
-                          {t('apartment.number')} {selectedApartment.apartment_number}
-                        </span>
-                      </div>
-                      <p className="text-gray-600">{selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.rooms')}`}</p>
-                    </div>
-
-                    {/* Key details */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-500">{t('project.area')}</div>
-                        <div className="font-semibold text-lg">{selectedApartment.area} м²</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-500">{t('project.floor')}</div>
-                        <div className="font-semibold text-lg">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
-                      </div>
-                   
-                    
-                    </div>
-
-                    {/* Price */}
-                    <div className="bg-white rounded-lg p-4 border">
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-500">{t('project.price')}</div>
-                        <div className="font-bold text-2xl">
-                          {selectedApartment.price ? `${formatPrice(convertPrice(selectedApartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-3">
-                      <Button 
-                        className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
-                        disabled={selectedApartment.status !== 'available'}
-                      >
-                        {selectedApartment.status === 'available' ? t('common.reserve') : t('common.unavailable')}
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        {t('common.more')}
-                      </Button>
-                    </div>
-
-                    
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          </>
+        )}
 
 
 
