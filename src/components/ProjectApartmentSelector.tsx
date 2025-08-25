@@ -23,7 +23,7 @@ import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
-import { getCurrencySymbolSafe, isValidCurrency, formatPriceWithCurrency } from '@/lib/currency-utils';
+import { getCurrencySymbolSafe, isValidCurrency } from '@/lib/currency-utils';
 
 
 
@@ -394,7 +394,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         </Select>
       </div>
 
-      {/* Floor filter (only for facade and list views) */}
       {viewMode !== 'floor-plan' && (
         <div className="space-y-2">
           <Label>{t('project.floor')}</Label>
@@ -653,7 +652,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
               </div>
             ) : (
               // Desktop table layout
-              <div className="space-y-4">
+              <div className="space-y-4 overflow-y-auto">
                 {/* Table header */}
                 <div className={`hidden md:grid gap-4 py-3 text-sm text-gray-500 border-b`}
                   style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
