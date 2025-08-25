@@ -89,11 +89,13 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
         const rowData: any = {};
         let hasData = false;
         
-        for (let col = 1; col < headers.length; col++) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        for (let col = 0; col < headers.length; col++) {
+          console.log('col', headers[col]);
+          
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: col + 1 });
           const cell = worksheet[cellAddress];
           const cellValue = cell ? cell.v : '';
-          rowData[headers[col - 1]] = cellValue;
+          rowData[headers[col]] = cellValue;
           if (cellValue) hasData = true;
         }
         

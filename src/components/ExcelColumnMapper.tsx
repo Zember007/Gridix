@@ -15,9 +15,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectCRUD } from '@/hooks/useProjects';
 
+interface ImportedRowData {
+  [key: string]: string | number | null | undefined;
+}
+
 interface ExcelColumnMapperProps {
   excelColumns: string[];
-  importedData: any[];
+  importedData: ImportedRowData[];
   onComplete: () => void;
 }
 
@@ -55,6 +59,17 @@ interface StatusValidationResult {
   invalidCount: number;
   invalidStatuses: string[];
   statusDistribution: { [key: string]: number };
+}
+
+interface RoomsMapping {
+  [key: string]: number | 'invalid';
+}
+
+interface RoomsValidationResult {
+  validCount: number;
+  invalidCount: number;
+  invalidRooms: string[];
+  roomsDistribution: { [key: string]: number };
 }
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
@@ -102,7 +117,42 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     'резерв': 'reserved'
   });
   const [statusValidation, setStatusValidation] = useState<StatusValidationResult | null>(null);
-  const [showStatusValidation, setShowStatusValidation] = useState(false);
+
+  // Rooms validation states
+  const [roomsMapping, setRoomsMapping] = useState<RoomsMapping>({
+    'студия': 0,
+    'studio': 0,
+    'st': 0,
+    '0': 0,
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    'однокомнатная': 1,
+    'двухкомнатная': 2,
+    'трехкомнатная': 3,
+    'четырехкомнатная': 4,
+    'пятикомнатная': 5,
+    '1к': 1,
+    '2к': 2,
+    '3к': 3,
+    '4к': 4,
+    '5к': 5,
+    '1-к': 1,
+    '2-к': 2,
+    '3-к': 3,
+    '4-к': 4,
+    '5-к': 5,
+    '1-комн': 1,
+    '2-комн': 2,
+    '3-комн': 3,
+    '4-комн': 4,
+    '5-комн': 5
+  });
+  const [roomsValidation, setRoomsValidation] = useState<RoomsValidationResult | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   const fieldLabels = useMemo(() => ({
     apartmentNumber: 'Номер квартиры',
@@ -197,6 +247,64 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     }
   }, [statusMapping]);
 
+  // Rooms validation functions
+  const validateRooms = useCallback(() => {
+    if (!columnMapping.rooms || columnMapping.rooms === '__none__') {
+      setRoomsValidation(null);
+      return;
+    }
+
+    const roomsDistribution: { [key: string]: number } = {};
+    const invalidRooms: string[] = [];
+    let validCount = 0;
+    let invalidCount = 0;
+
+    importedData.forEach((row) => {
+      const roomsValue = String(row[columnMapping.rooms] || '').toLowerCase().trim();
+      
+      if (!roomsValue) return;
+
+      // Подсчитываем распределение комнат
+      roomsDistribution[roomsValue] = (roomsDistribution[roomsValue] || 0) + 1;
+
+      // Проверяем валидность количества комнат
+      if (roomsMapping[roomsValue] !== undefined && roomsMapping[roomsValue] !== 'invalid') {
+        validCount++;
+      } else {
+        invalidCount++;
+        if (!invalidRooms.includes(roomsValue)) {
+          invalidRooms.push(roomsValue);
+        }
+      }
+    });
+
+    setRoomsValidation({
+      validCount,
+      invalidCount,
+      invalidRooms,
+      roomsDistribution
+    });
+  }, [columnMapping.rooms, roomsMapping, importedData]);
+
+  const updateRoomsMapping = useCallback((originalValue: string, mappedValue: number | 'invalid') => {
+    setRoomsMapping(prev => ({
+      ...prev,
+      [originalValue.toLowerCase()]: mappedValue
+    }));
+  }, []);
+
+  const addCustomRoomsMapping = useCallback((originalValue: string) => {
+    if (!originalValue.trim()) return;
+    
+    const key = originalValue.toLowerCase().trim();
+    if (roomsMapping[key] === undefined) {
+      setRoomsMapping(prev => ({
+        ...prev,
+        [key]: 1 // по умолчанию 1 комната
+      }));
+    }
+  }, [roomsMapping]);
+
   // Валидируем статусы при изменении маппинга колонки статуса
   useEffect(() => {
     // Добавляем debounce для предотвращения множественных вызовов
@@ -206,6 +314,15 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
     return () => clearTimeout(timeoutId);
   }, [columnMapping.status, statusMapping, importedData]);
+
+  // Валидируем комнаты при изменении маппинга колонки комнат
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      validateRooms();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [columnMapping.rooms, roomsMapping, importedData]);
 
   const handleCustomFieldsChange = useCallback((fields: CustomField[]) => {
     setCustomFields(fields);
@@ -238,8 +355,18 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   }, [columnMapping, importedData]);
 
   const createProjectWithData = useCallback(async () => {
-    if (!isValid || !projectData.name.trim()) {
-      toast.error('Пожалуйста, заполните все обязательные поля');
+    if (!isValidWithCustom || !projectData.name.trim()) {
+      let errorMessage = 'Пожалуйста, заполните все обязательные поля';
+      
+      if (statusValidation && statusValidation.invalidCount > 0) {
+        errorMessage += ' и настройте все неизвестные статусы';
+      }
+      
+      if (roomsValidation && roomsValidation.invalidCount > 0) {
+        errorMessage += ' и настройте все неизвестные значения комнат';
+      }
+      
+      toast.error(errorMessage);
       return;
     }
 
@@ -268,6 +395,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         longitude: null,
         slug: null,
         currency: null,
+        min_price: null,
         is_public: false,
         is_featured: false
       });
@@ -320,7 +448,19 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       const apartmentData = importedData.map((row, index) => {
         const floorNumber = parseInt(String(row[columnMapping.floor])) || 1;
         const apartmentNumber = String(row[columnMapping.apartmentNumber] || `${index + 1}`);
-        const rooms = parseInt(String(row[columnMapping.rooms])) || 1;
+        
+        // Используем валидацию комнат
+        let rooms = 1;
+        if (columnMapping.rooms && columnMapping.rooms !== '__none__') {
+          const roomsValue = String(row[columnMapping.rooms] || '').toLowerCase().trim();
+          const mappedRooms = roomsMapping[roomsValue];
+          if (typeof mappedRooms === 'number') {
+            rooms = mappedRooms;
+          } else if (roomsValue) {
+            console.warn(`Неизвестное количество комнат "${roomsValue}" для квартиры ${apartmentNumber}, используется 1`);
+          }
+        }
+        
         const area = parseFloat(String(row[columnMapping.area])) || 0;
         const price = columnMapping.price && columnMapping.price !== '__none__' 
           ? (parseInt(String(row[columnMapping.price])) || 0) 
@@ -339,7 +479,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         }
 
         // Собираем кастомные поля
-        const customFieldsData: Record<string, any> = {};
+        const customFieldsData: Record<string, string | number | boolean> = {};
         customFields.forEach(field => {
           const mappedColumn = columnMapping[field.field_name];
           if (mappedColumn && mappedColumn !== '__none__') {
@@ -351,7 +491,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 value = parseFloat(String(value)) || 0;
                 break;
               case 'boolean':
-                value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'да';
+                value = String(value).toLowerCase() === 'true' || String(value) === '1' || String(value).toLowerCase() === 'да' ? 1 : 0;
                 break;
               default:
                 value = String(value || '');
@@ -428,8 +568,14 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   }, [customFields]);
 
   const isValidWithCustom = useMemo(() => {
-    return allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
-  }, [allRequiredFields, columnMapping]);
+    const basicFieldsValid = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+    
+    // Проверяем, что нет неопознанных значений в статусах и комнатах
+    const statusValid = !statusValidation || statusValidation.invalidCount === 0;
+    const roomsValid = !roomsValidation || roomsValidation.invalidCount === 0;
+    
+    return basicFieldsValid && statusValid && roomsValid;
+  }, [allRequiredFields, columnMapping, statusValidation, roomsValidation]);
 
   if (!tempProjectId) {
     return <div className="p-4 text-center">Инициализация...</div>;
@@ -538,63 +684,72 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         </CardContent>
       </Card>
 
-      {/* Валидация статусов */}
-      {columnMapping.status && columnMapping.status !== '__none__' && (
+      {/* Валидация статусов и комнат */}
+      {((columnMapping.status && columnMapping.status !== '__none__') || 
+        (columnMapping.rooms && columnMapping.rooms !== '__none__')) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Валидация статусов квартир
-              {statusValidation && statusValidation.invalidCount > 0 && (
+              Валидация данных
+              {((statusValidation && statusValidation.invalidCount > 0) || 
+                (roomsValidation && roomsValidation.invalidCount > 0)) && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  {statusValidation.invalidCount} неизвестных
+                  {(statusValidation?.invalidCount || 0) + (roomsValidation?.invalidCount || 0)} неизвестных
                 </Badge>
               )}
             </CardTitle>
             <CardDescription>
-              Настройте соответствие значений статусов из Excel к стандартным статусам
+              Настройте соответствие значений из Excel к стандартным форматам
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {statusValidation && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{statusValidation.validCount}</div>
-                  <div className="text-sm text-gray-600">Валидных статусов</div>
+          <CardContent className="space-y-6">
+            {/* Общая статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {(statusValidation?.validCount || 0) + (roomsValidation?.validCount || 0)}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{statusValidation.invalidCount}</div>
-                  <div className="text-sm text-gray-600">Неизвестных статусов</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{Object.keys(statusValidation.statusDistribution).length}</div>
-                  <div className="text-sm text-gray-600">Уникальных значений</div>
-                </div>
+                <div className="text-sm text-gray-600">Валидных значений</div>
               </div>
-            )}
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">Настройка мапинга статусов</Label>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {(statusValidation?.invalidCount || 0) + (roomsValidation?.invalidCount || 0)}
+                </div>
+                <div className="text-sm text-gray-600">Неизвестных значений</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {(statusValidation ? Object.keys(statusValidation.statusDistribution).length : 0) + 
+                   (roomsValidation ? Object.keys(roomsValidation.roomsDistribution).length : 0)}
+                </div>
+                <div className="text-sm text-gray-600">Уникальных значений</div>
+              </div>
+              <div className="text-center">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowStatusValidation(!showStatusValidation)}
+                  onClick={() => setShowValidation(!showValidation)}
                 >
-                  {showStatusValidation ? 'Скрыть детали' : 'Показать детали'}
+                  {showValidation ? 'Скрыть детали' : 'Показать детали'}
                 </Button>
               </div>
+            </div>
 
-              {showStatusValidation && (
-                <div className="space-y-4 border rounded-lg p-4">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Распределение статусов в данных:</Label>
-                    {statusValidation && Object.entries(statusValidation.statusDistribution).map(([value, count]) => {
-                      const currentMapping = statusMapping[value.toLowerCase()];
-                      const isInvalid = !currentMapping || currentMapping === 'invalid';
-                      
-                      return (
-                        <div key={value} className="flex items-center gap-4 p-3 border rounded-lg bg-white">
+            {showValidation && (
+              <div className="space-y-6 border rounded-lg p-4">
+                {/* Валидация статусов */}
+                {columnMapping.status && columnMapping.status !== '__none__' && statusValidation && (
+                  <div className="space-y-4">
+                    <Label className="text-lg font-semibold">Настройка статусов квартир</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Распределение статусов в данных:</Label>
+                      {Object.entries(statusValidation.statusDistribution).map(([value, count]) => {
+                        const currentMapping = statusMapping[value.toLowerCase()];
+                        const isInvalid = !currentMapping || currentMapping === 'invalid';
+                        
+                        return (
+                          <div key={value} className="flex items-center gap-4 p-3 border rounded-lg bg-white">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">"{value}"</span>
@@ -647,53 +802,188 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                               </SelectContent>
                             </Select>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                          </div>
+                        );
+                      })}
 
-                  <div className="border-t pt-4">
-                    <Label className="text-sm font-medium">Добавить новый мапинг:</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Значение из Excel"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            addCustomStatusMapping(e.currentTarget.value);
-                            e.currentTarget.value = '';
-                          }
-                        }}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                          addCustomStatusMapping(input.value);
-                          input.value = '';
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="border-t pt-4">
+                        <Label className="text-sm font-medium">Добавить новый мапинг статуса:</Label>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            placeholder="Значение из Excel"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomStatusMapping(e.currentTarget.value);
+                                e.currentTarget.value = '';
+                              }
+                            }}
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                              addCustomStatusMapping(input.value);
+                              input.value = '';
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {statusValidation && statusValidation.invalidCount > 0 && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-yellow-800">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span className="font-medium">Внимание!</span>
+                {/* Валидация комнат */}
+                {columnMapping.rooms && columnMapping.rooms !== '__none__' && roomsValidation && (
+                  <div className="space-y-4">
+                    <Label className="text-lg font-semibold">Настройка количества комнат</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Распределение комнат в данных:</Label>
+                      {Object.entries(roomsValidation.roomsDistribution).map(([value, count]) => {
+                        const currentMapping = roomsMapping[value.toLowerCase()];
+                        const isInvalid = currentMapping === undefined || currentMapping === 'invalid';
+                        
+                        return (
+                          <div key={value} className="flex items-center gap-4 p-3 border rounded-lg bg-white">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">"{value}"</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {count} шт.
+                                </Badge>
+                                {isInvalid && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Неизвестное
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ArrowRight className="h-4 w-4 text-gray-400" />
+                              <Select
+                                value={currentMapping === undefined ? 'invalid' : String(currentMapping)}
+                                onValueChange={(mappedValue) => {
+                                  if (mappedValue === 'invalid') {
+                                    updateRoomsMapping(value, 'invalid');
+                                  } else {
+                                    updateRoomsMapping(value, parseInt(mappedValue));
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                                      Студия (0)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="1">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                      1 комната
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-green-500 rounded"></div>
+                                      2 комнаты
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                                      3 комнаты
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="4">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                                      4 комнаты
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="5">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-red-500 rounded"></div>
+                                      5+ комнат
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="invalid">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 bg-gray-500 rounded"></div>
+                                      Игнорировать
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <div className="border-t pt-4">
+                        <Label className="text-sm font-medium">Добавить новый мапинг комнат:</Label>
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            placeholder="Значение из Excel"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                addCustomRoomsMapping(e.currentTarget.value);
+                                e.currentTarget.value = '';
+                              }
+                            }}
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                              addCustomRoomsMapping(input.value);
+                              input.value = '';
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    Обнаружены неизвестные статусы: {statusValidation.invalidStatuses.join(', ')}. 
-                    Квартиры с неизвестными статусами будут импортированы со статусом "Свободна".
-                  </p>
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* Предупреждения */}
+                {statusValidation && statusValidation.invalidCount > 0 && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="font-medium">Внимание по статусам!</span>
+                    </div>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Обнаружены неизвестные статусы: {statusValidation.invalidStatuses.join(', ')}. 
+                      Квартиры с неизвестными статусами будут импортированы со статусом "Свободна".
+                    </p>
+                  </div>
+                )}
+
+                {roomsValidation && roomsValidation.invalidCount > 0 && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="font-medium">Внимание по комнатам!</span>
+                    </div>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Обнаружены неизвестные значения комнат: {roomsValidation.invalidRooms.join(', ')}. 
+                      Квартиры с неизвестными значениями будут импортированы с 1 комнатой.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
