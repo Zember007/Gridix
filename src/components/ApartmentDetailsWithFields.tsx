@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Language } from '@/lib/language-utils';
 
 interface FieldSetting {
   id: string;
@@ -46,7 +47,15 @@ const ApartmentDetailsWithFields = ({
 }: ApartmentDetailsWithFieldsProps) => {
   const [allFields, setAllFields] = useState<FieldSetting[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   useEffect(() => {
     loadAllFields();
@@ -136,7 +145,7 @@ const ApartmentDetailsWithFields = ({
             value={fieldValue || ''}
             onChange={(e) => handleFieldChange(field.field_name, e.target.value, field.is_custom)}
             disabled={readOnly}
-            placeholder={`Введите ${field.field_label.toLowerCase()}`}
+            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
@@ -147,7 +156,7 @@ const ApartmentDetailsWithFields = ({
             value={fieldValue || ''}
             onChange={(e) => handleFieldChange(field.field_name, parseFloat(e.target.value) || 0, field.is_custom)}
             disabled={readOnly}
-            placeholder={`Введите ${field.field_label.toLowerCase()}`}
+            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
@@ -178,7 +187,7 @@ const ApartmentDetailsWithFields = ({
             disabled={readOnly}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`Выберите ${field.field_label.toLowerCase()}`} />
+              <SelectValue placeholder={`${t('apartment.select')} ${getFieldLabel(field).toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Не выбрано</SelectItem>
@@ -200,7 +209,7 @@ const ApartmentDetailsWithFields = ({
               disabled={readOnly}
             />
             <span className="text-sm text-gray-600">
-              {fieldValue ? 'Да' : 'Нет'}
+              {fieldValue ? t('apartment.yes') : t('apartment.no')}
             </span>
           </div>
         );
@@ -211,28 +220,28 @@ const ApartmentDetailsWithFields = ({
   };
 
   if (loading) {
-    return <div className="text-sm text-gray-500">Загрузка полей...</div>;
+    return <div className="text-sm text-gray-500">{t('customFields.loading')}</div>;
   }
 
   if (allFields.length === 0) {
     return (
       <div className="text-sm text-gray-500 italic">
-        Поля не настроены для этого проекта
+        {t('customFields.noFields')}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium text-real-estate-900">Характеристики квартиры</h4>
+      <h4 className="font-medium text-real-estate-900">{t('apartment.additionalFields')}</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {allFields.map((field) => (
           <div key={field.id} className="space-y-2">
             <Label className="flex items-center gap-2">
-              {field.field_label}
+              {getFieldLabel(field)}
               {field.is_required && (
                 <Badge variant="destructive" className="text-xs">
-                  Обязательно
+                  {t('customFields.requiredBadge')}
                 </Badge>
               )}
             </Label>

@@ -50,7 +50,7 @@ export const useFields = (projectId: string) => {
           field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
           is_custom: field.is_custom,
           is_visible: field.is_visible,
-          sort_order: field.sort_order
+          sort_order: field.sort_order,
         })),
         ...customData.map(field => ({
           id: field.id,
@@ -59,7 +59,8 @@ export const useFields = (projectId: string) => {
           field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
           is_custom: true,
           is_visible: field.is_visible !== false,
-          sort_order: field.sort_order || 999
+          sort_order: field.sort_order || 999,
+          field_label_translations: field.field_label_translations || {}
         }))
       ];
 

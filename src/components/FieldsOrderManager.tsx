@@ -7,6 +7,7 @@ import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft } from 'lucide
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Language } from '@/lib/language-utils';
 import CustomFieldsManager from './CustomFieldsManager';
 
 interface CustomField {
@@ -31,7 +32,15 @@ const FieldsOrderManager = ({ projectId, fields, onFieldsChange }: FieldsOrderMa
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -200,7 +209,7 @@ const FieldsOrderManager = ({ projectId, fields, onFieldsChange }: FieldsOrderMa
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{field.field_label}</span>
+                    <span className="font-medium">{getFieldLabel(field)}</span>
                     {field.is_required && (
                       <Badge variant="destructive" className="text-xs">
                         {t('customFields.requiredBadge')}

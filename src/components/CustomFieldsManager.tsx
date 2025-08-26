@@ -11,11 +11,13 @@ import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SUPPORTED_LANGUAGES, LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 
 interface CustomField {
   id?: string;
   field_name: string;
   field_label: string;
+  field_label_translations?: Partial<Record<Language, string>>;
   field_type: 'text' | 'number' | 'select' | 'boolean';
   is_required: boolean;
   field_options?: string[];
@@ -40,11 +42,20 @@ const CustomFieldsManager = ({
   const [editingField, setEditingField] = useState<CustomField | null>(initialEditingField);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: CustomField) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   const [newField, setNewField] = useState<CustomField>({
     field_name: '',
     field_label: '',
+    field_label_translations: {},
     field_type: 'text',
     is_required: false,
     field_options: [],
@@ -66,6 +77,7 @@ const CustomFieldsManager = ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
+        field_label_translations: (field as any).field_label_translations as Partial<Record<Language, string>> || {},
         field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
         is_required: field.is_required,
         field_options: field.field_options as string[] || [],
@@ -117,6 +129,7 @@ const CustomFieldsManager = ({
           .update({
             field_name: fieldName,
             field_label: field.field_label,
+            field_label_translations: field.field_label_translations,
             field_type: field.field_type,
             is_required: field.is_required,
             field_options: field.field_options,
@@ -135,6 +148,7 @@ const CustomFieldsManager = ({
             project_id: projectId,
             field_name: fieldName,
             field_label: field.field_label,
+            field_label_translations: field.field_label_translations,
             field_type: field.field_type,
             is_required: field.is_required,
             field_options: field.field_options,
@@ -151,6 +165,7 @@ const CustomFieldsManager = ({
       setNewField({
         field_name: '',
         field_label: '',
+        field_label_translations: {},
         field_type: 'text',
         is_required: false,
         field_options: [],
@@ -226,6 +241,40 @@ const CustomFieldsManager = ({
         </div>
       </div>
 
+      {/* Переводы названий полей */}
+      <div>
+        <Label>{t('customFields.translations')}</Label>
+        <div className="space-y-2 mt-2">
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <div key={lang} className="flex items-center gap-2">
+              <span className="text-sm w-12 flex items-center gap-1">
+                {LANGUAGE_CONFIG[lang].flag} {LANGUAGE_CONFIG[lang].code.toUpperCase()}
+              </span>
+              <Input
+                value={field.field_label_translations?.[lang] || ''}
+                onChange={(e) => {
+                  const updatedTranslations = {
+                    ...field.field_label_translations,
+                    [lang]: e.target.value
+                  };
+                  const updatedField = { 
+                    ...field, 
+                    field_label_translations: updatedTranslations 
+                  };
+                  if (isNew) {
+                    setNewField(updatedField);
+                  } else {
+                    setEditingField(updatedField);
+                  }
+                }}
+                placeholder={`${t('customFields.fieldNamePlaceholder')} (${LANGUAGE_CONFIG[lang].name})`}
+                className="flex-1"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {field.field_type === 'select' && (
         <div>
           <Label>{t('customFields.options')}</Label>
@@ -279,6 +328,7 @@ const CustomFieldsManager = ({
               setNewField({
                 field_name: '',
                 field_label: '',
+                field_label_translations: {},
                 field_type: 'text',
                 is_required: false,
                 field_options: [],
@@ -320,7 +370,7 @@ const CustomFieldsManager = ({
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div>
-                    <div className="font-medium">{field.field_label}</div>
+                    <div className="font-medium">{getFieldLabel(field)}</div>
                     <div className="text-sm text-gray-500">
                       {field.field_type === 'text' && t('customFields.fieldTypeText')}
                       {field.field_type === 'number' && t('customFields.fieldTypeNumber')}

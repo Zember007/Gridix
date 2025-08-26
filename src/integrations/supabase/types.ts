@@ -281,6 +281,7 @@ export type Database = {
           project_id: string
           sort_order: number
           updated_at: string
+          field_label_translations?: Json | null
         }
         Insert: {
           created_at?: string
@@ -293,6 +294,7 @@ export type Database = {
           project_id: string
           sort_order?: number
           updated_at?: string
+          field_label_translations?: Json | null
         }
         Update: {
           created_at?: string
@@ -305,6 +307,7 @@ export type Database = {
           project_id?: string
           sort_order?: number
           updated_at?: string
+          field_label_translations?: Json | null
         }
         Relationships: [
           {
@@ -329,6 +332,7 @@ export type Database = {
           project_id: string
           sort_order: number
           updated_at: string
+          field_label_translations?: Json | null
         }
         Insert: {
           created_at?: string
@@ -342,6 +346,7 @@ export type Database = {
           project_id: string
           sort_order?: number
           updated_at?: string
+          field_label_translations?: Json | null
         }
         Update: {
           created_at?: string
@@ -355,6 +360,7 @@ export type Database = {
           project_id?: string
           sort_order?: number
           updated_at?: string
+          field_label_translations?: Json | null
         }
         Relationships: [
           {

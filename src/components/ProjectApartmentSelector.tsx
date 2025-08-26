@@ -18,6 +18,7 @@ import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
+import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
@@ -33,10 +34,19 @@ interface ProjectApartmentSelectorProps {
 }
 
 const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(projectId);
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
@@ -62,7 +72,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Загружаем проект только при изменении projectId или cachedProject
   useEffect(() => {
-    console.log('cachedProject', project);
 
     if (project) {
       if (project.currency && isValidCurrency(project.currency)) {
@@ -169,7 +178,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           if (!grouped[key]) grouped[key] = [];
           grouped[key].push({ id: p.id, image_url: p.image_url, description: p.description || undefined, order_index: p.order_index, type: 'layout' });
         });
-        console.log('grouped', grouped);
 
         setPreloadedLayoutPhotosByRooms(grouped);
       } catch (e) {
@@ -639,7 +647,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
                               return (
                                 <div key={field.id} className="text-xs text-gray-500">
-                                  {field.field_label}: {formatFieldValue(value, field.field_type, field.field_name)}
+                                  {getFieldLabel(field)}: {formatFieldValue(value, field.field_type, field.field_name)}
                                 </div>
                               );
                             })}
@@ -658,12 +666,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
                   <div></div>
                   {getVisibleFields().map((field) => (
-                    <div key={field.id}>{
-                      field.is_custom ?
-                        field.field_label
-                        :
-                        t(`project.${field.field_name}`)
-                    }</div>
+                                      <div key={field.id}>{
+                    field.is_custom ?
+                      getFieldLabel(field)
+                      :
+                      t(`project.${field.field_name}`)
+                  }</div>
                   ))}
                 </div>
 
@@ -682,7 +690,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   
                     {getVisibleFields().map((field) => {
                       let value: unknown = null;
-                      console.log(field.field_name);
 
                       if (field.is_custom) {
                         value = getCustomFieldValue(apartment, field.field_name);
@@ -1052,7 +1059,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
                               return (
                                 <div key={field.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                                  <span className="text-sm text-gray-600">{field.field_label}</span>
+                                  <span className="text-sm text-gray-600">{getFieldLabel(field)}</span>
                                   <span className="text-sm font-medium text-gray-900">
                                     {formatFieldValue(value, field.field_type, field.field_name)}
                                   </span>

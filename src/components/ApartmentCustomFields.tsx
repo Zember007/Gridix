@@ -6,11 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Language } from '@/lib/language-utils';
 
 interface CustomField {
   id: string;
   field_name: string;
   field_label: string;
+  field_label_translations?: Partial<Record<Language, string>>;
   field_type: 'text' | 'number' | 'select' | 'boolean';
   is_required: boolean;
   field_options?: string[];
@@ -35,6 +38,15 @@ const ApartmentCustomFields = ({
 }: ApartmentCustomFieldsProps) => {
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: CustomField) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   useEffect(() => {
     loadCustomFields();
@@ -55,6 +67,7 @@ const ApartmentCustomFields = ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
+        field_label_translations: (field as any).field_label_translations as Partial<Record<Language, string>> || {},
         field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
         is_required: field.is_required,
         field_options: field.field_options as string[] || [],
@@ -85,7 +98,7 @@ const ApartmentCustomFields = ({
             value={fieldValue || ''}
             onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
             disabled={readOnly}
-            placeholder={`Введите ${field.field_label.toLowerCase()}`}
+            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
@@ -96,7 +109,7 @@ const ApartmentCustomFields = ({
             value={fieldValue || ''}
             onChange={(e) => handleFieldChange(field.field_name, parseFloat(e.target.value) || 0)}
             disabled={readOnly}
-            placeholder={`Введите ${field.field_label.toLowerCase()}`}
+            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
@@ -108,10 +121,10 @@ const ApartmentCustomFields = ({
             disabled={readOnly}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`Выберите ${field.field_label.toLowerCase()}`} />
+              <SelectValue placeholder={`${t('apartment.select')} ${getFieldLabel(field).toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Не выбрано</SelectItem>
+              <SelectItem value="">{t('apartment.notSelected')}</SelectItem>
               {field.field_options?.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}
@@ -130,7 +143,7 @@ const ApartmentCustomFields = ({
               disabled={readOnly}
             />
             <span className="text-sm text-gray-600">
-              {fieldValue ? 'Да' : 'Нет'}
+              {fieldValue ? t('apartment.yes') : t('apartment.no')}
             </span>
           </div>
         );
@@ -141,28 +154,28 @@ const ApartmentCustomFields = ({
   };
 
   if (loading) {
-    return <div className="text-sm text-gray-500">Загрузка полей...</div>;
+    return <div className="text-sm text-gray-500">{t('customFields.loading')}</div>;
   }
 
   if (customFields.length === 0) {
     return (
       <div className="text-sm text-gray-500 italic">
-        Кастомные поля не настроены для этого проекта
+        {t('customFields.noFields')}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium text-real-estate-900">Дополнительные поля</h4>
+      <h4 className="font-medium text-real-estate-900">{t('apartment.additionalFields')}</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {customFields.map((field) => (
           <div key={field.id} className="space-y-2">
             <Label className="flex items-center gap-2">
-              {field.field_label}
+              {getFieldLabel(field)}
               {field.is_required && (
                 <Badge variant="destructive" className="text-xs">
-                  Обязательно
+                  {t('customFields.requiredBadge')}
                 </Badge>
               )}
             </Label>

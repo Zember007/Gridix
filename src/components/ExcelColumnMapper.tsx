@@ -14,6 +14,8 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectCRUD } from '@/hooks/useProjects';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Language } from '@/lib/language-utils';
 
 interface ImportedRowData {
   [key: string]: string | number | null | undefined;
@@ -75,6 +77,15 @@ interface RoomsValidationResult {
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
   const { user } = useAuth();
   const { createProject } = useProjectCRUD();
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
 
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     apartmentNumber: '',
@@ -580,7 +591,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const allFields = useMemo(() => {
     const fields = { ...fieldLabels };
     customFields.forEach(field => {
-      fields[field.field_name] = field.field_label;
+      fields[field.field_name] = getFieldLabel(field);
     });
     return fields;
   }, [customFields]);

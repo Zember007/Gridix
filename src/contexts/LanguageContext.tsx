@@ -544,6 +544,36 @@ const translations: Translations = {
     en: 'Sold',
     ka: 'გაყიდული'
   },
+  'apartment.enter': {
+    ru: 'Введите',
+    en: 'Enter',
+    ka: 'შეიყვანეთ'
+  },
+  'apartment.select': {
+    ru: 'Выберите',
+    en: 'Select',
+    ka: 'აირჩიეთ'
+  },
+  'apartment.notSelected': {
+    ru: 'Не выбрано',
+    en: 'Not selected',
+    ka: 'არ არის არჩეული'
+  },
+  'apartment.yes': {
+    ru: 'Да',
+    en: 'Yes',
+    ka: 'დიახ'
+  },
+  'apartment.no': {
+    ru: 'Нет',
+    en: 'No',
+    ka: 'არა'
+  },
+  'apartment.additionalFields': {
+    ru: 'Дополнительные поля',
+    en: 'Additional Fields',
+    ka: 'დამატებითი ველები'
+  },
   'apartment.reserved': {
     ru: 'Забронировано',
     en: 'Reserved',
@@ -2206,6 +2236,11 @@ const translations: Translations = {
     ru: 'Нельзя редактировать стандартное поле',
     en: 'Cannot edit built-in field',
     ka: 'სტანდარტული ველის რედაქტირება შეუძლებელია'
+  },
+  'customFields.translations': {
+    ru: 'Переводы',
+    en: 'Translations',
+    ka: 'თარგმანები'
   },
   'customFields.saving': {
     ru: 'Сохранение...',

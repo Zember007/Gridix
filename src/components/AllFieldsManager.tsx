@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Language } from '@/lib/language-utils';
 import CustomFieldsManager from './CustomFieldsManager';
 import { useFields, FieldSetting } from '@/hooks/useFields';
 
@@ -26,7 +27,15 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Функция для получения локализованного названия поля
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language];
+    }
+    return field.field_label;
+  };
   
   const {
     fields,
@@ -176,7 +185,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{field.field_label}</span>
+                    <span className="font-medium">{getFieldLabel(field)}</span>
                     {field.is_custom ? (
                       <Badge variant="secondary" className="text-xs">
                         {t('customFields.custom')}
