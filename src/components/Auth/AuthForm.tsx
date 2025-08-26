@@ -17,6 +17,9 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [showReset, setShowReset] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -58,9 +61,10 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         toast.success('Добро пожаловать!');
         onSuccess?.();
       }
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Произошла ошибка';
       console.error('Auth error:', error);
-      toast.error(error.message || 'Произошла ошибка');
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -76,9 +80,32 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
       });
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Ошибка входа через Google';
       console.error('Google auth error:', error);
-      toast.error(error.message || 'Ошибка входа через Google');
+      toast.error(message);
+    }
+  };
+
+  const handleSendReset = async () => {
+    if (!resetEmail) {
+      toast.error('Введите email');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth?mode=recovery`,
+      });
+      if (error) throw error;
+      toast.success('Письмо для восстановления отправлено');
+      setShowReset(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Не удалось отправить письмо';
+      console.error('Reset email error:', err);
+      toast.error(message);
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -121,6 +148,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                     />
                   </div>
                 </div>
+               
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Пароль</Label>
@@ -231,6 +259,16 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                     : 'Зарегистрироваться'
                 }
               </Button>
+
+              <div className="flex items-center justify-between text-sm">
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setShowReset(true)}
+                  >
+                    Забыли пароль?
+                  </button>
+                </div>
             </form>
 
             <div className="mt-6">
@@ -273,6 +311,36 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {showReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-background rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6 border-b">
+              <h2 className="text-lg font-semibold">Восстановление пароля</h2>
+              <p className="text-sm text-muted-foreground mt-1">Введите email для отправки ссылки</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" type="button" onClick={() => setShowReset(false)}>Отмена</Button>
+                <Button type="button" onClick={handleSendReset} disabled={resetLoading}>
+                  {resetLoading ? 'Отправка...' : 'Отправить ссылку'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

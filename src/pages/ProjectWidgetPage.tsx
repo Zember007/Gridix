@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
 
 
 
@@ -22,11 +23,18 @@ const ProjectWidgetPage = () => {
     );
   }
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const langParam = urlParams.get('lang');
+ 
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex justify-end p-4">
+     {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
+     null
+     :
+     <div className="flex justify-end p-4">
         <LanguageToggle />
-      </div>
+      </div>}
       <ProjectApartmentSelector projectId={projectId}  />
     </div>
   );
