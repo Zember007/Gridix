@@ -171,6 +171,20 @@ export const useProject = (identifier?: string) => {
 
       if (error) throw error;
 
+      // Инициализируем стандартные поля для нового проекта
+      try {
+        const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
+          p_project_id: data.id
+        });
+
+        if (fieldsError) {
+          console.error('Error initializing default fields:', fieldsError);
+          // Не прерываем создание проекта из-за ошибки полей
+        }
+      } catch (fieldsErr) {
+        console.error('Error calling initialize_default_fields:', fieldsErr);
+      }
+
       toast.success('Проект создан');
       return data;
     } catch (err: any) {

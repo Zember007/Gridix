@@ -15,7 +15,6 @@ export interface Project {
   longitude: number | null;
   slug: string | null;
   currency: string | null;
-  min_price: number | null;
   is_public: boolean;
   is_featured: boolean;
   view_count: number;
@@ -241,6 +240,20 @@ export const useProjectsManager = () => {
         .single();
 
       if (error) throw error;
+
+      // Инициализируем стандартные поля для нового проекта
+      try {
+        const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
+          p_project_id: data.id
+        });
+
+        if (fieldsError) {
+          console.error('Error initializing default fields:', fieldsError);
+          // Не прерываем создание проекта из-за ошибки полей
+        }
+      } catch (fieldsErr) {
+        console.error('Error calling initialize_default_fields:', fieldsErr);
+      }
 
       // Очищаем кеш проектов пользователя
       clearProjectsCache({ userId: user.id });

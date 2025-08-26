@@ -395,7 +395,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         longitude: null,
         slug: null,
         currency: null,
-        min_price: null,
         is_public: false,
         is_featured: false
       });
@@ -445,9 +444,23 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       }
 
       // Обрабатываем и вставляем данные квартир
+      const usedApartmentNumbers = new Set<string>();
       const apartmentData = importedData.map((row, index) => {
         const floorNumber = parseInt(String(row[columnMapping.floor])) || 1;
-        const apartmentNumber = String(row[columnMapping.apartmentNumber] || `${index + 1}`);
+        
+        // Обеспечиваем уникальность номеров квартир
+        let baseApartmentNumber = String(row[columnMapping.apartmentNumber] || '').trim();
+        if (!baseApartmentNumber) {
+          baseApartmentNumber = `${index + 1}`;
+        }
+        
+        let apartmentNumber = baseApartmentNumber;
+        let counter = 1;
+        while (usedApartmentNumbers.has(apartmentNumber)) {
+          apartmentNumber = `${baseApartmentNumber}-${counter}`;
+          counter++;
+        }
+        usedApartmentNumbers.add(apartmentNumber);
         
         // Используем валидацию комнат
         let rooms = 1;
@@ -501,6 +514,9 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           }
         });
 
+        if (apartmentNumber !== baseApartmentNumber) {
+          console.log(`Номер квартиры "${baseApartmentNumber}" изменен на "${apartmentNumber}" для избежания дублирования`);
+        }
         console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}, статус ${status}`);
 
         return {
@@ -522,7 +538,13 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         .from('apartments')
         .insert(apartmentData);
 
-      if (apartmentError) throw apartmentError;
+      if (apartmentError) {
+        console.error('Ошибка при создании квартир:', apartmentError);
+        if (apartmentError.code === '23505' && apartmentError.message.includes('apartments_project_id_apartment_number_key')) {
+          throw new Error('Найдены дублирующиеся номера квартир в данных. Проверьте Excel файл на уникальность номеров квартир.');
+        }
+        throw apartmentError;
+      }
 
       // Удаляем временный проект
       if (tempProjectId) {

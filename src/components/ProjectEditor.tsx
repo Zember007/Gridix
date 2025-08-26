@@ -138,6 +138,20 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         if (error) throw error;
         
+        // Инициализируем стандартные поля для нового проекта
+        try {
+          const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
+            p_project_id: data.id
+          });
+
+          if (fieldsError) {
+            console.error('Error initializing default fields:', fieldsError);
+            // Не прерываем создание проекта из-за ошибки полей
+          }
+        } catch (fieldsErr) {
+          console.error('Error calling initialize_default_fields:', fieldsErr);
+        }
+        
         setProject(prev => ({ ...prev, id: data.id }));
         toast.success(t('projectEditor.projectCreated'));
         navigate(`/admin/project/${data.id}`);

@@ -50,7 +50,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       toast.error('Введите ссылку на Excel файл');
       return;
     }
-
+  
     setIsLoading(true);
     try {
       const response = await fetch(excelUrl);
@@ -58,9 +58,17 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       if (!response.ok) {
         throw new Error('Не удалось загрузить файл');
       }
-
+  
       const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      // Добавляем опции для правильного чтения чисел
+      const workbook = XLSX.read(arrayBuffer,  { 
+        type: 'array',
+        cellDates: true,
+        cellNF: true, 
+        cellStyles: true,
+        cellFormula: true,
+        raw: false  ,
+      });
       
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
@@ -82,21 +90,37 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
         toast.error('Не найдены заголовки в первой строке');
         return;
       }
-
+  
+      // Функция для правильного извлечения значения ячейки
+      const getCellValue = (cell: any) => {
+        if (!cell) return '';
+      
+        // если есть отформатированное значение (w) → используем его
+        if (cell.w !== undefined) {
+          // если это строка вида "55,9" → заменим запятую на точку и вернём как number
+          const formatted = cell.w.replace(',', '.');
+          return isNaN(Number(formatted)) ? formatted : Number(formatted);
+        }
+      
+        // иначе возвращаем raw
+        return cell.v;
+      };
+  
       // Читаем данные начиная со второй строки
       const jsonData: any[] = [];
-      for (let row = 2; row <= range.e.r; row++) {
+      for (let row = 2; row <= range.e.r; row++) { // Изменено: читаем все строки, а не только вторую
         const rowData: any = {};
         let hasData = false;
         
         for (let col = 0; col < headers.length; col++) {
-          console.log('col', headers[col]);
-          
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: col + 1 });
           const cell = worksheet[cellAddress];
-          const cellValue = cell ? cell.v : '';
+          const cellValue = getCellValue(cell); // Используем новую функцию
+          
+          console.log(`Row ${row}, Col ${headers[col]}:`, cellValue, cell);
+          
           rowData[headers[col]] = cellValue;
-          if (cellValue) hasData = true;
+          if (cellValue !== '' && cellValue != null) hasData = true;
         }
         
         if (hasData) {
@@ -108,7 +132,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
         toast.error('Файл не содержит данных');
         return;
       }
-
+  
       console.log('Извлеченные заголовки:', headers);
       console.log('Обработанные данные:', jsonData.slice(0, 3));
       
