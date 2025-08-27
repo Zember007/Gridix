@@ -1661,6 +1661,16 @@ const translations: Translations = {
     en: 'Create',
     ka: 'შექმნა'
   },
+  'buildingImage.polygon.save': {
+    ru: 'Сохранить',
+    en: 'Save',
+    ka: 'შენახვა'
+  },
+  'buildingImage.polygon.cancel': {
+    ru: 'Отмена',
+    en: 'Cancel',
+    ka: 'გაუქმება'
+  },
   'buildingImage.polygon.createSuccess': {
     ru: 'Полигон для {floor} этажа создан',
     en: 'Polygon for floor {floor} created',

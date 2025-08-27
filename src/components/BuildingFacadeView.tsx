@@ -330,15 +330,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }
 
   if (!project.building_image_url) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-        <div className="text-center text-gray-500">
-          <Building2 className="h-16 w-16 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Изображение фасада не загружено</h3>
-          <p className="text-sm">Обратитесь к администратору для загрузки изображения</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
 
