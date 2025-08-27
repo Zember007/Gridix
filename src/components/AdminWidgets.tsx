@@ -19,8 +19,7 @@ interface Project {
 
 const AdminWidgets = () => {
   const [selectedProject, setSelectedProject] = useState<string>('all');
-  const [widgetWidth, setWidgetWidth] = useState('100%');
-  const [widgetHeight, setWidgetHeight] = useState('600px');
+
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('ru');
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -38,8 +37,9 @@ const AdminWidgets = () => {
 
     return `<iframe 
   src="${embedUrl}" 
-  width="${widgetWidth}" 
-  height="${widgetHeight}"
+  width="100%" 
+  height="100%"
+  style="height: 100vh; width: 100%;"
   frameborder="0"
   allowfullscreen>
 </iframe>`;
@@ -105,27 +105,7 @@ const AdminWidgets = () => {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="widget-width">{t('adminWidgets.width')}</Label>
-                <Input
-                  id="widget-width"
-                  value={widgetWidth}
-                  onChange={(e) => setWidgetWidth(e.target.value)}
-                  placeholder="100%"
-                />
-              </div>
 
-              <div>
-                <Label htmlFor="widget-height">{t('adminWidgets.height')}</Label>
-                <Input
-                  id="widget-height"
-                  value={widgetHeight}
-                  onChange={(e) => setWidgetHeight(e.target.value)}
-                  placeholder="600px"
-                />
-              </div>
-            </div>
 
             <div>
               <Label htmlFor="default-language">{t('adminWidgets.defaultLanguage')}</Label>

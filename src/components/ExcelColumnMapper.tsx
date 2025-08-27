@@ -177,28 +177,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const requiredFields = useMemo(() => ['apartmentNumber', 'floor', 'rooms', 'area'], []);
 
   // Создаем временный проект для настройки кастомных полей
-  useEffect(() => {
-    createTempProject();
-  }, []);
 
-  const createTempProject = useCallback(async () => {
-    try {
-      const { data: project, error } = await supabase
-        .from('projects')
-        .insert([{
-          name: 'temp_project_' + Date.now(),
-          description: 'Временный проект для настройки импорта',
-          floors: 1
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      setTempProjectId(project.id);
-    } catch (error) {
-      console.error('Error creating temp project:', error);
-    }
-  }, []);
 
   // Status validation functions
   const validateStatuses = useCallback(() => {
