@@ -4,7 +4,7 @@ import { Icon, LatLngBounds } from 'leaflet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
+import { MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
@@ -174,59 +174,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
           })}
         </MapContainer>
 
-        {/* Selected project info panel */}
-        {selectedProject && (
-          <div className="absolute bottom-6 left-6 right-6 md:left-6 md:right-auto md:w-96 z-10">
-            <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    {selectedProject.building_image_url ? (
-                      <img
-                        src={selectedProject.building_image_url}
-                        alt={selectedProject.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                        <Building2 className="h-8 w-8 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {selectedProject.name}
-                    </h3>
-                    
-                    {selectedProject.address && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                        <MapPin className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{selectedProject.address}</span>
-                      </div>
-                    )}
-                    
-                    <div className="text-sm text-gray-600 mb-4">
-                      {selectedProject.min_price ? (
-                        <>ОТ {formatPriceWithCurrency(selectedProject.min_price, selectedProject.currency)}</>
-                      ) : (
-                        <span className="text-gray-400">Цена по запросу</span>
-                      )}
-                    </div>
-                    
-                    <Button
-                      onClick={() => handleViewProject(selectedProject.id)}
-                      className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Смотреть квартиры
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+
       </div>
   );
 };
