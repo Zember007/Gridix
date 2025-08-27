@@ -10,6 +10,8 @@ export interface Project {
   description: string | null;
   address: string | null;
   floors: number;
+  has_parking: boolean;
+  has_commercial: boolean;
   building_image_url: string | null;
   latitude: number | null;
   longitude: number | null;

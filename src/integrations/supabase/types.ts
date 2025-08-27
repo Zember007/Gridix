@@ -144,6 +144,7 @@ export type Database = {
           project_id: string
           rooms: number
           status: string
+          type: Database["public"]["Enums"]["apartment_type"]
           updated_at: string
         }
         Insert: {
@@ -159,6 +160,7 @@ export type Database = {
           project_id: string
           rooms?: number
           status?: string
+          type?: Database["public"]["Enums"]["apartment_type"]
           updated_at?: string
         }
         Update: {
@@ -174,6 +176,7 @@ export type Database = {
           project_id?: string
           rooms?: number
           status?: string
+          type?: Database["public"]["Enums"]["apartment_type"]
           updated_at?: string
         }
         Relationships: [
@@ -434,6 +437,8 @@ export type Database = {
           currency: Database["public"]["Enums"]["currency_type"] | null
           description: string | null
           floors: number
+          has_parking: boolean
+          has_commercial: boolean
           id: string
           is_featured: boolean
           is_public: boolean
@@ -454,6 +459,8 @@ export type Database = {
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
+          has_parking?: boolean
+          has_commercial?: boolean
           id?: string
           is_featured?: boolean
           is_public?: boolean
@@ -474,6 +481,8 @@ export type Database = {
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
+          has_parking?: boolean
+          has_commercial?: boolean
           id?: string
           is_featured?: boolean
           is_public?: boolean
@@ -647,6 +656,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      apartment_type: "apartment" | "commercial" | "parking"
       currency_type: "EUR" | "GEL" | "RUB" | "USD"
     }
     CompositeTypes: {

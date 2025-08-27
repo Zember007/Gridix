@@ -9,6 +9,7 @@ export interface Apartment {
   area: number;
   price: number | null;
   status: 'available' | 'sold' | 'reserved';
+  type: 'apartment' | 'commercial' | 'parking';
   polygon: { x: number; y: number }[];
   custom_fields: Json | null;
   project_id: string;
@@ -22,6 +23,7 @@ export function normalizeApartmentData(data: any): Apartment {
   return {
     ...data,
     status: data.status as 'available' | 'sold' | 'reserved',
+    type: data.type as 'apartment' | 'commercial' | 'parking' || 'apartment',
     polygon: Array.isArray(data.polygon) ? data.polygon as { x: number; y: number }[] : [],
     price: data.price ? Number(data.price) : null,
     area: Number(data.area),

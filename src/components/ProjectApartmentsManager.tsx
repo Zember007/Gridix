@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,8 @@ import ApartmentCustomFields from '@/components/ApartmentCustomFields';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useProject } from '@/hooks/useProjects';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
@@ -40,7 +42,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
+  const [currentType, setCurrentType] = useState<'apartment' | 'commercial' | 'parking'>('apartment');
   const { t } = useLanguage();
+  const { project } = useProject(projectId);
 
   const [newApartment, setNewApartment] = useState<Partial<Apartment>>({
     apartment_number: '',
@@ -49,27 +53,12 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     area: 0,
     price: null,
     status: 'available',
+    type: 'apartment',
     polygon: [],
     custom_fields: {}
   });
 
-  useEffect(() => {
-    loadApartments();
-  }, [projectId]);
-
-  useEffect(() => {
-    // Filter apartments based on search term
-    const filtered = apartments.filter(apartment => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        apartment.apartment_number.toLowerCase().includes(searchLower) ||
-        apartment.status.toLowerCase().includes(searchLower)
-      );
-    });
-    setFilteredApartments(filtered);
-  }, [apartments, searchTerm]);
-
-  const loadApartments = async () => {
+  const loadApartments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('apartments')
@@ -88,7 +77,29 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, t]);
+
+  useEffect(() => {
+    loadApartments();
+  }, [loadApartments]);
+
+  useEffect(() => {
+    // Update newApartment type when currentType changes
+    setNewApartment(prev => ({ ...prev, type: currentType }));
+  }, [currentType]);
+
+  useEffect(() => {
+    // Filter apartments based on search term and type
+    const filtered = apartments.filter(apartment => {
+      const matchesType = apartment.type === currentType;
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = apartment.apartment_number.toLowerCase().includes(searchLower) ||
+        apartment.status.toLowerCase().includes(searchLower);
+      
+      return matchesType && matchesSearch;
+    });
+    setFilteredApartments(filtered);
+  }, [apartments, searchTerm, currentType]);
 
   const handleSaveApartment = async (apartmentData: Partial<Apartment>, isNew: boolean = false) => {
     if (!apartmentData.apartment_number?.trim()) {
@@ -112,7 +123,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         polygon: convertPolygonToDb(apartmentData.polygon || []),
         custom_fields: customFieldsData as Json,
         project_id: projectId,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        type: currentType
       };
 
       if (isNew) {
@@ -410,6 +422,19 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
             className="pl-10"
           />
         </div>
+
+        {/* Type selector tabs */}
+       {(project?.has_commercial || project?.has_parking) && <Tabs value={currentType} onValueChange={(value) => setCurrentType(value as 'apartment' | 'commercial' | 'parking')}>
+          <TabsList className="flex w-full">
+            <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
+            {project?.has_commercial && (
+              <TabsTrigger className="w-full" value="commercial">{t('apartmentsManager.typeCommercial')}</TabsTrigger>
+            )}
+            {project?.has_parking && (
+              <TabsTrigger className="w-full" value="parking">{t('apartmentsManager.typeParking')}</TabsTrigger>
+            )}
+          </TabsList>
+        </Tabs>}
 
         {/* Форма добавления новой квартиры */}
         {isAddingNew && (

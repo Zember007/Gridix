@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
 import { useProject, useProjectCRUD } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
@@ -36,6 +37,8 @@ interface Project {
   description: string;
   address: string;
   floors: number;
+  has_parking: boolean;
+  has_commercial: boolean;
   building_image_url: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -49,6 +52,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     description: '',
     address: '',
     floors: 1,
+    has_parking: false,
+    has_commercial: false,
     building_image_url: null,
     latitude: null,
     longitude: null,
@@ -82,6 +87,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           description: cachedProject.description || '',
           address: cachedProject.address || '',
           floors: cachedProject.floors || 1,
+          has_parking: cachedProject.has_parking || false,
+          has_commercial: cachedProject.has_commercial || false,
           building_image_url: cachedProject.building_image_url,
           latitude: cachedProject.latitude,
           longitude: cachedProject.longitude,
@@ -94,7 +101,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId, user, cachedProject]);
+  }, [user, cachedProject, t]);
 
   useEffect(() => {
     if (!isNew && projectId) {
@@ -120,6 +127,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         description: project.description || null,
         address: project.address || null,
         floors: project.floors,
+        has_parking: project.has_parking,
+        has_commercial: project.has_commercial,
         building_image_url: project.building_image_url,
         latitude: project.latitude,
         longitude: project.longitude,
@@ -139,18 +148,18 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         if (error) throw error;
         
         // Инициализируем стандартные поля для нового проекта
-        try {
-          const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
-            p_project_id: data.id
-          });
+        // try {
+        //   const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
+        //     p_project_id: data.id
+        //   });
 
-          if (fieldsError) {
-            console.error('Error initializing default fields:', fieldsError);
-            // Не прерываем создание проекта из-за ошибки полей
-          }
-        } catch (fieldsErr) {
-          console.error('Error calling initialize_default_fields:', fieldsErr);
-        }
+        //   if (fieldsError) {
+        //     console.error('Error initializing default fields:', fieldsError);
+        //     // Не прерываем создание проекта из-за ошибки полей
+        //   }
+        // } catch (fieldsErr) {
+        //   console.error('Error calling initialize_default_fields:', fieldsErr);
+        // }
         
         setProject(prev => ({ ...prev, id: data.id }));
         toast.success(t('projectEditor.projectCreated'));
@@ -375,6 +384,27 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     value={project.floors}
                     onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
                   />
+                </div>
+                
+                {/* Дополнительные типы помещений */}
+                <div className="space-y-4 ">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="has-parking"
+                      checked={project.has_parking}
+                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_parking: checked }))}
+                    />
+                    <Label htmlFor="has-parking">{t('projectEditor.hasParking')}</Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="has-commercial"
+                      checked={project.has_commercial}
+                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_commercial: checked }))}
+                    />
+                    <Label htmlFor="has-commercial">{t('projectEditor.hasCommercial')}</Label>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>

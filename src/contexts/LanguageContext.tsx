@@ -1053,6 +1053,16 @@ const translations: Translations = {
     en: 'Number of floors',
     ka: 'სართულების რაოდენობა'
   },
+  'projectEditor.hasParking': {
+    ru: 'Паркинг',
+    en: 'Parking',
+    ka: 'პარკინგი'
+  },
+  'projectEditor.hasCommercial': {
+    ru: 'Коммерческие помещения',
+    en: 'Commercial spaces',
+    ka: 'კომერციული ფართები'
+  },
   'projectEditor.buildingImage': {
     ru: 'Изображение здания',
     en: 'Building image',
@@ -1989,6 +1999,26 @@ const translations: Translations = {
     ru: 'Свободна',
     en: 'Available',
     ka: 'ხელმისაწვდომია'
+  },
+  'apartmentsManager.typeApartment': {
+    ru: 'Квартиры',
+    en: 'Apartments',
+    ka: 'ბინები'
+  },
+  'apartmentsManager.typeCommercial': {
+    ru: 'Коммерческие помещения',
+    en: 'Commercial spaces',
+    ka: 'კომერციული ფართები'
+  },
+  'apartmentsManager.typeParking': {
+    ru: 'Паркинг',
+    en: 'Parking',
+    ka: 'პარკინგი'
+  },
+  'apartmentsManager.apartmentType': {
+    ru: 'Тип помещения',
+    en: 'Space type',
+    ka: 'ფართის ტიპი'
   },
   'apartmentsManager.loading': {
     ru: 'Загрузка квартир...',

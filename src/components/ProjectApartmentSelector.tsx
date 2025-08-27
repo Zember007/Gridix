@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -59,6 +60,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+  const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
@@ -88,25 +90,27 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       const { data, error } = await supabase
         .from('apartments')
         // Загружаем только необходимые поля без тяжёлого поля polygon
-        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields')
+        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
         .eq('project_id', projectId);
 
       if (error) throw error;
 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
+      
       setApartments(normalizedApartments);
       setApartmentsLoaded(true);
 
       // Вычисляем диапазоны только один раз
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
-          .map(apt => apt.price || 0)
-          .filter(price => price > 0);
-
+          .map(apt => (apt.price ? apt.price : 0))
+        console.log('prices',prices);
+        
         const areas = normalizedApartments.map(apt => apt.area);
 
         if (prices.length > 0) {
           const minPrice = Math.min(...prices);
+          console.log('minPrice',minPrice);
           const maxPrice = Math.max(...prices);
           setPriceRange([minPrice, maxPrice]);
         }
@@ -265,6 +269,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       }
     }
 
+    if (selectedType !== 'all') {
+      console.log('selectedType',selectedType);
+      filtered = filtered.filter(apt => apt.type === selectedType);
+      console.log('filtered',filtered);
+    }
+
     if (showOnlyAvailable) {
       filtered = filtered.filter(apt => apt.status === 'available');
     }
@@ -284,7 +294,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
 
     return filtered;
-  }, [apartments, selectedFloor, selectedRooms, showOnlyAvailable, priceRange, areaRange, searchQuery, selectedCurrency, project?.currency, convertPrice]);
+  }, [apartments, selectedFloor, selectedRooms, selectedType, showOnlyAvailable, priceRange, areaRange, searchQuery, selectedCurrency, project?.currency, convertPrice]);
 
 
 
@@ -313,7 +323,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Форматируем значение поля для отображения
   const formatFieldValue = useCallback((value: unknown, fieldType: string, fieldName: string) => {
-    if (value === null || value === undefined) return '-';
+    if (value === null || value === undefined || (value === 0 && (selectedType == 'commercial' || selectedType == 'parking'))) return '-';
 
     if (fieldName === 'price') {
       return formatPrice(convertPrice(value as number, project?.currency, selectedCurrency)) + ' ' + getCurrencySymbolSafe(selectedCurrency);
@@ -328,7 +338,11 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
 
     if (fieldName === 'rooms') {
-      return value + ' ' + t('apartment.room').toLowerCase();
+      if(value === 0) {
+        return t('apartment.studio');
+      } else {
+        return value + ' ' + t('apartment.room').toLowerCase();
+      }
     }
 
 
@@ -343,7 +357,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       default:
         return String(value);
     }
-  }, []);
+  }, [selectedCurrency, selectedType]);
 
 
   const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
@@ -352,8 +366,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
     const convertedPrices = apartments
       .map(apt => convertPrice(apt.price || 0, project?.currency, selectedCurrency))
-      .filter(p => p > 0);
-    const areas = apartments.map(apt => apt.area).filter(a => a > 0);
+    const areas = apartments.map(apt => apt.area)
     return {
       minPrice: convertedPrices.length > 0 ? Math.min(...convertedPrices) : 0,
       maxPrice: convertedPrices.length > 0 ? Math.max(...convertedPrices) : 10000000,
@@ -416,6 +429,28 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   {floor} {t('project.floor').toLowerCase()}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Type filter - only show if project has commercial or parking */}
+      {(project?.has_commercial || project?.has_parking) && (
+        <div className="space-y-2">
+          <Label>{t('apartmentsManager.apartmentType')}</Label>
+          <Select value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('project.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+              <SelectItem value="apartment">{t('apartmentsManager.typeApartment')}</SelectItem>
+              {project?.has_commercial && (
+                <SelectItem value="commercial">{t('apartmentsManager.typeCommercial')}</SelectItem>
+              )}
+              {project?.has_parking && (
+                <SelectItem value="parking">{t('apartmentsManager.typeParking')}</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -582,6 +617,22 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           <div className="space-y-6">
             <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
 
+            {/* Type selector tabs - only show if project has commercial or parking */}
+            {(project?.has_commercial || project?.has_parking) && (
+              <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
+                <TabsList className="flex w-full">
+                  <TabsTrigger className="w-full" value="all">{t('project.allTypes')}</TabsTrigger>
+                  <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
+                  {project?.has_commercial && (
+                    <TabsTrigger className="w-full" value="commercial">{t('apartmentsManager.typeCommercial')}</TabsTrigger>
+                  )}
+                  {project?.has_parking && (
+                    <TabsTrigger className="w-full" value="parking">{t('apartmentsManager.typeParking')}</TabsTrigger>
+                  )}
+                </TabsList>
+              </Tabs>
+            )}
+
             {isMobile ? (
               // Mobile card layout
               <div className="space-y-4">
@@ -733,7 +784,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       ) : viewMode === 'map' ?
         <>
           <InteractiveProjectsMap
-            project={project}
+            project={project ? { ...project, min_price: null } : undefined}
             onProjectSelect={() => {
               setViewMode('list');
             }}
