@@ -414,8 +414,9 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               </Tabs>
 
               <div className="text-sm text-real-estate-600 bg-real-estate-50 p-3 rounded-md">
-                <p><strong>Поддерживаемые форматы:</strong> Excel (.xlsx, .xls) и CSV</p>
+                <p><strong>Поддерживаемые форматы:</strong> Excel (.xlsx, .xls), CSV и Google Sheets</p>
                 <p><strong>Необходимые данные:</strong> Номера квартир, этажи, комнаты, площадь, цена, статус</p>
+                <p><strong>Google Sheets:</strong> Любой формат ссылки, автоматическое преобразование и синхронизация</p>
               </div>
             </CardContent>
           </Card>

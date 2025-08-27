@@ -63,7 +63,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
             </div>
             <div>
               <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.rooms')}</h3>
-              <p className="text-lg">{apartment.rooms}</p>
+              <p className="text-lg">{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</p>
             </div>
             <div>
               <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.area')}</h3>

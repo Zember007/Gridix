@@ -158,7 +158,7 @@ const ApartmentDetailsPanel = ({
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Этаж {apartment.floor_number} • {apartment.rooms} комн. • {apartment.area} м²
+                Этаж {apartment.floor_number} • {apartment.rooms === 0 ? 'Студия' : `${apartment.rooms} комн.`} • {apartment.area} м²
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -197,13 +197,24 @@ const ApartmentDetailsPanel = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="rooms">Комнат*</Label>
-                <Input
-                  id="rooms"
-                  type="number"
-                  value={formData.rooms || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, rooms: parseInt(e.target.value) || 1 }))}
-                  min="1"
-                />
+                <Select
+                  value={formData.rooms?.toString() || '0'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, rooms: parseInt(value) || 0 }))}
+                >
+                  <SelectTrigger id="rooms">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">
+                      {t('apartment.studio')}
+                    </SelectItem>
+                    {[1, 2, 3, 4, 5].map(num => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="area">Площадь (м²)*</Label>

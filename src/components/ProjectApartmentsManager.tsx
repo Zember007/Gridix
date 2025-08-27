@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
@@ -21,9 +21,9 @@ interface ProjectApartmentsManagerProps {
 // Helper function to convert database polygon to our type
 const convertPolygonFromDb = (polygon: Json | null): { x: number; y: number }[] => {
   if (!polygon || !Array.isArray(polygon)) return [];
-  return polygon.map((point: any) => ({
-    x: typeof point?.x === 'number' ? point.x : 0,
-    y: typeof point?.y === 'number' ? point.y : 0
+  return polygon.map((point: Json) => ({
+    x: typeof point === 'object' && point !== null && 'x' in point && typeof point.x === 'number' ? point.x : 0,
+    y: typeof point === 'object' && point !== null && 'y' in point && typeof point.y === 'number' ? point.y : 0
   }));
 };
 
@@ -34,16 +34,18 @@ const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
 
 const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const { t } = useLanguage();
 
   const [newApartment, setNewApartment] = useState<Partial<Apartment>>({
     apartment_number: '',
     floor_number: 1,
-    rooms: 1,
+    rooms: 0,
     area: 0,
     price: null,
     status: 'available',
@@ -54,6 +56,18 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   useEffect(() => {
     loadApartments();
   }, [projectId]);
+
+  useEffect(() => {
+    // Filter apartments based on search term
+    const filtered = apartments.filter(apartment => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        apartment.apartment_number.toLowerCase().includes(searchLower) ||
+        apartment.status.toLowerCase().includes(searchLower)
+      );
+    });
+    setFilteredApartments(filtered);
+  }, [apartments, searchTerm]);
 
   const loadApartments = async () => {
     try {
@@ -91,7 +105,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       const saveData = {
         apartment_number: apartmentData.apartment_number.trim(),
         floor_number: apartmentData.floor_number,
-        rooms: apartmentData.rooms || 1,
+        rooms: apartmentData.rooms || 0,
         area: apartmentData.area || 0,
         price: apartmentData.price,
         status: apartmentData.status || 'available',
@@ -117,7 +131,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         setNewApartment({
           apartment_number: '',
           floor_number: 1,
-          rooms: 1,
+          rooms: 0,
           area: 0,
           price: null,
           status: 'available',
@@ -228,20 +242,31 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="rooms">{t('apartmentsManager.rooms')}</Label>
-          <Input
-            id="rooms"
-            type="number"
-            value={apartment.rooms || ''}
-            onChange={(e) => {
-              const value = parseInt(e.target.value) || 1;
+          <Select
+            value={apartment.rooms?.toString() || '0'}
+            onValueChange={(value) => {
+              const roomsValue = parseInt(value) || 0;
               if (isNew) {
-                setNewApartment(prev => ({ ...prev, rooms: value }));
+                setNewApartment(prev => ({ ...prev, rooms: roomsValue }));
               } else {
-                setEditingApartment(prev => prev ? { ...prev, rooms: value } : null);
+                setEditingApartment(prev => prev ? { ...prev, rooms: roomsValue } : null);
               }
             }}
-            min="1"
-          />
+          >
+            <SelectTrigger id="rooms">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">
+                {t('apartment.studio')}
+              </SelectItem>
+              {[1, 2, 3, 4, 5].map(num => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label htmlFor="area">{t('apartmentsManager.area')}</Label>
@@ -375,6 +400,17 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Search field */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder={t('apartmentsManager.searchPlaceholder')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {/* Форма добавления новой квартиры */}
         {isAddingNew && (
           <Card className="border-dashed">
@@ -388,74 +424,84 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         )}
 
         {/* Список существующих квартир */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {apartments.map((apartment) => (
+        <div className="space-y-2">
+          {filteredApartments.map((apartment) => (
             <Card key={apartment.id} className="relative">
               {editingApartment?.id === apartment.id ? (
                 <CardContent className="p-4">
                   {renderApartmentForm(editingApartment)}
                 </CardContent>
               ) : (
-                <>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {t('apartmentsManager.apartment', { number: apartment.apartment_number })}
-                      </CardTitle>
-                      <Badge className={getStatusColor(apartment.status)}>
-                        {getStatusLabel(apartment.status)}
-                      </Badge>
-                    </div>
-                    <CardDescription>
-                      {t('apartmentsManager.floor', { floor: apartment.floor_number })} • {t('apartmentsManager.roomsShort', { rooms: apartment.rooms })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{t('apartmentsManager.area')}:</span>
-                        <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
-                      </div>
-                      {apartment.price && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">{t('apartmentsManager.price')}:</span>
-                          <span>{t('apartmentsManager.priceValue', { price: apartment.price.toLocaleString() })}</span>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">
+                              {t('apartmentsManager.apartment', { number: apartment.apartment_number })}
+                            </h3>
+                            <Badge className={getStatusColor(apartment.status)}>
+                              {getStatusLabel(apartment.status)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} • {apartment.rooms === 0 ? t('apartment.studio') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms })}
+                          </p>
                         </div>
-                      )}
+                        <div className="flex gap-2">
+                          <div className="text-sm">
+                            <span className="text-gray-600">{t('apartmentsManager.area')}: </span>
+                            <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
+                          </div>
+                          {apartment.price && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">{t('apartmentsManager.price')}: </span>
+                              <span>{t('apartmentsManager.priceValue', { price: apartment.price.toLocaleString() })}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingApartment(apartment);
+                              // Загружаем кастомные поля для редактирования
+                              if (apartment.custom_fields && typeof apartment.custom_fields === 'object') {
+                                setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
+                              }
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteApartment(apartment.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingApartment(apartment);
-                          // Загружаем кастомные поля для редактирования
-                          if (apartment.custom_fields && typeof apartment.custom_fields === 'object') {
-                            setCustomFieldsData(apartment.custom_fields as Record<string, any>);
-                          }
-                        }}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteApartment(apartment.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </>
+                  </div>
+                </CardContent>
               )}
             </Card>
           ))}
         </div>
 
-        {apartments.length === 0 && (
+        {filteredApartments.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p>{t('apartmentsManager.noApartments')}</p>
-            <p className="text-sm">{t('apartmentsManager.noApartmentsDesc')}</p>
+            {searchTerm ? (
+              <p>{t('apartmentsManager.noSearchResults')}</p>
+            ) : (
+              <>
+                <p>{t('apartmentsManager.noApartments')}</p>
+                <p className="text-sm">{t('apartmentsManager.noApartmentsDesc')}</p>
+              </>
+            )}
           </div>
         )}
       </CardContent>

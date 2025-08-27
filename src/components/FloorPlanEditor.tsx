@@ -74,7 +74,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     status: 'available' | 'sold' | 'reserved';
   }>({
     number: '',
-    rooms: 1,
+    rooms: 0,
     area: 0,
     price: 0,
     status: 'available'
@@ -616,6 +616,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">
+                      {t('apartment.studio')}
+                    </SelectItem>
                     {[1, 2, 3, 4, 5].map(num => (
                       <SelectItem key={num} value={num.toString()}>
                         {num}
@@ -846,7 +849,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                                 <h4 className="font-semibold">Квартира №{apartment.apartment_number}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                   <span className="text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                                  <span>{apartment.rooms}</span>
+                                  <span>{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</span>
                                   <span className="text-gray-600">{t('floorPlan.apartments.area')}:</span>
                                   <span>{apartment.area} м²</span>
                                   {apartment.price > 0 && (
@@ -911,7 +914,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                <span className="font-medium">{selectedApartment.rooms}</span>
+                <span className="font-medium">{selectedApartment.rooms === 0 ? t('apartment.studio') : selectedApartment.rooms}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{t('floorPlan.apartments.area')}:</span>

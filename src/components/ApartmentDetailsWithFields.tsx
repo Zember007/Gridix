@@ -150,6 +150,30 @@ const ApartmentDetailsWithFields = ({
         );
 
       case 'number':
+        if (field.field_name === 'rooms') {
+          return (
+            <Select
+              value={fieldValue?.toString() || '0'}
+              onValueChange={(value) => handleFieldChange(field.field_name, parseInt(value) || 0, field.is_custom)}
+              disabled={readOnly}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">
+                  {t('apartment.studio')}
+                </SelectItem>
+                {[1, 2, 3, 4, 5].map(num => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        }
+        
         return (
           <Input
             type="number"
@@ -175,6 +199,30 @@ const ApartmentDetailsWithFields = ({
                 <SelectItem value="available">Доступно</SelectItem>
                 <SelectItem value="reserved">Забронировано</SelectItem>
                 <SelectItem value="sold">Продано</SelectItem>
+              </SelectContent>
+            </Select>
+          );
+        }
+        
+        if (field.field_name === 'rooms') {
+          return (
+            <Select
+              value={fieldValue?.toString() || '0'}
+              onValueChange={(value) => handleFieldChange(field.field_name, parseInt(value) || 0, field.is_custom)}
+              disabled={readOnly}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">
+                  {t('apartment.studio')}
+                </SelectItem>
+                {[1, 2, 3, 4, 5].map(num => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           );

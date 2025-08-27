@@ -1824,9 +1824,9 @@ const translations: Translations = {
     ka: 'ფართობი (მ²)'
   },
   'floorPlan.apartments.price': {
-    ru: 'Цена (₽)',
-    en: 'Price (₽)',
-    ka: 'ფასი (₽)'
+    ru: 'Цена',
+    en: 'Price',
+    ka: 'ფასი'
   },
   'floorPlan.apartments.status': {
     ru: 'Статус',
@@ -1885,6 +1885,11 @@ const translations: Translations = {
     en: 'Manage apartments and their characteristics',
     ka: 'ბინების და მათი მახასიათებლების მართვა'
   },
+  'apartmentsManager.searchPlaceholder': {
+    ru: 'Поиск по номеру квартиры или статусу',
+    en: 'Search by apartment number or status',
+    ka: 'ბინის ნომერის ან სტატუსის მიხედვით ძებნა'
+  },
   'apartmentsManager.addApartment': {
     ru: 'Добавить квартиру',
     en: 'Add Apartment',
@@ -1916,9 +1921,9 @@ const translations: Translations = {
     ka: 'ფართობი (მ²)*'
   },
   'apartmentsManager.price': {
-    ru: 'Цена (руб.)',
-    en: 'Price (RUB)',
-    ka: 'ფასი (რუბ.)'
+    ru: 'Цена',
+    en: 'Price',
+    ka: 'ფასი'
   },
   'apartmentsManager.status': {
     ru: 'Статус',
@@ -1956,9 +1961,9 @@ const translations: Translations = {
     ka: '{area} მ²'
   },
   'apartmentsManager.priceValue': {
-    ru: '{price} руб.',
-    en: '{price} RUB',
-    ka: '{price} რუბ.'
+    ru: '{price}',
+    en: '{price}',
+    ka: '{price}'
   },
   'apartmentsManager.sold': {
     ru: 'Продана',
