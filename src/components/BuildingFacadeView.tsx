@@ -258,7 +258,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
     
     // Переводим проценты полигона в пиксели
-    const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth;
+    const polygonLeftPx = svgLeft + (polygonBounds.minX );
     const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
     
     setSelectedFloor(floorNumber);
