@@ -641,9 +641,22 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <Building2 className="h-6 w-6 text-gray-400" />
-                          </div>
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        {(() => {
+                          const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                          const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                          const first = photos[0];
+                          return first ? (
+                            <img 
+                              src={first.image_url} 
+                              alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <Building2 className="h-8 w-8 text-gray-400" />
+                          );
+                        })()}
+                      </div>
                         </div>
                         <div className="flex-grow space-y-1">
                           <div className="flex items-center justify-between">
@@ -733,8 +746,21 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
                     onClick={() => setSelectedApartment(apartment)}>
                     <div className="flex items-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Building2 className="h-8 w-8 text-gray-400" />
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        {(() => {
+                          const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                          const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                          const first = photos[0];
+                          return first ? (
+                            <img 
+                              src={first.image_url} 
+                              alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <Building2 className="h-8 w-8 text-gray-400" />
+                          );
+                        })()}
                       </div>
                     </div>
                    
