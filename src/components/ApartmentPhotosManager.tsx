@@ -161,26 +161,47 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       if (!currentApartment) return;
 
       const apartmentNumber = currentApartment.apartment_number;
-      const baseNumber = apartmentNumber.replace(/^\d+/, '');
       
-      const similarApartments = apartments.filter(apt => 
-        apt.apartment_number.endsWith(baseNumber) && 
-        apt.id !== selectedApartment
-      );
+      // Извлекаем номер квартиры (последние 2 цифры)
+      const roomNumber = apartmentNumber.slice(-2);
+      
+      // Находим квартиры с таким же номером на других этажах
+      const similarApartments = apartments.filter(apt => {
+        const aptNumber = apt.apartment_number;
+        const aptRoomNumber = aptNumber.slice(-2);
+        
+        // Проверяем, что номер квартиры совпадает и это не та же квартира
+        return aptRoomNumber === roomNumber && apt.id !== selectedApartment;
+      });
 
       const duplicatePromises = similarApartments.map(async (apartment) => {
-        const photoPromises = photos.map(async (photo) => {
-          return supabase
-            .from('apartment_photos')
-            .insert({
-              apartment_id: apartment.id,
-              image_url: photo.image_url,
-              description: photo.description,
-              order_index: photo.order_index
-            });
-        });
-        
-        await Promise.all(photoPromises);
+        // Получаем существующие URL фотографий для целевой квартиры,
+        // чтобы не вставлять дубликаты при повторном дублировании
+        const { data: existingPhotos, error: existingError } = await supabase
+          .from('apartment_photos')
+          .select('image_url')
+          .eq('apartment_id', apartment.id);
+
+        if (existingError) throw existingError;
+
+        const existingUrls = new Set((existingPhotos || []).map(p => p.image_url));
+
+        const photosToInsert = photos.filter(p => !existingUrls.has(p.image_url));
+
+        if (photosToInsert.length === 0) return;
+
+        const insertPayload = photosToInsert.map(photo => ({
+          apartment_id: apartment.id,
+          image_url: photo.image_url,
+          description: photo.description,
+          order_index: photo.order_index
+        }));
+
+        const { error: insertError } = await supabase
+          .from('apartment_photos')
+          .insert(insertPayload);
+
+        if (insertError) throw insertError;
       });
 
       await Promise.all(duplicatePromises);
