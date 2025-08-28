@@ -44,15 +44,6 @@ const AdminWidgets = () => {
   frameborder="0"
   allowfullscreen>
 </iframe>
-<script>
-  const iframe = document.getElementById("gridix-widget");
-
-  window.addEventListener("message", (event) => {
-    if (event.data.height) {
-      iframe.style.height = event.data.height + "px";
-    }
-  });
-</script>
 `;
   };
 

@@ -12,25 +12,7 @@ const ProjectWidgetPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useLanguage();
 
-  useEffect(() => {
-    function sendHeight() {
-      const height = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
-      );
-  
-      window.parent.postMessage(
-        { type: "IFRAME_HEIGHT", height },
-        "*" // лучше вместо "*" указать точный origin родителя
-      );
-    }
-  
-    window.onload = sendHeight;
-    window.onresize = sendHeight;
-  
-    // На случай динамического контента
-    new ResizeObserver(sendHeight).observe(document.body);
-  }, []);
+
   
 
   if (!projectId) {
