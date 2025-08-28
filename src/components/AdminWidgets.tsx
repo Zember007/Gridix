@@ -28,7 +28,7 @@ const AdminWidgets = () => {
   const generateEmbedCode = () => {
     const baseUrl = window.location.origin;
     let embedUrl = '';
-    
+
     if (selectedProject === 'all') {
       embedUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
@@ -36,13 +36,24 @@ const AdminWidgets = () => {
     }
 
     return `<iframe 
+  id="gridix-widget"
   src="${embedUrl}" 
   width="100%" 
   height="100%"
   style="height: 100vh; width: 100%;"
   frameborder="0"
   allowfullscreen>
-</iframe>`;
+</iframe>
+<script>
+  const iframe = document.getElementById("gridix-widget");
+
+  window.addEventListener("message", (event) => {
+    if (event.data.height) {
+      iframe.style.height = event.data.height + "px";
+    }
+  });
+</script>
+`;
   };
 
   const copyEmbedCode = () => {
@@ -53,7 +64,7 @@ const AdminWidgets = () => {
   const openPreview = () => {
     const baseUrl = window.location.origin;
     let previewUrl = '';
-    
+
     if (selectedProject === 'all') {
       previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
