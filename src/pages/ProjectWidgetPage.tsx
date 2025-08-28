@@ -4,12 +4,33 @@ import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
+import { useEffect } from "react";
 
 
 
 const ProjectWidgetPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    function sendHeight() {
+      const height = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+  
+      window.parent.postMessage(
+        { type: "IFRAME_HEIGHT", height },
+        "*" // лучше вместо "*" указать точный origin родителя
+      );
+    }
+  
+    window.onload = sendHeight;
+    window.onresize = sendHeight;
+  
+    // На случай динамического контента
+    new ResizeObserver(sendHeight).observe(document.body);
+  }, []);
   
 
   if (!projectId) {
@@ -26,6 +47,7 @@ const ProjectWidgetPage = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const langParam = urlParams.get('lang');
  
+
 
   return (
     <div className="min-h-screen bg-background">
