@@ -258,7 +258,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
     
     // Переводим проценты полигона в пиксели
-    const polygonLeftPx = svgLeft + (polygonBounds.minX );
+    const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
     const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
     
     setSelectedFloor(floorNumber);
@@ -298,28 +298,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   };
 
   // Close popup when clicking outside
-  const handleContainerClick = (event: React.MouseEvent) => {
-    if (showPopup && event.target === event.currentTarget) {
-      setShowPopup(false);
-    }
-  };
+
 
 
   // Находим границы всех полигонов для масштабирования
-  const getPolygonBounds = () => {
-    let minX = 100, minY = 100, maxX = 0, maxY = 0;
-    buildingFloors.forEach(floor => {
-      if (floor.polygon && floor.polygon.length > 0) {
-        floor.polygon.forEach(point => {
-          minX = Math.min(minX, point.x);
-          minY = Math.min(minY, point.y);
-          maxX = Math.max(maxX, point.x);
-          maxY = Math.max(maxY, point.y);
-        });
-      }
-    });
-    return { minX, minY, maxX, maxY };
-  };
+
 
   if (loading) {
     return (
