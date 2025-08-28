@@ -12,10 +12,12 @@ import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import PolygonEditor from './polygon-editor/PolygonEditor';
+import ApartmentCustomFields from './ApartmentCustomFields';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import type { Json } from '@/integrations/supabase/types';
 
 interface Point {
   x: number;
@@ -30,6 +32,7 @@ interface Apartment {
   price: number;
   status: 'available' | 'sold' | 'reserved';
   polygon: Point[];
+  custom_fields: Json | null;
 }
 
 interface PolygonSettings {
@@ -79,6 +82,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     price: 0,
     status: 'available'
   });
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPolygonEditor, setShowPolygonEditor] = useState(false);
@@ -87,7 +91,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
@@ -149,7 +154,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         area: Number(apt.area),
         price: Number(apt.price) || 0,
         status: apt.status as 'available' | 'sold' | 'reserved',
-        polygon: Array.isArray(apt.polygon) ? apt.polygon as unknown as Point[] : []
+        polygon: Array.isArray(apt.polygon) ? apt.polygon as unknown as Point[] : [],
+        custom_fields: apt.custom_fields as Json | null
       }));
 
       setApartments(transformedApartments);
@@ -203,10 +209,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const uploadImage = async (file: File) => {
     // Проверяем аутентификацию пользователя
     if (!user) {
       toast.error(t('floorPlan.upload.authRequired'));
@@ -270,6 +273,40 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadImage(file);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        await uploadImage(file);
+      } else {
+        toast.error(t('floorPlan.upload.invalidFileType'));
+      }
+    }
+  };
+
   const duplicateToAllFloors = async () => {
     if (!imageUrl && apartments.length === 0) {
       toast.error(t('floorPlan.duplicate.noData'));
@@ -316,7 +353,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             .select('id, apartment_number')
             .eq('project_id', projectId)
             .eq('floor_number', targetFloor);
-          
+
           // Создаем Map для быстрого поиска по номеру квартиры
           const existingApartmentsMap = new Map(
             existingApartments?.map(apt => [apt.apartment_number, apt.id]) || []
@@ -326,7 +363,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             // Генерируем номер квартиры для целевого этажа
             let targetApartmentNumber: string;
             const originalNumber = apt.apartment_number;
-            
+
             // Если номер уже начинается с номера этажа, заменяем этаж
             if (originalNumber.startsWith(floorNumber.toString())) {
               const apartmentPart = originalNumber.substring(floorNumber.toString().length);
@@ -338,7 +375,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
             // Проверяем, существует ли апартамент с таким номером на целевом этаже
             const existingApartmentId = existingApartmentsMap.get(targetApartmentNumber);
-            
+
             if (existingApartmentId) {
               // Обновляем только polygon существующего апартамента
               try {
@@ -394,6 +431,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           status: apartment.status
         });
         setEditingPolygon(apartment.polygon);
+        // Загружаем кастомные поля
+        if (apartment.custom_fields && typeof apartment.custom_fields === 'object' && !Array.isArray(apartment.custom_fields)) {
+          setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
+        } else {
+          setCustomFieldsData({});
+        }
         setShowPolygonEditor(true);
       }
     }
@@ -418,7 +461,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any
+            polygon: points as any,
+            custom_fields: customFieldsData as Json
           })
           .select()
           .single();
@@ -432,7 +476,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           area: Number(data.area),
           price: Number(data.price),
           status: data.status as 'available' | 'sold' | 'reserved',
-          polygon: points
+          polygon: points,
+          custom_fields: data.custom_fields as Json | null
         }]);
       } else {
         const existingApartment = apartments.find(apt => apt.id === editingApartment);
@@ -446,7 +491,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any
+            polygon: points as any,
+            custom_fields: customFieldsData as Json
           })
           .eq('id', existingApartment.id);
 
@@ -454,7 +500,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
         setApartments(prev => prev.map(apt =>
           apt.id === existingApartment.id
-            ? { ...apt, ...apartmentData, polygon: points }
+            ? { ...apt, ...apartmentData, polygon: points, custom_fields: customFieldsData as Json }
             : apt
         ));
       }
@@ -499,6 +545,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       price: 0,
       status: 'available'
     });
+    setCustomFieldsData({});
   };
 
   const polygonToPath = (polygon: Point[]) => {
@@ -584,8 +631,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
-            {editingApartment === 'new' 
-              ? t('floorPlan.apartments.newApartment') 
+            {editingApartment === 'new'
+              ? t('floorPlan.apartments.newApartment')
               : t('floorPlan.apartments.editApartment', { number: apartmentData.number })
             }
           </h3>
@@ -665,6 +712,21 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           </CardContent>
         </Card>
 
+        {/* Кастомные поля */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-md">{t('apartment.additionalFields')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ApartmentCustomFields
+              projectId={projectId}
+              apartmentId={editingApartment === 'new' ? undefined : editingApartment}
+              customFieldsData={customFieldsData}
+              onCustomFieldsChange={setCustomFieldsData}
+            />
+          </CardContent>
+        </Card>
+
         <PolygonEditor
           imageUrl={imageUrl}
           existingPolygons={editingPolygon}
@@ -679,6 +741,14 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   return (
     <TooltipProvider>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Input
+          id="floor-image"
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          disabled={loading}
+          className="hidden"
+        />
         {/* Main editor */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between">
@@ -722,26 +792,50 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           </div>
 
           {/* Image Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-md">{t('floorPlan.upload.title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="floor-image">{t('floorPlan.upload.floorPlan', { floor: floorNumber })}</Label>
-                  <Input
-                    id="floor-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={loading}
-                  />
+          {!imageUrl && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-md">{t('floorPlan.upload.title')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label>{t('floorPlan.upload.floorPlan', { floor: floorNumber })}</Label>
+
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
+                      <div className="text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-gray-900">
+                            {t('floorPlan.upload.dragDrop')}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {t('floorPlan.upload.orClickToSelect')}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="mt-4"
+                          onClick={() => document.getElementById('floor-image')?.click()}
+                          disabled={loading}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {t('floorPlan.upload.selectImage')}
+                        </Button>
+                      </div>
+                    </div>
+
+
+                  </div>
+                  {loading && <p className="text-sm text-gray-600">{t('floorPlan.upload.loading')}</p>}
                 </div>
-                {loading && <p className="text-sm text-gray-600">{t('floorPlan.upload.loading')}</p>}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Apartment Controls */}
           <Card>
@@ -801,17 +895,47 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           {imageUrl && (
             <Card>
               <CardContent className="p-6">
-                <div className="relative inline-block max-w-full">
+                <div
+                  className="relative inline-block max-w-full"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <img
                     src={imageUrl}
                     alt={`Floor ${floorNumber} plan`}
-                    className="max-w-full max-h-[600px] object-contain rounded-lg"
+                    className={`max-w-full max-h-[600px] object-contain rounded-lg transition-all duration-200 ${isDragOver ? 'opacity-50 scale-95' : ''
+                      }`}
                     onLoad={() => console.log('Floor plan image loaded successfully')}
                     onError={(e) => {
                       console.error('Floor plan image failed to load:', e);
                       toast.error(t('floorPlan.image.loadError'));
                     }}
                   />
+
+                  {/* Drag Overlay */}
+                  {isDragOver && (
+                    <div className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center">
+                      <div className="text-center text-blue-700">
+                        <Upload className="mx-auto h-8 w-8 mb-2" />
+                        <p className="text-sm font-medium">{t('floorPlan.upload.dropToReplace')}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Change Image Button */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => document.getElementById('floor-image')?.click()}
+                      disabled={loading}
+                      className="bg-white/90 hover:bg-white shadow-md"
+                      title={t('floorPlan.upload.changeImage')}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <svg
                     className="absolute top-0 left-0 w-full h-full"
                     viewBox="0 0 100 100"

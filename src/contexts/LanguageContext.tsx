@@ -1748,6 +1748,46 @@ const translations: Translations = {
     en: 'Authentication required to upload floor plans',
     ka: 'სართულების გეგმების ატვირთვისთვის ავტორიზაცია საჭიროა'
   },
+  'floorPlan.upload.imageUploaded': {
+    ru: 'Изображение загружено',
+    en: 'Image uploaded',
+    ka: 'სურათი ატვირთულია'
+  },
+  'floorPlan.upload.clickToChange': {
+    ru: 'Нажмите, чтобы сменить изображение',
+    en: 'Click to change image',
+    ka: 'დააჭირეთ სურათის შესაცვლელად'
+  },
+  'floorPlan.upload.changeImage': {
+    ru: 'Сменить изображение',
+    en: 'Change Image',
+    ka: 'სურათის შეცვლა'
+  },
+  'floorPlan.upload.dragDrop': {
+    ru: 'Перетащите изображение сюда',
+    en: 'Drag and drop image here',
+    ka: 'გადაიტანეთ სურათი აქ'
+  },
+  'floorPlan.upload.orClickToSelect': {
+    ru: 'или нажмите для выбора файла',
+    en: 'or click to select file',
+    ka: 'ან დააჭირეთ ფაილის არჩევისთვის'
+  },
+  'floorPlan.upload.selectImage': {
+    ru: 'Выбрать изображение',
+    en: 'Select Image',
+    ka: 'სურათის არჩევა'
+  },
+  'floorPlan.upload.invalidFileType': {
+    ru: 'Пожалуйста, выберите файл изображения',
+    en: 'Please select an image file',
+    ka: 'გთხოვთ აირჩიოთ სურათის ფაილი'
+  },
+  'floorPlan.upload.dropToReplace': {
+    ru: 'Отпустите для замены изображения',
+    en: 'Drop to replace image',
+    ka: 'გადააგდეთ სურათის შესაცვლელად'
+  },
   'floorPlan.apartments.title': {
     ru: 'Управление квартирами',
     en: 'Apartment Management',
