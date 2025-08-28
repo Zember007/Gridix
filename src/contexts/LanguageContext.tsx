@@ -1893,6 +1893,46 @@ const translations: Translations = {
     en: 'Status',
     ka: 'სტატუსი'
   },
+  'floorPlan.apartments.photos': {
+    ru: 'Фотографии',
+    en: 'Photos',
+    ka: 'ფოტოები'
+  },
+  'floorPlan.apartments.uploadMultiplePhotos': {
+    ru: 'Выберите несколько изображений для загрузки',
+    en: 'Select multiple images to upload',
+    ka: 'ატვირთვისთვის რამდენიმე სურათი აირჩიეთ'
+  },
+  'floorPlan.apartments.noPhotos': {
+    ru: 'Нет фотографий',
+    en: 'No photos',
+    ka: 'ფოტოები არ არის'
+  },
+  'floorPlan.apartments.noPhotosDesc': {
+    ru: 'Загрузите фотографии квартиры',
+    en: 'Upload apartment photos',
+    ka: 'ბინის ფოტოები ატვირთეთ'
+  },
+  'floorPlan.apartments.photoUploadSuccess': {
+    ru: 'Фотографии успешно загружены',
+    en: 'Photos uploaded successfully',
+    ka: 'ფოტოები წარმატებით ატვირთულია'
+  },
+  'floorPlan.apartments.photoUploadError': {
+    ru: 'Ошибка загрузки фотографий',
+    en: 'Error uploading photos',
+    ka: 'ფოტოების ატვირთვის შეცდომა'
+  },
+  'floorPlan.apartments.photoDeleteSuccess': {
+    ru: 'Фотография удалена',
+    en: 'Photo deleted',
+    ka: 'ფოტო წაშლილია'
+  },
+  'floorPlan.apartments.photoDeleteError': {
+    ru: 'Ошибка удаления фотографии',
+    en: 'Error deleting photo',
+    ka: 'ფოტოს წაშლის შეცდომა'
+  },
   'floorPlan.settings.title': {
     ru: 'Настройки полигонов этажа {floor}',
     en: 'Floor {floor} Polygon Settings',

@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Plus, Trash2, Edit3, Settings, X, Copy } from 'lucide-react';
+import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
@@ -22,6 +22,14 @@ import type { Json } from '@/integrations/supabase/types';
 interface Point {
   x: number;
   y: number;
+}
+
+interface ApartmentPhoto {
+  id: string;
+  apartment_id: string;
+  image_url: string;
+  description?: string;
+  order_index: number;
 }
 
 interface Apartment {
@@ -92,6 +100,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [apartmentPhotos, setApartmentPhotos] = useState<ApartmentPhoto[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   const { user } = useAuth();
   const { project } = useProject(projectId);
@@ -273,6 +283,96 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
+  const loadApartmentPhotos = async (apartmentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('apartment_photos')
+        .select('*')
+        .eq('apartment_id', apartmentId)
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      
+      setApartmentPhotos(data || []);
+    } catch (error) {
+      console.error('Error loading apartment photos:', error);
+    }
+  };
+
+  const handleApartmentPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !editingApartment || editingApartment === 'new') return;
+
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      toast.error(t('floorPlan.upload.authRequired'));
+      return;
+    }
+
+    setUploadingPhotos(true);
+    try {
+      const uploadPromises = Array.from(files).map(async (file, index) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${editingApartment}-${Date.now()}-${index}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('project-images')
+          .upload(`apartments/${fileName}`, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-images')
+          .getPublicUrl(`apartments/${fileName}`);
+
+        const { error: insertError } = await supabase
+          .from('apartment_photos')
+          .insert({
+            apartment_id: editingApartment,
+            image_url: publicUrl,
+            order_index: apartmentPhotos.length + index
+          });
+
+        if (insertError) throw insertError;
+      });
+
+      await Promise.all(uploadPromises);
+      toast.success(t('floorPlan.apartments.photoUploadSuccess'));
+      loadApartmentPhotos(editingApartment);
+    } catch (error) {
+      console.error('Error uploading apartment photos:', error);
+      toast.error(t('floorPlan.apartments.photoUploadError'));
+    } finally {
+      setUploadingPhotos(false);
+    }
+  };
+
+  const handleDeleteApartmentPhoto = async (photoId: string, imageUrl: string) => {
+    try {
+      const { error: dbError } = await supabase
+        .from('apartment_photos')
+        .delete()
+        .eq('id', photoId);
+
+      if (dbError) throw dbError;
+
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        await supabase.storage
+          .from('project-images')
+          .remove([`apartments/${fileName}`]);
+      }
+
+      toast.success(t('floorPlan.apartments.photoDeleteSuccess'));
+      if (editingApartment && editingApartment !== 'new') {
+        loadApartmentPhotos(editingApartment);
+      }
+    } catch (error) {
+      console.error('Error deleting apartment photo:', error);
+      toast.error(t('floorPlan.apartments.photoDeleteError'));
+    }
+  };
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -437,6 +537,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         } else {
           setCustomFieldsData({});
         }
+        // Загружаем фото апартамента
+        loadApartmentPhotos(apartmentId);
         setShowPolygonEditor(true);
       }
     }
@@ -546,6 +648,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       status: 'available'
     });
     setCustomFieldsData({});
+    setApartmentPhotos([]);
   };
 
   const polygonToPath = (polygon: Point[]) => {
@@ -643,7 +746,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
                 <Input
@@ -709,23 +812,69 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Кастомные поля */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-md">{t('apartment.additionalFields')}</CardTitle>
-          </CardHeader>
-          <CardContent>
             <ApartmentCustomFields
               projectId={projectId}
               apartmentId={editingApartment === 'new' ? undefined : editingApartment}
               customFieldsData={customFieldsData}
               onCustomFieldsChange={setCustomFieldsData}
             />
+
+            {/* Секция управления фото апартамента */}
+            {editingApartment && editingApartment !== 'new' && (
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  <Label className="text-sm font-medium">{t('floorPlan.apartments.photos')}</Label>
+                </div>
+                
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleApartmentPhotoUpload}
+                    disabled={uploadingPhotos}
+                    className="mb-2"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('floorPlan.apartments.uploadMultiplePhotos')}
+                  </p>
+                </div>
+
+                {apartmentPhotos.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-muted rounded-lg">
+                    <ImageIcon className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">{t('floorPlan.apartments.noPhotos')}</p>
+                    <p className="text-xs">{t('floorPlan.apartments.noPhotosDesc')}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {apartmentPhotos.map((photo) => (
+                      <div key={photo.id} className="relative group">
+                        <img
+                          src={photo.image_url}
+                          alt={photo.description || 'Фото квартиры'}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                          onClick={() => handleDeleteApartmentPhoto(photo.id, photo.image_url)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
+
+
 
         <PolygonEditor
           imageUrl={imageUrl}
