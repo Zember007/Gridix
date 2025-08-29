@@ -22,7 +22,12 @@ jobs:
           port: 22
           script: |
             cd /var/www/floorplan-wizard-builder/
+
+             export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use 22
+
             git stash
             git pull
-            /root/.nvm/versions/node/v22.18.0/bin/npm install
-            /root/.nvm/versions/node/v22.18.0/bin/npm run build
+            npm install
+            npm run build
