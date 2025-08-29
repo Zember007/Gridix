@@ -51,7 +51,7 @@ const AdminWidgets = () => {
     window.addEventListener("message", (event) => {
         
         if (event.data.type === "IFRAME_HEIGHT") {
-            iframe!.style.height = event.data.height + "px";
+            iframe.style.height = event.data.height + "px";
         }
     });
 </script>

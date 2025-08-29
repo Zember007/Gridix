@@ -29,7 +29,7 @@ interface ApartmentCustomFieldsProps {
   readOnly?: boolean;
 }
 
-const ApartmentCustomFields = ({ 
+const  ApartmentCustomFields = ({ 
   projectId, 
   apartmentId,
   customFieldsData, 
@@ -89,6 +89,7 @@ const ApartmentCustomFields = ({
   };
 
   const renderField = (field: CustomField) => {
+    
     const fieldValue = customFieldsData[field.field_name];
 
     switch (field.field_type) {
@@ -116,15 +117,15 @@ const ApartmentCustomFields = ({
       case 'select':
         return (
           <Select
-            value={fieldValue || ''}
-            onValueChange={(value) => handleFieldChange(field.field_name, value)}
+            value={fieldValue || 'not-selected'}
+            onValueChange={(value) => handleFieldChange(field.field_name, value === 'not-selected' ? '' : value)}
             disabled={readOnly}
           >
             <SelectTrigger>
               <SelectValue placeholder={`${t('apartment.select')} ${getFieldLabel(field).toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('apartment.notSelected')}</SelectItem>
+              <SelectItem value="not-selected">{t('apartment.notSelected')}</SelectItem>
               {field.field_options?.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}
