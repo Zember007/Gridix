@@ -49,24 +49,56 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       const filtersHeight = filtersRef.current.offsetHeight;
       const margin = isMobile ? 10 : 20;
       const newHeight = window.innerHeight - filtersHeight - margin;
+  
       const minHeight = isMobile ? 300 : 400;
-      setContainerHeight(Math.max(newHeight, minHeight));
+      const maxHeight = isMobile ? 800 : 1200; // 👈 верхний предел
+  
+      setContainerHeight(
+        Math.min(Math.max(newHeight, minHeight), maxHeight)
+      );
     } else {
       const collapsedHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
       setContainerHeight(collapsedHeight);
     }
   }, [isExpanded, filtersRef, isMobile]);
+  
 
   const updateImageDimensions = useCallback(() => {
-    if (!imgRef.current || !containerRef.current) return;
-    const img = imgRef.current;
+    const imgEl = imgRef.current;
+    const containerEl = containerRef.current;
+    if (!imgEl || !containerEl) return;
+    if (imgEl.naturalHeight === 0) return;
+  
+    // высота фильтров/отступы (если используешь)
     const filtersHeight = filtersRef?.current ? filtersRef.current.offsetHeight : 0;
-    const newHeight = Math.max(0, window.innerHeight - filtersHeight - 20);
-    if (img.naturalHeight === 0) return;
-    const height_res = newHeight;
-    const width_res = (img.naturalWidth / img.naturalHeight) * newHeight;
-    setImgDimensions({ width: width_res, height: height_res });
-  }, [filtersRef]);
+    const margin = 20;
+  
+    // Используем containerHeight (который ты вычисляешь в updateHeight)
+    // Если его нет — падаем back на window.innerHeight - filters - margin
+    const baseHeight = typeof containerHeight === "number"
+      ? containerHeight
+      : Math.max(0, window.innerHeight - filtersHeight - margin);
+  
+    // Можно учесть паддинги контейнера, если нужно:
+    const containerPaddingTop = parseFloat(getComputedStyle(containerEl).paddingTop) || 0;
+    const containerPaddingBottom = parseFloat(getComputedStyle(containerEl).paddingBottom) || 0;
+    let availableHeight = Math.max(0, baseHeight - containerPaddingTop - containerPaddingBottom);
+  
+    // Считаем пропорции по натуральному соотношению
+    const aspect = imgEl.naturalWidth / imgEl.naturalHeight;
+    let width = Math.round(aspect * availableHeight);
+    let height = Math.round(availableHeight);
+  
+    // Ограничиваем ширину контейнером, чтобы не выходила боком
+    const containerWidth = containerEl.clientWidth || Infinity;
+    if (width > containerWidth) {
+      width = containerWidth;
+      height = Math.round(containerWidth / aspect);
+    }
+  
+    setImgDimensions({ width, height });
+  }, [imgRef, containerRef, filtersRef, containerHeight]);
+  
 
   useEffect(() => {
     loadBuildingFloors();

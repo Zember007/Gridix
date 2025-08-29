@@ -13,11 +13,30 @@ const ProjectWidgetPage = () => {
   const { t } = useLanguage();
 
 
+  useEffect(() => {
+    function sendHeight() {
+      const height =   document.body.scrollHeight
+
+      console.log('Height:', height,
+        document.documentElement.scrollHeight);
+  
+      window.parent.postMessage(
+        { type: "IFRAME_HEIGHT", height },
+        "*" // лучше вместо "*" указать точный origin родителя
+      );
+    }
+  
+    window.onload = sendHeight;
+    window.onresize = sendHeight;
+  
+    // На случай динамического контента
+    new ResizeObserver(sendHeight).observe(document.body);
+  }, []);
   
 
   if (!projectId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-full bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground mb-2">{t('project.notFound')}</h1>
           <p className="text-muted-foreground">{t('project.invalidId')}</p>
@@ -32,7 +51,7 @@ const ProjectWidgetPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-full bg-background">
      {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
      null
      :

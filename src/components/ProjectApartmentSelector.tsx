@@ -385,7 +385,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-full bg-white flex items-center justify-center">
         <div className="text-center">
           <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
           <p className="text-gray-600">{t('project.loading')}</p>
@@ -533,7 +533,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   );
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-full bg-white flex flex-col">
       {/* Top header bar - always visible */}
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 md:px-6 py-4">

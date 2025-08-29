@@ -24,9 +24,25 @@ interface Project {
 }
 
 const EmbedProjectsPage = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId: routeUserId } = useParams<{ userId: string }>();
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const { t } = useLanguage();
+  
+  // Пытаемся получить userId из URL параметров или query string для совместимости с iframe
+  const userId = routeUserId || (() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('userId') || undefined;
+  })();
+  
+  // Добавляем отладочную информацию для диагностики
+  console.log('Debug EmbedProjectsPage:', {
+    routeUserId,
+    queryUserId: new URLSearchParams(window.location.search).get('userId'),
+    finalUserId: userId,
+    currentURL: window.location.href,
+    pathname: window.location.pathname,
+    search: window.location.search
+  });
   
   // Используем объединенный оптимизированный хук
   const { projects, loading, error, userExists } = useProjectsWithPrices(userId);
@@ -52,6 +68,17 @@ const EmbedProjectsPage = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('embed.userNotFound')}</h1>
           <p className="text-gray-600">{t('embed.userNotFoundDesc')}</p>
+          {/* Отладочная информация для разработки */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
+              <strong>Debug Info:</strong><br/>
+              Route userId: {routeUserId || 'undefined'}<br/>
+              Query userId: {new URLSearchParams(window.location.search).get('userId') || 'undefined'}<br/>
+              Final userId: {userId || 'undefined'}<br/>
+              Current URL: {window.location.href}<br/>
+              User exists: {userExists?.toString() || 'null'}
+            </div>
+          )}
         </div>
       </div>
     );
