@@ -283,7 +283,7 @@ const CustomFieldsManager = ({
             rows={3}
             value={field.field_options?.join('\n') || ''}
             onChange={(e) => {
-              const options = e.target.value.split('\n').filter(opt => opt.trim());
+              const options = e.target.value.split('\n');
               const updatedField = { ...field, field_options: options };
               if (isNew) {
                 setNewField(updatedField);
