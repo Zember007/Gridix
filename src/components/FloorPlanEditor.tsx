@@ -13,10 +13,12 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import PolygonEditor from './polygon-editor/PolygonEditor';
 import ApartmentCustomFields from './ApartmentCustomFields';
+import ApartmentSyncDialog from './ApartmentSyncDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { Apartment as GlobalApartment } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 
 interface Point {
@@ -102,6 +104,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [isDragOver, setIsDragOver] = useState(false);
   const [apartmentPhotos, setApartmentPhotos] = useState<ApartmentPhoto[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncSourceApartment, setSyncSourceApartment] = useState<GlobalApartment | null>(null);
+  const [syncTargetApartments, setSyncTargetApartments] = useState<GlobalApartment[]>([]);
 
   const { user } = useAuth();
   const { project } = useProject(projectId);
@@ -256,7 +261,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           .from('floor_plans')
           .update({
             image_url: newImageUrl,
-            polygon_settings: polygonSettings as any
+            polygon_settings: polygonSettings as unknown as Json
           })
           .eq('id', existingPlan.id);
 
@@ -268,7 +273,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             project_id: projectId,
             floor_number: floorNumber,
             image_url: newImageUrl,
-            polygon_settings: polygonSettings as any
+            polygon_settings: polygonSettings as unknown as Json
           });
 
         if (insertError) throw insertError;
@@ -431,7 +436,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               .from('floor_plans')
               .update({
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as any
+                polygon_settings: polygonSettings as unknown as Json
               })
               .eq('id', existingPlan.id);
           } else {
@@ -441,7 +446,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 project_id: projectId,
                 floor_number: targetFloor,
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as any
+                polygon_settings: polygonSettings as unknown as Json
               });
           }
         }
@@ -563,7 +568,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any,
+            polygon: points as unknown as Json,
             custom_fields: customFieldsData as Json
           })
           .select()
@@ -593,7 +598,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
-            polygon: points as any,
+            polygon: points as unknown as Json,
             custom_fields: customFieldsData as Json
           })
           .eq('id', existingApartment.id);
@@ -686,14 +691,13 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       baseOpacity = hoverOpacity;
     }
 
-    let style: React.CSSProperties = {
+    const style: React.CSSProperties = {
       fillOpacity: baseOpacity,
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      ...(isHovered && polygonSettings.hoverEffects.glow ? {
+        filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))'
+      } : {})
     };
-
-    if (isHovered && polygonSettings.hoverEffects.glow) {
-      style.filter = 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))';
-    }
 
     return style;
   };
@@ -705,6 +709,89 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const handleApartmentClick = (apartment: Apartment) => {
     if (editingApartment) return;
     setSelectedApartment(apartment);
+  };
+
+  const openSyncDialog = (sourceApartment: Apartment) => {
+    // Найти все квартиры с такой же площадью и количеством комнат
+    const targetApartments = apartments.filter(apt => 
+      apt.id !== sourceApartment.id && 
+      apt.area === sourceApartment.area && 
+      apt.rooms === sourceApartment.rooms
+    );
+
+    if (targetApartments.length === 0) {
+      toast.error('Нет квартир с такой же площадью и количеством комнат для синхронизации');
+      return;
+    }
+
+    // Преобразовать в глобальный тип для диалога
+    const globalSourceApartment: GlobalApartment = {
+      ...sourceApartment,
+      floor_number: floorNumber,
+      type: 'apartment' as const,
+      project_id: projectId,
+      created_at: '',
+      updated_at: '',
+      floor_plan_id: null
+    };
+
+    const globalTargetApartments: GlobalApartment[] = targetApartments.map(apt => ({
+      ...apt,
+      floor_number: floorNumber,
+      type: 'apartment' as const,
+      project_id: projectId,
+      created_at: '',
+      updated_at: '',
+      floor_plan_id: null
+    }));
+
+    setSyncSourceApartment(globalSourceApartment);
+    setSyncTargetApartments(globalTargetApartments);
+    setSyncDialogOpen(true);
+  };
+
+  const handleSyncComplete = (updatedApartments: GlobalApartment[]) => {
+    // Обновить локальное состояние
+    setApartments(prev => 
+      prev.map(apt => {
+        const updated = updatedApartments.find(updApt => updApt.id === apt.id);
+        if (updated) {
+          return {
+            id: updated.id,
+            apartment_number: updated.apartment_number,
+            rooms: updated.rooms,
+            area: updated.area,
+            price: updated.price || 0,
+            status: updated.status,
+            polygon: updated.polygon,
+            custom_fields: updated.custom_fields
+          };
+        }
+        return apt;
+      })
+    );
+
+    // Сбросить состояние диалога
+    setSyncSourceApartment(null);
+    setSyncTargetApartments([]);
+  };
+
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'sold': return 'bg-red-100 text-red-800';
+      case 'reserved': return 'bg-yellow-100 text-yellow-800';
+      case 'available': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'sold': return t('floorPlan.apartments.sold');
+      case 'reserved': return t('floorPlan.apartments.reserved');
+      case 'available': return t('floorPlan.apartments.available');
+      default: return status;
+    }
   };
 
   if (showSettings) {
@@ -1018,6 +1105,15 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => openSyncDialog(apartment)}
+                            disabled={!!editingApartment}
+                            title="Синхронизировать с квартирами той же площади и планировки"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => startEditingApartment(apartment.id)}
                             disabled={!!editingApartment}
                           >
@@ -1199,7 +1295,17 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
                 </div>
               )}
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t space-y-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openSyncDialog(selectedApartment)}
+                  className="w-full"
+                  disabled={!!editingApartment}
+                >
+                  <Copy className="h-3 w-3 mr-1" />
+                  Синхронизировать
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -1215,6 +1321,17 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           </Card>
         )}
       </div>
+
+      {/* Диалог синхронизации */}
+      <ApartmentSyncDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        sourceApartment={syncSourceApartment}
+        targetApartments={syncTargetApartments}
+        onSyncComplete={handleSyncComplete}
+        getStatusColor={getStatusColorClass}
+        getStatusLabel={getStatusLabel}
+      />
     </TooltipProvider>
   );
 };

@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit2, Trash2, Save, X, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Search, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
+import ApartmentSyncDialog from '@/components/ApartmentSyncDialog';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,6 +44,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   const [searchTerm, setSearchTerm] = useState('');
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const [currentType, setCurrentType] = useState<'apartment' | 'commercial' | 'parking'>('apartment');
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncSourceApartment, setSyncSourceApartment] = useState<Apartment | null>(null);
+  const [syncTargetApartments, setSyncTargetApartments] = useState<Apartment[]>([]);
   const { t } = useLanguage();
   const { project } = useProject(projectId);
 
@@ -212,6 +216,39 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       case 'available': return t('apartmentsManager.available');
       default: return status;
     }
+  };
+
+  const openSyncDialog = (sourceApartment: Apartment) => {
+    // Найти все квартиры с такой же площадью и количеством комнат
+    const targetApartments = apartments.filter(apt => 
+      apt.id !== sourceApartment.id && 
+      apt.area === sourceApartment.area && 
+      apt.rooms === sourceApartment.rooms &&
+      apt.type === sourceApartment.type
+    );
+
+    if (targetApartments.length === 0) {
+      toast.error('Нет квартир с такой же площадью и количеством комнат для синхронизации');
+      return;
+    }
+
+    setSyncSourceApartment(sourceApartment);
+    setSyncTargetApartments(targetApartments);
+    setSyncDialogOpen(true);
+  };
+
+  const handleSyncComplete = (updatedApartments: Apartment[]) => {
+    // Обновить локальное состояние
+    setApartments(prev => 
+      prev.map(apt => {
+        const updated = updatedApartments.find(updApt => updApt.id === apt.id);
+        return updated || apt;
+      })
+    );
+
+    // Сбросить состояние диалога
+    setSyncSourceApartment(null);
+    setSyncTargetApartments([]);
   };
 
   const renderApartmentForm = (apartment: Partial<Apartment>, isNew: boolean = false) => (
@@ -487,6 +524,14 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                           )}
                         </div>
                         <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openSyncDialog(apartment)}
+                            title="Синхронизировать данные с квартирами той же площади и планировки"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -530,6 +575,17 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           </div>
         )}
       </CardContent>
+
+      {/* Диалог синхронизации */}
+      <ApartmentSyncDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        sourceApartment={syncSourceApartment}
+        targetApartments={syncTargetApartments}
+        onSyncComplete={handleSyncComplete}
+        getStatusColor={getStatusColor}
+        getStatusLabel={getStatusLabel}
+      />
     </Card>
   );
 };
