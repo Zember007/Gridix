@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, Image as ImageIcon } from 'lucide-react';
+import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
@@ -620,6 +620,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
+  
+
   const handlePolygonCancel = () => {
     resetEditing();
   };
@@ -774,6 +776,57 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     // Сбросить состояние диалога
     setSyncSourceApartment(null);
     setSyncTargetApartments([]);
+  };
+
+  const handleDuplicateApartment = async (apartment: Apartment) => {
+    try {
+      // Генерируем новый номер квартиры с префиксом "Copy"
+      const duplicateNumber = `Copy ${apartment.apartment_number}`;
+      
+      // Проверяем, существует ли уже квартира с таким номером
+      let finalNumber = duplicateNumber;
+      let counter = 1;
+      while (apartments.some(apt => apt.apartment_number === finalNumber)) {
+        finalNumber = `${duplicateNumber} (${counter})`;
+        counter++;
+      }
+
+      const { data, error } = await supabase
+        .from('apartments')
+        .insert({
+          project_id: projectId,
+          floor_number: floorNumber,
+          apartment_number: finalNumber,
+          rooms: apartment.rooms,
+          area: apartment.area,
+          price: apartment.price,
+          status: apartment.status,
+          polygon: apartment.polygon as unknown as Json,
+          custom_fields: apartment.custom_fields as Json
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Добавляем новую квартиру в локальное состояние
+      const newApartment: Apartment = {
+        id: data.id,
+        apartment_number: data.apartment_number,
+        rooms: data.rooms,
+        area: Number(data.area),
+        price: Number(data.price),
+        status: data.status as 'available' | 'sold' | 'reserved',
+        polygon: data.polygon as unknown as Point[],
+        custom_fields: data.custom_fields as Json | null
+      };
+      
+      setApartments(prev => [...prev, newApartment]);
+      toast.success(`Квартира продублирована как "${finalNumber}"`);
+    } catch (error) {
+      console.error('Error duplicating apartment:', error);
+      toast.error('Ошибка при дублировании квартиры');
+    }
   };
 
   const getStatusColorClass = (status: string) => {
@@ -1105,11 +1158,20 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleDuplicateApartment(apartment)}
+                            disabled={!!editingApartment}
+                            title="Дублировать квартиру"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => openSyncDialog(apartment)}
                             disabled={!!editingApartment}
                             title="Синхронизировать с квартирами той же площади и планировки"
                           >
-                            <Copy className="h-3 w-3" />
+                            <RefreshCw className="h-3 w-3" />
                           </Button>
                           <Button
                             size="sm"
@@ -1299,11 +1361,21 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => openSyncDialog(selectedApartment)}
+                  onClick={() => handleDuplicateApartment(selectedApartment)}
                   className="w-full"
                   disabled={!!editingApartment}
                 >
                   <Copy className="h-3 w-3 mr-1" />
+                  Дублировать
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openSyncDialog(selectedApartment)}
+                  className="w-full"
+                  disabled={!!editingApartment}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
                   Синхронизировать
                 </Button>
                 <Button

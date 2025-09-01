@@ -160,18 +160,13 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
       const currentApartment = apartments.find(apt => apt.id === selectedApartment);
       if (!currentApartment) return;
 
-      const apartmentNumber = currentApartment.apartment_number;
+      const currentArea = currentApartment.area;
+      const currentRooms = currentApartment.rooms;
       
-      // Извлекаем номер квартиры (последние 2 цифры)
-      const roomNumber = apartmentNumber.slice(-2);
-      
-      // Находим квартиры с таким же номером на других этажах
+      // Находим квартиры с такой же площадью и количеством комнат
       const similarApartments = apartments.filter(apt => {
-        const aptNumber = apt.apartment_number;
-        const aptRoomNumber = aptNumber.slice(-2);
-        
-        // Проверяем, что номер квартиры совпадает и это не та же квартира
-        return aptRoomNumber === roomNumber && apt.id !== selectedApartment;
+        // Проверяем, что площадь и количество комнат совпадают, и это не та же квартира
+        return apt.area === currentArea && apt.rooms === currentRooms && apt.id !== selectedApartment;
       });
 
       const duplicatePromises = similarApartments.map(async (apartment) => {
