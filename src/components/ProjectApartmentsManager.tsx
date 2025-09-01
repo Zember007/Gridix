@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit2, Trash2, Save, X, Search, Copy } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
@@ -249,6 +249,52 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     // Сбросить состояние диалога
     setSyncSourceApartment(null);
     setSyncTargetApartments([]);
+  };
+
+  const handleDuplicateApartment = async (apartment: Apartment) => {
+    try {
+      // Генерируем новый номер квартиры с префиксом "Копия"
+      const duplicateNumber = `Copy ${apartment.apartment_number}`;
+      
+      // Проверяем, существует ли уже квартира с таким номером
+      let finalNumber = duplicateNumber;
+      let counter = 1;
+      while (apartments.some(apt => apt.apartment_number === finalNumber)) {
+        finalNumber = `${duplicateNumber} (${counter})`;
+        counter++;
+      }
+
+      const duplicateData = {
+        apartment_number: finalNumber,
+        floor_number: apartment.floor_number,
+        rooms: apartment.rooms,
+        area: apartment.area,
+        price: apartment.price,
+        status: apartment.status,
+        polygon: convertPolygonToDb(apartment.polygon || []),
+        custom_fields: apartment.custom_fields as Json,
+        project_id: projectId,
+        type: apartment.type,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('apartments')
+        .insert([duplicateData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Добавляем новую квартиру в локальное состояние
+      const newApt = normalizeApartmentData(data);
+      setApartments(prev => [...prev, newApt]);
+      
+      toast.success(`Квартира продублирована как "${finalNumber}"`);
+    } catch (error) {
+      console.error('Error duplicating apartment:', error);
+      toast.error('Ошибка при дублировании квартиры');
+    }
   };
 
   const renderApartmentForm = (apartment: Partial<Apartment>, isNew: boolean = false) => (
@@ -524,13 +570,21 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                           )}
                         </div>
                         <div className="flex gap-2">
-                        <Button
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDuplicateApartment(apartment)}
+                            title="Дублировать квартиру"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
                             variant="outline"
                             size="sm"
                             onClick={() => openSyncDialog(apartment)}
                             title="Синхронизировать данные с квартирами той же площади и планировки"
                           >
-                            <Copy className="h-4 w-4" />
+                            <RefreshCw className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="outline"
