@@ -80,12 +80,12 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const { t, language } = useLanguage();
 
   // Функция для получения локализованного названия поля
-  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+  const getFieldLabel = useCallback((field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
     if (field.field_label_translations && field.field_label_translations[language]) {
       return field.field_label_translations[language];
     }
     return field.field_label;
-  };
+  }, [language]);
 
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({
     apartmentNumber: '',
@@ -103,7 +103,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   });
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
-  const [tempProjectId, setTempProjectId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const { navigate } = useLanguageNavigation();
 
@@ -177,7 +176,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const requiredFields = useMemo(() => ['apartmentNumber', 'floor', 'rooms', 'area'], []);
 
   // Создаем временный проект для настройки кастомных полей
-
 
   // Status validation functions
   const validateStatuses = useCallback(() => {
@@ -303,7 +301,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [columnMapping.status, statusMapping, importedData]);
+  }, [validateStatuses]);
 
   // Валидируем комнаты при изменении маппинга колонки комнат
   useEffect(() => {
@@ -312,7 +310,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [columnMapping.rooms, roomsMapping, importedData]);
+  }, [validateRooms]);
 
   const handleCustomFieldsChange = useCallback((fields: CustomField[]) => {
     setCustomFields(fields);
@@ -331,7 +329,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
   const isValid = useMemo(() => {
     return requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
-  }, [columnMapping]);
+  }, [columnMapping, requiredFields]);
 
   const handleMappingChange = useCallback((field: keyof ColumnMapping, value: string) => {
     setColumnMapping(prev => ({ ...prev, [field]: value }));
@@ -379,6 +377,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         name: projectData.name.trim(),
         description: projectData.description.trim() || null,
         floors: Math.max(maxFloor, projectData.floors),
+        has_parking: false,
+        has_commercial: false,
         address: null,
         building_image_url: null,
         latitude: null,
@@ -392,8 +392,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       if (!project) throw new Error('Failed to create project');
       console.log('Проект создан:', project);
 
-      // Копируем кастомные поля из временного проекта в реальный
-      if (customFields.length > 0 && tempProjectId) {
+      // Сохраняем кастомные поля в реальный проект
+      if (customFields.length > 0) {
         const customFieldsData = customFields.map(field => ({
           project_id: project.id,
           field_name: field.field_name,
@@ -536,10 +536,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         throw apartmentError;
       }
 
-      // Удаляем временный проект
-      if (tempProjectId) {
-        await supabase.from('projects').delete().eq('id', tempProjectId);
-      }
+      // Временный проект больше не используется
 
       // Группируем квартиры по этажам для отчета
       const apartmentsByFloor = apartmentData.reduce((acc, apt) => {
@@ -564,7 +561,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     } finally {
       setIsCreating(false);
     }
-  }, [isValid, projectData.name, columnMapping, importedData, customFields, tempProjectId, createProject, navigate]);
+  }, [projectData.name, projectData.description, projectData.floors, columnMapping, importedData, customFields, roomsMapping, roomsValidation, statusMapping, statusValidation, createProject, navigate]);
 
   // Объединяем стандартные поля и кастомные поля для маппинга
   const allFields = useMemo(() => {
@@ -573,11 +570,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       fields[field.field_name] = getFieldLabel(field);
     });
     return fields;
-  }, [customFields]);
+  }, [customFields, fieldLabels, getFieldLabel]);
 
   const allRequiredFields = useMemo(() => {
     return [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
-  }, [customFields]);
+  }, [customFields, requiredFields]);
 
   const isValidWithCustom = useMemo(() => {
     const basicFieldsValid = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
@@ -589,9 +586,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     return basicFieldsValid && statusValid && roomsValid;
   }, [allRequiredFields, columnMapping, statusValidation, roomsValidation]);
 
-  if (!tempProjectId) {
-    return <div className="p-4 text-center">Инициализация...</div>;
-  }
+  // Режим без временного проекта: сразу показываем интерфейс
 
   return (
     <div className="space-y-6">
@@ -642,7 +637,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       {/* Настройка кастомных полей */}
       <CustomFieldsManager 
-        projectId={tempProjectId}
+        projectId={null}
         onFieldsChange={handleCustomFieldsChange}
       />
 

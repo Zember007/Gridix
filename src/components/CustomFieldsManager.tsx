@@ -26,7 +26,7 @@ interface CustomField {
 }
 
 interface CustomFieldsManagerProps {
-  projectId: string;
+  projectId?: string | null;
   onFieldsChange?: (fields: CustomField[]) => void;
   editingField?: CustomField | null;
   onClose?: () => void;
@@ -64,6 +64,12 @@ const CustomFieldsManager = ({
   });
 
   const loadCustomFields = useCallback(async () => {
+    if (!projectId) {
+      setFields([]);
+      onFieldsChange?.([]);
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('project_custom_fields')
@@ -73,14 +79,26 @@ const CustomFieldsManager = ({
 
       if (error) throw error;
 
-      const formattedFields = data.map(field => ({
+      type DbCustomFieldRow = {
+        id: string;
+        field_name: string;
+        field_label: string;
+        field_label_translations?: Partial<Record<Language, string>> | null;
+        field_type: 'text' | 'number' | 'select' | 'boolean';
+        is_required: boolean;
+        field_options?: string[] | null;
+        sort_order?: number | null;
+        is_visible?: boolean | null;
+      };
+
+      const formattedFields = (data as DbCustomFieldRow[]).map(field => ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
-        field_label_translations: (field as any).field_label_translations as Partial<Record<Language, string>> || {},
-        field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
+        field_label_translations: field.field_label_translations || {},
+        field_type: field.field_type,
         is_required: field.is_required,
-        field_options: field.field_options as string[] || [],
+        field_options: field.field_options || [],
         sort_order: field.sort_order || 0,
         is_visible: field.is_visible !== false
       }));
@@ -122,7 +140,22 @@ const CustomFieldsManager = ({
     const fieldName = field.field_name || generateFieldName(field.field_label);
     
     try {
-      if (field.id) {
+      if (!projectId) {
+        // Локальный режим: сохраняем только в памяти
+        if (field.id) {
+          setFields(prev => prev.map(f => f.id === field.id ? { ...field, field_name: fieldName } : f));
+        } else {
+          const localField: CustomField = {
+            ...field,
+            id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            field_name: fieldName,
+            sort_order: field.sort_order || fields.length,
+            is_visible: field.is_visible ?? true
+          };
+          setFields(prev => [...prev, localField]);
+        }
+        toast.success(t('customFields.saveSuccess'));
+      } else if (field.id) {
         // Обновление существующего поля
         const { error } = await supabase
           .from('project_custom_fields')
@@ -172,7 +205,11 @@ const CustomFieldsManager = ({
         sort_order: 0,
         is_visible: true
       });
-      loadCustomFields();
+      if (!projectId) {
+        onFieldsChange?.(fields.map(f => ({ ...f })));
+      } else {
+        loadCustomFields();
+      }
     } catch (error) {
       console.error('Error saving field:', error);
       toast.error(t('customFields.saveError'));
@@ -181,6 +218,12 @@ const CustomFieldsManager = ({
 
   const handleDeleteField = async (fieldId: string) => {
     try {
+      if (!projectId) {
+        setFields(prev => prev.filter(f => f.id !== fieldId));
+        onFieldsChange?.(fields.filter(f => f.id !== fieldId));
+        toast.success(t('customFields.deleteSuccess'));
+        return;
+      }
       const { error } = await supabase
         .from('project_custom_fields')
         .delete()
