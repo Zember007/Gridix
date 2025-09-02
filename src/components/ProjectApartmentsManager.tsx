@@ -335,34 +335,36 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="rooms">{t('apartmentsManager.rooms')}</Label>
-          <Select
-            value={apartment.rooms?.toString() || '0'}
-            onValueChange={(value) => {
-              const roomsValue = parseInt(value) || 0;
-              if (isNew) {
-                setNewApartment(prev => ({ ...prev, rooms: roomsValue }));
-              } else {
-                setEditingApartment(prev => prev ? { ...prev, rooms: roomsValue } : null);
-              }
-            }}
-          >
-            <SelectTrigger id="rooms">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">
-                {t('apartment.studio')}
-              </SelectItem>
-              {[1, 2, 3, 4, 5].map(num => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num}
+        {currentType === 'apartment' && (
+          <div>
+            <Label htmlFor="rooms">{t('apartmentsManager.rooms')}</Label>
+            <Select
+              value={apartment.rooms?.toString() || '0'}
+              onValueChange={(value) => {
+                const roomsValue = parseInt(value) || 0;
+                if (isNew) {
+                  setNewApartment(prev => ({ ...prev, rooms: roomsValue }));
+                } else {
+                  setEditingApartment(prev => prev ? { ...prev, rooms: roomsValue } : null);
+                }
+              }}
+            >
+              <SelectTrigger id="rooms">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">
+                  {t('apartment.studio')}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+                {[1, 2, 3, 4, 5].map(num => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div>
           <Label htmlFor="area">{t('apartmentsManager.area')}</Label>
           <Input
@@ -428,12 +430,14 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         </div>
       </div>
 
-      <ApartmentCustomFields
-        projectId={projectId}
-        apartmentId={apartment.id}
-        customFieldsData={customFieldsData}
-        onCustomFieldsChange={setCustomFieldsData}
-      />
+      {currentType === 'apartment' && (
+        <ApartmentCustomFields
+          projectId={projectId}
+          apartmentId={apartment.id}
+          customFieldsData={customFieldsData}
+          onCustomFieldsChange={setCustomFieldsData}
+        />
+      )}
 
       <div className="flex gap-2 pt-4 border-t">
         <Button
@@ -554,7 +558,13 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} • {apartment.rooms === 0 ? t('apartment.studio') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms })}
+                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} • 
+                            {apartment.type === 'apartment' 
+                              ? (apartment.rooms === 0 ? t('apartment.studio') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
+                              : apartment.type === 'commercial' 
+                                ? t('apartmentsManager.typeCommercial')
+                                : t('apartmentsManager.typeParking')
+                            }
                           </p>
                         </div>
                         <div className="flex gap-2">
