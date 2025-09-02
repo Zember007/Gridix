@@ -142,8 +142,10 @@ const CustomFieldsManager = ({
     try {
       if (!projectId) {
         // Локальный режим: сохраняем только в памяти
+        let updatedFields;
         if (field.id) {
-          setFields(prev => prev.map(f => f.id === field.id ? { ...field, field_name: fieldName } : f));
+          updatedFields = fields.map(f => f.id === field.id ? { ...field, field_name: fieldName } : f);
+          setFields(updatedFields);
         } else {
           const localField: CustomField = {
             ...field,
@@ -152,8 +154,10 @@ const CustomFieldsManager = ({
             sort_order: field.sort_order || fields.length,
             is_visible: field.is_visible ?? true
           };
-          setFields(prev => [...prev, localField]);
+          updatedFields = [...fields, localField];
+          setFields(updatedFields);
         }
+        onFieldsChange?.(updatedFields);
         toast.success(t('customFields.saveSuccess'));
       } else if (field.id) {
         // Обновление существующего поля
@@ -206,7 +210,7 @@ const CustomFieldsManager = ({
         is_visible: true
       });
       if (!projectId) {
-        onFieldsChange?.(fields.map(f => ({ ...f })));
+        // В локальном режиме поля уже обновлены выше
       } else {
         loadCustomFields();
       }
@@ -219,8 +223,9 @@ const CustomFieldsManager = ({
   const handleDeleteField = async (fieldId: string) => {
     try {
       if (!projectId) {
-        setFields(prev => prev.filter(f => f.id !== fieldId));
-        onFieldsChange?.(fields.filter(f => f.id !== fieldId));
+        const updatedFields = fields.filter(f => f.id !== fieldId);
+        setFields(updatedFields);
+        onFieldsChange?.(updatedFields);
         toast.success(t('customFields.deleteSuccess'));
         return;
       }
