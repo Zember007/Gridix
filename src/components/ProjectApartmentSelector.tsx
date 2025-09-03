@@ -620,7 +620,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
             {/* Type selector tabs - only show if project has commercial or parking */}
             {(project?.has_commercial || project?.has_parking) && (
               <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
-                <TabsList className="flex w-full">
+                <TabsList className="flex w-full md:flex-row flex-col h-auto">
                   <TabsTrigger className="w-full" value="all">{t('project.allTypes')}</TabsTrigger>
                   <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
                   {project?.has_commercial && (
