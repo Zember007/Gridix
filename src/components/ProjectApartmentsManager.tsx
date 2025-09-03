@@ -120,7 +120,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
       const saveData = {
         apartment_number: apartmentData.apartment_number.trim(),
         floor_number: apartmentData.floor_number,
-        rooms: apartmentData.rooms || 0,
+        rooms: currentType === 'apartment' ? apartmentData.rooms || 0 : currentType,
         area: apartmentData.area || 0,
         price: apartmentData.price,
         status: apartmentData.status || 'available',

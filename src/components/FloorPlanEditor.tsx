@@ -37,7 +37,7 @@ interface ApartmentPhoto {
 interface Apartment {
   id: string;
   apartment_number: string;
-  rooms: number;
+  rooms: number | string;
   area: number;
   price: number;
   status: 'available' | 'sold' | 'reserved';
@@ -81,7 +81,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [editingApartment, setEditingApartment] = useState<string | null>(null);
   const [apartmentData, setApartmentData] = useState<{
     number: string;
-    rooms: number;
+    rooms: number | string;
     area: number;
     price: number;
     status: 'available' | 'sold' | 'reserved';
@@ -900,7 +900,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
                 <Select
                   value={apartmentData.rooms.toString()}
-                  onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: parseInt(value) }))}
+                  onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: value }))}
                 >
                   <SelectTrigger id="apt-rooms">
                     <SelectValue />

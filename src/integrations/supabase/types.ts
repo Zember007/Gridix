@@ -142,7 +142,7 @@ export type Database = {
           
           price: number | null
           project_id: string
-          rooms: number
+          rooms:  number | string
           status: string
           type: Database["public"]["Enums"]["apartment_type"]
           updated_at: string
@@ -158,7 +158,7 @@ export type Database = {
           polygon?: Json | null
           price?: number | null
           project_id: string
-          rooms?: number
+          rooms?:  number | string
           status?: string
           type?: Database["public"]["Enums"]["apartment_type"]
           updated_at?: string
@@ -174,7 +174,7 @@ export type Database = {
           polygon?: Json | null
           price?: number | null
           project_id?: string
-          rooms?: number
+          rooms?: number | string
           status?: string
           type?: Database["public"]["Enums"]["apartment_type"]
           updated_at?: string

@@ -42,7 +42,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
-    
+
     if (field.field_label_translations && field.field_label_translations[language]) {
       return field.field_label_translations[language];
     }
@@ -96,7 +96,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       if (error) throw error;
 
       const normalizedApartments = (data || []).map(normalizeApartmentData);
-      
+
       setApartments(normalizedApartments);
       setApartmentsLoaded(true);
 
@@ -104,13 +104,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       if (normalizedApartments.length > 0) {
         const prices = normalizedApartments
           .map(apt => (apt.price ? apt.price : 0))
-        console.log('prices',prices);
-        
+        console.log('prices', prices);
+
         const areas = normalizedApartments.map(apt => apt.area);
 
         if (prices.length > 0) {
           const minPrice = Math.min(...prices);
-          console.log('minPrice',minPrice);
+          console.log('minPrice', minPrice);
           const maxPrice = Math.max(...prices);
           setPriceRange([minPrice, maxPrice]);
         }
@@ -161,7 +161,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       if (!projectId || apartments.length === 0) return;
       // Определяем все уникальные типы layout_type для текущего набора квартир
       const uniqueLayouts = new Set<string>(
-        apartments.map(a => (a.rooms === 0 ? 'studio' : `${a.rooms}-room`))
+        apartments.map(a => (Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room`))
       );
 
       if (uniqueLayouts.size === 0) return;
@@ -263,16 +263,16 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
     if (selectedRooms !== 'all') {
       if (selectedRooms === '4+') {
-        filtered = filtered.filter(apt => apt.rooms >= 4);
+        filtered = filtered.filter(apt => Number(apt.rooms) >= 4);
       } else {
-        filtered = filtered.filter(apt => apt.rooms === parseInt(selectedRooms));
+        filtered = filtered.filter(apt => Number(apt.rooms) === parseInt(selectedRooms));
       }
     }
 
     if (selectedType !== 'all') {
-      console.log('selectedType',selectedType);
+      console.log('selectedType', selectedType);
       filtered = filtered.filter(apt => apt.type === selectedType);
-      console.log('filtered',filtered);
+      console.log('filtered', filtered);
     }
 
     if (showOnlyAvailable) {
@@ -299,7 +299,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
 
   const getUniqueRoomCounts = useCallback(() => {
-    return [...new Set(apartments.map(apt => apt.rooms))].sort((a, b) => a - b);
+    return [...new Set(apartments.map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms))].sort((a, b) => a - b);
   }, [apartments]);
 
   const getAvailableCount = useCallback(() => {
@@ -338,7 +338,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
 
     if (fieldName === 'rooms') {
-      if(value === 0) {
+      if (value === 0) {
         return t('apartment.studio');
       } else {
         return value + ' ' + t('apartment.room').toLowerCase();
@@ -357,7 +357,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       default:
         return String(value);
     }
-  }, [selectedCurrency, selectedType]);
+  }, [selectedCurrency, selectedType, convertPrice, project?.currency, t]);
 
 
   const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
@@ -587,14 +587,14 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                       <SlidersHorizontal className="h-3 w-3" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh]">
+                  <SheetContent side="top" className="h-[700px]">
                     <SheetHeader>
                       <SheetTitle>{t('project.filters')}</SheetTitle>
                       <SheetDescription>
                         {t('project.filtersDescription')}
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="mt-6 overflow-y-auto py-4">
+                    <div className="mt-6 overflow-y-auto py-4 max-h-[80%]">
                       <FiltersContent />
                     </div>
                   </SheetContent>
@@ -641,22 +641,22 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                        {(() => {
-                          const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
-                          const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                          const first = photos[0];
-                          return first ? (
-                            <img 
-                              src={first.image_url} 
-                              alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : (
-                            <Building2 className="h-8 w-8 text-gray-400" />
-                          );
-                        })()}
-                      </div>
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {(() => {
+                              const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                              const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                              const first = photos[0];
+                              return first ? (
+                                <img
+                                  src={first.image_url}
+                                  alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Building2 className="h-8 w-8 text-gray-400" />
+                              );
+                            })()}
+                          </div>
                         </div>
                         <div className="flex-grow space-y-1">
                           <div className="flex items-center justify-between">
@@ -730,12 +730,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
                   <div></div>
                   {getVisibleFields().map((field) => (
-                                      <div key={field.id}>{
-                    field.is_custom ?
-                      getFieldLabel(field)
-                      :
-                      t(`project.${field.field_name}`)
-                  }</div>
+                    <div key={field.id}>{
+                      field.is_custom ?
+                        getFieldLabel(field)
+                        :
+                        t(`project.${field.field_name}`)
+                    }</div>
                   ))}
                 </div>
 
@@ -752,10 +752,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                           const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                           const first = photos[0];
                           return first ? (
-                            <img 
-                              src={first.image_url} 
+                            <img
+                              src={first.image_url}
                               alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
-                              className="w-full h-full object-cover" 
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <Building2 className="h-8 w-8 text-gray-400" />
@@ -763,8 +763,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                         })()}
                       </div>
                     </div>
-                   
-                  
+
+
                     {getVisibleFields().map((field) => {
                       let value: unknown = null;
 
@@ -846,10 +846,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                         {/* Layout type filters */}
                         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           <Button
-                            variant={selectedRooms === 'all' ? 'default' : 'outline'}
+                            variant={selectedRooms === 'all' && selectedType === 'all' ? 'default' : 'outline'}
                             size="sm"
-                            className={selectedRooms === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                            onClick={() => setSelectedRooms('all')}
+                            className={selectedRooms === 'all' && selectedType === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                            onClick={() => {
+                              setSelectedType('all');
+                              setSelectedRooms('all')
+                            }}
                           >
                             {t('project.allTypes')}
                           </Button>
@@ -857,7 +860,11 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                             variant={selectedRooms === '0' ? 'default' : 'outline'}
                             size="sm"
                             className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                            onClick={() => setSelectedRooms('0')}
+                            onClick={() => {
+                              setSelectedType('all');
+
+                              setSelectedRooms('0')
+                            }}
                           >
                             {t('apartment.studio')}
                           </Button>
@@ -867,7 +874,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                               variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
                               size="sm"
                               className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
-                              onClick={() => setSelectedRooms(rooms.toString())}
+                              onClick={() => {
+                                setSelectedType('all');
+                                setSelectedRooms(rooms.toString())
+                              }}
                             >
                               {rooms}
                             </Button>
@@ -878,33 +888,74 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                             className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                             onClick={() => {
                               // Handle 4+ rooms filter
-                              const fourPlusApartments = apartments.filter(apt => apt.rooms >= 4);
+                              const fourPlusApartments = apartments.filter(apt => Number(apt.rooms) >= 4 && apt.type === 'apartment');
                               if (fourPlusApartments.length > 0) {
                                 setSelectedRooms('4+');
+                                setSelectedType('apartment');
                               }
                             }}
                           >
                             4+
                           </Button>
+                          {project?.has_commercial && (
+                            <Button
+                              variant={selectedType === 'commercial' ? 'default' : 'outline'}
+                              size="sm"
+                              className={selectedType === 'commercial' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                              onClick={() => {
+                                setSelectedType('commercial');
+                                setSelectedRooms('all');
+                              }}
+                            >
+                              {t('apartmentsManager.typeCommercial')}
+                            </Button>
+                          )}
+                          {project?.has_parking && (
+                            <Button
+                              variant={selectedType === 'parking' ? 'default' : 'outline'}
+                              size="sm"
+                              className={selectedType === 'parking' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                              onClick={() => {
+                                setSelectedType('parking');
+                                setSelectedRooms('all');
+                              }}
+                            >
+                              {t('apartmentsManager.typeParking')}
+                            </Button>
+                          )}
                         </div>
 
                         {/* Layout cards grid */}
                         <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
                           {(() => {
-                            // Group apartments by type (rooms + area)
+                            // Group apartments by layout depending on type
                             const layoutGroups: { [key: string]: Apartment[] } = {};
 
                             let apartmentsToShow = apartments;
+
+                            // Apply selected type filter for gallery
+                            if (selectedType !== 'all') {
+                              apartmentsToShow = apartmentsToShow.filter(apt => apt.type === selectedType);
+                            }
+
+                            // Rooms filter applies only to residential apartments
                             if (selectedRooms !== 'all') {
                               if (selectedRooms === '4+') {
-                                apartmentsToShow = apartments.filter(apt => apt.rooms >= 4);
+                                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) >= 4);
                               } else {
-                                apartmentsToShow = apartments.filter(apt => apt.rooms === parseInt(selectedRooms));
+                                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === parseInt(selectedRooms));
                               }
                             }
 
                             apartmentsToShow.forEach(apt => {
-                              const key = `${apt.rooms}-rooms`;
+                              let key: string;
+                              if (apt.type === 'commercial') {
+                                key = 'commercial';
+                              } else if (apt.type === 'parking') {
+                                key = 'parking';
+                              } else {
+                                key = `${Number(apt.rooms)}-rooms`;
+                              }
                               if (!layoutGroups[key]) {
                                 layoutGroups[key] = [];
                               }
@@ -916,15 +967,25 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                               const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
                               const totalCount = apartmentGroup.length;
 
+                              const isCommercial = representativeApt.type === 'commercial';
+                              const isParking = representativeApt.type === 'parking';
+
                               return (
                                 <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
                                   <div className="aspect-[4/3] bg-gray-100 relative">
                                     {(() => {
-                                      const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${representativeApt.rooms}-room`;
+                                      if (isCommercial || isParking) {
+                                        return (
+                                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                            {isCommercial ? t('apartmentsManager.typeCommercial') : t('apartmentsManager.typeParking')}
+                                          </div>
+                                        );
+                                      }
+                                      const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${Number(representativeApt.rooms)}-room`;
                                       const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                                       const first = photos[0];
                                       return first ? (
-                                        <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                        <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`}
                                           className="w-full h-full object-cover" />
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
@@ -945,7 +1006,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                   <CardContent className="p-4">
                                     <div className="space-y-3">
                                       <h4 className="font-semibold text-lg">
-                                        {representativeApt.rooms === 0 ? t('apartment.studio') : `${representativeApt.rooms}-${t('apartment.rooms')}`}
+                                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
                                       </h4>
 
                                       <div className="text-sm text-gray-600">
@@ -981,12 +1042,20 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                       <Button
                                         className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
                                         onClick={() => {
-                                          // Set filters and switch to list view
-                                          setSelectedRooms(representativeApt.rooms >= 4 ? '4+' : representativeApt.rooms.toString());
+                                          if (isCommercial) {
+                                            setSelectedType('commercial');
+                                            setSelectedRooms('all');
+                                          } else if (isParking) {
+                                            setSelectedType('parking');
+                                            setSelectedRooms('all');
+                                          } else {
+                                            setSelectedType('apartment');
+                                            setSelectedRooms(Number(representativeApt.rooms) >= 4 ? '4+' : String(representativeApt.rooms));
+                                          }
                                           setViewMode('list');
                                         }}
                                       >
-                                        Смотреть {totalCount} {totalCount === 1 ? 'вариант' : 'вариантов'}
+                                        {t('project.viewApartments', { count: totalCount })}
                                       </Button>
                                     </div>
                                   </CardContent>
@@ -1069,7 +1138,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
                       {/* Apartment Photos Viewer */}
                       <div className="space-y-4">
-                        <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={selectedApartment.rooms} />
+                        <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={Number(selectedApartment.rooms)} />
                       </div>
                     </div>
 

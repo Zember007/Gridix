@@ -213,9 +213,9 @@ const translations: Translations = {
     ka: 'აჩვენე კიდევ {{count}} {{total}}-დან'
   },
   'project.viewApartments': {
-    ru: 'Смотреть {{count}} вариантов',
-    en: 'View {{count}} options',
-    ka: 'იხილე {{count}} ვარიანტი'
+    ru: 'Смотреть {count} вариантов',
+    en: 'View {count} options',
+    ka: 'იხილე {count} ვარიანტი'
   },
   'project.contactMessage': {
     ru: 'Здравствуйте! Интересует проект {{projectName}}. Можете предоставить дополнительную информацию?',

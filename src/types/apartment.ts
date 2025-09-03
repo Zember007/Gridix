@@ -5,7 +5,7 @@ export interface Apartment {
   id: string;
   apartment_number: string;
   floor_number: number;
-  rooms: number;
+  rooms: number | string;
   area: number;
   price: number | null;
   status: 'available' | 'sold' | 'reserved';
