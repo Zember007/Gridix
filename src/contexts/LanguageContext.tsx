@@ -373,6 +373,16 @@ const translations: Translations = {
     en: 'Unavailable',
     ka: 'მიუწვდომელია'
   },
+  'common.list': {
+    ru: 'Список',
+    en: 'List',
+    ka: 'სია'
+  },
+  'common.grid': {
+    ru: 'Плитка',
+    en: 'Grid',
+    ka: 'ბადე'
+  },
 
   // Navigation
   'nav.admin': {

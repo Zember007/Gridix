@@ -59,10 +59,11 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
   const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
+  const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('list');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -323,7 +324,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Форматируем значение поля для отображения
   const formatFieldValue = useCallback((value: unknown, fieldType: string, fieldName: string) => {
-    if (value === null || value === undefined || (value === 0 && (selectedType == 'commercial' || selectedType == 'parking'))) return '-';
+    if (value === null || value === undefined || ((value === 0 || Number.isNaN(value)) && (selectedType == 'commercial' || selectedType == 'parking'))) return '-';
 
     if (fieldName === 'price') {
       return formatPrice(convertPrice(value as number, project?.currency, selectedCurrency)) + ' ' + getCurrencySymbolSafe(selectedCurrency);
@@ -341,6 +342,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       if (value === 0) {
         return t('apartment.studio');
       } else {
+        console.log('value', value, typeof value);
         return value + ' ' + t('apartment.room').toLowerCase();
       }
     }
@@ -633,6 +635,32 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
               </Tabs>
             )}
 
+            {/* View mode toggle - only show on desktop */}
+            {!isMobile && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={listViewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    className={listViewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                    onClick={() => setListViewMode('list')}
+                  >
+                    <List className="h-4 w-4 mr-1" />
+                    {t('common.list')}
+                  </Button>
+                  <Button
+                    variant={listViewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    className={listViewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+                    onClick={() => setListViewMode('grid')}
+                  >
+                    <Grid className="h-4 w-4 mr-1" />
+                    {t('common.grid')}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {isMobile ? (
               // Mobile card layout
               <div className="space-y-4">
@@ -723,86 +751,187 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 ))}
               </div>
             ) : (
-              // Desktop table layout
+              // Desktop layout - list or grid
               <div className="space-y-4 overflow-y-auto">
-                {/* Table header */}
-                <div className={`hidden md:grid gap-4 py-3 text-sm text-gray-500 border-b`}
-                  style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
-                  <div></div>
-                  {getVisibleFields().map((field) => (
-                    <div key={field.id}>{
-                      field.is_custom ?
-                        getFieldLabel(field)
-                        :
-                        t(`project.${field.field_name}`)
-                    }</div>
-                  ))}
-                </div>
-
-                {/* Apartment rows */}
-                {filteredApartments.map((apartment) => (
-                  <div key={apartment.id}
-                    className="hidden md:grid gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
-                    onClick={() => setSelectedApartment(apartment)}>
-                    <div className="flex items-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                        {(() => {
-                          const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
-                          const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                          const first = photos[0];
-                          return first ? (
-                            <img
-                              src={first.image_url}
-                              alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Building2 className="h-8 w-8 text-gray-400" />
-                          );
-                        })()}
-                      </div>
+                {listViewMode === 'list' ? (
+                  // Desktop table layout
+                  <>
+                    {/* Table header */}
+                    <div className={`hidden md:grid gap-4 py-3 text-sm text-gray-500 border-b`}
+                      style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
+                      <div></div>
+                      {getVisibleFields().map((field) => (
+                        <div key={field.id}>{
+                          field.is_custom ?
+                            getFieldLabel(field)
+                            :
+                            t(`project.${field.field_name}`)
+                        }</div>
+                      ))}
                     </div>
 
-
-                    {getVisibleFields().map((field) => {
-                      let value: unknown = null;
-
-                      if (field.is_custom) {
-                        value = getCustomFieldValue(apartment, field.field_name);
-                      } else {
-                        switch (field.field_name) {
-                          case 'rooms':
-                            value = apartment.rooms;
-                            break;
-                          case 'area':
-                            value = apartment.area;
-                            break;
-                          case 'price':
-                            value = apartment.price;
-                            break;
-                          case 'status':
-                            value = apartment.status;
-                            break;
-                          case 'floor':
-                            value = apartment.floor_number;
-                            break;
-                          case 'number':
-                            value = apartment.apartment_number;
-                            break;
-                          default:
-                            value = null;
-                        }
-                      }
-
-                      return (
-                        <div key={field.id} className="flex items-center">
-                          <span>{formatFieldValue(value, field.field_type, field.field_name)}</span>
+                    {/* Apartment rows */}
+                    {filteredApartments.map((apartment) => (
+                      <div key={apartment.id}
+                        className="hidden md:grid gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                        style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
+                        onClick={() => setSelectedApartment(apartment)}>
+                        <div className="flex items-center">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {(() => {
+                              const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                              const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                              const first = photos[0];
+                              return first ? (
+                                <img
+                                  src={first.image_url}
+                                  alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Building2 className="h-8 w-8 text-gray-400" />
+                              );
+                            })()}
+                          </div>
                         </div>
-                      );
-                    })}
+
+                        {getVisibleFields().map((field) => {
+                          let value: unknown = null;
+
+                          if (field.is_custom) {
+                            value = getCustomFieldValue(apartment, field.field_name);
+                          } else {
+                            switch (field.field_name) {
+                              case 'rooms':
+                                value = apartment.rooms;
+                                break;
+                              case 'area':
+                                value = apartment.area;
+                                break;
+                              case 'price':
+                                value = apartment.price;
+                                break;
+                              case 'status':
+                                value = apartment.status;
+                                break;
+                              case 'floor':
+                                value = apartment.floor_number;
+                                break;
+                              case 'number':
+                                value = apartment.apartment_number;
+                                break;
+                              default:
+                                value = null;
+                            }
+                          }
+
+                          return (
+                            <div key={field.id} className="flex items-center">
+                              <span>{formatFieldValue(value, field.field_type, field.field_name)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  // Desktop grid layout
+                  <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredApartments.map((apartment) => (
+                      <Card key={apartment.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
+                            {/* Image */}
+                            <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                              {(() => {
+                                const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                                const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                                const first = photos[0];
+                                return first ? (
+                                  <img
+                                    src={first.image_url}
+                                    alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Building2 className="h-16 w-16 text-gray-400" />
+                                );
+                              })()}
+                            </div>
+
+                            {/* Main info */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-lg">
+                                  {!Number.isNaN(apartment.rooms) &&
+                                    <>
+                                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
+                                  }
+                                </h3>
+                                <Badge
+                                  variant={apartment.status === 'available' ? 'default' : 'secondary'}
+                                  className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
+                                >
+                                  {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                </Badge>
+                              </div>
+
+                              <div className="text-sm text-gray-600">
+                                {apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}
+                              </div>
+
+                              <div className="font-bold text-lg text-gray-900">
+                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                              </div>
+                            </div>
+
+                            {/* Custom fields */}
+                            <div className="space-y-1">
+                              {getVisibleFields().slice(0, 3).map((field) => {
+                                let value: unknown = null;
+
+                                if (field.is_custom) {
+                                  value = getCustomFieldValue(apartment, field.field_name);
+                                } else {
+                                  switch (field.field_name) {
+                                    case 'rooms':
+                                      value = apartment.rooms;
+                                      break;
+                                    case 'area':
+                                      value = apartment.area;
+                                      break;
+                                    case 'price':
+                                      value = apartment.price;
+                                      break;
+                                    case 'status':
+                                      value = apartment.status;
+                                      break;
+                                    case 'floor':
+                                      value = apartment.floor_number;
+                                      break;
+                                    case 'number':
+                                      value = apartment.apartment_number;
+                                      break;
+                                    default:
+                                      value = null;
+                                  }
+                                }
+
+                                if (value === null) return null;
+
+                                return (
+                                  <div key={field.id} className="text-sm text-gray-500">
+                                    <span className="font-medium">{getFieldLabel(field)}:</span> {formatFieldValue(value, field.field_type, field.field_name)}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
