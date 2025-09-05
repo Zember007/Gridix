@@ -41,13 +41,13 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[90vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] ' : 'max-w-2xl '} max-h-[500px] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
             <span className={isMobile ? 'text-lg' : ''}>{t('apartment.number')} {apartment.apartment_number}</span>
             <Badge className={getStatusColor(apartment.status)}>
               {getStatusLabel(apartment.status)}
-            </Badge>
+            </Badge>       
           </DialogTitle>
         </DialogHeader>
         
