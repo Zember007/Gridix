@@ -13,15 +13,13 @@ import { useAuth, UserProfile } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import ManagerAccountsManager from '@/components/ManagerAccountsManager';
 
 
 interface AdminSettings {
   id?: string;
   user_id: string;
   company_name: string;
-  contact_name: string;
-  contact_phone: string;
-  contact_email: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -31,9 +29,6 @@ const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, lo
   const [settings, setSettings] = useState<AdminSettings>({
     user_id: userProfile?.id || '',
     company_name: '',
-    contact_name: '',
-    contact_phone: '',
-    contact_email: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -44,9 +39,6 @@ const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, lo
       setSettings({
         user_id: userProfile.id,
         company_name: userProfile.user_metadata.company_name || '',
-        contact_name: userProfile.user_metadata.full_name || '',
-        contact_phone: userProfile.user_metadata.phone || '',
-        contact_email: userProfile.email || '',
       })
     }
   }, [userProfile]);
@@ -63,9 +55,6 @@ const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, lo
     try {
       const saveData = {
         company_name: settings.company_name,
-        full_name: settings.contact_name,
-        phone: settings.contact_phone,
-        email: settings.contact_email,
         updated_at: new Date().toISOString()
       };
 
@@ -170,46 +159,7 @@ const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, lo
         </TabsContent>
 
         <TabsContent value="contacts">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('adminSettings.managerContacts')}</CardTitle>
-              <CardDescription>
-                {t('adminSettings.managerContactsDesc')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="contact_name">{t('adminSettings.managerName')}</Label>
-                <Input
-                  id="contact_name"
-                  value={settings.contact_name}
-                  onChange={(e) => handleInputChange('contact_name', e.target.value)}
-                  placeholder={t('adminSettings.managerNamePlaceholder')}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_phone">{t('adminSettings.managerPhone')}</Label>
-                <Input
-                  id="contact_phone"
-                  value={settings.contact_phone}
-                  onChange={(e) => handleInputChange('contact_phone', e.target.value)}
-                  placeholder={t('adminSettings.managerPhonePlaceholder')}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_email">{t('adminSettings.managerEmail')}</Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  value={settings.contact_email}
-                  onChange={(e) => handleInputChange('contact_email', e.target.value)}
-                  placeholder={t('adminSettings.managerEmailPlaceholder')}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <ManagerAccountsManager developerId={userProfile?.id || ''} />
         </TabsContent>
       </Tabs>
     </div>

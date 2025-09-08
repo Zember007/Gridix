@@ -1483,9 +1483,9 @@ const translations: Translations = {
     ka: 'კომპანია'
   },
   'adminSettings.contacts': {
-    ru: 'Контакты менеджера',
-    en: 'Manager contacts',
-    ka: 'მენეჯერის კონტაქტები'
+    ru: 'Аккаунты менеджеров',
+    en: 'Manager accounts',
+    ka: 'მენეჯერების ანგარიშები'
   },
   'adminSettings.companyInfo': {
     ru: 'Информация о компании',
@@ -1527,45 +1527,266 @@ const translations: Translations = {
     en: 'City, Street, 1',
     ka: 'ქალაქი, ქუჩა, 1'
   },
-  'adminSettings.managerContacts': {
-    ru: 'Контактная информация менеджера',
-    en: 'Manager contact information',
-    ka: 'მენეჯერის საკონტაქტო ინფორმაცია'
+  // Manager Accounts
+  'managerAccounts.title': {
+    ru: 'Управление менеджерами',
+    en: 'Manager Management',
+    ka: 'მენეჯერების მართვა'
   },
-  'adminSettings.managerContactsDesc': {
-    ru: 'Эта информация будет отображаться клиентам для связи',
-    en: 'This information will be displayed to clients for contact',
-    ka: 'ეს ინფორმაცია მომხმარებლებს კონტაქტისთვის გამოჩნდება'
+  'managerAccounts.description': {
+    ru: 'Добавляйте менеджеров для работы с вашими проектами',
+    en: 'Add managers to work with your projects',
+    ka: 'დაამატეთ მენეჯერები თქვენს პროექტებთან სამუშაოდ'
   },
-  'adminSettings.managerName': {
-    ru: 'Имя менеджера',
-    en: 'Manager name',
-    ka: 'მენეჯერის სახელი'
+  'managerAccounts.addManager': {
+    ru: 'Добавить менеджера',
+    en: 'Add Manager',
+    ka: 'მენეჯერის დამატება'
   },
-  'adminSettings.managerNamePlaceholder': {
+  'managerAccounts.inviteManager': {
+    ru: 'Пригласить менеджера',
+    en: 'Invite Manager',
+    ka: 'მენეჯერის მოწვევა'
+  },
+  'managerAccounts.inviteManagerDesc': {
+    ru: 'Отправьте приглашение новому менеджеру для работы с вашими проектами',
+    en: 'Send an invitation to a new manager to work with your projects',
+    ka: 'გაუგზავნეთ მოწვევა ახალ მენეჯერს თქვენს პროექტებთან სამუშაოდ'
+  },
+  'managerAccounts.email': {
+    ru: 'Email',
+    en: 'Email',
+    ka: 'ელფოსტა'
+  },
+  'managerAccounts.emailPlaceholder': {
+    ru: 'manager@example.com',
+    en: 'manager@example.com',
+    ka: 'manager@example.com'
+  },
+  'managerAccounts.fullName': {
+    ru: 'Полное имя',
+    en: 'Full Name',
+    ka: 'სრული სახელი'
+  },
+  'managerAccounts.fullNamePlaceholder': {
     ru: 'Иван Иванов',
     en: 'John Doe',
     ka: 'ივანე ივანოვი'
   },
-  'adminSettings.managerPhone': {
-    ru: 'Телефон менеджера',
-    en: 'Manager phone',
-    ka: 'მენეჯერის ტელეფონი'
+  'managerAccounts.phone': {
+    ru: 'Телефон',
+    en: 'Phone',
+    ka: 'ტელეფონი'
   },
-  'adminSettings.managerPhonePlaceholder': {
+  'managerAccounts.phonePlaceholder': {
     ru: '+7 (999) 123-45-67',
     en: '+1 (555) 123-4567',
     ka: '+995 599 123 456'
   },
-  'adminSettings.managerEmail': {
-    ru: 'Email менеджера',
-    en: 'Manager email',
-    ka: 'მენეჯერის ელფოსტა'
+  'managerAccounts.invite': {
+    ru: 'Пригласить',
+    en: 'Invite',
+    ka: 'მოწვევა'
   },
-  'adminSettings.managerEmailPlaceholder': {
-    ru: 'manager@company.com',
-    en: 'manager@company.com',
-    ka: 'manager@company.com'
+  'managerAccounts.inviting': {
+    ru: 'Приглашаем...',
+    en: 'Inviting...',
+    ka: 'მოწვევა...'
+  },
+  'managerAccounts.activeManagers': {
+    ru: 'Активные менеджеры',
+    en: 'Active Managers',
+    ka: 'აქტიური მენეჯერები'
+  },
+  'managerAccounts.activeManagersDesc': {
+    ru: 'Менеджеры с доступом к вашим проектам',
+    en: 'Managers with access to your projects',
+    ka: 'მენეჯერები თქვენს პროექტებზე წვდომით'
+  },
+  'managerAccounts.pendingInvitations': {
+    ru: 'Ожидающие приглашения',
+    en: 'Pending Invitations',
+    ka: 'მოლოდინის მოწვევები'
+  },
+  'managerAccounts.pendingInvitationsDesc': {
+    ru: 'Приглашения, которые еще не были приняты',
+    en: 'Invitations that have not been accepted yet',
+    ka: 'მოწვევები, რომლებიც ჯერ არ არის მიღებული'
+  },
+  'managerAccounts.statusActive': {
+    ru: 'Активный',
+    en: 'Active',
+    ka: 'აქტიური'
+  },
+  'managerAccounts.statusPending': {
+    ru: 'Ожидает',
+    en: 'Pending',
+    ka: 'მოლოდინში'
+  },
+  'managerAccounts.statusSuspended': {
+    ru: 'Заблокирован',
+    en: 'Suspended',
+    ka: 'შეჩერებული'
+  },
+  'managerAccounts.statusExpired': {
+    ru: 'Истекло',
+    en: 'Expired',
+    ka: 'ვადაგასული'
+  },
+  'managerAccounts.suspend': {
+    ru: 'Заблокировать',
+    en: 'Suspend',
+    ka: 'შეჩერება'
+  },
+  'managerAccounts.activate': {
+    ru: 'Активировать',
+    en: 'Activate',
+    ka: 'გააქტიურება'
+  },
+  'managerAccounts.remove': {
+    ru: 'Удалить',
+    en: 'Remove',
+    ka: 'წაშლა'
+  },
+  'managerAccounts.cancel': {
+    ru: 'Отменить',
+    en: 'Cancel',
+    ka: 'გაუქმება'
+  },
+  'managerAccounts.confirmRemove': {
+    ru: 'Подтвердите удаление',
+    en: 'Confirm Removal',
+    ka: 'წაშლის დადასტურება'
+  },
+  'managerAccounts.confirmRemoveDesc': {
+    ru: 'Вы уверены, что хотите удалить менеджера {{name}}? This action cannot be undone.',
+    en: 'Are you sure you want to remove manager {{name}}? This action cannot be undone.',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ მენეჯერის {{name}} წაშლა? ეს ქმედება ვერ გაუქმდება.'
+  },
+  'managerAccounts.confirmCancel': {
+    ru: 'Отменить приглашение',
+    en: 'Cancel Invitation',
+    ka: 'მოწვევის გაუქმება'
+  },
+  'managerAccounts.confirmCancelDesc': {
+    ru: 'Вы уверены, что хотите отменить приглашение для {{name}}?',
+    en: 'Are you sure you want to cancel the invitation for {{name}}?',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ {{name}}-ის მოწვევის გაუქმება?'
+  },
+  'managerAccounts.expiresAt': {
+    ru: 'Истекает',
+    en: 'Expires',
+    ka: 'ვადა ისრულება'
+  },
+  'managerAccounts.noManagers': {
+    ru: 'Нет менеджеров',
+    en: 'No Managers',
+    ka: 'მენეჯერები არ არის'
+  },
+  'managerAccounts.noManagersDesc': {
+    ru: 'У вас пока нет менеджеров. Добавьте первого менеджера для работы с проектами.',
+    en: 'You don\'t have any managers yet. Add your first manager to work with projects.',
+    ka: 'თქვენ ჯერ არ გაქვთ მენეჯერები. დაამატეთ პირველი მენეჯერი პროექტებთან სამუშაოდ.'
+  },
+  'managerAccounts.addFirstManager': {
+    ru: 'Добавить первого менеджера',
+    en: 'Add First Manager',
+    ka: 'პირველი მენეჯერის დამატება'
+  },
+  'managerAccounts.copyLink': {
+    ru: 'Копировать ссылку',
+    en: 'Copy Link',
+    ka: 'ბმულის კოპირება'
+  },
+  'managerAccounts.openLink': {
+    ru: 'Открыть',
+    en: 'Open',
+    ka: 'გახსნა'
+  },
+  'managerAccounts.linkCopied': {
+    ru: 'Ссылка скопирована в буфер обмена',
+    en: 'Link copied to clipboard',
+    ka: 'ბმული დაკოპირდა'
+  },
+  'managerAccounts.failedToCopy': {
+    ru: 'Не удалось скопировать ссылку',
+    en: 'Failed to copy link',
+    ka: 'ბმულის კოპირება ვერ მოხერხდა'
+  },
+  'managerAccounts.emailFailedCopyManually': {
+    ru: 'Не удалось отправить email. Скопируйте ссылку вручную.',
+    en: 'Failed to send email. Copy the link manually.',
+    ka: 'ელ.ფოსტის გაგზავნა ვერ მოხერხდა. დააკოპირეთ ბმული ხელით.'
+  },
+  'managerAccounts.fillRequiredFields': {
+    ru: 'Заполните все обязательные поля',
+    en: 'Fill in all required fields',
+    ka: 'შეავსეთ ყველა სავალდებულო ველი'
+  },
+  'managerAccounts.managerAdded': {
+    ru: 'Менеджер успешно добавлен',
+    en: 'Manager successfully added',
+    ka: 'მენეჯერი წარმატებით დაემატა'
+  },
+  'managerAccounts.invitationSent': {
+    ru: 'Приглашение отправлено',
+    en: 'Invitation sent',
+    ka: 'მოწვევა გაიგზავნა'
+  },
+  'managerAccounts.managerSuspended': {
+    ru: 'Менеджер заблокирован',
+    en: 'Manager suspended',
+    ka: 'მენეჯერი შეჩერდა'
+  },
+  'managerAccounts.managerActivated': {
+    ru: 'Менеджер активирован',
+    en: 'Manager activated',
+    ka: 'მენეჯერი გააქტიურდა'
+  },
+  'managerAccounts.managerRemoved': {
+    ru: 'Менеджер удален',
+    en: 'Manager removed',
+    ka: 'მენეჯერი წაიშალა'
+  },
+  'managerAccounts.invitationCancelled': {
+    ru: 'Приглашение отменено',
+    en: 'Invitation cancelled',
+    ka: 'მოწვევა გაუქმდა'
+  },
+  'managerAccounts.errorLoading': {
+    ru: 'Ошибка загрузки данных менеджеров',
+    en: 'Error loading manager data',
+    ka: 'შეცდომა მენეჯერების მონაცემების ჩატვირთვაში'
+  },
+  'managerAccounts.errorInviting': {
+    ru: 'Ошибка при приглашении менеджера',
+    en: 'Error inviting manager',
+    ka: 'შეცდომა მენეჯერის მოწვევაში'
+  },
+  'managerAccounts.errorSuspending': {
+    ru: 'Ошибка при блокировке менеджера',
+    en: 'Error suspending manager',
+    ka: 'შეცდომა მენეჯერის შეჩერებაში'
+  },
+  'managerAccounts.errorActivating': {
+    ru: 'Ошибка при активации менеджера',
+    en: 'Error activating manager',
+    ka: 'შეცდომა მენეჯერის გააქტიურებაში'
+  },
+  'managerAccounts.errorRemoving': {
+    ru: 'Ошибка при удалении менеджера',
+    en: 'Error removing manager',
+    ka: 'შეცდომა მენეჯერის წაშლაში'
+  },
+  'managerAccounts.errorCancelling': {
+    ru: 'Ошибка при отмене приглашения',
+    en: 'Error cancelling invitation',
+    ka: 'შეცდომა მოწვევის გაუქმებაში'
+  },
+  'managerAccounts.invitationCreated': {
+    ru: 'Приглашение создано',
+    en: 'Invitation created',
+    ka: 'მოწვევა შეიქმნა'
   },
 
   // Auth

@@ -16,6 +16,7 @@ import ProjectEditorPage from "./pages/ProjectEditorPage";
 import EmbedProjectsPage from "./pages/EmbedProjectsPage";
 import EmbedProjectsMap from "./pages/EmbedProjectsMap";
 import AuthPage from "./pages/AuthPage";
+import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,9 @@ function App() {
               
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
+              
+              {/* Invitation acceptance route - no auth required */}
+              <Route path="/accept-invitation" element={<EmbedLanguageProvider><AcceptInvitationPage /></EmbedLanguageProvider>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={

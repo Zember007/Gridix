@@ -591,6 +591,142 @@ export type Database = {
           },
         ]
       }
+      manager_accounts: {
+        Row: {
+          id: string
+          developer_id: string
+          manager_id: string
+          email: string
+          full_name: string
+          phone: string | null
+          status: "pending" | "active" | "suspended"
+          invited_at: string
+          accepted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          developer_id: string
+          manager_id: string
+          email: string
+          full_name: string
+          phone?: string | null
+          status?: "pending" | "active" | "suspended"
+          invited_at?: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          developer_id?: string
+          manager_id?: string
+          email?: string
+          full_name?: string
+          phone?: string | null
+          status?: "pending" | "active" | "suspended"
+          invited_at?: string
+          accepted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_accounts_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manager_accounts_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      manager_invitations: {
+        Row: {
+          id: string
+          developer_id: string
+          email: string
+          full_name: string
+          phone: string | null
+          invitation_token: string
+          status: "pending" | "accepted" | "expired"
+          expires_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          developer_id: string
+          email: string
+          full_name: string
+          phone?: string | null
+          invitation_token: string
+          status?: "pending" | "accepted" | "expired"
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          developer_id?: string
+          email?: string
+          full_name?: string
+          phone?: string | null
+          invitation_token?: string
+          status?: "pending" | "accepted" | "expired"
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_invitations_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      manager_permissions: {
+        Row: {
+          manager_account_id: string
+          permission_type: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
+          allowed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          manager_account_id: string
+          permission_type: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
+          allowed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          manager_account_id?: string
+          permission_type?: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
+          allowed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_permissions_manager_account_id_fkey"
+            columns: ["manager_account_id"]
+            isOneToOne: false
+            referencedRelation: "manager_accounts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       sync_logs: {
         Row: {
           created_at: string
@@ -653,7 +789,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking"
