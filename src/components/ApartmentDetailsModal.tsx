@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 
 interface ApartmentDetailsModalProps {
@@ -41,59 +43,68 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`top-1/2 -translate-y-1/2 ${isMobile ? 'max-w-[95vw] ' : 'max-w-2xl '} max-h-[85vh] overflow-y-auto`}>
-        <DialogHeader>
-          <DialogTitle className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
-            <span className={isMobile ? 'text-lg' : ''}>{t('apartment.number')} {apartment.apartment_number}</span>
-            <Badge className={getStatusColor(apartment.status)}>
-              {getStatusLabel(apartment.status)}
-            </Badge>       
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Фотографии квартиры */}
-          <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
-          
-          {/* Основная информация */}
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.floor')}</h3>
-              <p className="text-lg">{apartment.floor_number}</p>
+      <DialogContent className={`left-0 top-0 translate-x-0 translate-y-0 z-50 h-screen w-screen max-w-none rounded-none p-0 ${isMobile ? '' : ''}`}>
+        <div className="flex h-full flex-col">
+          <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background p-4">
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.back')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className={`flex flex-1 items-center justify-between ${isMobile ? '' : ''}`}>
+              <span className={isMobile ? 'text-lg' : 'text-xl font-semibold'}>
+                {t('apartment.number')} {apartment.apartment_number}
+              </span>
+              <Badge className={getStatusColor(apartment.status)}>
+                {getStatusLabel(apartment.status)}
+              </Badge>
             </div>
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.rooms')}</h3>
-              <p className="text-lg">{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.area')}</h3>
-              <p className="text-lg">{apartment.area} м²</p>
-            </div>
-            {apartment.price && (
-              <div>
-                <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
-                <p className="text-lg font-semibold">{apartment.price.toLocaleString()} </p>
-              </div>
-            )}
           </div>
 
-          {/* Дополнительные поля */}
-          {apartment.custom_fields && Object.keys(apartment.custom_fields).length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="font-medium mb-3">{t('apartment.additionalInfo')}</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  {Object.entries(apartment.custom_fields).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground capitalize">{key}:</span>
-                      <span>{String(value)}</span>
-                    </div>
-                  ))}
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-6 p-4">
+              {/* Фотографии квартиры */}
+              <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+
+              {/* Основная информация */}
+              <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.floor')}</h3>
+                  <p className="text-lg">{apartment.floor_number}</p>
                 </div>
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.rooms')}</h3>
+                  <p className="text-lg">{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.area')}</h3>
+                  <p className="text-lg">{apartment.area} м²</p>
+                </div>
+                {apartment.price && (
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
+                    <p className="text-lg font-semibold">{apartment.price.toLocaleString()} </p>
+                  </div>
+                )}
               </div>
-            </>
-          )}
+
+              {/* Дополнительные поля */}
+              {apartment.custom_fields && Object.keys(apartment.custom_fields).length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="font-medium mb-3">{t('apartment.additionalInfo')}</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {Object.entries(apartment.custom_fields).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-muted-foreground capitalize">{key}:</span>
+                          <span>{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
