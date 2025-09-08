@@ -23,6 +23,7 @@ import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import ApartmentDetailsModal from './ApartmentDetailsModal';
+import ApartmentReservationForm from './ApartmentReservationForm';
 import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
 import { getCurrencySymbolSafe, isValidCurrency } from '@/lib/currency-utils';
@@ -66,6 +67,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isReserveOpen, setIsReserveOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
   // Отслеживаем, для каких этажей уже подгружены полигоны, чтобы не дёргать повторно
   const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
@@ -1369,12 +1371,30 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                      </div>
 
                      {/* Action buttons */}
-                     <Button
-                       className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white w-full"
-                       disabled={selectedApartment.status !== 'available'}
-                     >
-                       {selectedApartment.status === 'available' ? t('common.reserve') : t('common.unavailable')}
-                     </Button>
+                     {selectedApartment.status === 'available' && !isReserveOpen && (
+                       <Button
+                         className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white w-full"
+                         onClick={() => setIsReserveOpen(true)}
+                       >
+                         {t('common.reserve')}
+                       </Button>
+                     )}
+                     {selectedApartment.status !== 'available' && (
+                       <Button className="flex-1 bg-[#1E1E1E]/50 text-white w-full" disabled>
+                         {t('common.unavailable')}
+                       </Button>
+                     )}
+                     {isReserveOpen && selectedApartment.status === 'available' && (
+                       <div className="mt-3 rounded-md border p-4">
+                         <h3 className="font-medium mb-3">{t('common.reserve')} {t('apartment.apartment')}</h3>
+                         <ApartmentReservationForm
+                           apartmentId={selectedApartment.id}
+                           projectId={selectedApartment.project_id}
+                           onSubmit={() => setIsReserveOpen(false)}
+                           onCancel={() => setIsReserveOpen(false)}
+                         />
+                       </div>
+                     )}
 
 
                    </div>
