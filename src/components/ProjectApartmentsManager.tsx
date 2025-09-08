@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw, Building, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ApartmentCustomFields from '@/components/ApartmentCustomFields';
@@ -47,6 +47,8 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] = useState<Apartment | null>(null);
   const [syncTargetApartments, setSyncTargetApartments] = useState<Apartment[]>([]);
+  const [floorManagementOpen, setFloorManagementOpen] = useState(false);
+  const [newFloorNumber, setNewFloorNumber] = useState<number>(1);
   const { t } = useLanguage();
   const { project } = useProject(projectId);
 
@@ -108,10 +110,11 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   const handleSaveApartment = async (apartmentData: Partial<Apartment>, isNew: boolean = false) => {
     if (!apartmentData.apartment_number?.trim()) {
       toast.error(t('apartmentsManager.numberRequired'));
+      
       return;
     }
 
-    if (!apartmentData.floor_number || apartmentData.floor_number < 1) {
+    if (apartmentData.floor_number === undefined || apartmentData.floor_number < 0) {
       toast.error(t('apartmentsManager.floorRequired'));
       return;
     }
@@ -297,6 +300,118 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     }
   };
 
+  const getUniqueFloors = useCallback(() => {
+    return [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
+  }, [apartments]);
+
+  const handleDeleteFloor = async (floorNumber: number) => {
+    const apartmentsOnFloor = apartments.filter(apt => apt.floor_number === floorNumber);
+    
+    if (apartmentsOnFloor.length > 0) {
+      if (!confirm(t('floorManagement.deleteFloorWithApartmentsConfirm', { floor: floorNumber, count: apartmentsOnFloor.length }))) {
+        return;
+      }
+    } else {
+      if (!confirm(t('floorManagement.deleteFloorConfirm', { floor: floorNumber }))) {
+        return;
+      }
+    }
+
+    try {
+      // Delete all apartments on this floor
+      if (apartmentsOnFloor.length > 0) {
+        const { error: apartmentsError } = await supabase
+          .from('apartments')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('floor_number', floorNumber);
+
+        if (apartmentsError) throw apartmentsError;
+      }
+
+      // Delete building floor visualization
+      const { error: buildingFloorError } = await supabase
+        .from('building_floors')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('floor_number', floorNumber);
+
+      if (buildingFloorError) throw buildingFloorError;
+
+      // Delete floor plan
+      const { error: floorPlanError } = await supabase
+        .from('floor_plans')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('floor_number', floorNumber);
+
+      if (floorPlanError) throw floorPlanError;
+
+      // Update project floors count if this was the highest floor
+      const maxFloor = Math.max(...getUniqueFloors().filter(f => f !== floorNumber));
+      if (project && floorNumber === project.floors) {
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({ floors: maxFloor || 1 })
+          .eq('id', projectId);
+
+        if (projectError) throw projectError;
+      }
+
+      // Update local state
+      setApartments(prev => prev.filter(apt => apt.floor_number !== floorNumber));
+      
+      toast.success(t('floorManagement.deleteFloorSuccess', { floor: floorNumber }));
+    } catch (error) {
+      console.error('Error deleting floor:', error);
+      toast.error(t('floorManagement.deleteFloorError'));
+    }
+  };
+
+  const handleAddFloor = async () => {
+    if (!newFloorNumber || newFloorNumber < 1) {
+      toast.error(t('floorManagement.invalidFloorNumber'));
+      return;
+    }
+
+    const existingFloors = getUniqueFloors();
+    if (existingFloors.includes(newFloorNumber)) {
+      toast.error(t('floorManagement.floorAlreadyExists', { floor: newFloorNumber }));
+      return;
+    }
+
+    try {
+      // Create building floor for visualization
+      const { error: buildingFloorError } = await supabase
+        .from('building_floors')
+        .insert({
+          project_id: projectId,
+          floor_number: newFloorNumber,
+          polygon: [],
+          color: '#3b82f6'
+        });
+
+      if (buildingFloorError) throw buildingFloorError;
+
+      // Update project floors count if this is higher than current max
+      const maxFloor = Math.max(...existingFloors, newFloorNumber);
+      if (project && maxFloor > project.floors) {
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({ floors: maxFloor })
+          .eq('id', projectId);
+
+        if (projectError) throw projectError;
+      }
+
+      setNewFloorNumber(maxFloor + 1);
+      toast.success(t('floorManagement.addFloorSuccess', { floor: newFloorNumber }));
+    } catch (error) {
+      console.error('Error adding floor:', error);
+      toast.error(t('floorManagement.addFloorError'));
+    }
+  };
+
   const renderApartmentForm = (apartment: Partial<Apartment>, isNew: boolean = false) => (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -320,16 +435,15 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
           <Input
             id="floor_number"
             type="number"
-            value={apartment.floor_number || ''}
+            value={apartment.floor_number}
             onChange={(e) => {
-              const value = parseInt(e.target.value) || 1;
+              const value = parseInt(e.target.value);
               if (isNew) {
                 setNewApartment(prev => ({ ...prev, floor_number: value }));
               } else {
                 setEditingApartment(prev => prev ? { ...prev, floor_number: value } : null);
               }
             }}
-            min="1"
           />
         </div>
       </div>
@@ -489,13 +603,22 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
               {t('apartmentsManager.description')}
             </CardDescription>
           </div>
-          <Button
-            onClick={() => setIsAddingNew(true)}
-            className="bg-real-estate-600 hover:bg-real-estate-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('apartmentsManager.addApartment')}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setFloorManagementOpen(true)}
+            >
+              <Building className="h-4 w-4 mr-2" />
+              {t('floorManagement.manageFloors')}
+            </Button>
+            <Button
+              onClick={() => setIsAddingNew(true)}
+              className="bg-real-estate-600 hover:bg-real-estate-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t('apartmentsManager.addApartment')}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -650,6 +773,79 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         getStatusColor={getStatusColor}
         getStatusLabel={getStatusLabel}
       />
+
+      {/* Диалог управления этажами */}
+      <Dialog open={floorManagementOpen} onOpenChange={setFloorManagementOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('floorManagement.title')}</DialogTitle>
+            <DialogDescription>
+              {t('floorManagement.description')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Добавление этажа */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">{t('floorManagement.addFloor')}</h4>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={newFloorNumber}
+                  onChange={(e) => setNewFloorNumber(parseInt(e.target.value) || 1)}
+                  placeholder={t('floorManagement.floorNumber')}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddFloor}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('floorManagement.add')}
+                </Button>
+              </div>
+            </div>
+
+            {/* Список существующих этажей */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">{t('floorManagement.existingFloors')}</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {getUniqueFloors().map((floorNumber) => {
+                  const apartmentsOnFloor = apartments.filter(apt => apt.floor_number === floorNumber);
+                  return (
+                    <div key={floorNumber} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Building className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <span className="font-medium">{t('floorManagement.floor')} {floorNumber}</span>
+                          <p className="text-sm text-gray-500">
+                            {apartmentsOnFloor.length} {apartmentsOnFloor.length === 1 ? t('floorManagement.apartment') : t('floorManagement.apartments')}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteFloor(floorNumber)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        {apartmentsOnFloor.length > 0 && (
+                          <AlertTriangle className="h-4 w-4 mr-1" />
+                        )}
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                {getUniqueFloors().length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Building className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>{t('floorManagement.noFloors')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

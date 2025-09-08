@@ -599,6 +599,16 @@ const translations: Translations = {
     en: 'Additional Information',
     ka: 'დამატებითი ინფორმაცია'
   },
+  'apartment.apartment': {
+    ru: 'квартира',
+    en: 'apartment',
+    ka: 'ბინა'
+  },
+  'apartment.apartments': {
+    ru: 'квартир',
+    en: 'apartments',
+    ka: 'ბინები'
+  },
 
   // Project listings
   'project.notFoundApartments': {
@@ -2699,6 +2709,103 @@ const translations: Translations = {
     ru: 'Необходимо войти в систему для загрузки фотографий',
     en: 'Authentication required to upload photos',
     ka: 'ფოტოების ატვირთვისთვის ავტორიზაცია საჭიროა'
+  },
+
+  // Floor Management
+  'floorManagement.title': {
+    ru: 'Управление этажами',
+    en: 'Floor Management',
+    ka: 'სართულების მართვა'
+  },
+  'floorManagement.description': {
+    ru: 'Добавляйте или удаляйте этажи в проекте',
+    en: 'Add or remove floors in the project',
+    ka: 'დაამატეთ ან წაშალეთ სართულები პროექტში'
+  },
+  'floorManagement.manageFloors': {
+    ru: 'Управление этажами',
+    en: 'Manage Floors',
+    ka: 'სართულების მართვა'
+  },
+  'floorManagement.addFloor': {
+    ru: 'Добавить этаж',
+    en: 'Add Floor',
+    ka: 'სართულის დამატება'
+  },
+  'floorManagement.floorNumber': {
+    ru: 'Номер этажа',
+    en: 'Floor number',
+    ka: 'სართულის ნომერი'
+  },
+  'floorManagement.add': {
+    ru: 'Добавить',
+    en: 'Add',
+    ka: 'დამატება'
+  },
+  'floorManagement.existingFloors': {
+    ru: 'Существующие этажи',
+    en: 'Existing floors',
+    ka: 'არსებული სართულები'
+  },
+  'floorManagement.floor': {
+    ru: 'Этаж',
+    en: 'Floor',
+    ka: 'სართული'
+  },
+  'floorManagement.apartment': {
+    ru: 'квартира',
+    en: 'apartment',
+    ka: 'ბინა'
+  },
+  'floorManagement.apartments': {
+    ru: 'квартир',
+    en: 'apartments',
+    ka: 'ბინები'
+  },
+  'floorManagement.noFloors': {
+    ru: 'Этажи не созданы',
+    en: 'No floors created',
+    ka: 'სართულები არ არის შექმნილი'
+  },
+  'floorManagement.deleteFloorConfirm': {
+    ru: 'Вы уверены, что хотите удалить {floor} этаж?',
+    en: 'Are you sure you want to delete floor {floor}?',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ {floor} სართულის წაშლა?'
+  },
+  'floorManagement.deleteFloorWithApartmentsConfirm': {
+    ru: 'Вы уверены, что хотите удалить {floor} этаж? На нем находится {count} квартир, которые также будут удалены.',
+    en: 'Are you sure you want to delete floor {floor}? It contains {count} apartments that will also be deleted.',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ {floor} სართულის წაშლა? მასზე არის {count} ბინა, რომლებიც ასევე წაიშლება.'
+  },
+  'floorManagement.deleteFloorSuccess': {
+    ru: 'Этаж {floor} успешно удален',
+    en: 'Floor {floor} successfully deleted',
+    ka: 'სართული {floor} წარმატებით წაიშალა'
+  },
+  'floorManagement.deleteFloorError': {
+    ru: 'Ошибка при удалении этажа',
+    en: 'Error deleting floor',
+    ka: 'სართულის წაშლის შეცდომა'
+  },
+  'floorManagement.addFloorSuccess': {
+    ru: 'Этаж {floor} успешно добавлен',
+    en: 'Floor {floor} successfully added',
+    ka: 'სართული {floor} წარმატებით დაემატა'
+  },
+  'floorManagement.addFloorError': {
+    ru: 'Ошибка при добавлении этажа',
+    en: 'Error adding floor',
+    ka: 'სართულის დამატების შეცდომა'
+  },
+  'floorManagement.invalidFloorNumber': {
+    ru: 'Неверный номер этажа',
+    en: 'Invalid floor number',
+    ka: 'არასწორი სართულის ნომერი'
+  },
+  'floorManagement.floorAlreadyExists': {
+    ru: 'Этаж {floor} уже существует',
+    en: 'Floor {floor} already exists',
+    ka: 'სართული {floor} უკვე არსებობს'
   }
 };
 

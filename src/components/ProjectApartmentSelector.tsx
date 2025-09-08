@@ -63,7 +63,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
-  const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('list');
+  const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -305,6 +305,34 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   const getAvailableCount = useCallback(() => {
     return filteredApartments.filter(apt => apt.status === 'available').length;
+  }, [filteredApartments]);
+
+  // Группировка квартир по этажам для grid режима
+  const groupApartmentsByFloor = useCallback(() => {
+    const grouped = filteredApartments.reduce((acc, apartment) => {
+      const floor = apartment.floor_number;
+      if (!acc[floor]) {
+        acc[floor] = [];
+      }
+      acc[floor].push(apartment);
+      return acc;
+    }, {} as Record<number, Apartment[]>);
+
+    // Сортируем этажи по убыванию (верхние этажи сверху)
+    const sortedFloors = Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => b - a);
+
+    return sortedFloors.map(floor => ({
+      floor,
+      apartments: grouped[floor].sort((a, b) => {
+        // Сортируем квартиры по номеру если он есть
+        if (a.apartment_number && b.apartment_number) {
+          return a.apartment_number.localeCompare(b.apartment_number);
+        }
+        return a.id.localeCompare(b.id);
+      })
+    }));
   }, [filteredApartments]);
 
   // Получаем отображаемые поля в правильном порядке
@@ -835,100 +863,73 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     ))}
                   </>
                 ) : (
-                  // Desktop grid layout
-                  <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredApartments.map((apartment) => (
-                      <Card key={apartment.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
-                        <CardContent className="p-6">
-                          <div className="space-y-4">
-                            {/* Image */}
-                            <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                              {(() => {
-                                const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
-                                const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                                const first = photos[0];
-                                return first ? (
-                                  <img
-                                    src={first.image_url}
-                                    alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <Building2 className="h-16 w-16 text-gray-400" />
-                                );
-                              })()}
-                            </div>
+                  // Desktop grid layout - grouped by floors
+                  <div className="hidden md:block space-y-8">
+                    {groupApartmentsByFloor().map(({ floor, apartments: floorApartments }) => (
+                      <div key={floor} className="space-y-4">
+                        {/* Floor header */}
+                        <div className="flex items-center gap-4">
+                          <h3 className="text-xl font-semibold text-gray-800">
+                            {floor} {t('project.floor').toLowerCase()}
+                          </h3>
+                          <div className="flex-1 h-px bg-gray-200"></div>
+                          <span className="text-sm text-gray-500">
+                            {floorApartments.length} {floorApartments.length === 1 ? t('apartment.apartment') : t('apartment.apartments')}
+                          </span>
+                        </div>
 
-                            {/* Main info */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-lg">
-                                  {!Number.isNaN(apartment.rooms) &&
-                                    <>
-                                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
-                                  }
-                                </h3>
-                                <Badge
-                                  variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                                  className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
-                                >
-                                  {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                                </Badge>
-                              </div>
-
-                              <div className="text-sm text-gray-600">
-                                {apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}
-                              </div>
-
-                              <div className="font-bold text-lg text-gray-900">
-                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                              </div>
-                            </div>
-
-                            {/* Custom fields */}
-                            <div className="space-y-1">
-                              {getVisibleFields().slice(0, 3).map((field) => {
-                                let value: unknown = null;
-
-                                if (field.is_custom) {
-                                  value = getCustomFieldValue(apartment, field.field_name);
-                                } else {
-                                  switch (field.field_name) {
-                                    case 'rooms':
-                                      value = apartment.rooms;
-                                      break;
-                                    case 'area':
-                                      value = apartment.area;
-                                      break;
-                                    case 'price':
-                                      value = apartment.price;
-                                      break;
-                                    case 'status':
-                                      value = apartment.status;
-                                      break;
-                                    case 'floor':
-                                      value = apartment.floor_number;
-                                      break;
-                                    case 'number':
-                                      value = apartment.apartment_number;
-                                      break;
-                                    default:
-                                      value = null;
-                                  }
-                                }
-
-                                if (value === null) return null;
-
-                                return (
-                                  <div key={field.id} className="text-sm text-gray-500">
-                                    <span className="font-medium">{getFieldLabel(field)}:</span> {formatFieldValue(value, field.field_type, field.field_name)}
+                        {/* Apartments grid for this floor */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                          {floorApartments.map((apartment) => (
+                            <Card
+                              key={apartment.id}
+                              className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 ${apartment.status === 'available'
+                                  ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100'
+                                  : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
+                                }`}
+                              onClick={() => setSelectedApartment(apartment)}
+                            >
+                              <CardContent className="p-3 h-full flex flex-col justify-between">
+                                {/* Apartment number */}
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-gray-900 mb-1">
+                                    {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                                  <Badge
+                                    variant={apartment.status === 'available' ? 'default' : 'secondary'}
+                                    className={`text-xs ${apartment.status === 'available'
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-gray-500 text-white'
+                                      }`}
+                                  >
+                                    {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                  </Badge>
+                                </div>
+
+                                {/* Apartment info */}
+                                <div className="text-center space-y-1">
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {!Number.isNaN(apartment.rooms) &&
+                                      <>
+                                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                                      </>
+                                    }
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {apartment.area} м²
+                                  </div>
+                                  <div className="text-xs font-semibold text-gray-900">
+                                    {apartment.price ?
+                                      `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                      : t('project.onRequest')
+                                    }
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
