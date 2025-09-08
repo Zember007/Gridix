@@ -12,6 +12,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useFields } from '@/hooks/useFields';
 import { Language } from '@/lib/language-utils';
 import { useProject } from '@/hooks/useProjects';
+import { useState } from 'react';
+import ApartmentReservationForm from './ApartmentReservationForm';
 
 
 interface ApartmentDetailsModalProps {
@@ -25,6 +27,8 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
   const isMobile = useIsMobile();
   const { fields: fieldSettings } = useFields(apartment?.project_id || '');
   const { project } = useProject(apartment?.project_id || '');
+
+  const [isReserveOpen, setIsReserveOpen] = useState(false);
 
   if (!apartment) return null;
 
@@ -144,6 +148,24 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
                   </div>
                 )}
               </div>
+
+              {apartment.status === 'available' && !isReserveOpen && (
+                <div className="pt-2">
+                  <Button onClick={() => setIsReserveOpen(true)} className="w-full md:w-auto">{t('common.reserve')}</Button>
+                </div>
+              )}
+
+              {isReserveOpen && (
+                <div className="pt-2 rounded-md border p-4">
+                  <h3 className="font-medium mb-3">{t('common.reserve')} {t('apartment.apartment')}</h3>
+                  <ApartmentReservationForm
+                    apartmentId={apartment.id}
+                    projectId={apartment.project_id}
+                    onSubmit={() => setIsReserveOpen(false)}
+                    onCancel={() => setIsReserveOpen(false)}
+                  />
+                </div>
+              )}
 
               {/* Дополнительные поля - как в ProjectApartmentSelector */}
               {getVisibleFields().length > 0 && (
