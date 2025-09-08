@@ -41,7 +41,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] ' : 'max-w-2xl '} max-h-[500px] overflow-y-auto`}>
+      <DialogContent className={`top-1/2 -translate-y-1/2 ${isMobile ? 'max-w-[95vw] ' : 'max-w-2xl '} max-h-[85vh] overflow-y-auto`}>
         <DialogHeader>
           <DialogTitle className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
             <span className={isMobile ? 'text-lg' : ''}>{t('apartment.number')} {apartment.apartment_number}</span>

@@ -203,7 +203,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const renderFloorPlanTabs = () => {
     if (isNew || !project.id) return null;
 
-    const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
+    const floors = Array.from({ length: project.floors + 1 }, (_, i) => i);
 
     return (
       <div className="space-y-2">

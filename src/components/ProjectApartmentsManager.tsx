@@ -369,7 +369,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
   };
 
   const handleAddFloor = async () => {
-    if (!newFloorNumber || newFloorNumber < 1) {
+    if (newFloorNumber === undefined || newFloorNumber < 0) {
       toast.error(t('floorManagement.invalidFloorNumber'));
       return;
     }
@@ -791,9 +791,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
               <div className="flex gap-2">
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   value={newFloorNumber}
-                  onChange={(e) => setNewFloorNumber(parseInt(e.target.value) || 1)}
+                  onChange={(e) => setNewFloorNumber(parseInt(e.target.value))}
                   placeholder={t('floorManagement.floorNumber')}
                   className="flex-1"
                 />

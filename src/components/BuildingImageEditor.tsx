@@ -183,6 +183,17 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
           });
 
         if (error) throw error;
+
+        // Update project floors count if this is higher than current max
+        if (project && selectedFloor > project.floors) {
+          const { error: projectError } = await supabase
+            .from('projects')
+            .update({ floors: selectedFloor })
+            .eq('id', projectId);
+
+          if (projectError) throw projectError;
+        }
+
         toast.success(t('buildingImage.polygon.createSuccess', { floor: selectedFloor }));
       } else if (editingFloorId) {
         // Update existing floor
@@ -304,7 +315,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   className="px-2 py-1 border rounded text-sm min-w-[80px]"
                   disabled={isEditing}
                 >
-                  {Array.from({ length: floors }, (_, i) => i + 1).map(floor => (
+                  {/* Allow floors from 0 to max(current floors, existing building floors) + 2 */}
+                  {Array.from({ length: Math.max(floors, buildingFloors.length > 0 ? Math.max(...buildingFloors.map(f => f.floor_number)) : 0) + 3 }, (_, i) => i).map(floor => (
                     <option key={floor} value={floor}>
                       {floor}
                     </option>

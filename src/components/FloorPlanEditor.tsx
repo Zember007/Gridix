@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,6 +108,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] = useState<GlobalApartment | null>(null);
   const [syncTargetApartments, setSyncTargetApartments] = useState<GlobalApartment[]>([]);
+  const [newFloorDialogOpen, setNewFloorDialogOpen] = useState(false);
+  const [newFloorNumber, setNewFloorNumber] = useState<number>(0);
 
   const { user } = useAuth();
   const { project } = useProject(projectId);
@@ -121,7 +124,18 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const loadProjectFloors = async () => {
     try {
-      if (project) {
+      // Get floors from building_floors table to include all existing floors
+      const { data: buildingFloorsData } = await supabase
+        .from('building_floors')
+        .select('floor_number')
+        .eq('project_id', projectId)
+        .order('floor_number');
+
+      if (buildingFloorsData && buildingFloorsData.length > 0) {
+        const existingFloors = buildingFloorsData.map(f => f.floor_number).sort((a, b) => a - b);
+        setAllFloors(existingFloors);
+      } else if (project) {
+        // Fallback to project.floors if no building floors exist
         const floors = Array.from({ length: project.floors }, (_, i) => i + 1);
         setAllFloors(floors);
       }
@@ -752,6 +766,46 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     setSyncDialogOpen(true);
   };
 
+  const handleCreateNewFloor = async (newFloorNumber: number) => {
+    try {
+      // Create building floor for visualization
+      const { error: buildingFloorError } = await supabase
+        .from('building_floors')
+        .insert({
+          project_id: projectId,
+          floor_number: newFloorNumber,
+          polygon: [],
+          color: '#3b82f6'
+        });
+
+      if (buildingFloorError) throw buildingFloorError;
+
+      // Update project floors count if this is higher than current max
+      const maxFloor = Math.max(...allFloors, newFloorNumber);
+      if (project && maxFloor > project.floors) {
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({ floors: maxFloor })
+          .eq('id', projectId);
+
+        if (projectError) throw projectError;
+      }
+
+      // Reload floors to include the new one
+      await loadProjectFloors();
+      
+      // Switch to the new floor
+      if (onFloorChange) {
+        onFloorChange(newFloorNumber);
+      }
+
+      toast.success(t('floorManagement.addFloorSuccess', { floor: newFloorNumber }));
+    } catch (error) {
+      console.error('Error creating new floor:', error);
+      toast.error(t('floorManagement.addFloorError'));
+    }
+  };
+
   const handleSyncComplete = (updatedApartments: GlobalApartment[]) => {
     // Обновить локальное состояние
     setApartments(prev => 
@@ -1043,22 +1097,38 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h3 className="text-lg font-semibold">{t('floorPlan.title')}</h3>
-              {onFloorChange && allFloors.length > 1 && (
-                <Select
-                  value={floorNumber.toString()}
-                  onValueChange={(value) => onFloorChange(parseInt(value))}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allFloors.map(floor => (
-                      <SelectItem key={floor} value={floor.toString()}>
-                        {t('floorPlan.title')} {floor}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {onFloorChange && (
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={floorNumber.toString()}
+                    onValueChange={(value) => onFloorChange(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allFloors.map(floor => (
+                        <SelectItem key={floor} value={floor.toString()}>
+                          {t('floorPlan.title')} {floor}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Set default to next available floor number
+                      const maxFloor = allFloors.length > 0 ? Math.max(...allFloors) : 0;
+                      setNewFloorNumber(maxFloor + 1);
+                      setNewFloorDialogOpen(true);
+                    }}
+                    className="h-8"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    {t('floorManagement.addFloor')}
+                  </Button>
+                </div>
               )}
             </div>
             <div className="flex gap-2">
@@ -1404,6 +1474,59 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         getStatusColor={getStatusColorClass}
         getStatusLabel={getStatusLabel}
       />
+
+      {/* New Floor Dialog */}
+      <Dialog open={newFloorDialogOpen} onOpenChange={setNewFloorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('floorManagement.addFloor')}</DialogTitle>
+            <DialogDescription>
+              {t('floorManagement.description')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="new-floor-number">{t('floorManagement.floorNumber')}</Label>
+              <Input
+                id="new-floor-number"
+                type="number"
+                value={newFloorNumber}
+                onChange={(e) => setNewFloorNumber(parseInt(e.target.value) || 0)}
+                placeholder="0"
+                className="mt-1"
+              />
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button
+                onClick={() => {
+                  handleCreateNewFloor(newFloorNumber);
+                  setNewFloorDialogOpen(false);
+                }}
+                className="flex-1"
+                disabled={allFloors.includes(newFloorNumber)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('floorManagement.add')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setNewFloorDialogOpen(false)}
+                className="flex-1"
+              >
+                {t('apartmentsManager.cancel')}
+              </Button>
+            </div>
+            
+            {allFloors.includes(newFloorNumber) && (
+              <p className="text-sm text-red-600">
+                {t('floorManagement.floorAlreadyExists', { floor: newFloorNumber })}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 };
