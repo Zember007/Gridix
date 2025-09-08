@@ -9,6 +9,9 @@ import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useFields } from '@/hooks/useFields';
+import { Language } from '@/lib/language-utils';
+import { useProject } from '@/hooks/useProjects';
 
 
 interface ApartmentDetailsModalProps {
@@ -18,8 +21,10 @@ interface ApartmentDetailsModalProps {
 }
 
 const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsModalProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isMobile = useIsMobile();
+  const { fields: fieldSettings } = useFields(apartment?.project_id || '');
+  const { project } = useProject(apartment?.project_id || '');
 
   if (!apartment) return null;
 
@@ -42,8 +47,63 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
   };
   if(!isOpen) return null;
 
+
+
+  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
+    if (field.field_label_translations && field.field_label_translations[language]) {
+      return field.field_label_translations[language] as string;
+    }
+    return field.field_label;
+  };
+
+  const getVisibleFields = () => {
+    return fieldSettings
+      .filter(field => field.is_visible)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  };
+
+  const getCustomFieldValue = (apt: Apartment, fieldName: string) => {
+    if (!apt.custom_fields) return null;
+    const customFields = apt.custom_fields as Record<string, unknown>;
+    return customFields[fieldName] || null;
+  };
+
+  const formatFieldValue = (value: unknown, fieldType: string, fieldName: string) => {
+    if (value === null || value === undefined) return '-';
+
+    if (fieldName === 'price') {
+      return typeof value === 'number' ? formatPriceWithCurrency(value, project?.currency || null) : '-';
+    }
+
+    if (fieldName === 'area') {
+      return `${value} м²`;
+    }
+
+    if (fieldName === 'floor_number' || fieldName === 'floor') {
+      return `${value} ${t('project.floor').toLowerCase()}`;
+    }
+
+    if (fieldName === 'rooms') {
+      if (value === 0) {
+        return t('apartment.studio');
+      }
+      return `${value} ${t('apartment.room').toLowerCase()}`;
+    }
+
+    switch (fieldType) {
+      case 'boolean':
+        return value ? 'Да' : 'Нет';
+      case 'number':
+        return typeof value === 'number' ? value.toString() : String(value);
+      case 'select':
+        return Array.isArray(value) ? value.join(', ') : String(value);
+      default:
+        return String(value);
+    }
+  };
+
   return (
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col container">
           <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background p-4">
             <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.back')}>
               <ArrowLeft className="h-5 w-5" />
@@ -80,24 +140,58 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
                 {apartment.price && (
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
-                    <p className="text-lg font-semibold">{apartment.price.toLocaleString()} </p>
+                    <p className="text-lg font-semibold">{formatPriceWithCurrency(apartment.price, project?.currency || null)}</p>
                   </div>
                 )}
               </div>
 
-              {/* Дополнительные поля */}
-              {apartment.custom_fields && Object.keys(apartment.custom_fields).length > 0 && (
+              {/* Дополнительные поля - как в ProjectApartmentSelector */}
+              {getVisibleFields().length > 0 && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="font-medium mb-3">{t('apartment.additionalInfo')}</h3>
                     <div className="grid grid-cols-1 gap-3">
-                      {Object.entries(apartment.custom_fields).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span className="text-muted-foreground capitalize">{key}:</span>
-                          <span>{String(value)}</span>
-                        </div>
-                      ))}
+                      {getVisibleFields().map((field) => {
+                        let value: unknown = null;
+                        if (field.is_custom) {
+                          value = getCustomFieldValue(apartment, field.field_name);
+                        } else {
+                          switch (field.field_name) {
+                            case 'rooms':
+                              value = apartment.rooms;
+                              break;
+                            case 'area':
+                              value = apartment.area;
+                              break;
+                            case 'price':
+                              value = apartment.price;
+                              break;
+                            case 'status':
+                              value = apartment.status;
+                              break;
+                            case 'floor':
+                              value = apartment.floor_number;
+                              break;
+                            case 'number':
+                              value = apartment.apartment_number;
+                              break;
+                            default:
+                              value = null;
+                          }
+                        }
+
+                        if (value === null) return null;
+
+                        return (
+                          <div key={field.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                            <span className="text-sm text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatFieldValue(value, field.field_type, field.field_name)}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
