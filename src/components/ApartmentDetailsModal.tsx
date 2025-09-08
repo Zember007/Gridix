@@ -40,10 +40,9 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
       default: return status;
     }
   };
+  if(!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`left-0 top-0 translate-x-0 translate-y-0 z-50 h-screen w-screen max-w-none rounded-none p-0 ${isMobile ? '' : ''}`}>
         <div className="flex h-full flex-col">
           <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background p-4">
             <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.back')}>
@@ -106,8 +105,7 @@ const ApartmentDetailsModal = ({ apartment, isOpen, onClose }: ApartmentDetailsM
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      
   );
 };
 
