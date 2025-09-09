@@ -50,6 +50,68 @@ export type Database = {
         }
         Relationships: []
       }
+      amocrm_settings: {
+        Row: {
+          access_token: string | null
+          authorization_code: string | null
+          client_id: string
+          client_secret: string
+          created_at: string
+          id: string
+          pipeline_id: number
+          project_id: string
+          redirect_uri: string | null
+          refresh_token: string | null
+          responsible_user_id: number | null
+          status_id: number | null
+          subdomain: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          authorization_code?: string | null
+          client_id: string
+          client_secret: string
+          created_at?: string
+          id?: string
+          pipeline_id: number
+          project_id: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          responsible_user_id?: number | null
+          status_id?: number | null
+          subdomain: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          authorization_code?: string | null
+          client_id?: string
+          client_secret?: string
+          created_at?: string
+          id?: string
+          pipeline_id?: number
+          project_id?: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          responsible_user_id?: number | null
+          status_id?: number | null
+          subdomain?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amocrm_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apartment_photos: {
         Row: {
           apartment_id: string

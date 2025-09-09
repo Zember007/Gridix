@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ApartmentReservationFormProps {
   apartmentId: string;
@@ -21,9 +23,53 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    
     setSubmitting(true);
     try {
-      onSubmit?.({ name, email, phone, apartmentId, projectId });
+      // Call the custom onSubmit if provided (for backward compatibility)
+      if (onSubmit) {
+        onSubmit({ name, email, phone, apartmentId, projectId });
+        return;
+      }
+
+      // Send lead to AmoCRM via Edge Function
+      const { data, error } = await supabase.functions.invoke('create-amocrm-lead', {
+        body: {
+          name,
+          email,
+          phone,
+          apartmentId,
+          projectId
+        }
+      });
+
+      if (error) {
+        console.error('Error creating lead:', error);
+        toast.error('Произошла ошибка при отправке заявки. Попробуйте еще раз.');
+        return;
+      }
+
+      if (data?.error) {
+        console.error('AmoCRM API error:', data.error);
+        toast.error(`Ошибка: ${data.error}`);
+        return;
+      }
+
+      toast.success('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+      
+      // Clear form
+      setName('');
+      setEmail('');
+      setPhone('');
+      
+      // Close modal if onCancel is provided (typically used to close modal)
+      setTimeout(() => {
+        onCancel?.();
+      }, 1500);
+
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error('Произошла неожиданная ошибка. Попробуйте еще раз.');
     } finally {
       setSubmitting(false);
     }
@@ -45,7 +91,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel }
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>{t('managerAccounts.cancel')}</Button>
-        <Button type="submit" disabled={submitting}>{submitting ? t('project.loading') : t('common.reserve')}</Button>
+        <Button type="submit" disabled={submitting}>{submitting ? 'Отправка...' : 'Отправить заявку'}</Button>
       </div>
     </form>
   );

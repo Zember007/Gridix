@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -24,6 +24,7 @@ import FloorPlanEditor from './FloorPlanEditor';
 import BuildingImageEditor from './BuildingImageEditor';
 import AllFieldsManager from './AllFieldsManager';
 import ApartmentPhotosManager from './ApartmentPhotosManager';
+import AmoCRMSettings from './AmoCRMSettings';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -313,7 +314,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="basic" className="text-xs">
               <Building2 className="h-3 w-3 mr-1" />
               {t('projectEditor.basicInfo')}
@@ -337,6 +338,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
               <Camera className="h-3 w-3 mr-1" />
               {t('projectEditor.photos')}
+            </TabsTrigger>
+            <TabsTrigger value="amocrm" className="text-xs" disabled={isNew}>
+              <Zap className="h-3 w-3 mr-1" />
+              AmoCRM
             </TabsTrigger>
           </TabsList>
 
@@ -497,6 +502,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           <TabsContent value="photos">
             <ApartmentPhotosManager projectId={project.id} />
+          </TabsContent>
+
+          <TabsContent value="amocrm">
+            <AmoCRMSettings projectId={project.id} />
           </TabsContent>
         </Tabs>
       </div>
