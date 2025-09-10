@@ -114,6 +114,53 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     fetchSettings();
   }, [fetchSettings]);
 
+  const handleAuth = async () => {
+    try {
+      setAuthorizing(true);
+      
+      // Очищаем предыдущие данные авторизации, если они есть
+      if (settings?.id) {
+        await supabase
+          .from('amocrm_settings')
+          .update({ 
+            authorization_code: null,
+            access_token: null,
+            refresh_token: null,
+            token_expires_at: null 
+          })
+          .eq('id', settings.id);
+      }
+      
+      // Используем edge function для генерации правильного URL авторизации
+      const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
+        body: { project_id: projectId }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.auth_url) {
+        window.open(data.auth_url, '_blank');
+
+      } else {
+        throw new Error('Не получен URL авторизации');
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при запуске авторизации:', error);
+      toast.error('Не удалось запустить авторизацию AmoCRM');
+    } finally {
+      setAuthorizing(false);
+    }
+  };
+
+  const handleAuthSuccess = useCallback(async () => {
+    // Обновляем настройки после успешной авторизации
+    await fetchSettings();
+   
+  }, [fetchSettings]);
+
 
   const handleDisconnect = async () => {
     try {
@@ -144,22 +191,42 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   };
 
   const handleAuthorize = async () => {
-    setAuthorizing(true);
     try {
+      setAuthorizing(true);
+      
+      // Очищаем предыдущие данные авторизации, если они есть
+      if (settings?.id) {
+        await supabase
+          .from('amocrm_settings')
+          .update({ 
+            authorization_code: null,
+            access_token: null,
+            refresh_token: null,
+            token_expires_at: null 
+          })
+          .eq('id', settings.id);
+      }
+      
+      // Используем edge function для генерации правильного URL авторизации
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
         body: { project_id: projectId }
       });
 
       if (error) {
-        throw new Error(error.message || 'Ошибка при запуске авторизации');
+        throw error;
       }
 
-      const { auth_url } = data;
-      // Full redirect to AmoCRM authorization page; callback will return to FRONTEND_URL
-      window.location.href = auth_url;
-    } catch (error: any) {
-      console.error('Error during authorization:', error);
-      toast.error(error.message || 'Ошибка при авторизации');
+      if (data?.auth_url) {
+        window.open(data.auth_url, '_blank');
+
+      } else {
+        throw new Error('Не получен URL авторизации');
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при запуске авторизации:', error);
+      toast.error('Не удалось запустить авторизацию AmoCRM');
+    } finally {
       setAuthorizing(false);
     }
   };
@@ -180,6 +247,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -270,7 +338,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
           // Not configured state - single button auth
           <>
             <Button 
-              onClick={handleAuthorize} 
+              onClick={handleAuth} 
               disabled={authorizing}
               className="w-full"
               size="lg"
@@ -295,6 +363,9 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
         )}
       </CardContent>
     </Card>
+    
+
+    </>
   );
 };
 
