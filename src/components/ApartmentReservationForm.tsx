@@ -29,7 +29,6 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel }
       // Call the custom onSubmit if provided (for backward compatibility)
       if (onSubmit) {
         onSubmit({ name, email, phone, apartmentId, projectId });
-        return;
       }
 
       // Send lead to AmoCRM via Edge Function

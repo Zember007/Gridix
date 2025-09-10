@@ -51,52 +51,17 @@ serve(async (req) => {
     })
 
     if (error) {
-      return new Response(`
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Ошибка авторизации AmoCRM</title>
-          </head>
-          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h1 style="color: red;">Ошибка авторизации: ${error}</h1>
-            <script>
-              if (window.parent !== window) {
-                window.parent.postMessage({
-                  type: 'AMOCRM_AUTH_ERROR',
-                  error: '${error}',
-                  timestamp: Date.now()
-                }, '*');
-              }
-              setTimeout(() => window.close(), 3000);
-            </script>
-          </body>
-        </html>
-      `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+      return new Response(JSON.stringify({ error }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
     if (!code || !state) {
-      return new Response(`
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Ошибка авторизации AmoCRM</title>
-          </head>
-          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h1 style="color: red;">Ошибка</h1>
-            <p>Отсутствует код авторизации или идентификатор проекта</p>
-            <script>
-              if (window.parent !== window) {
-                window.parent.postMessage({
-                  type: 'AMOCRM_AUTH_ERROR',
-                  error: 'Отсутствует код авторизации или идентификатор проекта',
-                  timestamp: Date.now()
-                }, '*');
-              }
-              setTimeout(() => window.close(), 3000);
-            </script>
-          </body>
-        </html>
-      `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+      return new Response(JSON.stringify({ error: 'missing_code_or_state' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
     // Инициализация supabase
@@ -125,63 +90,21 @@ serve(async (req) => {
       
       // Если уже есть access_token, значит авторизация завершена успешно
       if (existingSettings.access_token) {
-        const frontendUrl = Deno.env.get('FRONTEND_URL') || 'http://localhost:5173'
-        const redirectUrl = `${frontendUrl}/ru/admin/project/${state}`
-        
-        return new Response(`
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <title>Авторизация AmoCRM</title>
-            </head>
-            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-              <h1 style="color: green;">Авторизация уже выполнена! ✅</h1>
-              <p>AmoCRM интеграция уже настроена для этого проекта.</p>
-              <p>Перенаправляем вас обратно к проекту...</p>
-              <script>
-                if (window.parent !== window) {
-                  window.parent.postMessage({
-                    type: 'AMOCRM_AUTH_SUCCESS',
-                    projectId: '${state}',
-                    timestamp: Date.now()
-                  }, '*');
-                }
-                setTimeout(() => {
-                  if (window.parent !== window) {
-                    window.parent.location.href = '${redirectUrl}';
-                  } else {
-                    window.location.href = '${redirectUrl}';
-                  }
-                }, 1500);
-              </script>
-            </body>
-          </html>
-        `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+        return new Response(`<script>
+window.parent.postMessage({
+  type: 'AMOCRM_AUTH_SUCCESS',
+  projectId: '${state}',
+  timestamp: Date.now()
+}, '*');
+window.close();
+</script>`, { 
+          headers: { 'Content-Type': 'text/html; charset=utf-8' } 
+        })
       } else {
-        // Если код тот же, но токена нет, значит предыдущая попытка провалилась
-        // Показываем ошибку и просим начать заново
-        return new Response(`
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <title>Ошибка авторизации AmoCRM</title>
-            </head>
-            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-              <h1 style="color: red;">Код авторизации уже использован</h1>
-              <p>Пожалуйста, начните процесс авторизации заново.</p>
-              <script>
-                if (window.parent !== window) {
-                  window.parent.postMessage({
-                    type: 'AMOCRM_AUTH_ERROR',
-                    error: 'Код авторизации уже использован',
-                    timestamp: Date.now()
-                  }, '*');
-                }
-                setTimeout(() => window.close(), 3000);
-              </script>
-            </body>
-          </html>
-        `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+        return new Response(JSON.stringify({ error: 'authorization_code_already_used' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
       }
     }
 
@@ -242,8 +165,9 @@ serve(async (req) => {
           codeLength: code?.length
         }
       })
-      return new Response(`<h1>Ошибка получения токена</h1><p>${errorText}</p>`, {
-        headers: { 'Content-Type': 'text/html' }
+      return new Response(JSON.stringify({ error: 'token_exchange_failed', details: errorText }), {
+        status: tokenResponse.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
@@ -256,10 +180,9 @@ serve(async (req) => {
     let accountData: AmoCRMAccountData | null = null
     let pipelineId = 1 // fallback значение
     let pipelineName: string | null = null
-    let accountName: string | null = null
 
     try {
-      const accountUrl = `https://${subdomain}.amocrm.ru/api/v4/account?with=pipelines`
+      const accountUrl = `https://${subdomain}.amocrm.ru/api/v4/leads/pipelines`
       console.log('Fetching account data from:', accountUrl)
       
       const accountResponse = await fetch(accountUrl, {
@@ -269,17 +192,16 @@ serve(async (req) => {
         }
       })
 
+     
+
       if (accountResponse.ok) {
+
         accountData = await accountResponse.json() as AmoCRMAccountData
 
+
         
 
-        console.log('Account data received:', {
-          name: accountData?.name,
-          pipelinesCount: accountData?._embedded?.pipelines?.length || 0
-        })
         
-        accountName = accountData?.name
         
         // Находим первую активную воронку или главную воронку
         const pipelines = accountData?._embedded?.pipelines || []
@@ -317,87 +239,36 @@ serve(async (req) => {
         subdomain: subdomain,
         pipeline_id: pipelineId,
         pipeline_name: pipelineName,
-        account_name: accountName
       }, {
         onConflict: 'project_id'
       })
 
     if (upsertError) {
       console.error('Failed to save tokens:', upsertError)
-      return new Response(`<h1>Ошибка сохранения токенов</h1><p>${upsertError.message}</p>`, {
-        headers: { 'Content-Type': 'text/html' }
+      return new Response(JSON.stringify({ error: 'save_tokens_failed', details: upsertError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     console.log(`✅ Успешная авторизация AmoCRM для проекта ${state}`)
 
-    // Определяем URL для редиректа обратно к проекту
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'http://localhost:5173'
-    const redirectUrl = `${frontendUrl}/ru/admin/project/${state}`
-
-    return new Response(`
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Авторизация AmoCRM</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h1 style="color: green;">Авторизация успешна! 🎉</h1>
-          <p>AmoCRM интеграция настроена для вашего проекта.</p>
-          <p>Перенаправляем вас обратно к проекту...</p>
-          <script>
-            // Отправляем сообщение родительскому окну
-            if (window.parent !== window) {
-              window.parent.postMessage({
-                type: 'AMOCRM_AUTH_SUCCESS',
-                projectId: '${state}',
-                timestamp: Date.now()
-              }, '*');
-            }
-            
-            // Перенаправляем через 1.5 секунды
-            setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.location.href = '${redirectUrl}';
-              } else {
-                window.location.href = '${redirectUrl}';
-              }
-            }, 1500);
-          </script>
-        </body>
-      </html>
-    `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    return new Response(`<script>
+window.parent.postMessage({
+  type: 'AMOCRM_AUTH_SUCCESS',
+  projectId: '${state}',
+  timestamp: Date.now()
+}, '*');
+window.close();
+</script>`, { 
+      headers: { 'Content-Type': 'text/html; charset=utf-8' } 
+    })
 
   } catch (error) {
     console.error('OAuth callback error:', error)
-    return new Response(`
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Ошибка авторизации AmoCRM</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h1 style="color: red;">Ошибка авторизации</h1>
-          <p>${error.message}</p>
-          <script>
-            // Отправляем сообщение об ошибке родительскому окну
-            if (window.parent !== window) {
-              window.parent.postMessage({
-                type: 'AMOCRM_AUTH_ERROR',
-                error: '${error.message}',
-                timestamp: Date.now()
-              }, '*');
-            }
-            
-            setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.focus();
-              }
-              window.close();
-            }, 3000);
-          </script>
-        </body>
-      </html>
-    `, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    return new Response(JSON.stringify({ error: 'unexpected_error', details: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
   }
 })
