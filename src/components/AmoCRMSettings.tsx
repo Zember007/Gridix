@@ -96,6 +96,36 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const isConfigured = isAuthorized && !tokenExpired && settings.pipeline_id;
   const needsConfiguration = isAuthorized && !tokenExpired && !settings.pipeline_id;
 
+  const fetchAmoCRMData = useCallback(async (currentSettings: AmoCRMSettings) => {
+    if (!currentSettings.access_token || !currentSettings.subdomain) return;
+    
+    setLoadingData(true);
+    try {
+      // Используем edge function для запросов к AmoCRM API
+      const { data, error } = await supabase.functions.invoke('amocrm-api', {
+        body: { 
+          project_id: projectId,
+          action: 'fetch_data'
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.data) {
+        setAmocrmData(data.data);
+      } else {
+        throw new Error('Не удалось загрузить данные из AmoCRM');
+      }
+    } catch (error) {
+      console.error('Error fetching AmoCRM data:', error);
+      toast.error('Ошибка при загрузке данных из AmoCRM');
+    } finally {
+      setLoadingData(false);
+    }
+  }, [projectId]);
+
   const fetchSettings = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -121,64 +151,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
-
-  const fetchAmoCRMData = async (currentSettings: AmoCRMSettings) => {
-    if (!currentSettings.access_token || !currentSettings.subdomain) return;
-    
-    setLoadingData(true);
-    try {
-      // Загружаем воронки
-      const pipelinesResponse = await fetch(`https://${currentSettings.subdomain}.amocrm.ru/api/v4/leads/pipelines`, {
-        headers: {
-          'Authorization': `Bearer ${currentSettings.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Загружаем пользователей
-      const usersResponse = await fetch(`https://${currentSettings.subdomain}.amocrm.ru/api/v4/users`, {
-        headers: {
-          'Authorization': `Bearer ${currentSettings.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Загружаем информацию об аккаунте
-      const accountResponse = await fetch(`https://${currentSettings.subdomain}.amocrm.ru/api/v4/account`, {
-        headers: {
-          'Authorization': `Bearer ${currentSettings.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (pipelinesResponse.ok && usersResponse.ok && accountResponse.ok) {
-        const pipelinesData = await pipelinesResponse.json();
-        const usersData = await usersResponse.json();
-        const accountData = await accountResponse.json();
-
-        const data: AmoCRMData = {
-          account: {
-            id: accountData.id,
-            name: accountData.name,
-            subdomain: accountData.subdomain,
-            country: accountData.country
-          },
-          pipelines: pipelinesData._embedded?.pipelines || [],
-          users: usersData._embedded?.users || []
-        };
-
-        setAmocrmData(data);
-      } else {
-        throw new Error('Не удалось загрузить данные из AmoCRM');
-      }
-    } catch (error) {
-      console.error('Error fetching AmoCRM data:', error);
-      toast.error('Ошибка при загрузке данных из AmoCRM');
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  }, [projectId, fetchAmoCRMData]);
 
 
   useEffect(() => {
