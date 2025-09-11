@@ -2806,6 +2806,23 @@ const translations: Translations = {
     ru: 'Этаж {floor} уже существует',
     en: 'Floor {floor} already exists',
     ka: 'სართული {floor} უკვე არსებობს'
+  },
+  
+  // Filters
+  'project.moreFilters': {
+    ru: 'Больше фильтров',
+    en: 'More Filters',
+    ka: 'მეტი ფილტრი'
+  },
+  'project.currency': {
+    ru: 'Валюта',
+    en: 'Currency',
+    ka: 'ვალუტა'
+  },
+  'common.hide': {
+    ru: 'Скрыть',
+    en: 'Hide',
+    ka: 'დამალვა'
   }
 };
 

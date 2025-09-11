@@ -67,6 +67,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
   const [isReserveOpen, setIsReserveOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement>(null);
   // Отслеживаем, для каких этажей уже подгружены полигоны, чтобы не дёргать повторно
@@ -426,9 +427,140 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     );
   }
 
-  // Filters component for reuse between mobile sheet and desktop inline
+  // Compact filters for desktop - only essential filters
+  const CompactFiltersContent = () => (
+    <div className="flex items-center gap-4 flex-wrap">
+      {/* Rooms filter */}
+      <Select value={selectedRooms} onValueChange={setSelectedRooms}>
+        <SelectTrigger className="w-32">
+          <SelectValue placeholder={t('project.allTypes')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+          {getUniqueRoomCounts().map(rooms => (
+            <SelectItem key={rooms} value={rooms.toString()}>
+              {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {viewMode !== 'floor-plan' && (
+        <Select value={selectedFloor} onValueChange={setSelectedFloor}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder={t('project.allFloors')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('project.allFloors')}</SelectItem>
+            {getUniqueFloors().map(floor => (
+              <SelectItem key={floor} value={floor.toString()}>
+                {floor} {t('project.floor').toLowerCase()}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Type filter - only show if project has commercial or parking */}
+      {(project?.has_commercial || project?.has_parking) && (
+        <Select value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder={t('project.allTypes')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+            <SelectItem value="apartment">{t('apartmentsManager.typeApartment')}</SelectItem>
+            {project?.has_commercial && (
+              <SelectItem value="commercial">{t('apartmentsManager.typeCommercial')}</SelectItem>
+            )}
+            {project?.has_parking && (
+              <SelectItem value="parking">{t('apartmentsManager.typeParking')}</SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder={t('project.apartmentNumber')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 w-48"
+        />
+      </div>
+
+      {/* Currency filter - pill toggles */}
+      {(() => {
+        type Currency = 'RUB' | 'USD' | 'EUR' | 'GEL'
+        const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR']
+        const projectCurrency = (project?.currency || 'RUB') as Currency
+        const list: Currency[] = [...preferredOrder, ...(preferredOrder.includes(projectCurrency as Exclude<Currency, 'RUB'>) ? [] : [projectCurrency])]
+        const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
+        const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
+        return (
+          <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
+            {currenciesToShow.map((c) => (
+              <ToggleGroupItem
+                key={c}
+                value={c}
+                size="sm"
+                aria-label={c}
+                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+              >
+                {symbol[c]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )
+      })()}
+
+      {/* Available only switch */}
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={showOnlyAvailable}
+          onCheckedChange={setShowOnlyAvailable}
+        />
+        <Label className="text-sm">{t('project.onlyAvailable')}</Label>
+      </div>
+    </div>
+  );
+
+  // Expanded filters - price and area sliders
+  const ExpandedFiltersContent = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Price range */}
+      <div className="space-y-2">
+        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(selectedCurrency)}</Label>
+        <Slider
+          value={priceRange}
+          onValueChange={setPriceRange}
+          max={maxPrice}
+          min={minPrice}
+          step={1}
+          className="w-full"
+        />
+      </div>
+
+      {/* Area range */}
+      <div className="space-y-2">
+        <Label>{t('project.area')}: {areaRange[0]} - {areaRange[1]} м²</Label>
+        <Slider
+          defaultValue={areaRange}
+          onValueChange={setAreaRange}
+          max={maxArea}
+          min={minArea}
+          step={1}
+          className="w-full"
+        />
+      </div>
+    </div>
+  );
+
+  // Full filters for mobile
   const FiltersContent = () => (
-    <div className={isMobile ? "space-y-6" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end"}>
+    <div className="space-y-6">
       {/* Rooms filter */}
       <div className="space-y-2">
         <Label>{t('project.rooms')}</Label>
@@ -511,19 +643,22 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
         const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
         return (
-          <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
-            {currenciesToShow.map((c) => (
-              <ToggleGroupItem
-                key={c}
-                value={c}
-                size="sm"
-                aria-label={c}
-                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
-              >
-                {symbol[c]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <div className="space-y-2">
+            <Label>{t('project.currency')}</Label>
+            <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
+              {currenciesToShow.map((c) => (
+                <ToggleGroupItem
+                  key={c}
+                  value={c}
+                  size="sm"
+                  aria-label={c}
+                  className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+                >
+                  {symbol[c]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
         )
       })()}
 
@@ -649,7 +784,30 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
          {/* Desktop Filters */}
          {!isMobile && (
-           <FiltersContent />
+           <div className="space-y-4">
+             {/* Compact filters row */}
+             <div className="flex items-center justify-between">
+               <CompactFiltersContent />
+              {/*  <Button
+                 variant="outline"
+                 size="sm"
+                 onClick={() => setIsDesktopFiltersExpanded(!isDesktopFiltersExpanded)}
+                 className="flex items-center gap-2"
+               >
+                 <SlidersHorizontal className="h-4 w-4" />
+                 {isDesktopFiltersExpanded ? t('common.hide') : t('project.moreFilters')}
+               </Button> */}
+             </div>
+             
+             {/* Expanded filters - animated */}
+             <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+               isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+             }`}>
+               <div className="pt-4 border-t border-gray-200">
+                 <ExpandedFiltersContent />
+               </div>
+             </div>
+           </div>
          )}
        </div>
      </div>
@@ -679,8 +837,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
            {/* View mode toggle - only show on desktop */}
            {!isMobile && (
-             <div className="flex items-center justify-between">
-               <div className="flex items-center gap-2">
+               <div className="flex items-center justify-end gap-2">
                  <Button
                    variant={listViewMode === 'list' ? 'default' : 'outline'}
                    size="sm"
@@ -700,7 +857,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                    {t('common.grid')}
                  </Button>
                </div>
-             </div>
            )}
 
            {isMobile ? (
