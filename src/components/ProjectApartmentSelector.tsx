@@ -816,25 +816,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
             // List view - responsive layout
             <div className="container mx-auto px-4 md:px-6 py-8 grow">
               <div className={(project?.has_commercial || project?.has_parking) ? "space-y-6" : "space-y-1"}>
+                <div className="flex gap-[20px] justify-between">
                 <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
-
-                {/* Type selector tabs - only show if project has commercial or parking */}
-                {(project?.has_commercial || project?.has_parking) && (
-                  <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
-                    <TabsList className="flex w-full md:flex-row flex-col h-auto">
-                      <TabsTrigger className="w-full" value="all">{t('project.allTypes')}</TabsTrigger>
-                      <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
-                      {project?.has_commercial && (
-                        <TabsTrigger className="w-full" value="commercial">{t('apartmentsManager.typeCommercial')}</TabsTrigger>
-                      )}
-                      {project?.has_parking && (
-                        <TabsTrigger className="w-full" value="parking">{t('apartmentsManager.typeParking')}</TabsTrigger>
-                      )}
-                    </TabsList>
-                  </Tabs>
-                )}
-
-                {/* View mode toggle - only show on desktop */}
                 <div className="flex items-center justify-end gap-2">
                   <Button
                     variant={listViewMode === 'list' ? 'default' : 'outline'}
@@ -855,6 +838,26 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     {t('common.grid')}
                   </Button>
                 </div>
+                </div>
+
+                {/* Type selector tabs - only show if project has commercial or parking */}
+                {(project?.has_commercial || project?.has_parking) && (
+                  <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'apartment' | 'commercial' | 'parking')}>
+                    <TabsList className="flex w-full md:flex-row flex-col h-auto">
+                      <TabsTrigger className="w-full" value="all">{t('project.allTypes')}</TabsTrigger>
+                      <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
+                      {project?.has_commercial && (
+                        <TabsTrigger className="w-full" value="commercial">{t('apartmentsManager.typeCommercial')}</TabsTrigger>
+                      )}
+                      {project?.has_parking && (
+                        <TabsTrigger className="w-full" value="parking">{t('apartmentsManager.typeParking')}</TabsTrigger>
+                      )}
+                    </TabsList>
+                  </Tabs>
+                )}
+
+     
+              
 
 
                 <div className="space-y-4 overflow-y-auto">
