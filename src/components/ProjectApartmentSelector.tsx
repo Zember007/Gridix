@@ -816,7 +816,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
      {viewMode === 'list' ? (
        // List view - responsive layout
        <div className="container mx-auto px-4 md:px-6 py-8 grow">
-         <div className="space-y-6">
+         <div className={(project?.has_commercial || project?.has_parking) ? "space-y-6" : ""}>
            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
 
            {/* Type selector tabs - only show if project has commercial or parking */}
