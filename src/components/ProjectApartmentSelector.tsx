@@ -944,7 +944,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
                                         return (
                                           <div key={field.id} className="text-xs text-gray-500">
-                                            {getFieldLabel(field)}: {formatFieldValue(value, field.field_type, field.field_name)}
+                                            {
+                                field.is_custom ?
+                                  getFieldLabel(field)
+                                  :
+                                  t(`project.${field.field_name}`)
+                              }: {formatFieldValue(value, field.field_type, field.field_name)}
                                           </div>
                                         );
                                       })}
