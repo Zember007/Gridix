@@ -1062,12 +1062,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                              <CardContent className="p-3 h-full flex flex-col justify-between">
                                {/* Apartment number */}
                                <div className="text-center">
-                                 <div className="text-lg font-bold text-gray-900 mb-1">
+                                 <div className="text-sm font-bold text-gray-900 mb-1 ">
                                    {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
                                  </div>
                                  <Badge
                                    variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                                   className={`text-xs ${apartment.status === 'available'
+                                   className={`text-[8px] ${apartment.status === 'available'
                                        ? 'bg-green-500 text-white'
                                        : 'bg-gray-500 text-white'
                                      }`}
