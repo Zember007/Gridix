@@ -139,11 +139,8 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
                         strokeWidth={2}
                         className="cursor-pointer hover:fill-opacity-50 transition-all"
                         onClick={() => {
-                          setTimeout(() => {
-                            document.getElementById('apartment-summary')?.scrollIntoView({ behavior: 'smooth' });
-                          }, 500)
+                         
                           onApartmentSelect(apartment)
-                          console.log(apartment);
                           
                         }}
                       />

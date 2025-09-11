@@ -701,12 +701,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   return (
     <div className="min-h-full bg-white flex flex-col">
-      {(viewMode !== 'list' ? false : !!selectedApartment) ?
+      {(selectedApartment) ?
 
 
         <ApartmentDetailsModal
           apartment={selectedApartment}
-          isOpen={viewMode !== 'list' ? false : !!selectedApartment}
+          isOpen={!!selectedApartment}
           onClose={() => setSelectedApartment(null)}
         />
 
@@ -1419,146 +1419,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 </div>
 
                 {/* Apartment summary section - only show if apartment is selected */}
-                {selectedApartment && (
-                  <div
-                    id='apartment-summary'
-                    className="bg-gray-50 border-t">
-                    <div className="container mx-auto px-6 py-6">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Apartment Layout Images */}
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-gray-900">
-                              {selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms}-${t('apartment.rooms')}`}
-                            </h3>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedApartment(null)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-
-                          {/* Apartment Photos Viewer */}
-                          <div className="space-y-4">
-                            <ApartmentPhotosViewer apartmentId={selectedApartment.id} projectId={projectId} roomsHint={Number(selectedApartment.rooms)} />
-                          </div>
-                        </div>
-
-                        {/* Apartment Details */}
-                        <div className="space-y-6">
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Home className="h-5 w-5 text-gray-600" />
-                              <span className="text-lg font-semibold">
-                                {t('apartment.number')} {selectedApartment.apartment_number}
-                              </span>
-                            </div>
-                            <p className="text-gray-600">{selectedApartment.rooms === 0 ? t('apartment.studio') : `${selectedApartment.rooms} ${t('apartment.rooms')}`}</p>
-                          </div>
-
-                          {/* Key details */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <div className="text-sm text-gray-500">{t('project.area')}</div>
-                              <div className="font-semibold text-lg">{selectedApartment.area} м²</div>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="text-sm text-gray-500">{t('project.floor')}</div>
-                              <div className="font-semibold text-lg">{selectedApartment.floor_number} {t('project.of')} {project.floors}</div>
-                            </div>
-                          </div>
-
-                          {/* Custom fields */}
-                          {getVisibleFields().length > 0 && (
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-medium text-gray-700">{t('project.additionalInfo')}</h4>
-                              <div className="grid grid-cols-1 gap-3">
-                                {getVisibleFields().map((field) => {
-                                  let value: unknown = null;
-
-                                  if (field.is_custom) {
-                                    // Для кастомных полей берем значение из custom_fields
-                                    value = getCustomFieldValue(selectedApartment, field.field_name);
-                                  } else {
-                                    // Для стандартных полей берем из основных свойств апартамента
-                                    switch (field.field_name) {
-                                      case 'rooms':
-                                        value = selectedApartment.rooms;
-                                        break;
-                                      case 'area':
-                                        value = selectedApartment.area;
-                                        break;
-                                      case 'price':
-                                        value = selectedApartment.price;
-                                        break;
-                                      case 'status':
-                                        value = selectedApartment.status;
-                                        break;
-                                      case 'floor':
-                                        value = selectedApartment.floor_number;
-                                        break;
-                                      case 'number':
-                                        value = selectedApartment.apartment_number;
-                                        break;
-                                      default:
-                                        value = null;
-                                    }
-                                  }
-
-                                  return (
-                                    <div key={field.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                                      <span className="text-sm text-gray-600">{getFieldLabel(field)}</span>
-                                      <span className="text-sm font-medium text-gray-900">
-                                        {formatFieldValue(value, field.field_type, field.field_name)}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Price */}
-                          <div className="bg-white rounded-lg p-4 border">
-                            <div className="space-y-2">
-                              <div className="text-sm text-gray-500">{t('project.price')}</div>
-                              <div className="font-bold text-2xl">
-                                {selectedApartment.price ? `${formatPrice(convertPrice(selectedApartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Action buttons */}
-                          {selectedApartment.status === 'available' && !isReserveOpen && (
-                            <Button
-                              className="flex-1 bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white w-full"
-                              onClick={() => setIsReserveOpen(true)}
-                            >
-                              {t('common.reserve')}
-                            </Button>
-                          )}
-                          {selectedApartment.status !== 'available' && (
-                            <Button className="flex-1 bg-[#1E1E1E]/50 text-white w-full" disabled>
-                              {t('common.unavailable')}
-                            </Button>
-                          )}
-                          {isReserveOpen && selectedApartment.status === 'available' && (
-                            <div className="mt-3 rounded-md border p-4">
-                              <h3 className="font-medium mb-3">{t('common.reserve')} {t('apartment.apartment')}</h3>
-                              <ApartmentReservationForm
-                                apartmentId={selectedApartment.id}
-                                projectId={selectedApartment.project_id}
-                                onSubmit={() => setIsReserveOpen(false)}
-                                onCancel={() => setIsReserveOpen(false)}
-                              />
-                            </div>
-                          )}
-
-
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+               
               </>
             )}
         </>
