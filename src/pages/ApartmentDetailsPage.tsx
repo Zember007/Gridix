@@ -169,7 +169,6 @@ const ApartmentDetailsPage = () => {
   // Перенаправляем только если проект не найден после завершения загрузки
   if (!projectLoading && !project) {
     console.warn('Project not found after loading completed:', { projectId, apartmentId });
-    return <Navigate to={`/${lang}/projects`} replace />;
   }
 
   return (
