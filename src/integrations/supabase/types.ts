@@ -502,10 +502,13 @@ export type Database = {
           has_parking: boolean
           has_commercial: boolean
           id: string
+          installment_enabled: boolean
           is_featured: boolean
           is_public: boolean
           latitude: number | null
           longitude: number | null
+          max_installment_months: number
+          min_down_payment_percent: number
           name: string
           polygon_settings: Json | null
           slug: string | null
@@ -524,10 +527,13 @@ export type Database = {
           has_parking?: boolean
           has_commercial?: boolean
           id?: string
+          installment_enabled?: boolean
           is_featured?: boolean
           is_public?: boolean
           latitude?: number | null
           longitude?: number | null
+          max_installment_months?: number
+          min_down_payment_percent?: number
           name: string
           polygon_settings?: Json | null
           slug?: string | null
@@ -546,10 +552,13 @@ export type Database = {
           has_parking?: boolean
           has_commercial?: boolean
           id?: string
+          installment_enabled?: boolean
           is_featured?: boolean
           is_public?: boolean
           latitude?: number | null
           longitude?: number | null
+          max_installment_months?: number
+          min_down_payment_percent?: number
           name?: string
           polygon_settings?: Json | null
           slug?: string | null

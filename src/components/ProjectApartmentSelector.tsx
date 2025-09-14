@@ -17,14 +17,12 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Search, Building2, Home, MapPin, Ruler, DollarSign, SlidersHorizontal, Calendar, Eye, List, Grid, Share, Heart, Maximize2, X } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
 import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
-import ApartmentDetailsModal from './ApartmentDetailsModal';
-import ApartmentReservationForm from './ApartmentReservationForm';
-import ApartmentPhotosViewer from './ApartmentPhotosViewer';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
 import { getCurrencySymbolSafe, isValidCurrency } from '@/lib/currency-utils';
 
@@ -37,6 +35,7 @@ interface ProjectApartmentSelectorProps {
 
 const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
   const { t, language } = useLanguage();
+  const { lang } = useParams();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(projectId);
@@ -52,6 +51,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+
+  // Функция для открытия квартиры в новой вкладке
+  const openApartmentDetails = (apartment: Apartment) => {
+    const url = `/${lang}/project/${projectId}/apartment/${apartment.id}`;
+    window.open(url, '_blank');
+  };
 
 
   const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
@@ -701,18 +706,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   return (
     <div className="min-h-full bg-white flex flex-col">
-      {(selectedApartment) ?
-
-
-        <ApartmentDetailsModal
-          apartment={selectedApartment}
-          isOpen={!!selectedApartment}
-          onClose={() => setSelectedApartment(null)}
-        />
-
-        :
-
-        <>
           {/* Top header bar - always visible */}
           <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
             <div className="container mx-auto px-4 md:px-6 py-4">
@@ -870,7 +863,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                         // Mobile card layout
                         <div className="space-y-4">
                           {filteredApartments.map((apartment) => (
-                            <Card key={apartment.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedApartment(apartment)}>
+                            <Card key={apartment.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => openApartmentDetails(apartment)}>
                               <CardContent className="p-4">
                                 <div className="flex items-center space-x-4">
                                   <div className="flex-shrink-0">
@@ -980,7 +973,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                             <div key={apartment.id}
                               className="hidden md:grid gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                               style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
-                              onClick={() => setSelectedApartment(apartment)}>
+                              onClick={() => openApartmentDetails(apartment)}>
                               <div className="flex items-center">
                                 <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                   {(() => {
@@ -1066,7 +1059,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                   ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100'
                                   : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
                                   }`}
-                                onClick={() => setSelectedApartment(apartment)}
+                                onClick={() => openApartmentDetails(apartment)}
                               >
                                 <CardContent className="p-3 h-full flex flex-col justify-between">
                                   {/* Apartment number */}
@@ -1143,7 +1136,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                             setSelectedFloorForPlan(floor);
                             setViewMode('floor-plan');
                           }}
-                          onApartmentSelect={setSelectedApartment}
+                          onApartmentSelect={openApartmentDetails}
                           filtersRef={filtersRef}
                         />
 
@@ -1392,7 +1385,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                           apartments={filteredApartments.filter(apt =>
                             selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
                           )}
-                          onApartmentSelect={setSelectedApartment}
+                          onApartmentSelect={openApartmentDetails}
                           selectedFloorNumber={selectedFloorForPlan}
                         />
                       </div>
@@ -1425,17 +1418,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     </div>
                   )}
                 </div>
-
-                {/* Apartment summary section - only show if apartment is selected */}
-               
               </>
             )}
-        </>
-      }
-
-
-
-
     </div>
   );
 };

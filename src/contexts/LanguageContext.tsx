@@ -599,6 +599,105 @@ const translations: Translations = {
     en: 'Additional Information',
     ka: 'დამატებითი ინფორმაცია'
   },
+
+  // Installment Calculator
+  'installment.calculator': {
+    ru: 'Калькулятор рассрочки',
+    en: 'Installment Calculator',
+    ka: 'განვადების კალკულატორი'
+  },
+  'installment.downPayment': {
+    ru: 'Первоначальный взнос',
+    en: 'Down Payment',
+    ka: 'პირველადი გადახდა'
+  },
+  'installment.period': {
+    ru: 'Срок рассрочки',
+    en: 'Installment Period',
+    ka: 'განვადების ვადა'
+  },
+  'installment.months': {
+    ru: 'месяцев',
+    en: 'months',
+    ka: 'თვე'
+  },
+  'installment.month': {
+    ru: 'месяц',
+    en: 'month',
+    ka: 'თვე'
+  },
+  'installment.minimum': {
+    ru: 'Минимум',
+    en: 'Minimum',
+    ka: 'მინიმუმი'
+  },
+  'installment.maximum': {
+    ru: 'Максимум',
+    en: 'Maximum',
+    ka: 'მაქსიმუმი'
+  },
+  'installment.remainingAmount': {
+    ru: 'К доплате',
+    en: 'Remaining Amount',
+    ka: 'დასარჩენი თანხა'
+  },
+  'installment.monthlyPayment': {
+    ru: 'Ежемесячный платеж',
+    en: 'Monthly Payment',
+    ka: 'ყოველთვიური გადახდა'
+  },
+  'installment.apply': {
+    ru: 'Оформить рассрочку',
+    en: 'Apply for Installment',
+    ka: 'განვადების გაფორმება'
+  },
+  'installment.info.noInterest': {
+    ru: 'Рассрочка без процентов',
+    en: 'Interest-free installment',
+    ka: 'უპროცენტო განვადება'
+  },
+  'installment.info.earlyPayment': {
+    ru: 'Возможность досрочного погашения',
+    en: 'Early payment option available',
+    ka: 'ადრეული გადახდის შესაძლებლობა'
+  },
+  'installment.info.contactManager': {
+    ru: 'Для оформления обратитесь к менеджеру',
+    en: 'Contact manager to apply',
+    ka: 'გაფორმებისთვის დაუკავშირდით მენეჯერს'
+  },
+
+  // Project Editor - Installment Settings
+  'projectEditor.installmentSettings': {
+    ru: 'Настройки рассрочки',
+    en: 'Installment Settings',
+    ka: 'განვადების პარამეტრები'
+  },
+  'projectEditor.enableInstallment': {
+    ru: 'Включить рассрочку',
+    en: 'Enable Installment',
+    ka: 'განვადების ჩართვა'
+  },
+  'projectEditor.minDownPaymentPercent': {
+    ru: 'Минимальный первый взнос (%)',
+    en: 'Minimum Down Payment (%)',
+    ka: 'მინიმალური პირველადი გადახდა (%)'
+  },
+  'projectEditor.minDownPaymentDesc': {
+    ru: 'Минимальный процент от стоимости квартиры для первого взноса',
+    en: 'Minimum percentage of apartment price for down payment',
+    ka: 'ბინის ღირებულების მინიმალური პროცენტი პირველადი გადახდისთვის'
+  },
+  'projectEditor.maxInstallmentMonths': {
+    ru: 'Максимальный срок рассрочки (месяцы)',
+    en: 'Maximum Installment Period (months)',
+    ka: 'განვადების მაქსიმალური ვადა (თვე)'
+  },
+  'projectEditor.maxInstallmentMonthsDesc': {
+    ru: 'Максимальное количество месяцев для рассрочки',
+    en: 'Maximum number of months for installment payments',
+    ka: 'განვადების გადახდების მაქსიმალური თვეების რაოდენობა'
+  },
   'apartment.apartment': {
     ru: 'квартира',
     en: 'apartment',

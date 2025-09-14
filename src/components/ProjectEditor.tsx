@@ -44,6 +44,9 @@ interface Project {
   latitude: number | null;
   longitude: number | null;
   currency: CurrencyType;
+  installment_enabled: boolean;
+  min_down_payment_percent: number;
+  max_installment_months: number;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -58,7 +61,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     building_image_url: null,
     latitude: null,
     longitude: null,
-    currency: DEFAULT_CURRENCY
+    currency: DEFAULT_CURRENCY,
+    installment_enabled: false,
+    min_down_payment_percent: 20,
+    max_installment_months: 24
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -93,7 +99,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           building_image_url: cachedProject.building_image_url,
           latitude: cachedProject.latitude,
           longitude: cachedProject.longitude,
-          currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY
+          currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY,
+          installment_enabled: cachedProject.installment_enabled || false,
+          min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
+          max_installment_months: cachedProject.max_installment_months || 24
         });
       }
     } catch (error) {
@@ -134,6 +143,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         latitude: project.latitude,
         longitude: project.longitude,
         currency: project.currency,
+        installment_enabled: project.installment_enabled,
+        min_down_payment_percent: project.min_down_payment_percent,
+        max_installment_months: project.max_installment_months,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -452,6 +464,58 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
+                </div>
+
+                {/* Настройки рассрочки */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="installment-enabled"
+                      checked={project.installment_enabled}
+                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, installment_enabled: checked }))}
+                    />
+                    <Label htmlFor="installment-enabled">{t('projectEditor.enableInstallment')}</Label>
+                  </div>
+
+                  {project.installment_enabled && (
+                    <>
+                      <div>
+                        <Label htmlFor="min-down-payment">{t('projectEditor.minDownPaymentPercent')}</Label>
+                        <Input
+                          id="min-down-payment"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={project.min_down_payment_percent}
+                          onChange={(e) => setProject(prev => ({ 
+                            ...prev, 
+                            min_down_payment_percent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                          }))}
+                          placeholder="20"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{t('projectEditor.minDownPaymentDesc')}</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="max-installment-months">{t('projectEditor.maxInstallmentMonths')}</Label>
+                        <Input
+                          id="max-installment-months"
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={project.max_installment_months}
+                          onChange={(e) => setProject(prev => ({ 
+                            ...prev, 
+                            max_installment_months: Math.min(120, Math.max(1, parseInt(e.target.value) || 1))
+                          }))}
+                          placeholder="24"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{t('projectEditor.maxInstallmentMonthsDesc')}</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {isNew && (

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,23 +38,13 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
   const { projects: rawProjects, loading, error } = usePublicProjects();
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedRooms, setSelectedRooms] = useState('');
+  const [selectedCity, setSelectedCity] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedRooms, setSelectedRooms] = useState('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
 
   // Обрабатываем проекты для получения дополнительной информации
   const [projects, setProjects] = useState<Project[]>([]);
-
-  useEffect(() => {
-    if (rawProjects.length > 0) {
-      processProjects(rawProjects);
-    }
-  }, [rawProjects]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [projects, searchTerm, selectedCity, selectedStatus, selectedRooms, priceRange]);
 
   const processProjects = (rawProjects: BaseProject[]) => {
     const processedProjects = rawProjects.map((project: BaseProject) => {
@@ -87,7 +77,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
     }
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...projects];
 
     if (searchTerm) {
@@ -97,7 +87,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
       );
     }
 
-    if (selectedCity) {
+    if (selectedCity && selectedCity !== 'all') {
       filtered = filtered.filter(project =>
         project.address.toLowerCase().includes(selectedCity.toLowerCase())
       );
@@ -109,7 +99,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
       filtered = filtered.filter(project => project.available_count === 0);
     }
 
-    if (selectedRooms) {
+    if (selectedRooms && selectedRooms !== 'all') {
       // Здесь можно добавить фильтрацию по количеству комнат
       // Пока оставляем как есть
     }
@@ -122,7 +112,17 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
     }
 
     setFilteredProjects(filtered);
-  };
+  }, [projects, searchTerm, selectedCity, selectedStatus, selectedRooms, priceRange]);
+
+  useEffect(() => {
+    if (rawProjects.length > 0) {
+      processProjects(rawProjects);
+    }
+  }, [rawProjects]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const formatPrice = (price: number | null) => {
     if (!price) return t('common.priceOnRequest');
@@ -179,7 +179,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
                     <SelectValue placeholder={t('gallery.allCities')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('gallery.allCities')}</SelectItem>
+                    <SelectItem value="all">{t('gallery.allCities')}</SelectItem>
                     {cities.map(city => (
                       <SelectItem key={city} value={city}>{city}</SelectItem>
                     ))}
@@ -195,7 +195,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
                     <SelectValue placeholder={t('gallery.allStatuses')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('gallery.allStatuses')}</SelectItem>
+                    <SelectItem value="all">{t('gallery.allStatuses')}</SelectItem>
                     <SelectItem value="available">{t('gallery.onSale')}</SelectItem>
                     <SelectItem value="sold">{t('gallery.soldOut')}</SelectItem>
                   </SelectContent>
@@ -210,7 +210,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
                     <SelectValue placeholder={t('gallery.anyCost')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('gallery.anyCost')}</SelectItem>
+                    <SelectItem value="all">{t('gallery.anyCost')}</SelectItem>
                     <SelectItem value="studio">{t('gallery.upTo5M')}</SelectItem>
                     <SelectItem value="1">{t('gallery.from5To10M')}</SelectItem>
                     <SelectItem value="2">{t('gallery.from10M')}</SelectItem>

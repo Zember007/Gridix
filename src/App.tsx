@@ -17,6 +17,7 @@ import EmbedProjectsPage from "./pages/EmbedProjectsPage";
 import EmbedProjectsMap from "./pages/EmbedProjectsMap";
 import AuthPage from "./pages/AuthPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
+import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,9 +35,9 @@ function App() {
 
               {/* Language-specific routes with :lang parameter */}
               <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/projects" element={<LanguageProvider><LanguageWrapper><ProjectsGalleryPage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/widget/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/project/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/:projectId/apartment/:apartmentId" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage /></LanguageWrapper></LanguageProvider>} />
               
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
@@ -65,7 +66,6 @@ function App() {
               } />
 
               {/* Embed routes without language prefix but with EmbedLanguageProvider */}
-              <Route path="/embed/projects" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
               <Route path="/embed/projects/:userId" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
               <Route path="/embed/project/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage /></EmbedLanguageProvider>} />
 

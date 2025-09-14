@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Image as ImageIcon, Layout } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Image as ImageIcon, Layout, Expand } from 'lucide-react';
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 
 interface ApartmentPhoto {
   id: string;
@@ -43,22 +45,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Если предзагруженные фото планировок переданы, используем их и не делаем запросы
-    if (preloadedLayoutPhotos && preloadedLayoutPhotos.length > 0) {
-      setPhotos(preloadedLayoutPhotos.sort((a, b) => a.order_index - b.order_index));
-      setCurrentPhotoIndex(0);
-      setLoading(false);
-      return;
-    }
-    // Если нужно работать только с предзагруженными, не делаем запрос и ждём пропсы
-    if (fetchMode === 'preloaded-only') {
-      setLoading(true);
-      return;
-    }
-    loadPhotos();
-  }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos, fetchMode]);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const getLayoutType = (rooms: number): string => {
     return rooms === 0 ? 'studio' : `${rooms}-room`;
@@ -80,11 +67,11 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           .single();
 
         if (apartmentError) throw apartmentError;
-        currentRooms = currentRooms ?? apartmentData.rooms;
+        currentRooms = currentRooms ?? Number(apartmentData.rooms);
         currentProjectId = currentProjectId ?? apartmentData.project_id;
       }
 
-      const layoutType = getLayoutType(currentRooms!);
+      const layoutType = getLayoutType(typeof currentRooms === 'number' ? currentRooms : Number(currentRooms));
 
       // Если переданы предзагруженные фото планировок — используем их, иначе загружаем
       let layoutPhotos: LayoutPhoto[] | null = null;
@@ -144,12 +131,36 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
     }
   }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos]);
 
+  useEffect(() => {
+    // Если предзагруженные фото планировок переданы, используем их и не делаем запросы
+    if (preloadedLayoutPhotos && preloadedLayoutPhotos.length > 0) {
+      setPhotos(preloadedLayoutPhotos.sort((a, b) => a.order_index - b.order_index));
+      setCurrentPhotoIndex(0);
+      setLoading(false);
+      return;
+    }
+    // Если нужно работать только с предзагруженными, не делаем запрос и ждём пропсы
+    if (fetchMode === 'preloaded-only') {
+      setLoading(true);
+      return;
+    }
+    loadPhotos();
+  }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos, fetchMode, loadPhotos]);
+
   const nextPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
   };
 
   const prevPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
+  const openLightbox = () => {
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
   };
 
   if (loading) {
@@ -184,8 +195,19 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <img
             src={photos[currentPhotoIndex].image_url}
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
-            className="w-full h-64 object-cover rounded-lg"
+            className="w-full h-64 object-cover rounded-lg cursor-pointer"
+            onClick={openLightbox}
           />
+          
+          {/* Кнопка для открытия полноэкранного режима */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+            onClick={openLightbox}
+          >
+            <Expand className="h-4 w-4" />
+          </Button>
           
           {/* Бейдж для типа фотографии */}
           <Badge 
@@ -235,6 +257,21 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           </p>
         )}
       </CardContent>
+      
+      {/* Lightbox для полноэкранного просмотра */}
+      <Lightbox
+        open={isLightboxOpen}
+        close={closeLightbox}
+        index={currentPhotoIndex}
+        slides={photos.map((photo) => ({
+          src: photo.image_url,
+          alt: photo.description || 'Фото квартиры',
+          title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
+        }))}
+        on={{
+          view: ({ index }) => setCurrentPhotoIndex(index)
+        }}
+      />
     </Card>
   );
 };

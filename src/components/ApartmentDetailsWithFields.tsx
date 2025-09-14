@@ -118,17 +118,20 @@ const ApartmentDetailsWithFields = ({
   };
 
   const handleFieldChange = (fieldName: string, value: any, isCustom: boolean) => {
+    // Treat "none" as null/empty for select fields
+    const processedValue = value === "none" ? null : value;
+    
     if (isCustom) {
       const updatedData = { 
         ...apartmentData, 
         custom_fields: { 
           ...apartmentData.custom_fields, 
-          [fieldName]: value 
+          [fieldName]: processedValue 
         } 
       };
       onApartmentDataChange(updatedData);
     } else {
-      const updatedData = { ...apartmentData, [fieldName]: value };
+      const updatedData = { ...apartmentData, [fieldName]: processedValue };
       onApartmentDataChange(updatedData);
     }
   };
@@ -230,7 +233,7 @@ const ApartmentDetailsWithFields = ({
         
         return (
           <Select
-            value={fieldValue || ''}
+            value={fieldValue || 'none'}
             onValueChange={(value) => handleFieldChange(field.field_name, value, field.is_custom)}
             disabled={readOnly}
           >
@@ -238,7 +241,7 @@ const ApartmentDetailsWithFields = ({
               <SelectValue placeholder={`${t('apartment.select')} ${getFieldLabel(field).toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Не выбрано</SelectItem>
+              <SelectItem value="none">Не выбрано</SelectItem>
               {field.field_options?.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}

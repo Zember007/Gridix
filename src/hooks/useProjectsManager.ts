@@ -21,6 +21,9 @@ export interface Project {
   is_featured: boolean;
   view_count: number;
   user_id: string | null;
+  installment_enabled: boolean;
+  min_down_payment_percent: number;
+  max_installment_months: number;
   created_at: string;
   updated_at: string;
 }
