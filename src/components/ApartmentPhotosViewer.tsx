@@ -203,7 +203,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <Button
             variant="outline"
             size="sm"
-            className="absolute bottom-2 right-2 bg-white/80 hover:bg-white"
+            className="absolute md:bottom-2 bottom-10 right-2 bg-white/80 hover:bg-white"
             onClick={openLightbox}
           >
             <Expand className="h-4 w-4" />
