@@ -199,17 +199,17 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
             onClick={openLightbox}
           />
           
-       {/*    
+     
           <Button
             variant="outline"
             size="sm"
-            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+            className="absolute bottom-2 right-2 bg-white/80 hover:bg-white"
             onClick={openLightbox}
           >
             <Expand className="h-4 w-4" />
           </Button>
           
-          <Badge 
+           {/*     <Badge 
             variant={photos[currentPhotoIndex].type === 'layout' ? 'default' : 'secondary'}
             className="absolute top-2 left-2"
           >
