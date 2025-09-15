@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ExternalLink, Calculator } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calculator, FileDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
@@ -16,6 +16,7 @@ import ApartmentPhotosViewer from '@/components/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { generateApartmentPDF } from '@/lib/pdf-utils';
 
 const ApartmentDetailsPage = () => {
   const { projectId, apartmentId, lang } = useParams();
@@ -26,11 +27,11 @@ const ApartmentDetailsPage = () => {
 
   // Логируем состояние проекта для диагностики
   useEffect(() => {
-    console.log('Project state:', { 
-      projectId, 
-      project: project ? 'loaded' : 'not loaded', 
-      projectLoading, 
-      projectError 
+    console.log('Project state:', {
+      projectId,
+      project: project ? 'loaded' : 'not loaded',
+      projectLoading,
+      projectError
     });
   }, [projectId, project, projectLoading, projectError]);
 
@@ -38,6 +39,7 @@ const ApartmentDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const fetchApartment = async () => {
@@ -154,8 +156,87 @@ const ApartmentDetailsPage = () => {
     }, 100);
   };
 
+  const handleGeneratePDF = async () => {
+    if (!apartment || !projectId) return;
+
+    setIsGeneratingPDF(true);
+    try {
+      // Получаем фотографии квартиры
+      const layoutType = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+
+      // Загружаем планировки
+      const { data: layoutPhotos, error: layoutError } = await supabase
+        .from('layout_photos')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('layout_type', layoutType)
+        .order('order_index', { ascending: true });
+
+      if (layoutError) {
+        console.error('Error loading layout photos:', layoutError);
+      }
+
+      // Загружаем индивидуальные фотографии квартиры
+      const { data: apartmentPhotos, error: apartmentPhotosError } = await supabase
+        .from('apartment_photos')
+        .select('*')
+        .eq('apartment_id', apartment.id)
+        .order('order_index', { ascending: true });
+
+      if (apartmentPhotosError) {
+        console.error('Error loading apartment photos:', apartmentPhotosError);
+      }
+
+      // Объединяем фотографии
+      const allPhotos = [
+        ...(layoutPhotos || []).map(photo => ({
+          id: photo.id,
+          image_url: photo.image_url,
+          description: photo.description,
+          type: 'layout' as const
+        })),
+        ...(apartmentPhotos || []).map(photo => ({
+          id: photo.id,
+          image_url: photo.image_url,
+          description: photo.description,
+          type: 'apartment' as const
+        }))
+      ];
+
+      // Генерируем PDF
+      await generateApartmentPDF({
+        apartment,
+        projectCurrency: project?.currency || null,
+        photos: allPhotos,
+        translations: {
+          apartmentDetails: t('pdf.apartmentDetails'),
+          apartmentNumber: t('pdf.apartmentNumber'),
+          floor: t('apartment.floor'),
+          rooms: t('apartment.rooms'),
+          area: t('apartment.area'),
+          price: t('apartment.price'),
+          status: t('apartment.status'),
+          photos: t('pdf.photos'),
+          layout: t('pdf.layout'),
+          apartmentPhoto: t('pdf.apartmentPhoto'),
+          studio: t('apartment.studio'),
+          available: t('apartment.available'),
+          reserved: t('apartment.reserved'),
+          sold: t('apartment.sold'),
+          generatedOn: t('pdf.generatedOn')
+        }
+      });
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(t('common.error')); // Используем общую ошибку или можно добавить специфичную
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   // Показываем загрузку, если данные еще загружаются
-  if (loading || projectLoading || !apartment) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -202,11 +283,11 @@ const ApartmentDetailsPage = () => {
 
           <div className="flex-1 overflow-y-auto">
             <div className="flex gap-6 flex-col p-4">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 {/* Фотографии квартиры */}
                 <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
 
-                <div className="">
+                <div className="flex flex-col gap-4 justify-between">
                   {/* Основная информация */}
                   <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
                     <div>
@@ -230,7 +311,7 @@ const ApartmentDetailsPage = () => {
                   </div>
 
                   {apartment.status === 'available' && (
-                    <div className="pt-2 flex gap-2 flex-wrap">
+                    <div className=" flex gap-2 flex-col">
                       <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                         <DialogTrigger asChild>
                           <Button className="flex-1 md:flex-none">{t('common.reserve')}</Button>
@@ -248,27 +329,40 @@ const ApartmentDetailsPage = () => {
                         </DialogContent>
                       </Dialog>
 
-                      {project?.installment_enabled && apartment.price && (
-                        <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" className="flex-1 md:flex-none gap-2">
-                              <Calculator className="h-4 w-4" />
-                              {isMobile ? '' : t('installment.calculator')}
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
-                              <DialogTitle>{t('installment.calculator')}</DialogTitle>
-                            </DialogHeader>
-                            <InstallmentCalculator
-                              apartmentPrice={apartment.price}
-                              currency={project.currency}
-                              minDownPaymentPercent={project.min_down_payment_percent || 20}
-                              maxInstallmentMonths={project.max_installment_months || 24}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      )}
+                      <div className="flex gap-2 sm:flex-row flex-col">
+                        {project?.installment_enabled && apartment.price && (
+                          <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" className="flex-1">
+                                <Calculator className="h-4 w-4" />
+                                {t('installment.calculator')}
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[600px]">
+                              <DialogHeader>
+                                <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                              </DialogHeader>
+                              <InstallmentCalculator
+                                apartmentPrice={apartment.price}
+                                currency={project.currency}
+                                minDownPaymentPercent={project.min_down_payment_percent || 20}
+                                maxInstallmentMonths={project.max_installment_months || 24}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                        )}
+
+                        <Button
+                          className="flex-1"
+                          variant="outline"
+                          onClick={handleGeneratePDF}
+                          disabled={isGeneratingPDF}
+                        >
+                          <FileDown className="h-4 w-4" />
+                          {isGeneratingPDF ? t('common.loading') : 'PDF'}
+                        </Button>
+                      </div>
+
                     </div>
                   )}
                 </div>

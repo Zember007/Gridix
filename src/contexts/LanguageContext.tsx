@@ -646,6 +646,38 @@ const translations: Translations = {
     en: 'Monthly Payment',
     ka: 'ყოველთვიური გადახდა'
   },
+
+  // PDF Generation
+  'pdf.apartmentDetails': {
+    ru: 'Детали квартиры',
+    en: 'Apartment Details',
+    ka: 'ბინის დეტალები'
+  },
+  'pdf.apartmentNumber': {
+    ru: 'Номер квартиры',
+    en: 'Apartment Number',
+    ka: 'ბინის ნომერი'
+  },
+  'pdf.photos': {
+    ru: 'Фотографии',
+    en: 'Photos',
+    ka: 'ფოტოები'
+  },
+  'pdf.layout': {
+    ru: 'Планировка',
+    en: 'Layout',
+    ka: 'განლაგება'
+  },
+  'pdf.apartmentPhoto': {
+    ru: 'Фото квартиры',
+    en: 'Apartment Photo',
+    ka: 'ბინის ფოტო'
+  },
+  'pdf.generatedOn': {
+    ru: 'Создано',
+    en: 'Generated on',
+    ka: 'შექმნილია'
+  },
   'installment.apply': {
     ru: 'Оформить рассрочку',
     en: 'Apply for Installment',
