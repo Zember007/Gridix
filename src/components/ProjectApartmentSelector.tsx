@@ -35,7 +35,7 @@ interface ProjectApartmentSelectorProps {
 
 const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
   const { t, language } = useLanguage();
-  const { lang } = useParams();
+  
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(projectId);
@@ -54,7 +54,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Функция для открытия квартиры в новой вкладке
   const openApartmentDetails = (apartment: Apartment) => {
-    const url = `/${lang}/project/${projectId}/apartment/${apartment.id}`;
+    const url = `/${language}/project/${projectId}/apartment/${apartment.id}`;
     window.open(url, '_blank');
   };
 
