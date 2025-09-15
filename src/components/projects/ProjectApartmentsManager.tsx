@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw, Building, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import ApartmentCustomFields from '@/components/ApartmentCustomFields';
-import ApartmentSyncDialog from '@/components/ApartmentSyncDialog';
+import ApartmentCustomFields from '@/components/apartment/ApartmentCustomFields';
+import ApartmentSyncDialog from '@/components/apartment/ApartmentSyncDialog';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import type { Json } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';

@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link } from 'lucide-react';
 import { toast } from 'sonner';
-import ExcelColumnMapper from '@/components/ExcelColumnMapper';
-import ExcelUrlImporter from '@/components/ExcelUrlImporter';
+import ExcelColumnMapper from '@/components/data-import/ExcelColumnMapper';
+import ExcelUrlImporter from '@/components/data-import/ExcelUrlImporter';
 import * as XLSX from 'xlsx';
 
 interface ProjectCreationModalProps {

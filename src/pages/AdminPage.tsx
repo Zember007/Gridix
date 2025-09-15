@@ -1,6 +1,6 @@
 
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import AdminDashboard from '@/components/AdminDashboard';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const AdminPage = () => {
   const { navigate } = useLanguageNavigation();

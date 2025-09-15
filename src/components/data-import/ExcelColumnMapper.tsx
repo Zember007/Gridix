@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, AlertCircle, ArrowRight, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import CustomFieldsManager from '@/components/CustomFieldsManager';
+import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';

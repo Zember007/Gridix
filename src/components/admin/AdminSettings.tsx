@@ -13,7 +13,7 @@ import { useAuth, UserProfile } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import ManagerAccountsManager from '@/components/ManagerAccountsManager';
+import ManagerAccountsManager from '@/components/admin/ManagerAccountsManager';
 
 
 interface AdminSettings {

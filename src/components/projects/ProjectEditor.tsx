@@ -20,11 +20,11 @@ import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
 import { useProject, useProjectCRUD } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
-import FloorPlanEditor from './FloorPlanEditor';
-import BuildingImageEditor from './BuildingImageEditor';
-import AllFieldsManager from './AllFieldsManager';
-import ApartmentPhotosManager from './ApartmentPhotosManager';
-import AmoCRMSettings from './AmoCRMSettings';
+import FloorPlanEditor from '@/components/visualization/FloorPlanEditor';
+import BuildingImageEditor from '@/components/visualization/BuildingImageEditor';
+import AllFieldsManager from '@/components/admin/AllFieldsManager';
+import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
+import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
 
 interface ProjectEditorProps {
   projectId: string;

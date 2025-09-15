@@ -1,6 +1,6 @@
 
 import { useParams } from 'react-router-dom';
-import ProjectEditor from '@/components/ProjectEditor';
+import ProjectEditor from '@/components/projects/ProjectEditor';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 const ProjectEditorPage = () => {

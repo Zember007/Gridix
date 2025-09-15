@@ -109,7 +109,7 @@ window.close();
     }
 
     // Получаем настройки AmoCRM
-    const clientId = 'fdefa9e6-c28d-41df-9ead-06e388d9dcf0' // Ваш client_id
+    const clientId = Deno.env.get('AMOCRM_CLIENT_ID') // Ваш client_id
     const clientSecret = Deno.env.get('AMOCRM_CLIENT_SECRET')
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`
 

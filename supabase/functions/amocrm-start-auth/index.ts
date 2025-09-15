@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     // AmoCRM OAuth настройки
-    const clientId = 'fdefa9e6-c28d-41df-9ead-06e388d9dcf0';
+    const clientId = Deno.env.get('AMOCRM_CLIENT_ID') ;
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`;
 
     // Генерируем URL для авторизации AmoCRM

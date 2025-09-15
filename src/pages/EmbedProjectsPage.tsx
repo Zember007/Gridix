@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
+import InteractiveProjectsMap from '@/components/visualization/InteractiveProjectsMap';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
 

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Language } from '@/lib/language-utils';
-import CustomFieldsManager from './CustomFieldsManager';
+import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useFields, FieldSetting } from '@/hooks/useFields';
 
 interface CustomField {

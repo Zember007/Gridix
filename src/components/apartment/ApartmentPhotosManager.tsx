@@ -10,7 +10,7 @@ import { Upload, Image as ImageIcon, Copy, Trash2, Layout, Home } from 'lucide-r
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
-import LayoutPhotosManager from './LayoutPhotosManager';
+import LayoutPhotosManager from '@/components/visualization/LayoutPhotosManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 

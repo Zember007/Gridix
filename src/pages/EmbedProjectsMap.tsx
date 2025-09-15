@@ -1,6 +1,6 @@
 
 import { useParams } from 'react-router-dom';
-import InteractiveProjectsMap from '@/components/InteractiveProjectsMap';
+import InteractiveProjectsMap from '@/components/visualization/InteractiveProjectsMap';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 

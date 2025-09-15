@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Building2 } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
-import FloorPlanView from '@/components/FloorPlanView';
+import FloorPlanView from '@/components/visualization/FloorPlanView';
 
 interface ApartmentFloorPlanProps {
   projectId: string;

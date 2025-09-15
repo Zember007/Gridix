@@ -1,0 +1,288 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Ruler, Building2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Apartment } from '@/types/apartment';
+import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+
+interface Project {
+  has_commercial?: boolean;
+  has_parking?: boolean;
+}
+
+interface LayoutPhoto {
+  id: string;
+  image_url: string;
+  description?: string;
+  order_index: number;
+  type: 'layout';
+}
+
+interface LayoutGalleryProps {
+  apartments: Apartment[];
+  selectedRooms: string;
+  selectedType: 'all' | 'apartment' | 'commercial' | 'parking';
+  setSelectedRooms: (value: string) => void;
+  setSelectedType: (value: 'all' | 'apartment' | 'commercial' | 'parking') => void;
+  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites') => void;
+  getUniqueRoomCounts: () => number[];
+  preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
+  project?: Project;
+  formatPrice: (price: number) => string;
+  selectedCurrency: string;
+  isMobile: boolean;
+}
+
+export const LayoutGallery = ({
+  apartments,
+  selectedRooms,
+  selectedType,
+  setSelectedRooms,
+  setSelectedType,
+  setViewMode,
+  getUniqueRoomCounts,
+  preloadedLayoutPhotosByRooms,
+  project,
+  formatPrice,
+  selectedCurrency,
+  isMobile
+}: LayoutGalleryProps) => {
+  const { t } = useLanguage();
+
+  return (
+    <div className="container mx-auto px-4 md:px-6 py-8">
+      <div className="space-y-6">
+        <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h3>
+
+        {/* Layout type filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <Button
+            variant={selectedRooms === 'all' && selectedType === 'all' ? 'default' : 'outline'}
+            size="sm"
+            className={selectedRooms === 'all' && selectedType === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            onClick={() => {
+              setSelectedType('all');
+              setSelectedRooms('all')
+            }}
+          >
+            {t('project.allTypes')}
+          </Button>
+          <Button
+            variant={selectedRooms === '0' ? 'default' : 'outline'}
+            size="sm"
+            className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            onClick={() => {
+              setSelectedType('all');
+              setSelectedRooms('0')
+            }}
+          >
+            {t('apartment.studio')}
+          </Button>
+          {getUniqueRoomCounts().filter(rooms => rooms > 0).map(rooms => (
+            <Button
+              key={rooms}
+              variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
+              size="sm"
+              className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              onClick={() => {
+                setSelectedType('all');
+                setSelectedRooms(rooms.toString())
+              }}
+            >
+              {rooms}
+            </Button>
+          ))}
+          <Button
+            variant={selectedRooms === '4+' ? 'default' : 'outline'}
+            size="sm"
+            className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            onClick={() => {
+              // Handle 4+ rooms filter
+              const fourPlusApartments = apartments.filter(apt => Number(apt.rooms) >= 4 && apt.type === 'apartment');
+              if (fourPlusApartments.length > 0) {
+                setSelectedRooms('4+');
+                setSelectedType('apartment');
+              }
+            }}
+          >
+            4+
+          </Button>
+          {project?.has_commercial && (
+            <Button
+              variant={selectedType === 'commercial' ? 'default' : 'outline'}
+              size="sm"
+              className={selectedType === 'commercial' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              onClick={() => {
+                setSelectedType('commercial');
+                setSelectedRooms('all');
+              }}
+            >
+              {t('apartmentsManager.typeCommercial')}
+            </Button>
+          )}
+          {project?.has_parking && (
+            <Button
+              variant={selectedType === 'parking' ? 'default' : 'outline'}
+              size="sm"
+              className={selectedType === 'parking' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              onClick={() => {
+                setSelectedType('parking');
+                setSelectedRooms('all');
+              }}
+            >
+              {t('apartmentsManager.typeParking')}
+            </Button>
+          )}
+        </div>
+
+        {/* Layout cards grid */}
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
+          {(() => {
+            // Group apartments by layout depending on type
+            const layoutGroups: { [key: string]: Apartment[] } = {};
+
+            let apartmentsToShow = apartments;
+
+            // Apply selected type filter for gallery
+            if (selectedType !== 'all') {
+              apartmentsToShow = apartmentsToShow.filter(apt => apt.type === selectedType);
+            }
+
+            // Rooms filter applies only to residential apartments
+            if (selectedRooms !== 'all') {
+              if (selectedRooms === '4+') {
+                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) >= 4);
+              } else {
+                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === parseInt(selectedRooms));
+              }
+            }
+
+            apartmentsToShow.forEach(apt => {
+              let key: string;
+              if (apt.type === 'commercial') {
+                key = 'commercial';
+              } else if (apt.type === 'parking') {
+                key = 'parking';
+              } else {
+                key = `${Number(apt.rooms)}-rooms`;
+              }
+              if (!layoutGroups[key]) {
+                layoutGroups[key] = [];
+              }
+              layoutGroups[key].push(apt);
+            });
+
+            return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
+              const representativeApt = apartmentGroup[0];
+              const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
+              const totalCount = apartmentGroup.length;
+
+              const isCommercial = representativeApt.type === 'commercial';
+              const isParking = representativeApt.type === 'parking';
+
+              return (
+                <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-[4/3] bg-gray-100 relative">
+                    {(() => {
+                      if (isCommercial || isParking) {
+                        return (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            {isCommercial ? t('apartmentsManager.typeCommercial') : t('apartmentsManager.typeParking')}
+                          </div>
+                        );
+                      }
+                      const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${Number(representativeApt.rooms)}-room`;
+                      const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                      const first = photos[0];
+                      return first ? (
+                        <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`}
+                          className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
+                      );
+                    })()}
+
+                    {/* Status badge */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge
+                        variant={availableCount > 0 ? 'default' : 'secondary'}
+                        className={availableCount > 0 ? 'bg-green-500' : 'bg-gray-500'}
+                      >
+                        {availableCount > 0 ? `${availableCount} ${t('common.available')}` : t('common.unavailable')}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-lg">
+                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
+                      </h4>
+
+                      <div className="text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Ruler className="h-4 w-4" />
+                          {(() => {
+                            const areas = apartmentGroup.map(apt => apt.area);
+                            const minArea = Math.min(...areas);
+                            const maxArea = Math.max(...areas);
+                            return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
+                          })()}
+                        </span>
+                      </div>
+
+                      {/* Price range */}
+                      {(() => {
+                        const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
+                        if (prices.length > 0) {
+                          const minPrice = Math.min(...prices);
+                          const maxPrice = Math.max(...prices);
+                          return (
+                            <div className="font-bold text-lg">
+                              {minPrice === maxPrice
+                                ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                              }
+                            </div>
+                          );
+                        }
+                        return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
+                      })()}
+
+                      <Button
+                        className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                        onClick={() => {
+                          if (isCommercial) {
+                            setSelectedType('commercial');
+                            setSelectedRooms('all');
+                          } else if (isParking) {
+                            setSelectedType('parking');
+                            setSelectedRooms('all');
+                          } else {
+                            setSelectedType('apartment');
+                            setSelectedRooms(Number(representativeApt.rooms) >= 4 ? '4+' : String(representativeApt.rooms));
+                          }
+                          setViewMode('list');
+                        }}
+                      >
+                        {t('project.viewApartments', { count: totalCount })}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()}
+        </div>
+
+        {apartments.length === 0 && (
+          <div className="text-center py-12">
+            <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">{t('project.noApartments')}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

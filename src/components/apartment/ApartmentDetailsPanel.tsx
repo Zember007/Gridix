@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CurrencyType, getCurrencySymbol } from '@/lib/currency-utils';
-import ApartmentCustomFields from '@/components/ApartmentCustomFields';
+import ApartmentCustomFields from '@/components/apartment/ApartmentCustomFields';
 import type { Apartment } from '@/types/apartment';
 
 interface ApartmentDetailsPanelProps {

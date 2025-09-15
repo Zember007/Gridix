@@ -1,5 +1,5 @@
 
-import ProjectsGallery from '@/components/ProjectsGallery';
+import ProjectsGallery from '@/components/projects/ProjectsGallery';
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
