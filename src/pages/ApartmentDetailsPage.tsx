@@ -288,7 +288,7 @@ const ApartmentDetailsPage = () => {
 
   return (
     <div className="min-h-screen ">
-      <div className="container px-4 md:px-6 mx-auto">
+      <div className="container px-0 md:px-6 mx-auto">
         {/* Mobile Layout */}
         <div className="md:hidden ">
           {/* Header with back button and status badge */}
