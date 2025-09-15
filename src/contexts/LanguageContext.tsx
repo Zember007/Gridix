@@ -157,6 +157,23 @@ const translations: Translations = {
     en: 'List view',
     ka: 'სიის სახით'
   },
+
+  // Favorites
+  'favorites.title': {
+    ru: 'Избранное',
+    en: 'Favorites',
+    ka: 'რჩეულები'
+  },
+  'favorites.empty.title': {
+    ru: 'Нет избранных квартир',
+    en: 'No favorites yet',
+    ka: 'რჩეულები არ არის'
+  },
+  'favorites.empty.description': {
+    ru: 'Добавьте квартиры в избранное, нажав на сердечко',
+    en: 'Add apartments to favorites by tapping the heart',
+    ka: 'მონიშნეთ ბინები გულით, რომ დაამატოთ რჩეულებში'
+  },
   'project.layouts': {
     ru: 'Планировки',
     en: 'Layouts',

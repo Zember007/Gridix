@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
@@ -17,6 +17,7 @@ import ApartmentReservationForm from '@/components/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { generateApartmentPDF } from '@/lib/pdf-utils';
+import { useFavorites } from '@/hooks/useFavorites';
 
 const ApartmentDetailsPage = () => {
   const { projectId, apartmentId, lang } = useParams();
@@ -24,6 +25,7 @@ const ApartmentDetailsPage = () => {
   const isMobile = useIsMobile();
   const { project, loading: projectLoading, error: projectError } = useProject(projectId || '');
   const { fields: fieldSettings } = useFields(projectId || '');
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   // Логируем состояние проекта для диагностики
   useEffect(() => {
@@ -61,6 +63,21 @@ const ApartmentDetailsPage = () => {
         console.error('Error copying link to clipboard:', error);
       }
     }
+  };
+
+  const handleToggleFavorite = () => {
+    if (!apartment) return;
+    
+    toggleFavorite({
+      id: apartment.id,
+      project_id: apartment.project_id,
+      apartment_number: apartment.apartment_number,
+      rooms: typeof apartment.rooms === 'number' ? apartment.rooms : Number(apartment.rooms),
+      area: apartment.area,
+      price: typeof apartment.price === 'number' ? apartment.price : undefined,
+      status: apartment.status,
+      floor_number: apartment.floor_number
+    });
   };
 
   // Get project colors from polygon settings
@@ -350,13 +367,26 @@ const ApartmentDetailsPage = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 {t('apartment.apartment')} № {apartment.apartment_number}
               </h1>
-                <Button
-                  variant="outline"
-                  onClick={handleShare}
-                  className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
-                >
-                  <Share2 className="!h-5 !w-5 " />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleToggleFavorite}
+                    className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${
+                      isFavorite(apartment?.id || '') 
+                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Heart className={`!h-5 !w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
+                  >
+                    <Share2 className="!h-5 !w-5 " />
+                  </Button>
+                </div>
                 </div>
               <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
             </div>
@@ -562,13 +592,26 @@ const ApartmentDetailsPage = () => {
                   <h1 className="text-4xl font-bold text-gray-900 mb-2">
                     {t('apartment.apartment')} № {apartment.apartment_number}
                   </h1>
-                  <Button
-                    variant="outline"
-                    onClick={handleShare}
-                    className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
-                  >
-                    <Share2 className="!h-5 !w-5 " />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleToggleFavorite}
+                      className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${
+                        isFavorite(apartment?.id || '') 
+                          ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Heart className={`!h-5 !w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleShare}
+                      className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
+                    >
+                      <Share2 className="!h-5 !w-5 " />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-xl text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
               </div>

@@ -24,6 +24,8 @@ import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from './ApartmentFloorPlan';
 import BuildingFacadeView from './BuildingFacadeView';
 import InteractiveProjectsMap from './InteractiveProjectsMap';
+import FavoritesTab from './FavoritesTab';
+import { useFavorites } from '@/hooks/useFavorites';
 import { getCurrencySymbolSafe, isValidCurrency } from '@/lib/currency-utils';
 
 
@@ -39,6 +41,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(projectId);
+  const { favoritesCount } = useFavorites();
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
@@ -68,7 +71,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
-  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map'>('facade');
+  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites'>('facade');
   const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -750,6 +753,21 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
                     {!isMobile && t('embed.onMap')}
                   </Button>
+                  
+                  <Button
+                    variant={viewMode === 'favorites' ? 'default' : 'outline'}
+                    size="sm"
+                    className={`${viewMode === 'favorites' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''} relative`}
+                    onClick={() => setViewMode('favorites')}
+                  >
+                    <Heart className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+                    {!isMobile && (t('favorites.title') || 'Избранное')}
+                    {favoritesCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {favoritesCount > 99 ? '99+' : favoritesCount}
+                      </span>
+                    )}
+                  </Button>
 
                   {/* Mobile filters button */}
                   {isMobile && (
@@ -1118,6 +1136,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 }}
               />
             </>
+          : viewMode === 'favorites' ?
+            <div className="container mx-auto px-4 md:px-6 py-8 grow">
+              <FavoritesTab projectId={projectId} projectCurrency={project?.currency} />
+            </div>
             : (
               // Facade and Floor Plan views with hero section
               <>
