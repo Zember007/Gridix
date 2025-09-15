@@ -168,7 +168,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-center h-48">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 "></div>
           </div>
         </CardContent>
       </Card>
@@ -189,8 +189,8 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   }
 
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card className='border-none'>
+      <CardContent className="p-0">
         <div className="relative">
           <img
             src={photos[currentPhotoIndex].image_url}
@@ -199,7 +199,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
             onClick={openLightbox}
           />
           
-          {/* Кнопка для открытия полноэкранного режима */}
+       {/*    
           <Button
             variant="outline"
             size="sm"
@@ -209,7 +209,6 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
             <Expand className="h-4 w-4" />
           </Button>
           
-          {/* Бейдж для типа фотографии */}
           <Badge 
             variant={photos[currentPhotoIndex].type === 'layout' ? 'default' : 'secondary'}
             className="absolute top-2 left-2"
@@ -222,7 +221,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
             ) : (
               'Квартира'
             )}
-          </Badge>
+          </Badge> */}
           
           {photos.length > 1 && (
             <>

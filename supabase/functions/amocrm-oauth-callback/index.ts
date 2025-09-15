@@ -192,16 +192,8 @@ window.close();
         }
       })
 
-     
-
       if (accountResponse.ok) {
-
         accountData = await accountResponse.json() as AmoCRMAccountData
-
-
-        
-
-        
         
         // Находим первую активную воронку или главную воронку
         const pipelines = accountData?._embedded?.pipelines || []
@@ -222,6 +214,97 @@ window.close();
       }
     } catch (error) {
       console.warn('Error fetching account data:', error)
+    }
+
+    // Получаем и сохраняем custom fields для контактов и лидов
+    const customFieldsToSave: any[] = []
+
+    try {
+      // Получаем custom fields для контактов
+      const contactFieldsResponse = await fetch(`https://${subdomain}.amocrm.ru/api/v4/leads/custom_fields`, {
+        headers: {
+          'Authorization': `Bearer ${tokenResult.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (contactFieldsResponse.ok) {
+        const contactFieldsData = await contactFieldsResponse.json()
+        const contactFields = contactFieldsData._embedded?.custom_fields || []
+        
+        for (const field of contactFields) {
+          customFieldsToSave.push({
+            project_id: state,
+            field_id: field.id,
+            field_name: field.name,
+            field_code: field.code || null,
+            field_type: field.field_type,
+            is_required: field.is_required || false,
+            is_editable: field.is_editable || true,
+            sort: field.sort || 0,
+            entity_type: 'contacts'
+          })
+        }
+        console.log(`Found ${contactFields.length} contact custom fields`)
+      } else {
+        console.warn('Failed to fetch contact custom fields:', contactFieldsResponse.status)
+      }
+
+      // Получаем custom fields для лидов
+      const leadFieldsResponse = await fetch(`https://${subdomain}.amocrm.ru/api/v4/contacts`, {
+        headers: {
+          'Authorization': `Bearer ${tokenResult.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (leadFieldsResponse.ok) {
+        const leadFieldsData = await leadFieldsResponse.json()
+        return new Response(JSON.stringify(leadFieldsData), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+        const leadFields = leadFieldsData._embedded?.custom_fields || []
+        
+        for (const field of leadFields) {
+          customFieldsToSave.push({
+            project_id: state,
+            field_id: field.id,
+            field_name: field.name,
+            field_code: field.code || null,
+            field_type: field.field_type,
+            is_required: field.is_required || false,
+            is_editable: field.is_editable || true,
+            sort: field.sort || 0,
+            entity_type: 'leads'
+          })
+        }
+        console.log(`Found ${leadFields.length} lead custom fields`)
+      } else {
+        console.warn('Failed to fetch lead custom fields:', leadFieldsResponse.status)
+      }
+
+      // Сохраняем custom fields в базу данных
+      if (customFieldsToSave.length > 0) {
+        // Сначала удаляем старые записи для этого проекта
+        await supabase
+          .from('amocrm_custom_fields')
+          .delete()
+          .eq('project_id', state)
+
+        // Вставляем новые записи
+        const { error: customFieldsError } = await supabase
+          .from('amocrm_custom_fields')
+          .insert(customFieldsToSave)
+
+        if (customFieldsError) {
+          console.error('Failed to save custom fields:', customFieldsError)
+        } else {
+          console.log(`Successfully saved ${customFieldsToSave.length} custom fields`)
+        }
+      }
+    } catch (error) {
+      console.warn('Error fetching custom fields:', error)
     }
 
     // Сохраняем или обновляем настройки AmoCRM

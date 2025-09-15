@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ExternalLink, Calculator, FileDown } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
@@ -40,6 +40,22 @@ const ApartmentDetailsPage = () => {
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Get project colors from polygon settings
+  const getProjectColors = () => {
+    /* if (project && 'polygon_settings' in project) {
+      const projectWithSettings = project as Record<string, unknown>;
+      const settings = projectWithSettings.polygon_settings as { colors?: { available: string; sold: string; reserved: string } };
+      if (settings && settings.colors) {
+        return settings.colors;
+      }
+    } */
+    return {
+      available: '#3b82f6',
+      sold: '#ef4444',
+      reserved: '#f59e0b'
+    };
+  };
 
   useEffect(() => {
     const fetchApartment = async () => {
@@ -78,12 +94,30 @@ const ApartmentDetailsPage = () => {
   }, [projectId, apartmentId]);
 
   const getStatusColor = (status: string) => {
+    const colors = getProjectColors();
     switch (status) {
-      case 'sold': return 'bg-red-100 text-red-800';
-      case 'reserved': return 'bg-yellow-100 text-yellow-800';
-      case 'available': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'sold': return 'text-white';
+      case 'reserved': return 'text-white';
+      case 'available': return 'text-white';
+      default: return 'bg-gray-500 text-white';
     }
+  };
+
+  const getStatusStyle = (status: string) => {
+    const colors = getProjectColors();
+    switch (status) {
+      case 'sold': return { backgroundColor: colors.sold };
+      case 'reserved': return { backgroundColor: colors.reserved };
+      case 'available': return { backgroundColor: colors.available };
+      default: return { backgroundColor: '#6b7280' };
+    }
+  };
+
+  const getButtonStyle = (status: string = 'available') => {
+    const colors = getProjectColors();
+    return {
+      backgroundColor: colors[status as keyof typeof colors] || colors.available,
+    };
   };
 
   const getStatusLabel = (status: string) => {
@@ -253,68 +287,189 @@ const ApartmentDetailsPage = () => {
   }
 
   return (
-    <div className=" bg-background">
-      <div className="container mx-auto ">
-        <div className="flex h-full flex-col">
-          <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background p-4">
-            <Button variant="ghost" size="icon" onClick={goBackToProject} aria-label={t('admin.back')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className={`flex flex-1 items-center justify-between ${isMobile ? '' : ''}`}>
-              <div className="flex items-center gap-3">
-                <span className={isMobile ? 'text-lg' : 'text-xl font-semibold'}>
-                  {t('apartment.number')} {apartment.apartment_number}
-                </span>
-                <Badge className={getStatusColor(apartment.status)}>
-                  {getStatusLabel(apartment.status)}
-                </Badge>
-              </div>
+    <div className="min-h-screen ">
+      <div className="container px-4 md:px-6 mx-auto">
+        {/* Mobile Layout */}
+        <div className="md:hidden ">
+          {/* Header with back button and status badge */}
+          <div className="relative">
+            <div className="absolute top-4 left-4 z-10">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/${lang}/project/${projectId}`, '_blank')}
-                className="gap-2"
+                variant="ghost"
+                size="icon"
+                onClick={goBackToProject}
+                className="bg-black/20 hover:bg-black/30 text-white rounded-full w-10 h-10"
+                aria-label={t('admin.back')}
               >
-                <ExternalLink className="h-4 w-4" />
-                {!isMobile && t('projectList.viewProject')}
+                <ArrowLeft className="h-5 w-5" />
               </Button>
+            </div>
+            <div className="absolute top-4 right-4 z-10">
+              <Badge
+                className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
+                style={getStatusStyle(apartment.status)}
+              >
+                {getStatusLabel(apartment.status)}
+              </Badge>
+            </div>
+
+            {/* Main apartment image */}
+            <div className="h-70  relative overflow-hidden rounded-t-3xl">
+              <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="flex gap-6 flex-col p-4">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Фотографии квартиры */}
-                <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+          {/* Content */}
+          <div className="p-6 pb-32 rounded-t-3xl bg-white -mt-6 relative z-10 border">
+            {/* Title and floor */}
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                {t('apartment.apartment')} № {apartment.apartment_number}
+              </h1>
+              <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
+            </div>
 
-                <div className="flex flex-col gap-4 justify-between">
-                  {/* Основная информация */}
-                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
-                    <div>
-                      <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.floor')}</h3>
-                      <p className="text-lg">{apartment.floor_number}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.rooms')}</h3>
-                      <p className="text-lg">{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.area')}</h3>
-                      <p className="text-lg">{apartment.area} м²</p>
-                    </div>
-                    {apartment.price && (
-                      <div>
-                        <h3 className="font-medium text-sm text-muted-foreground">{t('apartment.price')}</h3>
-                        <p className="text-lg font-semibold">{formatPriceWithCurrency(apartment.price, project?.currency || null)}</p>
+            {/* Room and area info */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <Home className="h-5 w-5 text-gray-400" />
+                <span className="text-gray-700">
+                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Square className="h-5 w-5 text-gray-400" />
+                <span className="text-gray-700">{apartment.area} м² {t('apartment.area')}</span>
+              </div>
+            </div>
+
+            {/* Price */}
+            {apartment.price && (
+              <div className="mb-6">
+                <div className="text-3xl font-bold text-gray-900">
+                  {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                </div>
+              </div>
+            )}
+
+            {/* Description section */}
+            {project?.description && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {project.description}
+                </p>
+              </div>
+            )}
+
+            {/* Details section */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.details')}</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Home className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-600">{t('apartment.number')}: {apartment.apartment_number}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-600">{t('apartment.floor')}: {apartment.floor_number}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Square className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-600">{t('apartment.area')}: {apartment.area} м²</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Дополнительные поля */}
+            {getVisibleFields().length > 0 && (
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.additionalInfo')}</h3>
+                <div className="space-y-3">
+                  {getVisibleFields().map((field) => {
+                    let value: unknown = null;
+                    if (field.is_custom) {
+                      value = getCustomFieldValue(apartment, field.field_name);
+                    } else {
+                      switch (field.field_name) {
+                        case 'rooms':
+                          value = apartment.rooms;
+                          break;
+                        case 'area':
+                          value = apartment.area;
+                          break;
+                        case 'price':
+                          value = apartment.price;
+                          break;
+                        case 'status':
+                          value = apartment.status;
+                          break;
+                        case 'floor':
+                          value = apartment.floor_number;
+                          break;
+                        case 'number':
+                          value = apartment.apartment_number;
+                          break;
+                        default:
+                          value = null;
+                      }
+                    }
+
+                    if (value === null) return null;
+
+                    return (
+                      <div key={field.id} className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                        <span className="font-medium text-gray-900">
+                          {formatFieldValue(value, field.field_type, field.field_name)}
+                        </span>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
+        {/* Desktop Layout */}
+        <div className="hidden md:block py-8">
+          <div className="flex min-h-screen gap-8">
+            {/* Left side - Image */}
+            <div className="flex-1 relative">
+
+              <div className="h-full  ">
+                <div className="relative  flex flex-col gap-8 sticky top-8">
+                  <div className="absolute top-4 left-4 z-10">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={goBackToProject}
+                      className="bg-black/20 hover:bg-black/30 text-white rounded-full w-10 h-10"
+                      aria-label={t('admin.back')}
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <div className="absolute top-4 right-4 z-10">
+                    <Badge
+                      className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
+                      style={getStatusStyle(apartment.status)}
+                    >
+                      {getStatusLabel(apartment.status)}
+                    </Badge>
+                  </div>
+                  <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
                   {apartment.status === 'available' && (
-                    <div className=" flex gap-2 flex-col">
+                    <div className="space-y-4">
                       <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button className="flex-1 md:flex-none">{t('common.reserve')}</Button>
+                          <Button
+                            className="w-full text-white py-4 px-6 rounded-2xl text-lg font-semibold shadow-lg hover:opacity-90"
+                            style={getButtonStyle('available')}
+                          >
+                            {t('common.reserve')}
+                          </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px]">
                           <DialogHeader>
@@ -329,100 +484,221 @@ const ApartmentDetailsPage = () => {
                         </DialogContent>
                       </Dialog>
 
-                      <div className="flex gap-2 sm:flex-row flex-col">
-                        {project?.installment_enabled && apartment.price && (
-                          <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" className="flex-1">
-                                <Calculator className="h-4 w-4" />
-                                {t('installment.calculator')}
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[600px]">
-                              <DialogHeader>
-                                <DialogTitle>{t('installment.calculator')}</DialogTitle>
-                              </DialogHeader>
-                              <InstallmentCalculator
-                                apartmentPrice={apartment.price}
-                                currency={project.currency}
-                                minDownPaymentPercent={project.min_down_payment_percent || 20}
-                                maxInstallmentMonths={project.max_installment_months || 24}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                        )}
+                      {project?.installment_enabled && apartment.price && (
+                        <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 hover:border-gray-300 shadow-lg bg-white">
+                              <Calculator className="h-5 w-5 mr-2" />
+                              {t('installment.calculator')}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                              <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                            </DialogHeader>
+                            <InstallmentCalculator
+                              apartmentPrice={apartment.price}
+                              currency={project.currency}
+                              minDownPaymentPercent={project.min_down_payment_percent || 20}
+                              maxInstallmentMonths={project.max_installment_months || 24}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      )}
 
-                        <Button
-                          className="flex-1"
-                          variant="outline"
-                          onClick={handleGeneratePDF}
-                          disabled={isGeneratingPDF}
-                        >
-                          <FileDown className="h-4 w-4" />
-                          {isGeneratingPDF ? t('common.loading') : 'PDF'}
-                        </Button>
-                      </div>
-
+                      <Button
+                        variant="outline"
+                        onClick={handleGeneratePDF}
+                        disabled={isGeneratingPDF}
+                        className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 hover:border-gray-300 shadow-lg bg-white"
+                      >
+                        <FileDown className="h-5 w-5 mr-2" />
+                        PDF
+                      </Button>
                     </div>
                   )}
                 </div>
               </div>
+            </div>
 
+            {/* Right side - Content */}
+            <div className="flex-1  overflow-y-auto">
+              {/* Title and floor */}
+              <div className="mb-6">
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  {t('apartment.apartment')} № {apartment.apartment_number}
+                </h1>
+                <p className="text-xl text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
+              </div>
+
+              {/* Room and area info */}
+              <div className="flex items-center gap-6 mb-8">
+                <div className="flex items-center gap-3">
+                  <Home className="h-6 w-6 text-gray-400" />
+                  <span className="text-lg text-gray-700">
+                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Square className="h-6 w-6 text-gray-400" />
+                  <span className="text-lg text-gray-700">{apartment.area} м² {t('apartment.area')}</span>
+                </div>
+              </div>
+
+              {/* Price */}
+              {apartment.price && (
+                <div className="mb-8">
+                  <div className="text-5xl font-bold text-gray-900">
+                    {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                  </div>
+                </div>
+              )}
+
+              {/* Description section */}
+              {project?.description && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{t('projectEditor.description')}</h3>
+                  <p className="text-gray-600 leading-relaxed text-lg">
+                    {project.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Details section */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Home className="h-6 w-6 text-gray-400" />
+                    <span className="text-lg text-gray-600">{t('apartment.number')}: {apartment.apartment_number}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <MapPin className="h-6 w-6 text-gray-400" />
+                    <span className="text-lg text-gray-600">{t('apartment.floor')}: {apartment.floor_number}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Square className="h-6 w-6 text-gray-400" />
+                    <span className="text-lg text-gray-600">{t('apartment.area')}: {apartment.area} м²</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Дополнительные поля */}
               {getVisibleFields().length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="font-medium mb-3">{t('apartment.additionalInfo')}</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {getVisibleFields().map((field) => {
-                        let value: unknown = null;
-                        if (field.is_custom) {
-                          value = getCustomFieldValue(apartment, field.field_name);
-                        } else {
-                          switch (field.field_name) {
-                            case 'rooms':
-                              value = apartment.rooms;
-                              break;
-                            case 'area':
-                              value = apartment.area;
-                              break;
-                            case 'price':
-                              value = apartment.price;
-                              break;
-                            case 'status':
-                              value = apartment.status;
-                              break;
-                            case 'floor':
-                              value = apartment.floor_number;
-                              break;
-                            case 'number':
-                              value = apartment.apartment_number;
-                              break;
-                            default:
-                              value = null;
-                          }
+                <div className="mb-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
+                  <div className="space-y-4">
+                    {getVisibleFields().map((field) => {
+                      let value: unknown = null;
+                      if (field.is_custom) {
+                        value = getCustomFieldValue(apartment, field.field_name);
+                      } else {
+                        switch (field.field_name) {
+                          case 'rooms':
+                            value = apartment.rooms;
+                            break;
+                          case 'area':
+                            value = apartment.area;
+                            break;
+                          case 'price':
+                            value = apartment.price;
+                            break;
+                          case 'status':
+                            value = apartment.status;
+                            break;
+                          case 'floor':
+                            value = apartment.floor_number;
+                            break;
+                          case 'number':
+                            value = apartment.apartment_number;
+                            break;
+                          default:
+                            value = null;
                         }
+                      }
 
-                        if (value === null) return null;
+                      if (value === null) return null;
 
-                        return (
-                          <div key={field.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                            <span className="text-sm text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {formatFieldValue(value, field.field_type, field.field_name)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                      return (
+                        <div key={field.id} className="flex justify-between items-center py-2">
+                          <span className="text-lg text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                          <span className="text-lg font-medium text-gray-900">
+                            {formatFieldValue(value, field.field_type, field.field_name)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* Fixed Action Buttons - Mobile (bottom) */}
+        {apartment.status === 'available' && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div className="max-w-sm mx-auto space-y-3">
+              <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full text-white py-3 rounded-2xl text-lg font-semibold hover:opacity-90"
+                    style={getButtonStyle('available')}
+                  >
+                    {t('common.reserve')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
+                  </DialogHeader>
+                  <ApartmentReservationForm
+                    apartmentId={apartment.id}
+                    projectId={apartment.project_id}
+                    onSubmit={() => setIsReserveDialogOpen(false)}
+                    onCancel={() => setIsReserveDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+
+              <div className="flex gap-3">
+                {project?.installment_enabled && apartment.price && (
+                  <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="flex-1 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300">
+                        <Calculator className="h-5 w-5 mr-2" />
+                        {t('installment.calculator')}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[600px]">
+                      <DialogHeader>
+                        <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                      </DialogHeader>
+                      <InstallmentCalculator
+                        apartmentPrice={apartment.price}
+                        currency={project.currency}
+                        minDownPaymentPercent={project.min_down_payment_percent || 20}
+                        maxInstallmentMonths={project.max_installment_months || 24}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={handleGeneratePDF}
+                  disabled={isGeneratingPDF}
+                  className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300"
+                >
+                  <FileDown className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
       </div>
     </div>
   );

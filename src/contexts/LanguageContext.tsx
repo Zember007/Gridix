@@ -504,6 +504,11 @@ const translations: Translations = {
   },
 
   // Apartment details
+  'apartment.details': {
+    ru: 'Детали квартиры',
+    en: 'Apartment details',
+    ka: 'ბინის დეტალები'
+  },
   'apartment.number': {
     ru: 'Квартира №',
     en: 'Apartment #',
