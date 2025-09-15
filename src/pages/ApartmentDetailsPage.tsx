@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
@@ -52,13 +53,13 @@ const ApartmentDetailsPage = () => {
         await navigator.share({ title, text, url });
       } else {
         await navigator.clipboard.writeText(url);
-        alert(t('common.copied') || 'Link copied to clipboard');
+        toast.success(t('common.copied'));
       }
     } catch (error) {
       // User might cancel share; fallback to copying link
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert(t('common.copied') || 'Link copied to clipboard');
+        toast.success(t('common.copied'));
       } catch (error) {
         console.error('Error copying link to clipboard:', error);
       }
@@ -302,7 +303,7 @@ const ApartmentDetailsPage = () => {
 
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert(t('common.error')); // Используем общую ошибку или можно добавить специфичную
+      toast.error(t('common.error'));
     } finally {
       setIsGeneratingPDF(false);
     }

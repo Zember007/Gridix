@@ -400,6 +400,16 @@ const translations: Translations = {
     en: 'Grid',
     ka: 'ბადე'
   },
+  'common.copied': {
+    ru: 'Ссылка скопирована в буфер обмена',
+    en: 'Link copied to clipboard',
+    ka: 'ბმული დაკოპირდა'
+  },
+  'common.error': {
+    ru: 'Произошла ошибка',
+    en: 'An error occurred',
+    ka: 'შეცდომა მოხდა'
+  },
 
   // Navigation
   'nav.admin': {
