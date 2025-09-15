@@ -353,14 +353,14 @@ const ApartmentDetailsPage = () => {
             )}
 
             {/* Description section */}
-            {project?.description && (
+           {/*  {project?.description && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
                 <p className="text-gray-600 leading-relaxed">
                   {project.description}
                 </p>
               </div>
-            )}
+            )} */}
 
             {/* Details section */}
             <div className="mb-6">
@@ -691,6 +691,7 @@ const ApartmentDetailsPage = () => {
                   className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300"
                 >
                   <FileDown className="h-5 w-5" />
+                  <span className="hidden xs:block">PDF</span>
                 </Button>
               </div>
             </div>
