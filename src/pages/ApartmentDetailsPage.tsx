@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
@@ -40,6 +40,28 @@ const ApartmentDetailsPage = () => {
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      const title = `${t('apartment.apartment')} № ${apartment?.apartment_number}`;
+      const text = project?.name ? project.name : '';
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert(t('common.copied') || 'Link copied to clipboard');
+      }
+    } catch (error) {
+      // User might cancel share; fallback to copying link
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert(t('common.copied') || 'Link copied to clipboard');
+      } catch (error) {
+        console.error('Error copying link to clipboard:', error);
+      }
+    }
+  };
 
   // Get project colors from polygon settings
   const getProjectColors = () => {
@@ -323,9 +345,19 @@ const ApartmentDetailsPage = () => {
           <div className="p-6 pb-32 rounded-t-3xl bg-white -mt-6 relative z-10 border">
             {/* Title and floor */}
             <div className="mb-4">
+             
+              <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 {t('apartment.apartment')} № {apartment.apartment_number}
               </h1>
+                <Button
+                  variant="outline"
+                  onClick={handleShare}
+                  className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
+                >
+                  <Share2 className="!h-5 !w-5 " />
+                </Button>
+                </div>
               <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
             </div>
 
@@ -353,7 +385,7 @@ const ApartmentDetailsPage = () => {
             )}
 
             {/* Description section */}
-           {/*  {project?.description && (
+            {/*  {project?.description && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -515,6 +547,7 @@ const ApartmentDetailsPage = () => {
                         <FileDown className="h-5 w-5 mr-2" />
                         PDF
                       </Button>
+
                     </div>
                   )}
                 </div>
@@ -525,9 +558,18 @@ const ApartmentDetailsPage = () => {
             <div className="flex-1  overflow-y-auto">
               {/* Title and floor */}
               <div className="mb-6">
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  {t('apartment.apartment')} № {apartment.apartment_number}
-                </h1>
+                <div className="flex justify-between items-center">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    {t('apartment.apartment')} № {apartment.apartment_number}
+                  </h1>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
+                  >
+                    <Share2 className="!h-5 !w-5 " />
+                  </Button>
+                </div>
                 <p className="text-xl text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
               </div>
 
@@ -693,6 +735,7 @@ const ApartmentDetailsPage = () => {
                   <FileDown className="h-5 w-5" />
                   <span className="hidden xs:block">PDF</span>
                 </Button>
+
               </div>
             </div>
           </div>

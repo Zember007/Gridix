@@ -39,13 +39,6 @@ interface AmoCRMLead {
   pipeline_id: number;
   status_id?: number;
   responsible_user_id?: number;
-  custom_fields_values?: Array<{
-    field_id: number;
-    values: Array<{
-      value: string;
-      enum_id?: number;
-    }>;
-  }>;
   _embedded?: {
     contacts?: Array<{
       name: string;
@@ -53,7 +46,6 @@ interface AmoCRMLead {
         field_id: number;
         values: Array<{
           value: string;
-          enum_id?: number;
         }>;
       }>;
     }>;
@@ -61,15 +53,18 @@ interface AmoCRMLead {
 }
 
 async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Promise<string | null> {
+  // Проверяем актуальность токена
   if (settings.access_token && settings.token_expires_at) {
     const expiresAt = new Date(settings.token_expires_at);
     const now = new Date();
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+    
     if (expiresAt > fiveMinutesFromNow) {
       return settings.access_token;
     }
   }
 
+  // Обновляем токен
   if (!settings.refresh_token) {
     console.error('No refresh token available');
     return null;
@@ -81,8 +76,11 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
       client_id: settings.client_id,
       client_secret: settings.client_secret,
       grant_type: 'refresh_token',
-      refresh_token: settings.refresh_token
+      refresh_token: settings.refresh_token,
+      redirect_uri: 'https://yourdomain.com' // Добавьте ваш redirect_uri
     };
+
+    console.log('Refreshing token for subdomain:', settings.subdomain);
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
@@ -94,14 +92,19 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Token refresh failed:', { status: response.status, errorText });
+      console.error('Token refresh failed:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        errorText 
+      });
       return null;
     }
 
     const tokenResult: TokenResponse = await response.json();
     const expiresAt = new Date(Date.now() + (tokenResult.expires_in * 1000));
 
-    await supabase
+    // Обновляем токен в базе
+    const { error: updateError } = await supabase
       .from('amocrm_settings')
       .update({
         access_token: tokenResult.access_token,
@@ -110,6 +113,10 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
       })
       .eq('id', settings.id);
 
+    if (updateError) {
+      console.error('Failed to update token in database:', updateError);
+    }
+
     return tokenResult.access_token;
   } catch (error) {
     console.error('Error refreshing token:', error);
@@ -117,25 +124,77 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
   }
 }
 
+async function getContactFields(settings: AmoCRMSettings, accessToken: string) {
+  let emailFieldId = 0;
+  let phoneFieldId = 0;
+
+  try {
+    console.log('Fetching contact fields from AmoCRM API...');
+    const fieldsResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/contacts/custom_fields`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+
+    if (fieldsResponse.ok) {
+      const fieldsData = await fieldsResponse.json();
+      if (fieldsData._embedded && fieldsData._embedded.custom_fields) {
+        const emailFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'EMAIL');
+        const phoneFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'PHONE');
+        
+        if (emailFieldData) emailFieldId = emailFieldData.id;
+        if (phoneFieldData) phoneFieldId = phoneFieldData.id;
+        
+        console.log('Found contact fields:', { emailFieldId, phoneFieldId });
+      }
+    } else {
+      console.error('Failed to fetch contact fields:', await fieldsResponse.text());
+    }
+  } catch (error) {
+    console.error('Error fetching contact fields:', error);
+  }
+
+  return { emailFieldId, phoneFieldId };
+}
+
 serve(async (req) => {
+  // Обработка CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { name, email, phone, apartmentId, projectId }: LeadRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('Received request:', requestBody);
 
+    const { name, email, phone, apartmentId, projectId }: LeadRequest = requestBody;
+
+    // Валидация обязательных полей
     if (!name || !email || !phone || !apartmentId || !projectId) {
+      console.error('Missing required fields:', { name: !!name, email: !!email, phone: !!phone, apartmentId: !!apartmentId, projectId: !!projectId });
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ 
+          error: 'Missing required fields',
+          required: ['name', 'email', 'phone', 'apartmentId', 'projectId']
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Инициализация Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase configuration');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Получение настроек AmoCRM
+    console.log('Fetching AmoCRM settings for project:', projectId);
     const { data: amocrmSettings, error: settingsError } = await supabase
       .from('amocrm_settings')
       .select('*')
@@ -150,11 +209,13 @@ serve(async (req) => {
       );
     }
 
+    // Получение данных о квартире
+    console.log('Fetching apartment data for:', apartmentId);
     const { data: apartment, error: apartmentError } = await supabase
       .from('apartments')
       .select(`
         *,
-        projects (
+        projects!inner (
           name,
           address
         )
@@ -172,6 +233,7 @@ serve(async (req) => {
 
     const settings = amocrmSettings as AmoCRMSettings;
 
+    // Получение действующего токена доступа
     const accessToken = await getValidAccessToken(settings, supabase);
     if (!accessToken) {
       console.error('Unable to get valid access token');
@@ -181,64 +243,24 @@ serve(async (req) => {
       );
     }
 
+    // Определение ответственного пользователя
     let responsibleUserId = settings.responsible_user_id;
     if (!responsibleUserId) {
       try {
+        console.log('Fetching user info from AmoCRM...');
         const userInfoResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/account`, {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
+        
         if (userInfoResponse.ok) {
           const userInfo = await userInfoResponse.json();
           responsibleUserId = userInfo.current_user_id || userInfo._embedded?.users?.[0]?.id;
+          console.log('Got responsible user ID:', responsibleUserId);
+        } else {
+          console.error('Failed to get user info:', await userInfoResponse.text());
         }
       } catch (error) {
-        console.error('Failed to get user info from AmoCRM:', error);
-      }
-    }
-
-    let emailFieldId = 0; // Будем получать из API, если не найдено
-    let phoneFieldId = 0;
-
-    const { data: contactFields, error: fieldsError } = await supabase
-      .from('amocrm_custom_fields')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('entity_type', 'contacts');
-
-    if (fieldsError) {
-      console.error('Failed to get contact fields from database:', fieldsError);
-    } else if (contactFields && contactFields.length > 0) {
-      const emailField = contactFields.find((field: any) =>
-        field.field_code === 'EMAIL' ||
-        field.field_name?.toLowerCase().includes('email') ||
-        field.field_name?.toLowerCase().includes('почта')
-      );
-      if (emailField) emailFieldId = emailField.field_id;
-
-      const phoneField = contactFields.find((field: any) =>
-        field.field_code === 'PHONE' ||
-        field.field_name?.toLowerCase().includes('phone') ||
-        field.field_name?.toLowerCase().includes('телефон')
-      );
-      if (phoneField) phoneFieldId = phoneField.field_id;
-    }
-
-    // Если поля не найдены, получите их из API
-    if (!emailFieldId || !phoneFieldId) {
-      const fieldsResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/contacts/custom_fields`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      if (fieldsResponse.ok) {
-        const fieldsData = await fieldsResponse.json();
-        const emailFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'EMAIL');
-        const phoneFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'PHONE');
-        if (emailFieldData) emailFieldId = emailFieldData.id;
-        if (phoneFieldData) phoneFieldId = phoneFieldData.id;
-
-        await supabase.from('amocrm_custom_fields').upsert([
-          { project_id: projectId, entity_type: 'contacts', field_id: emailFieldId, field_code: 'EMAIL', field_name: 'Email' },
-          { project_id: projectId, entity_type: 'contacts', field_id: phoneFieldId, field_code: 'PHONE', field_name: 'Phone' }
-        ]);
+        console.error('Error fetching user info:', error);
       }
     }
 
@@ -250,75 +272,27 @@ serve(async (req) => {
       );
     }
 
-    const { data: leadFields } = await supabase
-      .from('amocrm_custom_fields')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('entity_type', 'leads');
+    // Получение полей для контактов
+    const { emailFieldId, phoneFieldId } = await getContactFields(settings, accessToken);
 
-    const leadCustomFields: Array<{
-      field_id: number;
-      values: Array<{ value: string; enum_id?: number }>;
-    }> = [];
-
-    if (leadFields && leadFields.length > 0) {
-      const apartmentNumberField = leadFields.find((field: any) =>
-        field.field_name?.toLowerCase().includes('квартир') ||
-        field.field_name?.toLowerCase().includes('apartment') ||
-        field.field_code === 'APARTMENT_NUMBER'
+    if (!emailFieldId || !phoneFieldId) {
+      console.error('Unable to get contact field IDs:', { emailFieldId, phoneFieldId });
+      return new Response(
+        JSON.stringify({ error: 'Unable to configure contact fields in AmoCRM' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-      const projectField = leadFields.find((field: any) =>
-        field.field_name?.toLowerCase().includes('проект') ||
-        field.field_name?.toLowerCase().includes('project') ||
-        field.field_code === 'PROJECT_NAME'
-      );
-      const areaField = leadFields.find((field: any) =>
-        field.field_name?.toLowerCase().includes('площад') ||
-        field.field_name?.toLowerCase().includes('area') ||
-        field.field_code === 'AREA'
-      );
-      const priceField = leadFields.find((field: any) =>
-        field.field_name?.toLowerCase().includes('цена') ||
-        field.field_name?.toLowerCase().includes('price') ||
-        field.field_code === 'PRICE'
-      );
-
-      if (apartmentNumberField && apartment.apartment_number) {
-        leadCustomFields.push({
-          field_id: apartmentNumberField.field_id,
-          values: [{ value: apartment.apartment_number }]
-        });
-      }
-      if (projectField && apartment.projects?.name) {
-        leadCustomFields.push({
-          field_id: projectField.field_id,
-          values: [{ value: apartment.projects.name }]
-        });
-      }
-      if (areaField && apartment.area) {
-        leadCustomFields.push({
-          field_id: areaField.field_id,
-          values: [{ value: apartment.area.toString() }]
-        });
-      }
-      if (priceField && apartment.price) {
-        leadCustomFields.push({
-          field_id: priceField.field_id,
-          values: [{ value: apartment.price.toString() }]
-        });
-      }
     }
 
+    // Building lead payload (simple structure without custom lead fields)
     const leadData: AmoCRMLead = {
-      name: `Заявка на квартиру ${apartment.apartment_number} - ${apartment.projects?.name}`,
+      name: `Apartment inquiry ${apartment.apartment_number} - ${apartment.projects?.name || 'Project'}`,
       pipeline_id: settings.pipeline_id,
       ...(settings.status_id && { status_id: settings.status_id }),
       responsible_user_id: responsibleUserId,
-      ...(leadCustomFields.length > 0 && { custom_fields_values: leadCustomFields }),
       _embedded: {
         contacts: [
           {
-            name,
+            name: name,
             custom_fields_values: [
               {
                 field_id: emailFieldId,
@@ -334,9 +308,10 @@ serve(async (req) => {
       }
     };
 
-    const amocrmUrl = `https://${settings.subdomain}.amocrm.ru/api/v4/leads/complex`;
-    console.log('Sending lead to AmoCRM:', JSON.stringify(leadData, null, 2));
+    console.log('Creating lead in AmoCRM with data:', JSON.stringify(leadData, null, 2));
 
+    // Отправка лида в AmoCRM
+    const amocrmUrl = `https://${settings.subdomain}.amocrm.ru/api/v4/leads/complex`;
     const amocrmResponse = await fetch(amocrmUrl, {
       method: 'POST',
       headers: {
@@ -348,64 +323,117 @@ serve(async (req) => {
 
     if (!amocrmResponse.ok) {
       const errorText = await amocrmResponse.text();
-      console.error('AmoCRM API error:', { status: amocrmResponse.status, errorText });
+      console.error('AmoCRM API error:', { 
+        status: amocrmResponse.status, 
+        statusText: amocrmResponse.statusText,
+        errorText 
+      });
+      
       let errorMessage = 'Failed to create lead in AmoCRM';
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.detail || errorData.message || errorMessage;
+        if (errorData.detail) errorMessage = errorData.detail;
+        else if (errorData.message) errorMessage = errorData.message;
+        
         if (errorData['validation-errors']) {
-          console.error('Validation errors:', errorData['validation-errors']);
+          console.error('Validation errors:', JSON.stringify(errorData['validation-errors'], null, 2));
+          errorMessage += '. Validation errors: ' + JSON.stringify(errorData['validation-errors']);
         }
       } catch (e) {
-        // Используем стандартное сообщение
+        console.error('Failed to parse error response');
       }
+      
       return new Response(
-        JSON.stringify({ error: errorMessage }),
+        JSON.stringify({ 
+          error: errorMessage,
+          details: errorText
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const amocrmResult = await amocrmResponse.json();
-    console.log('AmoCRM lead created:', amocrmResult);
+    console.log('AmoCRM lead created successfully:', amocrmResult);
 
-    // Добавление заметки
+    // Add a detailed note with apartment and client information
     if (amocrmResult[0]?.id) {
       const leadId = amocrmResult[0].id;
+      
+      // Create a detailed note with all the information
+      const currentDate = new Date().toLocaleString('ru-RU', { 
+        timeZone: 'Europe/Moscow',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      const noteText = `📋 APARTMENT INQUIRY | ${currentDate}
+
+👤 CLIENT:
+• Name: ${name}
+• Phone: ${phone}
+• Email: ${email}
+
+🏠 APARTMENT:
+• Apartment number: ${apartment.apartment_number}
+• Project: ${apartment.projects?.name || 'Not specified'}
+${apartment.area ? `• Area: ${apartment.area} m²` : ''}
+${apartment.price ? `• Price: ${Number(apartment.price).toLocaleString('ru-RU')} RUB` : ''}
+${apartment.floor ? `• Floor: ${apartment.floor}` : ''}
+${apartment.rooms ? `• Rooms: ${apartment.rooms}` : ''}
+${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : ''}
+
+💡 Inquiry created automatically via website`;
+
       const noteData = {
         entity_id: leadId,
         note_type: "common",
         params: {
-          text: `Номер квартиры: ${apartment.apartment_number}${apartment.area ? `\nПлощадь: ${apartment.area} м²` : ''}${apartment.price ? `\nЦена: ${apartment.price}` : ''}${apartment.projects?.address ? `\nАдрес: ${apartment.projects.address}` : ''}`
+          text: noteText
         }
       };
 
-      const noteResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/leads/notes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify([noteData])
-      });
+      try {
+        const noteResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/leads/notes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify([noteData])
+        });
 
-      if (!noteResponse.ok) {
-        console.error('Failed to create note:', await noteResponse.text());
+        if (!noteResponse.ok) {
+          console.error('Failed to create note:', await noteResponse.text());
+        } else {
+          console.log('Note added successfully to lead');
+        }
+      } catch (noteError) {
+        console.error('Error adding note to lead:', noteError);
       }
     }
 
+    // Возврат успешного результата
     return new Response(
       JSON.stringify({
         success: true,
         leadId: amocrmResult[0]?.id,
-        message: 'Lead successfully created in AmoCRM'
+        contactId: amocrmResult[0]?._embedded?.contacts?.[0]?.id,
+        message: 'Lead successfully created in AmoCRM',
+        leadUrl: `https://${settings.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error creating AmoCRM lead:', error);
+    console.error('Unexpected error creating AmoCRM lead:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
