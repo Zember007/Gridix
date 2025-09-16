@@ -717,7 +717,7 @@ const translations: Translations = {
     ru: 'Пользовательское соглашение',
     en: 'Terms of Service',
     ka: 'მომხმარებლის შეთანხმება'
-  }
+  },
 
   // Apartment details
   'apartment.details': {
