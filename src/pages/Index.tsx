@@ -342,9 +342,13 @@ const Index = () => {
               <h4 className="text-lg font-semibold mb-4 text-white">Быстрые ссылки</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">Админ панель</button></li>
-                <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
-                <li><button className="hover:text-blue-400 transition-colors">Документация</button></li>
-                <li><button className="hover:text-blue-400 transition-colors">Поддержка</button></li>
+   {/*              <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
+                <li><button className="hover:text-blue-400 transition-colors">Документация</button></li> */}
+                <li><button 
+                onClick={() => {
+                  window.open('https://t.me/Klasterdigital', '_blank');
+                }}
+                className="hover:text-blue-400 transition-colors">Поддержка</button></li>
               </ul>
             </div>
             
@@ -354,7 +358,7 @@ const Index = () => {
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">Политика конфиденциальности</button></li>
                 <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">Пользовательское соглашение</button></li>
-                <li><button className="hover:text-blue-400 transition-colors">Cookie Policy</button></li>
+                {/* <li><button className="hover:text-blue-400 transition-colors">Cookie Policy</button></li> */}
               </ul>
             </div>
           </div>
@@ -364,9 +368,7 @@ const Index = () => {
               <p className="text-gray-400">
                 © 2024 Gridix. Все права защищены.
               </p>
-              <div className="flex items-center gap-4">
-                <span className="text-gray-400 text-sm">Сделано с ❤️ в Грузии</span>
-              </div>
+            
             </div>
           </div>
         </div>
