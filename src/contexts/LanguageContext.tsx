@@ -530,6 +530,195 @@ const translations: Translations = {
     ka: '© 2024 RealEstate SaaS. ყველა უფლება დაცულია.'
   },
 
+  // Landing (extended)
+  'landing.badge': {
+    ru: 'Инновационное решение для недвижимости',
+    en: 'Innovative solution for real estate',
+    ka: 'ინოვაციური გადაწყვეტა უძრავი ქონებისთვის'
+  },
+  'landing.stats.projects': {
+    ru: 'Проектов',
+    en: 'Projects',
+    ka: 'პროექტი'
+  },
+  'landing.stats.companies': {
+    ru: 'Компаний',
+    en: 'Companies',
+    ka: 'კომპანია'
+  },
+  'landing.stats.uptime': {
+    ru: 'Время работы',
+    en: 'Uptime',
+    ka: 'ხელმისაწვდომობა'
+  },
+  'landing.stats.support': {
+    ru: 'Поддержка',
+    en: 'Support',
+    ka: 'მხარდაჭერა'
+  },
+  'landing.toolsHeadline': {
+    ru: 'Мощные инструменты для создания интерактивных планов недвижимости',
+    en: 'Powerful tools to build interactive real estate floor plans',
+    ka: 'ძლიერი ინსტრუმენტები ინტერაქტიული გეგმების შესაქმნელად'
+  },
+  'landing.feature.quickSetup.title': {
+    ru: 'Быстрая настройка',
+    en: 'Quick setup',
+    ka: 'სწრაფი მონტაჟი'
+  },
+  'landing.feature.quickSetup.desc': {
+    ru: 'Создайте проект за 5 минут',
+    en: 'Create a project in 5 minutes',
+    ka: 'შექმენით პროექტი 5 წუთში'
+  },
+  'landing.feature.security.title': {
+    ru: 'Безопасность',
+    en: 'Security',
+    ka: 'უსაფრთხოება'
+  },
+  'landing.feature.security.desc': {
+    ru: 'Защищенное хранение данных',
+    en: 'Secure data storage',
+    ka: 'მონაცემთა დაცული შენახვა'
+  },
+  'landing.feature.multilang.title': {
+    ru: 'Мультиязычность',
+    en: 'Multilingual',
+    ka: 'მრავალენოვანი'
+  },
+  'landing.feature.multilang.desc': {
+    ru: 'Поддержка 3 языков',
+    en: 'Supports 3 languages',
+    ka: 'მხარდაჭერა 3 ენა'
+  },
+  'landing.feature.mobile.title': {
+    ru: 'Мобильная версия',
+    en: 'Mobile friendly',
+    ka: 'მობილური ვერსია'
+  },
+  'landing.feature.mobile.desc': {
+    ru: 'Работает на всех устройствах',
+    en: 'Works on all devices',
+    ka: 'მუშაობს ყველა მოწყობილობაზე'
+  },
+  'landing.feature.simplicity.title': {
+    ru: 'Простота',
+    en: 'Simplicity',
+    ka: 'სიმარტივე'
+  },
+  'landing.feature.simplicity.desc': {
+    ru: 'Интуитивный интерфейс',
+    en: 'Intuitive interface',
+    ka: 'ინტუიციური ინტერფეისი'
+  },
+  'landing.feature.quality.title': {
+    ru: 'Качество',
+    en: 'Quality',
+    ka: 'ხარისხი'
+  },
+  'landing.feature.quality.desc': {
+    ru: 'Профессиональный результат',
+    en: 'Professional results',
+    ka: 'პროფესიონალური შედეგი'
+  },
+  'landing.testimonials.title': {
+    ru: 'Отзывы наших клиентов',
+    en: 'What our clients say',
+    ka: 'რას ამბობენ ჩვენი კლიენტები'
+  },
+  'landing.testimonials.subtitle': {
+    ru: 'Узнайте, что говорят о нас профессионалы рынка недвижимости',
+    en: 'Hear from real estate professionals who use our product',
+    ka: 'გაიგეთ რას ამბობენ უძრავი ქონების პროფესიონალები'
+  },
+  'landing.testimonials.ratingSummary': {
+    ru: '4.9/5 средняя оценка от 100+ клиентов',
+    en: '4.9/5 average rating from 100+ clients',
+    ka: '4.9/5 საშუალო შეფასება 100+ კლიენტისგან'
+  },
+  'landing.trialBadge': {
+    ru: 'Бесплатный пробный период • Без обязательств • Настройка за 5 минут',
+    en: 'Free trial • No commitment • Setup in 5 minutes',
+    ka: 'უფასო საცდელი • ვალდებულებების გარეშე • მონტაჟი 5 წუთში'
+  },
+  'footer.quickLinks': {
+    ru: 'Быстрые ссылки',
+    en: 'Quick links',
+    ka: 'სწრაფი ბმულები'
+  },
+  'footer.demo': {
+    ru: 'Демо',
+    en: 'Demo',
+    ka: 'დემო'
+  },
+  'footer.docs': {
+    ru: 'Документация',
+    en: 'Documentation',
+    ka: 'დოკუმენტაცია'
+  },
+  'footer.support': {
+    ru: 'Поддержка',
+    en: 'Support',
+    ka: 'მხარდაჭერა'
+  },
+  'footer.legal': {
+    ru: 'Правовая информация',
+    en: 'Legal',
+    ka: 'იურიდიული ინფორმაცია'
+  },
+  'footer.privacy': {
+    ru: 'Политика конфиденциальности',
+    en: 'Privacy Policy',
+    ka: 'კონფიდენციალურობის პოლიტიკა'
+  },
+  'footer.terms': {
+    ru: 'Пользовательское соглашение',
+    en: 'Terms of Service',
+    ka: 'მომხმარებლის შეთანხმება'
+  },
+  'footer.cookie': {
+    ru: 'Cookie Policy',
+    en: 'Cookie Policy',
+    ka: 'ქუქის პოლიტიკა'
+  },
+  'footer.company': {
+    ru: 'Компания',
+    en: 'Company',
+    ka: 'კომპანია'
+  },
+  'footer.address': {
+    ru: 'Адрес',
+    en: 'Address',
+    ka: 'მისამართი'
+  },
+  'footer.email': {
+    ru: 'Email',
+    en: 'Email',
+    ka: 'ელფოსტა'
+  },
+  'footer.craftedInGeorgia': {
+    ru: 'Сделано с ❤️ в Грузии',
+    en: 'Made with ❤️ in Georgia',
+    ka: 'შექმნილია ❤️ საქართველოში'
+  },
+
+  // Legal pages
+  'legal.backHome': {
+    ru: 'На главную',
+    en: 'Back to Home',
+    ka: 'მთავარზე დაბრუნება'
+  },
+  'legal.privacy.title': {
+    ru: 'Политика конфиденциальности',
+    en: 'Privacy Policy',
+    ka: 'კონფიდენციალურობის პოლიტიკა'
+  },
+  'legal.terms.title': {
+    ru: 'Пользовательское соглашение',
+    en: 'Terms of Service',
+    ka: 'მომხმარებლის შეთანხმება'
+  }
+
   // Apartment details
   'apartment.details': {
     ru: 'Детали квартиры',

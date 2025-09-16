@@ -42,7 +42,7 @@ const TermsOfServicePage = () => {
                 size={isMobile ? 'sm' : 'default'}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                На главную
+                {t('legal.backHome')}
               </Button>
             </div>
           </div>
@@ -60,7 +60,7 @@ const TermsOfServicePage = () => {
               </div>
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Пользовательское соглашение
+              {t('legal.terms.title')}
             </h1>
             <p className="text-xl text-gray-600">
               Последнее обновление: {new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}
