@@ -544,7 +544,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
         </div>
       </div>
 
-      {currentType === 'apartment' && (
+      {currentType !== 'parking' && (
         <ApartmentCustomFields
           projectId={projectId}
           apartmentId={apartment.id}
