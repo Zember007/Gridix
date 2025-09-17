@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getAllowedCorsHeaders(origin: string | null) {
+  const siteUrl = Deno.env.get('SITE_URL') || ''
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+  if (!origin || (siteUrl && origin === siteUrl)) {
+    headers['Access-Control-Allow-Origin'] = origin || siteUrl || '*'
+  }
+  return headers
 }
 
 interface AmoCRMSettings {
@@ -56,11 +62,17 @@ interface AmoCRMData {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin')
+  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    if (origin && (!corsHeaders['Access-Control-Allow-Origin'] || corsHeaders['Access-Control-Allow-Origin'] === '*')) {
+      return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
@@ -83,13 +95,16 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase user client (RLS enforced)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authHeader = req.headers.get('Authorization') || ''
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
-    // Check if project exists and user has access
-    const { data: project, error: projectError } = await supabase
+    // Check if project exists and user has access via RLS
+    const { data: project, error: projectError } = await userClient
       .from('projects')
       .select('id')
       .eq('id', project_id)
@@ -105,8 +120,12 @@ serve(async (req) => {
       );
     }
 
+    // Escalate to service role to read sensitive tokens AFTER access check
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const svc = createClient(supabaseUrl, supabaseServiceKey);
+
     // Get AmoCRM settings for the project
-    const { data: settings, error: settingsError } = await supabase
+    const { data: settings, error: settingsError } = await svc
       .from('amocrm_settings')
       .select('*')
       .eq('project_id', project_id)
@@ -147,7 +166,7 @@ serve(async (req) => {
     // Handle different actions
     switch (action) {
       case 'fetch_data':
-        return await fetchAmoCRMData(settings);
+        return await fetchAmoCRMData(settings, corsHeaders);
       
       default:
         return new Response(
@@ -174,7 +193,7 @@ serve(async (req) => {
   }
 });
 
-async function fetchAmoCRMData(settings: AmoCRMSettings): Promise<Response> {
+async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<string, string>): Promise<Response> {
   try {
     const baseUrl = `https://${settings.subdomain}.amocrm.ru/api/v4`;
     const headers = {

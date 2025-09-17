@@ -1,9 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getAllowedCorsHeaders(origin: string | null) {
+  const siteUrl = Deno.env.get('SITE_URL') || ''
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+  if (!origin || (siteUrl && origin === siteUrl)) {
+    headers['Access-Control-Allow-Origin'] = origin || siteUrl || '*'
+  }
+  return headers
+}
+
+async function hmacVerify(inputB64: string, signature: string, secret: string): Promise<boolean> {
+  const enc = new TextEncoder()
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const computed = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(inputB64))
+  const bytes = new Uint8Array(computed)
+  const b64 = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+  return b64 === signature
 }
 
 interface TokenResponse {
@@ -30,21 +51,27 @@ interface AmoCRMAccountData {
   };
 }
 serve(async (req) => {
+  const origin = req.headers.get('Origin')
+  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const url = new URL(req.url)
+    if (origin && (!corsHeaders['Access-Control-Allow-Origin'] || corsHeaders['Access-Control-Allow-Origin'] === '*')) {
+      return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const code = url.searchParams.get('code')
-    const state = url.searchParams.get('state') // project_id
+    const signedState = url.searchParams.get('state')
     const referer = url.searchParams.get('referer') // важный параметр для определения субдомена
     const error = url.searchParams.get('error')
 
     console.log('AmoCRM callback received:', { 
       hasCode: !!code, 
       codeLength: code?.length, 
-      state, 
+      hasState: !!signedState,
       referer, 
       error,
       fullUrl: req.url 
@@ -57,12 +84,38 @@ serve(async (req) => {
       })
     }
 
-    if (!code || !state) {
+    if (!code || !signedState) {
       return new Response(JSON.stringify({ error: 'missing_code_or_state' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // Verify signed state
+    const stateSecret = Deno.env.get('AMOCRM_STATE_SECRET')
+    if (!stateSecret) {
+      return new Response(JSON.stringify({ error: 'server_misconfigured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const parts = signedState.split('.')
+    if (parts.length !== 2) {
+      return new Response(JSON.stringify({ error: 'invalid_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const [payloadB64, signature] = parts
+    const ok = await hmacVerify(payloadB64, signature, stateSecret)
+    if (!ok) {
+      return new Response(JSON.stringify({ error: 'invalid_state_signature' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const payloadJson = atob(payloadB64.replaceAll('-', '+').replaceAll('_', '/') + '==')
+    let stateObj: { project_id: string; exp: number }
+    try {
+      stateObj = JSON.parse(payloadJson)
+    } catch {
+      return new Response(JSON.stringify({ error: 'invalid_state_payload' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    if (!stateObj?.project_id || !stateObj?.exp || stateObj.exp < Math.floor(Date.now() / 1000)) {
+      return new Response(JSON.stringify({ error: 'state_expired' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const state = stateObj.project_id
 
     // Инициализация supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -223,9 +276,6 @@ window.close();
       .from('amocrm_settings')
       .upsert({
         project_id: state,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
         access_token: tokenResult.access_token,
         refresh_token: tokenResult.refresh_token,
         token_expires_at: expiresAt.toISOString(),

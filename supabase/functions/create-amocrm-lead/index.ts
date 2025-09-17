@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getAllowedCorsHeaders(origin: string | null) {
+  const siteUrl = Deno.env.get('SITE_URL') || ''
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+  if (!origin || (siteUrl && origin === siteUrl)) {
+    headers['Access-Control-Allow-Origin'] = origin || siteUrl || '*'
+  }
+  return headers
 }
 
 interface LeadRequest {
@@ -157,11 +163,17 @@ async function getContactFields(settings: AmoCRMSettings, accessToken: string) {
 
 serve(async (req) => {
   // Обработка CORS
+  const origin = req.headers.get('Origin')
+  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    if (origin && (!corsHeaders['Access-Control-Allow-Origin'] || corsHeaders['Access-Control-Allow-Origin'] === '*')) {
+      return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const requestBody = await req.json();
     console.log('Received request:', requestBody);
 
@@ -181,9 +193,9 @@ serve(async (req) => {
 
     // Инициализация Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase configuration');
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
@@ -191,11 +203,12 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const authHeader = req.headers.get('Authorization') || ''
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
 
     // Получение настроек AmoCRM
     console.log('Fetching AmoCRM settings for project:', projectId);
-    const { data: amocrmSettings, error: settingsError } = await supabase
+    const { data: amocrmSettings, error: settingsError } = await userClient
       .from('amocrm_settings')
       .select('*')
       .eq('project_id', projectId)
@@ -211,7 +224,7 @@ serve(async (req) => {
 
     // Получение данных о квартире
     console.log('Fetching apartment data for:', apartmentId);
-    const { data: apartment, error: apartmentError } = await supabase
+    const { data: apartment, error: apartmentError } = await userClient
       .from('apartments')
       .select(`
         *,
@@ -234,7 +247,10 @@ serve(async (req) => {
     const settings = amocrmSettings as AmoCRMSettings;
 
     // Получение действующего токена доступа
-    const accessToken = await getValidAccessToken(settings, supabase);
+    // Escalate to service role only to refresh tokens if needed
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const svc = createClient(supabaseUrl, supabaseServiceKey);
+    const accessToken = await getValidAccessToken(settings, svc);
     if (!accessToken) {
       console.error('Unable to get valid access token');
       return new Response(

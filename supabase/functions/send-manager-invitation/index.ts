@@ -2,9 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SmtpClient } from "https://deno.land/x/smtp/mod.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getAllowedCorsHeaders(origin: string | null) {
+  const siteUrl = Deno.env.get('SITE_URL') || ''
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+  if (!origin || (siteUrl && origin === siteUrl)) {
+    headers['Access-Control-Allow-Origin'] = origin || siteUrl || '*'
+  }
+  return headers
 }
 
 interface InvitationRequest {
@@ -18,14 +24,22 @@ interface InvitationRequest {
 
 serve(async (req) => {
   // Handle CORS preflight requests
+  const origin = req.headers.get('Origin')
+  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    if (origin && (!corsHeaders['Access-Control-Allow-Origin'] || corsHeaders['Access-Control-Allow-Origin'] === '*')) {
+      return new Response(JSON.stringify({ success: false, error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    // Require authenticated user to send invitation; rely on RLS in tables
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization') || '' } } }
     )
 
     const { email, full_name, phone, developer_name, company_name, invitation_token }: InvitationRequest = await req.json()
