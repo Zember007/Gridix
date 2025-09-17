@@ -14,6 +14,7 @@ import BuildingFacadeView from '../visualization/BuildingFacadeView';
 import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
 import FavoritesTab from '../FavoritesTab';
 import { useFavorites } from '@/hooks/useFavorites';
+import { WheelPicker, WheelPickerWrapper } from '@/components/ui/wheel-picker';
 
 // Import new components
 import { useProjectFilters } from './hooks/useProjectFilters';
@@ -23,7 +24,6 @@ import { ExpandedFilters } from './filters/ExpandedFilters';
 import { MobileFilters } from './filters/MobileFilters';
 import { LayoutGallery } from './layouts/LayoutGallery';
 import { ListView } from './views/ListView';
-import { FloorSelector } from './FloorSelector';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -413,29 +413,73 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   />
                 </div>
               ) : (
-                // Floor plan view for specific floor
-                <div className="w-full h-full bg-white">
-                  <ApartmentFloorPlan
-                    projectId={projectId}
-                    project={project}
-                    apartments={filters.filteredApartments.filter(apt =>
-                      selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
-                    )}
-                    onApartmentSelect={openApartmentDetails}
-                    selectedFloorNumber={selectedFloorForPlan}
-                  />
+                // Floor plan view for specific floor with sidebar
+                <div className="w-full bg-white min-h-[600px]">
+                  <div className="flex h-full">
+                    {/* Main floor plan area */}
+                    <div className="flex-1 relative">
+                      <ApartmentFloorPlan
+                        projectId={projectId}
+                        project={project}
+                        apartments={filters.filteredApartments.filter(apt =>
+                          selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
+                        )}
+                        onApartmentSelect={openApartmentDetails}
+                        selectedFloorNumber={selectedFloorForPlan}
+                      />
+                    </div>
+                    
+                    {/* Floor selector sidebar */}
+                    <div className={`${isMobile ? 'w-24' : 'w-32'} bg-gradient-to-b from-gray-50 to-gray-100 border-l border-gray-200 shadow-inner flex flex-col items-center justify-center p-4`}>
+                      <div className="flex flex-col items-center gap-3 h-full">
+                        {/* Vertical title */}
+                        <div className="flex-shrink-0">
+                          <div 
+                            className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-gray-600 tracking-wider uppercase`}
+                            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+                          >
+                            {t('project.selectFloor')}
+                          </div>
+                        </div>
+                        
+                        {/* Wheel picker - full height */}
+                        <div className="flex-1 flex items-stretch justify-center min-h-0 py-2">
+                          <WheelPickerWrapper 
+                            className={`${isMobile ? 'w-18' : 'w-24'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm`}
+                          >
+                            <WheelPicker
+                              options={filters.getUniqueFloors().map(floor => ({
+                                value: floor.toString(),
+                                label: floor.toString()
+                              }))}
+                              value={selectedFloorForPlan?.toString()}
+                              onValueChange={(value) => setSelectedFloorForPlan(Number(value))}
+                              optionItemHeight={isMobile ? 40 : 45}
+                              visibleCount={isMobile ? 9 : 25}
+                              infinite={filters.getUniqueFloors().length > 5}
+                              dragSensitivity={1.2}
+                              scrollSensitivity={1.5}
+                             
+                            />
+                          </WheelPickerWrapper>
+                        </div>
+                        
+                        {/* Floor label */}
+                        <div className="flex-shrink-0">
+                          <div 
+                            className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium`}
+                            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+                          >
+                            {t('project.floor')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Floor selector for floor-plan mode */}
-            {viewMode === 'floor-plan' && (
-              <FloorSelector
-                selectedFloorForPlan={selectedFloorForPlan}
-                setSelectedFloorForPlan={setSelectedFloorForPlan}
-                getUniqueFloors={filters.getUniqueFloors}
-              />
-            )}
           </div>
         </>
       )}

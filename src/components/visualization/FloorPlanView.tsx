@@ -74,7 +74,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-96">
+        <CardContent className="flex items-center justify-center min-h-96 h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </CardContent>
       </Card>
@@ -83,8 +83,10 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
 
   if (!floorPlan || !floorPlan.image_url) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center h-96 text-gray-500">
+      <Card
+      className='h-full grow'
+      >
+        <CardContent className="flex flex-col items-center justify-center min-h-96 h-full text-gray-500">
           <p>План {floorNumber} этажа не загружен</p>
           <p className="text-sm mt-1">Обратитесь к администратору для загрузки плана этажа</p>
         </CardContent>
