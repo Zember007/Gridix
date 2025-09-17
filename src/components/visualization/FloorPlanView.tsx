@@ -73,7 +73,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect }
 
   if (loading) {
     return (
-      <Card>
+      <Card
+         className='h-full grow'
+      >
         <CardContent className="flex items-center justify-center min-h-96 h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </CardContent>
