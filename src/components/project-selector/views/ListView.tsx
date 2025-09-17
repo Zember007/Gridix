@@ -77,13 +77,22 @@ export const ListView = ({
   const { t } = useLanguage();
 
   // Calculate installment payment
+ 
+
   const calculateInstallmentPayment = (price: number): number => {
-    if (!project?.installment_enabled || !project.min_down_payment_percent || !project.max_installment_months) {
-      return 0;
-    }
-    const downPayment = (price / 100) * project.min_down_payment_percent;
-    const remainingAmount = price - downPayment;
-    return remainingAmount / project.max_installment_months;
+    if (!project?.installment_enabled || !project.max_installment_months) return 0;
+  
+    const minDp = project.min_down_payment_percent ?? 20;
+    const maxDp =  50; // разумный верхний предел “от”
+    const targetDp = 30;
+  
+    const downPercent = Math.min(Math.max(targetDp, minDp), maxDp);
+    const downPayment = (price * downPercent) / 100;
+    const remaining = price - downPayment;
+  
+    const months = project.max_installment_months;
+
+    return remaining / months;
   };
 
   // Handle favorite toggle
