@@ -142,6 +142,8 @@ ${phone ? `- Телефон: ${phone}` : ''}
     if (smtpHost && smtpUser && smtpPass) {
       const client = new SmtpClient()
       try {
+        console.log('Attempting SMTP connection to:', smtpHost, 'port:', smtpPort)
+        
         if (smtpPort === 465) {
           await client.connectTLS({
             hostname: smtpHost,
@@ -158,6 +160,8 @@ ${phone ? `- Телефон: ${phone}` : ''}
           })
         }
 
+        console.log('SMTP connection successful, sending email...')
+
         await client.send({
           from: fromEmail,
           to: email,
@@ -169,17 +173,22 @@ ${phone ? `- Телефон: ${phone}` : ''}
         console.log('Email sent successfully via SMTP to', email)
       } catch (smtpError) {
         console.error('SMTP email sending failed:', smtpError)
-        throw new Error(`Failed to send email via SMTP`)
+        console.error('SMTP config:', { smtpHost, smtpPort, smtpUser: smtpUser ? '[CONFIGURED]' : '[NOT SET]', fromEmail })
+        throw new Error(`Failed to send email via SMTP: ${smtpError.message}`)
       } finally {
         try { await client.close() } catch (_) { /* noop */ }
       }
     } else {
-      // Fallback: log email content for development
-      console.log('SMTP is not configured, logging email content:')
+      // Fallback: log email content for development and throw error
+      console.log('SMTP is not configured, missing required environment variables:')
+      console.log('SMTP_HOST:', smtpHost ? '[SET]' : '[MISSING]')
+      console.log('SMTP_USERNAME:', smtpUser ? '[SET]' : '[MISSING]')  
+      console.log('SMTP_PASSWORD:', smtpPass ? '[SET]' : '[MISSING]')
       console.log('To:', email)
       console.log('Subject:', emailSubject)
       console.log('Invitation URL:', invitationUrl)
-      console.log('HTML Content length:', emailHtml.length)
+      
+      throw new Error('SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USERNAME, and SMTP_PASSWORD environment variables.')
     }
     
     return new Response(

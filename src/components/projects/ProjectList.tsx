@@ -21,12 +21,13 @@ interface Project {
 interface ProjectListProps {
   onCreateNew: () => void;
   onEditProject: (projectId: string, isNew: boolean) => void;
+  developerId?: string;
 }
 
-const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
+const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { projects, loading, error, refresh } = useUserProjects(user?.id);
+  const { projects, loading, error, refresh } = useUserProjects(developerId || user?.id);
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
 
   // Удаляем старую функцию loadProjects, так как теперь используется хук

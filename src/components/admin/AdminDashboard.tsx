@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User } from 'lucide-react';
+import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield } from 'lucide-react';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
 
 interface AdminDashboardProps {
@@ -26,6 +27,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const { user, userProfile, signOut, loading } = useAuth();
+  const { userRole, isManager, isDeveloper, developerId } = useUserRole();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -76,11 +78,21 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </div>
               <div className="flex flex-col gap-2">
                 {/* User Info */}
-                <div className="flex items-center gap-2 self-end">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {userProfile?.email || user?.email || 'Unknown user'}
-                  </span>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {userProfile?.email || user?.email || 'Unknown user'}
+                    </span>
+                  </div>
+                  {isManager && userRole.managerData && (
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-3 w-3 text-blue-600" />
+                      <span className="text-xs text-blue-600">
+                        Менеджер: {userRole.managerData.developer_profile?.company_name}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Sign Out Button */}
@@ -126,6 +138,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <ProjectList 
                   onCreateNew={handleCreateNew}
                   onEditProject={handleEditProject}
+                  developerId={developerId}
                 />
               </TabsContent>
 
@@ -148,7 +161,13 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-6">
-                <AdminSettings userProfile={user} loading={loading} />
+                <AdminSettings 
+                  userProfile={user!} 
+                  loading={loading} 
+                  developerId={developerId}
+                  isManager={isManager}
+                  managerData={userRole.managerData}
+                />
               </TabsContent>
             </div>
           </Tabs>
@@ -214,6 +233,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                 <ProjectList 
                   onCreateNew={handleCreateNew}
                   onEditProject={handleEditProject}
+                  developerId={developerId}
                 />
               </TabsContent>
 
@@ -236,7 +256,13 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-6">
-                <AdminSettings userProfile={user} loading={loading} />
+                <AdminSettings 
+                  userProfile={user!} 
+                  loading={loading} 
+                  developerId={developerId}
+                  isManager={isManager}
+                  managerData={userRole.managerData}
+                />
               </TabsContent>
             </div>
           </Tabs>

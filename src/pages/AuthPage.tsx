@@ -4,12 +4,14 @@ import { AuthForm } from '@/components/Auth/AuthForm';
 import ResetPasswordForm from '@/components/Auth/ResetPasswordForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
+import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const { navigate } = useLanguageNavigation();
   const [searchParams] = useSearchParams();
   const { user, loading } = useAuth();
+  const { userRole, loading: roleLoading } = useUserRole();
   
   const redirectTo = searchParams.get('redirect') || '/admin';
   const mode = searchParams.get('mode');
@@ -39,18 +41,20 @@ const AuthPage = () => {
   }, []);
 
   useEffect(() => {
-    if (user && !loading && !isRecovery) {
+    if (user && !loading && !roleLoading && !isRecovery) {
       // Если redirect содержит языковой префикс, используем его напрямую
       // Иначе добавляем языковой префикс
       if (redirectTo.match(/^\/(ru|en|ge)\//)) {
         window.location.href = redirectTo;
       } else {
+        // Все пользователи (и застройщики, и менеджеры) попадают в /admin
+        // Там уже будет определяться контекст на основе роли
         navigate('/admin');
       }
     }
-  }, [user, loading, navigate, redirectTo, isRecovery]);
+  }, [user, loading, roleLoading, navigate, redirectTo, isRecovery, userRole]);
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

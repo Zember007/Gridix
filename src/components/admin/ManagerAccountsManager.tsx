@@ -69,11 +69,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       if (managersError) throw managersError;
 
-      // Загружаем приглашения
+      // Загружаем только активные приглашения (не принятые и не истекшие)
       const { data: invitationsData, error: invitationsError } = await supabase
         .from('manager_invitations')
         .select('*')
         .eq('developer_id', developerId)
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (invitationsError) throw invitationsError;
@@ -96,6 +98,39 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
     setSubmitting(true);
     try {
+      // Проверяем, существует ли уже менеджер с таким email
+      const { data: existingManager } = await supabase
+        .from('manager_accounts')
+        .select('id, status')
+        .eq('developer_id', developerId)
+        .eq('email', newManager.email)
+        .single();
+
+      if (existingManager) {
+        if (existingManager.status === 'active') {
+          toast.error('Менеджер с таким email уже добавлен');
+          return;
+        } else if (existingManager.status === 'suspended') {
+          toast.error('Менеджер с таким email заблокирован. Разблокируйте его для повторного использования.');
+          return;
+        }
+      }
+
+      // Проверяем, существует ли активное приглашение с таким email
+      const { data: existingInvitation } = await supabase
+        .from('manager_invitations')
+        .select('id, status, expires_at')
+        .eq('developer_id', developerId)
+        .eq('email', newManager.email)
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString())
+        .single();
+
+      if (existingInvitation) {
+        toast.error('Активное приглашение для этого email уже существует');
+        return;
+      }
+
       // Проверяем, существует ли уже пользователь с таким email
       const { data: existingUser } = await supabase
         .from('user_profiles')
@@ -146,8 +181,9 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
           toast.success(t('managerAccounts.invitationSent'));
         } catch (emailError) {
           console.error('Email sending failed:', emailError);
-          toast.success(t('managerAccounts.invitationCreated'));
-          toast.warning(t('managerAccounts.emailFailedCopyManually'));
+          // Показываем предупреждение с подробностями ошибки
+          toast.warning(`Приглашение создано, но письмо не отправлено: ${emailError.message || 'Проверьте настройки SMTP'}`);
+          toast.info('Скопируйте ссылку приглашения вручную из списка ниже');
         }
       }
 

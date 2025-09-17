@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import ManagerAccountsManager from '@/components/admin/ManagerAccountsManager';
+import { ManagerRole } from '@/hooks/useUserRole';
 
 
 interface AdminSettings {
@@ -24,7 +25,15 @@ interface AdminSettings {
   updated_at?: string;
 }
 
-const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, loading: boolean }) => {
+interface AdminSettingsProps {
+  userProfile: SupabaseUser;
+  loading: boolean;
+  developerId?: string;
+  isManager?: boolean;
+  managerData?: ManagerRole;
+}
+
+const AdminSettings = ({ userProfile, loading, developerId, isManager, managerData }: AdminSettingsProps) => {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<AdminSettings>({
     user_id: userProfile?.id || '',
@@ -159,7 +168,22 @@ const AdminSettings = ({ userProfile, loading }: { userProfile: SupabaseUser, lo
         </TabsContent>
 
         <TabsContent value="contacts">
-          <ManagerAccountsManager developerId={userProfile?.id || ''} />
+          {/* Показываем менеджеров только застройщикам, менеджеры не могут управлять другими менеджерами */}
+          {!isManager && (
+            <ManagerAccountsManager developerId={developerId || userProfile?.id || ''} />
+          )}
+          {isManager && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Управление менеджерами доступно только владельцу аккаунта
+              </p>
+              {managerData?.developer_profile && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Обратитесь к {managerData.developer_profile.full_name} для изменения настроек команды
+                </p>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -163,7 +163,7 @@ const AcceptInvitationPage = () => {
         throw managerError;
       }
 
-      // Обновляем статус приглашения
+      // Обновляем статус приглашения на 'accepted'
       const { error: updateError } = await supabase
         .from('manager_invitations')
         .update({ 
@@ -173,14 +173,15 @@ const AcceptInvitationPage = () => {
         .eq('id', invitation.id);
 
       if (updateError) {
-        console.warn('Warning: Could not update invitation status:', updateError);
+        console.error('Error updating invitation status:', updateError);
+        // Не прерываем процесс, так как основная задача выполнена
       }
 
       toast.success('Приглашение принято! Добро пожаловать в команду!');
       
-      // Перенаправляем на главную страницу после успешной регистрации
+      // Перенаправляем менеджера в административную панель застройщика
       setTimeout(() => {
-        navigate('/');
+        navigate('/admin', { replace: true });
       }, 2000);
 
     } catch (error: unknown) {
