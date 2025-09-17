@@ -83,10 +83,12 @@ export const ListView = ({
     if (!project?.installment_enabled || !project.max_installment_months) return 0;
   
     const minDp = project.min_down_payment_percent ?? 20;
-    const maxDp =  50; // разумный верхний предел “от”
-    const targetDp = 30;
+    const maxDp =  50; 
+    const targetDp = 50;
   
     const downPercent = Math.min(Math.max(targetDp, minDp), maxDp);
+    console.log('downPercent', downPercent);
+    
     const downPayment = (price * downPercent) / 100;
     const remaining = price - downPayment;
   
