@@ -34,7 +34,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(projectId);
-  const { favoritesCount } = useFavorites();
+  const { favoritesCount } = useFavorites(projectId);
 
   // State
   const [apartments, setApartments] = useState<Apartment[]>([]);

@@ -6,8 +6,11 @@ import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Apartment } from '@/types/apartment';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { toast } from 'sonner';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface Project {
+  name?: string;
   has_commercial?: boolean;
   has_parking?: boolean;
   currency?: string;
@@ -76,6 +79,8 @@ export const ListView = ({
 }: ListViewProps) => {
   const { t } = useLanguage();
 
+  const { isFavorite, toggleFavorite } = useFavorites();
+
   // Calculate installment payment
  
 
@@ -98,17 +103,43 @@ export const ListView = ({
   };
 
   // Handle favorite toggle
-  const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
+  const handleShare = async (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
-    // TODO: Implement favorite functionality
-    console.log('Toggle favorite for apartment:', apartment.id);
+    try {
+      const url = window.location.href;
+      const title = `${t('apartment.apartment')} № ${apartment?.apartment_number}`;
+      const text = project.name ? project.name : '';
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('common.copied'));
+      }
+    } catch (error) {
+      // User might cancel share; fallback to copying link
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success(t('common.copied'));
+      } catch (error) {
+        console.error('Error copying link to clipboard:', error);
+      }
+    }
   };
 
-  // Handle share
-  const handleShare = (e: React.MouseEvent, apartment: Apartment) => {
+  const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
-    // TODO: Implement share functionality
-    console.log('Share apartment:', apartment.id);
+    if (!apartment) return;
+    
+    toggleFavorite({
+      id: apartment.id,
+      project_id: apartment.project_id,
+      apartment_number: apartment.apartment_number,
+      rooms: typeof apartment.rooms === 'number' ? apartment.rooms : Number(apartment.rooms),
+      area: apartment.area,
+      price: typeof apartment.price === 'number' ? apartment.price : undefined,
+      status: apartment.status,
+      floor_number: apartment.floor_number
+    });
   };
 
   return (
@@ -267,7 +298,7 @@ export const ListView = ({
                               className="p-2 h-8 w-8"
                               onClick={(e) => handleFavoriteToggle(e, apartment)}
                             >
-                              <Heart className="h-4 w-4" />
+                              <Heart className={`h-4 w-4 ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                             </Button>
                           </div>
                         </div>
@@ -422,7 +453,7 @@ export const ListView = ({
                               className="p-2 h-10 w-10 hover:bg-gray-100"
                               onClick={(e) => handleFavoriteToggle(e, apartment)}
                             >
-                              <Heart className="h-6 w-6 text-black" />
+                              <Heart className={`h-6 w-6 text-black ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                             </Button>
                           </div>
                         </div>
@@ -475,7 +506,7 @@ export const ListView = ({
                             className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm"
                             onClick={(e) => handleFavoriteToggle(e, apartment)}
                           >
-                            <Heart className="h-3 w-3 text-black" />
+                            <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                           </Button>
                         </div>
 

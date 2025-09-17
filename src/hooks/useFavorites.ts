@@ -14,7 +14,7 @@ interface FavoriteApartment {
 
 const FAVORITES_STORAGE_KEY = 'apartment-favorites';
 
-export const useFavorites = () => {
+export const useFavorites = (projectId?: string) => {
   const [favorites, setFavorites] = useState<FavoriteApartment[]>([]);
 
   // Загружаем избранные из localStorage при инициализации
@@ -77,6 +77,13 @@ export const useFavorites = () => {
     return [...favorites].sort((a, b) => b.addedAt - a.addedAt);
   };
 
+  // Получить избранные квартиры по проекту
+  const getFavoritesForProject = (id: string) => {
+    return [...favorites]
+      .filter(fav => fav.project_id === id)
+      .sort((a, b) => b.addedAt - a.addedAt);
+  };
+
   // Очистить все избранные
   const clearFavorites = () => {
     setFavorites([]);
@@ -85,11 +92,14 @@ export const useFavorites = () => {
 
   return {
     favorites: getFavorites(),
+    favoritesForProject: projectId ? getFavoritesForProject(projectId) : undefined,
     addToFavorites,
     removeFromFavorites,
     toggleFavorite,
     isFavorite,
     clearFavorites,
-    favoritesCount: favorites.length
+    favoritesCount: projectId
+      ? favorites.filter(fav => fav.project_id === projectId).length
+      : favorites.length
   };
 };
