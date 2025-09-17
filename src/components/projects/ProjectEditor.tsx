@@ -25,6 +25,8 @@ import BuildingImageEditor from '@/components/visualization/BuildingImageEditor'
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
 import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
+import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -73,10 +75,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [accessError, setAccessError] = useState<string | null>(null);
 
   const { navigate } = useLanguageNavigation();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { t } = useLanguage();
   const { project: cachedProject } = useProject(projectId);
   const { updateProject } = useProjectCRUD();
+  const isMobile = useIsMobile();
 
   const loadProject = useCallback(async () => {
     try {
@@ -294,11 +297,39 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         );
       }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-                      <div className="flex items-center justify-between">
+  // Map activeTab to sidebar sections
+  const getSidebarSection = (tab: string) => {
+    switch (tab) {
+      case 'basic': return 'general';
+      case 'building': return 'general';
+      case 'apartments': return 'apartments';
+      case 'floors': return 'floorplan';
+      case 'photos': return 'photos';
+      case 'fields': return 'fields';
+      case 'amocrm': return 'integrations';
+      default: return 'general';
+    }
+  };
+
+  const handleSidebarSectionChange = (section: string) => {
+    switch (section) {
+      case 'general': setActiveTab('basic'); break;
+      case 'apartments': setActiveTab('apartments'); break;
+      case 'floorplan': setActiveTab('floors'); break;
+      case 'photos': setActiveTab('photos'); break;
+      case 'fields': setActiveTab('fields'); break;
+      case 'integrations': setActiveTab('amocrm'); break;
+      default: setActiveTab('basic');
+    }
+  };
+
+  // Mobile view - keep original layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={onBack}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -321,41 +352,41 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </Button>
               </div>
             </div>
+          </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7 mb-6">
-            <TabsTrigger value="basic" className="text-xs">
-              <Building2 className="h-3 w-3 mr-1" />
-              {t('projectEditor.basicInfo')}
-            </TabsTrigger>
-            <TabsTrigger value="building" className="text-xs" disabled={isNew}>
-              <Image className="h-3 w-3 mr-1" />
-              {t('projectEditor.buildingImage')}
-            </TabsTrigger>
-            <TabsTrigger value="floors" className="text-xs" disabled={isNew}>
-              <Layers3 className="h-3 w-3 mr-1" />
-              {t('projectEditor.floors')}
-            </TabsTrigger>
-            <TabsTrigger value="apartments" className="text-xs" disabled={isNew}>
-              <Settings className="h-3 w-3 mr-1" />
-              {t('projectList.apartments')}
-            </TabsTrigger>
-            <TabsTrigger value="fields" className="text-xs" disabled={isNew}>
-              <Settings className="h-3 w-3 mr-1" />
-              {t('projectEditor.fields')}
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
-              <Camera className="h-3 w-3 mr-1" />
-              {t('projectEditor.photos')}
-            </TabsTrigger>
-            <TabsTrigger value="amocrm" className="text-xs" disabled={isNew}>
-              <Zap className="h-3 w-3 mr-1" />
-              AmoCRM
-            </TabsTrigger>
-          </TabsList>
+        <div className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-7 mb-6">
+              <TabsTrigger value="basic" className="text-xs">
+                <Building2 className="h-3 w-3 mr-1" />
+                {t('projectEditor.basicInfo')}
+              </TabsTrigger>
+              <TabsTrigger value="building" className="text-xs" disabled={isNew}>
+                <Image className="h-3 w-3 mr-1" />
+                {t('projectEditor.buildingImage')}
+              </TabsTrigger>
+              <TabsTrigger value="floors" className="text-xs" disabled={isNew}>
+                <Layers3 className="h-3 w-3 mr-1" />
+                {t('projectEditor.floors')}
+              </TabsTrigger>
+              <TabsTrigger value="apartments" className="text-xs" disabled={isNew}>
+                <Settings className="h-3 w-3 mr-1" />
+                {t('projectList.apartments')}
+              </TabsTrigger>
+              <TabsTrigger value="fields" className="text-xs" disabled={isNew}>
+                <Settings className="h-3 w-3 mr-1" />
+                {t('projectEditor.fields')}
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
+                <Camera className="h-3 w-3 mr-1" />
+                {t('projectEditor.photos')}
+              </TabsTrigger>
+              <TabsTrigger value="amocrm" className="text-xs" disabled={isNew}>
+                <Zap className="h-3 w-3 mr-1" />
+                AmoCRM
+              </TabsTrigger>
+            </TabsList>
 
           <TabsContent value="basic" className="space-y-4">
             <Card>
@@ -568,10 +599,283 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <ApartmentPhotosManager projectId={project.id} />
           </TabsContent>
 
-          <TabsContent value="amocrm">
-            <AmoCRMSettings projectId={project.id} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="amocrm">
+              <AmoCRMSettings projectId={project.id} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop view with sidebar
+  return (
+    <div className="min-h-screen bg-background flex">
+      <ProjectEditorSidebar 
+        onSectionChange={handleSidebarSectionChange}
+        activeTab={getSidebarSection(activeTab)}
+        userEmail={userProfile?.email || user?.email || 'Unknown user'}
+      />
+      
+      <div className="flex-1 bg-background">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={onBack}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t('projectEditor.back')}
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    {isNew ? t('projectEditor.newProject') : project.name}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <LanguageToggle />
+                <Button onClick={handleSave} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? t('projectEditor.saving') : t('projectEditor.save')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {/* Keep tabs for secondary navigation within sections */}
+            {activeTab === 'basic' || activeTab === 'building' ? (
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="basic" className="text-sm">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  {t('projectEditor.basicInfo')}
+                </TabsTrigger>
+                <TabsTrigger value="building" className="text-sm" disabled={isNew}>
+                  <Image className="h-4 w-4 mr-2" />
+                  {t('projectEditor.buildingImage')}
+                </TabsTrigger>
+              </TabsList>
+            ) : null}
+
+            <TabsContent value="basic" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('projectEditor.basicInfo')}</CardTitle>
+                  <CardDescription>{t('projectEditor.basicInfo')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">{t('projectEditor.projectName')} *</Label>
+                    <Input
+                      id="name"
+                      value={project.name}
+                      onChange={(e) => setProject(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder={t('projectEditor.projectName')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">{t('projectEditor.description')}</Label>
+                    <Textarea
+                      id="description"
+                      value={project.description}
+                      onChange={(e) => setProject(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder={t('projectEditor.description')}
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address">{t('projectEditor.address')}</Label>
+                    <Input
+                      id="address"
+                      value={project.address}
+                      onChange={(e) => setProject(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder={t('projectEditor.address')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
+                    <Input
+                      id="floors"
+                      type="number"
+                      min="1"
+                      value={project.floors}
+                      onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
+                    />
+                  </div>
+                  
+                  {/* Дополнительные типы помещений */}
+                  <div className="space-y-4 ">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="has-parking"
+                        checked={project.has_parking}
+                        onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_parking: checked }))}
+                      />
+                      <Label htmlFor="has-parking">{t('projectEditor.hasParking')}</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="has-commercial"
+                        checked={project.has_commercial}
+                        onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_commercial: checked }))}
+                      />
+                      <Label htmlFor="has-commercial">{t('projectEditor.hasCommercial')}</Label>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>
+                    <Input
+                      id="latitude"
+                      type="number"
+                      step="0.000001"
+                      value={project.latitude ?? ''}
+                      onPaste={handlePaste}
+                      onChange={(e) => setProject(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                      placeholder={t('projectEditor.latitudePlaceholder')}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{t('projectEditor.latitudeExample')}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="longitude">{t('projectEditor.longitude')}</Label>
+                    <Input
+                      id="longitude"
+                      type="number"
+                      step="0.000001"
+                      value={project.longitude ?? ''}
+                      onPaste={handlePaste}
+                      onChange={(e) => setProject(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
+                      placeholder={t('projectEditor.longitudePlaceholder')}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{t('projectEditor.longitudeExample')}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="currency">{t('projectEditor.currency')}</Label>
+                    <Select value={project.currency} onValueChange={(value: CurrencyType) => setProject(prev => ({ ...prev, currency: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('projectEditor.currency')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(CURRENCIES).map(([code, info]) => (
+                          <SelectItem key={code} value={code}>
+                            {t(info.translationKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
+                  </div>
+
+                  {/* Настройки рассрочки */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="installment-enabled"
+                        checked={project.installment_enabled}
+                        onCheckedChange={(checked) => setProject(prev => ({ ...prev, installment_enabled: checked }))}
+                      />
+                      <Label htmlFor="installment-enabled">{t('projectEditor.enableInstallment')}</Label>
+                    </div>
+
+                    {project.installment_enabled && (
+                      <>
+                        <div>
+                          <Label htmlFor="min-down-payment">{t('projectEditor.minDownPaymentPercent')}</Label>
+                          <Input
+                            id="min-down-payment"
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={project.min_down_payment_percent}
+                            onChange={(e) => setProject(prev => ({ 
+                              ...prev, 
+                              min_down_payment_percent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                            }))}
+                            placeholder="20"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{t('projectEditor.minDownPaymentDesc')}</p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="max-installment-months">{t('projectEditor.maxInstallmentMonths')}</Label>
+                          <Input
+                            id="max-installment-months"
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={project.max_installment_months}
+                            onChange={(e) => setProject(prev => ({ 
+                              ...prev, 
+                              max_installment_months: Math.min(120, Math.max(1, parseInt(e.target.value) || 1))
+                            }))}
+                            placeholder="24"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{t('projectEditor.maxInstallmentMonthsDesc')}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {isNew && (
+                    <Button onClick={handleSave} disabled={saving} className="w-full">
+                      <Save className="h-4 w-4 mr-2" />
+                      {saving ? t('projectEditor.saving') : t('projectEditor.save&continue')}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="building">
+              <BuildingImageEditor 
+                projectId={project.id}
+                currentImageUrl={project.building_image_url}
+                onImageUpdate={(imageUrl) => setProject(prev => ({ ...prev, building_image_url: imageUrl }))}
+              />
+            </TabsContent>
+
+            <TabsContent value="floors">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('projectEditor.floorPlans')}</CardTitle>
+                    <CardDescription>
+                      {t('projectEditor.floorPlansDesc')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {renderFloorPlanTabs()}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="apartments">
+              <div className="space-y-4">
+                <ProjectApartmentsManager projectId={project.id} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="fields">
+              <AllFieldsManager projectId={project.id} />
+            </TabsContent>
+
+            <TabsContent value="photos">
+              <ApartmentPhotosManager projectId={project.id} />
+            </TabsContent>
+
+            <TabsContent value="amocrm">
+              <AmoCRMSettings projectId={project.id} />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

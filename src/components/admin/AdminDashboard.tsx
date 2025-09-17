@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminSidebar } from '@/components/ui/sidebar-component';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -56,107 +57,198 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
-            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-4'}`}>
-              <Button variant="ghost" size="sm" onClick={onBack} className={isMobile ? 'self-start' : ''}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                {t('admin.back')}
-              </Button>
-              <div>
-                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{t('admin.dashboard')}</h1>
-                <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
+  // Mobile view - keep original layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <Button variant="ghost" size="sm" onClick={onBack} className="self-start">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t('admin.back')}
+                </Button>
+                <div>
+                  <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
+                  <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
+                </div>
               </div>
-            </div>
-            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-4'}`}>
-              {/* User Info */}
-              <div className={`flex items-center gap-2 ${isMobile ? 'self-end' : ''}`}>
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {userProfile?.email || user?.email || 'Unknown user'}
-                </span>
+              <div className="flex flex-col gap-2">
+                {/* User Info */}
+                <div className="flex items-center gap-2 self-end">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {userProfile?.email || user?.email || 'Unknown user'}
+                  </span>
+                </div>
+                
+                {/* Sign Out Button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 self-end"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t('auth.signOut')}
+                </Button>
+                
+                <LanguageToggle />
               </div>
-              
-              {/* Sign Out Button */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSignOut}
-                className={`flex items-center gap-2 ${isMobile ? 'self-end' : ''}`}
-              >
-                <LogOut className="h-4 w-4" />
-                {isMobile ? '' : t('auth.signOut')}
-              </Button>
-              
-              <LanguageToggle />
             </div>
           </div>
         </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 gap-1">
+              <TabsTrigger value="projects" className="flex items-center gap-1 text-xs">
+                <Building2 className="h-3 w-3" />
+                {t('admin.projects').substring(0, 8)}
+              </TabsTrigger>
+              <TabsTrigger value="widgets" className="flex items-center gap-1 text-xs">
+                <Code className="h-3 w-3" />
+                {t('admin.widgets').substring(0, 8)}
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs">
+                <BarChart3 className="h-3 w-3" />
+                {t('admin.analytics').substring(0, 8)}
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-1 text-xs">
+                <Settings className="h-3 w-3" />
+                {t('admin.settings').substring(0, 8)}
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="mt-6">
+              <TabsContent value="projects" className="space-y-6">
+                <ProjectList 
+                  onCreateNew={handleCreateNew}
+                  onEditProject={handleEditProject}
+                />
+              </TabsContent>
+
+              <TabsContent value="widgets" className="space-y-6">
+                <AdminWidgets />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('admin.analytics')}</CardTitle>
+                    <CardDescription>
+                      {t('admin.analyticsDescription')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-6">
+                <AdminSettings userProfile={user} loading={loading} />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+
+        {/* Project Creation Modal */}
+        <ProjectCreationModal
+          open={showCreateModal}
+          onClose={handleCloseCreateModal}
+          onManualCreate={handleManualCreate}
+        />
       </div>
+    );
+  }
 
-      <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4'}`}>
-            <TabsTrigger value="projects" className={`flex items-center ${isMobile ? 'gap-1 text-xs' : 'gap-2'}`}>
-              <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {isMobile ? t('admin.projects').substring(0, 8) : t('admin.projects')}
-            </TabsTrigger>
-            <TabsTrigger value="widgets" className={`flex items-center ${isMobile ? 'gap-1 text-xs' : 'gap-2'}`}>
-              <Code className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {isMobile ? t('admin.widgets').substring(0, 8) : t('admin.widgets')}
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className={`flex items-center ${isMobile ? 'gap-1 text-xs' : 'gap-2'}`}>
-              <BarChart3 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {isMobile ? t('admin.analytics').substring(0, 8) : t('admin.analytics')}
-            </TabsTrigger>
-            <TabsTrigger value="settings" className={`flex items-center ${isMobile ? 'gap-1 text-xs' : 'gap-2'}`}>
-              <Settings className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {isMobile ? t('admin.settings').substring(0, 8) : t('admin.settings')}
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="mt-6">
-            <TabsContent value="projects" className="space-y-6">
-              <ProjectList 
-                onCreateNew={handleCreateNew}
-                onEditProject={handleEditProject}
-              />
-            </TabsContent>
-
-            <TabsContent value="widgets" className="space-y-6">
-              <AdminWidgets />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('admin.analytics')}</CardTitle>
-                  <CardDescription>
-                    {t('admin.analyticsDescription')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-6">
-              <AdminSettings userProfile={user} loading={loading} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
-
-      {/* Project Creation Modal */}
-      <ProjectCreationModal
-        open={showCreateModal}
-        onClose={handleCloseCreateModal}
-        onManualCreate={handleManualCreate}
+  // Desktop view with sidebar
+  return (
+    <div className="min-h-screen bg-background flex">
+      <AdminSidebar 
+        onNavigate={navigate}
+        userEmail={userProfile?.email || user?.email || 'Unknown user'}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
+      
+      <div className="flex-1 bg-background">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={onBack}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t('admin.back')}
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold">{t('admin.dashboard')}</h1>
+                  <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {/* Sign Out Button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t('auth.signOut')}
+                </Button>
+                
+                <LanguageToggle />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+
+            <div className="mt-6">
+              <TabsContent value="projects" className="space-y-6">
+                <ProjectList 
+                  onCreateNew={handleCreateNew}
+                  onEditProject={handleEditProject}
+                />
+              </TabsContent>
+
+              <TabsContent value="widgets" className="space-y-6">
+                <AdminWidgets />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('admin.analytics')}</CardTitle>
+                    <CardDescription>
+                      {t('admin.analyticsDescription')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-6">
+                <AdminSettings userProfile={user} loading={loading} />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+
+        {/* Project Creation Modal */}
+        <ProjectCreationModal
+          open={showCreateModal}
+          onClose={handleCloseCreateModal}
+          onManualCreate={handleManualCreate}
+        />
+      </div>
     </div>
   );
 };
