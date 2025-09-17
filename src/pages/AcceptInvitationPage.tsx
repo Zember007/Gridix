@@ -44,6 +44,40 @@ const AcceptInvitationPage = () => {
   const [accepting, setAccepting] = useState(false);
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
+  const [checkingUser, setCheckingUser] = useState(false);
+
+  const checkUserExists = useCallback(async (email: string) => {
+    try {
+      setCheckingUser(true);
+      console.log('Checking if user exists with email:', email);
+
+      // Проверяем, существует ли пользователь с таким email в user_profiles
+      const { data: existingUser, error: userError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('Error checking user existence:', userError);
+        return;
+      }
+
+      if (existingUser) {
+        console.log('User exists, setting isExistingUser to true');
+        setIsExistingUser(true);
+      } else {
+        console.log('User does not exist, setting isExistingUser to false');
+        setIsExistingUser(false);
+      }
+    } catch (error) {
+      console.error('Error in checkUserExists:', error);
+      // В случае ошибки по умолчанию показываем форму создания аккаунта
+      setIsExistingUser(false);
+    } finally {
+      setCheckingUser(false);
+    }
+  }, []);
 
   const loadInvitationData = useCallback(async () => {
     try {
@@ -64,22 +98,22 @@ const AcceptInvitationPage = () => {
       if (invitationError) {
         console.error('Invitation error:', invitationError);
         if (invitationError.code === 'PGRST116') {
-          throw new Error('Приглашение не найдено или недоступно');
+          throw new Error(t('invitation.notFound'));
         }
-        throw new Error(`Ошибка загрузки приглашения: ${invitationError.message}`);
+        throw new Error(t('invitation.loadingError', { message: invitationError.message }));
       }
 
       if (!invitationData) {
-        throw new Error('Приглашение не найдено');
+        throw new Error(t('invitation.notFound'));
       }
 
       // Проверяем статус и срок действия
       if (invitationData.status !== 'pending') {
-        throw new Error('Приглашение уже было использовано или отменено');
+        throw new Error(t('invitation.alreadyUsed'));
       }
 
       if (new Date(invitationData.expires_at) < new Date()) {
-        throw new Error('Срок действия приглашения истек');
+        throw new Error(t('invitation.expired'));
       }
 
       // Загружаем данные разработчика отдельно
@@ -97,48 +131,51 @@ const AcceptInvitationPage = () => {
 
       setInvitation({
         ...invitationData,
-        developer_name: developerData?.full_name || 'Неизвестно',
-        company_name: developerData?.company_name || 'Неизвестно'
+        developer_name: developerData?.full_name || t('invitation.unknown'),
+        company_name: developerData?.company_name || t('invitation.unknown')
       });
+
+      // Автоматически проверяем, существует ли пользователь с таким email
+      await checkUserExists(invitationData.email);
 
     } catch (err: unknown) {
       console.error('Error in loadInvitationData:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки приглашения';
+      const errorMessage = err instanceof Error ? err.message : t('invitation.loadingError', { message: 'Unknown error' });
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t, checkUserExists]);
 
   useEffect(() => {
     if (!token) {
-      setError('Токен приглашения не найден');
+      setError(t('invitation.tokenNotFound'));
       setLoading(false);
       return;
     }
 
     loadInvitationData();
-  }, [token, loadInvitationData]);
+  }, [token, loadInvitationData, t]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Пароль должен содержать минимум 8 символов';
+      return t('invitation.passwordMinLength8');
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Пароль должен содержать строчные буквы';
+      return t('invitation.passwordLowercase');
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Пароль должен содержать заглавные буквы';
+      return t('invitation.passwordUppercase');
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Пароль должен содержать цифры';
+      return t('invitation.passwordDigits');
     }
     return null;
   };
 
   const handleAcceptInvitation = async () => {
     if (!invitation) {
-      toast.error('Данные приглашения не найдены');
+      toast.error(t('invitation.dataNotFound'));
       return;
     }
 
@@ -152,11 +189,11 @@ const AcceptInvitationPage = () => {
       if (existingUser && existingUser.email === invitation.email) {
         // Пользователь уже авторизован с нужным email
         userId = existingUser.id;
-        toast.info('Вы уже авторизованы. Принимаем приглашение...');
+        toast.info(t('invitation.alreadyAuthorized'));
       } else if (isExistingUser) {
         // Пользователь существует, нужно войти
         if (!loginPassword) {
-          toast.error('Введите пароль для входа');
+          toast.error(t('invitation.enterLoginPassword'));
           return;
         }
 
@@ -166,18 +203,18 @@ const AcceptInvitationPage = () => {
         });
 
         if (signInError) {
-          throw new Error('Неверный пароль или email');
+          throw new Error(t('invitation.incorrectPassword'));
         }
 
         if (!authData.user) {
-          throw new Error('Ошибка входа в аккаунт');
+          throw new Error(t('invitation.signInError'));
         }
 
         userId = authData.user.id;
       } else {
         // Создаем новый аккаунт
         if (!password || !confirmPassword) {
-          toast.error('Заполните все поля для создания аккаунта');
+          toast.error(t('invitation.fillAllFields'));
           return;
         }
 
@@ -188,7 +225,7 @@ const AcceptInvitationPage = () => {
         }
 
         if (password !== confirmPassword) {
-          toast.error('Пароли не совпадают');
+          toast.error(t('invitation.passwordMismatch'));
           return;
         }
 
@@ -208,7 +245,7 @@ const AcceptInvitationPage = () => {
         }
 
         if (!authData.user) {
-          throw new Error('Ошибка создания аккаунта');
+          throw new Error(t('invitation.accountCreationError'));
         }
 
         userId = authData.user.id;
@@ -245,7 +282,7 @@ const AcceptInvitationPage = () => {
         // Не прерываем процесс, так как основная задача выполнена
       }
 
-      toast.success('Приглашение принято! Добро пожаловать в команду!');
+      toast.success(t('invitation.acceptedSuccess'));
       
       // Перенаправляем менеджера в административную панель
       setTimeout(() => {
@@ -254,7 +291,7 @@ const AcceptInvitationPage = () => {
 
     } catch (error: unknown) {
       console.error('Error accepting invitation:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Ошибка при принятии приглашения';
+      const errorMessage = error instanceof Error ? error.message : t('invitation.acceptError');
       toast.error(errorMessage);
     } finally {
       setAccepting(false);
@@ -275,7 +312,7 @@ const AcceptInvitationPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-red-600">Ошибка</CardTitle>
+            <CardTitle className="text-red-600">{t('invitation.error')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
@@ -285,7 +322,7 @@ const AcceptInvitationPage = () => {
               className="w-full mt-4" 
               onClick={() => navigate('/')}
             >
-              Вернуться на главную
+              {t('invitation.returnHome')}
             </Button>
           </CardContent>
         </Card>
@@ -302,9 +339,9 @@ const AcceptInvitationPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <CardTitle>Приглашение в команду</CardTitle>
+          <CardTitle>{t('invitation.teamInvitation')}</CardTitle>
           <CardDescription>
-            Завершите регистрацию для получения доступа
+            {checkingUser ? t('invitation.checkingExistingUser') : t('invitation.completeRegistration')}
           </CardDescription>
         </CardHeader>
         
@@ -313,66 +350,50 @@ const AcceptInvitationPage = () => {
           <div className="bg-blue-50 p-4 rounded-lg space-y-3">
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Менеджер:</span>
+              <span className="font-medium text-blue-900">{t('invitation.manager')}</span>
               <span className="text-blue-800">{invitation.full_name}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Mail className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Email:</span>
+              <span className="font-medium text-blue-900">{t('invitation.email')}</span>
               <span className="text-blue-800">{invitation.email}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Building className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Компания:</span>
+              <span className="font-medium text-blue-900">{t('invitation.company')}</span>
               <span className="text-blue-800">{invitation.company_name}</span>
             </div>
             {invitation.developer_name && (
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-900">Пригласил:</span>
+                <span className="font-medium text-blue-900">{t('invitation.invitedBy')}</span>
                 <span className="text-blue-800">{invitation.developer_name}</span>
               </div>
             )}
           </div>
 
-          {/* Переключатель между входом и регистрацией */}
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <button
-              type="button"
-              onClick={() => setIsExistingUser(false)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !isExistingUser 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Создать аккаунт
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsExistingUser(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isExistingUser 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              У меня есть аккаунт
-            </button>
-          </div>
+          {/* Показываем информацию о том, что система автоматически определила */}
+          {!checkingUser && (
+            <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+              {isExistingUser 
+                ? `✓ ${t('invitation.haveAccount')}` 
+                : `+ ${t('invitation.createAccount')}`
+              }
+            </div>
+          )}
 
           {isExistingUser ? (
             /* Форма входа */
             <div className="space-y-4">
               <div>
-                <Label htmlFor="loginPassword">Введите пароль</Label>
+                <Label htmlFor="loginPassword">{t('invitation.enterPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="loginPassword"
                     type={showPassword ? 'text' : 'password'}
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="Ваш пароль"
+                    placeholder={t('invitation.yourPassword')}
                     className="pr-10"
                   />
                   <button
@@ -393,14 +414,14 @@ const AcceptInvitationPage = () => {
             /* Форма создания пароля */
             <div className="space-y-4">
               <div>
-                <Label htmlFor="password">Создайте пароль</Label>
+                <Label htmlFor="password">{t('invitation.createPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Минимум 8 символов"
+                    placeholder={t('invitation.minimum8Characters')}
                     className="pr-10"
                   />
                   <button
@@ -418,14 +439,14 @@ const AcceptInvitationPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+                <Label htmlFor="confirmPassword">{t('invitation.confirmPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Повторите пароль"
+                    placeholder={t('invitation.repeatPassword')}
                     className="pr-10"
                   />
                   <button
@@ -444,11 +465,11 @@ const AcceptInvitationPage = () => {
 
               {/* Требования к паролю */}
               <div className="text-sm text-gray-600">
-                <p className="font-medium mb-1">Требования к паролю:</p>
+                <p className="font-medium mb-1">{t('invitation.passwordRequirements')}</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Минимум 8 символов</li>
-                  <li>Строчные и заглавные буквы</li>
-                  <li>Минимум одна цифра</li>
+                  <li>{t('invitation.passwordMinLength')}</li>
+                  <li>{t('invitation.passwordCase')}</li>
+                  <li>{t('invitation.passwordDigit')}</li>
                 </ul>
               </div>
             </div>
@@ -456,14 +477,17 @@ const AcceptInvitationPage = () => {
 
           <Button 
             onClick={handleAcceptInvitation} 
-            disabled={accepting || (isExistingUser ? !loginPassword : (!password || !confirmPassword))}
+            disabled={accepting || checkingUser || (isExistingUser ? !loginPassword : (!password || !confirmPassword))}
             className="w-full"
           >
-            {accepting ? (isExistingUser ? 'Вход и принятие приглашения...' : 'Создание аккаунта...') : 'Принять приглашение'}
+            {accepting 
+              ? (isExistingUser ? t('invitation.signingInAndAccepting') : t('invitation.creatingAccount')) 
+              : t('invitation.acceptInvitation')
+            }
           </Button>
 
           <div className="text-center text-sm text-gray-500">
-            <p>Приглашение действительно до:</p>
+            <p>{t('invitation.validUntil')}</p>
             <p className="font-medium">
               {new Date(invitation.expires_at).toLocaleDateString('ru-RU', {
                 day: 'numeric',

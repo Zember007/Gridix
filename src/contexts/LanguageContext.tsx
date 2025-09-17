@@ -3185,6 +3185,233 @@ const translations: Translations = {
     ru: 'Скрыть',
     en: 'Hide',
     ka: 'დამალვა'
+  },
+
+  // Accept Invitation Page
+  'invitation.teamInvitation': {
+    ru: 'Приглашение в команду',
+    en: 'Team Invitation',
+    ka: 'გუნდში მოწვევა'
+  },
+  'invitation.completeRegistration': {
+    ru: 'Завершите регистрацию для получения доступа',
+    en: 'Complete registration to get access',
+    ka: 'დაასრულეთ რეგისტრაცია წვდომის მისაღებად'
+  },
+  'invitation.manager': {
+    ru: 'Менеджер:',
+    en: 'Manager:',
+    ka: 'მენეჯერი:'
+  },
+  'invitation.email': {
+    ru: 'Email:',
+    en: 'Email:',
+    ka: 'ელ-ფოსტა:'
+  },
+  'invitation.company': {
+    ru: 'Компания:',
+    en: 'Company:',
+    ka: 'კომპანია:'
+  },
+  'invitation.invitedBy': {
+    ru: 'Пригласил:',
+    en: 'Invited by:',
+    ka: 'მოიწვია:'
+  },
+  'invitation.createAccount': {
+    ru: 'Создать аккаунт',
+    en: 'Create Account',
+    ka: 'ანგარიშის შექმნა'
+  },
+  'invitation.haveAccount': {
+    ru: 'У меня есть аккаунт',
+    en: 'I have an account',
+    ka: 'მაქვს ანგარიში'
+  },
+  'invitation.enterPassword': {
+    ru: 'Введите пароль',
+    en: 'Enter password',
+    ka: 'შეიყვანეთ პაროლი'
+  },
+  'invitation.yourPassword': {
+    ru: 'Ваш пароль',
+    en: 'Your password',
+    ka: 'თქვენი პაროლი'
+  },
+  'invitation.createPassword': {
+    ru: 'Создайте пароль',
+    en: 'Create password',
+    ka: 'შექმენით პაროლი'
+  },
+  'invitation.minimum8Characters': {
+    ru: 'Минимум 8 символов',
+    en: 'Minimum 8 characters',
+    ka: 'მინიმუმ 8 სიმბოლო'
+  },
+  'invitation.confirmPassword': {
+    ru: 'Подтвердите пароль',
+    en: 'Confirm password',
+    ka: 'დაადასტურეთ პაროლი'
+  },
+  'invitation.repeatPassword': {
+    ru: 'Повторите пароль',
+    en: 'Repeat password',
+    ka: 'გაიმეორეთ პაროლი'
+  },
+  'invitation.passwordRequirements': {
+    ru: 'Требования к паролю:',
+    en: 'Password requirements:',
+    ka: 'პაროლის მოთხოვნები:'
+  },
+  'invitation.passwordMinLength': {
+    ru: 'Минимум 8 символов',
+    en: 'Minimum 8 characters',
+    ka: 'მინიმუმ 8 სიმბოლო'
+  },
+  'invitation.passwordCase': {
+    ru: 'Строчные и заглавные буквы',
+    en: 'Lowercase and uppercase letters',
+    ka: 'პატარა და დიდი ასოები'
+  },
+  'invitation.passwordDigit': {
+    ru: 'Минимум одна цифра',
+    en: 'At least one digit',
+    ka: 'მინიმუმ ერთი ციფრი'
+  },
+  'invitation.acceptInvitation': {
+    ru: 'Принять приглашение',
+    en: 'Accept Invitation',
+    ka: 'მოწვევის მიღება'
+  },
+  'invitation.signingInAndAccepting': {
+    ru: 'Вход и принятие приглашения...',
+    en: 'Signing in and accepting invitation...',
+    ka: 'შესვლა და მოწვევის მიღება...'
+  },
+  'invitation.creatingAccount': {
+    ru: 'Создание аккаунта...',
+    en: 'Creating account...',
+    ka: 'ანგარიშის შექმნა...'
+  },
+  'invitation.validUntil': {
+    ru: 'Приглашение действительно до:',
+    en: 'Invitation valid until:',
+    ka: 'მოწვევა ძალაშია:'
+  },
+  'invitation.error': {
+    ru: 'Ошибка',
+    en: 'Error',
+    ka: 'შეცდომა'
+  },
+  'invitation.returnHome': {
+    ru: 'Вернуться на главную',
+    en: 'Return to Home',
+    ka: 'მთავარ გვერდზე დაბრუნება'
+  },
+  'invitation.tokenNotFound': {
+    ru: 'Токен приглашения не найден',
+    en: 'Invitation token not found',
+    ka: 'მოწვევის ტოკენი ვერ მოიძებნა'
+  },
+  'invitation.notFound': {
+    ru: 'Приглашение не найдено или недоступно',
+    en: 'Invitation not found or unavailable',
+    ka: 'მოწვევა ვერ მოიძებნა ან მიუწვდომელია'
+  },
+  'invitation.loadingError': {
+    ru: 'Ошибка загрузки приглашения: {message}',
+    en: 'Error loading invitation: {message}',
+    ka: 'მოწვევის ჩატვირთვის შეცდომა: {message}'
+  },
+  'invitation.alreadyUsed': {
+    ru: 'Приглашение уже было использовано или отменено',
+    en: 'Invitation has already been used or cancelled',
+    ka: 'მოწვევა უკვე გამოყენებულია ან გაუქმებულია'
+  },
+  'invitation.expired': {
+    ru: 'Срок действия приглашения истек',
+    en: 'Invitation has expired',
+    ka: 'მოწვევის ვადა ამოიწურა'
+  },
+  'invitation.unknown': {
+    ru: 'Неизвестно',
+    en: 'Unknown',
+    ka: 'უცნობი'
+  },
+  'invitation.dataNotFound': {
+    ru: 'Данные приглашения не найдены',
+    en: 'Invitation data not found',
+    ka: 'მოწვევის მონაცემები ვერ მოიძებნა'
+  },
+  'invitation.alreadyAuthorized': {
+    ru: 'Вы уже авторизованы. Принимаем приглашение...',
+    en: 'You are already authorized. Accepting invitation...',
+    ka: 'თქვენ უკვე ავტორიზებული ხართ. მოწვევის მიღება...'
+  },
+  'invitation.enterLoginPassword': {
+    ru: 'Введите пароль для входа',
+    en: 'Enter password to sign in',
+    ka: 'შეიყვანეთ პაროლი შესასვლელად'
+  },
+  'invitation.incorrectPassword': {
+    ru: 'Неверный пароль или email',
+    en: 'Incorrect password or email',
+    ka: 'არასწორი პაროლი ან ელ-ფოსტა'
+  },
+  'invitation.signInError': {
+    ru: 'Ошибка входа в аккаунт',
+    en: 'Error signing into account',
+    ka: 'ანგარიშში შესვლის შეცდომა'
+  },
+  'invitation.fillAllFields': {
+    ru: 'Заполните все поля для создания аккаунта',
+    en: 'Fill all fields to create account',
+    ka: 'შეავსეთ ყველა ველი ანგარიშის შესაქმნელად'
+  },
+  'invitation.passwordMinLength8': {
+    ru: 'Пароль должен содержать минимум 8 символов',
+    en: 'Password must contain at least 8 characters',
+    ka: 'პაროლი უნდა შეიცავდეს მინიმუმ 8 სიმბოლოს'
+  },
+  'invitation.passwordLowercase': {
+    ru: 'Пароль должен содержать строчные буквы',
+    en: 'Password must contain lowercase letters',
+    ka: 'პაროლი უნდა შეიცავდეს პატარა ასოებს'
+  },
+  'invitation.passwordUppercase': {
+    ru: 'Пароль должен содержать заглавные буквы',
+    en: 'Password must contain uppercase letters',
+    ka: 'პაროლი უნდა შეიცავდეს დიდ ასოებს'
+  },
+  'invitation.passwordDigits': {
+    ru: 'Пароль должен содержать цифры',
+    en: 'Password must contain digits',
+    ka: 'პაროლი უნდა შეიცავდეს ციფრებს'
+  },
+  'invitation.passwordMismatch': {
+    ru: 'Пароли не совпадают',
+    en: 'Passwords do not match',
+    ka: 'პაროლები არ ემთხვევა'
+  },
+  'invitation.accountCreationError': {
+    ru: 'Ошибка создания аккаунта',
+    en: 'Error creating account',
+    ka: 'ანგარიშის შექმნის შეცდომა'
+  },
+  'invitation.acceptedSuccess': {
+    ru: 'Приглашение принято! Добро пожаловать в команду!',
+    en: 'Invitation accepted! Welcome to the team!',
+    ka: 'მოწვევა მიღებულია! კეთილი იყოს თქვენი მობრძანება გუნდში!'
+  },
+  'invitation.acceptError': {
+    ru: 'Ошибка при принятии приглашения',
+    en: 'Error accepting invitation',
+    ka: 'მოწვევის მიღების შეცდომა'
+  },
+  'invitation.checkingExistingUser': {
+    ru: 'Проверяем существующий аккаунт...',
+    en: 'Checking existing account...',
+    ka: 'არსებული ანგარიშის შემოწმება...'
   }
 };
 
