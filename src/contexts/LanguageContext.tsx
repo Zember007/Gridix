@@ -2573,6 +2573,11 @@ const translations: Translations = {
     en: 'Project Apartments',
     ka: 'პროექტის ბინები'
   },
+  'apartmentsManager.name': {
+    ru: 'Название',
+    en: 'Name',
+    ka: 'სახელი'
+  },
   'apartmentsManager.description': {
     ru: 'Управление квартирами и их характеристиками',
     en: 'Manage apartments and their characteristics',

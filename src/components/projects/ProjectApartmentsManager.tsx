@@ -416,7 +416,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="apartment_number">{t('apartmentsManager.apartmentNumber')}</Label>
+          <Label htmlFor="apartment_number">{ currentType === 'apartment' ? t('apartmentsManager.apartmentNumber') : t('apartmentsManager.name')}</Label>
           <Input
             id="apartment_number"
             value={apartment.apartment_number || ''}
@@ -427,7 +427,6 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                 setEditingApartment(prev => prev ? { ...prev, apartment_number: e.target.value } : null);
               }
             }}
-            placeholder="101"
           />
         </div>
         <div>
