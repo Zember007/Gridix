@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { List, Grid, Building2 } from 'lucide-react';
+import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Apartment } from '@/types/apartment';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
@@ -11,6 +11,9 @@ interface Project {
   has_commercial?: boolean;
   has_parking?: boolean;
   currency?: string;
+  installment_enabled?: boolean;
+  min_down_payment_percent?: number;
+  max_installment_months?: number;
 }
 
 interface LayoutPhoto {
@@ -72,6 +75,30 @@ export const ListView = ({
   isMobile
 }: ListViewProps) => {
   const { t } = useLanguage();
+
+  // Calculate installment payment
+  const calculateInstallmentPayment = (price: number): number => {
+    if (!project?.installment_enabled || !project.min_down_payment_percent || !project.max_installment_months) {
+      return 0;
+    }
+    const downPayment = (price / 100) * project.min_down_payment_percent;
+    const remainingAmount = price - downPayment;
+    return remainingAmount / project.max_installment_months;
+  };
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
+    e.stopPropagation();
+    // TODO: Implement favorite functionality
+    console.log('Toggle favorite for apartment:', apartment.id);
+  };
+
+  // Handle share
+  const handleShare = (e: React.MouseEvent, apartment: Apartment) => {
+    e.stopPropagation();
+    // TODO: Implement share functionality
+    console.log('Share apartment:', apartment.id);
+  };
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-8 grow">
@@ -162,6 +189,12 @@ export const ListView = ({
                               <div className="font-bold text-sm text-gray-900">
                                 {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                               </div>
+                              {/* Installment pricing for mobile */}
+                              {apartment.price && project?.installment_enabled && (
+                                <div className="text-xs text-gray-500">
+                                  {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))} {getCurrencySymbolSafe(selectedCurrency)}
+                                </div>
+                              )}
                               {/* Custom fields for mobile */}
                               {getVisibleFields().slice(0, 2).map((field) => {
                                 let value: unknown = null;
@@ -208,90 +241,184 @@ export const ListView = ({
                               })}
                             </div>
                           </div>
+                          <div className="flex flex-col gap-2 ml-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="p-2 h-8 w-8"
+                              onClick={(e) => handleShare(e, apartment)}
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="p-2 h-8 w-8"
+                              onClick={(e) => handleFavoriteToggle(e, apartment)}
+                            >
+                              <Heart className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               ) : (
-                <>
-                  <div className={`hidden md:grid gap-4 py-3 text-sm text-gray-500 border-b`}
-                    style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}>
-                    <div></div>
-                    {getVisibleFields().map((field) => (
-                      <div key={field.id}>{
-                        field.is_custom ?
-                          getFieldLabel(field)
-                          :
-                          t(`project.${field.field_name}`)
-                      }</div>
-                    ))}
-                  </div>
-
-                  {/* Apartment rows */}
+                // Desktop horizontal card layout (like Figma design)
+                <div className="space-y-4">
                   {filteredApartments.map((apartment) => (
-                    <div key={apartment.id}
-                      className="hidden md:grid gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                      style={{ gridTemplateColumns: `200px 120px 100px 100px 150px ${getVisibleFields().map(() => '120px').join(' ')}` }}
-                      onClick={() => openApartmentDetails(apartment)}>
-                      <div className="flex items-center">
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                          {(() => {
-                            const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
-                            const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                            const first = photos[0];
-                            return first ? (
-                              <img
-                                src={first.image_url}
-                                alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Building2 className="h-8 w-8 text-gray-400" />
-                            );
-                          })()}
-                        </div>
-                      </div>
-
-                      {getVisibleFields().map((field) => {
-                        let value: unknown = null;
-
-                        if (field.is_custom) {
-                          value = getCustomFieldValue(apartment, field.field_name);
-                        } else {
-                          switch (field.field_name) {
-                            case 'rooms':
-                              value = apartment.rooms;
-                              break;
-                            case 'area':
-                              value = apartment.area;
-                              break;
-                            case 'price':
-                              value = apartment.price;
-                              break;
-                            case 'status':
-                              value = apartment.status;
-                              break;
-                            case 'floor':
-                              value = apartment.floor_number;
-                              break;
-                            case 'number':
-                              value = apartment.apartment_number;
-                              break;
-                            default:
-                              value = null;
-                          }
-                        }
-
-                        return (
-                          <div key={field.id} className="flex items-center">
-                            <span>{formatFieldValue(value, field.field_type, field.field_name)}</span>
+                    <Card key={apartment.id} className="group overflow-hidden hover:shadow-md transition-shadow cursor-pointer rounded-[30px] bg-white" onClick={() => openApartmentDetails(apartment)}>
+                      <CardContent className="p-0">
+                        <div className="flex items-center h-[89px]">
+                          {/* Apartment Image */}
+                          <div className="flex-shrink-0 ml-[57px]">
+                            <div className="w-[31px] h-[64px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                              {(() => {
+                                const layoutKey = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+                                const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                                const first = photos[0];
+                                return first ? (
+                                  <img
+                                    src={first.image_url}
+                                    alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Building2 className="h-8 w-8 text-gray-400" />
+                                );
+                              })()}
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Apartment Info - Horizontal scrollable container with gradient indicators */}
+                          <div className="flex-1 overflow-hidden ml-[57px] relative">
+                            {/* Left gradient indicator */}
+                            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100" id={`left-gradient-${apartment.id}`}></div>
+                            
+                            {/* Right gradient indicator */}
+                            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none opacity-100 transition-opacity duration-300" id={`right-gradient-${apartment.id}`}></div>
+                            
+                            <div 
+                              className="flex items-center gap-8 overflow-x-auto scrollbar-hide pb-1 scroll-smooth hover:scrollbar-thin hover:scrollbar-thumb-gray-300 hover:scrollbar-track-transparent transition-all duration-300"
+                              onScroll={(e) => {
+                                const container = e.currentTarget;
+                                const leftGradient = document.getElementById(`left-gradient-${apartment.id}`);
+                                const rightGradient = document.getElementById(`right-gradient-${apartment.id}`);
+                                
+                                if (leftGradient && rightGradient) {
+                                  const isAtStart = container.scrollLeft <= 10;
+                                  const isAtEnd = container.scrollLeft >= (container.scrollWidth - container.clientWidth - 10);
+                                  
+                                  leftGradient.style.opacity = isAtStart ? '0' : '1';
+                                  rightGradient.style.opacity = isAtEnd ? '0' : '1';
+                                }
+                              }}
+                            >
+                              {/* Room type */}
+                              <div className="flex-shrink-0 text-center min-w-[99px] transition-transform duration-200 hover:scale-105">
+                                <div className="text-[20px] font-medium text-black leading-[26px] hover:text-gray-700 transition-colors duration-200">
+                                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                                </div>
+                              </div>
+
+                              {/* Area */}
+                              <div className="flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105">
+                                <div className="text-[20px] font-light text-black leading-[24px] hover:text-gray-700 transition-colors duration-200">
+                                  {apartment.area} м²
+                                </div>
+                              </div>
+
+                              {/* Custom fields - scrollable */}
+                              {getVisibleFields().map((field) => {
+                                let value: unknown = null;
+
+                                if (field.is_custom) {
+                                  value = getCustomFieldValue(apartment, field.field_name);
+                                } else {
+                                  switch (field.field_name) {
+                                    case 'rooms':
+                                      value = apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`;
+                                      break;
+                                    case 'area':
+                                      value = `${apartment.area} м²`;
+                                      break;
+                                    case 'price':
+                                      value = apartment.price;
+                                      break;
+                                    case 'status':
+                                      value = apartment.status;
+                                      break;
+                                    case 'floor':
+                                      value = `${apartment.floor_number} ${t('project.from')} 30`;
+                                      break;
+                                    case 'number':
+                                      value = apartment.apartment_number;
+                                      break;
+                                    default:
+                                      value = null;
+                                  }
+                                }
+
+                                if (value === null || field.field_name === 'rooms' || field.field_name === 'area') return null;
+
+                                return (
+                                  <div key={field.id} className="flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105">
+                                    <div className="text-[16px] font-light text-[#6C6C6C] leading-[21px] hover:text-gray-800 transition-colors duration-200 px-2 py-1 rounded-md hover:bg-gray-50">
+                                      {field.field_name === 'floor' ? 
+                                        `${apartment.floor_number} ${t('project.from')} 30` :
+                                        formatFieldValue(value, field.field_type, field.field_name)
+                                      }
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {/* Additional custom field */}
+                              <div className="flex-shrink-0 text-center min-w-[105px] transition-transform duration-200 hover:scale-105">
+                                <div className="text-[14px] font-medium text-[rgba(30,30,30,0.5)] leading-[21px] hover:text-[rgba(30,30,30,0.8)] transition-colors duration-200 px-2 py-1 rounded-md hover:bg-gray-50">
+                                  Черный каркас
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Price Section */}
+                          <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
+                            <div className="text-[20px] font-extrabold text-black leading-[26px]">
+                              {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                            </div>
+                            {apartment.price && project?.installment_enabled && (
+                              <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
+                                {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons - Always visible */}
+                          <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 h-10 w-10 hover:bg-gray-100"
+                              onClick={(e) => handleShare(e, apartment)}
+                            >
+                              <Share2 className="h-6 w-6 text-black" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 h-10 w-10 hover:bg-gray-100"
+                              onClick={(e) => handleFavoriteToggle(e, apartment)}
+                            >
+                              <Heart className="h-6 w-6 text-black" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-                </>
+                </div>
               )}
             </>
           ) : (
@@ -315,12 +442,32 @@ export const ListView = ({
                     {floorApartments.map((apartment) => (
                       <Card
                         key={apartment.id}
-                        className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 ${apartment.status === 'available'
+                        className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 relative ${apartment.status === 'available'
                           ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100'
                           : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
                           }`}
                         onClick={() => openApartmentDetails(apartment)}
                       >
+                        {/* Action buttons - top right */}
+                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm"
+                            onClick={(e) => handleShare(e, apartment)}
+                          >
+                            <Share2 className="h-3 w-3 text-black" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm"
+                            onClick={(e) => handleFavoriteToggle(e, apartment)}
+                          >
+                            <Heart className="h-3 w-3 text-black" />
+                          </Button>
+                        </div>
+
                         <CardContent className="p-3 h-full flex flex-col justify-between">
                           {/* Apartment number */}
                           <div className="text-center flex flex-col items-center gap-[5px]">
@@ -356,6 +503,12 @@ export const ListView = ({
                                 : t('project.onRequest')
                               }
                             </div>
+                            {/* Installment pricing for grid */}
+                            {apartment.price && project?.installment_enabled && (
+                              <div className="text-[10px] text-gray-500">
+                                {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

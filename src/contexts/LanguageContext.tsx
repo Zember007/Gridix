@@ -220,9 +220,14 @@ const translations: Translations = {
     ka: 'დამატებითი ინფორმაცია'
   },
   'project.installmentFrom': {
-    ru: 'В рассрочку от 700$',
-    en: 'Installment from $700',
-    ka: 'განვადებით $700-დან'
+    ru: 'В рассрочку от',
+    en: 'Installment from',
+    ka: 'განვადებით -და'
+  },
+  'project.from': {
+    ru: 'от',
+    en: 'from',
+    ka: '-დან'
   },
   'project.showMore': {
     ru: 'Показать еще {{count}} из {{total}} вариантов',
