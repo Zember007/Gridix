@@ -15,6 +15,7 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
@@ -77,6 +78,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { navigate } = useLanguageNavigation();
   const { user, userProfile } = useAuth();
   const { t } = useLanguage();
+  const { userRole, isManager, developerIds } = useUserRole();
   const { project: cachedProject } = useProject(projectId);
   const { updateProject } = useProjectCRUD();
   const isMobile = useIsMobile();
@@ -85,7 +87,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     try {
       if (cachedProject) {
         // Проверяем права на редактирование
-        if (!user || cachedProject.user_id !== user.id) {
+        const canEdit = user && (
+          // Владелец проекта может редактировать
+          cachedProject.user_id === user.id ||
+          // Менеджер может редактировать, если проект принадлежит застройщику, к которому он имеет доступ
+          (isManager && developerIds.includes(cachedProject.user_id))
+        );
+        
+        if (!canEdit) {
           setAccessError(t('projectEditor.noEditRights'));
           setLoading(false);
           return;
@@ -114,7 +123,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     } finally {
       setLoading(false);
     }
-  }, [user, cachedProject, t]);
+  }, [user, cachedProject, t, isManager, developerIds]);
 
   useEffect(() => {
     if (!isNew && projectId) {
@@ -181,11 +190,20 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         toast.success(t('projectEditor.projectCreated'));
         navigate(`/admin/project/${data.id}`);
       } else {
+        // Дополнительная проверка прав (хотя основная проверка уже сделана в loadProject)
+        const canEdit = user && (
+          cachedProject?.user_id === user.id ||
+          (isManager && cachedProject?.user_id && developerIds.includes(cachedProject.user_id))
+        );
+        
+        if (!canEdit) {
+          throw new Error('У вас нет прав на редактирование этого проекта');
+        }
+
         const { error } = await supabase
           .from('projects')
           .update(saveData)
-          .eq('id', project.id)
-          .eq('user_id', user.id); // Проверяем владельца
+          .eq('id', project.id);
 
         if (error) throw error;
         toast.success(t('projectEditor.projectSaved'));

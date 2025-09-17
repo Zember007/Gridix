@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from './useUserRole';
 import { toast } from 'sonner';
 
 interface Project {
@@ -30,6 +31,7 @@ export const useProject = (identifier?: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { isManager, developerIds } = useUserRole();
 
   const loadProject = async (id: string) => {
     if (!id) return;
@@ -62,7 +64,15 @@ export const useProject = (identifier?: string) => {
       }
 
       // Проверяем права доступа
-      if (!data.is_public && (!user || data.user_id !== user.id)) {
+      const hasAccess = data.is_public || 
+        (user && (
+          // Владелец проекта имеет доступ
+          data.user_id === user.id ||
+          // Менеджер имеет доступ, если проект принадлежит застройщику, к которому он имеет доступ
+          (isManager && developerIds.includes(data.user_id))
+        ));
+        
+      if (!hasAccess) {
         setError('У вас нет доступа к этому проекту');
         return;
       }
@@ -111,11 +121,22 @@ export const useProject = (identifier?: string) => {
     }
 
     try {
+      // Проверяем права на редактирование
+      const canEdit = user && (
+        // Владелец проекта может редактировать
+        project?.user_id === user.id ||
+        // Менеджер может редактировать, если проект принадлежит застройщику, к которому он имеет доступ
+        (isManager && project?.user_id && developerIds.includes(project.user_id))
+      );
+      
+      if (!canEdit) {
+        throw new Error('У вас нет прав на редактирование этого проекта');
+      }
+
       const { data, error } = await supabase
         .from('projects')
         .update(updates)
         .eq('id', projectId)
-        .eq('user_id', user.id) // Проверяем владельца
         .select()
         .single();
 
@@ -138,11 +159,16 @@ export const useProject = (identifier?: string) => {
     }
 
     try {
+      // Проверяем права на удаление (только владелец может удалять)
+      if (!user || project?.user_id !== user.id) {
+        throw new Error('Только владелец проекта может его удалить');
+      }
+
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', projectId)
-        .eq('user_id', user.id); // Проверяем владельца
+        .eq('user_id', user.id);
 
       if (error) throw error;
 

@@ -32,7 +32,8 @@ serve(async (req) => {
 
     // Create the invitation link
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
-    const invitationUrl = `${siteUrl}/accept-invitation?token=${invitation_token}`
+    const encodedToken = encodeURIComponent(invitation_token)
+    const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`
 
     // Prepare email content
     const emailSubject = `Приглашение в команду ${company_name}`

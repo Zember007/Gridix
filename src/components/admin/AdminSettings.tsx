@@ -30,7 +30,7 @@ interface AdminSettingsProps {
   loading: boolean;
   developerId?: string;
   isManager?: boolean;
-  managerData?: ManagerRole;
+  managerData?: ManagerRole[];
 }
 
 const AdminSettings = ({ userProfile, loading, developerId, isManager, managerData }: AdminSettingsProps) => {
@@ -177,10 +177,17 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
               <p className="text-muted-foreground">
                 Управление менеджерами доступно только владельцу аккаунта
               </p>
-              {managerData?.developer_profile && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Обратитесь к {managerData.developer_profile.full_name} для изменения настроек команды
-                </p>
+              {managerData && managerData.length > 0 && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  <p>Обратитесь к владельцам аккаунтов для изменения настроек команды:</p>
+                  <ul className="mt-1 space-y-1">
+                    {managerData.map((data) => (
+                      <li key={data.id}>
+                        • {data.developer_profile?.full_name} ({data.developer_profile?.company_name})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}

@@ -306,7 +306,10 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
   const copyInvitationLink = async (token: string) => {
     const siteUrl = window.location.origin;
-    const invitationUrl = `${siteUrl}/accept-invitation?token=${token}`;
+    const encodedToken = encodeURIComponent(token);
+    const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`;
+    
+    console.log('Generated invitation URL:', invitationUrl);
     
     try {
       await navigator.clipboard.writeText(invitationUrl);
@@ -319,7 +322,9 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
   const openInvitationLink = (token: string) => {
     const siteUrl = window.location.origin;
-    const invitationUrl = `${siteUrl}/accept-invitation?token=${token}`;
+    const encodedToken = encodeURIComponent(token);
+    const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`;
+    console.log('Opening invitation URL:', invitationUrl);
     window.open(invitationUrl, '_blank');
   };
 

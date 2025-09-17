@@ -26,7 +26,13 @@ const AcceptInvitationPage = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token');
+  const rawToken = searchParams.get('token');
+  // Декодируем токен, если он был URL-encoded
+  const token = rawToken ? decodeURIComponent(rawToken) : null;
+  
+  console.log('URL params:', window.location.search);
+  console.log('Raw token from params:', rawToken);
+  console.log('Decoded token:', token);
 
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,10 +42,15 @@ const AcceptInvitationPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
 
   const loadInvitationData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Loading invitation with token:', token);
       
       // Загружаем данные приглашения
       const { data: invitationData, error: invitationError } = await supabase
@@ -48,8 +59,27 @@ const AcceptInvitationPage = () => {
         .eq('invitation_token', token)
         .single();
 
+      console.log('Invitation query result:', { data: invitationData, error: invitationError });
+
       if (invitationError) {
+        console.error('Invitation error:', invitationError);
+        if (invitationError.code === 'PGRST116') {
+          throw new Error('Приглашение не найдено или недоступно');
+        }
+        throw new Error(`Ошибка загрузки приглашения: ${invitationError.message}`);
+      }
+
+      if (!invitationData) {
         throw new Error('Приглашение не найдено');
+      }
+
+      // Проверяем статус и срок действия
+      if (invitationData.status !== 'pending') {
+        throw new Error('Приглашение уже было использовано или отменено');
+      }
+
+      if (new Date(invitationData.expires_at) < new Date()) {
+        throw new Error('Срок действия приглашения истек');
       }
 
       // Загружаем данные разработчика отдельно
@@ -59,21 +89,20 @@ const AcceptInvitationPage = () => {
         .eq('id', invitationData.developer_id)
         .single();
 
-      if (invitationData.status !== 'pending') {
-        throw new Error('Приглашение уже было использовано или отменено');
-      }
+      console.log('Developer query result:', { data: developerData, error: developerError });
 
-      if (new Date(invitationData.expires_at) < new Date()) {
-        throw new Error('Срок действия приглашения истек');
+      if (developerError) {
+        console.warn('Could not load developer data:', developerError);
       }
 
       setInvitation({
         ...invitationData,
-        developer_name: developerData?.full_name,
-        company_name: developerData?.company_name
+        developer_name: developerData?.full_name || 'Неизвестно',
+        company_name: developerData?.company_name || 'Неизвестно'
       });
 
     } catch (err: unknown) {
+      console.error('Error in loadInvitationData:', err);
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки приглашения';
       setError(errorMessage);
     } finally {
@@ -108,42 +137,81 @@ const AcceptInvitationPage = () => {
   };
 
   const handleAcceptInvitation = async () => {
-    if (!invitation || !password || !confirmPassword) {
-      toast.error('Заполните все поля');
-      return;
-    }
-
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      toast.error(passwordError);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Пароли не совпадают');
+    if (!invitation) {
+      toast.error('Данные приглашения не найдены');
       return;
     }
 
     setAccepting(true);
     try {
-      // Создаем аккаунт пользователя
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: invitation.email,
-        password: password,
-        options: {
-          data: {
-            full_name: invitation.full_name,
-            phone: invitation.phone
-          }
+      // Проверяем, есть ли уже пользователь с таким email
+      const { data: { user: existingUser }, error: getUserError } = await supabase.auth.getUser();
+      
+      let userId: string;
+      
+      if (existingUser && existingUser.email === invitation.email) {
+        // Пользователь уже авторизован с нужным email
+        userId = existingUser.id;
+        toast.info('Вы уже авторизованы. Принимаем приглашение...');
+      } else if (isExistingUser) {
+        // Пользователь существует, нужно войти
+        if (!loginPassword) {
+          toast.error('Введите пароль для входа');
+          return;
         }
-      });
 
-      if (signUpError) {
-        throw signUpError;
-      }
+        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: invitation.email,
+          password: loginPassword
+        });
 
-      if (!authData.user) {
-        throw new Error('Ошибка создания аккаунта');
+        if (signInError) {
+          throw new Error('Неверный пароль или email');
+        }
+
+        if (!authData.user) {
+          throw new Error('Ошибка входа в аккаунт');
+        }
+
+        userId = authData.user.id;
+      } else {
+        // Создаем новый аккаунт
+        if (!password || !confirmPassword) {
+          toast.error('Заполните все поля для создания аккаунта');
+          return;
+        }
+
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          toast.error(passwordError);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          toast.error('Пароли не совпадают');
+          return;
+        }
+
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: invitation.email,
+          password: password,
+          options: {
+            data: {
+              full_name: invitation.full_name,
+              phone: invitation.phone
+            }
+          }
+        });
+
+        if (signUpError) {
+          throw signUpError;
+        }
+
+        if (!authData.user) {
+          throw new Error('Ошибка создания аккаунта');
+        }
+
+        userId = authData.user.id;
       }
 
       // Создаем запись менеджера
@@ -151,7 +219,7 @@ const AcceptInvitationPage = () => {
         .from('manager_accounts')
         .insert({
           developer_id: invitation.developer_id,
-          manager_id: authData.user.id,
+          manager_id: userId,
           email: invitation.email,
           full_name: invitation.full_name,
           phone: invitation.phone,
@@ -179,7 +247,7 @@ const AcceptInvitationPage = () => {
 
       toast.success('Приглашение принято! Добро пожаловать в команду!');
       
-      // Перенаправляем менеджера в административную панель застройщика
+      // Перенаправляем менеджера в административную панель
       setTimeout(() => {
         navigate('/admin', { replace: true });
       }, 2000);
@@ -267,75 +335,131 @@ const AcceptInvitationPage = () => {
             )}
           </div>
 
-          {/* Форма создания пароля */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="password">Создайте пароль</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Минимум 8 символов"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Повторите пароль"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Требования к паролю */}
-            <div className="text-sm text-gray-600">
-              <p className="font-medium mb-1">Требования к паролю:</p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>Минимум 8 символов</li>
-                <li>Строчные и заглавные буквы</li>
-                <li>Минимум одна цифра</li>
-              </ul>
-            </div>
+          {/* Переключатель между входом и регистрацией */}
+          <div className="flex items-center justify-center space-x-4 mb-4">
+            <button
+              type="button"
+              onClick={() => setIsExistingUser(false)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !isExistingUser 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Создать аккаунт
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsExistingUser(true)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isExistingUser 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              У меня есть аккаунт
+            </button>
           </div>
+
+          {isExistingUser ? (
+            /* Форма входа */
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="loginPassword">Введите пароль</Label>
+                <div className="relative">
+                  <Input
+                    id="loginPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Ваш пароль"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Форма создания пароля */
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="password">Создайте пароль</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Минимум 8 символов"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Повторите пароль"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Требования к паролю */}
+              <div className="text-sm text-gray-600">
+                <p className="font-medium mb-1">Требования к паролю:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Минимум 8 символов</li>
+                  <li>Строчные и заглавные буквы</li>
+                  <li>Минимум одна цифра</li>
+                </ul>
+              </div>
+            </div>
+          )}
 
           <Button 
             onClick={handleAcceptInvitation} 
-            disabled={accepting || !password || !confirmPassword}
+            disabled={accepting || (isExistingUser ? !loginPassword : (!password || !confirmPassword))}
             className="w-full"
           >
-            {accepting ? 'Создание аккаунта...' : 'Принять приглашение'}
+            {accepting ? (isExistingUser ? 'Вход и принятие приглашения...' : 'Создание аккаунта...') : 'Принять приглашение'}
           </Button>
 
           <div className="text-center text-sm text-gray-500">

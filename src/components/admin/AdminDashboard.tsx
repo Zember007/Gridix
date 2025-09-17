@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield } from 'lucide-react';
 import ProjectList from '@/components/projects/ProjectList';
+import ManagerProjectList from '@/components/projects/ManagerProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
@@ -14,6 +15,7 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useManagerProjects } from '@/hooks/useManagerProjects';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
 
 interface AdminDashboardProps {
@@ -27,7 +29,8 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const { user, userProfile, signOut, loading } = useAuth();
-  const { userRole, isManager, isDeveloper, developerId } = useUserRole();
+  const { userRole, isManager, isDeveloper, developerId, primaryDeveloperId } = useUserRole();
+  const { projects: managerProjects, loading: projectsLoading, refresh: refreshProjects } = useManagerProjects();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -86,11 +89,15 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                     </span>
                   </div>
                   {isManager && userRole.managerData && (
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-3 w-3 text-blue-600" />
-                      <span className="text-xs text-blue-600">
-                        Менеджер: {userRole.managerData.developer_profile?.company_name}
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      {userRole.managerData.map((data, index) => (
+                        <div key={data.id} className="flex items-center gap-2">
+                          <Shield className="h-3 w-3 text-blue-600" />
+                          <span className="text-xs text-blue-600">
+                            Менеджер: {data.developer_profile?.company_name}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -135,11 +142,18 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
             <div className="mt-6">
               <TabsContent value="projects" className="space-y-6">
-                <ProjectList 
-                  onCreateNew={handleCreateNew}
-                  onEditProject={handleEditProject}
-                  developerId={developerId}
-                />
+                {isManager ? (
+                  <ManagerProjectList 
+                    onCreateNew={handleCreateNew}
+                    onEditProject={handleEditProject}
+                  />
+                ) : (
+                  <ProjectList 
+                    onCreateNew={handleCreateNew}
+                    onEditProject={handleEditProject}
+                    developerId={user?.id}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="widgets" className="space-y-6">
