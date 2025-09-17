@@ -673,7 +673,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-lg">
-                              {t('apartmentsManager.apartment', { number: apartment.apartment_number })}
+                              {currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number}
                             </h3>
                             <Badge className={getStatusColor(apartment.status)}>
                               {getStatusLabel(apartment.status)}
