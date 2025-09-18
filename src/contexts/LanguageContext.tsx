@@ -1593,6 +1593,78 @@ const translations: Translations = {
     ka: 'გეგმა'
   },
 
+  // Project Editor - PDF presentation
+  'projectEditor.pdfPresentation': {
+    ru: 'PDF презентация',
+    en: 'PDF presentation',
+    ka: 'PDF პრეზენტაცია'
+  },
+  'projectEditor.pdfUploaded': {
+    ru: 'PDF загружен',
+    en: 'PDF uploaded',
+    ka: 'PDF აიტვირთა'
+  },
+  'projectEditor.view': {
+    ru: 'Просмотр',
+    en: 'View',
+    ka: 'ნახვა'
+  },
+  'projectEditor.pdfPresentationDesc': {
+    ru: 'Загрузите PDF-презентацию проекта',
+    en: 'Upload project PDF presentation',
+    ka: 'ატვირთეთ პროექტის PDF პრეზენტაცია'
+  },
+  'projectEditor.uploading': {
+    ru: 'Загрузка...',
+    en: 'Uploading...',
+    ka: 'იტვირთება...'
+  },
+  'projectEditor.uploadPdf': {
+    ru: 'Загрузить PDF',
+    en: 'Upload PDF',
+    ka: 'PDF ატვირთვა'
+  },
+  'projectEditor.saveProjectFirstNote': {
+    ru: 'Сначала сохраните проект',
+    en: 'Save the project first',
+    ka: 'ჯერ შეინახეთ პროექტი'
+  },
+  'projectEditor.saveProjectFirst': {
+    ru: 'Сначала сохраните проект',
+    en: 'Please save the project first',
+    ka: 'ჯერ შეინახეთ პროექტი'
+  },
+  'projectEditor.onlyPdfAllowed': {
+    ru: 'Разрешены только PDF файлы',
+    en: 'Only PDF files are allowed',
+    ka: 'მხოლოდ PDF ფაილებია დაშვებული'
+  },
+  'projectEditor.fileTooLarge': {
+    ru: 'Файл слишком большой (макс. 10 МБ)',
+    en: 'File is too large (max 10MB)',
+    ka: 'ფაილი ძალიან დიდია (მაქს. 10MB)'
+  },
+  'projectEditor.pdfUploadSuccess': {
+    ru: 'PDF успешно загружен',
+    en: 'PDF uploaded successfully',
+    ka: 'PDF წარმატებით აიტვირთა'
+  },
+  'projectEditor.pdfUploadError': {
+    ru: 'Ошибка загрузки PDF',
+    en: 'Error uploading PDF',
+    ka: 'PDF ატვირთვის შეცდომა'
+  },
+  'projectEditor.pdfRemoveSuccess': {
+    ru: 'PDF удалён',
+    en: 'PDF removed',
+    ka: 'PDF წაიშალა'
+  },
+  'projectEditor.pdfRemoveError': {
+    ru: 'Ошибка удаления PDF',
+    en: 'Error removing PDF',
+    ka: 'PDF წაშლის შეცდომა'
+  },
+
   // Project List
   'projectList.deleteConfirm': {
     ru: 'Вы уверены, что хотите удалить проект "{name}"?',
