@@ -282,6 +282,7 @@ const ApartmentDetailsPage = () => {
         apartment,
         projectCurrency: project?.currency || null,
         photos: allPhotos,
+        pdf_main: project?.pdf_presentation_url || undefined,
         translations: {
           apartmentDetails: t('pdf.apartmentDetails'),
           apartmentNumber: t('pdf.apartmentNumber'),

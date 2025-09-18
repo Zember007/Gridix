@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -25,6 +25,7 @@ export type Database = {
           created_at: string
           id: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           company_description?: string | null
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           company_description?: string | null
@@ -47,66 +49,135 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
+      }
+      amocrm_custom_fields: {
+        Row: {
+          created_at: string | null
+          entity_type: string
+          field_code: string | null
+          field_id: number
+          field_name: string
+          field_type: string
+          id: string
+          is_editable: boolean | null
+          is_required: boolean | null
+          project_id: string
+          sort: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_type: string
+          field_code?: string | null
+          field_id: number
+          field_name: string
+          field_type: string
+          id?: string
+          is_editable?: boolean | null
+          is_required?: boolean | null
+          project_id: string
+          sort?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_type?: string
+          field_code?: string | null
+          field_id?: number
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_editable?: boolean | null
+          is_required?: boolean | null
+          project_id?: string
+          sort?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amocrm_custom_fields_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       amocrm_settings: {
         Row: {
           access_token: string | null
+          account_name: string | null
           authorization_code: string | null
-          client_id: string
-          client_secret: string
-          created_at: string
+          base_domain: string | null
+          client_id: string | null
+          client_secret: string | null
+          created_at: string | null
           id: string
           pipeline_id: number
+          pipeline_name: string | null
           project_id: string
           redirect_uri: string | null
           refresh_token: string | null
           responsible_user_id: number | null
           status_id: number | null
+          status_name: string | null
           subdomain: string
           token_expires_at: string | null
-          updated_at: string
+          updated_at: string | null
+          user_name: string | null
         }
         Insert: {
           access_token?: string | null
+          account_name?: string | null
           authorization_code?: string | null
-          client_id: string
-          client_secret: string
-          created_at?: string
+          base_domain?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string | null
           id?: string
           pipeline_id: number
+          pipeline_name?: string | null
           project_id: string
           redirect_uri?: string | null
           refresh_token?: string | null
           responsible_user_id?: number | null
           status_id?: number | null
+          status_name?: string | null
           subdomain: string
           token_expires_at?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          user_name?: string | null
         }
         Update: {
           access_token?: string | null
+          account_name?: string | null
           authorization_code?: string | null
-          client_id?: string
-          client_secret?: string
-          created_at?: string
+          base_domain?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string | null
           id?: string
           pipeline_id?: number
+          pipeline_name?: string | null
           project_id?: string
           redirect_uri?: string | null
           refresh_token?: string | null
           responsible_user_id?: number | null
           status_id?: number | null
+          status_name?: string | null
           subdomain?: string
           token_expires_at?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          user_name?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "amocrm_settings_project_id_fkey"
             columns: ["project_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -150,47 +221,6 @@ export type Database = {
           },
         ]
       }
-      layout_photos: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string
-          layout_type: string
-          order_index: number
-          project_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url: string
-          layout_type: string
-          order_index?: number
-          project_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string
-          layout_type?: string
-          order_index?: number
-          project_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "layout_photos_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       apartments: {
         Row: {
           apartment_number: string
@@ -201,12 +231,11 @@ export type Database = {
           floor_plan_id: string | null
           id: string
           polygon: Json | null
-          
           price: number | null
           project_id: string
-          rooms:  number | string
+          rooms: string
           status: string
-          type: Database["public"]["Enums"]["apartment_type"]
+          type: Database["public"]["Enums"]["apartment_type"] | null
           updated_at: string
         }
         Insert: {
@@ -220,9 +249,9 @@ export type Database = {
           polygon?: Json | null
           price?: number | null
           project_id: string
-          rooms?:  number | string
+          rooms: string
           status?: string
-          type?: Database["public"]["Enums"]["apartment_type"]
+          type?: Database["public"]["Enums"]["apartment_type"] | null
           updated_at?: string
         }
         Update: {
@@ -236,9 +265,9 @@ export type Database = {
           polygon?: Json | null
           price?: number | null
           project_id?: string
-          rooms?: number | string
+          rooms?: string
           status?: string
-          type?: Database["public"]["Enums"]["apartment_type"]
+          type?: Database["public"]["Enums"]["apartment_type"] | null
           updated_at?: string
         }
         Relationships: [
@@ -334,6 +363,296 @@ export type Database = {
           },
         ]
       }
+      layout_photos: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          layout_type: string
+          order_index: number
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          layout_type: string
+          order_index?: number
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          layout_type?: string
+          order_index?: number
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layout_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          amocrm_contact_id: number | null
+          amocrm_error: string | null
+          amocrm_lead_id: number | null
+          amocrm_retries: number | null
+          amocrm_sent_at: string | null
+          apartment_id: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          project_id: string
+          source: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amocrm_contact_id?: number | null
+          amocrm_error?: string | null
+          amocrm_lead_id?: number | null
+          amocrm_retries?: number | null
+          amocrm_sent_at?: string | null
+          apartment_id: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          project_id: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amocrm_contact_id?: number | null
+          amocrm_error?: string | null
+          amocrm_lead_id?: number | null
+          amocrm_retries?: number | null
+          amocrm_sent_at?: string | null
+          apartment_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          project_id?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manager_accounts: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          developer_id: string
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          manager_id: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          developer_id: string
+          email: string
+          full_name: string
+          id?: string
+          invited_at?: string
+          manager_id: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          developer_id?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          manager_id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_manager_accounts_developer_profile"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manager_invitations: {
+        Row: {
+          created_at: string
+          developer_id: string
+          email: string
+          expires_at: string
+          full_name: string
+          id: string
+          invitation_token: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          developer_id: string
+          email: string
+          expires_at?: string
+          full_name: string
+          id?: string
+          invitation_token: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          developer_id?: string
+          email?: string
+          expires_at?: string
+          full_name?: string
+          id?: string
+          invitation_token?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      manager_permissions: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          id: string
+          manager_account_id: string
+          permission_type: string
+          updated_at: string
+        }
+        Insert: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          manager_account_id: string
+          permission_type: string
+          updated_at?: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          manager_account_id?: string
+          permission_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_permissions_manager_account_id_fkey"
+            columns: ["manager_account_id"]
+            isOneToOne: false
+            referencedRelation: "manager_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_custom_fields: {
+        Row: {
+          created_at: string
+          field_label: string
+          field_label_translations: Json | null
+          field_name: string
+          field_options: Json | null
+          field_type: string
+          id: string
+          is_required: boolean
+          is_visible: boolean
+          project_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_label: string
+          field_label_translations?: Json | null
+          field_name: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          is_visible?: boolean
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_label?: string
+          field_label_translations?: Json | null
+          field_name?: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          is_visible?: boolean
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_custom_fields_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_field_settings: {
         Row: {
           created_at: string
@@ -346,7 +665,6 @@ export type Database = {
           project_id: string
           sort_order: number
           updated_at: string
-          field_label_translations?: Json | null
         }
         Insert: {
           created_at?: string
@@ -359,7 +677,6 @@ export type Database = {
           project_id: string
           sort_order?: number
           updated_at?: string
-          field_label_translations?: Json | null
         }
         Update: {
           created_at?: string
@@ -372,64 +689,10 @@ export type Database = {
           project_id?: string
           sort_order?: number
           updated_at?: string
-          field_label_translations?: Json | null
         }
         Relationships: [
           {
             foreignKeyName: "project_field_settings_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_custom_fields: {
-        Row: {
-          created_at: string
-          field_label: string
-          field_name: string
-          field_options: Json | null
-          field_type: string
-          id: string
-          is_required: boolean
-          is_visible: boolean
-          project_id: string
-          sort_order: number
-          updated_at: string
-          field_label_translations?: Json | null
-        }
-        Insert: {
-          created_at?: string
-          field_label: string
-          field_name: string
-          field_options?: Json | null
-          field_type?: string
-          id?: string
-          is_required?: boolean
-          is_visible?: boolean
-          project_id: string
-          sort_order?: number
-          updated_at?: string
-          field_label_translations?: Json | null
-        }
-        Update: {
-          created_at?: string
-          field_label?: string
-          field_name?: string
-          field_options?: Json | null
-          field_type?: string
-          id?: string
-          is_required?: boolean
-          is_visible?: boolean
-          project_id?: string
-          sort_order?: number
-          updated_at?: string
-          field_label_translations?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_custom_fields_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -490,6 +753,44 @@ export type Database = {
           },
         ]
       }
+      project_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          project_id: string
+          referrer: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          project_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          project_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           address: string | null
@@ -499,17 +800,18 @@ export type Database = {
           currency: Database["public"]["Enums"]["currency_type"] | null
           description: string | null
           floors: number
-          has_parking: boolean
-          has_commercial: boolean
+          has_commercial: boolean | null
+          has_parking: boolean | null
           id: string
-          installment_enabled: boolean
+          installment_enabled: boolean | null
           is_featured: boolean
           is_public: boolean
           latitude: number | null
           longitude: number | null
-          max_installment_months: number
-          min_down_payment_percent: number
+          max_installment_months: number | null
+          min_down_payment_percent: number | null
           name: string
+          pdf_presentation_url: string | null
           polygon_settings: Json | null
           slug: string | null
           updated_at: string
@@ -524,17 +826,18 @@ export type Database = {
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
-          has_parking?: boolean
-          has_commercial?: boolean
+          has_commercial?: boolean | null
+          has_parking?: boolean | null
           id?: string
-          installment_enabled?: boolean
+          installment_enabled?: boolean | null
           is_featured?: boolean
           is_public?: boolean
           latitude?: number | null
           longitude?: number | null
-          max_installment_months?: number
-          min_down_payment_percent?: number
+          max_installment_months?: number | null
+          min_down_payment_percent?: number | null
           name: string
+          pdf_presentation_url?: string | null
           polygon_settings?: Json | null
           slug?: string | null
           updated_at?: string
@@ -549,17 +852,18 @@ export type Database = {
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
           floors?: number
-          has_parking?: boolean
-          has_commercial?: boolean
+          has_commercial?: boolean | null
+          has_parking?: boolean | null
           id?: string
-          installment_enabled?: boolean
+          installment_enabled?: boolean | null
           is_featured?: boolean
           is_public?: boolean
           latitude?: number | null
           longitude?: number | null
-          max_installment_months?: number
-          min_down_payment_percent?: number
+          max_installment_months?: number | null
+          min_down_payment_percent?: number | null
           name?: string
+          pdf_presentation_url?: string | null
           polygon_settings?: Json | null
           slug?: string | null
           updated_at?: string
@@ -568,234 +872,12 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "projects_user_id_fkey"
+            foreignKeyName: "fk_projects_user_profile"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      project_views: {
-        Row: {
-          created_at: string
-          id: string
-          ip_address: string | null
-          project_id: string
-          referrer: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          project_id: string
-          referrer?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          ip_address?: string | null
-          project_id?: string
-          referrer?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_views_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_views_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          company_name: string | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          company_name?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          company_name?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      manager_accounts: {
-        Row: {
-          id: string
-          developer_id: string
-          manager_id: string
-          email: string
-          full_name: string
-          phone: string | null
-          status: "pending" | "active" | "suspended"
-          invited_at: string
-          accepted_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          developer_id: string
-          manager_id: string
-          email: string
-          full_name: string
-          phone?: string | null
-          status?: "pending" | "active" | "suspended"
-          invited_at?: string
-          accepted_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          developer_id?: string
-          manager_id?: string
-          email?: string
-          full_name?: string
-          phone?: string | null
-          status?: "pending" | "active" | "suspended"
-          invited_at?: string
-          accepted_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "manager_accounts_developer_id_fkey"
-            columns: ["developer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "manager_accounts_manager_id_fkey"
-            columns: ["manager_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      manager_invitations: {
-        Row: {
-          id: string
-          developer_id: string
-          email: string
-          full_name: string
-          phone: string | null
-          invitation_token: string
-          status: "pending" | "accepted" | "expired"
-          expires_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          developer_id: string
-          email: string
-          full_name: string
-          phone?: string | null
-          invitation_token: string
-          status?: "pending" | "accepted" | "expired"
-          expires_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          developer_id?: string
-          email?: string
-          full_name?: string
-          phone?: string | null
-          invitation_token?: string
-          status?: "pending" | "accepted" | "expired"
-          expires_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "manager_invitations_developer_id_fkey"
-            columns: ["developer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      manager_permissions: {
-        Row: {
-          manager_account_id: string
-          permission_type: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
-          allowed: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          manager_account_id: string
-          permission_type: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
-          allowed?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          manager_account_id?: string
-          permission_type?: "view_projects" | "edit_projects" | "create_projects" | "delete_projects" | "view_settings" | "edit_company_settings"
-          allowed?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "manager_permissions_manager_account_id_fkey"
-            columns: ["manager_account_id"]
-            isOneToOne: false
-            referencedRelation: "manager_accounts"
-            referencedColumns: ["id"]
-          }
         ]
       }
       sync_logs: {
@@ -855,19 +937,86 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_default_manager_permissions: {
+        Args: { manager_account_id: string }
+        Returns: undefined
+      }
+      ensure_unique_slug: {
+        Args: { base_slug: string; project_id?: string }
+        Returns: string
+      }
       generate_invitation_token: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
+      }
+      increment_view_count: {
+        Args: { project_id: string }
+        Returns: undefined
+      }
+      initialize_default_fields: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
+      is_amocrm_configured: {
+        Args: {
+          settings_row: Database["public"]["Tables"]["amocrm_settings"]["Row"]
+        }
+        Returns: boolean
+      }
+      needs_token_refresh: {
+        Args: { settings_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking"
-      currency_type: "EUR" | "GEL" | "RUB" | "USD"
+      currency_type: "RUB" | "USD" | "EUR" | "GEL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -994,6 +1143,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      apartment_type: ["apartment", "commercial", "parking"],
+      currency_type: ["RUB", "USD", "EUR", "GEL"],
+    },
   },
 } as const

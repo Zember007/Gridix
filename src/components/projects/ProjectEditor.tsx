@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -50,6 +50,7 @@ interface Project {
   installment_enabled: boolean;
   min_down_payment_percent: number;
   max_installment_months: number;
+  pdf_presentation_url: string | null;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -67,13 +68,15 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     currency: DEFAULT_CURRENCY,
     installment_enabled: false,
     min_down_payment_percent: 20,
-    max_installment_months: 24
+    max_installment_months: 24,
+    pdf_presentation_url: null
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const { navigate } = useLanguageNavigation();
   const { user, userProfile } = useAuth();
@@ -114,7 +117,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY,
           installment_enabled: cachedProject.installment_enabled || false,
           min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
-          max_installment_months: cachedProject.max_installment_months || 24
+          max_installment_months: cachedProject.max_installment_months || 24,
+          pdf_presentation_url: cachedProject.pdf_presentation_url
         });
       }
     } catch (error) {
@@ -158,6 +162,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         installment_enabled: project.installment_enabled,
         min_down_payment_percent: project.min_down_payment_percent,
         max_installment_months: project.max_installment_months,
+        pdf_presentation_url: project.pdf_presentation_url,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -233,6 +238,92 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       e.preventDefault() // предотвращаем вставку в одно поле
     }
   }
+
+  const handlePdfUpload = async (file: File) => {
+    if (!user || isNew) {
+      toast.error(t('projectEditor.saveProjectFirst'));
+      return;
+    }
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      toast.error(t('projectEditor.onlyPdfAllowed'));
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error(t('projectEditor.fileTooLarge'));
+      return;
+    }
+
+    setUploadingPdf(true);
+    try {
+      const fileName = `${user.id}/${project.id}/presentation_${Date.now()}.pdf`;
+      
+      const { data, error } = await supabase.storage
+        .from('project-files')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('project-files')
+        .getPublicUrl(fileName);
+
+      // Update project with new PDF URL
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ pdf_presentation_url: publicUrl })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      setProject(prev => ({ ...prev, pdf_presentation_url: publicUrl }));
+      toast.success(t('projectEditor.pdfUploadSuccess'));
+
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      toast.error(t('projectEditor.pdfUploadError'));
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
+
+  const handleRemovePdf = async () => {
+    if (!user || !project.pdf_presentation_url) return;
+
+    try {
+      // Extract file path from URL
+      const url = new URL(project.pdf_presentation_url);
+      const filePath = url.pathname.split('/').pop();
+      
+      if (filePath) {
+        await supabase.storage
+          .from('project-files')
+          .remove([`${project.id}/${filePath}`]);
+      }
+
+      // Update project to remove PDF URL
+      const { error } = await supabase
+        .from('projects')
+        .update({ pdf_presentation_url: null })
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      setProject(prev => ({ ...prev, pdf_presentation_url: null }));
+      toast.success(t('projectEditor.pdfRemoveSuccess'));
+
+    } catch (error) {
+      console.error('Error removing PDF:', error);
+      toast.error(t('projectEditor.pdfRemoveError'));
+    }
+  };
 
   const renderFloorPlanTabs = () => {
     if (isNew || !project.id) return null;
@@ -515,6 +606,74 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                 </div>
 
+                {/* PDF Presentation Upload */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    {t('projectEditor.pdfPresentation')}
+                  </h4>
+                  
+                  {project.pdf_presentation_url ? (
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-red-600" />
+                        <span className="text-sm">{t('projectEditor.pdfUploaded')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(project.pdf_presentation_url!, '_blank')}
+                        >
+                          {t('projectEditor.view')}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleRemovePdf}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                      <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t('projectEditor.pdfPresentationDesc')}
+                      </p>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handlePdfUpload(file);
+                        }}
+                        className="hidden"
+                        id="pdf-upload-mobile"
+                        disabled={isNew || uploadingPdf}
+                      />
+                      <label htmlFor="pdf-upload-mobile">
+                        <Button
+                          variant="outline"
+                          disabled={isNew || uploadingPdf}
+                          asChild
+                        >
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploadingPdf ? t('projectEditor.uploading') : t('projectEditor.uploadPdf')}
+                          </span>
+                        </Button>
+                      </label>
+                      {isNew && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {t('projectEditor.saveProjectFirstNote')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Настройки рассрочки */}
                 <div className="space-y-4 pt-4 border-t">
                   <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
@@ -787,6 +946,74 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
+                  </div>
+
+                  {/* PDF Presentation Upload */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      {t('projectEditor.pdfPresentation')}
+                    </h4>
+                    
+                    {project.pdf_presentation_url ? (
+                      <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-red-600" />
+                          <span className="text-sm">{t('projectEditor.pdfUploaded')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(project.pdf_presentation_url!, '_blank')}
+                          >
+                            {t('projectEditor.view')}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleRemovePdf}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                        <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t('projectEditor.pdfPresentationDesc')}
+                        </p>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePdfUpload(file);
+                          }}
+                          className="hidden"
+                          id="pdf-upload-desktop"
+                          disabled={isNew || uploadingPdf}
+                        />
+                        <label htmlFor="pdf-upload-desktop">
+                          <Button
+                            variant="outline"
+                            disabled={isNew || uploadingPdf}
+                            asChild
+                          >
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploadingPdf ? t('projectEditor.uploading') : t('projectEditor.uploadPdf')}
+                            </span>
+                          </Button>
+                        </label>
+                        {isNew && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {t('projectEditor.saveProjectFirstNote')}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Настройки рассрочки */}

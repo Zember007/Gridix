@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { PDFDocument } from 'pdf-lib';
 import { Apartment } from '@/types/apartment';
 import { formatPriceWithCurrency } from './currency-utils';
 
@@ -11,6 +12,7 @@ interface PDFGenerationOptions {
     description?: string;
     type: 'layout' | 'apartment';
   }>;
+  pdf_main?: string | ArrayBuffer | Uint8Array; // URL или данные основного PDF файла (проектная презентация)
   translations: {
     apartmentDetails: string;
     apartmentNumber: string;
@@ -29,6 +31,27 @@ interface PDFGenerationOptions {
     generatedOn: string;
   };
 }
+
+// Функция для загрузки PDF файла
+const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promise<ArrayBuffer> => {
+  if (typeof pdfSource === 'string') {
+    // Если это URL, загружаем файл
+    const response = await fetch(pdfSource);
+    if (!response.ok) {
+      throw new Error(`Failed to load PDF from URL: ${pdfSource}`);
+    }
+    return await response.arrayBuffer();
+  } else if (pdfSource instanceof ArrayBuffer) {
+    return pdfSource;
+  } else if (pdfSource instanceof Uint8Array) {
+    const buffer = new ArrayBuffer(pdfSource.byteLength);
+    const view = new Uint8Array(buffer);
+    view.set(pdfSource);
+    return buffer;
+  } else {
+    throw new Error('Unsupported PDF source type');
+  }
+};
 
 // Функция для загрузки изображения как base64
 const loadImageAsBase64 = async (url: string): Promise<string> => {
@@ -185,8 +208,37 @@ const drawInfoBlock = (pdf: jsPDF, label: string, value: string, x: number, y: n
 
 
 
+/**
+ * Генерирует PDF с деталями квартиры и опционально объединяет его с основным PDF файлом
+ * 
+ * @param options - Опции для генерации PDF
+ * @param options.apartment - Данные квартиры
+ * @param options.projectCurrency - Валюта проекта
+ * @param options.photos - Массив фотографий
+ * @param options.pdf_main - Основной PDF файл (URL, ArrayBuffer или Uint8Array) - опционально
+ * @param options.translations - Переводы для интерфейса
+ * 
+ * @example
+ * // Генерация PDF без основного файла
+ * await generateApartmentPDF({
+ *   apartment,
+ *   projectCurrency: 'USD',
+ *   photos: [],
+ *   translations: {...}
+ * });
+ * 
+ * @example
+ * // Генерация PDF с объединением с основным файлом
+ * await generateApartmentPDF({
+ *   apartment,
+ *   projectCurrency: 'USD', 
+ *   photos: [],
+ *   pdf_main: 'https://example.com/main.pdf', // или ArrayBuffer/Uint8Array
+ *   translations: {...}
+ * });
+ */
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
-  const { apartment, projectCurrency, photos, translations } = options;
+  const { apartment, projectCurrency, photos, translations, pdf_main } = options;
   
   try {
     // Создаем PDF документ
@@ -346,9 +398,51 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       pageHeight - 5
     );
     
-    // Сохраняем PDF
-    const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
-    pdf.save(fileName);
+    // Если есть основной PDF файл, объединяем его с сгенерированным
+    if (pdf_main) {
+      try {
+        // Получаем данные сгенерированного PDF
+        const generatedPdfBytes = pdf.output('arraybuffer');
+        
+        // Загружаем основной PDF
+        const mainPdfBytes = await loadPDFFile(pdf_main);
+        
+        // Создаем новый PDF документ с помощью pdf-lib
+        const mainPdfDoc = await PDFDocument.load(mainPdfBytes);
+        const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes);
+        
+        // Копируем страницы из сгенерированного PDF в основной
+        const copiedPages = await mainPdfDoc.copyPages(generatedPdfDoc, generatedPdfDoc.getPageIndices());
+        copiedPages.forEach((page) => {
+          mainPdfDoc.addPage(page);
+        });
+        
+        // Сохраняем объединенный PDF
+        const mergedPdfBytes = await mainPdfDoc.save();
+        const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
+        
+        // Создаем blob и скачиваем файл
+        const blob = new Blob([new Uint8Array(mergedPdfBytes)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+      } catch (mergeError) {
+        console.error('Error merging PDFs:', mergeError);
+        // В случае ошибки объединения, сохраняем только сгенерированный PDF
+        const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
+        pdf.save(fileName);
+      }
+    } else {
+      // Если основного PDF нет, сохраняем только сгенерированный
+      const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
+      pdf.save(fileName);
+    }
     
   } catch (error) {
     console.error('Error generating PDF:', error);

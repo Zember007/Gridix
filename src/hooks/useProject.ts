@@ -22,6 +22,7 @@ interface Project {
   installment_enabled: boolean;
   min_down_payment_percent: number;
   max_installment_months: number;
+  pdf_presentation_url: string | null;
   created_at: string;
   updated_at: string;
 }
