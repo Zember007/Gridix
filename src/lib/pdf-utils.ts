@@ -58,20 +58,20 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         reject(new Error('Failed to get canvas context'));
         return;
       }
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      
+
       try {
         const dataURL = canvas.toDataURL('image/jpeg', 0.8);
         resolve(dataURL);
@@ -79,11 +79,11 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
         reject(error);
       }
     };
-    
+
     img.onerror = () => {
       reject(new Error(`Failed to load image: ${url}`));
     };
-    
+
     img.src = url;
   });
 };
@@ -122,11 +122,11 @@ const drawRoundedRect = (pdf: jsPDF, x: number, y: number, width: number, height
 // Функция для рисования карточки
 const drawCard = (pdf: jsPDF, x: number, y: number, width: number, height: number) => {
 
-  
+
   // Основная карточка
   pdf.setFillColor(255, 255, 255);
   drawRoundedRect(pdf, x, y, width, height, 3);
-  
+
   // Граница
   pdf.setDrawColor(226, 232, 240);
   pdf.setLineWidth(0.5);
@@ -138,13 +138,13 @@ const drawSectionHeader = (pdf: jsPDF, text: string, x: number, y: number, width
   // Фон заголовка
   pdf.setFillColor(37, 99, 235); // primary color
   drawRoundedRect(pdf, x, y, width, 8, 2);
-  
+
   // Текст заголовка
   pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.text(text, x + 3, y + 5.5);
-  
+
   // Сброс цвета текста
   pdf.setTextColor(0, 0, 0);
 };
@@ -167,38 +167,38 @@ const getStatusColor = (status: string) => {
 const drawStatusBadge = (pdf: jsPDF, text: string, x: number, y: number, status: string) => {
   const color = getStatusColor(status);
   const [r, g, b] = color.match(/\w\w/g)!.map(hex => parseInt(hex, 16));
-  
+
   // Измеряем текст для определения размера бейджа
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
   const textWidth = pdf.getTextWidth(text);
   const badgeWidth = textWidth + 6;
   const badgeHeight = 6;
-  
+
   // Рисуем бейдж
   pdf.setFillColor(r, g, b);
   drawRoundedRect(pdf, x, y - 4, badgeWidth, badgeHeight, 3);
-  
+
   // Текст бейджа
   pdf.setTextColor(255, 255, 255);
   pdf.text(text, x + 3, y);
-  
+
   // Сброс цвета
   pdf.setTextColor(0, 0, 0);
-  
+
   return badgeWidth;
 };
 
 // Функция для рисования информационного блока с иконкой
 const drawInfoBlock = (pdf: jsPDF, label: string, value: string, x: number, y: number) => {
 
-  
+
   // Лейбл
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(71, 85, 105);
   pdf.text(label + ': ', x + 4, y);
-  
+
   // Значение
   pdf.setFont('helvetica', 'normal');
   pdf.setTextColor(15, 23, 42);
@@ -239,7 +239,7 @@ const drawInfoBlock = (pdf: jsPDF, label: string, value: string, x: number, y: n
  */
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, projectCurrency, photos, translations, pdf_main } = options;
-  
+
   try {
     // Создаем PDF документ
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -247,39 +247,39 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     const pageHeight = 297; // A4 height in mm
     const margin = 5;
     const contentWidth = pageWidth - (margin * 2);
-    
+
     let yPosition = margin;
-    
+
     // === HEADER SECTION ===
     // Фон заголовка
     pdf.setFillColor(248, 250, 252); // light color
     pdf.rect(0, 0, pageWidth, 50, 'F');
-    
+
     // Главный заголовок
     pdf.setFontSize(28);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(30, 41, 59); // dark color
     pdf.text(translations.apartmentDetails, margin, yPosition + 15);
-    
+
     // Номер квартиры
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(100, 116, 139); // secondary color
     pdf.text(`${translations.apartmentNumber} ${apartment.apartment_number}`, margin, yPosition + 28);
-    
+
     // Линия-разделитель
     pdf.setDrawColor(37, 99, 235); // primary color
     pdf.setLineWidth(2);
     pdf.line(margin, yPosition + 35, pageWidth - margin, yPosition + 35);
-    
+
     yPosition = 60;
-    
+
     // === ОСНОВНАЯ ИНФОРМАЦИЯ ===
     drawCard(pdf, margin, yPosition, contentWidth, 45);
     drawSectionHeader(pdf, translations.apartmentDetails || 'Основная информация', margin, yPosition, contentWidth);
-    
+
     yPosition += 15;
-    
+
     // Информационные блоки в две колонки
     const infoItems = [
       { label: capitalizeFirstLetter(translations.floor), value: apartment.floor_number.toString() },
@@ -287,25 +287,25 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       { label: capitalizeFirstLetter(translations.area), value: `${apartment.area} m²` },
       ...(apartment.price ? [{ label: translations.price, value: formatPriceWithCurrency(apartment.price, projectCurrency) }] : [])
     ];
-    
+
     const colWidth = (contentWidth - 10) / 2;
-    
+
     // Иконки для разных типов информации
-    
+
     infoItems.forEach((item, index) => {
       const col = index % 2;
       const row = Math.floor(index / 2);
       const x = margin + 5 + (col * (colWidth + 5));
       const y = yPosition + (row * 8);
-      
+
       drawInfoBlock(pdf, item.label, item.value, x, y);
     });
-    
+
     yPosition += Math.ceil(infoItems.length / 2) * 8 + 15;
-    
+
     // Декоративный разделитель
     yPosition += 10;
-    
+
     // === СТАТУС ===
     let statusText: string = apartment.status;
     switch (apartment.status) {
@@ -319,17 +319,17 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         statusText = translations.sold;
         break;
     }
-    
+
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(71, 85, 105);
     pdf.text(translations.status + ':', margin + 5, yPosition);
-    
+
     const statusLabelWidth = pdf.getTextWidth(translations.status + ': ');
     const badgeWidth = drawStatusBadge(pdf, statusText, margin + 5 + statusLabelWidth + 5, yPosition, apartment.status);
-    
+
     yPosition += 20;
-    
+
     // === ФОТОГРАФИИ ===
     if (photos.length > 0) {
       // Проверяем, нужна ли новая страница
@@ -337,14 +337,14 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         pdf.addPage();
         yPosition = margin;
       }
-      
+
       drawSectionHeader(pdf, translations.photos, margin, yPosition, contentWidth);
       yPosition += 20;
-      
+
       // Разделяем фото по типам
       const layoutPhotos = photos.filter(p => p.type === 'layout');
       const apartmentPhotos = photos.filter(p => p.type === 'apartment');
-      
+
       // Сначала планировки
       if (layoutPhotos.length > 0) {
         pdf.setFontSize(14);
@@ -352,14 +352,14 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         pdf.setTextColor(37, 99, 235);
         pdf.text(translations.layout, margin, yPosition);
         yPosition += 10;
-        
+
         for (const photo of layoutPhotos) {
           yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations);
         }
-        
+
         yPosition += 10;
       }
-      
+
       // Затем фотографии квартиры
       if (apartmentPhotos.length > 0) {
         pdf.setFontSize(14);
@@ -367,29 +367,29 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         pdf.setTextColor(37, 99, 235);
         pdf.text(translations.apartmentPhoto, margin, yPosition);
         yPosition += 10;
-        
+
         for (const photo of apartmentPhotos) {
           yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations);
         }
       }
     }
-    
+
     // === FOOTER ===
     const currentDate = new Date().toLocaleDateString();
     pdf.setFontSize(8);
     pdf.setTextColor(148, 163, 184);
-    
+
     // Фон футера
     pdf.setFillColor(248, 250, 252);
     pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
-    
+
     // Текст футера
     pdf.text(
       `${translations.generatedOn}: ${currentDate}`,
       margin,
       pageHeight - 5
     );
-    
+
     // Логотип или название компании (если нужно)
     pdf.setTextColor(100, 116, 139);
     pdf.text(
@@ -397,30 +397,41 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       pageWidth - margin - pdf.getTextWidth('Gridix Live'),
       pageHeight - 5
     );
-    
+
     // Если есть основной PDF файл, объединяем его с сгенерированным
     if (pdf_main) {
       try {
         // Получаем данные сгенерированного PDF
         const generatedPdfBytes = pdf.output('arraybuffer');
-        
+
         // Загружаем основной PDF
         const mainPdfBytes = await loadPDFFile(pdf_main);
-        
-        // Создаем новый PDF документ с помощью pdf-lib
+
+        // Создаем новый PDF-документ
+        const mergedPdfDoc = await PDFDocument.create();
+
+        // Загружаем документы
         const mainPdfDoc = await PDFDocument.load(mainPdfBytes);
         const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes);
-        
-        // Копируем страницы из сгенерированного PDF в основной
-        const copiedPages = await mainPdfDoc.copyPages(generatedPdfDoc, generatedPdfDoc.getPageIndices());
-        copiedPages.forEach((page) => {
-          mainPdfDoc.addPage(page);
-        });
-        
+
+        // Сначала добавляем страницы из сгенерированного PDF
+        const generatedPages = await mergedPdfDoc.copyPages(
+          generatedPdfDoc,
+          generatedPdfDoc.getPageIndices()
+        );
+        generatedPages.forEach((page) => mergedPdfDoc.addPage(page));
+
+        // Затем добавляем страницы из основного PDF
+        const mainPages = await mergedPdfDoc.copyPages(
+          mainPdfDoc,
+          mainPdfDoc.getPageIndices()
+        );
+        mainPages.forEach((page) => mergedPdfDoc.addPage(page));
+
         // Сохраняем объединенный PDF
-        const mergedPdfBytes = await mainPdfDoc.save();
+        const mergedPdfBytes = await mergedPdfDoc.save();
         const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
-        
+
         // Создаем blob и скачиваем файл
         const blob = new Blob([new Uint8Array(mergedPdfBytes)], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
@@ -431,7 +442,8 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
+
       } catch (mergeError) {
         console.error('Error merging PDFs:', mergeError);
         // В случае ошибки объединения, сохраняем только сгенерированный PDF
@@ -443,7 +455,7 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
       pdf.save(fileName);
     }
-    
+
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF');
@@ -452,17 +464,17 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
 
 // Вспомогательная функция для добавления фото в PDF
 const addPhotoToPDF = async (
-  pdf: jsPDF, 
+  pdf: jsPDF,
   photo: {
     id: string;
     image_url: string;
     description?: string;
     type: 'layout' | 'apartment';
-  }, 
-  margin: number, 
-  yPosition: number, 
-  contentWidth: number, 
-  pageHeight: number, 
+  },
+  margin: number,
+  yPosition: number,
+  contentWidth: number,
+  pageHeight: number,
   translations: {
     apartmentPhoto: string;
     [key: string]: string;
@@ -474,10 +486,10 @@ const addPhotoToPDF = async (
       pdf.addPage();
       yPosition = margin;
     }
-    
+
     // Загружаем изображение
     const base64Image = await loadImageAsBase64(photo.image_url);
-    
+
     // Создаем временное изображение для получения размеров
     const tempImg = new Image();
     await new Promise((resolve, reject) => {
@@ -485,18 +497,18 @@ const addPhotoToPDF = async (
       tempImg.onerror = reject;
       tempImg.src = base64Image;
     });
-    
+
     // Вычисляем размеры для PDF (максимум 170mm в ширину, 120mm в высоту)
     const dimensions = getImageDimensions(tempImg.width, tempImg.height, contentWidth - 10, 120);
-    
+
     // Карточка для изображения
     const cardHeight = dimensions.height + 20;
     drawCard(pdf, margin, yPosition, contentWidth, cardHeight);
-    
+
     // Центрируем изображение в карточке
     const imageX = margin + (contentWidth - dimensions.width) / 2;
     const imageY = yPosition + 5;
-    
+
     // Добавляем изображение
     pdf.addImage(
       base64Image,
@@ -506,32 +518,32 @@ const addPhotoToPDF = async (
       dimensions.width,
       dimensions.height
     );
-    
+
     // Подпись к фото внизу карточки
     if (photo.description) {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'italic');
       pdf.setTextColor(100, 116, 139);
       const descY = imageY + dimensions.height + 8;
-      
+
       // Центрируем подпись
       const descWidth = pdf.getTextWidth(photo.description);
       const descX = margin + (contentWidth - descWidth) / 2;
       pdf.text(photo.description, descX, descY);
     }
-    
+
     return yPosition + cardHeight + 10;
-    
+
   } catch (error) {
     console.error(`Failed to load image ${photo.image_url}:`, error);
-    
+
     // Карточка ошибки
     drawCard(pdf, margin, yPosition, contentWidth, 30);
-    
+
     pdf.setFontSize(12);
     pdf.setTextColor(220, 38, 38); // danger color
     pdf.text(`[${translations.apartmentPhoto} не удалось загрузить]`, margin + 10, yPosition + 15);
-    
+
     pdf.setTextColor(0, 0, 0); // reset color
     return yPosition + 40;
   }
