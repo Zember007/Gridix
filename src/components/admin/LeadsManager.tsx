@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { useLeads, Lead } from '@/hooks/useLeads';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LeadsManagerProps {
   projectId?: string;
@@ -59,6 +60,7 @@ interface LeadsManagerProps {
 }
 
 export function LeadsManager({ projectId, showProjectColumn = false }: LeadsManagerProps) {
+  const { t } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFromFilter, setDateFromFilter] = useState<string>('');
   const [dateToFilter, setDateToFilter] = useState<string>('');
@@ -81,15 +83,15 @@ export function LeadsManager({ projectId, showProjectColumn = false }: LeadsMana
   const getStatusBadge = (status: Lead['status']) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="outline" className="text-yellow-600"><Clock className="w-3 h-3 mr-1" />Ожидает</Badge>;
+        return <Badge variant="outline" className="text-yellow-600"><Clock className="w-3 h-3 mr-1" />{t('leads.status.pending')}</Badge>;
       case 'sent_to_crm':
-        return <Badge variant="outline" className="text-green-600"><CheckCircle className="w-3 h-3 mr-1" />Отправлен</Badge>;
+        return <Badge variant="outline" className="text-green-600"><CheckCircle className="w-3 h-3 mr-1" />{t('leads.status.sent_to_crm')}</Badge>;
       case 'saved_only':
-        return <Badge variant="outline" className="text-blue-600"><AlertCircle className="w-3 h-3 mr-1" />Только в БД</Badge>;
+        return <Badge variant="outline" className="text-blue-600"><AlertCircle className="w-3 h-3 mr-1" />{t('leads.status.saved_only')}</Badge>;
       case 'failed':
-        return <Badge variant="outline" className="text-red-600"><AlertCircle className="w-3 h-3 mr-1" />Ошибка</Badge>;
+        return <Badge variant="outline" className="text-red-600"><AlertCircle className="w-3 h-3 mr-1" />{t('leads.status.failed')}</Badge>;
       case 'cancelled':
-        return <Badge variant="outline" className="text-gray-600"><X className="w-3 h-3 mr-1" />Отменен</Badge>;
+        return <Badge variant="outline" className="text-gray-600"><X className="w-3 h-3 mr-1" />{t('leads.status.cancelled')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -105,13 +107,13 @@ Email: ${lead.email}
     
     navigator.clipboard.writeText(leadInfo).then(() => {
       toast({
-        title: "Скопировано",
-        description: "Информация о лиде скопирована в буфер обмена",
+        title: t('leads.toast.copied.title'),
+        description: t('leads.toast.copied.desc'),
       });
     }).catch(() => {
       toast({
-        title: "Ошибка",
-        description: "Не удалось скопировать информацию",
+        title: t('leads.toast.copyError.title'),
+        description: t('leads.toast.copyError.desc'),
         variant: "destructive",
       });
     });
@@ -121,13 +123,13 @@ Email: ${lead.email}
     try {
       await cancelLead(leadId);
       toast({
-        title: "Успешно",
-        description: "Лид отменен",
+        title: t('leads.toast.cancelled.title'),
+        description: t('leads.toast.cancelled.desc'),
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось отменить лид",
+        title: t('leads.toast.cancelError.title'),
+        description: t('leads.toast.cancelError.desc'),
         variant: "destructive",
       });
     }
@@ -142,13 +144,13 @@ Email: ${lead.email}
       setSelectedLead(null);
       setNotes('');
       toast({
-        title: "Успешно",
-        description: "Заметки обновлены",
+        title: t('leads.toast.notesSaved.title'),
+        description: t('leads.toast.notesSaved.desc'),
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить заметки",
+        title: t('leads.toast.notesError.title'),
+        description: t('leads.toast.notesError.desc'),
         variant: "destructive",
       });
     }
@@ -166,7 +168,7 @@ Email: ${lead.email}
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
             <Clock className="w-6 h-6 animate-spin mr-2" />
-            Загрузка лидов...
+            {t('leads.loading')}
           </div>
         </CardContent>
       </Card>
@@ -179,7 +181,7 @@ Email: ${lead.email}
         <CardContent className="p-6">
           <div className="text-red-600 flex items-center">
             <AlertCircle className="w-5 h-5 mr-2" />
-            Ошибка: {error}
+            {t('leads.error')}: {error}
           </div>
         </CardContent>
       </Card>
@@ -193,37 +195,37 @@ Email: ${lead.email}
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{leadCounts.total}</div>
-            <div className="text-sm text-muted-foreground">Всего лидов</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.total')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">{leadCounts.pending}</div>
-            <div className="text-sm text-muted-foreground">Ожидают</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.pending')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">{leadCounts.sent}</div>
-            <div className="text-sm text-muted-foreground">В CRM</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.sent')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">{leadCounts.savedOnly}</div>
-            <div className="text-sm text-muted-foreground">Только в БД</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.savedOnly')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-600">{leadCounts.failed}</div>
-            <div className="text-sm text-muted-foreground">С ошибками</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.failed')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-gray-600">{leadCounts.cancelled}</div>
-            <div className="text-sm text-muted-foreground">Отменены</div>
+            <div className="text-sm text-muted-foreground">{t('leads.stats.cancelled')}</div>
           </CardContent>
         </Card>
       </div>
@@ -231,28 +233,28 @@ Email: ${lead.email}
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Фильтры</CardTitle>
+          <CardTitle>{t('leads.filters.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Статус</label>
+              <label className="text-sm font-medium mb-2 block">{t('leads.filters.status')}</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
-                  <SelectItem value="pending">Ожидают</SelectItem>
-                  <SelectItem value="sent_to_crm">Отправлены</SelectItem>
-                  <SelectItem value="saved_only">Только в БД</SelectItem>
-                  <SelectItem value="failed">С ошибками</SelectItem>
-                  <SelectItem value="cancelled">Отменены</SelectItem>
+                  <SelectItem value="all">{t('leads.status.all')}</SelectItem>
+                  <SelectItem value="pending">{t('leads.status.pending')}</SelectItem>
+                  <SelectItem value="sent_to_crm">{t('leads.status.sent_to_crm')}</SelectItem>
+                  <SelectItem value="saved_only">{t('leads.status.saved_only')}</SelectItem>
+                  <SelectItem value="failed">{t('leads.status.failed')}</SelectItem>
+                  <SelectItem value="cancelled">{t('leads.status.cancelled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Дата от</label>
+              <label className="text-sm font-medium mb-2 block">{t('leads.filters.dateFrom')}</label>
               <Input
                 type="date"
                 value={dateFromFilter}
@@ -260,7 +262,7 @@ Email: ${lead.email}
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Дата до</label>
+              <label className="text-sm font-medium mb-2 block">{t('leads.filters.dateTo')}</label>
               <Input
                 type="date"
                 value={dateToFilter}
@@ -274,23 +276,23 @@ Email: ${lead.email}
       {/* Leads Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Лиды</CardTitle>
+          <CardTitle>{t('leads.title')}</CardTitle>
           <CardDescription>
-            Все заявки от клиентов с информацией о статусе отправки в CRM
+            {t('leads.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Дата</TableHead>
-                <TableHead>Клиент</TableHead>
-                <TableHead>Контакты</TableHead>
-                {showProjectColumn && <TableHead>Проект</TableHead>}
-                <TableHead>Квартира</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>CRM</TableHead>
-                <TableHead>Действия</TableHead>
+                <TableHead>{t('leads.table.date')}</TableHead>
+                <TableHead>{t('leads.table.client')}</TableHead>
+                <TableHead>{t('leads.table.contacts')}</TableHead>
+                {showProjectColumn && <TableHead>{t('leads.table.project')}</TableHead>}
+                <TableHead>{t('leads.table.apartment')}</TableHead>
+                <TableHead>{t('leads.table.status')}</TableHead>
+                <TableHead>{t('leads.table.crm')}</TableHead>
+                <TableHead>{t('leads.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -352,7 +354,7 @@ Email: ${lead.email}
                     ) : (
                       <div className="flex items-center text-muted-foreground">
                         <Minus className="w-3 h-3 mr-1" />
-                        <span className="text-sm">Не отправлен</span>
+                        <span className="text-sm">{t('leads.crm.notSent')}</span>
                       </div>
                     )}
                   </TableCell>
@@ -365,7 +367,7 @@ Email: ${lead.email}
                           onClick={() => handleCopyLead(lead)}
                         >
                           <Copy className="w-3 h-3 mr-1" />
-                          Копировать
+                          {t('leads.actions.copy')}
                         </Button>
                       )}
                       {lead.status === 'pending' && (
@@ -375,7 +377,7 @@ Email: ${lead.email}
                           onClick={() => handleCancel(lead.id)}
                         >
                           <X className="w-3 h-3 mr-1" />
-                          Отменить
+                          {t('leads.actions.cancel')}
                         </Button>
                       )}
                       <Button
@@ -393,8 +395,8 @@ Email: ${lead.email}
                             // This would need the subdomain from AmoCRM settings
                             // For now, just show a placeholder
                             toast({
-                              title: "Ссылка на лид",
-                              description: `ID лида в AmoCRM: ${lead.amocrm_lead_id}`,
+                              title: t('leads.actions.openInCrm'),
+                              description: `ID: ${lead.amocrm_lead_id}`,
                             });
                           }}
                         >
@@ -409,7 +411,7 @@ Email: ${lead.email}
           </Table>
           {leads.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              Лиды не найдены
+              {t('leads.empty')}
             </div>
           )}
         </CardContent>
@@ -419,14 +421,14 @@ Email: ${lead.email}
       <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Заметки к лиду</DialogTitle>
+            <DialogTitle>{t('leads.notes.title')}</DialogTitle>
             <DialogDescription>
-              Клиент: {selectedLead?.name}
+              {t('leads.notes.client')}: {selectedLead?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Textarea
-              placeholder="Введите заметки..."
+              placeholder={t('leads.notes.placeholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
@@ -434,10 +436,10 @@ Email: ${lead.email}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNotesDialogOpen(false)}>
-              Отмена
+              {t('leads.cancel')}
             </Button>
             <Button onClick={handleUpdateNotes}>
-              Сохранить
+              {t('leads.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

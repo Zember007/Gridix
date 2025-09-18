@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Search as SearchIcon,
   LayoutDashboard as Dashboard,
@@ -48,22 +49,22 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 
 
 // Simplified admin navigation items
-const getAdminNavItems = (onNavigate?: (path: string) => void) => [
-  { id: "projects", icon: <Building2 size={20} />, label: "Проекты" },
-  { id: "leads", icon: <UserCheck size={20} />, label: "Лиды" },
-  { id: "widgets", icon: <Code size={20} />, label: "Виджеты" },
-  { id: "analytics", icon: <BarChart3 size={20} />, label: "Аналитика" },
-  { id: "settings", icon: <SettingsIcon size={20} />, label: "Настройки" },
+const getAdminNavItems = (t: (k: string) => string, onNavigate?: (path: string) => void) => [
+  { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
+  { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
+  { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
+  { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics') },
+  { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
 ];
 
 // Simplified project editor navigation items
-const getProjectEditorNavItems = () => [
-  { id: "general", icon: <Building2 size={20} />, label: "Основное" },
-  { id: "apartments", icon: <Layers3 size={20} />, label: "Квартиры" },
-  { id: "floorplan", icon: <Folder size={20} />, label: "Планировки" },
-  { id: "photos", icon: <Camera size={20} />, label: "Фото" },
-  { id: "fields", icon: <DocumentAdd size={20} />, label: "Поля" },
-  { id: "integrations", icon: <Integration size={20} />, label: "Интеграции" },
+const getProjectEditorNavItems = (t: (k: string) => string) => [
+  { id: "general", icon: <Building2 size={20} />, label: t('projectEditor.general') },
+  { id: "apartments", icon: <Layers3 size={20} />, label: t('projectEditor.apartmentsTab') },
+  { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
+  { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
+  { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
+  { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
 ];
 
 /* ---------------------------- Simplified Sidebar -------------------------- */
@@ -85,6 +86,7 @@ function SimplifiedSidebar({
   onToggleCollapse: () => void;
   title?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <aside className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 h-screen sticky top-0 ${
       isCollapsed ? "w-16" : "w-64"
@@ -101,7 +103,7 @@ function SimplifiedSidebar({
           <button
             onClick={onToggleCollapse}
             className="p-1 rounded-md hover:bg-gray-100 transition-colors"
-            title={isCollapsed ? "Развернуть" : "Свернуть"}
+            title={isCollapsed ? t('common.more') : t('common.hide')}
           >
             <ChevronDownIcon 
               className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
@@ -178,6 +180,7 @@ export function AdminSidebar({
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }) {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -186,7 +189,7 @@ export function AdminSidebar({
     onTabChange?.(section);
   };
 
-  const navItems = getAdminNavItems(onNavigate);
+  const navItems = getAdminNavItems(t, onNavigate);
 
   return (
     <SimplifiedSidebar
@@ -196,7 +199,7 @@ export function AdminSidebar({
       userEmail={userEmail}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      title="Админ Панель"
+      title={t('adminSidebar.title')}
     />
   );
 }
@@ -210,6 +213,7 @@ export function ProjectEditorSidebar({
   activeTab?: string;
   userEmail?: string;
 }) {
+  const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState(activeTab || "general");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -218,7 +222,7 @@ export function ProjectEditorSidebar({
     onSectionChange?.(section);
   };
 
-  const navItems = getProjectEditorNavItems();
+  const navItems = getProjectEditorNavItems(t);
 
   return (
     <SimplifiedSidebar
@@ -228,7 +232,7 @@ export function ProjectEditorSidebar({
       userEmail={userEmail}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      title="Редактор Проекта"
+      title={t('projectEditorSidebar.title')}
     />
   );
 }
