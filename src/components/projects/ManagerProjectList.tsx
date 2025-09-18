@@ -6,6 +6,7 @@ import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3, Building } from 'luc
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useManagerProjects, Project } from '@/hooks/useManagerProjects';
 import { toast } from 'sonner';
+import { LeadsStats } from '@/components/admin/LeadsNotification';
 
 interface ManagerProjectListProps {
   onCreateNew: () => void;
@@ -119,18 +120,23 @@ const ManagerProjectList = ({ onCreateNew, onEditProject }: ManagerProjectListPr
                 <CardContent className="pt-0">
                   <div className="space-y-4">
                     {/* Project Stats */}
-                    <div className="flex items-center gap-4 text-sm text-real-estate-600">
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>
-                          {project.floors} {project.floors === 1 ? 'этаж' : project.floors < 5 ? 'этажа' : 'этажей'}
-                        </span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4 text-sm text-real-estate-600">
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-4 w-4" />
+                          <span>
+                            {project.floors} {project.floors === 1 ? 'этаж' : project.floors < 5 ? 'этажа' : 'этажей'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-real-estate-500">
+                            {new Date(project.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-real-estate-500">
-                          {new Date(project.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
+                      
+                      {/* Leads Stats */}
+                      <LeadsStats projectId={project.id} />
                     </div>
 
                     {/* Actions */}

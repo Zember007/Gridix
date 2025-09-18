@@ -8,6 +8,7 @@ import { useUserProjects, useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { LeadsStats } from '@/components/admin/LeadsNotification';
 
 interface Project {
   id: string;
@@ -151,13 +152,18 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                   )}
 
                   {/* Project Info */}
-                  <div className="flex items-center justify-between text-sm">
-                    <Badge variant="outline" className="border-real-estate-300 text-real-estate-700">
-                      {project.floors} этажей
-                    </Badge>
-                    <span className="text-real-estate-500">
-                      {new Date(project.created_at).toLocaleDateString('ru-RU')}
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <Badge variant="outline" className="border-real-estate-300 text-real-estate-700">
+                        {project.floors} этажей
+                      </Badge>
+                      <span className="text-real-estate-500">
+                        {new Date(project.created_at).toLocaleDateString('ru-RU')}
+                      </span>
+                    </div>
+                    
+                    {/* Leads Stats */}
+                    <LeadsStats projectId={project.id} />
                   </div>
 
                   {/* Actions */}

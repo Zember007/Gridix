@@ -40,6 +40,7 @@ import {
   Image,
   Layers3,
   Camera,
+  UserCheck,
 } from "lucide-react";
 
 // Softer spring animation curve
@@ -49,6 +50,7 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 // Simplified admin navigation items
 const getAdminNavItems = (onNavigate?: (path: string) => void) => [
   { id: "projects", icon: <Building2 size={20} />, label: "Проекты" },
+  { id: "leads", icon: <UserCheck size={20} />, label: "Лиды" },
   { id: "widgets", icon: <Code size={20} />, label: "Виджеты" },
   { id: "analytics", icon: <BarChart3 size={20} />, label: "Аналитика" },
   { id: "settings", icon: <SettingsIcon size={20} />, label: "Настройки" },
@@ -93,7 +95,7 @@ function SimplifiedSidebar({
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-blue-600" />
-              <span className="font-semibold text-gray-900">{title}</span>
+              <span className="font-semibold text-gray-900 whitespace-nowrap">{title}</span>
             </div>
           )}
           <button

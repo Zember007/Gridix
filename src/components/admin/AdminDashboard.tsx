@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield } from 'lucide-react';
+import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck } from 'lucide-react';
 import ProjectList from '@/components/projects/ProjectList';
 import ManagerProjectList from '@/components/projects/ManagerProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
+import { LeadsManager } from './LeadsManager';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -121,10 +122,14 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
         <div className="container mx-auto px-4 py-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 gap-1">
+            <TabsList className="grid w-full grid-cols-3 gap-1">
               <TabsTrigger value="projects" className="flex items-center gap-1 text-xs">
                 <Building2 className="h-3 w-3" />
                 {t('admin.projects').substring(0, 8)}
+              </TabsTrigger>
+              <TabsTrigger value="leads" className="flex items-center gap-1 text-xs">
+                <UserCheck className="h-3 w-3" />
+                Лиды
               </TabsTrigger>
               <TabsTrigger value="widgets" className="flex items-center gap-1 text-xs">
                 <Code className="h-3 w-3" />
@@ -154,6 +159,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                     developerId={user?.id}
                   />
                 )}
+              </TabsContent>
+
+              <TabsContent value="leads" className="space-y-6">
+                <LeadsManager showProjectColumn={!isManager} />
               </TabsContent>
 
               <TabsContent value="widgets" className="space-y-6">
@@ -249,6 +258,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                   onEditProject={handleEditProject}
                   developerId={developerId}
                 />
+              </TabsContent>
+
+              <TabsContent value="leads" className="space-y-6">
+                <LeadsManager showProjectColumn={!isManager} />
               </TabsContent>
 
               <TabsContent value="widgets" className="space-y-6">
