@@ -13,9 +13,7 @@ import {
 } from '@/lib/language-utils';
 
 interface Translations {
-  [key: string]: {
-    [key in Language]: string;
-  };
+  [key: string]: Partial<Record<Language, string>>;
 }
 
 const translations: Translations = {
@@ -23,511 +21,610 @@ const translations: Translations = {
   'nav.projects': {
     ru: 'Проекты',
     en: 'Projects',
-    ka: 'პროექტები'
+    ka: 'პროექტები',
+    ar: 'المشاريع'
   },
   'nav.about': {
     ru: 'О нас',
     en: 'About',
-    ka: 'ჩვენს შესახებ'
+    ka: 'ჩვენს შესახებ',
+    ar: 'حولنا'
   },
   'nav.contact': {
     ru: 'Контакты',
     en: 'Contact',
-    ka: 'კონტაქტი'
+    ka: 'კონტაქტი',
+    ar: 'اتصل بنا'
   },
 
   // Project
   'project.apartments': {
     ru: 'квартир',
     en: 'apartments',
-    ka: 'ბინები'
+    ka: 'ბინები',
+    ar: 'شقق'
   },
   'project.floors': {
     ru: 'этажей',
     en: 'floors',
-    ka: 'სართულები'
+    ka: 'სართულები',
+    ar: 'طوابق'
   },
   'project.available': {
     ru: 'Доступно',
     en: 'Available',
-    ka: 'ხელმისაწვდომია'
+    ka: 'ხელმისაწვდომია',
+    ar: 'متاح'
   },
   'project.reserved': {
     ru: 'Забронировано',
     en: 'Reserved',
-    ka: 'დაჯავშნული'
+    ka: 'დაჯავშნული',
+    ar: 'محجوز'
   },
   'project.sold': {
     ru: 'Продано',
     en: 'Sold',
-    ka: 'გაყიდული'
+    ka: 'გაყიდული',
+    ar: 'مباع'
   },
   'project.price': {
     ru: 'Цена',
     en: 'Price',
-    ka: 'ფასი'
+    ka: 'ფასი',
+    ar: 'السعر'
   },
   'project.area': {
     ru: 'Площадь',
     en: 'Area',
-    ka: 'ართული'
+    ka: 'ართული',
+    ar: 'المساحة'
   },
   'project.rooms': {
     ru: 'Комнаты',
     en: 'Rooms',
-    ka: 'ოთახები'
+    ka: 'ოთახები',
+    ar: 'الغرف'
   },
   'project.floor': {
     ru: 'Этаж',
     en: 'Floor',
-    ka: 'სართული'
+    ka: 'სართული',
+    ar: 'الطابق'
   },
   'project.number': {
     ru: 'Номер',
     en: 'Number',
-    ka: 'ნომერი'
+    ka: 'ნომერი',
+    ar: 'الرقم'
   },
   'project.status': {
     ru: 'Статус',
     en: 'Status',
-    ka: 'სტატუსი'
+    ka: 'სტატუსი',
+    ar: 'الحالة'
   },
   'project.contactManager': {
     ru: 'Связаться с менеджером',
     en: 'Contact Manager',
-    ka: 'დაკავშირება მენეჯერთან'
+    ka: 'დაკავშირება მენეჯერთან',
+    ar: 'الاتصال بالمدير'
   },
   'project.contactManagerNotConfigured': {
     ru: 'Контактная информация менеджера не настроена',
     en: 'Manager contact information not configured',
-    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული'
+    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული',
+    ar: 'معلومات الاتصال بالمدير غير مكونة'
   },
   'project.backToBuilding': {
     ru: 'Назад к зданию',
     en: 'Back to Building',
-    ka: 'შენობაზე დაბრუნება'
+    ka: 'შენობაზე დაბრუნება',
+    ar: 'العودة إلى المبنى'
   },
   'project.noBuildingPlan': {
     ru: 'План здания не настроен',
     en: 'Building plan not configured',
-    ka: 'შენობის გეგმა არ არის კონფიგურირებული'
+    ka: 'შენობის გეგმა არ არის კონფიგურირებული',
+    ar: 'مخطط المبنى غير مكون'
   },
   'project.contactAdmin': {
     ru: 'Обратитесь к администратору',
     en: 'Contact administrator',
-    ka: 'დაუკავშირდით ადმინისტრატორს'
+    ka: 'დაუკავშირდით ადმინისტრატორს',
+    ar: 'اتصل بالمسؤول'
   },
   'project.interactivePlan': {
     ru: 'Интерактивный план',
     en: 'Interactive Plan',
-    ka: 'ინტერაქტიული გეგმა'
+    ka: 'ინტერაქტიული გეგმა',
+    ar: 'المخطط التفاعلي'
   },
   'project.total': {
     ru: 'Всего',
     en: 'Total',
-    ka: 'სულ'
+    ka: 'სულ',
+    ar: 'الإجمالي'
   },
   'project.legend': {
     ru: 'Легенда',
     en: 'Legend',
-    ka: 'ლეგენდა'
+    ka: 'ლეგენდა',
+    ar: 'وصف الرموز'
   },
   'project.loading': {
     ru: 'Загрузка...',
     en: 'Loading...',
-    ka: 'იტვირთება...'
+    ka: 'იტვირთება...',
+    ar: 'جاري التحميل...'
   },
   'project.parameters': {
     ru: 'Параметры',
     en: 'Parameters',
-    ka: 'პარამეტრები'
+    ka: 'პარამეტრები',
+    ar: 'المعاملات'
   },
   'project.resetFilters': {
     ru: 'Сбросить фильтры',
     en: 'Reset filters',
-    ka: 'ფილტრების გაუქმება'
+    ka: 'ფილტრების გაუქმება',
+    ar: 'إعادة تعيين التصفيات'
   },
   'project.facade': {
     ru: 'Фасад',
     en: 'Facade',
-    ka: 'ფასადი'
+    ka: 'ფასადი',
+    ar: 'الواجهة'
   },
   'project.listView': {
     ru: 'Списком',
     en: 'List view',
-    ka: 'სიის სახით'
+    ka: 'სიის სახით',
+    ar: 'عرض القائمة'
   },
 
   // Favorites
   'favorites.title': {
     ru: 'Избранное',
     en: 'Favorites',
-    ka: 'რჩეულები'
+    ka: 'რჩეულები',
+    ar: 'المفضلة'
   },
   'favorites.empty.title': {
     ru: 'Нет избранных квартир',
     en: 'No favorites yet',
-    ka: 'რჩეულები არ არის'
+    ka: 'რჩეულები არ არის',
+    ar: 'لا توجد مفضلة حتى الآن'
   },
   'favorites.empty.description': {
     ru: 'Добавьте квартиры в избранное, нажав на сердечко',
     en: 'Add apartments to favorites by tapping the heart',
-    ka: 'მონიშნეთ ბინები გულით, რომ დაამატოთ რჩეულებში'
+    ka: 'მონიშნეთ ბინები გულით, რომ დაამატოთ რჩეულებში',
+    ar: 'أضف الشقق إلى المفضلة بالنقر على القلب'
   },
   'project.layouts': {
     ru: 'Планировки',
     en: 'Layouts',
-    ka: 'პლანირებები'
+    ka: 'პლანირებები',
+    ar: 'التخطيطات'
   },
   'project.layout': {
     ru: 'Планировка',
     en: 'Layout',
-    ka: 'პლანირება'
+    ka: 'პლანირება',
+    ar: 'التخطيط'
   },
   'project.type': {
     ru: 'Тип',
     en: 'Type',
-    ka: 'ტიპი'
+    ka: 'ტიპი',
+    ar: 'النوع'
   },
   'project.location': {
     ru: 'Расположение',
     en: 'Location',
-    ka: 'მდებარეობა'
+    ka: 'მდებარეობა',
+    ar: 'الموقع'
   },
   'project.finishing': {
     ru: 'Отделка',
     en: 'Finishing',
-    ka: 'მოწყობა'
+    ka: 'მოწყობა',
+    ar: 'التشطيب'
   },
   'project.sampleLocation': {
     ru: 'Вид на море',
     en: 'Sea view',
-    ka: 'ზღვის ხედი'
+    ka: 'ზღვის ხედი',
+    ar: 'إطلالة على البحر'
   },
   'project.of': {
     ru: 'из',
     en: 'of',
-    ka: '-დან'
+    ka: '-დან',
+    ar: 'من'
   },
   'project.onRequest': {
     ru: 'По запросу',
     en: 'On request',
-    ka: 'მოთხოვნისთანა'
+    ka: 'მოთხოვნისთანა',
+    ar: 'عند الطلب'
   },
   'project.additionalInfo': {
     ru: 'Дополнительная информация',
     en: 'Additional Information',
-    ka: 'დამატებითი ინფორმაცია'
+    ka: 'დამატებითი ინფორმაცია',
+    ar: 'معلومات إضافية'
   },
   'project.installmentFrom': {
     ru: 'В рассрочку от',
     en: 'Installment from',
-    ka: 'განვადებით -და'
+    ka: 'განვადებით -და',
+    ar: 'بالتقسيط من'
   },
   'project.from': {
     ru: 'от',
     en: 'from',
-    ka: '-დან'
+    ka: '-დან',
+    ar: 'من'
   },
   'project.showMore': {
     ru: 'Показать еще {{count}} из {{total}} вариантов',
     en: 'Show {{count}} more of {{total}} options',
-    ka: 'აჩვენე კიდევ {{count}} {{total}}-დან'
+    ka: 'აჩვენე კიდევ {{count}} {{total}}-დან',
+    ar: 'عرض {{count}} أكثر من {{total}} خيار'
   },
   'project.viewApartments': {
     ru: 'Смотреть {count} вариантов',
     en: 'View {count} options',
-    ka: 'იხილე {count} ვარიანტი'
+    ka: 'იხილე {count} ვარიანტი',
+    ar: 'عرض {count} خيارات'
   },
   'project.contactMessage': {
     ru: 'Здравствуйте! Интересует проект {{projectName}}. Можете предоставить дополнительную информацию?',
     en: 'Hello! I am interested in the {{projectName}} project. Can you provide additional information?',
-    ka: 'გამარჯობა! მაინტერესებს {{projectName}} პროექტი. შეგიძლიათ დამატებითი ინფორმაცია მოგვაწოდოთ?'
+    ka: 'გამარჯობა! მაინტერესებს {{projectName}} პროექტი. შეგიძლიათ დამატებითი ინფორმაცია მოგვაწოდოთ?',
+    ar: 'مرحبا! أنا مهتم بمشروع {{projectName}}. هل يمكنك تقديم معلومات إضافية؟'
   },
   'project.noContactInfo': {
     ru: 'Контактная информация менеджера не настроена',
     en: 'Manager contact information not configured',
-    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული'
+    ka: 'მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული',
+    ar: 'معلومات الاتصال بالمدير غير مكونة'
   },
   'apartment.rooms': {
     ru: 'комнаты',
     en: 'rooms',
-    ka: 'ოთახები'
+    ka: 'ოთახები',
+    ar: 'غرف'
   },
   'project.selectFloor': {
     ru: 'Выберите этаж',
     en: 'Select floor',
-    ka: 'აირჩიეთ სართული'
+    ka: 'აირჩიეთ სართული',
+    ar: 'اختر الطابق'
   },
   'project.apartmentsList': {
     ru: 'Список квартир',
     en: 'Apartments list',
-    ka: 'ბინების სია'
+    ka: 'ბინების სია',
+    ar: 'قائمة الشقق'
   },
   'project.noImage': {
     ru: 'Изображение не загружено',
     en: 'No image loaded',
-    ka: 'სურათი არ არის ჩატვირთული'
+    ka: 'სურათი არ არის ჩატვირთული',
+    ar: 'لم يتم تحميل الصورة'
   },
   'project.priceRange': {
     ru: 'Диапазон цен',
     en: 'Price range',
-    ka: 'ფასების დიაპაზონი'
+    ka: 'ფასების დიაპაზონი',
+    ar: 'نطاق الأسعار'
   },
   'project.areaRange': {
     ru: 'Диапазон площадей',
     en: 'Area range',
-    ka: 'ფართობების დიაპაზონი'
+    ka: 'ფართობების დიაპაზონი',
+    ar: 'نطاق المساحات'
   },
   'project.layoutPreview': {
     ru: 'Предпросмотр планировки',
     en: 'Layout preview',
-    ka: 'განლაგების გადახედვა'
+    ka: 'განლაგების გადახედვა',
+    ar: 'معاينة التخطيط'
   },
   'common.reserve': {
     ru: 'Забронировать',
     en: 'Reserve',
-    ka: 'დაჯავშნა'
+    ka: 'დაჯავშნა',
+    ar: 'احجز'
   },
 
   // Filters
   'filters.search': {
     ru: 'Поиск...',
     en: 'Search...',
-    ka: 'ძებნა...'
+    ka: 'ძებნა...',
+    ar: 'بحث...'
   },
   'filters.city': {
     ru: 'Город',
     en: 'City',
-    ka: 'ქალაქი'
+    ka: 'ქალაქი',
+    ar: 'المدينة'
   },
   'filters.allCities': {
     ru: 'Все города',
     en: 'All cities',
-    ka: 'ყველა ქალაქი'
+    ka: 'ყველა ქალაქი',
+    ar: 'جميع المدن'
   },
   'filters.status': {
     ru: 'Статус',
     en: 'Status',
-    ka: 'სტატუსი'
+    ka: 'სტატუსი',
+    ar: 'الحالة'
   },
   'filters.allStatuses': {
     ru: 'Все статусы',
     en: 'All statuses',
-    ka: 'ყველა სტატუსი'
+    ka: 'ყველა სტატუსი',
+    ar: 'جميع الحالات'
   },
   'filters.priceRange': {
     ru: 'Диапазон цен',
     en: 'Price range',
-    ka: 'ფასის დიაპაზონი'
+    ka: 'ფასის დიაპაზონი',
+    ar: 'نطاق الأسعار'
   },
   'filters.minPrice': {
     ru: 'Мин. цена',
     en: 'Min price',
-    ka: 'მინ. ფასი'
+    ka: 'მინ. ფასი',
+    ar: 'أقل سعر'
   },
   'filters.maxPrice': {
     ru: 'Макс. цена',
     en: 'Max price',
-    ka: 'მაქს. ფასი'
+    ka: 'მაქს. ფასი',
+    ar: 'أعلى سعر'
   },
   'filters.applyFilters': {
     ru: 'Применить фильтры',
     en: 'Apply filters',
-    ka: 'ფილტრების გამოყენება'
+    ka: 'ფილტრების გამოყენება',
+    ar: 'تطبيق التصفيات'
   },
   'filters.resetFilters': {
     ru: 'Сбросить фильтры',
     en: 'Reset filters',
-    ka: 'ფილტრების გადატვირთვა'
+    ka: 'ფილტრების გადატვირთვა',
+    ar: 'إعادة تعيين التصفيات'
   },
 
   // Statistics
   'stats.totalProjects': {
     ru: 'Всего проектов',
     en: 'Total projects',
-    ka: 'სულ პროექტები'
+    ka: 'სულ პროექტები',
+    ar: 'إجمالي المشاريع'
   },
   'stats.totalApartments': {
     ru: 'Всего квартир',
     en: 'Total apartments',
-    ka: 'სულ ბინები'
+    ka: 'სულ ბინები',
+    ar: 'إجمالي الشقق'
   },
   'stats.availableApartments': {
     ru: 'Доступные квартиры',
     en: 'Available apartments',
-    ka: 'ხელმისაწვდომი ბინები'
+    ka: 'ხელმისაწვდომი ბინები',
+    ar: 'الشقق المتاحة'
   },
 
   // Common
   'common.available': {
     ru: 'Доступно',
     en: 'Available',
-    ka: 'ხელმისაწვდომია'
+    ka: 'ხელმისაწვდომია',
+    ar: 'متاح'
   },
   'common.reserved': {
     ru: 'Забронировано',
     en: 'Reserved',
-    ka: 'დაჯავშნული'
+    ka: 'დაჯავშნული',
+    ar: 'محجوز'
   },
   'common.sold': {
     ru: 'Продано',
     en: 'Sold',
-    ka: 'გაყიდული'
+    ka: 'გაყიდული',
+    ar: 'مباع'
   },
   'common.more': {
     ru: 'Подробнее',
     en: 'More details',
-    ka: 'დეტალები'
+    ka: 'დეტალები',
+    ar: 'المزيد من التفاصيل'
   },
   'common.priceOnRequest': {
     ru: 'По запросу',
     en: 'On request',
-    ka: 'მოთხოვნისამებრ'
+    ka: 'მოთხოვნისამებრ',
+    ar: 'عند الطلب'
   },
   'common.search': {
     ru: 'Поиск',
     en: 'Search',
-    ka: 'ძებნა'
+    ka: 'ძებნა',
+    ar: 'بحث'
   },
   'common.unavailable': {
     ru: 'Недоступно',
     en: 'Unavailable',
-    ka: 'მიუწვდომელია'
+    ka: 'მიუწვდომელია',
+    ar: 'غير متاح'
   },
   'common.list': {
     ru: 'Список',
     en: 'List',
-    ka: 'სია'
+    ka: 'სია',
+    ar: 'قائمة'
   },
   'common.grid': {
     ru: 'Плитка',
     en: 'Grid',
-    ka: 'ბადე'
+    ka: 'ბადე',
+    ar: 'شبكة'
   },
   'common.copied': {
     ru: 'Ссылка скопирована в буфер обмена',
     en: 'Link copied to clipboard',
-    ka: 'ბმული დაკოპირდა'
+    ka: 'ბმული დაკოპირდა',
+    ar: 'تم نسخ الرابط'
   },
   'common.error': {
     ru: 'Произошла ошибка',
     en: 'An error occurred',
-    ka: 'შეცდომა მოხდა'
+    ka: 'შეცდომა მოხდა',
+    ar: 'حدث خطأ'
   },
 
   // Navigation
   'nav.admin': {
     ru: 'Админ панель',
     en: 'Admin Panel',
-    ka: 'ადმინ პანელი'
+    ka: 'ადმინ პანელი',
+    ar: 'لوحة الإدارة'
   },
 
   // Landing page
   'landing.title': {
     ru: 'Создавайте интерактивные планы',
     en: 'Create Interactive Floor Plans',
-    ka: 'შექმენით ინტერაქტიული გეგმები'
+    ka: 'შექმენით ინტერაქტიული გეგმები',
+    ar: 'إنشاء مخططات أرضية تفاعلية'
   },
   'landing.subtitle': {
     ru: 'недвижимости легко',
     en: 'with ease',
-    ka: 'მარტივად'
+    ka: 'მარტივად',
+    ar: 'بسهولة'
   },
   'landing.description': {
     ru: 'Профессиональная платформа для создания и управления интерактивными планами недвижимости. Загружайте планы, настраивайте квартиры и встраивайте виджеты на ваш сайт.',
     en: 'Professional platform for creating and managing interactive real estate floor plans. Upload plans, configure apartments, and embed widgets on your website.',
-    ka: 'პროფესიონალური პლატფორმა ინტერაქტიული უძრავი ქონების გეგმების შესაქმნელად და მართვისთვის. ატვირთეთ გეგმები, კონფიგურაცია გაუკეთეთ ბინებს და ჩადეთ ვიჯეტები თქვენს ვებსაიტზე.'
+    ka: 'პროფესიონალური პლატფორმა ინტერაქტიული უძრავი ქონების გეგმების შესაქმნელად და მართვისთვის. ატვირთეთ გეგმები, კონფიგურაცია გაუკეთეთ ბინებს და ჩადეთ ვიჯეტები თქვენს ვებსაიტზე.',
+    ar: 'منصة احترافية لإنشاء وإدارة مخططات العقارات التفاعلية. ارفع المخططات، اضبط الشقق، وادمج الأدوات في موقعك.'
   },
   'landing.getStarted': {
     ru: 'Начать работу',
     en: 'Get Started',
-    ka: 'დაწყება'
+    ka: 'დაწყება',
+    ar: 'ابدأ الآن'
   },
   'landing.viewDemo': {
     ru: 'Посмотреть демо',
     en: 'View Demo',
-    ka: 'დემოს ნახვა'
+    ka: 'დემოს ნახვა',
+    ar: 'عرض التوضيحي'
   },
   'landing.features': {
     ru: 'Возможности платформы',
     en: 'Platform Features',
-    ka: 'პლატფორმის შესაძლებლობები'
+    ka: 'პლატფორმის შესაძლებლობები',
+    ar: 'ميزات المنصة'
   },
   'landing.planUpload': {
     ru: 'Загрузка планов',
     en: 'Plan Upload',
-    ka: 'გეგმების ატვირთვა'
+    ka: 'გეგმების ატვირთვა',
+    ar: 'رفع المخططات'
   },
   'landing.planUploadDesc': {
     ru: 'Загружайте изображения планов зданий и создавайте интерактивные карты квартир',
     en: 'Upload building plan images and create interactive apartment maps',
-    ka: 'ატვირთეთ შენობის გეგმების სურათები და შექმენით ინტერაქტიული ბინების რუკები'
+    ka: 'ატვირთეთ შენობის გეგმების სურათები და შექმენით ინტერაქტიული ბინების რუკები',
+    ar: 'ارفع صور مخططات المباني وأنشئ خرائط شقق تفاعلية'
   },
   'landing.interactiveEditing': {
     ru: 'Интерактивное редактирование',
     en: 'Interactive Editing',
-    ka: 'ინტერაქტიული რედაქტირება'
+    ka: 'ინტერაქტიული რედაქტირება',
+    ar: 'التحرير التفاعلي'
   },
   'landing.interactiveEditingDesc': {
     ru: 'Создавайте и редактируйте полигоны квартир прямо в браузере с помощью удобного редактора',
     en: 'Create and edit apartment polygons directly in the browser with a convenient editor',
-    ka: 'შექმენით და დაარედაქტირეთ ბინების პოლიგონები პირდაპირ ბრაუზერში მოსახერხებელი რედაქტორით'
+    ka: 'შექმენით და დაარედაქტირეთ ბინების პოლიგონები პირდაპირ ბრაუზერში მოსახერხებელი რედაქტორით',
+    ar: 'أنشئ وحرر مضلعات الشقق مباشرة في المتصفح بمحرر مريح'
   },
   'landing.excelIntegration': {
     ru: 'Интеграция с Excel',
     en: 'Excel Integration',
-    ka: 'Excel ინტეგრაცია'
+    ka: 'Excel ინტეგრაცია',
+    ar: 'تكامل Excel'
   },
   'landing.excelIntegrationDesc': {
     ru: 'Импортируйте данные о квартирах из Excel файлов и синхронизируйте информацию',
     en: 'Import apartment data from Excel files and synchronize information',
-    ka: 'იმპორტი გაუკეთეთ ბინების მონაცემებს Excel ფაილებიდან და სინქრონიზაცია გაუკეთეთ ინფორმაციას'
+    ka: 'იმპორტი გაუკეთეთ ბინების მონაცემებს Excel ფაილებიდან და სინქრონიზაცია გაუკეთეთ ინფორმაციას',
+    ar: 'استورد بيانات الشقق من ملفات Excel وزامن المعلومات'
   },
   'landing.embeddableWidget': {
     ru: 'Встраиваемые виджеты',
     en: 'Embeddable Widgets',
-    ka: 'ჩასადები ვიჯეტები'
+    ka: 'ჩასადები ვიჯეტები',
+    ar: 'ويجتات قابلة للدمج'
   },
   'landing.embeddableWidgetDesc': {
     ru: 'Встраивайте интерактивные планы на ваш сайт с помощью простого HTML кода',
     en: 'Embed interactive plans on your website with simple HTML code',
-    ka: 'ჩადეთ ინტერაქტიული გეგმები თქვენს ვებსაიტზე მარტივი HTML კოდით'
+    ka: 'ჩადეთ ინტერაქტიული გეგმები თქვენს ვებსაიტზე მარტივი HTML კოდით',
+    ar: 'ادمج المخططات التفاعلية في موقعك بكود HTML بسيط'
   },
   'landing.statusManagement': {
     ru: 'Управление статусами',
     en: 'Status Management',
-    ka: 'სტატუსების მართვა'
+    ka: 'სტატუსების მართვა',
+    ar: 'إدارة الحالة'
   },
   'landing.statusManagementDesc': {
     ru: 'Отслеживайте статусы квартир: доступно, забронировано, продано',
     en: 'Track apartment statuses: available, reserved, sold',
-    ka: 'თვალყურის დევნება ბინების სტატუსებზე: ხელმისაწვდომი, დაჯავშნული, გაყიდული'
+    ka: 'თვალყურის დევნება ბინების სტატუსებზე: ხელმისაწვდომი, დაჯავშნული, გაყიდული',
+    ar: 'تتبع حالات الشقق: متاح، محجوز، مباع'
   },
   'landing.multiProject': {
     ru: 'Мульти-проекты',
     en: 'Multi-Projects',
-    ka: 'მრავალი პროექტი'
+    ka: 'მრავალი პროექტი',
+    ar: 'مشاريع متعددة'
   },
   'landing.multiProjectDesc': {
     ru: 'Управляйте несколькими проектами недвижимости в одной панели администратора',
     en: 'Manage multiple real estate projects in one admin panel',
-    ka: 'მართეთ რამდენიმე უძრავი ქონების პროექტი ერთ ადმინ პანელში'
+    ka: 'მართეთ რამდენიმე უძრავი ქონების პროექტი ერთ ადმინ პანელში',
+    ar: 'أدر عدة مشاريع عقارية في لوحة إدارة واحدة'
   },
   'landing.readyToStart': {
     ru: 'Готовы начать?',
     en: 'Ready to Start?',
-    ka: 'მზად ხართ დასაწყებად?'
+    ka: 'მზად ხართ დასაწყებად?',
+    ar: 'مستعد للبدء؟'
   },
   'landing.readyToStartDesc': {
     ru: 'Создайте свой первый интерактивный план недвижимости уже сегодня',
     en: 'Create your first interactive real estate plan today',
-    ka: 'შექმენით თქვენი პირველი ინტერაქტიული უძრავი ქონების გეგმა დღესვე'
+    ka: 'შექმენით თქვენი პირველი ინტერაქტიული უძრავი ქონების გეგმა დღესვე',
+    ar: 'أنشئ مخططك العقاري التفاعلي الأول اليوم'
   },
   'landing.enterAdmin': {
     ru: 'Войти в админ панель',
     en: 'Enter Admin Panel',
-    ka: 'ადმინ პანელში შესვლა'
+    ka: 'ადმინ პანელში შესვლა',
+    ar: 'دخول لوحة الإدارة'
   },
   'landing.copyright': {
     ru: '© 2024 RealEstate SaaS. Все права защищены.',
@@ -549,152 +646,182 @@ const translations: Translations = {
   'landing.stats.companies': {
     ru: 'Компаний',
     en: 'Companies',
-    ka: 'კომპანია'
+    ka: 'კომპანია',
+    ar: 'شركات'
   },
   'landing.stats.uptime': {
     ru: 'Время работы',
     en: 'Uptime',
-    ka: 'ხელმისაწვდომობა'
+    ka: 'ხელმისაწვდომობა',
+    ar: 'وقت التشغيل'
   },
   'landing.stats.support': {
     ru: 'Поддержка',
     en: 'Support',
-    ka: 'მხარდაჭერა'
+    ka: 'მხარდაჭერა',
+    ar: 'الدعم'
   },
   'landing.toolsHeadline': {
     ru: 'Мощные инструменты для создания интерактивных планов недвижимости',
     en: 'Powerful tools to build interactive real estate floor plans',
-    ka: 'ძლიერი ინსტრუმენტები ინტერაქტიული გეგმების შესაქმნელად'
+    ka: 'ძლიერი ინსტრუმენტები ინტერაქტიული გეგმების შესაქმნელად',
+    ar: 'أدوات قوية لبناء مخططات عقارية تفاعلية'
   },
   'landing.feature.quickSetup.title': {
     ru: 'Быстрая настройка',
     en: 'Quick setup',
-    ka: 'სწრაფი მონტაჟი'
+    ka: 'სწრაფი მონტაჟი',
+    ar: 'إعداد سريع'
   },
   'landing.feature.quickSetup.desc': {
     ru: 'Создайте проект за 5 минут',
     en: 'Create a project in 5 minutes',
-    ka: 'შექმენით პროექტი 5 წუთში'
+    ka: 'შექმენით პროექტი 5 წუთში',
+    ar: 'أنشئ مشروعاً في 5 دقائق'
   },
   'landing.feature.security.title': {
     ru: 'Безопасность',
     en: 'Security',
-    ka: 'უსაფრთხოება'
+    ka: 'უსაფრთხოება',
+    ar: 'الأمان'
   },
   'landing.feature.security.desc': {
     ru: 'Защищенное хранение данных',
     en: 'Secure data storage',
-    ka: 'მონაცემთა დაცული შენახვა'
+    ka: 'მონაცემთა დაცული შენახვა',
+    ar: 'تخزين آمن للبيانات'
   },
   'landing.feature.multilang.title': {
     ru: 'Мультиязычность',
     en: 'Multilingual',
-    ka: 'მრავალენოვანი'
+    ka: 'მრავალენოვანი',
+    ar: 'متعدد اللغات'
   },
   'landing.feature.multilang.desc': {
     ru: 'Поддержка 3 языков',
     en: 'Supports 3 languages',
-    ka: 'მხარდაჭერა 3 ენა'
+    ka: 'მხარდაჭერა 3 ენა',
+    ar: 'يدعم 4 لغات'
   },
   'landing.feature.mobile.title': {
     ru: 'Мобильная версия',
     en: 'Mobile friendly',
-    ka: 'მობილური ვერსია'
+    ka: 'მობილური ვერსია',
+    ar: 'متوافق مع الهاتف'
   },
   'landing.feature.mobile.desc': {
     ru: 'Работает на всех устройствах',
     en: 'Works on all devices',
-    ka: 'მუშაობს ყველა მოწყობილობაზე'
+    ka: 'მუშაობს ყველა მოწყობილობაზე',
+    ar: 'يعمل على جميع الأجهزة'
   },
   'landing.feature.simplicity.title': {
     ru: 'Простота',
     en: 'Simplicity',
-    ka: 'სიმარტივე'
+    ka: 'სიმარტივე',
+    ar: 'البساطة'
   },
   'landing.feature.simplicity.desc': {
     ru: 'Интуитивный интерфейс',
     en: 'Intuitive interface',
-    ka: 'ინტუიციური ინტერფეისი'
+    ka: 'ინტუიციური ინტერფეისი',
+    ar: 'واجهة بديهية'
   },
   'landing.feature.quality.title': {
     ru: 'Качество',
     en: 'Quality',
-    ka: 'ხარისხი'
+    ka: 'ხარისხი',
+    ar: 'الجودة'
   },
   'landing.feature.quality.desc': {
     ru: 'Профессиональный результат',
     en: 'Professional results',
-    ka: 'პროფესიონალური შედეგი'
+    ka: 'პროფესიონალური შედეგი',
+    ar: 'نتائج مهنية'
   },
   'landing.testimonials.title': {
     ru: 'Отзывы наших клиентов',
     en: 'What our clients say',
-    ka: 'რას ამბობენ ჩვენი კლიენტები'
+    ka: 'რას ამბობენ ჩვენი კლიენტები',
+    ar: 'ماذا يقول عملاؤنا'
   },
   'landing.testimonials.subtitle': {
     ru: 'Узнайте, что говорят о нас профессионалы рынка недвижимости',
     en: 'Hear from real estate professionals who use our product',
-    ka: 'გაიგეთ რას ამბობენ უძრავი ქონების პროფესიონალები'
+    ka: 'გაიგეთ რას ამბობენ უძრავი ქონების პროფესიონალები',
+    ar: 'اسمع من محترفي العقارات الذين يستخدمون منتجنا'
   },
   'landing.testimonials.ratingSummary': {
     ru: '4.9/5 средняя оценка от 100+ клиентов',
     en: '4.9/5 average rating from 100+ clients',
-    ka: '4.9/5 საშუალო შეფასება 100+ კლიენტისგან'
+    ka: '4.9/5 საშუალო შეფასება 100+ კლიენტისგან',
+    ar: '4.9/5 متوسط التقييم من 100+ عميل'
   },
   'landing.trialBadge': {
     ru: 'Бесплатный пробный период • Без обязательств • Настройка за 5 минут',
     en: 'Free trial • No commitment • Setup in 5 minutes',
-    ka: 'უფასო საცდელი • ვალდებულებების გარეშე • მონტაჟი 5 წუთში'
+    ka: 'უფასო საცდელი • ვალდებულებების გარეშე • მონტაჟი 5 წუთში',
+    ar: 'تجربة مجانية • بدون التزام • إعداد في 5 دقائق'
   },
   'footer.quickLinks': {
     ru: 'Быстрые ссылки',
     en: 'Quick links',
-    ka: 'სწრაფი ბმულები'
+    ka: 'სწრაფი ბმულები',
+    ar: 'روابط سريعة'
   },
   'footer.demo': {
     ru: 'Демо',
     en: 'Demo',
-    ka: 'დემო'
+    ka: 'დემო',
+    ar: 'عرض توضيحي'
   },
   'footer.docs': {
     ru: 'Документация',
     en: 'Documentation',
-    ka: 'დოკუმენტაცია'
+    ka: 'დოკუმენტაცია',
+    ar: 'التوثيق'
   },
   'footer.support': {
     ru: 'Поддержка',
     en: 'Support',
-    ka: 'მხარდაჭერა'
+    ka: 'მხარდაჭერა',
+    ar: 'الدعم'
   },
   'footer.legal': {
     ru: 'Правовая информация',
     en: 'Legal',
-    ka: 'იურიდიული ინფორმაცია'
+    ka: 'იურიდიული ინფორმაცია',
+    ar: 'قانوني'
   },
   'footer.privacy': {
     ru: 'Политика конфиденциальности',
     en: 'Privacy Policy',
-    ka: 'კონფიდენციალურობის პოლიტიკა'
+    ka: 'კონფიდენციალურობის პოლიტიკა',
+    ar: 'سياسة الخصوصية'
   },
   'footer.terms': {
     ru: 'Пользовательское соглашение',
     en: 'Terms of Service',
-    ka: 'მომხმარებლის შეთანხმება'
+    ka: 'მომხმარებლის შეთანხმება',
+    ar: 'شروط الخدمة'
   },
   'footer.cookie': {
     ru: 'Cookie Policy',
     en: 'Cookie Policy',
-    ka: 'ქუქის პოლიტიკა'
+    ka: 'ქუქის პოლიტიკა',
+    ar: 'سياسة ملفات تعريف الارتباط'
   },
   'footer.company': {
     ru: 'Компания',
     en: 'Company',
-    ka: 'კომპანია'
+    ka: 'კომპანია',
+    ar: 'الشركة'
   },
   'footer.address': {
     ru: 'Адрес',
     en: 'Address',
-    ka: 'მისამართი'
+    ka: 'მისამართი',
+    ar: 'العنوان'
   },
   'footer.email': {
     ru: 'Email',
@@ -1801,6 +1928,12 @@ const translations: Translations = {
     ru: 'ქართული',
     en: 'Georgian',
     ka: 'ქართული'
+  },
+  'language.ar': {
+    ru: 'Арабский',
+    en: 'Arabic',
+    ka: 'არაბული',
+    ar: 'العربية'
   },
 
   // Admin Settings
@@ -3417,9 +3550,6 @@ const translations: Translations = {
   'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი' },
   'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი' },
   'admin.leads': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები' },
-  'admin.widgets': { ru: 'Виджеты', en: 'Widgets', ka: 'ვიჯეტები' },
-  'admin.analytics': { ru: 'Аналитика', en: 'Analytics', ka: 'ანალიტიკა' },
-  'admin.settings': { ru: 'Настройки', en: 'Settings', ka: 'პარამეტრები' },
   'projectEditor.general': { ru: 'Основное', en: 'General', ka: 'ძირითადი' },
   'projectEditor.apartmentsTab': { ru: 'Квартиры', en: 'Apartments', ka: 'ბინები' },
   'projectEditor.floorplan': { ru: 'Планировки', en: 'Floor plans', ka: 'გეგმები' },
@@ -3505,19 +3635,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Get language from URL path directly
-  const getCurrentLanguageFromURL = () => {
-    return getLanguageFromPath(location.pathname);
-  };
-
   // Initialize language from URL path or default
   const [language, setLanguageState] = useState<Language>(() => {
-    return getCurrentLanguageFromURL();
+    return getLanguageFromPath(location.pathname);
   });
 
   // Update language when URL changes
   useEffect(() => {
-    const urlLanguage = getCurrentLanguageFromURL();
+    const urlLanguage = getLanguageFromPath(location.pathname);
     if (urlLanguage !== language) {
       setLanguageState(urlLanguage);
     }
@@ -3537,7 +3662,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
 
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const translation = translations[key]?.[language] || key;
+    const base = translations[key] || {};
+    const translation = (base[language] ?? base.en ?? base.ru ?? key);
     
     if (params) {
       return Object.keys(params).reduce((text, param) => {
@@ -3583,7 +3709,8 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
   };
 
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const translation = translations[key]?.[language] || key;
+    const base = translations[key] || {};
+    const translation = (base[language] ?? base.en ?? base.ru ?? key);
     
     if (params) {
       return Object.keys(params).reduce((text, param) => {

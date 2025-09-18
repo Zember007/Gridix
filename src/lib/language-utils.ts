@@ -1,12 +1,7 @@
-export type Language = 'ru' | 'en' | 'ka';
+export type Language = 'ru' | 'en' | 'ka' | 'ar';
 
 export const LANGUAGE_CONFIG = {
-  ru: {
-    code: 'ru',
-    urlPrefix: '/ru',
-    name: 'Русский',
-    flag: '🇷🇺'
-  },
+ 
   en: {
     code: 'en',
     urlPrefix: '/en',
@@ -18,6 +13,18 @@ export const LANGUAGE_CONFIG = {
     urlPrefix: '/ge', // Using /ge/ for Georgian as requested
     name: 'ქართული',
     flag: '🇬🇪'
+  },
+  ar: {
+    code: 'ar',
+    urlPrefix: '/ar',
+    name: 'العربية',
+    flag: '🇸🇦'
+  },
+  ru: {
+    code: 'ru',
+    urlPrefix: '/ru',
+    name: 'Русский',
+    flag: '🇷🇺'
   }
 } as const;
 
