@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Code, Eye, Settings, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUserProjects } from '@/hooks/useProjects';
+import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface Project {
   id: string;
@@ -202,7 +203,9 @@ export default RealEstateWidget;`;
           <CardContent>
             <div className="bg-gray-100 p-4 rounded-lg min-h-[400px] flex items-center justify-center">
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-real-estate-600 rounded-lg mx-auto flex items-center justify-center">
+                <div 
+                style={{ backgroundColor: ADMIN_THEME.primary }}
+                className="w-16 h-16 bg-real-estate-600 rounded-lg mx-auto flex items-center justify-center">
                   <Eye className="h-8 w-8 text-white" />
                 </div>
                 <div>
@@ -212,6 +215,7 @@ export default RealEstateWidget;`;
                   </p>
                   {previewUrl && (
                     <Button
+                      style={{ backgroundColor: ADMIN_THEME.primary }}
                       size="sm"
                       variant="outline"
                       onClick={() => window.open(previewUrl, '_blank')}

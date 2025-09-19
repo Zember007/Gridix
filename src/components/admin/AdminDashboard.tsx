@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck } from 'lucide-react';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import ManagerProjectList from '@/components/projects/ManagerProjectList';
 import AdminSettings from './AdminSettings';
@@ -26,6 +27,14 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
@@ -109,6 +118,17 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                   size="sm" 
                   onClick={handleSignOut}
                   className="flex items-center gap-2 self-end"
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                    borderColor: ADMIN_THEME.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                  }}
                 >
                   <LogOut className="h-4 w-4" />
                   {t('auth.signOut')}
@@ -237,6 +257,17 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                   size="sm" 
                   onClick={handleSignOut}
                   className="flex items-center gap-2"
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                    borderColor: ADMIN_THEME.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                  }}
                 >
                   <LogOut className="h-4 w-4" />
                   {t('auth.signOut')}

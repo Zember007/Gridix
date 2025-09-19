@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { useUserProjects, useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,14 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
   const { user } = useAuth();
   const { projects, loading, error, refresh } = useUserProjects(developerId || user?.id);
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
 
   // Удаляем старую функцию loadProjects, так как теперь используется хук
 
@@ -74,7 +83,10 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Building2 className="h-8 w-8 text-real-estate-600 animate-pulse" />
+        <Building2 
+          className="h-8 w-8 animate-pulse" 
+          style={{ color: ADMIN_THEME.primary }}
+        />
       </div>
     );
   }
@@ -94,8 +106,17 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
             </p>
             <Button
               onClick={onCreateNew}
-              className="bg-real-estate-600 hover:bg-real-estate-700"
               size="lg"
+              style={{
+                backgroundColor: ADMIN_THEME.primary,
+                color: ADMIN_THEME.textOnPrimary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+              }}
             >
               <Plus className="h-5 w-5 mr-2" />
               {t('projectList.createFirst')}
@@ -107,12 +128,25 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
           {/* Header with Create New Project Button */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-real-estate-900">{t('projectList.projects')}</h2>
-              <p className="text-real-estate-600">{t('projectList.manageDescription')}</p>
+              <h2
+              style={{ color: ADMIN_THEME.textPrimary }}
+              className="text-xl font-semibold text-real-estate-900">{t('projectList.projects')}</h2>
+              <p 
+              style={{ color: ADMIN_THEME.textSecondary }}
+              className="text-real-estate-600">{t('projectList.manageDescription')}</p>
             </div>
             <Button
               onClick={onCreateNew}
-              className="bg-real-estate-600 hover:bg-real-estate-700"
+              style={{
+                backgroundColor: ADMIN_THEME.primary,
+                color: ADMIN_THEME.textOnPrimary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+              }}
             >
               <Plus className="h-5 w-5 mr-2" />
               {t('projectList.createNew')}
@@ -125,10 +159,14 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg text-real-estate-900 group-hover:text-real-estate-700 transition-colors line-clamp-1">
+                    <CardTitle
+                    style={{ color: ADMIN_THEME.textPrimary }}
+                    className="text-lg text-real-estate-900 group-hover:text-real-estate-700 transition-colors line-clamp-1">
                       {project.name}
                     </CardTitle>
-                    <CardDescription className="mt-1 line-clamp-2">
+                    <CardDescription
+                    style={{ color: ADMIN_THEME.textSecondary }}
+                    className="mt-1 line-clamp-2">
                       {project.description || 'Описание отсутствует'}
                     </CardDescription>
                   </div>
@@ -146,18 +184,25 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-real-estate-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="h-12 w-12 text-real-estate-400" />
+                    <div 
+                    className="aspect-video bg-real-estate-100 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: ADMIN_THEME.backgroundSecondary }}
+                    >
+                      <Building2 className="h-12 w-12 text-real-estate-400" style={{ color: ADMIN_THEME.textSecondary }} />
                     </div>
                   )}
 
                   {/* Project Info */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <Badge variant="outline" className="border-real-estate-300 text-real-estate-700">
+                      <Badge
+                      style={{ color: ADMIN_THEME.textSecondary }}
+                      variant="outline" className="border-real-estate-300 text-real-estate-700">
                         {project.floors} этажей
                       </Badge>
-                      <span className="text-real-estate-500">
+                      <span
+                      style={{ color: ADMIN_THEME.textSecondary }}
+                      className="text-real-estate-500">
                         {new Date(project.created_at).toLocaleDateString('ru-RU')}
                       </span>
                     </div>
@@ -171,7 +216,17 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                     <Button
                       size="sm"
                       onClick={() => viewProject(project.id)}
-                      className="bg-real-estate-600 hover:bg-real-estate-700 text-white flex-1"
+                      className="flex-1"
+                      style={{
+                        backgroundColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.textOnPrimary,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                      }}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Открыть
@@ -181,7 +236,16 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       size="sm"
                       variant="outline"
                       onClick={() => onEditProject(project.id, false)}
-                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                      style={{
+                        borderColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.primary,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       <Edit3 className="h-4 w-4" />
                     </Button>
@@ -190,7 +254,16 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       size="sm"
                       variant="outline"
                       onClick={() => copyWidgetCode(project.id)}
-                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                      style={{
+                        borderColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.primary,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>

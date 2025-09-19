@@ -16,6 +16,7 @@ import type { Json } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/hooks/useProjects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
@@ -554,6 +555,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
 
       <div className="flex gap-2 pt-4 border-t">
         <Button
+          style={{ backgroundColor: ADMIN_THEME.primary }}
           onClick={() => handleSaveApartment(apartment, isNew)}
           className="bg-real-estate-600 hover:bg-real-estate-700"
         >
@@ -611,6 +613,7 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
               {t('floorManagement.manageFloors')}
             </Button>
             <Button
+              style={{ backgroundColor: ADMIN_THEME.primary }}
               onClick={() => setIsAddingNew(true)}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >

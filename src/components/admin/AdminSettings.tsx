@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, User, Building } from 'lucide-react';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, UserProfile } from '@/contexts/AuthContext';
@@ -40,6 +41,14 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
     company_name: '',
   });
   const [saving, setSaving] = useState(false);
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
 
   useEffect(() => {
     console.log('userProfile', userProfile);
@@ -91,7 +100,10 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div 
+          className="animate-spin rounded-full h-8 w-8 border-b-2"
+          style={{ borderColor: ADMIN_THEME.primary }}
+        ></div>
       </div>
     );
   }
@@ -105,7 +117,24 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
         </div>
         <div className="flex items-center gap-2">
           <LanguageToggle />
-          <Button onClick={handleSave} disabled={saving}>
+          <Button 
+            onClick={handleSave} 
+            disabled={saving}
+            style={{
+              backgroundColor: ADMIN_THEME.primary,
+              color: ADMIN_THEME.textOnPrimary,
+            }}
+            onMouseEnter={(e) => {
+              if (!saving) {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!saving) {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+              }
+            }}
+          >
             <Save className="h-4 w-4 mr-2" />
             {saving ? t('adminSettings.saving') : t('adminSettings.save')}
           </Button>

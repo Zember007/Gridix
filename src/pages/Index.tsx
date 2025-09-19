@@ -43,142 +43,69 @@ const Index = () => {
 
   const data = [
     {
-      title: "2024",
+      title: "Готовые виджеты для любого сайта",
       content: (
         <div>
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            Built and launched Aceternity UI and Aceternity UI Pro from scratch
+            Встраиваемые интерактивные планы одной строкой кода. Работает на любой CMS (WordPress, Tilda, 1C-Битрикс).
           </p>
           <div className="grid grid-cols-2 gap-4">
-            <img
-              src="https://assets.aceternity.com/templates/startup-1.webp"
-              alt="startup template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/templates/startup-2.webp"
-              alt="startup template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/templates/startup-3.webp"
-              alt="startup template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/templates/startup-4.webp"
-              alt="startup template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+            >
+              Ваш браузер не поддерживает видео.
+            </video>
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
           </div>
         </div>
       ),
     },
     {
-      title: "Early 2023",
+      title: "Импорт данных",
       content: (
         <div>
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            I usually run out of copy, but when I see content this big, I try to
-            integrate lorem ipsum.
-          </p>
-          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            Lorem ipsum is for people who are too lazy to write copy. But we are
-            not. Here are some more example of beautiful designs I built.
+            Загрузите статусы и цены квартир из Excel, CSV или Google Sheets. Все данные автоматически подтянутся в систему.
           </p>
           <div className="grid grid-cols-2 gap-4">
-            <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
-              alt="hero template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
-            <img
-              src="https://assets.aceternity.com/features-section.png"
-              alt="feature template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/pro/bento-grids.png"
-              alt="bento template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/cards.png"
-              alt="cards template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
           </div>
         </div>
       ),
     },
     {
-      title: "Changelog",
+      title: "Интеграция с популярными CRM",
       content: (
         <div>
-          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-4">
-            Deployed 5 new components on Aceternity today
+          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
+            Автоматическая передача лидов и данных о квартирах в AmoCRM, Bitrix24, HubSpot и другие CRM.
+            Никаких потерянных заявок — все клиенты сразу в вашей воронке.
           </p>
-          <div className="mb-8">
-            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
-              ✅ Card grid component
-            </div>
-            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
-              ✅ Startup template Aceternity
-            </div>
-            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
-              ✅ Random file upload lol
-            </div>
-            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
-              ✅ Himesh Reshammiya Music CD
-            </div>
-            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
-              ✅ Salman Bhai Fan Club registrations open
-            </div>
-          </div>
           <div className="grid grid-cols-2 gap-4">
-            <img
-              src="https://assets.aceternity.com/pro/hero-sections.png"
-              alt="hero template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
-            <img
-              src="https://assets.aceternity.com/features-section.png"
-              alt="feature template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/pro/bento-grids.png"
-              alt="bento template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
-            />
-            <img
-              src="https://assets.aceternity.com/cards.png"
-              alt="cards template"
-              width={500}
-              height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            <video
+              src=""
+              controls
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
           </div>
         </div>
@@ -190,28 +117,28 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
       <HeroHeader />
-      <HeroSection 
-       title="Build faster with beautiful components"
-       description="Premium UI components built with React and Tailwind CSS. Save time and ship your next project faster with our ready-to-use components."
-       actions={[
-         {
-           text: "Get Started",
-           href: "/docs/getting-started",
-           variant: "default",
-         },
-         
-       ]}
-       image={{
-         light: "https://www.launchuicomponents.com/app-light.png",
-         dark: "https://www.launchuicomponents.com/app-dark.png",
-         alt: "UI Components Preview",
-       }}
-      />
-   
+      <HeroSection
+        title="Интерактивные планы для застройщиков и риелторов"
+        description="Gridix помогает создавать наглядные и удобные планы недвижимости: отмечайте статус квартир, подключайте интеграции с CRM и делитесь планами одной строкой кода. Всё просто, быстро и без лишних затрат."
+        actions={[
+          {
+            text: "Get Started",
+            href: "/docs/getting-started",
+            variant: "default",
+          },
 
-       <Timeline
+        ]}
+        image={{
+          light: "https://www.launchuicomponents.com/app-light.png",
+          dark: "https://www.launchuicomponents.com/app-dark.png",
+          alt: "UI Components Preview",
+        }}
+      />
+
+
+      <Timeline
         data={data}
-       />
+      />
 
 
 
@@ -219,9 +146,9 @@ const Index = () => {
         titleComponent={
           <>
             <h1 className="text-4xl font-semibold text-black dark:text-white">
-              Unleash the power of <br />
+              как это выглядит <br />
               <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
-                Scroll Animations
+                ИНТЕРАКТИВНОЕ ДЕМО
               </span>
             </h1>
           </>
@@ -232,16 +159,16 @@ const Index = () => {
           src={`https://gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
           width="100%"
           height="100%"
-          >
+        >
         </iframe>
 
-  
+
 
       </ContainerScroll>
 
 
-      <WorldMap 
-      labelClassName="text-[7px]"
+      <WorldMap
+        labelClassName="text-[7px]"
         dots={[
           // 1. Турция -> ОАЭ
           {
@@ -310,7 +237,7 @@ const Index = () => {
       />
 
 
-    
+
 
       {/* CTA Section */}
       <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gray-900 text-gray-100 relative overflow-hidden`}>
@@ -345,7 +272,7 @@ const Index = () => {
             <div className="relative group">
               {/* Glow effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
-              
+
               <Button
                 size="lg"
                 className={`relative bg-white text-gray-900 hover:bg-gray-100 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-6'} font-semibold`}

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X } from 'lucide-react';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -85,6 +86,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { project: cachedProject } = useProject(projectId);
   const { updateProject } = useProjectCRUD();
   const isMobile = useIsMobile();
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
 
   const loadProject = useCallback(async () => {
     try {
@@ -382,7 +391,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div 
+          className="animate-spin rounded-full h-8 w-8 border-b-2"
+          style={{ borderColor: ADMIN_THEME.primary }}
+        ></div>
       </div>
     );
   }
@@ -455,7 +467,24 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <LanguageToggle />
-                <Button onClick={handleSave} disabled={saving}>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                    }
+                  }}
+                >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? t('projectEditor.saving') : t('projectEditor.save')}
                 </Button>
@@ -727,7 +756,25 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </div>
 
                 {isNew && (
-              <Button onClick={handleSave} disabled={saving} className="w-full">
+              <Button 
+                onClick={handleSave} 
+                disabled={saving} 
+                className="w-full"
+                style={{
+                  backgroundColor: ADMIN_THEME.primary,
+                  color: ADMIN_THEME.textOnPrimary,
+                }}
+                onMouseEnter={(e) => {
+                  if (!saving) {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!saving) {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                  }
+                }}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? t('projectEditor.saving') : t('projectEditor.save&continue')}
               </Button>
@@ -814,7 +861,24 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <LanguageToggle />
-                <Button onClick={handleSave} disabled={saving}>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                    }
+                  }}
+                >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? t('projectEditor.saving') : t('projectEditor.save')}
                 </Button>
@@ -1069,7 +1133,25 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </div>
 
                   {isNew && (
-                    <Button onClick={handleSave} disabled={saving} className="w-full">
+                    <Button 
+                      onClick={handleSave} 
+                      disabled={saving} 
+                      className="w-full"
+                      style={{
+                        backgroundColor: ADMIN_THEME.primary,
+                        color: ADMIN_THEME.textOnPrimary,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                        }
+                      }}
+                    >
                       <Save className="h-4 w-4 mr-2" />
                       {saving ? t('projectEditor.saving') : t('projectEditor.save&continue')}
                     </Button>

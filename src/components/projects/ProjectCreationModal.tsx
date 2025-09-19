@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/data-import/ExcelColumnMapper';
 import ExcelUrlImporter from '@/components/data-import/ExcelUrlImporter';
 import * as XLSX from 'xlsx';
+import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface ProjectCreationModalProps {
   open: boolean;
@@ -244,7 +245,8 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               onValueChange={(value) => setSameLayoutForAllFloors(value === 'true')}
             >
               <div className="space-y-4">
-                <Card className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
+                <Card 
+                className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
                   <div className="flex items-start space-x-3">
                     <RadioGroupItem value="true" id="same-layout" className="mt-1" />
                     <div className="flex-1">

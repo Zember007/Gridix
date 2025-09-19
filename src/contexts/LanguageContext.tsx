@@ -1779,47 +1779,56 @@ const translations: Translations = {
   'projectEditor.uploadPdf': {
     ru: 'Загрузить PDF',
     en: 'Upload PDF',
-    ka: 'PDF ატვირთვა'
+    ka: 'PDF ატვირთვა',
+    ar: 'رفع PDF'
   },
   'projectEditor.saveProjectFirstNote': {
     ru: 'Сначала сохраните проект',
     en: 'Save the project first',
-    ka: 'ჯერ შეინახეთ პროექტი'
+    ka: 'ჯერ შეინახეთ პროექტი',
+    ar: 'احفظ المشروع أولاً'
   },
   'projectEditor.saveProjectFirst': {
     ru: 'Сначала сохраните проект',
     en: 'Please save the project first',
-    ka: 'ჯერ შეინახეთ პროექტი'
+    ka: 'ჯერ შეინახეთ პროექტი',
+    ar: 'يرجى حفظ المشروع أولاً'
   },
   'projectEditor.onlyPdfAllowed': {
     ru: 'Разрешены только PDF файлы',
     en: 'Only PDF files are allowed',
-    ka: 'მხოლოდ PDF ფაილებია დაშვებული'
+    ka: 'მხოლოდ PDF ფაილებია დაშვებული',
+    ar: 'يُسمح بملفات PDF فقط'
   },
   'projectEditor.fileTooLarge': {
     ru: 'Файл слишком большой (макс. 10 МБ)',
     en: 'File is too large (max 10MB)',
-    ka: 'ფაილი ძალიან დიდია (მაქს. 10MB)'
+    ka: 'ფაილი ძალიან დიდია (მაქს. 10MB)',
+    ar: 'الملف كبير جداً (الحد الأقصى 10 ميجابايت)'
   },
   'projectEditor.pdfUploadSuccess': {
     ru: 'PDF успешно загружен',
     en: 'PDF uploaded successfully',
-    ka: 'PDF წარმატებით აიტვირთა'
+    ka: 'PDF წარმატებით აიტვირთა',
+    ar: 'تم رفع PDF بنجاح'
   },
   'projectEditor.pdfUploadError': {
     ru: 'Ошибка загрузки PDF',
     en: 'Error uploading PDF',
-    ka: 'PDF ატვირთვის შეცდომა'
+    ka: 'PDF ატვირთვის შეცდომა',
+    ar: 'خطأ في رفع PDF'
   },
   'projectEditor.pdfRemoveSuccess': {
     ru: 'PDF удалён',
     en: 'PDF removed',
-    ka: 'PDF წაიშალა'
+    ka: 'PDF წაიშალა',
+    ar: 'تم حذف PDF'
   },
   'projectEditor.pdfRemoveError': {
     ru: 'Ошибка удаления PDF',
     en: 'Error removing PDF',
-    ka: 'PDF წაშლის შეცდომა'
+    ka: 'PDF წაშლის შეცდომა',
+    ar: 'خطأ في حذف PDF'
   },
 
   // Project List
@@ -3916,65 +3925,65 @@ const translations: Translations = {
   'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი', ar: 'لوحة الإدارة' },
   'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი', ar: 'محرر المشروع' },
   'admin.leads': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
-  'projectEditor.general': { ru: 'Основное', en: 'General', ka: 'ძირითადი' },
-  'projectEditor.apartmentsTab': { ru: 'Квартиры', en: 'Apartments', ka: 'ბინები' },
-  'projectEditor.floorplan': { ru: 'Планировки', en: 'Floor plans', ka: 'გეგმები' },
-  'projectEditor.photosTab': { ru: 'Фото', en: 'Photos', ka: 'ფოტოები' },
-  'projectEditor.fieldsTab': { ru: 'Поля', en: 'Fields', ka: 'ველები' },
-  'projectEditor.integrations': { ru: 'Интеграции', en: 'Integrations', ka: 'ინტეგრაციები' },
+  'projectEditor.general': { ru: 'Основное', en: 'General', ka: 'ძირითადი', ar: 'عام' },
+  'projectEditor.apartmentsTab': { ru: 'Квартиры', en: 'Apartments', ka: 'ბინები', ar: 'الشقق' },
+  'projectEditor.floorplan': { ru: 'Планировки', en: 'Floor plans', ka: 'გეგმები', ar: 'المخططات' },
+  'projectEditor.photosTab': { ru: 'Фото', en: 'Photos', ka: 'ფოტოები', ar: 'الصور' },
+  'projectEditor.fieldsTab': { ru: 'Поля', en: 'Fields', ka: 'ველები', ar: 'الحقول' },
+  'projectEditor.integrations': { ru: 'Интеграции', en: 'Integrations', ka: 'ინტეგრაციები', ar: 'التكاملات' },
   
   // Leads Manager
   'leads.title': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
   'leads.description': { ru: 'Все заявки от клиентов с информацией о статусе отправки в CRM', en: 'All client requests with CRM delivery status', ka: 'ყველა კლიენტის განაცხადი CRM-ში გაგზავნის სტატუსით', ar: 'جميع طلبات العملاء مع حالة الإرسال إلى CRM' },
   'leads.loading': { ru: 'Загрузка лидов...', en: 'Loading leads...', ka: 'ლიდების ჩატვირთვა...', ar: 'جار تحميل العملاء المحتملين...' },
   'leads.error': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა', ar: 'خطأ' },
-  'leads.stats.total': { ru: 'Всего лидов', en: 'Total leads', ka: 'ლიდები სულ' },
-  'leads.stats.pending': { ru: 'Ожидают', en: 'Pending', ka: 'მოლოდინში' },
-  'leads.stats.sent': { ru: 'В CRM', en: 'Sent to CRM', ka: 'გაგზავნილი CRM-ში' },
-  'leads.stats.savedOnly': { ru: 'Только в БД', en: 'Saved only', ka: 'მხოლოდ ბაზაში' },
-  'leads.stats.failed': { ru: 'С ошибками', en: 'Failed', ka: 'შეცდომით' },
-  'leads.stats.cancelled': { ru: 'Отменены', en: 'Cancelled', ka: 'გაუქმებული' },
-  'leads.filters.title': { ru: 'Фильтры', en: 'Filters', ka: 'ფილტრები' },
-  'leads.filters.status': { ru: 'Статус', en: 'Status', ka: 'სტატუსი' },
-  'leads.filters.dateFrom': { ru: 'Дата от', en: 'Date from', ka: 'თარიღი -დან' },
-  'leads.filters.dateTo': { ru: 'Дата до', en: 'Date to', ka: 'თარიღი -მდე' },
-  'leads.status.all': { ru: 'Все', en: 'All', ka: 'ყველა' },
-  'leads.status.pending': { ru: 'Ожидает', en: 'Pending', ka: 'მოლოდინში' },
-  'leads.status.sent_to_crm': { ru: 'Отправлен', en: 'Sent to CRM', ka: 'გაგზავნილი CRM-ში' },
-  'leads.status.saved_only': { ru: 'Только в БД', en: 'Saved only', ka: 'მხოლოდ ბაზაში' },
-  'leads.status.failed': { ru: 'Ошибка', en: 'Failed', ka: 'შეცდომა' },
-  'leads.status.cancelled': { ru: 'Отменен', en: 'Cancelled', ka: 'გაუქმებული' },
-  'leads.table.date': { ru: 'Дата', en: 'Date', ka: 'თარიღი' },
-  'leads.table.client': { ru: 'Клиент', en: 'Client', ka: 'კლიენტი' },
-  'leads.table.contacts': { ru: 'Контакты', en: 'Contacts', ka: 'კონტაქტები' },
-  'leads.table.project': { ru: 'Проект', en: 'Project', ka: 'პროექტი' },
-  'leads.table.apartment': { ru: 'Квартира', en: 'Apartment', ka: 'ბინა' },
-  'leads.table.status': { ru: 'Статус', en: 'Status', ka: 'სტატუსი' },
-  'leads.table.crm': { ru: 'CRM', en: 'CRM', ka: 'CRM' },
-  'leads.table.actions': { ru: 'Действия', en: 'Actions', ka: 'ქმედებები' },
-  'leads.crm.notSent': { ru: 'Не отправлен', en: 'Not sent', ka: 'გაუგზავნელი' },
-  'leads.actions.copy': { ru: 'Копировать', en: 'Copy', ka: 'კოპირება' },
-  'leads.actions.cancel': { ru: 'Отменить', en: 'Cancel', ka: 'გაუქმება' },
-  'leads.actions.editNotes': { ru: 'Редактировать заметки', en: 'Edit notes', ka: 'შენიშვნების რედაქტირება' },
-  'leads.actions.openInCrm': { ru: 'Открыть в CRM', en: 'Open in CRM', ka: 'გახსნა CRM-ში' },
+  'leads.stats.total': { ru: 'Всего лидов', en: 'Total leads', ka: 'ლიდები სულ', ar: 'إجمالي العملاء المحتملين' },
+  'leads.stats.pending': { ru: 'Ожидают', en: 'Pending', ka: 'მოლოდინში', ar: 'في الانتظار' },
+  'leads.stats.sent': { ru: 'В CRM', en: 'Sent to CRM', ka: 'გაგზავნილი CRM-ში', ar: 'مرسل إلى CRM' },
+  'leads.stats.savedOnly': { ru: 'Только в БД', en: 'Saved only', ka: 'მხოლოდ ბაზაში', ar: 'محفوظ فقط' },
+  'leads.stats.failed': { ru: 'С ошибками', en: 'Failed', ka: 'შეცდომით', ar: 'فشل' },
+  'leads.stats.cancelled': { ru: 'Отменены', en: 'Cancelled', ka: 'გაუქმებული', ar: 'ملغي' },
+  'leads.filters.title': { ru: 'Фильтры', en: 'Filters', ka: 'ფილტრები', ar: 'المرشحات' },
+  'leads.filters.status': { ru: 'Статус', en: 'Status', ka: 'სტატუსი', ar: 'الحالة' },
+  'leads.filters.dateFrom': { ru: 'Дата от', en: 'Date from', ka: 'თარიღი -დან', ar: 'التاريخ من' },
+  'leads.filters.dateTo': { ru: 'Дата до', en: 'Date to', ka: 'თარიღი -მდე', ar: 'التاريخ إلى' },
+  'leads.status.all': { ru: 'Все', en: 'All', ka: 'ყველა', ar: 'الكل' },
+  'leads.status.pending': { ru: 'Ожидает', en: 'Pending', ka: 'მოლოდინში', ar: 'في الانتظار' },
+  'leads.status.sent_to_crm': { ru: 'Отправлен', en: 'Sent to CRM', ka: 'გაგზავნილი CRM-ში', ar: 'مرسل إلى CRM' },
+  'leads.status.saved_only': { ru: 'Только в БД', en: 'Saved only', ka: 'მხოლოდ ბაზაში', ar: 'محفوظ فقط' },
+  'leads.status.failed': { ru: 'Ошибка', en: 'Failed', ka: 'შეცდომა', ar: 'فشل' },
+  'leads.status.cancelled': { ru: 'Отменен', en: 'Cancelled', ka: 'გაუქმებული', ar: 'ملغي' },
+  'leads.table.date': { ru: 'Дата', en: 'Date', ka: 'თარიღი', ar: 'التاريخ' },
+  'leads.table.client': { ru: 'Клиент', en: 'Client', ka: 'კლიენტი', ar: 'العميل' },
+  'leads.table.contacts': { ru: 'Контакты', en: 'Contacts', ka: 'კონტაქტები', ar: 'جهات الاتصال' },
+  'leads.table.project': { ru: 'Проект', en: 'Project', ka: 'პროექტი', ar: 'المشروع' },
+  'leads.table.apartment': { ru: 'Квартира', en: 'Apartment', ka: 'ბინა', ar: 'الشقة' },
+  'leads.table.status': { ru: 'Статус', en: 'Status', ka: 'სტატუსი', ar: 'الحالة' },
+  'leads.table.crm': { ru: 'CRM', en: 'CRM', ka: 'CRM', ar: 'CRM' },
+  'leads.table.actions': { ru: 'Действия', en: 'Actions', ka: 'ქმედებები', ar: 'الإجراءات' },
+  'leads.crm.notSent': { ru: 'Не отправлен', en: 'Not sent', ka: 'გაუგზავნელი', ar: 'لم يتم الإرسال' },
+  'leads.actions.copy': { ru: 'Копировать', en: 'Copy', ka: 'კოპირება', ar: 'نسخ' },
+  'leads.actions.cancel': { ru: 'Отменить', en: 'Cancel', ka: 'გაუქმება', ar: 'إلغاء' },
+  'leads.actions.editNotes': { ru: 'Редактировать заметки', en: 'Edit notes', ka: 'შენიშვნების რედაქტირება', ar: 'تحرير الملاحظات' },
+  'leads.actions.openInCrm': { ru: 'Открыть в CRM', en: 'Open in CRM', ka: 'გახსნა CRM-ში', ar: 'فتح في CRM' },
   'leads.empty': { ru: 'Лиды не найдены', en: 'No leads found', ka: 'ლიდები ვერ მოიძებნა', ar: 'لم يتم العثور على عملاء محتملين' },
-  'leads.notes.title': { ru: 'Заметки к лиду', en: 'Lead notes', ka: 'ლიდის შენიშვნები' },
-  'leads.notes.client': { ru: 'Клиент', en: 'Client', ka: 'კლიენტი' },
-  'leads.notes.placeholder': { ru: 'Введите заметки...', en: 'Enter notes...', ka: 'შეიყვანეთ შენიშვნები...' },
+  'leads.notes.title': { ru: 'Заметки к лиду', en: 'Lead notes', ka: 'ლიდის შენიშვნები', ar: 'ملاحظات العميل المحتمل' },
+  'leads.notes.client': { ru: 'Клиент', en: 'Client', ka: 'კლიენტი', ar: 'العميل' },
+  'leads.notes.placeholder': { ru: 'Введите заметки...', en: 'Enter notes...', ka: 'შეიყვანეთ შენიშვნები...', ar: 'أدخل الملاحظات...' },
   'leads.save': { ru: 'Сохранить', en: 'Save', ka: 'შენახვა', ar: 'حفظ' },
   'leads.cancel': { ru: 'Отмена', en: 'Cancel', ka: 'გაუქმება', ar: 'إلغاء' },
-  'leads.toast.copied.title': { ru: 'Скопировано', en: 'Copied', ka: 'დაკოპირდა' },
-  'leads.toast.copied.desc': { ru: 'Информация о лиде скопирована в буфер обмена', en: 'Lead info copied to clipboard', ka: 'ლიდის ინფორმაცია დაკოპირდა' },
-  'leads.toast.copyError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
-  'leads.toast.copyError.desc': { ru: 'Не удалось скопировать информацию', en: 'Failed to copy info', ka: 'ინფორმაციის კოპირება ვერ მოხერხდა' },
-  'leads.toast.cancelled.title': { ru: 'Успешно', en: 'Success', ka: 'წარმატებულია' },
-  'leads.toast.cancelled.desc': { ru: 'Лид отменен', en: 'Lead cancelled', ka: 'ლიდი გაუქმდა' },
-  'leads.toast.cancelError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
-  'leads.toast.cancelError.desc': { ru: 'Не удалось отменить лид', en: 'Failed to cancel lead', ka: 'ლიდის გაუქმება ვერ მოხერხდა' },
-  'leads.toast.notesSaved.title': { ru: 'Успешно', en: 'Success', ka: 'წარმატებულია' },
-  'leads.toast.notesSaved.desc': { ru: 'Заметки обновлены', en: 'Notes updated', ka: 'შენიშვნები განახლებულია' },
-  'leads.toast.notesError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
-  'leads.toast.notesError.desc': { ru: 'Не удалось обновить заметки', en: 'Failed to update notes', ka: 'შენიშვნების განახლება ვერ მოხერხდა' },
+  'leads.toast.copied.title': { ru: 'Скопировано', en: 'Copied', ka: 'დაკოპირდა', ar: 'تم النسخ' },
+  'leads.toast.copied.desc': { ru: 'Информация о лиде скопирована в буфер обмена', en: 'Lead info copied to clipboard', ka: 'ლიდის ინფორმაცია დაკოპირდა', ar: 'تم نسخ معلومات العميل المحتمل إلى الحافظة' },
+  'leads.toast.copyError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა', ar: 'خطأ' },
+  'leads.toast.copyError.desc': { ru: 'Не удалось скопировать информацию', en: 'Failed to copy info', ka: 'ინფორმაციის კოპირება ვერ მოხერხდა', ar: 'فشل في نسخ المعلومات' },
+  'leads.toast.cancelled.title': { ru: 'Успешно', en: 'Success', ka: 'წარმატებულია', ar: 'نجاح' },
+  'leads.toast.cancelled.desc': { ru: 'Лид отменен', en: 'Lead cancelled', ka: 'ლიდი გაუქმდა', ar: 'تم إلغاء العميل المحتمل' },
+  'leads.toast.cancelError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა', ar: 'خطأ' },
+  'leads.toast.cancelError.desc': { ru: 'Не удалось отменить лид', en: 'Failed to cancel lead', ka: 'ლიდის გაუქმება ვერ მოხერხდა', ar: 'فشل في إلغاء العميل المحتمل' },
+  'leads.toast.notesSaved.title': { ru: 'Успешно', en: 'Success', ka: 'წარმატებულია', ar: 'نجاح' },
+  'leads.toast.notesSaved.desc': { ru: 'Заметки обновлены', en: 'Notes updated', ka: 'შენიშვნები განახლებულია', ar: 'تم تحديث الملاحظات' },
+  'leads.toast.notesError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა', ar: 'خطأ' },
+  'leads.toast.notesError.desc': { ru: 'Не удалось обновить заметки', en: 'Failed to update notes', ka: 'შენიშვნების განახლება ვერ მოხერხდა', ar: 'فشل في تحديث الملاحظات' },
 
   // Countries
   'country.turkey': {
@@ -3999,7 +4008,7 @@ const translations: Translations = {
     ru: 'ДР',
     en: 'DR',
     ka: 'დრ',
-    ar: 'დრ'
+    ar: 'جمهورية الدومينيكان'
   },
   'country.indonesia': {
     ru: 'Индонезия',

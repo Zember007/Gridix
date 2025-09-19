@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import {
   Search as SearchIcon,
   LayoutDashboard as Dashboard,
@@ -87,26 +88,61 @@ function SimplifiedSidebar({
   title?: string;
 }) {
   const { t } = useLanguage();
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
+
   return (
-    <aside className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 h-screen sticky top-0 ${
-      isCollapsed ? "w-16" : "w-64"
-    }`}>
+    <aside 
+      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+      style={{
+        backgroundColor: ADMIN_THEME.sidebarBackground,
+        borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
+      }}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div 
+        className="p-4"
+        style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+      >
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-blue-600" />
-              <span className="font-semibold text-gray-900 whitespace-nowrap">{title}</span>
+              <Building2 
+                className="h-6 w-6" 
+                style={{ color: ADMIN_THEME.sidebarText }}
+              />
+              <span 
+                className="font-semibold whitespace-nowrap"
+                style={{ color: ADMIN_THEME.sidebarText }}
+              >
+                {title}
+              </span>
             </div>
           )}
           <button
             onClick={onToggleCollapse}
-            className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-md transition-colors"
+            style={{
+              color: ADMIN_THEME.sidebarText,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             title={isCollapsed ? t('common.more') : t('common.hide')}
           >
             <ChevronDownIcon 
-              className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
+              className={`h-4 w-4 transition-transform duration-300 ${
                 isCollapsed ? "rotate-90" : "-rotate-90"
               }`} 
             />
@@ -121,18 +157,31 @@ function SimplifiedSidebar({
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                activeSection === item.id
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-              } ${isCollapsed ? "justify-center px-2" : ""}`}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${isCollapsed ? "justify-center px-2" : ""}`}
+              style={{
+                backgroundColor: activeSection === item.id ? ADMIN_THEME.sidebarActiveBackground : 'transparent',
+                border: activeSection === item.id ? `1px solid ${ADMIN_THEME.sidebarActiveBorder}` : '1px solid transparent',
+                color: activeSection === item.id ? ADMIN_THEME.sidebarActiveText : ADMIN_THEME.sidebarText,
+              }}
+              onMouseEnter={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                  e.currentTarget.style.color = ADMIN_THEME.sidebarTextHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = ADMIN_THEME.sidebarText;
+                }
+              }}
               title={isCollapsed ? item.label : undefined}
             >
               <div className="flex-shrink-0">
                 {item.icon}
               </div>
               {!isCollapsed && (
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium whitespace-nowrap">{item.label}</span>
               )}
             </button>
           ))}
@@ -141,19 +190,34 @@ function SimplifiedSidebar({
 
       {/* Footer */}
       {userEmail && (
-        <div className="p-4 border-t border-gray-200">
+        <div 
+          className="p-4"
+          style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+        >
           <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <UserIcon className="h-4 w-4 text-gray-600" />
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+              >
+                <UserIcon 
+                  className="h-4 w-4" 
+                  style={{ color: ADMIN_THEME.textOnPrimary }}
+                />
               </div>
             </div>
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p 
+                  className="text-sm font-medium truncate"
+                  style={{ color: ADMIN_THEME.sidebarText }}
+                >
                   {userEmail.split('@')[0]}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p 
+                  className="text-xs truncate"
+                  style={{ color: ADMIN_THEME.textMuted }}
+                >
                   {userEmail}
                 </p>
               </div>

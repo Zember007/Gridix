@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { useUserProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,8 +20,15 @@ interface Project {
 
 const AdminWidgets = () => {
   const [selectedProject, setSelectedProject] = useState<string>('all');
-
   const [defaultLanguage, setDefaultLanguage] = useState<Language>('ru');
+
+  // Применяем CSS переменные темы
+  useEffect(() => {
+    const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value);
+    });
+  }, []);
   const { user } = useAuth();
   const { t } = useLanguage();
   const { projects, loading, error } = useUserProjects(user?.id);
@@ -79,7 +87,10 @@ const AdminWidgets = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div 
+          className="animate-spin rounded-full h-8 w-8 border-b-2"
+          style={{ borderColor: ADMIN_THEME.primary }}
+        ></div>
         <span className="ml-2">{t('adminWidgets.loading')}</span>
       </div>
     );
@@ -138,11 +149,38 @@ const AdminWidgets = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={openPreview} variant="outline" className="flex-1">
+              <Button 
+                onClick={openPreview} 
+                variant="outline" 
+                className="flex-1"
+                style={{
+                  borderColor: ADMIN_THEME.primary,
+                  color: ADMIN_THEME.primary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
                 <Eye className="h-4 w-4 mr-2" />
                 {t('adminWidgets.preview')}
               </Button>
-              <Button onClick={copyEmbedCode} className="flex-1">
+              <Button 
+                onClick={copyEmbedCode} 
+                className="flex-1"
+                style={{
+                  backgroundColor: ADMIN_THEME.primary,
+                  color: ADMIN_THEME.textOnPrimary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                }}
+              >
                 <Copy className="h-4 w-4 mr-2" />
                 {t('adminWidgets.copyCode')}
               </Button>

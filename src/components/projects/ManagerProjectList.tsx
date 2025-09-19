@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useManagerProjects, Project } from '@/hooks/useManagerProjects';
 import { toast } from 'sonner';
 import { LeadsStats } from '@/components/admin/LeadsNotification';
+import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface ManagerProjectListProps {
   onCreateNew: () => void;
@@ -100,10 +101,14 @@ const ManagerProjectList = ({ onCreateNew, onEditProject }: ManagerProjectListPr
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg text-real-estate-900 group-hover:text-real-estate-700 transition-colors line-clamp-1">
+                      <CardTitle 
+                      style={{ color: ADMIN_THEME.textPrimary }}
+                      className="text-lg text-real-estate-900 group-hover:text-real-estate-700 transition-colors line-clamp-1">
                         {project.name}
                       </CardTitle>
-                      <CardDescription className="mt-1 line-clamp-2">
+                      <CardDescription 
+                      style={{ color: ADMIN_THEME.textSecondary }}
+                      className="mt-1 line-clamp-2">
                         {project.description || 'Описание отсутствует'}
                       </CardDescription>
                       
