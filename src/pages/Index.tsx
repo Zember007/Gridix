@@ -229,7 +229,7 @@ const Index = () => {
       >
         <iframe
           id="gridix-widget"
-          src={`http://localhost:8080/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
+          src={`http://gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
           width="100%"
           height="100%"
           >
