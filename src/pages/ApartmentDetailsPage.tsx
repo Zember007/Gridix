@@ -68,7 +68,7 @@ const ApartmentDetailsPage = () => {
 
   const handleToggleFavorite = () => {
     if (!apartment) return;
-    
+
     toggleFavorite({
       id: apartment.id,
       project_id: apartment.project_id,
@@ -364,20 +364,19 @@ const ApartmentDetailsPage = () => {
           <div className="p-6 pb-32 rounded-t-3xl bg-white -mt-6 relative z-10 border">
             {/* Title and floor */}
             <div className="mb-4">
-             
+
               <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                {t('apartment.apartment')} № {apartment.apartment_number}
-              </h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  {t('apartment.apartment')} № {apartment.apartment_number}
+                </h1>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     onClick={handleToggleFavorite}
-                    className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${
-                      isFavorite(apartment?.id || '') 
-                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' 
+                    className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${isFavorite(apartment?.id || '')
+                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Heart className={`!h-5 !w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
                   </Button>
@@ -389,7 +388,7 @@ const ApartmentDetailsPage = () => {
                     <Share2 className="!h-5 !w-5 " />
                   </Button>
                 </div>
-                </div>
+              </div>
               <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
             </div>
 
@@ -538,11 +537,10 @@ const ApartmentDetailsPage = () => {
                   <Button
                     variant="outline"
                     onClick={handleToggleFavorite}
-                    className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${
-                      isFavorite(apartment?.id || '')
+                    className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${isFavorite(apartment?.id || '')
                         ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
                         : 'border-gray-200'
-                    }`}
+                      }`}
                     aria-label="favorite"
                   >
                     <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
@@ -658,76 +656,78 @@ const ApartmentDetailsPage = () => {
                 )}
               </div>
 
-              {/* Right column - Price and actions (1/3 width) */}
-              <div className="space-y-6">
-                {/* Price card */}
-                {apartment.price && (
-                  <div className="rounded-xl border bg-white shadow-sm p-6 text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">
-                      {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+              <div className="relative h-full">
+                {/* Right column - Price and actions (1/3 width) */}
+                <div className="space-y-6 w-full sticky top-10">
+                  {/* Price card */}
+                  {apartment.price && (
+                    <div className="rounded-xl border bg-white shadow-sm p-6 text-center">
+                      <div className="text-3xl font-bold text-gray-900 mb-2">
+                        {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                      </div>
+                      <p className="text-gray-500 text-sm">{t('project.price')}</p>
                     </div>
-                    <p className="text-gray-500 text-sm">{t('apartment.totalPrice')}</p>
-                  </div>
-                )}
+                  )}
 
-                {/* Action buttons */}
-                {apartment.status === 'available' && (
-                  <div className="space-y-3">
-                    <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button
-                          className="w-full text-white py-4 rounded-xl text-lg font-semibold hover:opacity-90"
-                          style={getButtonStyle('available')}
-                        >
-                          {t('common.reserve')}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                          <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
-                        </DialogHeader>
-                        <ApartmentReservationForm
-                          apartmentId={apartment.id}
-                          projectId={apartment.project_id}
-                          onSubmit={() => setIsReserveDialogOpen(false)}
-                          onCancel={() => setIsReserveDialogOpen(false)}
-                        />
-                      </DialogContent>
-                    </Dialog>
-
-                    {project?.installment_enabled && apartment.price && (
-                      <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                  {/* Action buttons */}
+                  {apartment.status === 'available' && (
+                    <div className="space-y-3">
+                      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white">
-                            <Calculator className="h-5 w-5 mr-2" />
-                            {t('installment.calculator')}
+                          <Button
+                            className="w-full text-white py-4 rounded-xl text-lg font-semibold hover:opacity-90"
+                            style={getButtonStyle('available')}
+                          >
+                            {t('common.reserve')}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[600px]">
+                        <DialogContent className="sm:max-w-[500px]">
                           <DialogHeader>
-                            <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                            <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
                           </DialogHeader>
-                          <InstallmentCalculator
-                            apartmentPrice={apartment.price}
-                            currency={project.currency}
-                            minDownPaymentPercent={project.min_down_payment_percent || 20}
-                            maxInstallmentMonths={project.max_installment_months || 24}
+                          <ApartmentReservationForm
+                            apartmentId={apartment.id}
+                            projectId={apartment.project_id}
+                            onSubmit={() => setIsReserveDialogOpen(false)}
+                            onCancel={() => setIsReserveDialogOpen(false)}
                           />
                         </DialogContent>
                       </Dialog>
-                    )}
 
-                    <Button
-                      variant="outline"
-                      onClick={handleGeneratePDF}
-                      disabled={isGeneratingPDF}
-                      className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white"
-                    >
-                      <FileDown className="h-5 w-5 mr-2" />
-                      PDF
-                    </Button>
-                  </div>
-                )}
+                      {project?.installment_enabled && apartment.price && (
+                        <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white">
+                              <Calculator className="h-5 w-5 mr-2" />
+                              {t('installment.calculator')}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                              <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                            </DialogHeader>
+                            <InstallmentCalculator
+                              apartmentPrice={apartment.price}
+                              currency={project.currency}
+                              minDownPaymentPercent={project.min_down_payment_percent || 20}
+                              maxInstallmentMonths={project.max_installment_months || 24}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      )}
+
+                      <Button
+                        variant="outline"
+                        onClick={handleGeneratePDF}
+                        disabled={isGeneratingPDF}
+                        className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white"
+                      >
+                        <FileDown className="h-5 w-5 mr-2" />
+                        PDF
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
