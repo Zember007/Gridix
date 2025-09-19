@@ -5,15 +5,19 @@ import { Building2, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { LanguageToggle } from "../LanguageToggle"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const menuItems = [
-    { name: 'Features', href: '#link' },
-    { name: 'Solution', href: '#link' },
-    { name: 'Pricing', href: '#link' },
-    { name: 'About', href: '#link' },
+    { name: 'Features', href: '#features' },
+    /* { name: 'Solution', href: '#link' }, */
+  /*   { name: 'Pricing', href: '#link' },
+    { name: 'About', href: '#link' }, */
+
+    { name: 'Demo', href: '#demo' }
 ]
 
 const HeroHeader = () => {
+    const { language } = useLanguage()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
 
@@ -96,7 +100,7 @@ const HeroHeader = () => {
                                     variant="outline"
                                     size="sm"
                                     className={cn(isScrolled && 'lg:hidden')}>
-                                    <Link to="#">
+                                    <Link to={`/${language}/admin`}>
                                         <span>Login</span>
                                     </Link>
                                 </Button>
@@ -104,7 +108,7 @@ const HeroHeader = () => {
                                     asChild
                                     size="sm"
                                     className={cn(isScrolled && 'lg:hidden')}>
-                                    <Link to="#">
+                                    <Link to={`/${language}/admin`}>
                                         <span>Sign Up</span>
                                     </Link>
                                 </Button>
@@ -112,7 +116,7 @@ const HeroHeader = () => {
                                     asChild
                                     size="sm"
                                     className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}>
-                                    <Link to="#">
+                                    <Link to={`/${language}/admin`}>
                                         <span>Get Started</span>
                                     </Link>
                                 </Button>

@@ -73,11 +73,11 @@ const Index = () => {
 
   const data = [
     {
-      title: "Готовые виджеты для любого сайта",
+      title: t('landing.widgetsTitle'),
       content: (
         <div>
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            Встраиваемые интерактивные планы одной строкой кода. Работает на любой CMS (WordPress, Tilda, 1C-Битрикс).
+            {t('landing.widgetsDesc')}
           </p>
           <div className="grid grid-cols-2 gap-4">
             <video
@@ -85,7 +85,7 @@ const Index = () => {
               controls
               className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             >
-              Ваш браузер не поддерживает видео.
+              {t('landing.videoNotSupported')}
             </video>
             <video
               src=""
@@ -97,11 +97,11 @@ const Index = () => {
       ),
     },
     {
-      title: "Импорт данных",
+      title: t('landing.dataImportTitle'),
       content: (
         <div>
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            Загрузите статусы и цены квартир из Excel, CSV или Google Sheets. Все данные автоматически подтянутся в систему.
+            {t('landing.dataImportDesc')}
           </p>
           <div className="grid grid-cols-2 gap-4">
             <video
@@ -119,12 +119,11 @@ const Index = () => {
       ),
     },
     {
-      title: "Интеграция с популярными CRM",
+      title: t('landing.crmIntegrationTitle'),
       content: (
         <div>
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            Автоматическая передача лидов и данных о квартирах в AmoCRM, Bitrix24, HubSpot и другие CRM.
-            Никаких потерянных заявок — все клиенты сразу в вашей воронке.
+            {t('landing.crmIntegrationDesc')}
           </p>
           <div className="grid grid-cols-2 gap-4">
             <video
@@ -143,19 +142,19 @@ const Index = () => {
     },
   ];
 
-  
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
       <HeroHeader />
       <HeroSection
-        title="Интерактивные планы для застройщиков и риелторов"
-        description="Gridix помогает создавать наглядные и удобные планы недвижимости: отмечайте статус квартир, подключайте интеграции с CRM и делитесь планами одной строкой кода. Всё просто, быстро и без лишних затрат."
+        title={t('landing.interactivePlansTitle')}
+        description={t('landing.interactivePlansDesc')}
         actions={[
           {
             text: "Get Started",
-            href: "/docs/getting-started",
+            href: `/${language}/admin`,
             variant: "default",
           },
           {
@@ -166,14 +165,24 @@ const Index = () => {
 
         ]}
         image={{
-          light: "https://www.launchuicomponents.com/app-light.png",
-          dark: "https://www.launchuicomponents.com/app-dark.png",
+          light: "/AdminScreen.jpeg",
+          dark: "/AdminScreen.jpeg",
           alt: "UI Components Preview",
         }}
       />
 
 
       <Timeline
+        title={
+          <>
+            <h2 className="text-4xl font-semibold text-black dark:text-white">
+              {t('landing.whatWeGiveClients')} <br />
+              <span className="text-7xl  font-bold mt-1 leading-none">
+                {t('landing.ourAdvantages')}
+              </span>
+            </h2>
+          </>
+        }
         data={data}
       />
 
@@ -182,12 +191,12 @@ const Index = () => {
       <ContainerScroll
         titleComponent={
           <>
-            <h1 className="text-4xl font-semibold text-black dark:text-white">
-              как это выглядит <br />
-              <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
-                ИНТЕРАКТИВНОЕ ДЕМО
+            <h2 className="text-4xl font-semibold text-black dark:text-white">
+              {t('landing.howItLooks')} <br />
+              <span className="text-7xl  font-bold mt-1 leading-none">
+                {t('landing.interactiveDemo')}
               </span>
-            </h1>
+            </h2>
           </>
         }
       >
@@ -203,75 +212,84 @@ const Index = () => {
 
       </ContainerScroll>
 
+      <section className="flex items-center justify-center flex-col gap-20">
+        <h2 className="text-4xl max-w-5xl font-semibold text-black dark:text-white text-center">
+          {t('landing.workWithoutBorders')}   <br />
+          <span className="text-7xl  font-bold mt-1 leading-none">
+            {t('landing.sellFromAnywhere')}
+          </span>
 
-      <WorldMap
-        labelClassName="text-[7px]"
-        dots={[
-          // 1. Турция -> ОАЭ
-          {
-            start: { lat: 39.9334, lng: 32.8597, label: t('country.turkey') },
-            end: { lat: 25.2048, lng: 55.2708, label: t('country.uae') }
-          },
-          // 2. ОАЭ -> Мексика
-          {
-            start: { lat: 25.2048, lng: 55.2708, label: t('country.uae') },
-            end: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') }
-          },
-          // 3. Мексика -> Доминиканская Республика
-          {
-            start: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') },
-            end: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') }
-          },
-          // 4. Доминиканская Республика -> Индонезия
-          {
-            start: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') },
-            end: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') }
-          },
-          // 5. Индонезия -> Испания
-          {
-            start: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') },
-            end: { lat: 40.4637, lng: -3.7492, label: t('country.spain') }
-          },
-          // 6. Испания -> Грузия
-          {
-            start: { lat: 40.4637, lng: -3.7492, label: t('country.spain') },
-            end: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') }
-          },
-          // 7. Грузия -> Кипр
-          {
-            start: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') },
-            end: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') }
-          },
-          // 8. Кипр -> Черногория
-          {
-            start: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') },
-            end: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') }
-          },
-          // 9. Черногория -> Таиланд
-          {
-            start: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') },
-            end: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') }
-          },
-          // 10. Таиланд -> Коста-Рика
-          {
-            start: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') },
-            end: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') }
-          },
-          // 11. Коста-Рика -> Панама
-          {
-            start: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') },
-            end: { lat: 8.5380, lng: -80.7821, label: t('country.panama') }
-          },
-          // 12. Панама -> Греция
-          {
-            start: { lat: 8.5380, lng: -80.7821, label: t('country.panama') },
-            end: { lat: 39.0742, lng: 21.8243, label: t('country.greece') }
-          }
-        ]}
-        lineColor="#000"
-        animationDuration={3}
-        loop={true}
-      />
+
+        </h2>
+        <WorldMap
+          labelClassName="text-[7px]"
+          dots={[
+            // 1. Турция -> ОАЭ
+            {
+              start: { lat: 39.9334, lng: 32.8597, label: t('country.turkey') },
+              end: { lat: 25.2048, lng: 55.2708, label: t('country.uae') }
+            },
+            // 2. ОАЭ -> Мексика
+            {
+              start: { lat: 25.2048, lng: 55.2708, label: t('country.uae') },
+              end: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') }
+            },
+            // 3. Мексика -> Доминиканская Республика
+            {
+              start: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') },
+              end: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') }
+            },
+            // 4. Доминиканская Республика -> Индонезия
+            {
+              start: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') },
+              end: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') }
+            },
+            // 5. Индонезия -> Испания
+            {
+              start: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') },
+              end: { lat: 40.4637, lng: -3.7492, label: t('country.spain') }
+            },
+            // 6. Испания -> Грузия
+            {
+              start: { lat: 40.4637, lng: -3.7492, label: t('country.spain') },
+              end: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') }
+            },
+            // 7. Грузия -> Кипр
+            {
+              start: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') },
+              end: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') }
+            },
+            // 8. Кипр -> Черногория
+            {
+              start: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') },
+              end: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') }
+            },
+            // 9. Черногория -> Таиланд
+            {
+              start: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') },
+              end: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') }
+            },
+            // 10. Таиланд -> Коста-Рика
+            {
+              start: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') },
+              end: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') }
+            },
+            // 11. Коста-Рика -> Панама
+            {
+              start: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') },
+              end: { lat: 8.5380, lng: -80.7821, label: t('country.panama') }
+            },
+            // 12. Панама -> Греция
+            {
+              start: { lat: 8.5380, lng: -80.7821, label: t('country.panama') },
+              end: { lat: 39.0742, lng: 21.8243, label: t('country.greece') }
+            }
+          ]}
+          lineColor="#000"
+          animationDuration={3}
+          loop={true}
+        />
+      </section>
 
 
 
@@ -286,11 +304,7 @@ const Index = () => {
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-full px-4 py-2 mb-8 animate-appear">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-300">Готовы начать работу?</span>
-          </div>
+       
 
           {/* Title */}
           <h3 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-semibold mb-6 animate-appear opacity-0 delay-100`}>
@@ -325,15 +339,15 @@ const Index = () => {
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 max-w-lg">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
-                <span>Бесплатный пробный период</span>
+                <span>{t('landing.freeTrial')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-green-400" />
-                <span>Без обязательств</span>
+                <span>{t('landing.noObligations')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-green-400" />
-                <span>Настройка за 5 минут</span>
+                <span>{t('landing.setupIn5Minutes')}</span>
               </div>
             </div>
           </div>
@@ -358,37 +372,36 @@ const Index = () => {
                 </div>
               </div>
               <p className="text-gray-400 mb-4 max-w-md">
-                Инновационная платформа для создания интерактивных планов недвижимости.
-                Упрощаем процесс продаж и повышаем конверсию.
+                {t('landing.companyDescription')}
               </p>
               <div className="text-sm text-gray-400">
-                <p><strong>Компания:</strong> Gridix</p>
-                <p><strong>Адрес:</strong> Грузия, Батуми, ул. Леселидзе 3</p>
-                <p><strong>Email:</strong> inbox@gridix.live</p>
+                <p><strong>{t('landing.company')}:</strong> Gridix</p>
+                <p><strong>{t('landing.address')}:</strong> Грузия, Батуми, ул. Леселидзе 3</p>
+                <p><strong>{t('landing.email')}:</strong> inbox@gridix.live</p>
               </div>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-white">Быстрые ссылки</h4>
+              <h4 className="text-lg font-semibold mb-4 text-white">{t('landing.quickLinks')}</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">Админ панель</button></li>
+                <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">{t('landing.adminPanel')}</button></li>
                 {/*              <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
                 <li><button className="hover:text-blue-400 transition-colors">Документация</button></li> */}
                 <li><button
                   onClick={() => {
                     window.open('https://t.me/Klasterdigital', '_blank');
                   }}
-                  className="hover:text-blue-400 transition-colors">Поддержка</button></li>
+                  className="hover:text-blue-400 transition-colors">{t('landing.support')}</button></li>
               </ul>
             </div>
 
             {/* Legal */}
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-white">Правовая информация</h4>
+              <h4 className="text-lg font-semibold mb-4 text-white">{t('landing.legalInfo')}</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">Политика конфиденциальности</button></li>
-                <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">Пользовательское соглашение</button></li>
+                <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">{t('landing.privacyPolicy')}</button></li>
+                <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">{t('landing.termsOfService')}</button></li>
                 {/* <li><button className="hover:text-blue-400 transition-colors">Cookie Policy</button></li> */}
               </ul>
             </div>
@@ -397,7 +410,7 @@ const Index = () => {
           <div className="border-t border-gray-800 pt-8">
             <div className={`flex ${isMobile ? 'flex-col gap-4 text-center' : 'justify-between items-center'}`}>
               <p className="text-gray-400">
-                © 2024 Gridix. Все права защищены.
+                {t('landing.copyright')}
               </p>
 
             </div>

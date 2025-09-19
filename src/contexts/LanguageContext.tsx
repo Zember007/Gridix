@@ -626,12 +626,6 @@ const translations: Translations = {
     ka: 'ადმინ პანელში შესვლა',
     ar: 'دخول لوحة الإدارة'
   },
-  'landing.copyright': {
-    ru: '© 2024 RealEstate SaaS. Все права защищены.',
-    en: '© 2024 RealEstate SaaS. All rights reserved.',
-    ka: '© 2024 RealEstate SaaS. ყველა უფლება დაცულია.',
-    ar: '© 2024 RealEstate SaaS. جميع الحقوق محفوظة.'
-  },
 
   // Landing (extended)
   'landing.badge': {
@@ -4063,6 +4057,184 @@ const translations: Translations = {
     en: 'Greece',
     ka: 'საბერძნეთი',
     ar: 'اليونان'
+  },
+  
+  // Landing page translations
+  'landing.workWithoutBorders': {
+    ru: 'работайте без границ',
+    en: 'work without borders',
+    ka: 'იმუშავეთ საზღვრების გარეშე',
+    ar: 'اعمل بدون حدود'
+  },
+  'landing.sellFromAnywhere': {
+    ru: 'ПРОДАВАЙТЕ ИЗ ЛЮБОЙ ТОЧКИ МИРА',
+    en: 'SELL FROM ANYWHERE IN THE WORLD',
+    ka: 'გაყიდეთ მსოფლიოს ნებისმიერი წერტილიდან',
+    ar: 'بع من أي مكان في العالم'
+  },
+  'landing.widgetsTitle': {
+    ru: 'Готовые виджеты для любого сайта',
+    en: 'Ready-made widgets for any website',
+    ka: 'მზა ვიჯეტები ნებისმიერი საიტისთვის',
+    ar: 'ودجات جاهزة لأي موقع ويب'
+  },
+  'landing.widgetsDesc': {
+    ru: 'Встраиваемые интерактивные планы одной строкой кода. Работает на любой CMS (WordPress, Tilda, 1C-Битрикс).',
+    en: 'Embeddable interactive plans with one line of code. Works on any CMS (WordPress, Tilda, 1C-Bitrix).',
+    ka: 'ჩასაშენებელი ინტერაქტიული გეგმები ერთი ხაზის კოდით. მუშაობს ნებისმიერ CMS-ზე (WordPress, Tilda, 1C-Битрикс).',
+    ar: 'خطط تفاعلية قابلة للتضمين بسطر واحد من الكود. يعمل على أي نظام إدارة محتوى (WordPress, Tilda, 1C-Bitrix).'
+  },
+  'landing.videoNotSupported': {
+    ru: 'Ваш браузер не поддерживает видео.',
+    en: 'Your browser does not support video.',
+    ka: 'თქვენი ბრაუზერი არ მხარს უჭერს ვიდეოს.',
+    ar: 'متصفحك لا يدعم الفيديو.'
+  },
+  'landing.dataImportTitle': {
+    ru: 'Импорт данных',
+    en: 'Data Import',
+    ka: 'მონაცემების იმპორტი',
+    ar: 'استيراد البيانات'
+  },
+  'landing.dataImportDesc': {
+    ru: 'Загрузите статусы и цены квартир из Excel, CSV или Google Sheets. Все данные автоматически подтянутся в систему.',
+    en: 'Upload apartment statuses and prices from Excel, CSV or Google Sheets. All data will automatically sync to the system.',
+    ka: 'ატვირთეთ ბინების სტატუსები და ფასები Excel-დან, CSV-დან ან Google Sheets-დან. ყველა მონაცემი ავტომატურად ჩაიტვირთება სისტემაში.',
+    ar: 'قم بتحميل حالات وأسعار الشقق من Excel أو CSV أو Google Sheets. ستتم مزامنة جميع البيانات تلقائياً مع النظام.'
+  },
+  'landing.crmIntegrationTitle': {
+    ru: 'Интеграция с популярными CRM',
+    en: 'Integration with popular CRM systems',
+    ka: 'ინტეგრაცია პოპულარულ CRM-ებთან',
+    ar: 'التكامل مع أنظمة CRM الشائعة'
+  },
+  'landing.crmIntegrationDesc': {
+    ru: 'Автоматическая передача лидов и данных о квартирах в AmoCRM, Bitrix24, HubSpot и другие CRM. Никаких потерянных заявок — все клиенты сразу в вашей воронке.',
+    en: 'Automatic transfer of leads and apartment data to AmoCRM, Bitrix24, HubSpot and other CRM systems. No lost applications — all clients are immediately in your funnel.',
+    ka: 'ლიდების და ბინების მონაცემების ავტომატური გადაცემა AmoCRM-ში, Bitrix24-ში, HubSpot-ში და სხვა CRM-ებში. არანაირი დაკარგული განაცხადი — ყველა კლიენტი მაშინვე თქვენს ძაბრშია.',
+    ar: 'نقل تلقائي للعملاء المحتملين وبيانات الشقق إلى AmoCRM و Bitrix24 و HubSpot وأنظمة CRM أخرى. لا توجد طلبات مفقودة — جميع العملاء في قمعك على الفور.'
+  },
+  'landing.interactivePlansTitle': {
+    ru: 'Интерактивные планы для застройщиков и риелторов',
+    en: 'Interactive plans for developers and realtors',
+    ka: 'ინტერაქტიული გეგმები დეველოპერებისა და რიელტორებისთვის',
+    ar: 'خطط تفاعلية للمطورين والوسطاء العقاريين'
+  },
+  'landing.interactivePlansDesc': {
+    ru: 'Gridix помогает создавать наглядные и удобные планы недвижимости: отмечайте статус квартир, подключайте интеграции с CRM и делитесь планами одной строкой кода. Всё просто, быстро и без лишних затрат.',
+    en: 'Gridix helps create clear and convenient real estate plans: mark apartment statuses, connect CRM integrations and share plans with one line of code. Everything is simple, fast and without unnecessary costs.',
+    ka: 'Gridix ეხმარება შექმნას ნათელი და მოსახერხებელი უძრავი ქონების გეგმები: მონიშნეთ ბინების სტატუსები, შეაერთეთ CRM ინტეგრაციები და გაუზიარეთ გეგმები ერთი ხაზის კოდით. ყველაფერი მარტივი, სწრაფი და ზედმეტი ხარჯების გარეშე.',
+    ar: 'يساعد Gridix في إنشاء خطط عقارية واضحة ومريحة: ضع علامة على حالات الشقق، واربط تكاملات CRM وشارك الخطط بسطر واحد من الكود. كل شيء بسيط وسريع وبدون تكاليف غير ضرورية.'
+  },
+  
+  // Additional landing page sections
+  'landing.whatWeGiveClients': {
+    ru: 'что мы даём клиентам',
+    en: 'what we give clients',
+    ka: 'რას ვაძლევთ კლიენტებს',
+    ar: 'ما نقدمه للعملاء'
+  },
+  'landing.ourAdvantages': {
+    ru: 'НАШИ ПРЕИМУЩЕСТВА',
+    en: 'OUR ADVANTAGES',
+    ka: 'ჩვენი უპირატესობები',
+    ar: 'مزايانا'
+  },
+  'landing.howItLooks': {
+    ru: 'как это выглядит',
+    en: 'how it looks',
+    ka: 'როგორ გამოიყურება',
+    ar: 'كيف يبدو'
+  },
+  'landing.interactiveDemo': {
+    ru: 'ИНТЕРАКТИВНОЕ ДЕМО',
+    en: 'INTERACTIVE DEMO',
+    ka: 'ინტერაქტიული დემო',
+    ar: 'عرض تفاعلي'
+  },
+  'landing.freeTrial': {
+    ru: 'Бесплатный пробный период',
+    en: 'Free trial period',
+    ka: 'უფასო საცდელი პერიოდი',
+    ar: 'فترة تجريبية مجانية'
+  },
+  'landing.noObligations': {
+    ru: 'Без обязательств',
+    en: 'No obligations',
+    ka: 'ზედმეტი ვალდებულებების გარეშე',
+    ar: 'بدون التزامات'
+  },
+  'landing.setupIn5Minutes': {
+    ru: 'Настройка за 5 минут',
+    en: 'Setup in 5 minutes',
+    ka: 'ჩამოყალიბება 5 წუთში',
+    ar: 'إعداد في 5 دقائق'
+  },
+  'landing.companyDescription': {
+    ru: 'Инновационная платформа для создания интерактивных планов недвижимости. Упрощаем процесс продаж и повышаем конверсию.',
+    en: 'Innovative platform for creating interactive real estate plans. We simplify the sales process and increase conversion.',
+    ka: 'ინოვაციური პლატფორმა ინტერაქტიული უძრავი ქონების გეგმების შესაქმნელად. ვამარტივებთ გაყიდვების პროცესს და ვზრდით კონვერსიას.',
+    ar: 'منصة مبتكرة لإنشاء خطط عقارية تفاعلية. نحن نبسط عملية البيع ونزيد التحويل.'
+  },
+  'landing.company': {
+    ru: 'Компания',
+    en: 'Company',
+    ka: 'კომპანია',
+    ar: 'الشركة'
+  },
+  'landing.address': {
+    ru: 'Адрес',
+    en: 'Address',
+    ka: 'მისამართი',
+    ar: 'العنوان'
+  },
+  'landing.email': {
+    ru: 'Email',
+    en: 'Email',
+    ka: 'ელფოსტა',
+    ar: 'البريد الإلكتروني'
+  },
+  'landing.quickLinks': {
+    ru: 'Быстрые ссылки',
+    en: 'Quick links',
+    ka: 'სწრაფი ბმულები',
+    ar: 'روابط سريعة'
+  },
+  'landing.adminPanel': {
+    ru: 'Админ панель',
+    en: 'Admin panel',
+    ka: 'ადმინ პანელი',
+    ar: 'لوحة الإدارة'
+  },
+  'landing.support': {
+    ru: 'Поддержка',
+    en: 'Support',
+    ka: 'მხარდაჭერა',
+    ar: 'الدعم'
+  },
+  'landing.legalInfo': {
+    ru: 'Правовая информация',
+    en: 'Legal information',
+    ka: 'იურიდიული ინფორმაცია',
+    ar: 'المعلومات القانونية'
+  },
+  'landing.privacyPolicy': {
+    ru: 'Политика конфиденциальности',
+    en: 'Privacy policy',
+    ka: 'კონფიდენციალურობის პოლიტიკა',
+    ar: 'سياسة الخصوصية'
+  },
+  'landing.termsOfService': {
+    ru: 'Пользовательское соглашение',
+    en: 'Terms of service',
+    ka: 'მომხმარებლის შეთანხმება',
+    ar: 'شروط الخدمة'
+  },
+  'landing.copyright': {
+    ru: '© 2024 Gridix. Все права защищены.',
+    en: '© 2024 Gridix. All rights reserved.',
+    ka: '© 2024 Gridix. ყველა უფლება დაცულია.',
+    ar: '© 2024 Gridix. جميع الحقوق محفوظة.'
   }
 };
 
