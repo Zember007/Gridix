@@ -79,20 +79,11 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.widgetsDesc')}
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            >
-              {t('landing.videoNotSupported')}
-            </video>
-            <video
+          <video
               src=""
               controls
               className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
-          </div>
         </div>
       ),
     },
@@ -103,18 +94,11 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.dataImportDesc')}
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <video
+          <video
               src=""
               controls
               className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
-            <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            />
-          </div>
         </div>
       ),
     },
@@ -125,18 +109,11 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.crmIntegrationDesc')}
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <video
+          <video
               src=""
               controls
               className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
             />
-            <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            />
-          </div>
         </div>
       ),
     },
@@ -175,9 +152,9 @@ const Index = () => {
       <Timeline
         title={
           <>
-            <h2 className="text-4xl font-semibold text-black dark:text-white">
+            <h2 className="text-xl sm:text-4xl font-semibold text-black dark:text-white">
               {t('landing.whatWeGiveClients')} <br />
-              <span className="text-7xl  font-bold mt-1 leading-none">
+              <span className="text-3xl sm:text-5xl md:text-7xl   font-bold mt-1 leading-none">
                 {t('landing.ourAdvantages')}
               </span>
             </h2>
@@ -191,9 +168,9 @@ const Index = () => {
       <ContainerScroll
         titleComponent={
           <>
-            <h2 className="text-4xl font-semibold text-black dark:text-white">
+            <h2 className="text-xl sm:text-4xl font-semibold text-black dark:text-white">
               {t('landing.howItLooks')} <br />
-              <span className="text-7xl  font-bold mt-1 leading-none">
+              <span className="text-3xl sm:text-5xl md:text-7xl  font-bold mt-1 leading-none">
                 {t('landing.interactiveDemo')}
               </span>
             </h2>
@@ -213,9 +190,9 @@ const Index = () => {
       </ContainerScroll>
 
       <section className="flex items-center justify-center flex-col gap-20">
-        <h2 className="text-4xl max-w-5xl font-semibold text-black dark:text-white text-center">
+        <h2 className="text-xl sm:text-4xl max-w-5xl font-semibold text-black dark:text-white text-center">
           {t('landing.workWithoutBorders')}   <br />
-          <span className="text-7xl  font-bold mt-1 leading-none">
+          <span className="text-3xl sm:text-5xl md:text-7xl   font-bold mt-1 leading-none">
             {t('landing.sellFromAnywhere')}
           </span>
 
