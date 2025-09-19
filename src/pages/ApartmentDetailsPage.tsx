@@ -498,10 +498,10 @@ const ApartmentDetailsPage = () => {
 
         {/* Desktop Layout */}
         <div className="hidden md:block py-10">
-          <div className="grid grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Left side - Media card */}
-            <div className="relative">
-              <div className="relative rounded-xl border bg-white shadow-sm overflow-hidden sticky top-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Gallery at top */}
+            <div className="relative mb-8">
+              <div className="relative rounded-xl border bg-white shadow-sm overflow-hidden">
                 <div className="absolute top-4 left-4 z-10">
                   <Button
                     variant="ghost"
@@ -525,65 +525,158 @@ const ApartmentDetailsPage = () => {
               </div>
             </div>
 
-            {/* Right side - Content cards */}
-            <div className="space-y-6">
-              <div className="rounded-xl border bg-white shadow-sm p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-semibold text-gray-900">
-                      {t('apartment.apartment')} № {apartment.apartment_number}
-                    </h1>
-                    <p className="mt-1 text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleToggleFavorite}
-                      className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${
-                        isFavorite(apartment?.id || '')
-                          ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'border-gray-200'
-                      }`}
-                      aria-label="favorite"
-                    >
-                      <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleShare}
-                      className="px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
-                      aria-label="share"
-                    >
-                      <Share2 className="h-5 w-5" />
-                    </Button>
-                  </div>
+            {/* Title and basic info section */}
+            <div className="mb-8">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900">
+                    {t('apartment.apartment')} № {apartment.apartment_number}
+                  </h1>
+                  <p className="mt-2 text-lg text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleToggleFavorite}
+                    className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${
+                      isFavorite(apartment?.id || '')
+                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
+                        : 'border-gray-200'
+                    }`}
+                    aria-label="favorite"
+                  >
+                    <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
+                    aria-label="share"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
 
-                {apartment.price && (
-                  <div className="mt-4">
-                    <div className="text-4xl font-bold text-gray-900">
-                      {formatPriceWithCurrency(apartment.price, project?.currency || null)}
-                    </div>
+              {/* Basic metrics */}
+              <div className="flex items-center gap-8 text-lg">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Home className="h-6 w-6 text-gray-400" />
+                  <span>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Square className="h-6 w-6 text-gray-400" />
+                  <span>{apartment.area} м²</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Two-column layout: Data on left, Price and actions on right */}
+            <div className="grid grid-cols-3 gap-8">
+              {/* Left column - Apartment data (2/3 width) */}
+              <div className="col-span-2 space-y-6">
+                {/* Project description */}
+                {project?.description && (
+                  <div className="rounded-xl border bg-white shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('projectEditor.description')}</h3>
+                    <p className="text-gray-600 leading-relaxed">{project.description}</p>
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Home className="h-5 w-5 text-gray-400" />
-                    <span>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Square className="h-5 w-5 text-gray-400" />
-                    <span>{apartment.area} м² {t('apartment.area')}</span>
+                {/* Basic apartment details */}
+                <div className="rounded-xl border bg-white shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">{t('apartment.number')}</span>
+                      <span className="font-medium text-gray-900">{apartment.apartment_number}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">{t('apartment.floor')}</span>
+                      <span className="font-medium text-gray-900">{apartment.floor_number}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">{t('apartment.area')}</span>
+                      <span className="font-medium text-gray-900">{apartment.area} м²</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-gray-600">{t('apartment.rooms')}</span>
+                      <span className="font-medium text-gray-900">
+                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
+                {/* Additional fields */}
+                {getVisibleFields().length > 0 && (
+                  <div className="rounded-xl border bg-white shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
+                    <div className="space-y-3">
+                      {getVisibleFields().map((field) => {
+                        let value: unknown = null;
+                        if (field.is_custom) {
+                          value = getCustomFieldValue(apartment, field.field_name);
+                        } else {
+                          switch (field.field_name) {
+                            case 'rooms':
+                              value = apartment.rooms;
+                              break;
+                            case 'area':
+                              value = apartment.area;
+                              break;
+                            case 'price':
+                              value = apartment.price;
+                              break;
+                            case 'status':
+                              value = apartment.status;
+                              break;
+                            case 'floor':
+                              value = apartment.floor_number;
+                              break;
+                            case 'number':
+                              value = apartment.apartment_number;
+                              break;
+                            default:
+                              value = null;
+                          }
+                        }
+
+                        if (value === null) return null;
+
+                        return (
+                          <div key={field.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                            <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                            <span className="font-medium text-gray-900">
+                              {formatFieldValue(value, field.field_type, field.field_name)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right column - Price and actions (1/3 width) */}
+              <div className="space-y-6">
+                {/* Price card */}
+                {apartment.price && (
+                  <div className="rounded-xl border bg-white shadow-sm p-6 text-center">
+                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                      {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                    </div>
+                    <p className="text-gray-500 text-sm">{t('apartment.totalPrice')}</p>
+                  </div>
+                )}
+
+                {/* Action buttons */}
                 {apartment.status === 'available' && (
-                  <div className="mt-6 grid grid-cols-3 gap-3">
+                  <div className="space-y-3">
                     <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                       <DialogTrigger asChild>
                         <Button
-                          className="col-span-3 text-white py-3 rounded-xl text-base font-medium hover:opacity-90"
+                          className="w-full text-white py-4 rounded-xl text-lg font-semibold hover:opacity-90"
                           style={getButtonStyle('available')}
                         >
                           {t('common.reserve')}
@@ -605,7 +698,7 @@ const ApartmentDetailsPage = () => {
                     {project?.installment_enabled && apartment.price && (
                       <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" className="col-span-2 py-3 rounded-xl border border-gray-200 hover:border-gray-300 bg-white">
+                          <Button variant="outline" className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white">
                             <Calculator className="h-5 w-5 mr-2" />
                             {t('installment.calculator')}
                           </Button>
@@ -628,87 +721,14 @@ const ApartmentDetailsPage = () => {
                       variant="outline"
                       onClick={handleGeneratePDF}
                       disabled={isGeneratingPDF}
-                      className="py-3 rounded-xl border border-gray-200 hover:border-gray-300 bg-white"
+                      className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white"
                     >
                       <FileDown className="h-5 w-5 mr-2" />
-                      PDF
+                      {t('common.downloadPDF')}
                     </Button>
                   </div>
                 )}
               </div>
-
-              {project?.description && (
-                <div className="rounded-xl border bg-white shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
-                  <p className="text-gray-600 leading-relaxed">{project.description}</p>
-                </div>
-              )}
-
-              <div className="rounded-xl border bg-white shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
-                <div className="divide-y divide-gray-100">
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">{t('apartment.number')}</span>
-                    <span className="font-medium text-gray-900">{apartment.apartment_number}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">{t('apartment.floor')}</span>
-                    <span className="font-medium text-gray-900">{apartment.floor_number}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">{t('apartment.area')}</span>
-                    <span className="font-medium text-gray-900">{apartment.area} м²</span>
-                  </div>
-                </div>
-              </div>
-
-              {getVisibleFields().length > 0 && (
-                <div className="rounded-xl border bg-white shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
-                  <div className="divide-y divide-gray-100">
-                    {getVisibleFields().map((field) => {
-                      let value: unknown = null;
-                      if (field.is_custom) {
-                        value = getCustomFieldValue(apartment, field.field_name);
-                      } else {
-                        switch (field.field_name) {
-                          case 'rooms':
-                            value = apartment.rooms;
-                            break;
-                          case 'area':
-                            value = apartment.area;
-                            break;
-                          case 'price':
-                            value = apartment.price;
-                            break;
-                          case 'status':
-                            value = apartment.status;
-                            break;
-                          case 'floor':
-                            value = apartment.floor_number;
-                            break;
-                          case 'number':
-                            value = apartment.apartment_number;
-                            break;
-                          default:
-                            value = null;
-                        }
-                      }
-
-                      if (value === null) return null;
-
-                      return (
-                        <div key={field.id} className="flex items-center justify-between py-2">
-                          <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
-                          <span className="font-medium text-gray-900">
-                            {formatFieldValue(value, field.field_type, field.field_name)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
