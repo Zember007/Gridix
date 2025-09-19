@@ -14,7 +14,7 @@ import BuildingFacadeView from '../visualization/BuildingFacadeView';
 import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
 import FavoritesTab from '../FavoritesTab';
 import { useFavorites } from '@/hooks/useFavorites';
-import { WheelPicker, WheelPickerWrapper } from '@/components/ui/wheel-picker';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 
 // Import new components
 import { useProjectFilters } from './hooks/useProjectFilters';
@@ -415,7 +415,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
               ) : (
                 // Floor plan view for specific floor with sidebar
                 <div className="w-full bg-white min-h-[600px]">
-                  <div className="flex h-full">
+                  <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
                     {/* Main floor plan area */}
                     <div className="flex-1 relative">
                       <ApartmentFloorPlan
@@ -430,49 +430,61 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     </div>
                     
                     {/* Floor selector sidebar */}
-                    <div className={`${isMobile ? 'w-24' : 'w-32'} bg-gradient-to-b from-gray-50 to-gray-100 border-l border-gray-200 shadow-inner flex flex-col items-center justify-center p-4`}>
-                      <div className="flex flex-col items-center gap-3 h-full">
-                        {/* Vertical title */}
-                        <div className="flex-shrink-0">
-                          <div 
-                            className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-gray-600 tracking-wider uppercase`}
-                            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-                          >
-                            {t('project.selectFloor')}
+                    <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-32 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
+                      <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
+            
+                        
+                        {/* Floor Carousel */}
+                        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-0 py-10'}`}>
+                          <div className={`${isMobile ? ' w-full max-w-xs' : 'w-24 h-full'} relative`}>
+                            <Carousel 
+                              className="w-full h-full "
+                              orientation={isMobile ? "horizontal" : "vertical"}
+                              opts={{
+                                align: "center",
+                                loop: filters.getUniqueFloors().length > 3,
+                              }}
+                            >
+                              <div className={`${isMobile ? ' w-full' : 'w-24 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm`}>
+                                <CarouselContent className={`h-full ${isMobile ? '' : 'flex-col'}`}>
+                                  {filters.getUniqueFloors().map((floor, index) => (
+                                    <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
+                                      <button
+                                        className={`w-full ${isMobile ? 'h-full' : 'h-12'} flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${
+                                          selectedFloorForPlan === floor
+                                            ? 'bg-black text-white'
+                                            : 'hover:bg-gray-100 text-gray-700'
+                                        }`}
+                                        onClick={() => setSelectedFloorForPlan(floor)}
+                                      >
+                                        {floor}
+                                      </button>
+                                    </CarouselItem>
+                                  ))}
+                                </CarouselContent>
+                              </div>
+                              
+                              {/* Navigation buttons */}
+                              {filters.getUniqueFloors().length > 3 && (
+                                <>
+                                  {isMobile ? (
+                                    <>
+                                      <CarouselPrevious className="-left-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                      <CarouselNext className="-right-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CarouselPrevious className="-top-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                      <CarouselNext className="-bottom-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            </Carousel>
                           </div>
                         </div>
                         
-                        {/* Wheel picker - full height */}
-                        <div className="flex-1 flex items-stretch justify-center min-h-0 py-2">
-                          <WheelPickerWrapper 
-                            className={`${isMobile ? 'w-18' : 'w-24'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm`}
-                          >
-                            <WheelPicker
-                              options={filters.getUniqueFloors().map(floor => ({
-                                value: floor.toString(),
-                                label: floor.toString()
-                              }))}
-                              value={selectedFloorForPlan?.toString()}
-                              onValueChange={(value) => setSelectedFloorForPlan(Number(value))}
-                              optionItemHeight={isMobile ? 40 : 45}
-                              visibleCount={isMobile ? 9 : 25}
-                              infinite={filters.getUniqueFloors().length > 5}
-                              dragSensitivity={1.2}
-                              scrollSensitivity={1.5}
-                             
-                            />
-                          </WheelPickerWrapper>
-                        </div>
-                        
-                        {/* Floor label */}
-                        <div className="flex-shrink-0">
-                          <div 
-                            className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 font-medium`}
-                            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-                          >
-                            {t('project.floor')}
-                          </div>
-                        </div>
+                   
                       </div>
                     </div>
                   </div>
