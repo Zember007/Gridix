@@ -724,7 +724,7 @@ const ApartmentDetailsPage = () => {
                       className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white"
                     >
                       <FileDown className="h-5 w-5 mr-2" />
-                      {t('common.downloadPDF')}
+                      PDF
                     </Button>
                   </div>
                 )}
