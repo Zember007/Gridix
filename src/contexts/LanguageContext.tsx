@@ -629,19 +629,22 @@ const translations: Translations = {
   'landing.copyright': {
     ru: '© 2024 RealEstate SaaS. Все права защищены.',
     en: '© 2024 RealEstate SaaS. All rights reserved.',
-    ka: '© 2024 RealEstate SaaS. ყველა უფლება დაცულია.'
+    ka: '© 2024 RealEstate SaaS. ყველა უფლება დაცულია.',
+    ar: '© 2024 RealEstate SaaS. جميع الحقوق محفوظة.'
   },
 
   // Landing (extended)
   'landing.badge': {
     ru: 'Инновационное решение для недвижимости',
     en: 'Innovative solution for real estate',
-    ka: 'ინოვაციური გადაწყვეტა უძრავი ქონებისთვის'
+    ka: 'ინოვაციური გადაწყვეტა უძრავი ქონებისთვის',
+    ar: 'حل مبتكر للعقارات'
   },
   'landing.stats.projects': {
     ru: 'Проектов',
     en: 'Projects',
-    ka: 'პროექტი'
+    ka: 'პროექტი',
+    ar: 'مشاريع'
   },
   'landing.stats.companies': {
     ru: 'Компаний',
@@ -826,798 +829,952 @@ const translations: Translations = {
   'footer.email': {
     ru: 'Email',
     en: 'Email',
-    ka: 'ელფოსტა'
+    ka: 'ელფოსტა',
+    ar: 'البريد الإلكتروني'
   },
   'footer.craftedInGeorgia': {
     ru: 'Сделано с ❤️ в Грузии',
     en: 'Made with ❤️ in Georgia',
-    ka: 'შექმნილია ❤️ საქართველოში'
+    ka: 'შექმნილია ❤️ საქართველოში',
+    ar: 'صُنع بـ ❤️ في جورجيا'
   },
 
   // Legal pages
   'legal.backHome': {
     ru: 'На главную',
     en: 'Back to Home',
-    ka: 'მთავარზე დაბრუნება'
+    ka: 'მთავარზე დაბრუნება',
+    ar: 'العودة للرئيسية'
   },
   'legal.privacy.title': {
     ru: 'Политика конфиденциальности',
     en: 'Privacy Policy',
-    ka: 'კონფიდენციალურობის პოლიტიკა'
+    ka: 'კონფიდენციალურობის პოლიტიკა',
+    ar: 'سياسة الخصوصية'
   },
   'legal.terms.title': {
     ru: 'Пользовательское соглашение',
     en: 'Terms of Service',
-    ka: 'მომხმარებლის შეთანხმება'
+    ka: 'მომხმარებლის შეთანხმება',
+    ar: 'شروط الخدمة'
   },
 
   // Apartment details
   'apartment.details': {
     ru: 'Детали квартиры',
     en: 'Apartment details',
-    ka: 'ბინის დეტალები'
+    ka: 'ბინის დეტალები',
+    ar: 'تفاصيل الشقة'
   },
   'apartment.number': {
     ru: 'Квартира №',
     en: 'Apartment #',
-    ka: 'ბინა №'
+    ka: 'ბინა №',
+    ar: 'شقة رقم'
   },            
   'apartment.floor': {
     ru: 'Этаж',
     en: 'Floor',
-    ka: 'სართული'
+    ka: 'სართული',
+    ar: 'الطابق'
   },
   'apartment.room': {
     ru: 'комн.',
     en: 'room',
-    ka: 'ოთახი'
+    ka: 'ოთახი',
+    ar: 'غرفة'
   },
   'apartment.studio': {
     ru: 'Студия',
     en: 'Studio',
-    ka: 'სტუდია'
+    ka: 'სტუდია',
+    ar: 'استوديو'
   },
   'apartment.area': {
     ru: 'Площадь',
     en: 'Area',
-    ka: 'ფართობი'
+    ka: 'ფართობი',
+    ar: 'المساحة'
   },
   'apartment.price': {
     ru: 'Цена',
     en: 'Price',
-    ka: 'ფასი'
+    ka: 'ფასი',
+    ar: 'السعر'
   },
   'apartment.pricePerSqm': {
     ru: 'Цена за м²',
     en: 'Price per m²',
-    ka: 'ფასი მ²-ზე'
+    ka: 'ფასი მ²-ზე',
+    ar: 'السعر للمتر المربع'
   },
   'apartment.status': {
     ru: 'Статус',
     en: 'Status',
-    ka: 'სტატუსი'
+    ka: 'სტატუსი',
+    ar: 'الحالة'
   },
   'apartment.sqm': {
     ru: 'м²',
     en: 'm²',
-    ka: 'მ²'
+    ka: 'მ²',
+    ar: 'م²'
   },
   'apartment.sold': {
     ru: 'Продано',
     en: 'Sold',
-    ka: 'გაყიდული'
+    ka: 'გაყიდული',
+    ar: 'مباع'
   },
   'apartment.enter': {
     ru: 'Введите',
     en: 'Enter',
-    ka: 'შეიყვანეთ'
+    ka: 'შეიყვანეთ',
+    ar: 'أدخل'
   },
   'apartment.select': {
     ru: 'Выберите',
     en: 'Select',
-    ka: 'აირჩიეთ'
+    ka: 'აირჩიეთ',
+    ar: 'اختر'
   },
   'apartment.notSelected': {
     ru: 'Не выбрано',
     en: 'Not selected',
-    ka: 'არ არის არჩეული'
+    ka: 'არ არის არჩეული',
+    ar: 'غير محدد'
   },
   'apartment.yes': {
     ru: 'Да',
     en: 'Yes',
-    ka: 'დიახ'
+    ka: 'დიახ',
+    ar: 'نعم'
   },
   'apartment.no': {
     ru: 'Нет',
     en: 'No',
-    ka: 'არა'
+    ka: 'არა',
+    ar: 'لا'
   },
   'apartment.additionalFields': {
     ru: 'Дополнительные поля',
     en: 'Additional Fields',
-    ka: 'დამატებითი ველები'
+    ka: 'დამატებითი ველები',
+    ar: 'حقول إضافية'
   },
   'apartment.reserved': {
     ru: 'Забронировано',
     en: 'Reserved',
-    ka: 'დაჯავშნული'
+    ka: 'დაჯავშნული',
+    ar: 'محجوز'
   },
   'apartment.available': {
     ru: 'Доступно',
     en: 'Available',
-    ka: 'ხელმისაწვდომია'
+    ka: 'ხელმისაწვდომია',
+    ar: 'متاح'
   },
   'apartment.additionalInfo': {
     ru: 'Дополнительная информация',
     en: 'Additional Information',
-    ka: 'დამატებითი ინფორმაცია'
+    ka: 'დამატებითი ინფორმაცია',
+    ar: 'معلومات إضافية'
   },
 
   // Installment Calculator
   'installment.calculator': {
     ru: 'Калькулятор рассрочки',
     en: 'Installment Calculator',
-    ka: 'განვადების კალკულატორი'
+    ka: 'განვადების კალკულატორი',
+    ar: 'حاسبة التقسيط'
   },
   'installment.downPayment': {
     ru: 'Первоначальный взнос',
     en: 'Down Payment',
-    ka: 'პირველადი გადახდა'
+    ka: 'პირველადი გადახდა',
+    ar: 'الدفعة الأولى'
   },
   'installment.period': {
     ru: 'Срок рассрочки',
     en: 'Installment Period',
-    ka: 'განვადების ვადა'
+    ka: 'განვადების ვადა',
+    ar: 'فترة التقسيط'
   },
   'installment.months': {
     ru: 'месяцев',
     en: 'months',
-    ka: 'თვე'
+    ka: 'თვე',
+    ar: 'شهور'
   },
   'installment.month': {
     ru: 'месяц',
     en: 'month',
-    ka: 'თვე'
+    ka: 'თვე',
+    ar: 'شهر'
   },
   'installment.minimum': {
     ru: 'Минимум',
     en: 'Minimum',
-    ka: 'მინიმუმი'
+    ka: 'მინიმუმი',
+    ar: 'الحد الأدنى'
   },
   'installment.maximum': {
     ru: 'Максимум',
     en: 'Maximum',
-    ka: 'მაქსიმუმი'
+    ka: 'მაქსიმუმი',
+    ar: 'الحد الأقصى'
   },
   'installment.remainingAmount': {
     ru: 'К доплате',
     en: 'Remaining Amount',
-    ka: 'დასარჩენი თანხა'
+    ka: 'დასარჩენი თანხა',
+    ar: 'المبلغ المتبقي'
   },
   'installment.monthlyPayment': {
     ru: 'Ежемесячный платеж',
     en: 'Monthly Payment',
-    ka: 'ყოველთვიური გადახდა'
+    ka: 'ყოველთვიური გადახდა',
+    ar: 'الدفعة الشهرية'
   },
 
   // PDF Generation
   'pdf.apartmentDetails': {
     ru: 'Детали квартиры',
     en: 'Apartment Details',
-    ka: 'ბინის დეტალები'
+    ka: 'ბინის დეტალები',
+    ar: 'تفاصيل الشقة'
   },
   'pdf.apartmentNumber': {
     ru: 'Номер квартиры',
     en: 'Apartment Number',
-    ka: 'ბინის ნომერი'
+    ka: 'ბინის ნომერი',
+    ar: 'رقم الشقة'
   },
   'pdf.photos': {
     ru: 'Фотографии',
     en: 'Photos',
-    ka: 'ფოტოები'
+    ka: 'ფოტოები',
+    ar: 'الصور'
   },
   'pdf.layout': {
     ru: 'Планировка',
     en: 'Layout',
-    ka: 'განლაგება'
+    ka: 'განლაგება',
+    ar: 'التخطيط'
   },
   'pdf.apartmentPhoto': {
     ru: 'Фото квартиры',
     en: 'Apartment Photo',
-    ka: 'ბინის ფოტო'
+    ka: 'ბინის ფოტო',
+    ar: 'صورة الشقة'
   },
   'pdf.generatedOn': {
     ru: 'Создано',
     en: 'Generated on',
-    ka: 'შექმნილია'
+    ka: 'შექმნილია',
+    ar: 'تم إنشاؤه في'
   },
   'installment.apply': {
     ru: 'Оформить рассрочку',
     en: 'Apply for Installment',
-    ka: 'განვადების გაფორმება'
+    ka: 'განვადების გაფორმება',
+    ar: 'تطبيق التقسيط'
   },
   'installment.info.noInterest': {
     ru: 'Рассрочка без процентов',
     en: 'Interest-free installment',
-    ka: 'უპროცენტო განვადება'
+    ka: 'უპროცენტო განვადება',
+    ar: 'تقسيط بدون فوائد'
   },
   'installment.info.earlyPayment': {
     ru: 'Возможность досрочного погашения',
     en: 'Early payment option available',
-    ka: 'ადრეული გადახდის შესაძლებლობა'
+    ka: 'ადრეული გადახდის შესაძლებლობა',
+    ar: 'خيار الدفع المبكر متاح'
   },
   'installment.info.contactManager': {
     ru: 'Для оформления обратитесь к менеджеру',
     en: 'Contact manager to apply',
-    ka: 'გაფორმებისთვის დაუკავშირდით მენეჯერს'
+    ka: 'გაფორმებისთვის დაუკავშირდით მენეჯერს',
+    ar: 'اتصل بالمدير للتقديم'
   },
 
   // Project Editor - Installment Settings
   'projectEditor.installmentSettings': {
     ru: 'Настройки рассрочки',
     en: 'Installment Settings',
-    ka: 'განვადების პარამეტრები'
+    ka: 'განვადების პარამეტრები',
+    ar: 'إعدادات التقسيط'
   },
   'projectEditor.enableInstallment': {
     ru: 'Включить рассрочку',
     en: 'Enable Installment',
-    ka: 'განვადების ჩართვა'
+    ka: 'განვადების ჩართვა',
+    ar: 'تفعيل التقسيط'
   },
   'projectEditor.minDownPaymentPercent': {
     ru: 'Минимальный первый взнос (%)',
     en: 'Minimum Down Payment (%)',
-    ka: 'მინიმალური პირველადი გადახდა (%)'
+    ka: 'მინიმალური პირველადი გადახდა (%)',
+    ar: 'الحد الأدنى للدفعة الأولى (%)'
   },
   'projectEditor.minDownPaymentDesc': {
     ru: 'Минимальный процент от стоимости квартиры для первого взноса',
     en: 'Minimum percentage of apartment price for down payment',
-    ka: 'ბინის ღირებულების მინიმალური პროცენტი პირველადი გადახდისთვის'
+    ka: 'ბინის ღირებულების მინიმალური პროცენტი პირველადი გადახდისთვის',
+    ar: 'الحد الأدنى من النسبة المئوية لسعر الشقة للدفعة الأولى'
   },
   'projectEditor.maxInstallmentMonths': {
     ru: 'Максимальный срок рассрочки (месяцы)',
     en: 'Maximum Installment Period (months)',
-    ka: 'განვადების მაქსიმალური ვადა (თვე)'
+    ka: 'განვადების მაქსიმალური ვადა (თვე)',
+    ar: 'الحد الأقصى لفترة التقسيط (شهور)'
   },
   'projectEditor.maxInstallmentMonthsDesc': {
     ru: 'Максимальное количество месяцев для рассрочки',
     en: 'Maximum number of months for installment payments',
-    ka: 'განვადების გადახდების მაქსიმალური თვეების რაოდენობა'
+    ka: 'განვადების გადახდების მაქსიმალური თვეების რაოდენობა',
+    ar: 'الحد الأقصى لعدد الشهور لدفعات التقسيط'
   },
   'apartment.apartment': {
     ru: 'квартира',
     en: 'apartment',
-    ka: 'ბინა'
+    ka: 'ბინა',
+    ar: 'شقة'
   },
   'apartment.apartments': {
     ru: 'квартир',
     en: 'apartments',
-    ka: 'ბინები'
+    ka: 'ბინები',
+    ar: 'شقق'
   },
 
   // Project listings
   'project.notFoundApartments': {
     ru: 'По вашим критериям квартиры не найдены',
     en: 'No apartments found matching your criteria',
-    ka: 'თქვენი კრიტერიუმების მიხედვით ბინები ვერ მოიძებნა'
+    ka: 'თქვენი კრიტერიუმების მიხედვით ბინები ვერ მოიძებნა',
+    ar: 'لم يتم العثور على شقق تطابق معاييرك'
   },
   'project.changeFilters': {
     ru: 'Попробуйте изменить фильтры поиска',
     en: 'Try changing your search filters',
-    ka: 'სცადეთ ძებნის ფილტრების შეცვლა'
+    ka: 'სცადეთ ძებნის ფილტრების შეცვლა',
+    ar: 'حاول تغيير فلاتر البحث'
   },
   'project.found': {
     ru: 'Найдено',
     en: 'Found',
-    ka: 'ნაპოვნია'
+    ka: 'ნაპოვნია',
+    ar: 'تم العثور على'
   },
   'project.floorPlan': {
     ru: 'План этажа',
     en: 'Floor Plan',
-    ka: 'სართულის გეგმა'
+    ka: 'სართულის გეგმა',
+    ar: 'مخطط الطابق'
   },
   'project.table': {
     ru: 'Таблица',
     en: 'Table',
-    ka: 'ცხრილი'
+    ka: 'ცხრილი',
+    ar: 'جدول'
   },
   'project.onlyAvailable': {
     ru: 'Только доступные',
     en: 'Only available',
-    ka: 'მხოლოდ ხელმისაწვდომი'
+    ka: 'მხოლოდ ხელმისაწვდომი',
+    ar: 'المتاح فقط'
   },
   'project.apartmentNumber': {
     ru: 'Номер квартиры',
     en: 'Apartment number',
-    ka: 'ბინის ნომერი'
+    ka: 'ბინის ნომერი',
+    ar: 'رقم الشقة'
   },
   'project.notFound': {
     ru: 'Проект не найден',
     en: 'Project not found',
-    ka: 'პროექტი ვერ მოიძებნა'
+    ka: 'პროექტი ვერ მოიძებნა',
+    ar: 'المشروع غير موجود'
   },
   'project.invalidId': {
     ru: 'Неверный идентификатор проекта',
     en: 'Invalid project identifier',
-    ka: 'არასწორი პროექტის იდენტიფიკატორი'
+    ka: 'არასწორი პროექტის იდენტიფიკატორი',
+    ar: 'معرف المشروع غير صحيح'
   },
   'project.summary': {
     ru: 'Сводка',
     en: 'Summary',
-    ka: 'შეჯამება'
+    ka: 'შეჯამება',
+    ar: 'ملخص'
   },
   'project.allFloors': {
     ru: 'Все этажи',
     en: 'All floors',
-    ka: 'ყველა სართული'
+    ka: 'ყველა სართული',
+    ar: 'جميع الطوابق'
   },
   'project.allTypes': {
     ru: 'Все типы',
     en: 'All types',
-    ka: 'ყველა ტიპი'
+    ka: 'ყველა ტიპი',
+    ar: 'جميع الأنواع'
   },
 
   // Projects Gallery
   'gallery.title': {
     ru: 'Наши проекты',
     en: 'Our Projects',
-    ka: 'ჩვენი პროექტები'
+    ka: 'ჩვენი პროექტები',
+    ar: 'مشاريعنا'
   },
   'gallery.subtitle': {
     ru: 'Выберите подходящий жилой комплекс',
     en: 'Choose the right residential complex',
-    ka: 'აირჩიეთ შესაფერისი საცხოვრებელი კომპლექსი'
+    ka: 'აირჩიეთ შესაფერისი საცხოვრებელი კომპლექსი',
+    ar: 'اختر المجمع السكني المناسب'
   },
   'gallery.search': {
     ru: 'Поиск',
     en: 'Search',
-    ka: 'ძებნა'
+    ka: 'ძებნა',
+    ar: 'بحث'
   },
   'gallery.searchPlaceholder': {
     ru: 'Название или адрес...',
     en: 'Name or address...',
-    ka: 'სახელი ან მისამართი...'
+    ka: 'სახელი ან მისამართი...',
+    ar: 'الاسم أو العنوان...'
   },
   'gallery.city': {
     ru: 'Город',
     en: 'City',
-    ka: 'ქალაქი'
+    ka: 'ქალაქი',
+    ar: 'المدينة'
   },
   'gallery.allCities': {
     ru: 'Все города',
     en: 'All cities',
-    ka: 'ყველა ქალაქი'
+    ka: 'ყველა ქალაქი',
+    ar: 'جميع المدن'
   },
   'gallery.status': {
     ru: 'Статус',
     en: 'Status',
-    ka: 'სტატუსი'
+    ka: 'სტატუსი',
+    ar: 'الحالة'
   },
   'gallery.allStatuses': {
     ru: 'Все статусы',
     en: 'All statuses',
-    ka: 'ყველა სტატუსი'
+    ka: 'ყველა სტატუსი',
+    ar: 'جميع الحالات'
   },
   'gallery.onSale': {
     ru: 'В продаже',
     en: 'On sale',
-    ka: 'გაყიდვაში'
+    ka: 'გაყიდვაში',
+    ar: 'للبيع'
   },
   'gallery.soldOut': {
     ru: 'Распроданы',
     en: 'Sold out',
-    ka: 'გაყიდული'
+    ka: 'გაყიდული',
+    ar: 'نفدت'
   },
   'gallery.cost': {
     ru: 'Стоимость',
     en: 'Cost',
-    ka: 'ღირებულება'
+    ka: 'ღირებულება',
+    ar: 'التكلفة'
   },
   'gallery.anyCost': {
     ru: 'Любая стоимость',
     en: 'Any cost',
-    ka: 'ნებისმიერი ღირებულება'
+    ka: 'ნებისმიერი ღირებულება',
+    ar: 'أي تكلفة'
   },
   'gallery.upTo5M': {
     ru: 'до 5 млн',
     en: 'up to 5M',
-    ka: '5მ-მდე'
+    ka: '5მ-მდე',
+    ar: 'حتى 5 مليون'
   },
   'gallery.from5To10M': {
     ru: '5-10 млн',
     en: '5-10M',
-    ka: '5-10მ'
+    ka: '5-10მ',
+    ar: '5-10 مليون'
   },
   'gallery.from10M': {
     ru: 'от 10 млн',
     en: 'from 10M',
-    ka: '10მ-დან'
+    ka: '10მ-დან',
+    ar: 'من 10 مليون'
   },
   'gallery.priceRange': {
     ru: 'Цена',
     en: 'Price',
-    ka: 'ფასი'
+    ka: 'ფასი',
+    ar: 'السعر'
   },
   'gallery.resetFilters': {
     ru: 'Сбросить фильтры',
     en: 'Reset filters',
-    ka: 'ფილტრების გადატვირთვა'
+    ka: 'ფილტრების გადატვირთვა',
+    ar: 'إعادة تعيين التصفيات'
   },
   'gallery.hideFilters': {
     ru: 'Скрыть фильтры',
     en: 'Hide filters',
-    ka: 'ფილტრების დამალვა'
+    ka: 'ფილტრების დამალვა',
+    ar: 'إخفاء التصفيات'
   },
   'gallery.foundCount': {
     ru: 'Найдено',
     en: 'Found',
-    ka: 'ნაპოვნია'
+    ka: 'ნაპოვნია',
+    ar: 'تم العثور على'
   },
   'gallery.viewAllApartments': {
     ru: 'Смотреть все апартаменты',
     en: 'View all apartments',
-    ka: 'ყველა ბინის ნახვა'
+    ka: 'ყველა ბინის ნახვა',
+    ar: 'عرض جميع الشقق'
   },
   'gallery.installment0': {
     ru: 'Рассрочка 0%',
     en: 'Installment 0%',
-    ka: 'განვადება 0%'
+    ka: 'განვადება 0%',
+    ar: 'تقسيط 0%'
   },
   'gallery.downPayment': {
     ru: 'первый взнос от 5%',
     en: 'down payment from 5%',
-    ka: 'პირველი გადახდა 5%-დან'
+    ka: 'პირველი გადახდა 5%-დან',
+    ar: 'الدفعة الأولى من 5%'
   },
   'gallery.salesStart': {
     ru: 'Старт продаж',
     en: 'Sales start',
-    ka: 'გაყიდვების დაწყება'
+    ka: 'გაყიდვების დაწყება',
+    ar: 'بداية المبيعات'
   },
   'gallery.floors': {
     ru: 'этажей',
     en: 'floors',
-    ka: 'სართული'
+    ka: 'სართული',
+    ar: 'طوابق'
   },
   'gallery.apartments': {
     ru: 'квартир',
     en: 'apartments',
-    ka: 'ბინა'
+    ka: 'ბინა',
+    ar: 'شقق'
   },
   'gallery.from': {
     ru: 'от',
     en: 'from',
-    ka: '-დან'
+    ka: '-დან',
+    ar: 'من'
   },
   'gallery.available': {
     ru: 'доступно',
     en: 'available',
-    ka: 'ხელმისაწვდომია'
+    ka: 'ხელმისაწვდომია',
+    ar: 'متاح'
   },
   'gallery.open': {
     ru: 'Открыть',
     en: 'Open',
-    ka: 'გახსნა'
+    ka: 'გახსნა',
+    ar: 'فتح'
   },
   'gallery.noProjects': {
     ru: 'Проекты не найдены',
     en: 'No projects found',
-    ka: 'პროექტები ვერ მოიძებნა'
+    ka: 'პროექტები ვერ მოიძებნა',
+    ar: 'لم يتم العثور على مشاريع'
   },
   'gallery.changeSearchCriteria': {
     ru: 'Попробуйте изменить критерии поиска',
     en: 'Try changing search criteria',
-    ka: 'სცადეთ ძებნის კრიტერიუმების შეცვლა'
+    ka: 'სცადეთ ძებნის კრიტერიუმების შეცვლა',
+    ar: 'حاول تغيير معايير البحث'
   },
 
   // Admin Dashboard
   'admin.back': {
     ru: 'Назад',
     en: 'Back',
-    ka: 'უკან'
+    ka: 'უკან',
+    ar: 'رجوع'
   },
   'admin.dashboard': {
     ru: 'Панель управления',
     en: 'Admin Dashboard',
-    ka: 'ადმინისტრაციული პანელი'
+    ka: 'ადმინისტრაციული პანელი',
+    ar: 'لوحة الإدارة'
   },
   'admin.dashboardDescription': {
     ru: 'Управление проектами и настройками',
     en: 'Manage projects and settings',
-    ka: 'პროექტების და პარამეტრების მართვა'
+    ka: 'პროექტების და პარამეტრების მართვა',
+    ar: 'إدارة المشاريع والإعدادات'
   },
   'admin.projects': {
     ru: 'Проекты',
     en: 'Projects',
-    ka: 'პროექტები'
+    ka: 'პროექტები',
+    ar: 'المشاريع'
   },
   'admin.widgets': {
     ru: 'Виджеты',
     en: 'Widgets',
-    ka: 'ვიჯეტები'
+    ka: 'ვიჯეტები',
+    ar: 'الودجات'
   },
   'admin.analytics': {
     ru: 'Аналитика',
     en: 'Analytics',
-    ka: 'ანალიტიკა'
+    ka: 'ანალიტიკა',
+    ar: 'التحليلات'
   },
   'admin.settings': {
     ru: 'Настройки',
     en: 'Settings',
-    ka: 'პარამეტრები'
+    ka: 'პარამეტრები',
+    ar: 'الإعدادات'
   },
   'admin.analyticsDescription': {
     ru: 'Статистика по проектам и квартирам',
     en: 'Statistics on projects and apartments',
-    ka: 'სტატისტიკა პროექტებისა და ბინების შესახებ'
+    ka: 'სტატისტიკა პროექტებისა და ბინების შესახებ',
+    ar: 'إحصائيات المشاريع والشقق'
   },
   'admin.analyticsComingSoon': {
     ru: 'Функция аналитики будет добавлена позже',
     en: 'Analytics feature will be added later',
-    ka: 'ანალიტიკის ფუნქცია მოგვიანებით დაემატება'
+    ka: 'ანალიტიკის ფუნქცია მოგვიანებით დაემატება',
+    ar: 'ستتم إضافة ميزة التحليلات لاحقاً'
   },
 
   // Project List
   'projectList.noProjects': {
     ru: 'Нет проектов',
     en: 'No projects',
-    ka: 'პროექტები არ არის'
+    ka: 'პროექტები არ არის',
+    ar: 'لا توجد مشاريع'
   },
   'projectList.createFirstDescription': {
     ru: 'Создайте свой первый проект недвижимости с интерактивными планами этажей и квартир',
     en: 'Create your first real estate project with interactive floor and apartment plans',
-    ka: 'შექმენით თქვენი პირველი უძრავი ქონების პროექტი ინტერაქტიული სართულისა და ბინების გეგმებით'
+    ka: 'შექმენით თქვენი პირველი უძრავი ქონების პროექტი ინტერაქტიული სართულისა და ბინების გეგმებით',
+    ar: 'أنشئ مشروعك العقاري الأول مع مخططات الطوابق والشقق التفاعلية'
   },
   'projectList.createFirst': {
     ru: 'Создать первый проект',
     en: 'Create first project',
-    ka: 'პირველი პროექტის შექმნა'
+    ka: 'პირველი პროექტის შექმნა',
+    ar: 'إنشاء المشروع الأول'
   },
   'projectList.createNew': {
     ru: 'Создать проект',
     en: 'Create project',
-    ka: 'პროექტის შექმნა'
+    ka: 'პროექტის შექმნა',
+    ar: 'إنشاء مشروع'
   },
   'projectList.projects': {
     ru: 'Проекты',
     en: 'Projects',
-    ka: 'პროექტები'
+    ka: 'პროექტები',
+    ar: 'المشاريع'
   },
   'projectList.manageDescription': {
     ru: 'Управление проектами недвижимости',
     en: 'Manage real estate projects',
-    ka: 'უძრავი ქონების პროექტების მართვა'
+    ka: 'უძრავი ქონების პროექტების მართვა',
+    ar: 'إدارة مشاريع العقارات'
   },
 
   // Embed Projects Page
   'embed.title': {
     ru: 'Проекты недвижимости',
     en: 'Real Estate Projects',
-    ka: 'უძრავი ქონების პროექტები'
+    ka: 'უძრავი ქონების პროექტები',
+    ar: 'مشاريع العقارات'
   },
   'embed.subtitle': {
     ru: 'Выберите проект для просмотра доступных квартир',
     en: 'Select a project to view available apartments',
-    ka: 'აირჩიეთ პროექტი ხელმისაწვდომი ბინების სანახავად'
+    ka: '아이რჩიეთ პროექტი ხელმისაწვდომი ბინების სანახავად',
+    ar: 'اختر مشروعاً لعرض الشقق المتاحة'
   },
   'embed.noProjects': {
     ru: 'Проекты не найдены',
     en: 'No projects found',
-    ka: 'პროექტები ვერ მოიძებნა'
+    ka: 'პროექტები ვერ მოიძებნა',
+    ar: 'لم يتم العثور على مشاريع'
   },
   'embed.floors': {
     ru: 'Этажей',
     en: 'Floors',
-    ka: 'სართულები'
+    ka: 'სართულები',
+    ar: 'طوابق'
   },
   'embed.viewApartments': {
     ru: 'Посмотреть квартиры',
     en: 'View apartments',
-    ka: 'ბინების ნახვა'
+    ka: 'ბინების ნახვა',
+    ar: 'عرض الشقق'
   },
 
   // Project Creation Modal
   'modal.createProject': {
     ru: 'Создать новый проект',
     en: 'Create new project',
-    ka: 'ახალი პროექტის შექმნა'
+    ka: 'ახალი პროექტის შექმნა',
+    ar: 'إنشاء مشروع جديد'
   },
   'modal.chooseMethod': {
     ru: 'Выберите способ создания проекта',
     en: 'Choose project creation method',
-    ka: 'აირჩიეთ პროექტის შექმნის მეთოდი'
+    ka: 'აირჩიეთ პროექტის შექმნის მეთოდი',
+    ar: 'اختر طريقة إنشاء المشروع'
   },
   'modal.manualSetup': {
     ru: 'Ручная настройка',
     en: 'Manual setup',
-    ka: 'ხელით კონფიგურაცია'
+    ka: 'ხელით კონფიგურაცია',
+    ar: 'إعداد يدوي'
   },
   'modal.manualSetupDesc': {
     ru: 'Создать проект с нуля и настроить все самостоятельно',
     en: 'Create project from scratch and configure everything manually',
-    ka: 'შექმენით პროექტი ნულიდან და ყველაფერი ხელით კონფიგურაცია'
+    ka: 'შექმენით პროექტი ნულიდან და ყველაფერი ხელით კონფიგურაცია',
+    ar: 'أنشئ مشروعاً من الصفر واضبط كل شيء يدوياً'
   },
   'modal.startManual': {
     ru: 'Начать ручное создание',
     en: 'Start manual creation',
-    ka: 'ხელით შექმნის დაწყება'
+    ka: 'ხელით შექმნის დაწყება',
+    ar: 'بدء الإنشاء اليدوي'
   },
   'modal.importExcel': {
     ru: 'Импорт из Excel',
     en: 'Import from Excel',
-    ka: 'Excel-იდან იმპორტი'
+    ka: 'Excel-იდან იმპორტი',
+    ar: 'استيراد من Excel'
   },
   'modal.importExcelDesc': {
     ru: 'Загрузить Excel файл с данными квартир и автоматически создать проект',
     en: 'Upload Excel file with apartment data and automatically create project',
-    ka: 'ატვირთეთ Excel ფაილი ბინების მონაცემებით და ავტომატურად შექმენით პროექტი'
+    ka: 'ატვირთეთ Excel ფაილი ბინების მონაცემებით და ავტომატურად შექმენით პროექტი',
+    ar: 'قم بتحميل ملف Excel ببيانات الشقق وإنشاء المشروع تلقائياً'
   },
 
   // Project Editor
   'projectEditor.newProject': {
     ru: 'Новый проект',
     en: 'New project',
-    ka: 'ახალი პროექტი'
+    ka: 'ახალი პროექტი',
+    ar: 'مشروع جديد'
   },
   'projectEditor.editProject': {
     ru: 'Редактирование проекта',
     en: 'Edit project',
-    ka: 'პროექტის რედაქტირება'
+    ka: 'პროექტის რედაქტირება',
+    ar: 'تعديل المشروع'
   },
   'projectEditor.createNewProject': {
     ru: 'Создание нового проекта',
     en: 'Creating new project',
-    ka: 'ახალი პროექტის შექმნა'
+    ka: 'ახალი პროექტის შექმნა',
+    ar: 'إنشاء مشروع جديد'
   },
   'projectEditor.projectNameRequired': {
     ru: 'Название проекта обязательно',
     en: 'Project name is required',
-    ka: 'პროექტის სახელი საჭიროა'
+    ka: 'პროექტის სახელი საჭიროა',
+    ar: 'اسم المشروع مطلوب'
   },
   'projectEditor.authRequired': {
     ru: 'Необходима авторизация для работы с проектом',
     en: 'Authentication required to work with project',
-    ka: 'პროექტთან მუშაობისთვის ავტორიზაცია საჭიროა'
+    ka: 'პროექტთან მუშაობისთვის ავტორიზაცია საჭიროა',
+    ar: 'المصادقة مطلوبة للعمل مع المشروع'
   },
   'projectEditor.authRequiredCreate': {
     ru: 'Необходима авторизация для создания проекта',
     en: 'Authentication required to create project',
-    ka: 'პროექტის შექმნისთვის ავტორიზაცია საჭიროა'
+    ka: 'პროექტის შექმნისთვის ავტორიზაცია საჭიროა',
+    ar: 'المصادقة مطلوبة لإنشاء مشروع'
   },
   'projectEditor.authRequiredEdit': {
     ru: 'Необходима авторизация для редактирования проекта',
     en: 'Authentication required to edit project',
-    ka: 'პროექტის რედაქტირებისთვის ავტორიზაცია საჭიროა'
+    ka: 'პროექტის რედაქტირებისთვის ავტორიზაცია საჭიროა',
+    ar: 'المصادقة مطلوبة لتعديل المشروع'
   },
   'projectEditor.projectCreated': {
     ru: 'Проект создан',
     en: 'Project created',
-    ka: 'პროექტი შეიქმნა'
+    ka: 'პროექტი შეიქმნა',
+    ar: 'تم إنشاء المشروع'
   },
   'projectEditor.projectSaved': {
     ru: 'Проект сохранен',
     en: 'Project saved',
-    ka: 'პროექტი შენახულია'
+    ka: 'პროექტი შენახულია',
+    ar: 'تم حفظ المشروع'
   },
   'projectEditor.errorLoading': {
     ru: 'Ошибка загрузки проекта',
     en: 'Error loading project',
-    ka: 'პროექტის ჩატვირთვის შეცდომა'
+    ka: 'პროექტის ჩატვირთვის შეცდომა',
+    ar: 'خطأ في تحميل المشروع'
   },
   'projectEditor.errorSaving': {
     ru: 'Ошибка сохранения проекта',
     en: 'Error saving project',
-    ka: 'პროექტის შენახვის შეცდომა'
+    ka: 'პროექტის შენახვის შეცდომა',
+    ar: 'خطأ في حفظ المشروع'
   },
   'projectEditor.accessDenied': {
     ru: 'Доступ запрещен',
     en: 'Access denied',
-    ka: 'წვდომა უარყოფილია'
+    ka: 'წვდომა უარყოფილია',
+    ar: 'تم رفض الوصول'
   },
   'projectEditor.noEditRights': {
     ru: 'У вас нет прав на редактирование этого проекта',
     en: 'You do not have permission to edit this project',
-    ka: 'ამ პროექტის რედაქტირების უფლება არ გაქვთ'
+    ka: 'ამ პროექტის რედაქტირების უფლება არ გაქვთ',
+    ar: 'ليست لديك صلاحية لتعديل هذا المشروع'
   },
   'projectEditor.back': {
     ru: 'Назад',
     en: 'Back',
-    ka: 'უკან'
+    ka: 'უკან',
+    ar: 'رجوع'
   },
   'projectEditor.save': {
     ru: 'Сохранить',
     en: 'Save',
-    ka: 'შენახვა'
+    ka: 'შენახვა',
+    ar: 'حفظ'
   },
   'projectEditor.saving': {
     ru: 'Сохранение...',
     en: 'Saving...',
-    ka: 'შენახვა...'
+    ka: 'შენახვა...',
+    ar: 'جار الحفظ...'
   },
   'projectEditor.basicInfo': {
     ru: 'Основная информация',
     en: 'Basic information',
-    ka: 'ძირითადი ინფორმაცია'
+    ka: 'ძირითადი ინფორმაცია',
+    ar: 'معلومات أساسية'
   },
   'projectEditor.projectName': {
     ru: 'Название проекта',
     en: 'Project name',
-    ka: 'პროექტის სახელი'
+    ka: 'პროექტის სახელი',
+    ar: 'اسم المشروع'
   },
   'projectEditor.description': {
     ru: 'Описание',
     en: 'Description',
-    ka: 'აღწერა'
+    ka: 'აღწერა',
+    ar: 'الوصف'
   },
   'projectEditor.address': {
     ru: 'Адрес',
     en: 'Address',
-    ka: 'მისამართი'
+    ka: 'მისამართი',
+    ar: 'العنوان'
   },
   'projectEditor.floors': {
     ru: 'Количество этажей',
     en: 'Number of floors',
-    ka: 'სართულების რაოდენობა'
+    ka: 'სართულების რაოდენობა',
+    ar: 'عدد الطوابق'
   },
   'projectEditor.hasParking': {
     ru: 'Паркинг',
     en: 'Parking',
-    ka: 'პარკინგი'
+    ka: 'პარკინგი',
+    ar: 'مواقف سيارات'
   },
   'projectEditor.hasCommercial': {
     ru: 'Коммерческие помещения',
     en: 'Commercial spaces',
-    ka: 'კომერციული ფართები'
+    ka: 'კომერციული ფართები',
+    ar: 'مساحات تجارية'
   },
   'projectEditor.buildingImage': {
     ru: 'Изображение здания',
     en: 'Building image',
-    ka: 'შენობის სურათი'
+    ka: 'შენობის სურათი',
+    ar: 'صورة المبنى'
   },
   'projectEditor.floorPlan': {
     ru: 'План этажа',
     en: 'Floor plan',
-    ka: 'სართულის გეგმა'
+    ka: 'სართულის გეგმა',
+    ar: 'مخطط الطابق'
   },
   'projectEditor.floor': {
     ru: 'Этаж',
     en: 'Floor',
-    ka: 'სართული'
+    ka: 'სართული',
+    ar: 'الطابق'
   },
   'projectEditor.floorPlanDesc': {
     ru: 'Планировка {floor} этажа',
     en: 'Floor {floor} layout',
-    ka: 'სართული {floor} განლაგება'
+    ka: 'სართული {floor} განლაგება',
+    ar: 'تخطيط الطابق {floor}'
   },
   'projectEditor.plan': {
     ru: 'План',
     en: 'Plan',
-    ka: 'გეგმა'
+    ka: 'გეგმა',
+    ar: 'المخطط'
   },
 
   // Project Editor - PDF presentation
   'projectEditor.pdfPresentation': {
     ru: 'PDF презентация',
     en: 'PDF presentation',
-    ka: 'PDF პრეზენტაცია'
+    ka: 'PDF პრეზენტაცია',
+    ar: 'عرض PDF'
   },
   'projectEditor.pdfUploaded': {
     ru: 'PDF загружен',
     en: 'PDF uploaded',
-    ka: 'PDF აიტვირთა'
+    ka: 'PDF აიტვირთა',
+    ar: 'تم رفع ملف PDF'
   },
   'projectEditor.view': {
     ru: 'Просмотр',
     en: 'View',
-    ka: 'ნახვა'
+    ka: 'ნახვა',
+    ar: 'عرض'
   },
   'projectEditor.pdfPresentationDesc': {
     ru: 'Загрузите PDF-презентацию проекта',
     en: 'Upload project PDF presentation',
-    ka: 'ატვირთეთ პროექტის PDF პრეზენტაცია'
+    ka: 'ატვირთეთ პროექტის PDF პრეზენტაცია',
+    ar: 'قم بتحميل عرض المشروع بصيغة PDF'
   },
   'projectEditor.uploading': {
     ru: 'Загрузка...',
     en: 'Uploading...',
-    ka: 'იტვირთება...'
+    ka: 'იტვირთება...',
+    ar: 'جار الرفع...'
   },
   'projectEditor.uploadPdf': {
     ru: 'Загрузить PDF',
@@ -1669,320 +1826,381 @@ const translations: Translations = {
   'projectList.deleteConfirm': {
     ru: 'Вы уверены, что хотите удалить проект "{name}"?',
     en: 'Are you sure you want to delete project "{name}"?',
-    ka: 'დარწმუნებული ხართ, რომ გსურთ პროექტის "{name}" წაშლა?'
+    ka: 'დარწმუნებული ხართ, რომ გსურთ პროექტის "{name}" წაშლა?',
+    ar: 'هل أنت متأكد أنك تريد حذف المشروع "{name}"؟'
   },
   'projectList.projectDeleted': {
     ru: 'Проект удален',
     en: 'Project deleted',
-    ka: 'პროექტი წაშლილია'
+    ka: 'პროექტი წაშლილია',
+    ar: 'تم حذف المشروع'
   },
   'projectList.errorDeleting': {
     ru: 'Ошибка удаления проекта',
     en: 'Error deleting project',
-    ka: 'პროექტის წაშლის შეცდომა'
+    ka: 'პროექტის წაშლის შეცდომა',
+    ar: 'خطأ في حذف المشروع'
   },
   'projectList.errorLoading': {
     ru: 'Ошибка загрузки проектов',
     en: 'Error loading projects',
-    ka: 'პროექტების ჩატვირთვის შეცდომა'
+    ka: 'პროექტების ჩატვირთვის შეცდომა',
+    ar: 'خطأ في تحميل المشاريع'
   },
   'projectList.timeoutError': {
     ru: 'Загрузка проектов заняла слишком много времени',
     en: 'Loading projects took too long',
-    ka: 'პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა'
+    ka: 'პროექტების ჩატვირთვას ძალიან დიდი დრო დასჭირდა',
+    ar: 'استغرق تحميل المشاريع وقتاً طويلاً'
   },
   'projectList.authRequired': {
     ru: 'Необходима авторизация',
     en: 'Authentication required',
-    ka: 'ავტორიზაცია საჭიროა'
+    ka: 'ავტორიზაცია საჭიროა',
+    ar: 'المصادقة مطلوبة'
   },
   'projectList.viewProject': {
     ru: 'Посмотреть проект',
     en: 'View project',
-    ka: 'პროექტის ნახვა'
+    ka: 'პროექტის ნახვა',
+    ar: 'عرض المشروع'
   },
   'projectList.editProject': {
     ru: 'Редактировать проект',
     en: 'Edit project',
-    ka: 'პროექტის რედაქტირება'
+    ka: 'პროექტის რედაქტირება',
+    ar: 'تعديل المشروع'
   },
   'projectList.deleteProject': {
     ru: 'Удалить проект',
     en: 'Delete project',
-    ka: 'პროექტის წაშლა'
+    ka: 'პროექტის წაშლა',
+    ar: 'حذف المشروع'
   },
   'projectList.copyWidgetCode': {
     ru: 'Копировать код виджета',
     en: 'Copy widget code',
-    ka: 'ვიჯეტის კოდის კოპირება'
+    ka: 'ვიჯეტის კოდის კოპირება',
+    ar: 'نسخ كود الودجت'
   },
   'projectList.widgetCodeCopied': {
     ru: 'Код виджета скопирован',
     en: 'Widget code copied',
-    ka: 'ვიჯეტის კოდი კოპირებულია'
+    ka: 'ვიჯეტის კოდი კოპირებულია',
+    ar: 'تم نسخ كود الودجت'
   },
   'projectList.created': {
     ru: 'Создан',
     en: 'Created',
-    ka: 'შეიქმნა'
+    ka: 'შეიქმნა',
+    ar: 'تم الإنشاء'
   },
   'projectList.updated': {
     ru: 'Обновлен',
     en: 'Updated',
-    ka: 'განახლებულია'
+    ka: 'განახლებულია',
+    ar: 'تم التحديث'
   },
   'projectList.floors': {
     ru: 'Этажей',
     en: 'Floors',
-    ka: 'სართულები'
+    ka: 'სართულები',
+    ar: 'طوابق'
   },
   'projectList.apartments': {
     ru: 'Квартир',
     en: 'Apartments',
-    ka: 'ბინები'
+    ka: 'ბინები',
+    ar: 'شقق'
   },
 
   // Admin Widgets
   'adminWidgets.embedCode': {
     ru: 'Код для вставки',
     en: 'Embed code',
-    ka: 'ჩასასმელი კოდი'
+    ka: 'ჩასასმელი კოდი',
+    ar: 'كود التضمين'
   },
   'adminWidgets.embedCodeDesc': {
     ru: 'Скопируйте этот код и вставьте на ваш сайт',
     en: 'Copy this code and paste it on your website',
-    ka: 'დააკოპირეთ ეს კოდი და ჩასვით თქვენს საიტზე'
+    ka: 'დააკოპირეთ ეს კოდი და ჩასვით თქვენს საიტზე',
+    ar: 'انسخ هذا الكود والصقه في موقعك'
   },
   'adminWidgets.width': {
     ru: 'Ширина',
     en: 'Width',
-    ka: 'სიგანე'
+    ka: 'სიგანე',
+    ar: 'العرض'
   },
   'adminWidgets.height': {
     ru: 'Высота',
     en: 'Height',
-    ka: 'სიმაღლე'
+    ka: 'სიმაღლე',
+    ar: 'الارتفاع'
   },
   'adminWidgets.selectProject': {
     ru: 'Выберите проект',
     en: 'Select project',
-    ka: 'აირჩიეთ პროექტი'
+    ka: 'აირჩიეთ პროექტი',
+    ar: 'اختر مشروعاً'
   },
   'adminWidgets.allProjects': {
     ru: 'Все проекты (галерея)',
     en: 'All projects (gallery)',
-    ka: 'ყველა პროექტი (გალერეა)'
+    ka: 'ყველა პროექტი (გალერეა)',
+    ar: 'كل المشاريع (معرض)'
   },
   'adminWidgets.copyCode': {
     ru: 'Копировать код',
     en: 'Copy code',
-    ka: 'კოდის კოპირება'
+    ka: 'კოდის კოპირება',
+    ar: 'نسخ الكود'
   },
   'adminWidgets.codeCopied': {
     ru: 'Код скопирован в буфер обмена',
     en: 'Code copied to clipboard',
-    ka: 'კოდი კოპირებულია ბუფერში'
+    ka: 'კოდი კოპირებულია ბუფერში',
+    ar: 'تم نسخ الكود إلى الحافظة'
   },
   'adminWidgets.preview': {
     ru: 'Предварительный просмотр',
     en: 'Preview',
-    ka: 'წინასწარი ნახვა'
+    ka: 'წინასწარი ნახვა',
+    ar: 'معاينة'
   },
   'adminWidgets.loading': {
     ru: 'Загрузка...',
     en: 'Loading...',
-    ka: 'ჩატვირთვა...'
+    ka: 'ჩატვირთვა...',
+    ar: 'جار التحميل...'
   },
   'adminWidgets.links': {
     ru: 'Прямые ссылки',
     en: 'Direct links',
-    ka: 'პირდაპირი ბმულები'
+    ka: 'პირდაპირი ბმულები',
+    ar: 'روابط مباشرة'
   },
   'adminWidgets.linksDesc': {
     ru: 'Используйте эти ссылки для прямого доступа к виджетам',
     en: 'Use these links to access the widgets directly',
-    ka: 'ვიჯეტების პირდაპირი წვდომისთვის გამოიყენეთ ეს ბმულები'
+    ka: 'ვიჯეტების პირდაპირი წვდომისთვის გამოიყენეთ ეს ბმულები',
+    ar: 'استخدم هذه الروابط للوصول إلى الودجات مباشرة'
   },
   'adminWidgets.selectedProject': {
     ru: 'Выбранный проект',
     en: 'Selected project',
-    ka: 'აირჩილა პროექტი'
+    ka: 'აირჩილა პროექტი',
+    ar: 'المشروع المحدد'
   },
   'adminWidgets.allProjectsDesc': {
     ru: 'Галерея всех проектов',
     en: 'Gallery of all projects',
-    ka: 'ყველა პროექტის გალერეა'
+    ka: 'ყველა პროექტის გალერეა',
+    ar: 'معرض كل المشاريع'
   },
 
   // Interactive Map
   'map.loading': {
     ru: 'Загрузка карты...',
     en: 'Loading map...',
-    ka: 'რუკის ჩატვირთვა...'
+    ka: 'რუკის ჩატვირთვა...',
+    ar: 'جارٍ تحميل الخريطة...'
   },
   'map.noProjects': {
     ru: 'Нет проектов для отображения',
     en: 'No projects to display',
-    ka: 'საჩვენებელი პროექტები არ არის'
+    ka: 'საჩვენებელი პროექტები არ არის',
+    ar: 'لا توجد مشاريع لعرضها'
   },
   'map.viewProject': {
     ru: 'Посмотреть проект',
     en: 'View project',
-    ka: 'პროექტის ნახვა'
+    ka: 'პროექტის ნახვა',
+    ar: 'عرض المشروع'
   },
   'map.projectInfo': {
     ru: 'Информация о проекте',
     en: 'Project information',
-    ka: 'პროექტის ინფორმაცია'
+    ka: 'პროექტის ინფორმაცია',
+    ar: 'معلومات المشروع'
   },
 
   // Embed Pages
   'embed.userNotFound': {
     ru: 'Пользователь не найден',
     en: 'User not found',
-    ka: 'მომხმარებელი ვერ მოიძებნა'
+    ka: 'მომხმარებელი ვერ მოიძებნა',
+    ar: 'المستخدم غير موجود'
   },
   'embed.userNotFoundDesc': {
     ru: 'Указанный пользователь не существует или не имеет публичных проектов.',
     en: 'The specified user does not exist or has no public projects.',
-    ka: 'მითითებული მომხმარებელი არ არსებობს ან არ აქვს საჯარო პროექტები.'
+    ka: 'მითითებული მომხმარებელი არ არსებობს ან არ აქვს საჯარო პროექტები.',
+    ar: 'المستخدم المحدد غير موجود أو ليس لديه مشاريع عامة.'
   },
   'embed.projects': {
     ru: 'Проекты ({count})',
     en: 'Projects ({count})',
-    ka: 'პროექტები ({count})'
+    ka: 'პროექტები ({count})',
+    ar: 'المشاريع ({count})'
   },
   'embed.onMap': {
     ru: 'На карте',
     en: 'On map',
-    ka: 'რუკაზე'
+    ka: 'რუკაზე',
+    ar: 'على الخريطة'
   },
   'embed.listView': {
     ru: 'Список',
     en: 'List view',
-    ka: 'სიის ხედი'
+    ka: 'სიის ხედი',
+    ar: 'عرض القائمة'
   },
   'embed.resetFilters': {
     ru: 'Сбросить фильтры',
     en: 'Reset filters',
-    ka: 'ფილტრების გაუქმება'
+    ka: 'ფილტრების გაუქმება',
+    ar: 'إعادة تعيين التصفيات'
   },
 
   // Admin Widgets (additional)
   'adminWidgets.title': {
     ru: 'Виджеты',
     en: 'Widgets',
-    ka: 'ვიჯეტები'
+    ka: 'ვიჯეტები',
+    ar: 'الودجات'
   },
   'adminWidgets.description': {
     ru: 'Создание и настройка встраиваемых виджетов для ваших проектов',
     en: 'Create and configure embeddable widgets for your projects',
-    ka: 'თქვენი პროექტებისთვის ჩასასმელი ვიჯეტების შექმნა და კონფიგურაცია'
+    ka: 'თქვენი პროექტებისთვის ჩასასმელი ვიჯეტების შექმნა და კონფიგურაცია',
+    ar: 'إنشاء وتكوين الودجات القابلة للتضمين لمشاريعك'
   },
   'adminWidgets.settings': {
     ru: 'Настройки виджета',
     en: 'Widget settings',
-    ka: 'ვიჯეტის პარამეტრები'
+    ka: 'ვიჯეტის პარამეტრები',
+    ar: 'إعدادات الودجت'
   },
   'adminWidgets.settingsDesc': {
     ru: 'Выберите проект и настройте параметры виджета',
     en: 'Select project and configure widget parameters',
-    ka: 'აირჩიეთ პროექტი და დააკონფიგურირეთ ვიჯეტის პარამეტრები'
+    ka: 'აირჩიეთ პროექტი და დააკონფიგურირეთ ვიჯეტის პარამეტრები',
+    ar: 'اختر مشروعاً واضبط إعدادات الودجت'
   },
   // Project Editor (additional)
   'projectEditor.photos': {
     ru: 'Фото',
     en: 'Photos',
-    ka: 'ფოტოები'
+    ka: 'ფოტოები',
+    ar: 'الصور'
   },
   'projectEditor.latitude': {
     ru: 'Широта (latitude)',
     en: 'Latitude',
-    ka: 'განედი'
+    ka: 'განედი',
+    ar: 'خط العرض'
   },
   'projectEditor.longitude': {
     ru: 'Долгота (longitude)',
     en: 'Longitude',
-    ka: 'გრძედი'
+    ka: 'გრძედი',
+    ar: 'خط الطول'
   },
   'projectEditor.latitudePlaceholder': {
     ru: 'Например: 41.6967',
     en: 'Example: 41.6967',
-    ka: 'მაგალითი: 41.6967'
+    ka: 'მაგალითი: 41.6967',
+    ar: 'مثال: 41.6967'
   },
   'projectEditor.longitudePlaceholder': {
     ru: 'Например: 44.7896',
     en: 'Example: 44.7896',
-    ka: 'მაგალითი: 44.7896'
+    ka: 'მაგალითი: 44.7896',
+    ar: 'مثال: 44.7896'
   },
   'projectEditor.latitudeExample': {
     ru: 'Пример: 41.6967 (Тбилиси)',
     en: 'Example: 41.6967 (Tbilisi)',
-    ka: 'მაგალითი: 41.6967 (თბილისი)'
+    ka: 'მაგალითი: 41.6967 (თბილისი)',
+    ar: 'مثال: 41.6967 (تبليسي)'
   },
   'projectEditor.longitudeExample': {
     ru: 'Пример: 44.7896 (Тбилиси)',
     en: 'Example: 44.7896 (Tbilisi)',
-    ka: 'მაგალითი: 44.7896 (თბილისი)'
+    ka: 'მაგალითი: 44.7896 (თბილისი)',
+    ar: 'مثال: 44.7896 (تبليسي)'
   },
   'projectEditor.floorPlans': {
     ru: 'Планы этажей',
     en: 'Floor plans',
-    ka: 'სართულების გეგმები'
+    ka: 'სართულების გეგმები',
+    ar: 'مخططات الطوابق'
   },
   'projectEditor.floorPlansDesc': {
     ru: 'Управление планировками этажей. Нажмите на этаж для редактирования.',
     en: 'Manage floor layouts. Click on a floor to edit.',
-    ka: 'სართულების განლაგების მართვა. რედაქტირებისთვის დააჭირეთ სართულს.'
+    ka: 'სართულების განლაგების მართვა. რედაქტირებისთვის დააჭირეთ სართულს.',
+    ar: 'إدارة مخططات الطوابق. انقر على طابق للتحرير.'
   },
   'projectEditor.currency': {
     ru: 'Валюта',
     en: 'Currency',
-    ka: 'ვალუტა'
+    ka: 'ვალუტა',
+    ar: 'العملة'
   },
   'projectEditor.currencyDesc': {
     ru: 'Выберите валюту для отображения цен в проекте',
     en: 'Select currency for displaying prices in the project',
-    ka: 'აირჩიეთ ვალუტა პროექტში ფასების საჩვენებლად'
+    ka: 'აირჩიეთ ვალუტა პროექტში ფასების საჩვენებლად',
+    ar: 'اختر العملة لعرض الأسعار في المشروع'
   },
   'projectEditor.fields': {
     ru: 'Поля',
     en: 'Fields',
-    ka: 'ველები'
+    ka: 'ველები',
+    ar: 'الحقول'
   },
 
   // Currencies
   'currency.rub': {
     ru: 'Российский рубль (₽)',
     en: 'Russian Ruble (₽)',
-    ka: 'რუსული რუბლი (₽)'
+    ka: 'რუსული რუბლი (₽)',
+    ar: 'الروبل الروسي (₽)'
   },
   'currency.usd': {
     ru: 'Доллар США ($)',
     en: 'US Dollar ($)',
-    ka: 'აშშ დოლარი ($)'
+    ka: 'აშშ დოლარი ($)',
+    ar: 'الدولار الأمريكي ($)'
   },
   'currency.eur': {
     ru: 'Евро (€)',
     en: 'Euro (€)',
-    ka: 'ევრო (€)'
+    ka: 'ევრო (€)',
+    ar: 'اليورو (€)'
   },
   'currency.gel': {
     ru: 'Грузинский лари (₾)',
     en: 'Georgian Lari (₾)',
-    ka: 'ქართული ლარი (₾)'
+    ka: 'ქართული ლარი (₾)',
+    ar: 'اللاري الجورجي (₾)'
   },
 
   // Widget Languages
   'adminWidgets.defaultLanguage': {
     ru: 'Язык по умолчанию',
     en: 'Default language',
-    ka: 'ნაგულისხმევი ენა'
+    ka: 'ნაგულისხმევი ენა',
+    ar: 'اللغة الافتراضية'
   },
   'adminWidgets.defaultLanguageDesc': {
     ru: 'Выберите язык по умолчанию для виджета',
     en: 'Select default language for the widget',
-    ka: 'აირჩიეთ ნაგულისხმევი ენა ვიჯეტისთვის'
+    ka: 'აირჩიეთ ნაგულისხმევი ენა ვიჯეტისთვის',
+    ar: 'اختر اللغة الافتراضية للودجت'
   },
 
   // Languages
@@ -2012,353 +2230,423 @@ const translations: Translations = {
   'adminSettings.title': {
     ru: 'Настройки',
     en: 'Settings',
-    ka: 'პარამეტრები'
+    ka: 'პარამეტრები',
+    ar: 'الإعدادات'
   },
   'adminSettings.description': {
     ru: 'Управление настройками компании и контактной информацией',
     en: 'Manage company settings and contact information',
-    ka: 'კომპანიის პარამეტრების და საკონტაქტო ინფორმაციის მართვა'
+    ka: 'კომპანიის პარამეტრების და საკონტაქტო ინფორმაციის მართვა',
+    ar: 'إدارة إعدادات الشركة ومعلومات الاتصال'
   },
   'adminSettings.save': {
     ru: 'Сохранить',
     en: 'Save',
-    ka: 'შენახვა'
+    ka: 'შენახვა',
+    ar: 'حفظ'
   },
   'adminSettings.saving': {
     ru: 'Сохранение...',
     en: 'Saving...',
-    ka: 'შენახვა...'
+    ka: 'შენახვა...',
+    ar: 'جاري الحفظ...'
   },
   'adminSettings.settingsSaved': {
     ru: 'Настройки сохранены',
     en: 'Settings saved',
-    ka: 'პარამეტრები შენახულია'
+    ka: 'პარამეტრები შენახულია',
+    ar: 'تم حفظ الإعدادات'
   },
   'adminSettings.errorLoading': {
     ru: 'Ошибка загрузки настроек',
     en: 'Error loading settings',
-    ka: 'პარამეტრების ჩატვირთვის შეცდომა'
+    ka: 'პარამეტრების ჩატვირთვის შეცდომა',
+    ar: 'خطأ في تحميل الإعدادات'
   },
   'adminSettings.errorSaving': {
     ru: 'Ошибка сохранения настроек',
     en: 'Error saving settings',
-    ka: 'პარამეტრების შენახვის შეცდომა'
+    ka: 'პარამეტრების შენახვის შეცდომა',
+    ar: 'خطأ في حفظ الإعدادات'
   },
   'adminSettings.authRequired': {
     ru: 'Необходима авторизация для работы с настройками',
     en: 'Authentication required to work with settings',
-    ka: 'პარამეტრებთან მუშაობისთვის ავტორიზაცია საჭიროა'
+    ka: 'პარამეტრებთან მუშაობისთვის ავტორიზაცია საჭიროა',
+    ar: 'يلزم تسجيل الدخول للعمل مع الإعدادات'
   },
   'adminSettings.company': {
     ru: 'Компания',
     en: 'Company',
-    ka: 'კომპანია'
+    ka: 'კომპანია',
+    ar: 'الشركة'
   },
   'adminSettings.contacts': {
     ru: 'Аккаунты менеджеров',
     en: 'Manager accounts',
-    ka: 'მენეჯერების ანგარიშები'
+    ka: 'მენეჯერების ანგარიშები',
+    ar: 'حسابات المدراء'
   },
   'adminSettings.companyInfo': {
     ru: 'Информация о компании',
     en: 'Company information',
-    ka: 'კომპანიის ინფორმაცია'
+    ka: 'კომპანიის ინფორმაცია',
+    ar: 'معلومات الشركة'
   },
   'adminSettings.companyInfoDesc': {
     ru: 'Основная информация о вашей компании',
     en: 'Basic information about your company',
-    ka: 'თქვენი კომპანიის ძირითადი ინფორმაცია'
+    ka: 'თქვენი კომპანიის ძირითადი ინფორმაცია',
+    ar: 'معلومات أساسية عن شركتك'
   },
   'adminSettings.companyName': {
     ru: 'Название компании',
     en: 'Company name',
-    ka: 'კომპანიის სახელი'
+    ka: 'კომპანიის სახელი',
+    ar: 'اسم الشركة'
   },
   'adminSettings.companyNamePlaceholder': {
     ru: 'ООО «Название компании»',
     en: 'LLC "Company Name"',
-    ka: 'LLC "კომპანიის სახელი"'
+    ka: 'LLC "კომპანიის სახელი"',
+    ar: 'شركة ذات مسؤولية محدودة "اسم الشركة"'
   },
   'adminSettings.companyDescription': {
     ru: 'Описание компании',
     en: 'Company description',
-    ka: 'კომპანიის აღწერა'
+    ka: 'კომპანიის აღწერა',
+    ar: 'وصف الشركة'
   },
   'adminSettings.companyDescriptionPlaceholder': {
     ru: 'Краткое описание деятельности компании...',
     en: 'Brief description of company activities...',
-    ka: 'კომპანიის საქმიანობის მოკლე აღწერა...'
+    ka: 'კომპანიის საქმიანობის მოკლე აღწერა...',
+    ar: 'وصف مختصر لأنشطة الشركة...'
   },
   'adminSettings.companyAddress': {
     ru: 'Адрес компании',
     en: 'Company address',
-    ka: 'კომპანიის მისამართი'
+    ka: 'კომპანიის მისამართი',
+    ar: 'عنوان الشركة'
   },
   'adminSettings.companyAddressPlaceholder': {
     ru: 'г. Город, ул. Улица, д. 1',
     en: 'City, Street, 1',
-    ka: 'ქალაქი, ქუჩა, 1'
+    ka: 'ქალაქი, ქუჩა, 1',
+    ar: 'المدينة، الشارع، 1'
   },
   // Manager Accounts
   'managerAccounts.title': {
     ru: 'Управление менеджерами',
     en: 'Manager Management',
-    ka: 'მენეჯერების მართვა'
+    ka: 'მენეჯერების მართვა',
+    ar: 'إدارة المدراء'
   },
   'managerAccounts.description': {
     ru: 'Добавляйте менеджеров для работы с вашими проектами',
     en: 'Add managers to work with your projects',
-    ka: 'დაამატეთ მენეჯერები თქვენს პროექტებთან სამუშაოდ'
+    ka: 'დაამატეთ მენეჯერები თქვენს პროექტებთან სამუშაოდ',
+    ar: 'أضف المدراء للعمل على مشاريعك'
   },
   'managerAccounts.addManager': {
     ru: 'Добавить менеджера',
     en: 'Add Manager',
-    ka: 'მენეჯერის დამატება'
+    ka: 'მენეჯერის დამატება',
+    ar: 'إضافة مدير'
   },
   'managerAccounts.inviteManager': {
     ru: 'Пригласить менеджера',
     en: 'Invite Manager',
-    ka: 'მენეჯერის მოწვევა'
+    ka: 'მენეჯერის მოწვევა',
+    ar: 'دعوة مدير'
   },
   'managerAccounts.inviteManagerDesc': {
     ru: 'Отправьте приглашение новому менеджеру для работы с вашими проектами',
     en: 'Send an invitation to a new manager to work with your projects',
-    ka: 'გაუგზავნეთ მოწვევა ახალ მენეჯერს თქვენს პროექტებთან სამუშაოდ'
+    ka: 'გაუგზავნეთ მოწვევა ახალ მენეჯერს თქვენს პროექტებთან სამუშაოდ',
+    ar: 'أرسل دعوة لمدير جديد للعمل على مشاريعك'
   },
   'managerAccounts.email': {
     ru: 'Email',
     en: 'Email',
-    ka: 'ელფოსტა'
+    ka: 'ელფოსტა',
+    ar: 'البريد الإلكتروني'
   },
   'managerAccounts.emailPlaceholder': {
     ru: 'manager@example.com',
     en: 'manager@example.com',
-    ka: 'manager@example.com'
+    ka: 'manager@example.com',
+    ar: 'manager@example.com'
   },
   'managerAccounts.fullName': {
     ru: 'Полное имя',
     en: 'Full Name',
-    ka: 'სრული სახელი'
+    ka: 'სრული სახელი',
+    ar: 'الاسم الكامل'
   },
   'managerAccounts.fullNamePlaceholder': {
     ru: 'Иван Иванов',
     en: 'John Doe',
-    ka: 'ივანე ივანოვი'
+    ka: 'ივანე ივანოვი',
+    ar: 'محمد أحمد'
   },
   'managerAccounts.phone': {
     ru: 'Телефон',
     en: 'Phone',
-    ka: 'ტელეფონი'
+    ka: 'ტელეფონი',
+    ar: 'الهاتف'
   },
   'managerAccounts.phonePlaceholder': {
     ru: '+7 (999) 123-45-67',
     en: '+1 (555) 123-4567',
-    ka: '+995 599 123 456'
+    ka: '+995 599 123 456',
+    ar: '+966 5 1234 5678'
   },
   'managerAccounts.invite': {
     ru: 'Пригласить',
     en: 'Invite',
-    ka: 'მოწვევა'
+    ka: 'მოწვევა',
+    ar: 'دعوة'
   },
   'managerAccounts.inviting': {
     ru: 'Приглашаем...',
     en: 'Inviting...',
-    ka: 'მოწვევა...'
+    ka: 'მოწვევა...',
+    ar: 'جارٍ الدعوة...'
   },
   'managerAccounts.activeManagers': {
     ru: 'Активные менеджеры',
     en: 'Active Managers',
-    ka: 'აქტიური მენეჯერები'
+    ka: 'აქტიური მენეჯერები',
+    ar: 'المدراء النشطون'
   },
   'managerAccounts.activeManagersDesc': {
     ru: 'Менеджеры с доступом к вашим проектам',
     en: 'Managers with access to your projects',
-    ka: 'მენეჯერები თქვენს პროექტებზე წვდომით'
+    ka: 'მენეჯერები თქვენს პროექტებზე წვდომით',
+    ar: 'مدراء لديهم صلاحية الوصول إلى مشاريعك'
   },
   'managerAccounts.pendingInvitations': {
     ru: 'Ожидающие приглашения',
     en: 'Pending Invitations',
-    ka: 'მოლოდინის მოწვევები'
+    ka: 'მოლოდინის მოწვევები',
+    ar: 'دعوات قيد الانتظار'
   },
   'managerAccounts.pendingInvitationsDesc': {
     ru: 'Приглашения, которые еще не были приняты',
     en: 'Invitations that have not been accepted yet',
-    ka: 'მოწვევები, რომლებიც ჯერ არ არის მიღებული'
+    ka: 'მოწვევები, რომლებიც ჯერ არ არის მიღებული',
+    ar: 'دعوات لم تُقبل بعد'
   },
   'managerAccounts.statusActive': {
     ru: 'Активный',
     en: 'Active',
-    ka: 'აქტიური'
+    ka: 'აქტიური',
+    ar: 'نشط'
   },
   'managerAccounts.statusPending': {
     ru: 'Ожидает',
     en: 'Pending',
-    ka: 'მოლოდინში'
+    ka: 'მოლოდინში',
+    ar: 'قيد الانتظار'
   },
   'managerAccounts.statusSuspended': {
     ru: 'Заблокирован',
     en: 'Suspended',
-    ka: 'შეჩერებული'
+    ka: 'შეჩერებული',
+    ar: 'موقوف'
   },
   'managerAccounts.statusExpired': {
     ru: 'Истекло',
     en: 'Expired',
-    ka: 'ვადაგასული'
+    ka: 'ვადაგასული',
+    ar: 'منتهي'
   },
   'managerAccounts.suspend': {
     ru: 'Заблокировать',
     en: 'Suspend',
-    ka: 'შეჩერება'
+    ka: 'შეჩერება',
+    ar: 'إيقاف'
   },
   'managerAccounts.activate': {
     ru: 'Активировать',
     en: 'Activate',
-    ka: 'გააქტიურება'
+    ka: 'გააქტიურება',
+    ar: 'تفعيل'
   },
   'managerAccounts.remove': {
     ru: 'Удалить',
     en: 'Remove',
-    ka: 'წაშლა'
+    ka: 'წაშლა',
+    ar: 'إزالة'
   },
   'managerAccounts.cancel': {
     ru: 'Отменить',
     en: 'Cancel',
-    ka: 'გაუქმება'
+    ka: 'გაუქმება',
+    ar: 'إلغاء'
   },
   'managerAccounts.confirmRemove': {
     ru: 'Подтвердите удаление',
     en: 'Confirm Removal',
-    ka: 'წაშლის დადასტურება'
+    ka: 'წაშლის დადასტურება',
+    ar: 'تأكيد الإزالة'
   },
   'managerAccounts.confirmRemoveDesc': {
     ru: 'Вы уверены, что хотите удалить менеджера {{name}}? This action cannot be undone.',
     en: 'Are you sure you want to remove manager {{name}}? This action cannot be undone.',
-    ka: 'დარწმუნებული ხართ, რომ გსურთ მენეჯერის {{name}} წაშლა? ეს ქმედება ვერ გაუქმდება.'
+    ka: 'დარწმუნებული ხართ, რომ გსურთ მენეჯერის {{name}} წაშლა? ეს ქმედება ვერ გაუქმდება.',
+    ar: 'هل أنت متأكد أنك تريد إزالة المدير {{name}}؟ لا يمكن التراجع عن هذا الإجراء.'
   },
   'managerAccounts.confirmCancel': {
     ru: 'Отменить приглашение',
     en: 'Cancel Invitation',
-    ka: 'მოწვევის გაუქმება'
+    ka: 'მოწვევის გაუქმება',
+    ar: 'إلغاء الدعوة'
   },
   'managerAccounts.confirmCancelDesc': {
     ru: 'Вы уверены, что хотите отменить приглашение для {{name}}?',
     en: 'Are you sure you want to cancel the invitation for {{name}}?',
-    ka: 'დარწმუნებული ხართ, რომ გსურთ {{name}}-ის მოწვევის გაუქმება?'
+    ka: 'დარწმუნებული ხართ, რომ გსურთ {{name}}-ის მოწვევის გაუქმება?',
+    ar: 'هل أنت متأكد أنك تريد إلغاء الدعوة لـ {{name}}؟'
   },
   'managerAccounts.expiresAt': {
     ru: 'Истекает',
     en: 'Expires',
-    ka: 'ვადა ისრულება'
+    ka: 'ვადა ისრულება',
+    ar: 'تنتهي في'
   },
   'managerAccounts.noManagers': {
     ru: 'Нет менеджеров',
     en: 'No Managers',
-    ka: 'მენეჯერები არ არის'
+    ka: 'მენეჯერები არ არის',
+    ar: 'لا يوجد مديرون'
   },
   'managerAccounts.noManagersDesc': {
     ru: 'У вас пока нет менеджеров. Добавьте первого менеджера для работы с проектами.',
     en: 'You don\'t have any managers yet. Add your first manager to work with projects.',
-    ka: 'თქვენ ჯერ არ გაქვთ მენეჯერები. დაამატეთ პირველი მენეჯერი პროექტებთან სამუშაოდ.'
+    ka: 'თქვენ ჯერ არ გაქვთ მენეჯერები. დაამატეთ პირველი მენეჯერი პროექტებთან სამუშაოდ.',
+    ar: 'ليس لديك أي مدير بعد. أضف أول مدير للعمل على المشاريع.'
   },
   'managerAccounts.addFirstManager': {
     ru: 'Добавить первого менеджера',
     en: 'Add First Manager',
-    ka: 'პირველი მენეჯერის დამატება'
+    ka: 'პირველი მენეჯერის დამატება',
+    ar: 'إضافة أول مدير'
   },
   'managerAccounts.copyLink': {
     ru: 'Копировать ссылку',
     en: 'Copy Link',
-    ka: 'ბმულის კოპირება'
+    ka: 'ბმულის კოპირება',
+    ar: 'نسخ الرابط'
   },
   'managerAccounts.openLink': {
     ru: 'Открыть',
     en: 'Open',
-    ka: 'გახსნა'
+    ka: 'გახსნა',
+    ar: 'فتح'
   },
   'managerAccounts.linkCopied': {
     ru: 'Ссылка скопирована в буфер обмена',
     en: 'Link copied to clipboard',
-    ka: 'ბმული დაკოპირდა'
+    ka: 'ბმული დაკოპირდა',
+    ar: 'تم نسخ الرابط إلى الحافظة'
   },
   'managerAccounts.failedToCopy': {
     ru: 'Не удалось скопировать ссылку',
     en: 'Failed to copy link',
-    ka: 'ბმულის კოპირება ვერ მოხერხდა'
+    ka: 'ბმულის კოპირება ვერ მოხერხდა',
+    ar: 'فشل نسخ الرابط'
   },
   'managerAccounts.emailFailedCopyManually': {
     ru: 'Не удалось отправить email. Скопируйте ссылку вручную.',
     en: 'Failed to send email. Copy the link manually.',
-    ka: 'ელ.ფოსტის გაგზავნა ვერ მოხერხდა. დააკოპირეთ ბმული ხელით.'
+    ka: 'ელ.ფოსტის გაგზავნა ვერ მოხერხდა. დააკოპირეთ ბმული ხელით.',
+    ar: 'فشل إرسال البريد الإلكتروني. انسخ الرابط يدوياً.'
   },
   'managerAccounts.fillRequiredFields': {
     ru: 'Заполните все обязательные поля',
     en: 'Fill in all required fields',
-    ka: 'შეავსეთ ყველა სავალდებულო ველი'
+    ka: 'შეავსეთ ყველა სავალდებულო ველი',
+    ar: 'يرجى تعبئة جميع الحقول المطلوبة'
   },
   'managerAccounts.managerAdded': {
     ru: 'Менеджер успешно добавлен',
     en: 'Manager successfully added',
-    ka: 'მენეჯერი წარმატებით დაემატა'
+    ka: 'მენეჯერი წარმატებით დაემატა',
+    ar: 'تمت إضافة المدير بنجاح'
   },
   'managerAccounts.invitationSent': {
     ru: 'Приглашение отправлено',
     en: 'Invitation sent',
-    ka: 'მოწვევა გაიგზავნა'
+    ka: 'მოწვევა გაიგზავნა',
+    ar: 'تم إرسال الدعوة'
   },
   'managerAccounts.managerSuspended': {
     ru: 'Менеджер заблокирован',
     en: 'Manager suspended',
-    ka: 'მენეჯერი შეჩერდა'
+    ka: 'მენეჯერი შეჩერდა',
+    ar: 'تم إيقاف المدير'
   },
   'managerAccounts.managerActivated': {
     ru: 'Менеджер активирован',
     en: 'Manager activated',
-    ka: 'მენეჯერი გააქტიურდა'
+    ka: 'მენეჯერი გააქტიურდა',
+    ar: 'تم تفعيل المدير'
   },
   'managerAccounts.managerRemoved': {
     ru: 'Менеджер удален',
     en: 'Manager removed',
-    ka: 'მენეჯერი წაიშალა'
+    ka: 'მენეჯერი წაიშალა',
+    ar: 'تمت إزالة المدير'
   },
   'managerAccounts.invitationCancelled': {
     ru: 'Приглашение отменено',
     en: 'Invitation cancelled',
-    ka: 'მოწვევა გაუქმდა'
+    ka: 'მოწვევა გაუქმდა',
+    ar: 'تم إلغاء الدعوة'
   },
   'managerAccounts.errorLoading': {
     ru: 'Ошибка загрузки данных менеджеров',
     en: 'Error loading manager data',
-    ka: 'შეცდომა მენეჯერების მონაცემების ჩატვირთვაში'
+    ka: 'შეცდომა მენეჯერების მონაცემების ჩატვირთვაში',
+    ar: 'خطأ في تحميل بيانات المدراء'
   },
   'managerAccounts.errorInviting': {
     ru: 'Ошибка при приглашении менеджера',
     en: 'Error inviting manager',
-    ka: 'შეცდომა მენეჯერის მოწვევაში'
+    ka: 'შეცდომა მენეჯერის მოწვევაში',
+    ar: 'خطأ في دعوة المدير'
   },
   'managerAccounts.errorSuspending': {
     ru: 'Ошибка при блокировке менеджера',
     en: 'Error suspending manager',
-    ka: 'შეცდომა მენეჯერის შეჩერებაში'
+    ka: 'შეცდომა მენეჯერის შეჩერებაში',
+    ar: 'خطأ في إيقاف المدير'
   },
   'managerAccounts.errorActivating': {
     ru: 'Ошибка при активации менеджера',
     en: 'Error activating manager',
-    ka: 'შეცდომა მენეჯერის გააქტიურებაში'
+    ka: 'შეცდომა მენეჯერის გააქტიურებაში',
+    ar: 'خطأ في تفعيل المدير'
   },
   'managerAccounts.errorRemoving': {
     ru: 'Ошибка при удалении менеджера',
     en: 'Error removing manager',
-    ka: 'შეცდომა მენეჯერის წაშლაში'
+    ka: 'შეცდომა მენეჯერის წაშლაში',
+    ar: 'خطأ في إزالة المدير'
   },
   'managerAccounts.errorCancelling': {
     ru: 'Ошибка при отмене приглашения',
     en: 'Error cancelling invitation',
-    ka: 'შეცდომა მოწვევის გაუქმებაში'
+    ka: 'შეცდომა მოწვევის გაუქმებაში',
+    ar: 'خطأ في إلغاء الدعوة'
   },
   'managerAccounts.invitationCreated': {
     ru: 'Приглашение создано',
     en: 'Invitation created',
-    ka: 'მოწვევა შეიქმნა'
+    ka: 'მოწვევა შეიქმნა',
+    ar: 'تم إنشاء الدعوة'
   },
 
   // Auth
@@ -2781,32 +3069,38 @@ const translations: Translations = {
   'apartmentsManager.title': {
     ru: 'Квартиры проекта',
     en: 'Project Apartments',
-    ka: 'პროექტის ბინები'
+    ka: 'პროექტის ბინები',
+    ar: 'شقق المشروع'
   },
   'apartmentsManager.name': {
     ru: 'Название',
     en: 'Name',
-    ka: 'სახელი'
+    ka: 'სახელი',
+    ar: 'الاسم'
   },
   'apartmentsManager.description': {
     ru: 'Управление квартирами и их характеристиками',
     en: 'Manage apartments and their characteristics',
-    ka: 'ბინების და მათი მახასიათებლების მართვა'
+    ka: 'ბინების და მათი მახასიათებლების მართვა',
+    ar: 'إدارة الشقق وخصائصها'
   },
   'apartmentsManager.searchPlaceholder': {
     ru: 'Поиск по номеру квартиры или статусу',
     en: 'Search by apartment number or status',
-    ka: 'ბინის ნომერის ან სტატუსის მიხედვით ძებნა'
+    ka: 'ბინის ნომერის ან სტატუსის მიხედვით ძებნა',
+    ar: 'ابحث برقم الشقة أو الحالة'
   },
   'apartmentsManager.addApartment': {
     ru: 'Добавить квартиру',
     en: 'Add Apartment',
-    ka: 'ბინის დამატება'
+    ka: 'ბინის დამატება',
+    ar: 'إضافة شقة'
   },
   'apartmentsManager.newApartment': {
     ru: 'Новая квартира',
     en: 'New Apartment',
-    ka: 'ახალი ბინა'
+    ka: 'ახალი ბინა',
+    ar: 'شقة جديدة'
   },
   'apartmentsManager.apartmentNumber': {
     ru: 'Номер квартиры*',
@@ -3619,9 +3913,9 @@ const translations: Translations = {
     ka: 'არსებული ანგარიშის შემოწმება...'
   },  
   // Admin Sidebar (extra)
-  'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი' },
-  'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი' },
-  'admin.leads': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები' },
+  'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი', ar: 'لوحة الإدارة' },
+  'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი', ar: 'محرر المشروع' },
+  'admin.leads': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
   'projectEditor.general': { ru: 'Основное', en: 'General', ka: 'ძირითადი' },
   'projectEditor.apartmentsTab': { ru: 'Квартиры', en: 'Apartments', ka: 'ბინები' },
   'projectEditor.floorplan': { ru: 'Планировки', en: 'Floor plans', ka: 'გეგმები' },
@@ -3630,10 +3924,10 @@ const translations: Translations = {
   'projectEditor.integrations': { ru: 'Интеграции', en: 'Integrations', ka: 'ინტეგრაციები' },
   
   // Leads Manager
-  'leads.title': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები' },
-  'leads.description': { ru: 'Все заявки от клиентов с информацией о статусе отправки в CRM', en: 'All client requests with CRM delivery status', ka: 'ყველა კლიენტის განაცხადი CRM-ში გაგზავნის სტატუსით' },
-  'leads.loading': { ru: 'Загрузка лидов...', en: 'Loading leads...', ka: 'ლიდების ჩატვირთვა...' },
-  'leads.error': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
+  'leads.title': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
+  'leads.description': { ru: 'Все заявки от клиентов с информацией о статусе отправки в CRM', en: 'All client requests with CRM delivery status', ka: 'ყველა კლიენტის განაცხადი CRM-ში გაგზავნის სტატუსით', ar: 'جميع طلبات العملاء مع حالة الإرسال إلى CRM' },
+  'leads.loading': { ru: 'Загрузка лидов...', en: 'Loading leads...', ka: 'ლიდების ჩატვირთვა...', ar: 'جار تحميل العملاء المحتملين...' },
+  'leads.error': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა', ar: 'خطأ' },
   'leads.stats.total': { ru: 'Всего лидов', en: 'Total leads', ka: 'ლიდები სულ' },
   'leads.stats.pending': { ru: 'Ожидают', en: 'Pending', ka: 'მოლოდინში' },
   'leads.stats.sent': { ru: 'В CRM', en: 'Sent to CRM', ka: 'გაგზავნილი CRM-ში' },
@@ -3663,12 +3957,12 @@ const translations: Translations = {
   'leads.actions.cancel': { ru: 'Отменить', en: 'Cancel', ka: 'გაუქმება' },
   'leads.actions.editNotes': { ru: 'Редактировать заметки', en: 'Edit notes', ka: 'შენიშვნების რედაქტირება' },
   'leads.actions.openInCrm': { ru: 'Открыть в CRM', en: 'Open in CRM', ka: 'გახსნა CRM-ში' },
-  'leads.empty': { ru: 'Лиды не найдены', en: 'No leads found', ka: 'ლიდები ვერ მოიძებნა' },
+  'leads.empty': { ru: 'Лиды не найдены', en: 'No leads found', ka: 'ლიდები ვერ მოიძებნა', ar: 'لم يتم العثور على عملاء محتملين' },
   'leads.notes.title': { ru: 'Заметки к лиду', en: 'Lead notes', ka: 'ლიდის შენიშვნები' },
   'leads.notes.client': { ru: 'Клиент', en: 'Client', ka: 'კლიენტი' },
   'leads.notes.placeholder': { ru: 'Введите заметки...', en: 'Enter notes...', ka: 'შეიყვანეთ შენიშვნები...' },
-  'leads.save': { ru: 'Сохранить', en: 'Save', ka: 'შენახვა' },
-  'leads.cancel': { ru: 'Отмена', en: 'Cancel', ka: 'გაუქმება' },
+  'leads.save': { ru: 'Сохранить', en: 'Save', ka: 'შენახვა', ar: 'حفظ' },
+  'leads.cancel': { ru: 'Отмена', en: 'Cancel', ka: 'გაუქმება', ar: 'إلغاء' },
   'leads.toast.copied.title': { ru: 'Скопировано', en: 'Copied', ka: 'დაკოპირდა' },
   'leads.toast.copied.desc': { ru: 'Информация о лиде скопирована в буфер обмена', en: 'Lead info copied to clipboard', ka: 'ლიდის ინფორმაცია დაკოპირდა' },
   'leads.toast.copyError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
@@ -3680,7 +3974,87 @@ const translations: Translations = {
   'leads.toast.notesSaved.title': { ru: 'Успешно', en: 'Success', ka: 'წარმატებულია' },
   'leads.toast.notesSaved.desc': { ru: 'Заметки обновлены', en: 'Notes updated', ka: 'შენიშვნები განახლებულია' },
   'leads.toast.notesError.title': { ru: 'Ошибка', en: 'Error', ka: 'შეცდომა' },
-  'leads.toast.notesError.desc': { ru: 'Не удалось обновить заметки', en: 'Failed to update notes', ka: 'შენიშვნების განახლება ვერ მოხერხდა' }
+  'leads.toast.notesError.desc': { ru: 'Не удалось обновить заметки', en: 'Failed to update notes', ka: 'შენიშვნების განახლება ვერ მოხერხდა' },
+
+  // Countries
+  'country.turkey': {
+    ru: 'Турция',
+    en: 'Turkey',
+    ka: 'თურქეთი',
+    ar: 'تركيا'
+  },
+  'country.uae': {
+    ru: 'ОАЭ',
+    en: 'UAE',
+    ka: 'არაბეთის გაერთიანებული საამიროები',
+    ar: 'الإمارات العربية المتحدة'
+  },
+  'country.mexico': {
+    ru: 'Мексика',
+    en: 'Mexico',
+    ka: 'მექსიკა',
+    ar: 'المكسيك'
+  },
+  'country.dominicanRepublic': {
+    ru: 'ДР',
+    en: 'DR',
+    ka: 'დრ',
+    ar: 'დრ'
+  },
+  'country.indonesia': {
+    ru: 'Индонезия',
+    en: 'Indonesia',
+    ka: 'ინდონეზია',
+    ar: 'إندونيسيا'
+  },
+  'country.spain': {
+    ru: 'Испания',
+    en: 'Spain',
+    ka: 'ესპანეთი',
+    ar: 'إسبانيا'
+  },
+  'country.georgia': {
+    ru: 'Грузия',
+    en: 'Georgia',
+    ka: 'საქართველო',
+    ar: 'جورجيا'
+  },
+  'country.cyprus': {
+    ru: 'Кипр',
+    en: 'Cyprus',
+    ka: 'კვიპროსი',
+    ar: 'قبرص'
+  },
+  'country.montenegro': {
+    ru: 'Черногория',
+    en: 'Montenegro',
+    ka: 'მონტენეგრო',
+    ar: 'الجبل الأسود'
+  },
+  'country.thailand': {
+    ru: 'Таиланд',
+    en: 'Thailand',
+    ka: 'ტაილანდი',
+    ar: 'تايلاند'
+  },
+  'country.costaRica': {
+    ru: 'Коста-Рика',
+    en: 'Costa Rica',
+    ka: 'კოსტა-რიკა',
+    ar: 'كوستاريكا'
+  },
+  'country.panama': {
+    ru: 'Панама',
+    en: 'Panama',
+    ka: 'პანამა',
+    ar: 'بنما'
+  },
+  'country.greece': {
+    ru: 'Греция',
+    en: 'Greece',
+    ka: 'საბერძნეთი',
+    ar: 'اليونان'
+  }
 };
 
 interface LanguageContextType {

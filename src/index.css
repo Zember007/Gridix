@@ -139,6 +139,8 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --brand: 27 96% 61%;
+    --brand-foreground: 31 97% 72%;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -165,6 +167,11 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --brand: 31 97% 72%;
+  }
+  .theme {
+    --animate-appear-zoom: appear-zoom 0.5s ease-out forwards;
+    --animate-appear: appear 0.5s ease-out forwards;
   }
 }
 
@@ -244,14 +251,13 @@ svg text {
   .apartment-reserved {
     stroke-width: 0.3 !important;
   }
-  
+
   .apartment-hover {
     stroke-width: 0.4 !important;
   }
-  
+
   /* Larger touch targets on mobile */
 
-  
   /* Better tap highlighting */
   * {
     -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
@@ -263,8 +269,31 @@ svg text {
   .mobile-center {
     text-align: center;
   }
-  
+
   .mobile-stack {
     flex-direction: column;
+  }
+}
+
+@theme inline {
+  @keyframes appear-zoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    }
+  }
+  @keyframes appear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    }
   }
 }

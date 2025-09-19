@@ -192,7 +192,7 @@ const drawInfoBlock = (pdf: jsPDF, label: string, value: string, x: number, y: n
 
 
   // Лейбл
-  pdf.setFontSize(scaledFontSize(10, 7, 18));
+  pdf.setFontSize(scaledFontSize(10, 16, 20));
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(71, 85, 105);
   pdf.text(label + ': ', x + scale(4), y);
@@ -254,13 +254,17 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     });
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    // Базируем масштабы на формате A4 по меньшей стороне, чтоб всё выглядело пропорционально
-    const baseShortSide = 210; // мм для A4
-    const currentShortSide = Math.min(pageWidth, pageHeight);
-    const scaleFactor = currentShortSide / baseShortSide;
-    const scale = (n: number) => n * scaleFactor;
+    // Базируем масштабы на A4 (мм) и учитываем текущие единицы (pt или mm)
+    const unit = (firstPage ? 'pt' : 'mm') as 'pt' | 'mm';
+    const unitToMm = unit === 'pt' ? (25.4 / 72) : 1; // сколько мм в 1 юните
+    const baseShortSideMm = 210; // A4 короткая сторона (мм)
+    const currentShortSideMm = Math.min(pageWidth, pageHeight) * unitToMm;
+    const scaleFactor = currentShortSideMm / baseShortSideMm;
+    const scale = (nMm: number) => (nMm * scaleFactor) / unitToMm; // n в мм → адаптированная величина в текущих юнитах
     const scaledFontSize = (n: number, min = 6, max = 28) => Math.max(min, Math.min(max, n * scaleFactor));
-    const margin = 5;
+    // Адаптивные отступы от краев: минимум ~12мм, предпочтительно ~5% короткой стороны
+    const pctMargin = Math.min(pageWidth, pageHeight) * 0.05;
+    const margin = Math.max(scale(12), pctMargin);
     const contentWidth = pageWidth - (margin * 2);
 
     let yPosition = margin;

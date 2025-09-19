@@ -9,10 +9,15 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useState, useEffect } from 'react';
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import HeroHeader from '@/components/index/header';
+import { HeroSection } from '@/components/blocks/hero-section';
+import { Timeline } from '@/components/ui/timeline';
+import { WorldMap } from '@/components/ui/map';
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const [currentFeature, setCurrentFeature] = useState(0);
 
@@ -36,274 +41,337 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const features = [
-    { icon: Upload, key: 'planUpload' },
-    { icon: Settings, key: 'interactiveEditing' },
-    { icon: BarChart3, key: 'excelIntegration' },
-    { icon: Eye, key: 'embeddableWidget' },
-    { icon: Users, key: 'statusManagement' },
-    { icon: Building2, key: 'multiProject' }
+  const data = [
+    {
+      title: "2024",
+      content: (
+        <div>
+          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
+            Built and launched Aceternity UI and Aceternity UI Pro from scratch
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <img
+              src="https://assets.aceternity.com/templates/startup-1.webp"
+              alt="startup template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/templates/startup-2.webp"
+              alt="startup template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/templates/startup-3.webp"
+              alt="startup template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/templates/startup-4.webp"
+              alt="startup template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Early 2023",
+      content: (
+        <div>
+          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
+            I usually run out of copy, but when I see content this big, I try to
+            integrate lorem ipsum.
+          </p>
+          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
+            Lorem ipsum is for people who are too lazy to write copy. But we are
+            not. Here are some more example of beautiful designs I built.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <img
+              src="https://assets.aceternity.com/pro/hero-sections.png"
+              alt="hero template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/features-section.png"
+              alt="feature template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/pro/bento-grids.png"
+              alt="bento template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/cards.png"
+              alt="cards template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Changelog",
+      content: (
+        <div>
+          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-4">
+            Deployed 5 new components on Aceternity today
+          </p>
+          <div className="mb-8">
+            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
+              ✅ Card grid component
+            </div>
+            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
+              ✅ Startup template Aceternity
+            </div>
+            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
+              ✅ Random file upload lol
+            </div>
+            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
+              ✅ Himesh Reshammiya Music CD
+            </div>
+            <div className="flex gap-2 items-center text-neutral-700 dark:text-neutral-300 text-xs md:text-sm">
+              ✅ Salman Bhai Fan Club registrations open
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <img
+              src="https://assets.aceternity.com/pro/hero-sections.png"
+              alt="hero template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/features-section.png"
+              alt="feature template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/pro/bento-grids.png"
+              alt="bento template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+            <img
+              src="https://assets.aceternity.com/cards.png"
+              alt="cards template"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+            />
+          </div>
+        </div>
+      ),
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Building2 className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-blue-600`} />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent`}>
-                  Gridix
-                </h1>
-                <p className="text-xs text-gray-500">FloorPlan Wizard</p>
-              </div>
-            </div>
-            <div className={`flex ${isMobile ? 'justify-center' : ''} items-center gap-3`}>
-              <LanguageToggle />
-              <Button 
-                onClick={goToAdmin}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                size={isMobile ? 'sm' : 'default'}
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                {t('nav.admin')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <HeroHeader />
+      <HeroSection 
+       title="Build faster with beautiful components"
+       description="Premium UI components built with React and Tailwind CSS. Save time and ship your next project faster with our ready-to-use components."
+       actions={[
+         {
+           text: "Get Started",
+           href: "/docs/getting-started",
+           variant: "default",
+         },
+         
+       ]}
+       image={{
+         light: "https://www.launchuicomponents.com/app-light.png",
+         dark: "https://www.launchuicomponents.com/app-dark.png",
+         alt: "UI Components Preview",
+       }}
+      />
+   
 
-      {/* Hero Section */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} relative overflow-hidden`}>
-        {/* Background Animation */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500 rounded-full animate-bounce"></div>
-          <div className="absolute top-40 right-20 w-16 h-16 bg-indigo-500 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-purple-500 rounded-full animate-ping"></div>
-        </div>
-        
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="mb-6">
-            <span className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 text-sm font-medium mb-4">
-              <Star className="w-4 h-4 mr-2 text-yellow-500" />
-              Инновационное решение для недвижимости
-            </span>
-          </div>
-          
-          <h2 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-bold mb-6`}>
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('landing.title')}
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              {t('landing.subtitle')}
-            </span>
-          </h2>
-          
-          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-gray-700 mb-10 max-w-4xl mx-auto leading-relaxed`}>
-            {t('landing.description')}
-          </p>
-          
-          {/* Stats */}
-          <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-6 mb-10 max-w-2xl mx-auto`}>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                <AnimatedCounter end={1000} suffix="+" />
-              </div>
-              <div className="text-sm text-gray-600">Проектов</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-600">
-                <AnimatedCounter end={50} suffix="+" />
-              </div>
-              <div className="text-sm text-gray-600">Компаний</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                <AnimatedCounter end={99.9} suffix="%" />
-              </div>
-              <div className="text-sm text-gray-600">Время работы</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">24/7</div>
-              <div className="text-sm text-gray-600">Поддержка</div>
-            </div>
-          </div>
-          
-          <div className={`flex ${isMobile ? 'flex-col gap-4' : 'gap-6'} justify-center ${isMobile ? 'px-4' : ''}`}>
-            <Button 
-              size={isMobile ? 'lg' : 'lg'} 
-              className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-10 py-5'}`}
-              onClick={goToAdmin}
-            >
-              <Zap className="w-5 h-5 mr-2" />
-              {t('landing.getStarted')}
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            <Button 
-              size={isMobile ? 'lg' : 'lg'} 
-              variant="outline" 
-              className={`border-2 border-blue-600 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-10 py-5'}`}
-            >
-              <Eye className="w-5 h-5 mr-2" />
-              {t('landing.viewDemo')}
-            </Button>
-          </div>
-        </div>
-      </section>
+       <Timeline
+        data={data}
+       />
 
-      {/* Features */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30`}>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h3 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold mb-4`}>
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {t('landing.features')}
+
+
+      <ContainerScroll
+        titleComponent={
+          <>
+            <h1 className="text-4xl font-semibold text-black dark:text-white">
+              Unleash the power of <br />
+              <span className="text-4xl md:text-[6rem] font-bold mt-1 leading-none">
+                Scroll Animations
               </span>
-            </h3>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Мощные инструменты для создания интерактивных планов недвижимости
-            </p>
-          </div>
+            </h1>
+          </>
+        }
+      >
+        <iframe
+          id="gridix-widget"
+          src={`http://localhost:8080/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
+          width="100%"
+          height="100%"
+          >
+        </iframe>
 
-          {/* Interactive Feature Showcase */}
-          <div className={`grid ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'} gap-12 mb-16`}>
-            <div className="space-y-6">
-              {features.map((feature, index) => {
-                const IconComponent = feature.icon;
-                return (
-                  <div 
-                    key={feature.key}
-                    className={`p-6 rounded-xl cursor-pointer transition-all duration-300 ${
-                      currentFeature === index 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl scale-105' 
-                        : 'bg-white/80 hover:bg-white hover:shadow-lg'
-                    }`}
-                    onClick={() => setCurrentFeature(index)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <IconComponent className={`h-12 w-12 ${currentFeature === index ? 'text-white' : 'text-blue-600'}`} />
-                      <div>
-                        <h4 className={`text-xl font-bold ${currentFeature === index ? 'text-white' : 'text-gray-900'}`}>
-                          {t(`landing.${feature.key}`)}
-                        </h4>
-                        <p className={`${currentFeature === index ? 'text-blue-100' : 'text-gray-600'}`}>
-                          {t(`landing.${feature.key}Desc`)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="flex items-center justify-center">
-              <div className="w-full h-96 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center shadow-2xl">
-                <div className="text-center">
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-6 mx-auto animate-pulse">
-                    {(() => {
-                      const IconComponent = features[currentFeature].icon;
-                      return <IconComponent className="h-16 w-16 text-white" />;
-                    })()}
-                  </div>
-                  <h4 className="text-2xl font-bold text-gray-800 mb-2">
-                    {t(`landing.${features[currentFeature].key}`)}
-                  </h4>
-                  <p className="text-gray-600 max-w-sm">
-                    {t(`landing.${features[currentFeature].key}Desc`)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+  
 
-          {/* Feature Grid */}
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'md:grid-cols-2 lg:grid-cols-3 gap-8'}`}>
-            {[
-              { icon: Zap, title: 'Быстрая настройка', desc: 'Создайте проект за 5 минут' },
-              { icon: Shield, title: 'Безопасность', desc: 'Защищенное хранение данных' },
-              { icon: Globe, title: 'Мультиязычность', desc: 'Поддержка 3 языков' },
-              { icon: Smartphone, title: 'Мобильная версия', desc: 'Работает на всех устройствах' },
-              { icon: CheckCircle, title: 'Простота', desc: 'Интуитивный интерфейс' },
-              { icon: Star, title: 'Качество', desc: 'Профессиональный результат' }
-            ].map((item, index) => (
-              <Card key={index} className="border-0 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <CardHeader className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-gray-900 text-lg">{item.title}</CardTitle>
-                  <CardDescription className="text-gray-600">
-                    {item.desc}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      </ContainerScroll>
 
-      {/* Testimonials */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gradient-to-br from-gray-50 to-blue-50/50`}>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h3 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold mb-4`}>
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Отзывы наших клиентов
-              </span>
-            </h3>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Узнайте, что говорят о нас профессионалы рынка недвижимости
-            </p>
-          </div>
-          
-          <Testimonials isMobile={isMobile} />
-          
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-100 to-blue-100 rounded-full">
-              <Star className="h-5 w-5 text-yellow-500 fill-current" />
-              <span className="text-gray-700 font-medium">4.9/5 средняя оценка от 100+ клиентов</span>
-            </div>
-          </div>
-        </div>
-      </section>
+
+      <WorldMap 
+      labelClassName="text-[7px]"
+        dots={[
+          // 1. Турция -> ОАЭ
+          {
+            start: { lat: 39.9334, lng: 32.8597, label: t('country.turkey') },
+            end: { lat: 25.2048, lng: 55.2708, label: t('country.uae') }
+          },
+          // 2. ОАЭ -> Мексика
+          {
+            start: { lat: 25.2048, lng: 55.2708, label: t('country.uae') },
+            end: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') }
+          },
+          // 3. Мексика -> Доминиканская Республика
+          {
+            start: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') },
+            end: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') }
+          },
+          // 4. Доминиканская Республика -> Индонезия
+          {
+            start: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') },
+            end: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') }
+          },
+          // 5. Индонезия -> Испания
+          {
+            start: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') },
+            end: { lat: 40.4637, lng: -3.7492, label: t('country.spain') }
+          },
+          // 6. Испания -> Грузия
+          {
+            start: { lat: 40.4637, lng: -3.7492, label: t('country.spain') },
+            end: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') }
+          },
+          // 7. Грузия -> Кипр
+          {
+            start: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') },
+            end: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') }
+          },
+          // 8. Кипр -> Черногория
+          {
+            start: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') },
+            end: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') }
+          },
+          // 9. Черногория -> Таиланд
+          {
+            start: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') },
+            end: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') }
+          },
+          // 10. Таиланд -> Коста-Рика
+          {
+            start: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') },
+            end: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') }
+          },
+          // 11. Коста-Рика -> Панама
+          {
+            start: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') },
+            end: { lat: 8.5380, lng: -80.7821, label: t('country.panama') }
+          },
+          // 12. Панама -> Греция
+          {
+            start: { lat: 8.5380, lng: -80.7821, label: t('country.panama') },
+            end: { lat: 39.0742, lng: 21.8243, label: t('country.greece') }
+          }
+        ]}
+        lineColor="#000"
+        animationDuration={3}
+        loop={true}
+      />
+
+
+    
 
       {/* CTA Section */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden`}>
+      <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gray-900 text-gray-100 relative overflow-hidden`}>
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 to-transparent"></div>
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full"></div>
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/5 to-blue-500/5 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h3 className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold text-white mb-6`}>
-            {t('landing.readyToStart')}
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-full px-4 py-2 mb-8 animate-appear">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-300">Готовы начать работу?</span>
+          </div>
+
+          {/* Title */}
+          <h3 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-semibold mb-6 animate-appear opacity-0 delay-100`}>
+            <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              {t('landing.readyToStart')}
+            </span>
           </h3>
-          <p className={`${isMobile ? 'text-lg' : 'text-2xl'} text-blue-100 mb-10 max-w-3xl mx-auto leading-relaxed`}>
+
+          {/* Description */}
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed animate-appear opacity-0 delay-200`}>
             {t('landing.readyToStartDesc')}
           </p>
-          
-          <div className="flex flex-col items-center gap-6">
-            <Button 
-              size="lg"
-              className={`bg-white text-blue-600 hover:bg-blue-50 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-6'}`}
-              onClick={goToAdmin}
-            >
-              <Zap className="w-6 h-6 mr-3" />
-              {t('landing.enterAdmin')}
-              <ArrowRight className="w-6 h-6 ml-3" />
-            </Button>
-            
-            <p className="text-blue-200 text-sm">
-              Бесплатный пробный период • Без обязательств • Настройка за 5 минут
-            </p>
+
+          {/* Actions */}
+          <div className="flex flex-col items-center gap-6 animate-appear opacity-0 delay-300">
+            <div className="relative group">
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+              
+              <Button
+                size="lg"
+                className={`relative bg-white text-gray-900 hover:bg-gray-100 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-6'} font-semibold`}
+                onClick={goToAdmin}
+              >
+                <Zap className="w-6 h-6 mr-3" />
+                {t('landing.enterAdmin')}
+                <ArrowRight className="w-6 h-6 ml-3" />
+              </Button>
+            </div>
+
+            {/* Features list */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 max-w-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span>Бесплатный пробный период</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-green-400" />
+                <span>Без обязательств</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-green-400" />
+                <span>Настройка за 5 минут</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -316,18 +384,17 @@ const Index = () => {
             <div className="col-span-2">
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative">
-                  <Building2 className="h-8 w-8 text-blue-400" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></div>
+                  <Building2 className="h-8 w-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                  <h3 className="text-2xl font-bold text-white">
                     Gridix
                   </h3>
                   <p className="text-sm text-gray-400">FloorPlan Wizard</p>
                 </div>
               </div>
               <p className="text-gray-400 mb-4 max-w-md">
-                Инновационная платформа для создания интерактивных планов недвижимости. 
+                Инновационная платформа для создания интерактивных планов недвижимости.
                 Упрощаем процесс продаж и повышаем конверсию.
               </p>
               <div className="text-sm text-gray-400">
@@ -336,22 +403,22 @@ const Index = () => {
                 <p><strong>Email:</strong> inbox@gridix.live</p>
               </div>
             </div>
-            
+
             {/* Quick Links */}
             <div>
               <h4 className="text-lg font-semibold mb-4 text-white">Быстрые ссылки</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">Админ панель</button></li>
-   {/*              <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
+                {/*              <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
                 <li><button className="hover:text-blue-400 transition-colors">Документация</button></li> */}
-                <li><button 
-                onClick={() => {
-                  window.open('https://t.me/Klasterdigital', '_blank');
-                }}
-                className="hover:text-blue-400 transition-colors">Поддержка</button></li>
+                <li><button
+                  onClick={() => {
+                    window.open('https://t.me/Klasterdigital', '_blank');
+                  }}
+                  className="hover:text-blue-400 transition-colors">Поддержка</button></li>
               </ul>
             </div>
-            
+
             {/* Legal */}
             <div>
               <h4 className="text-lg font-semibold mb-4 text-white">Правовая информация</h4>
@@ -362,13 +429,13 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 pt-8">
             <div className={`flex ${isMobile ? 'flex-col gap-4 text-center' : 'justify-between items-center'}`}>
               <p className="text-gray-400">
                 © 2024 Gridix. Все права защищены.
               </p>
-            
+
             </div>
           </div>
         </div>

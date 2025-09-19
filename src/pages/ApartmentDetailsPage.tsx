@@ -497,184 +497,175 @@ const ApartmentDetailsPage = () => {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:block py-8">
-          <div className="flex min-h-screen gap-8">
-            {/* Left side - Image */}
-            <div className="flex-1 relative">
-
-              <div className="h-full  ">
-                <div className="relative  flex flex-col gap-8 sticky top-8">
-                  <div className="absolute top-4 left-4 z-10">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={goBackToProject}
-                      className="bg-black/20 hover:bg-black/30 text-white rounded-full w-10 h-10"
-                      aria-label={t('admin.back')}
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge
-                      className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
-                      style={getStatusStyle(apartment.status)}
-                    >
-                      {getStatusLabel(apartment.status)}
-                    </Badge>
-                  </div>
-                  <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
-                  {apartment.status === 'available' && (
-                    <div className="space-y-4">
-                      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            className="w-full text-white py-4 px-6 rounded-2xl text-lg font-semibold shadow-lg hover:opacity-90"
-                            style={getButtonStyle('available')}
-                          >
-                            {t('common.reserve')}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                          <DialogHeader>
-                            <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
-                          </DialogHeader>
-                          <ApartmentReservationForm
-                            apartmentId={apartment.id}
-                            projectId={apartment.project_id}
-                            onSubmit={() => setIsReserveDialogOpen(false)}
-                            onCancel={() => setIsReserveDialogOpen(false)}
-                          />
-                        </DialogContent>
-                      </Dialog>
-
-                      {project?.installment_enabled && apartment.price && (
-                        <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 hover:border-gray-300 shadow-lg bg-white">
-                              <Calculator className="h-5 w-5 mr-2" />
-                              {t('installment.calculator')}
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
-                              <DialogTitle>{t('installment.calculator')}</DialogTitle>
-                            </DialogHeader>
-                            <InstallmentCalculator
-                              apartmentPrice={apartment.price}
-                              currency={project.currency}
-                              minDownPaymentPercent={project.min_down_payment_percent || 20}
-                              maxInstallmentMonths={project.max_installment_months || 24}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      )}
-
-                      <Button
-                        variant="outline"
-                        onClick={handleGeneratePDF}
-                        disabled={isGeneratingPDF}
-                        className="w-full py-4 px-6 rounded-2xl border-2 border-gray-200 hover:border-gray-300 shadow-lg bg-white"
-                      >
-                        <FileDown className="h-5 w-5 mr-2" />
-                        PDF
-                      </Button>
-
-                    </div>
-                  )}
+        <div className="hidden md:block py-10">
+          <div className="grid grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Left side - Media card */}
+            <div className="relative">
+              <div className="relative rounded-xl border bg-white shadow-sm overflow-hidden sticky top-8">
+                <div className="absolute top-4 left-4 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={goBackToProject}
+                    className="bg-black/20 hover:bg-black/30 text-white rounded-full w-10 h-10"
+                    aria-label={t('admin.back')}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
                 </div>
+                <div className="absolute top-4 right-4 z-10">
+                  <Badge
+                    className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
+                    style={getStatusStyle(apartment.status)}
+                  >
+                    {getStatusLabel(apartment.status)}
+                  </Badge>
+                </div>
+                <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
               </div>
             </div>
 
-            {/* Right side - Content */}
-            <div className="flex-1  overflow-y-auto">
-              {/* Title and floor */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                    {t('apartment.apartment')} № {apartment.apartment_number}
-                  </h1>
+            {/* Right side - Content cards */}
+            <div className="space-y-6">
+              <div className="rounded-xl border bg-white shadow-sm p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-semibold text-gray-900">
+                      {t('apartment.apartment')} № {apartment.apartment_number}
+                    </h1>
+                    <p className="mt-1 text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       onClick={handleToggleFavorite}
-                      className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${
-                        isFavorite(apartment?.id || '') 
-                          ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100' 
-                          : 'border-gray-200 hover:border-gray-300'
+                      className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${
+                        isFavorite(apartment?.id || '')
+                          ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
+                          : 'border-gray-200'
                       }`}
+                      aria-label="favorite"
                     >
-                      <Heart className={`!h-5 !w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
+                      <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
                     </Button>
                     <Button
                       variant="outline"
                       onClick={handleShare}
-                      className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 h-15 w-15"
+                      className="px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
+                      aria-label="share"
                     >
-                      <Share2 className="!h-5 !w-5 " />
+                      <Share2 className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
-                <p className="text-xl text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
-              </div>
 
-              {/* Room and area info */}
-              <div className="flex items-center gap-6 mb-8">
-                <div className="flex items-center gap-3">
-                  <Home className="h-6 w-6 text-gray-400" />
-                  <span className="text-lg text-gray-700">
-                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Square className="h-6 w-6 text-gray-400" />
-                  <span className="text-lg text-gray-700">{apartment.area} м² {t('apartment.area')}</span>
-                </div>
-              </div>
+                {apartment.price && (
+                  <div className="mt-4">
+                    <div className="text-4xl font-bold text-gray-900">
+                      {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                    </div>
+                  </div>
+                )}
 
-              {/* Price */}
-              {apartment.price && (
-                <div className="mb-8">
-                  <div className="text-5xl font-bold text-gray-900">
-                    {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                <div className="mt-4 flex items-center gap-6">
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Home className="h-5 w-5 text-gray-400" />
+                    <span>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Square className="h-5 w-5 text-gray-400" />
+                    <span>{apartment.area} м² {t('apartment.area')}</span>
                   </div>
                 </div>
-              )}
 
-              {/* Description section */}
+                {apartment.status === 'available' && (
+                  <div className="mt-6 grid grid-cols-3 gap-3">
+                    <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="col-span-3 text-white py-3 rounded-xl text-base font-medium hover:opacity-90"
+                          style={getButtonStyle('available')}
+                        >
+                          {t('common.reserve')}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
+                        </DialogHeader>
+                        <ApartmentReservationForm
+                          apartmentId={apartment.id}
+                          projectId={apartment.project_id}
+                          onSubmit={() => setIsReserveDialogOpen(false)}
+                          onCancel={() => setIsReserveDialogOpen(false)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+
+                    {project?.installment_enabled && apartment.price && (
+                      <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="col-span-2 py-3 rounded-xl border border-gray-200 hover:border-gray-300 bg-white">
+                            <Calculator className="h-5 w-5 mr-2" />
+                            {t('installment.calculator')}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[600px]">
+                          <DialogHeader>
+                            <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                          </DialogHeader>
+                          <InstallmentCalculator
+                            apartmentPrice={apartment.price}
+                            currency={project.currency}
+                            minDownPaymentPercent={project.min_down_payment_percent || 20}
+                            maxInstallmentMonths={project.max_installment_months || 24}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      onClick={handleGeneratePDF}
+                      disabled={isGeneratingPDF}
+                      className="py-3 rounded-xl border border-gray-200 hover:border-gray-300 bg-white"
+                    >
+                      <FileDown className="h-5 w-5 mr-2" />
+                      PDF
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               {project?.description && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{t('projectEditor.description')}</h3>
-                  <p className="text-gray-600 leading-relaxed text-lg">
-                    {project.description}
-                  </p>
+                <div className="rounded-xl border bg-white shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
+                  <p className="text-gray-600 leading-relaxed">{project.description}</p>
                 </div>
               )}
 
-              {/* Details section */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Home className="h-6 w-6 text-gray-400" />
-                    <span className="text-lg text-gray-600">{t('apartment.number')}: {apartment.apartment_number}</span>
+              <div className="rounded-xl border bg-white shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
+                <div className="divide-y divide-gray-100">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-600">{t('apartment.number')}</span>
+                    <span className="font-medium text-gray-900">{apartment.apartment_number}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <MapPin className="h-6 w-6 text-gray-400" />
-                    <span className="text-lg text-gray-600">{t('apartment.floor')}: {apartment.floor_number}</span>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-600">{t('apartment.floor')}</span>
+                    <span className="font-medium text-gray-900">{apartment.floor_number}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Square className="h-6 w-6 text-gray-400" />
-                    <span className="text-lg text-gray-600">{t('apartment.area')}: {apartment.area} м²</span>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-600">{t('apartment.area')}</span>
+                    <span className="font-medium text-gray-900">{apartment.area} м²</span>
                   </div>
                 </div>
               </div>
 
-              {/* Дополнительные поля */}
               {getVisibleFields().length > 0 && (
-                <div className="mb-8 pt-6 border-t border-gray-100">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
-                  <div className="space-y-4">
+                <div className="rounded-xl border bg-white shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
+                  <div className="divide-y divide-gray-100">
                     {getVisibleFields().map((field) => {
                       let value: unknown = null;
                       if (field.is_custom) {
@@ -707,9 +698,9 @@ const ApartmentDetailsPage = () => {
                       if (value === null) return null;
 
                       return (
-                        <div key={field.id} className="flex justify-between items-center py-2">
-                          <span className="text-lg text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
-                          <span className="text-lg font-medium text-gray-900">
+                        <div key={field.id} className="flex items-center justify-between py-2">
+                          <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                          <span className="font-medium text-gray-900">
                             {formatFieldValue(value, field.field_type, field.field_name)}
                           </span>
                         </div>
