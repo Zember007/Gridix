@@ -33,12 +33,42 @@ const Index = () => {
     navigate('/terms-of-service');
   };
 
+  // Функция для плавной прокрутки к элементу
+  const smoothScrollTo = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  };
+
   // Автоматическое переключение слайдов для интерактивности
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFeature((prev) => (prev + 1) % 6);
     }, 3000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Обработчик для плавной прокрутки по якорным ссылкам
+  useEffect(() => {
+    const handleAnchorClick = (e: Event) => {
+      const target = e.target as HTMLAnchorElement;
+      if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
+        e.preventDefault();
+        const elementId = target.getAttribute('href')?.substring(1);
+        if (elementId) {
+          smoothScrollTo(elementId);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleAnchorClick);
+    return () => {
+      document.removeEventListener('click', handleAnchorClick);
+    };
   }, []);
 
   const data = [
@@ -113,6 +143,8 @@ const Index = () => {
     },
   ];
 
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
@@ -124,6 +156,11 @@ const Index = () => {
           {
             text: "Get Started",
             href: "/docs/getting-started",
+            variant: "default",
+          },
+          {
+            text: "View Demo",
+            href: "#demo",
             variant: "default",
           },
 
