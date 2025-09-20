@@ -25,6 +25,7 @@ export interface Project {
   min_down_payment_percent: number;
   max_installment_months: number;
   pdf_presentation_url: string | null;
+  theme_color: string | null;
   created_at: string;
   updated_at: string;
 }

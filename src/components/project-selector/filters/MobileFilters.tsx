@@ -40,6 +40,7 @@ interface MobileFiltersProps {
   minArea: number;
   maxArea: number;
   formatPrice: (price: number) => string;
+  themeColor?: string;
 }
 
 export const MobileFilters = ({
@@ -67,9 +68,15 @@ export const MobileFilters = ({
   maxPrice,
   minArea,
   maxArea,
-  formatPrice
+  formatPrice,
+  themeColor = '#000000'
 }: MobileFiltersProps) => {
   const { t } = useLanguage();
+
+  const sliderStyle = {
+    '--slider-thumb-color': themeColor,
+    '--slider-range-color': themeColor,
+  } as React.CSSProperties;
 
   return (
     <div className="space-y-6">
@@ -164,7 +171,11 @@ export const MobileFilters = ({
                   value={c}
                   size="sm"
                   aria-label={c}
-                  className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+                  className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:text-white"
+                  style={{
+                    '--tw-bg-opacity': selectedCurrency === c ? '1' : undefined,
+                    backgroundColor: selectedCurrency === c ? themeColor : undefined
+                  } as React.CSSProperties}
                 >
                   {symbol[c]}
                 </ToggleGroupItem>
@@ -184,6 +195,7 @@ export const MobileFilters = ({
           min={minPrice}
           step={1}
           className="w-full"
+          style={sliderStyle}
         />
       </div>
 
@@ -197,6 +209,7 @@ export const MobileFilters = ({
           min={minArea}
           step={1}
           className="w-full"
+          style={sliderStyle}
         />
       </div>
 
@@ -205,6 +218,10 @@ export const MobileFilters = ({
         <Switch
           checked={showOnlyAvailable}
           onCheckedChange={setShowOnlyAvailable}
+          style={{
+            '--switch-bg': showOnlyAvailable ? themeColor : undefined,
+          } as React.CSSProperties}
+          className="data-[state=checked]:bg-[--switch-bg]"
         />
         <Label>{t('project.onlyAvailable')}</Label>
       </div>

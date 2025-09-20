@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -13,6 +13,7 @@ interface InstallmentCalculatorProps {
   minDownPaymentPercent: number;
   maxInstallmentMonths: number;
   onCalculate?: (calculation: InstallmentCalculation) => void;
+  themeColor?: string;
 }
 
 export interface InstallmentCalculation {
@@ -29,40 +30,47 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
   currency,
   minDownPaymentPercent,
   maxInstallmentMonths,
-  onCalculate
+  onCalculate,
+  themeColor = '#000000'
 }) => {
   const { t } = useLanguage();
+
+  const sliderStyle = {
+    '--slider-thumb-color': themeColor,
+    '--slider-range-color': themeColor,
+  } as React.CSSProperties;
   
   // Состояние для выбранных значений
   const [downPaymentPercent, setDownPaymentPercent] = useState(minDownPaymentPercent);
   const [installmentMonths, setInstallmentMonths] = useState(Math.min(12, maxInstallmentMonths));
 
   // Расчетные значения
-  const downPayment = Math.round((apartmentPrice * downPaymentPercent) / 100);
-  const remainingAmount = apartmentPrice - downPayment;
-  const monthlyPayment = Math.round(remainingAmount / installmentMonths);
+  const calculation = useMemo(() => {
+    const downPayment = Math.round((apartmentPrice * downPaymentPercent) / 100);
+    const remainingAmount = apartmentPrice - downPayment;
+    const monthlyPayment = Math.round(remainingAmount / installmentMonths);
 
-  const calculation: InstallmentCalculation = {
-    apartmentPrice,
-    downPayment,
-    downPaymentPercent,
-    remainingAmount,
-    monthlyPayment,
-    installmentMonths
-  };
+    return {
+      apartmentPrice,
+      downPayment,
+      downPaymentPercent,
+      remainingAmount,
+      monthlyPayment,
+      installmentMonths
+    };
+  }, [apartmentPrice, downPaymentPercent, installmentMonths]);
+
+  const { downPayment, remainingAmount, monthlyPayment } = calculation;
 
   // Вызываем callback при изменении расчетов
   useEffect(() => {
     onCalculate?.(calculation);
-  }, [downPayment, remainingAmount, monthlyPayment, installmentMonths, onCalculate]);
+  }, [calculation, onCalculate]);
 
   return (
     <Card className="w-full">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Calculator className="h-5 w-5" />
-          {t('installment.calculator')}
-        </CardTitle>
+        
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Стоимость квартиры */}
@@ -89,6 +97,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
             max={100}
             step={5}
             className="w-full"
+            style={sliderStyle}
           />
           <div className="flex justify-between text-xs text-gray-500">
             <span>{t('installment.minimum')}: {minDownPaymentPercent}%</span>
@@ -111,6 +120,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
             max={maxInstallmentMonths}
             step={1}
             className="w-full"
+            style={sliderStyle}
           />
           <div className="flex justify-between text-xs text-gray-500">
             <span>1 {t('installment.month')}</span>
@@ -133,7 +143,11 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
         </div>
 
         {/* Кнопка для оформления рассрочки */}
-        <Button className="w-full gap-2" size="lg">
+        <Button 
+          className="w-full gap-2 text-white hover:opacity-90" 
+          size="lg"
+          style={{ backgroundColor: themeColor }}
+        >
           <CreditCard className="h-4 w-4" />
           {t('installment.apply')}
         </Button>

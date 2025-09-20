@@ -9,13 +9,17 @@ interface ViewModeButtonsProps {
   setViewMode: (mode: ViewMode) => void;
   favoritesCount: number;
   isMobile: boolean;
+  themeColor?: string;
 }
 
-export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, themeColor = '#000000' }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
 
   const buttonClass = (mode: ViewMode) => 
-    `${viewMode === mode ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`;
+    `${viewMode === mode ? 'text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`;
+
+  const buttonStyle = (mode: ViewMode) => 
+    viewMode === mode ? { backgroundColor: themeColor } : {};
 
   return (
     <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
@@ -23,6 +27,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         variant={viewMode === 'facade' ? 'default' : 'outline'}
         size="sm"
         className={buttonClass('facade')}
+        style={buttonStyle('facade')}
         onClick={() => setViewMode('facade')}
       >
         <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
@@ -33,6 +38,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
         size="sm"
         className={buttonClass('floor-plan')}
+        style={buttonStyle('floor-plan')}
         onClick={() => setViewMode('floor-plan')}
       >
         <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
@@ -43,6 +49,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         variant={viewMode === 'list' ? 'default' : 'outline'}
         size="sm"
         className={buttonClass('list')}
+        style={buttonStyle('list')}
         onClick={() => setViewMode('list')}
       >
         <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
@@ -53,6 +60,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         variant={viewMode === 'map' ? 'default' : 'outline'}
         size="sm"
         className={buttonClass('map')}
+        style={buttonStyle('map')}
         onClick={() => setViewMode('map')}
       >
         <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
@@ -63,6 +71,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         variant={viewMode === 'favorites' ? 'default' : 'outline'}
         size="sm"
         className={`${buttonClass('favorites')} relative`}
+        style={buttonStyle('favorites')}
         onClick={() => setViewMode('favorites')}
       >
         <Heart className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />

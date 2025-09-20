@@ -61,6 +61,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     return field.field_label;
   };
 
+  const getThemeColor = () => {
+    return (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
+  };
+
   const openApartmentDetails = (apartment: Apartment) => {
     const url = `/${language}/project/${projectId}/apartment/${apartment.id}`;
     window.open(url, '_blank');
@@ -281,6 +285,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
                 isMobile={isMobile}
+                themeColor={getThemeColor()}
               />
 
               {/* Mobile filters button */}
@@ -306,6 +311,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                         project={project}
                         viewMode={viewMode}
                         formatPrice={formatPrice}
+                        themeColor={getThemeColor()}
                       />
                     </div>
                   </SheetContent>
@@ -325,6 +331,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   getUniqueFloors={filters.getUniqueFloors}
                   project={project}
                   viewMode={viewMode}
+                  themeColor={getThemeColor()}
                 />
               </div>
 
@@ -334,6 +341,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                   <ExpandedFilters
                     {...filters}
                     formatPrice={formatPrice}
+                    themeColor={getThemeColor()}
                   />
                 </div>
               </div>
@@ -362,6 +370,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           project={project}
           selectedCurrency={filters.selectedCurrency}
           isMobile={isMobile}
+          themeColor={getThemeColor()}
         />
       ) : viewMode === 'map' ? (
         <InteractiveProjectsMap
@@ -410,6 +419,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     formatPrice={formatPrice}
                     selectedCurrency={filters.selectedCurrency}
                     isMobile={isMobile}
+                    themeColor={getThemeColor()}
                   />
                 </div>
               ) : (
@@ -452,9 +462,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                       <button
                                         className={`w-full ${isMobile ? 'h-full' : 'h-12'} flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${
                                           selectedFloorForPlan === floor
-                                            ? 'bg-black text-white'
+                                            ? 'text-white'
                                             : 'hover:bg-gray-100 text-gray-700'
                                         }`}
+                                        style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
                                         onClick={() => setSelectedFloorForPlan(floor)}
                                       >
                                         {floor}

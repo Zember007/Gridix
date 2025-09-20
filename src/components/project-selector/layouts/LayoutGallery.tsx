@@ -32,6 +32,7 @@ interface LayoutGalleryProps {
   formatPrice: (price: number) => string;
   selectedCurrency: string;
   isMobile: boolean;
+  themeColor?: string;
 }
 
 export const LayoutGallery = ({
@@ -46,9 +47,16 @@ export const LayoutGallery = ({
   project,
   formatPrice,
   selectedCurrency,
-  isMobile
+  isMobile,
+  themeColor = '#000000'
 }: LayoutGalleryProps) => {
   const { t } = useLanguage();
+
+  const getButtonStyle = (isActive: boolean) => 
+    isActive ? { backgroundColor: themeColor, color: 'white' } : {};
+
+  const getButtonClass = (isActive: boolean) => 
+    isActive ? 'text-white' : 'border-gray-300';
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-8">
@@ -60,7 +68,8 @@ export const LayoutGallery = ({
           <Button
             variant={selectedRooms === 'all' && selectedType === 'all' ? 'default' : 'outline'}
             size="sm"
-            className={selectedRooms === 'all' && selectedType === 'all' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            className={getButtonClass(selectedRooms === 'all' && selectedType === 'all')}
+            style={getButtonStyle(selectedRooms === 'all' && selectedType === 'all')}
             onClick={() => {
               setSelectedType('all');
               setSelectedRooms('all')
@@ -71,7 +80,8 @@ export const LayoutGallery = ({
           <Button
             variant={selectedRooms === '0' ? 'default' : 'outline'}
             size="sm"
-            className={selectedRooms === '0' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            className={getButtonClass(selectedRooms === '0')}
+            style={getButtonStyle(selectedRooms === '0')}
             onClick={() => {
               setSelectedType('all');
               setSelectedRooms('0')
@@ -84,7 +94,8 @@ export const LayoutGallery = ({
               key={rooms}
               variant={selectedRooms === rooms.toString() ? 'default' : 'outline'}
               size="sm"
-              className={selectedRooms === rooms.toString() ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              className={getButtonClass(selectedRooms === rooms.toString())}
+              style={getButtonStyle(selectedRooms === rooms.toString())}
               onClick={() => {
                 setSelectedType('all');
                 setSelectedRooms(rooms.toString())
@@ -96,7 +107,8 @@ export const LayoutGallery = ({
           <Button
             variant={selectedRooms === '4+' ? 'default' : 'outline'}
             size="sm"
-            className={selectedRooms === '4+' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+            className={getButtonClass(selectedRooms === '4+')}
+            style={getButtonStyle(selectedRooms === '4+')}
             onClick={() => {
               // Handle 4+ rooms filter
               const fourPlusApartments = apartments.filter(apt => Number(apt.rooms) >= 4 && apt.type === 'apartment');
@@ -112,7 +124,8 @@ export const LayoutGallery = ({
             <Button
               variant={selectedType === 'commercial' ? 'default' : 'outline'}
               size="sm"
-              className={selectedType === 'commercial' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              className={getButtonClass(selectedType === 'commercial')}
+              style={getButtonStyle(selectedType === 'commercial')}
               onClick={() => {
                 setSelectedType('commercial');
                 setSelectedRooms('all');
@@ -125,7 +138,8 @@ export const LayoutGallery = ({
             <Button
               variant={selectedType === 'parking' ? 'default' : 'outline'}
               size="sm"
-              className={selectedType === 'parking' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              className={getButtonClass(selectedType === 'parking')}
+              style={getButtonStyle(selectedType === 'parking')}
               onClick={() => {
                 setSelectedType('parking');
                 setSelectedRooms('all');
@@ -251,7 +265,8 @@ export const LayoutGallery = ({
                       })()}
 
                       <Button
-                        className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
+                        className="w-full text-white hover:opacity-90"
+                        style={{ backgroundColor: themeColor }}
                         onClick={() => {
                           if (isCommercial) {
                             setSelectedType('commercial');

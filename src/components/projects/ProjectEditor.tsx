@@ -52,6 +52,7 @@ interface Project {
   min_down_payment_percent: number;
   max_installment_months: number;
   pdf_presentation_url: string | null;
+  theme_color: string;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -70,7 +71,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     installment_enabled: false,
     min_down_payment_percent: 20,
     max_installment_months: 24,
-    pdf_presentation_url: null
+    pdf_presentation_url: null,
+    theme_color: '#000000'
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -127,7 +129,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           installment_enabled: cachedProject.installment_enabled || false,
           min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
           max_installment_months: cachedProject.max_installment_months || 24,
-          pdf_presentation_url: cachedProject.pdf_presentation_url
+          pdf_presentation_url: cachedProject.pdf_presentation_url,
+          theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000'
         });
       }
     } catch (error) {
@@ -172,6 +175,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         min_down_payment_percent: project.min_down_payment_percent,
         max_installment_months: project.max_installment_months,
         pdf_presentation_url: project.pdf_presentation_url,
+        theme_color: project.theme_color,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -634,6 +638,40 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </Select>
                   <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                 </div>
+                <div>
+                  <Label htmlFor="theme-color-mobile">Цвет темы проекта</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="theme-color-mobile"
+                        type="color"
+                        value={project.theme_color}
+                        onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
+                        className="w-20 h-10 p-1 border rounded cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={project.theme_color}
+                        onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
+                        placeholder="#000000"
+                        className="flex-1"
+                      />
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {['#000000', '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors"
+                          style={{ backgroundColor: color }}
+                          onClick={() => setProject(prev => ({ ...prev, theme_color: color }))}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Выберите основной цвет темы для интерфейса проекта</p>
+                </div>
 
                 {/* PDF Presentation Upload */}
                 <div className="space-y-4 pt-4 border-t">
@@ -1010,6 +1048,40 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="theme-color">Цвет темы проекта</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          id="theme-color"
+                          type="color"
+                          value={project.theme_color}
+                          onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
+                          className="w-20 h-10 p-1 border rounded cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={project.theme_color}
+                          onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
+                          placeholder="#000000"
+                          className="flex-1"
+                        />
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {['#000000', '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'].map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors"
+                            style={{ backgroundColor: color }}
+                            onClick={() => setProject(prev => ({ ...prev, theme_color: color }))}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Выберите основной цвет темы для интерфейса проекта</p>
                   </div>
 
                   {/* PDF Presentation Upload */}

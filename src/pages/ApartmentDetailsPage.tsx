@@ -83,6 +83,7 @@ const ApartmentDetailsPage = () => {
 
   // Get project colors from polygon settings
   const getProjectColors = () => {
+    const themeColor = (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
     /* if (project && 'polygon_settings' in project) {
       const projectWithSettings = project as Record<string, unknown>;
       const settings = projectWithSettings.polygon_settings as { colors?: { available: string; sold: string; reserved: string } };
@@ -91,7 +92,7 @@ const ApartmentDetailsPage = () => {
       }
     } */
     return {
-      available: '#3b82f6',
+      available: themeColor,
       sold: '#ef4444',
       reserved: '#f59e0b'
     };
@@ -690,6 +691,7 @@ const ApartmentDetailsPage = () => {
                             projectId={apartment.project_id}
                             onSubmit={() => setIsReserveDialogOpen(false)}
                             onCancel={() => setIsReserveDialogOpen(false)}
+                            themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                           />
                         </DialogContent>
                       </Dialog>
@@ -711,6 +713,7 @@ const ApartmentDetailsPage = () => {
                               currency={project.currency}
                               minDownPaymentPercent={project.min_down_payment_percent || 20}
                               maxInstallmentMonths={project.max_installment_months || 24}
+                              themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                             />
                           </DialogContent>
                         </Dialog>
@@ -755,6 +758,7 @@ const ApartmentDetailsPage = () => {
                     projectId={apartment.project_id}
                     onSubmit={() => setIsReserveDialogOpen(false)}
                     onCancel={() => setIsReserveDialogOpen(false)}
+                    themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                   />
                 </DialogContent>
               </Dialog>
@@ -777,6 +781,7 @@ const ApartmentDetailsPage = () => {
                         currency={project.currency}
                         minDownPaymentPercent={project.min_down_payment_percent || 20}
                         maxInstallmentMonths={project.max_installment_months || 24}
+                        themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                       />
                     </DialogContent>
                   </Dialog>

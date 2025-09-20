@@ -11,9 +11,10 @@ interface ApartmentReservationFormProps {
   projectId: string;
   onSubmit?: (payload: { name: string; email: string; phone: string; apartmentId: string; projectId: string }) => void;
   onCancel?: () => void;
+  themeColor?: string;
 }
 
-const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel }: ApartmentReservationFormProps) => {
+const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, themeColor = '#000000' }: ApartmentReservationFormProps) => {
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -90,7 +91,14 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel }
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>{t('managerAccounts.cancel')}</Button>
-        <Button type="submit" disabled={submitting}>{submitting ? 'Отправка...' : 'Отправить заявку'}</Button>
+        <Button 
+          type="submit" 
+          disabled={submitting}
+          className="text-white hover:opacity-90"
+          style={{ backgroundColor: themeColor }}
+        >
+          {submitting ? 'Отправка...' : 'Отправить заявку'}
+        </Button>
       </div>
     </form>
   );

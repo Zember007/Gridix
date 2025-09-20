@@ -14,6 +14,7 @@ interface ExpandedFiltersProps {
   minArea: number;
   maxArea: number;
   formatPrice: (price: number) => string;
+  themeColor?: string;
 }
 
 export const ExpandedFilters = ({
@@ -26,9 +27,15 @@ export const ExpandedFilters = ({
   maxPrice,
   minArea,
   maxArea,
-  formatPrice
+  formatPrice,
+  themeColor = '#000000'
 }: ExpandedFiltersProps) => {
   const { t } = useLanguage();
+
+  const sliderStyle = {
+    '--slider-thumb-color': themeColor,
+    '--slider-range-color': themeColor,
+  } as React.CSSProperties;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -42,6 +49,7 @@ export const ExpandedFilters = ({
           min={minPrice}
           step={1}
           className="w-full"
+          style={sliderStyle}
         />
       </div>
 
@@ -55,6 +63,7 @@ export const ExpandedFilters = ({
           min={minArea}
           step={1}
           className="w-full"
+          style={sliderStyle}
         />
       </div>
     </div>

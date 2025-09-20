@@ -29,6 +29,7 @@ interface CompactFiltersProps {
   getUniqueFloors: () => number[];
   project?: Project;
   viewMode: string;
+  themeColor?: string;
 }
 
 export const CompactFilters = ({
@@ -47,7 +48,8 @@ export const CompactFilters = ({
   getUniqueRoomCounts,
   getUniqueFloors,
   project,
-  viewMode
+  viewMode,
+  themeColor = '#000000'
 }: CompactFiltersProps) => {
   const { t } = useLanguage();
 
@@ -130,7 +132,11 @@ export const CompactFilters = ({
                 value={c}
                 size="sm"
                 aria-label={c}
-                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:bg-black data-[state=on]:text-white"
+                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:text-white"
+                style={{
+                  '--tw-bg-opacity': selectedCurrency === c ? '1' : undefined,
+                  backgroundColor: selectedCurrency === c ? themeColor : undefined
+                } as React.CSSProperties}
               >
                 {symbol[c]}
               </ToggleGroupItem>
@@ -144,6 +150,10 @@ export const CompactFilters = ({
         <Switch
           checked={showOnlyAvailable}
           onCheckedChange={setShowOnlyAvailable}
+          style={{
+            '--switch-bg': showOnlyAvailable ? themeColor : undefined,
+          } as React.CSSProperties}
+          className="data-[state=checked]:bg-[--switch-bg]"
         />
         <Label className="text-sm">{t('project.onlyAvailable')}</Label>
       </div>

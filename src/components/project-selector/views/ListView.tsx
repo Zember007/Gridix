@@ -56,6 +56,7 @@ interface ListViewProps {
   project?: Project;
   selectedCurrency: string;
   isMobile: boolean;
+  themeColor?: string;
 }
 
 export const ListView = ({
@@ -75,11 +76,18 @@ export const ListView = ({
   formatPrice,
   project,
   selectedCurrency,
-  isMobile
+  isMobile,
+  themeColor = '#000000'
 }: ListViewProps) => {
   const { t } = useLanguage();
 
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  const getButtonStyle = (isActive: boolean) => 
+    isActive ? { backgroundColor: themeColor, color: 'white' } : {};
+
+  const getButtonClass = (isActive: boolean) => 
+    isActive ? 'text-white' : 'border-gray-300';
 
   // Calculate installment payment
  
@@ -151,7 +159,8 @@ export const ListView = ({
             <Button
               variant={listViewMode === 'list' ? 'default' : 'outline'}
               size="sm"
-              className={listViewMode === 'list' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              className={getButtonClass(listViewMode === 'list')}
+              style={getButtonStyle(listViewMode === 'list')}
               onClick={() => setListViewMode('list')}
             >
               <List className="h-4 w-4 mr-1" />
@@ -160,7 +169,8 @@ export const ListView = ({
             <Button
               variant={listViewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
-              className={listViewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
+              className={getButtonClass(listViewMode === 'grid')}
+              style={getButtonStyle(listViewMode === 'grid')}
               onClick={() => setListViewMode('grid')}
             >
               <Grid className="h-4 w-4 mr-1" />
