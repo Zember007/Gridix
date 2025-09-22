@@ -529,7 +529,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               </TabsTrigger>
               <TabsTrigger value="domains" className="text-xs" disabled={isNew}>
                 <Globe className="h-3 w-3 mr-1" />
-                Домены
+                {t('projectEditor.domains')}
               </TabsTrigger>
               <TabsTrigger value="amocrm" className="text-xs" disabled={isNew}>
                 <Zap className="h-3 w-3 mr-1" />

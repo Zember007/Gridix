@@ -4310,6 +4310,12 @@ const translations: Translations = {
     ka: 'მატება...',
     ar: 'جاري الإضافة...'
   },
+  'projectEditor.domains': {
+    ru: 'Домены',
+    en: 'Domains',
+    ka: 'დომენები',
+    ar: 'النطاقات'
+  },
   'domains.placeholder': {
     ru: 'example.com или www.example.com',
     en: 'example.com or www.example.com',
