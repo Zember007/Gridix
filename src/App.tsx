@@ -20,6 +20,7 @@ import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import DomainProjectPage from "./pages/DomainProjectPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,8 +33,8 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              {/* Default route - redirect to default language */}
-              <Route path="/" element={<Navigate to={getLanguagePrefix(DEFAULT_LANGUAGE)} replace />} />
+              {/* Default route - check for custom domain or redirect to default language */}
+              <Route path="/" element={<DomainProjectPage />} />
 
               {/* Language-specific routes with :lang parameter */}
               <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X, Globe } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +27,7 @@ import BuildingImageEditor from '@/components/visualization/BuildingImageEditor'
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
 import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
+import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -432,6 +433,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'photos': return 'photos';
       case 'fields': return 'fields';
       case 'amocrm': return 'integrations';
+      case 'domains': return 'domains';
       default: return 'general';
     }
   };
@@ -444,6 +446,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'photos': setActiveTab('photos'); break;
       case 'fields': setActiveTab('fields'); break;
       case 'integrations': setActiveTab('amocrm'); break;
+      case 'domains': setActiveTab('domains'); break;
       default: setActiveTab('basic');
     }
   };
@@ -523,6 +526,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               <TabsTrigger value="photos" className="text-xs" disabled={isNew}>
                 <Camera className="h-3 w-3 mr-1" />
                 {t('projectEditor.photos')}
+              </TabsTrigger>
+              <TabsTrigger value="domains" className="text-xs" disabled={isNew}>
+                <Globe className="h-3 w-3 mr-1" />
+                Домены
               </TabsTrigger>
               <TabsTrigger value="amocrm" className="text-xs" disabled={isNew}>
                 <Zap className="h-3 w-3 mr-1" />
@@ -859,6 +866,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           <TabsContent value="photos">
             <ApartmentPhotosManager projectId={project.id} />
+          </TabsContent>
+
+          <TabsContent value="domains">
+            <ProjectDomainSettings projectId={project.id} projectName={project.name} />
           </TabsContent>
 
             <TabsContent value="amocrm">
@@ -1268,6 +1279,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
             <TabsContent value="photos">
               <ApartmentPhotosManager projectId={project.id} />
+            </TabsContent>
+
+            <TabsContent value="domains">
+              <ProjectDomainSettings projectId={project.id} projectName={project.name} />
             </TabsContent>
 
             <TabsContent value="amocrm">

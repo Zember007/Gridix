@@ -4,4 +4,5 @@ export { default as AdminWidgets } from './AdminWidgets';
 export { default as AllFieldsManager } from './AllFieldsManager';
 export { default as AmoCRMSettings } from './AmoCRMSettings';
 export { default as ManagerAccountsManager } from './ManagerAccountsManager';
+export { default as ProjectDomainSettings } from './ProjectDomainSettings';
 export { LeadsManager } from './LeadsManager';

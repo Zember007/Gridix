@@ -4235,6 +4235,188 @@ const translations: Translations = {
     en: '© 2024 Gridix. All rights reserved.',
     ka: '© 2024 Gridix. ყველა უფლება დაცულია.',
     ar: '© 2024 Gridix. جميع الحقوق محفوظة.'
+  },
+
+  // Custom Domains
+  'domains.title': {
+    ru: 'Кастомные домены',
+    en: 'Custom Domains',
+    ka: 'მორგებული დომენები',
+    ar: 'النطاقات المخصصة'
+  },
+  'domains.description': {
+    ru: 'Подключите собственный домен к проекту "{projectName}" для брендинга',
+    en: 'Connect your own domain to project "{projectName}" for branding',
+    ka: 'დააკავშირეთ თქვენი საკუთარი დომენი პროექტთან "{projectName}" ბრენდინგისთვის',
+    ar: 'ربط النطاق الخاص بك بالمشروع "{projectName}" للعلامة التجارية'
+  },
+  'domains.instructions.title': {
+    ru: 'Инструкция по подключению домена:',
+    en: 'Domain connection instructions:',
+    ka: 'დომენის დაკავშირების ინსტრუქციები:',
+    ar: 'تعليمات ربط النطاق:'
+  },
+  'domains.instructions.step1': {
+    ru: 'Добавьте ваш домен в список ниже',
+    en: 'Add your domain to the list below',
+    ka: 'დაამატეთ თქვენი დომენი ქვემოთ მოცემულ სიაში',
+    ar: 'أضف نطاقك إلى القائمة أدناه'
+  },
+  'domains.instructions.step2': {
+    ru: 'В панели управления вашего регистратора домена создайте DNS записи:',
+    en: 'In your domain registrar control panel, create DNS records:',
+    ka: 'თქვენი დომენის რეგისტრატორის კონტროლის პანელში შექმენით DNS ჩანაწერები:',
+    ar: 'في لوحة تحكم مسجل النطاق الخاص بك، قم بإنشاء سзаписи DNS:'
+  },
+  'domains.instructions.rootDomain': {
+    ru: 'Для основного домена (без www):',
+    en: 'For root domain (without www):',
+    ka: 'მთავარი დომენისთვის (www-ის გარეშე):',
+    ar: 'للنطاق الأساسي (بدون www):'
+  },
+  'domains.instructions.subdomain': {
+    ru: 'Для поддомена www:',
+    en: 'For www subdomain:',
+    ka: 'www ქვედომენისთვის:',
+    ar: 'للنطاق الفرعي www:'
+  },
+  'domains.instructions.step3': {
+    ru: 'Дождитесь распространения DNS (до 24 часов)',
+    en: 'Wait for DNS propagation (up to 24 hours)',
+    ka: 'დაელოდეთ DNS გავრცელებას (24 საათამდე)',
+    ar: 'انتظر انتشار DNS (حتى 24 ساعة)'
+  },
+  'domains.instructions.dnsRecords': {
+    ru: 'Точные DNS записи для вашего домена:',
+    en: 'Exact DNS records for your domain:',
+    ka: 'ზუსტი DNS ჩანაწერები თქვენი დომენისთვის:',
+    ar: 'سجلات DNS الدقيقة لنطاقك:'
+  },
+  'domains.addNew': {
+    ru: 'Добавить новый домен',
+    en: 'Add new domain',
+    ka: 'ახალი დომენის დამატება',
+    ar: 'إضافة نطاق جديد'
+  },
+  'domains.addButton': {
+    ru: 'Добавить',
+    en: 'Add',
+    ka: 'დამატება',
+    ar: 'إضافة'
+  },
+  'domains.adding': {
+    ru: 'Добавление...',
+    en: 'Adding...',
+    ka: 'მატება...',
+    ar: 'جاري الإضافة...'
+  },
+  'domains.placeholder': {
+    ru: 'example.com или www.example.com',
+    en: 'example.com or www.example.com',
+    ka: 'example.com ან www.example.com',
+    ar: 'example.com أو www.example.com'
+  },
+  'domains.inputHelp': {
+    ru: 'Введите домен без протокола (http/https). Например: example.com или www.example.com',
+    en: 'Enter domain without protocol (http/https). For example: example.com or www.example.com',
+    ka: 'შეიყვანეთ დომენი პროტოკოლის გარეშე (http/https). მაგალითად: example.com ან www.example.com',
+    ar: 'أدخل النطاق بدون البروتوكول (http/https). على سبيل المثال: example.com أو www.example.com'
+  },
+  'domains.connectedDomains': {
+    ru: 'Подключенные домены',
+    en: 'Connected domains',
+    ka: 'დაკავშირებული დომენები',
+    ar: 'النطاقات المتصلة'
+  },
+  'domains.noDomains': {
+    ru: 'Домены не добавлены',
+    en: 'No domains added',
+    ka: 'დომენები არ არის დამატებული',
+    ar: 'لم يتم إضافة نطاقات'
+  },
+  'domains.addFirst': {
+    ru: 'Добавьте первый домен для вашего проекта',
+    en: 'Add the first domain for your project',
+    ka: 'დაამატეთ პირველი დომენი თქვენი პროექტისთვის',
+    ar: 'أضف النطاق الأول لمشروعك'
+  },
+  'domains.primary': {
+    ru: 'Основной',
+    en: 'Primary',
+    ka: 'მთავარი',
+    ar: 'أساسي'
+  },
+  'domains.active': {
+    ru: 'Активен',
+    en: 'Active',
+    ka: 'აქტიური',
+    ar: 'نشط'
+  },
+  'domains.addedOn': {
+    ru: 'Добавлен',
+    en: 'Added on',
+    ka: 'დამატებულია',
+    ar: 'أضيف في'
+  },
+  'domains.setPrimary': {
+    ru: 'Основной',
+    en: 'Primary',
+    ka: 'მთავარი',
+    ar: 'أساسي'
+  },
+  'domains.deleteConfirm': {
+    ru: 'Удалить домен?',
+    en: 'Delete domain?',
+    ka: 'წაშალოთ დომენი?',
+    ar: 'حذف النطاق؟'
+  },
+  'domains.deleteDescription': {
+    ru: 'Вы уверены, что хотите удалить домен "{domain}"? Это действие нельзя отменить.',
+    en: 'Are you sure you want to delete domain "{domain}"? This action cannot be undone.',
+    ka: 'დარწმუნებული ხართ, რომ გსურთ წაშალოთ დომენი "{domain}"? ეს ქმედება არ შეიძლება გაუქმდეს.',
+    ar: 'هل أنت متأكد من أنك تريد حذف النطاق "{domain}"؟ لا يمكن التراجع عن هذا الإجراء.'
+  },
+  'domains.cancel': {
+    ru: 'Отмена',
+    en: 'Cancel',
+    ka: 'გაუქმება',
+    ar: 'إلغاء'
+  },
+  'domains.delete': {
+    ru: 'Удалить',
+    en: 'Delete',
+    ka: 'წაშლა',
+    ar: 'حذف'
+  },
+  'domains.warning': {
+    ru: 'После добавления домена обязательно настройте DNS записи у вашего регистратора домена. Домен будет работать только после правильной настройки DNS.',
+    en: 'After adding a domain, be sure to configure DNS records with your domain registrar. The domain will only work after proper DNS configuration.',
+    ka: 'დომენის დამატების შემდეგ აუცილებლად გამართეთ DNS ჩანაწერები თქვენი დომენის რეგისტრატორთან. დომენი მუშაობს მხოლოდ DNS-ის სწორი კონფიგურაციის შემდეგ.',
+    ar: 'بعد إضافة نطاق، تأكد من تكوين سجلات DNS مع مسجل النطاق الخاص بك. سيعمل النطاق فقط بعد التكوين الصحيح لـ DNS.'
+  },
+  'domains.dnsType': {
+    ru: 'Тип',
+    en: 'Type',
+    ka: 'ტიპი',
+    ar: 'النوع'
+  },
+  'domains.dnsName': {
+    ru: 'Имя',
+    en: 'Name',
+    ka: 'სახელი',
+    ar: 'الاسم'
+  },
+  'domains.dnsValue': {
+    ru: 'Значение',
+    en: 'Value',
+    ka: 'მნიშვნელობა',
+    ar: 'القيمة'
+  },
+  'domains.copyValue': {
+    ru: 'Скопировать значение',
+    en: 'Copy value',
+    ka: 'მნიშვნელობის კოპირება',
+    ar: 'نسخ القيمة'
   }
 };
 

@@ -43,6 +43,7 @@ import {
   Layers3,
   Camera,
   UserCheck,
+  Globe,
 } from "lucide-react";
 
 // Softer spring animation curve
@@ -66,6 +67,7 @@ const getProjectEditorNavItems = (t: (k: string) => string) => [
   { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
   { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
   { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
+  { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
 ];
 
 /* ---------------------------- Simplified Sidebar -------------------------- */
