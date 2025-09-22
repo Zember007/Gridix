@@ -32,6 +32,10 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
   const { domains, loading, addDomain, updateDomain, deleteDomain } = useProjectDomains(projectId);
   const [newDomain, setNewDomain] = useState("");
   const [isAddingDomain, setIsAddingDomain] = useState(false);
+  const [dnsProvider, setDnsProvider] = useState<'manual' | 'cloudflare'>('manual');
+  const [dnsApiKey, setDnsApiKey] = useState("");
+  const [dnsZoneId, setDnsZoneId] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const { t } = useLanguage();
 
   // Получаем IP адрес VPS из переменных окружения или используем дефолтный
@@ -47,16 +51,48 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
     if (!newDomain.trim()) return;
 
     setIsAddingDomain(true);
-    const result = await addDomain({
-      project_id: projectId,
-      domain: newDomain.trim(),
-      is_primary: domains.length === 0, // First domain is primary by default
-      status: 'active'
-    });
+    
+    try {
+      // Call the automated domain manager
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-domain-manager`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          domain: newDomain.trim(),
+          project_id: projectId,
+          dns_provider: dnsProvider,
+          api_key: dnsApiKey,
+          zone_id: dnsZoneId,
+        }),
+      });
 
-    if (result) {
-      setNewDomain("");
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message);
+        setNewDomain("");
+        
+        // Show automation results
+        if (result.automation.dns_created) {
+          toast.success(t('domains.automation.dnsCreated'));
+        }
+        if (result.automation.hosting_added) {
+          toast.success(t('domains.automation.hostingAdded'));
+        }
+        
+        // Refresh domains list
+        window.location.reload();
+      } else {
+        toast.error(result.error || t('domains.automation.failed'));
+      }
+    } catch (error) {
+      console.error('Domain automation error:', error);
+      toast.error(t('domains.automation.error'));
     }
+    
     setIsAddingDomain(false);
   };
 
@@ -197,6 +233,61 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
           <p className="text-sm text-muted-foreground">
             {t('domains.inputHelp')}
           </p>
+
+          {/* DNS Automation Settings */}
+          <div className="border-t pt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="mb-3"
+            >
+              {showAdvanced ? 'Hide' : 'Show'} DNS Automation
+            </Button>
+            
+            {showAdvanced && (
+              <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <Label>DNS Provider</Label>
+                  <select 
+                    className="w-full p-2 border rounded"
+                    value={dnsProvider}
+                    onChange={(e) => setDnsProvider(e.target.value as 'manual' | 'cloudflare')}
+                  >
+                    <option value="manual">Manual Setup</option>
+                    <option value="cloudflare">Cloudflare (Auto)</option>
+                  </select>
+                </div>
+
+                {dnsProvider === 'cloudflare' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="api-key">Cloudflare API Key</Label>
+                      <Input
+                        id="api-key"
+                        type="password"
+                        placeholder="Your Cloudflare API Key"
+                        value={dnsApiKey}
+                        onChange={(e) => setDnsApiKey(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zone-id">Zone ID</Label>
+                      <Input
+                        id="zone-id"
+                        placeholder="Your Cloudflare Zone ID"
+                        value={dnsZoneId}
+                        onChange={(e) => setDnsZoneId(e.target.value)}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      With API credentials, DNS records will be created automatically.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <Separator />
