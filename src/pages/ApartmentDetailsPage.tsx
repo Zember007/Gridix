@@ -1,6 +1,7 @@
 import { useParams, Navigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/hooks/useProjects';
+import { useApartment } from '@/hooks/useApartment';
 import { useFields } from '@/hooks/useFields';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { Language } from '@/lib/language-utils';
@@ -20,26 +21,55 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { useFavorites } from '@/hooks/useFavorites';
 
-const ApartmentDetailsPage = () => {
-  const { projectId, apartmentId, lang } = useParams();
+interface ApartmentDetailsPageProps {
+  useId?: boolean;
+}
+
+const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
+  const { 
+    projectId, 
+    projectSlug, 
+    apartmentId, 
+    apartmentNumber, 
+    lang 
+  } = useParams<{ 
+    projectId?: string; 
+    projectSlug?: string;
+    apartmentId?: string; 
+    apartmentNumber?: string;
+    lang?: string; 
+  }>();
+  
+  // Определяем идентификаторы в зависимости от типа маршрута
+  const projectIdentifier = useId ? projectId : (projectSlug || projectId);
+  const apartmentIdentifier = useId ? apartmentId : (apartmentNumber || apartmentId);
+  
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
-  const { project, loading: projectLoading, error: projectError } = useProject(projectId || '');
-  const { fields: fieldSettings } = useFields(projectId || '');
+  const { project, loading: projectLoading, error: projectError } = useProject(projectIdentifier || '');
+  const { apartment, loading: apartmentLoading, error: apartmentError } = useApartment(
+    projectIdentifier, 
+    apartmentIdentifier, 
+    { useId }
+  );
+  const { fields: fieldSettings } = useFields(project?.id || '');
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // Логируем состояние проекта для диагностики
   useEffect(() => {
-    console.log('Project state:', {
-      projectId,
+    console.log('Project and apartment state:', {
+      projectIdentifier,
+      apartmentIdentifier,
       project: project ? 'loaded' : 'not loaded',
+      apartment: apartment ? 'loaded' : 'not loaded',
       projectLoading,
-      projectError
+      apartmentLoading,
+      projectError,
+      apartmentError
     });
-  }, [projectId, project, projectLoading, projectError]);
+  }, [projectIdentifier, apartmentIdentifier, project, apartment, projectLoading, apartmentLoading, projectError, apartmentError]);
 
-  const [apartment, setApartment] = useState<Apartment | null>(null);
-  const [loading, setLoading] = useState(true);
+  const loading = projectLoading || apartmentLoading;
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -98,41 +128,6 @@ const ApartmentDetailsPage = () => {
     };
   };
 
-  useEffect(() => {
-    const fetchApartment = async () => {
-      if (!projectId || !apartmentId) {
-        console.warn('Missing projectId or apartmentId:', { projectId, apartmentId });
-        setLoading(false);
-        return;
-      }
-
-      console.log('Fetching apartment:', { projectId, apartmentId });
-
-      try {
-        const { data, error } = await supabase
-          .from('apartments')
-          .select('*')
-          .eq('id', apartmentId)
-          .eq('project_id', projectId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching apartment:', error);
-          setLoading(false);
-          return;
-        }
-
-        console.log('Apartment data received:', data);
-        setApartment(normalizeApartmentData(data));
-      } catch (error) {
-        console.error('Error fetching apartment:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApartment();
-  }, [projectId, apartmentId]);
 
   const getStatusColor = (status: string) => {
     const colors = getProjectColors();
@@ -227,12 +222,16 @@ const ApartmentDetailsPage = () => {
     window.close(); // Закрываем текущую вкладку
     // Если вкладка не закрылась (например, не была открыта через JS), перенаправляем назад
     setTimeout(() => {
-      window.location.href = `/${lang}/project/${projectId}`;
+      // Используем slug вместо ID для обратной ссылки
+      const projectUrl = useId 
+        ? `/${lang}/project/id/${projectId}` 
+        : `/${lang}/project/${project?.slug || projectIdentifier}`;
+      window.location.href = projectUrl;
     }, 100);
   };
 
   const handleGeneratePDF = async () => {
-    if (!apartment || !projectId) return;
+    if (!apartment || !project?.id) return;
 
     setIsGeneratingPDF(true);
     try {
@@ -243,7 +242,7 @@ const ApartmentDetailsPage = () => {
       const { data: layoutPhotos, error: layoutError } = await supabase
         .from('layout_photos')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', project.id)
         .eq('layout_type', layoutType)
         .order('order_index', { ascending: true });
 
@@ -316,16 +315,47 @@ const ApartmentDetailsPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
+   
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('common.loading')}</p>
+          <p className="text-muted-foreground">{t('adminWidgets.loading')}</p>
         </div>
       </div>
     );
   }
 
-  // Перенаправляем только если проект не найден после завершения загрузки
-  if (!projectLoading && !project) {
-    console.warn('Project not found after loading completed:', { projectId, apartmentId });
+  // Обработка ошибок
+  if (projectError || apartmentError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-foreground mb-2">{t('common.error')}</h1>
+          <p className="text-muted-foreground">{projectError || apartmentError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Перенаправляем только если проект или квартира не найдены после завершения загрузки
+  if (!loading && (!project || !apartment)) {
+    console.warn('Project or apartment not found after loading completed:', { 
+      projectIdentifier, 
+      apartmentIdentifier, 
+      project: !!project,
+      apartment: !!apartment
+    });
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-foreground mb-2">{t('apartment.notFound')}</h1>
+          <p className="text-muted-foreground">{t('apartment.invalidId')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Если данные еще не загружены, не рендерим основной контент
+  if (!apartment || !project) {
+    return null;
   }
 
   return (

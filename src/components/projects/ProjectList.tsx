@@ -58,17 +58,22 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
     }
   };
 
-  const viewProject = (projectId: string) => {
-    window.open(`/${language}/project/${projectId}`, '_blank');
+  const viewProject = (project: any) => {
+    const url = project.slug 
+      ? `/${language}/project/${project.slug}` 
+      : `/${language}/project/id/${project.id}`;
+    window.open(url, '_blank');
   };
 
-  const getWidgetUrl = (projectId: string) => {
-    return `/${language}/embed/project/${projectId}`;
+  const getWidgetUrl = (project: any) => {
+    return project.slug 
+      ? `/${language}/embed/project/${project.slug}`
+      : `/${language}/embed/project/id/${project.id}`;
   };
 
-  const copyWidgetCode = (projectId: string) => {
+  const copyWidgetCode = (project: any) => {
     const widgetCode = `<iframe 
-  src="${getWidgetUrl(projectId)}"
+  src="${getWidgetUrl(project)}"
   width="100%"
   height="600px"
   frameborder="0"
@@ -215,7 +220,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                   <div className="flex items-center gap-2 pt-2">
                     <Button
                       size="sm"
-                      onClick={() => viewProject(project.id)}
+                      onClick={() => viewProject(project)}
                       className="flex-1"
                       style={{
                         backgroundColor: ADMIN_THEME.primary,
@@ -253,7 +258,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyWidgetCode(project.id)}
+                      onClick={() => copyWidgetCode(project)}
                       style={{
                         borderColor: ADMIN_THEME.primary,
                         color: ADMIN_THEME.primary,

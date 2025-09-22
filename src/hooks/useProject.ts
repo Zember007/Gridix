@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from './useUserRole';
+import { generateSlug } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface Project {
@@ -135,9 +136,34 @@ export const useProject = (identifier?: string) => {
         throw new Error('У вас нет прав на редактирование этого проекта');
       }
 
+      // Если изменяется название и slug не указан, генерируем новый slug
+      let finalUpdates = { ...updates };
+      if (updates.name && !updates.slug) {
+        const newSlug = generateSlug(updates.name);
+        
+        // Проверяем уникальность нового slug (исключая текущий проект)
+        let finalSlug = newSlug;
+        let counter = 1;
+        while (true) {
+          const { data: existingProject } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('slug', finalSlug)
+            .neq('id', projectId)
+            .single();
+            
+          if (!existingProject) break;
+          
+          finalSlug = `${newSlug}-${counter}`;
+          counter++;
+        }
+        
+        finalUpdates.slug = finalSlug;
+      }
+
       const { data, error } = await supabase
         .from('projects')
-        .update(updates)
+        .update(finalUpdates)
         .eq('id', projectId)
         .select()
         .single();
@@ -191,10 +217,30 @@ export const useProject = (identifier?: string) => {
     }
 
     try {
+      // Генерируем slug из названия, если он не указан
+      const slug = projectData.slug || generateSlug(projectData.name);
+      
+      // Проверяем уникальность slug
+      let finalSlug = slug;
+      let counter = 1;
+      while (true) {
+        const { data: existingProject } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('slug', finalSlug)
+          .single();
+          
+        if (!existingProject) break;
+        
+        finalSlug = `${slug}-${counter}`;
+        counter++;
+      }
+
       const { data, error } = await supabase
         .from('projects')
         .insert({
           ...projectData,
+          slug: finalSlug,
           user_id: user.id
         })
         .select()

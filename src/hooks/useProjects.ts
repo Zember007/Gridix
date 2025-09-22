@@ -29,7 +29,7 @@ export const useProjects = (filters: ProjectFilters = {}) => {
     return () => {
       mountedRef.current = false;
     };
-  }, [filtersKey, loadProjects]);
+  }, [filtersKey, loadProjects, filters]);
 
   // Мемоизированная функция обновления
   const refresh = useCallback(() => {
@@ -75,6 +75,7 @@ export const useProject = (identifier?: string) => {
 
     if (!identifier) {
       setProject(null);
+
       setLoading(false);
       setError(null);
       return;
@@ -101,14 +102,20 @@ export const useProject = (identifier?: string) => {
             setError('Проект не найден');
           }
         }
-      } catch (err: any) {
-        // Проверяем, что это не отмененный запрос
-        if (!controller.signal.aborted && mountedRef.current && identifierRef.current === identifier) {
-          setError(err.message || 'Ошибка загрузки проекта');
+      } catch (err: unknown) {
+        // Обновляем состояние только если компонент смонтирован и это актуальный идентификатор
+        if (mountedRef.current && identifierRef.current === identifier) {
+          const message = err instanceof Error ? err.message : 'Ошибка загрузки проекта';
+          setError(message);
           setProject(null);
         }
       } finally {
-        if (!controller.signal.aborted && mountedRef.current && identifierRef.current === identifier) {
+        console.log('loading false', identifier);
+        console.log(!controller.signal.aborted, 'controller.signal.aborted');
+        console.log(mountedRef.current, 'mountedRef.current');
+        console.log(identifierRef.current === identifier, 'identifierRef.current === identifier');
+        // Не блокируемся на controller.signal.aborted, т.к. сам запрос не принимает signal
+        if (mountedRef.current && identifierRef.current === identifier) {
           setLoading(false);
         }
       }
@@ -148,12 +155,15 @@ export const useProject = (identifier?: string) => {
           setError('Проект не найден');
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (!controller.signal.aborted && mountedRef.current) {
-        setError(err.message || 'Ошибка загрузки проекта');
+        const message = err instanceof Error ? err.message : 'Ошибка загрузки проекта';
+        setError(message);
         setProject(null);
       }
     } finally {
+      console.log('loading false2', identifier);
+
       if (!controller.signal.aborted && mountedRef.current) {
         setLoading(false);
       }

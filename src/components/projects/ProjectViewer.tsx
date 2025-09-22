@@ -107,7 +107,7 @@ const ProjectViewer = () => {
       const { data: floorsData, error: floorsError } = await supabase
         .from('building_floors')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', cachedProject?.id || projectId)
         .order('floor_number');
 
       if (floorsError) {

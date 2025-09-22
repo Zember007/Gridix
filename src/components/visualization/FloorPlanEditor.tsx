@@ -128,7 +128,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const { data: buildingFloorsData } = await supabase
         .from('building_floors')
         .select('floor_number')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .order('floor_number');
 
       if (buildingFloorsData && buildingFloorsData.length > 0) {
@@ -149,7 +149,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const { data, error } = await supabase
         .from('floor_plans')
         .select('image_url')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .eq('floor_number', floorNumber)
         .maybeSingle();
 
@@ -171,7 +171,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const { data, error } = await supabase
         .from('apartments')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .eq('floor_number', floorNumber);
 
       if (error) throw error;
@@ -199,7 +199,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const { data, error } = await supabase
         .from('floor_plans')
         .select('polygon_settings')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .eq('floor_number', floorNumber)
         .maybeSingle();
 
@@ -266,7 +266,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       const { data: existingPlan } = await supabase
         .from('floor_plans')
         .select('id')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .eq('floor_number', floorNumber)
         .maybeSingle();
 
@@ -284,7 +284,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         const { error: insertError } = await supabase
           .from('floor_plans')
           .insert({
-            project_id: projectId,
+            project_id: project?.id || projectId,
             floor_number: floorNumber,
             image_url: newImageUrl,
             polygon_settings: polygonSettings as unknown as Json
@@ -441,7 +441,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           const { data: existingPlan } = await supabase
             .from('floor_plans')
             .select('id')
-            .eq('project_id', projectId)
+            .eq('project_id', project?.id || projectId)
             .eq('floor_number', targetFloor)
             .maybeSingle();
 
@@ -457,7 +457,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             await supabase
               .from('floor_plans')
               .insert({
-                project_id: projectId,
+                project_id: project?.id || projectId,
                 floor_number: targetFloor,
                 image_url: imageUrl,
                 polygon_settings: polygonSettings as unknown as Json
@@ -470,7 +470,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           const { data: existingApartments } = await supabase
             .from('apartments')
             .select('id, apartment_number')
-            .eq('project_id', projectId)
+            .eq('project_id', project?.id || projectId)
             .eq('floor_number', targetFloor);
 
           // Создаем Map для быстрого поиска по номеру квартиры
@@ -575,7 +575,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         const { data, error } = await supabase
           .from('apartments')
           .insert({
-            project_id: projectId,
+            project_id: project?.id || projectId,
             floor_number: floorNumber,
             apartment_number: apartmentData.number,
             rooms: apartmentData.rooms,
@@ -786,7 +786,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         const { error: projectError } = await supabase
           .from('projects')
           .update({ floors: maxFloor })
-          .eq('id', projectId);
+          .eq('id', project?.id || projectId);
 
         if (projectError) throw projectError;
       }

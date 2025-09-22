@@ -82,8 +82,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     // Можно учесть паддинги контейнера, если нужно:
     const containerPaddingTop = parseFloat(getComputedStyle(containerEl).paddingTop) || 0;
     const containerPaddingBottom = parseFloat(getComputedStyle(containerEl).paddingBottom) || 0;
-    let availableHeight = Math.max(0, baseHeight - containerPaddingTop - containerPaddingBottom);
-  
+    const availableHeight = Math.max(0, baseHeight - containerPaddingTop - containerPaddingBottom);
+    
     // Считаем пропорции по натуральному соотношению
     const aspect = imgEl.naturalWidth / imgEl.naturalHeight;
     let width = Math.round(aspect * availableHeight);
@@ -100,9 +100,40 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [imgRef, containerRef, filtersRef, containerHeight]);
   
 
+  const loadBuildingFloors = useCallback(async () => {
+    if (!projectId) {
+      setBuildingFloors([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('building_floors')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('floor_number');
+
+      if (error) throw error;
+
+      const processedFloors = data.map(floor => ({
+        ...floor,
+        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
+      }));
+
+      setBuildingFloors(processedFloors);
+    } catch (error) {
+      console.error('Error loading building floors:', error);
+      setBuildingFloors([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     loadBuildingFloors();
-  }, [projectId]);
+  }, [loadBuildingFloors]);
 
   useEffect(() => {
     
@@ -138,31 +169,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       setShowPopup(false);
     }
   }, [isExpanded, showPopup]);
-
-  const loadBuildingFloors = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('building_floors')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('floor_number');
-
-      if (error) throw error;
-
-      const processedFloors = data.map(floor => ({
-        ...floor,
-        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
-      }));
-
-      setBuildingFloors(processedFloors);
-    } catch (error) {
-      console.error('Error loading building floors:', error);
-      setBuildingFloors([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getFloorApartments = (floorNumber: number) => {
     return apartments.filter(apt => apt.floor_number === floorNumber);

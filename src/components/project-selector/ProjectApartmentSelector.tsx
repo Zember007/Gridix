@@ -33,8 +33,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
-  const { fields: fieldSettings } = useFields(projectId);
-  const { favoritesCount } = useFavorites(projectId);
+  const { fields: fieldSettings } = useFields(project?.id || null);
+  const { favoritesCount } = useFavorites(project?.id || null);
 
   // State
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -66,7 +66,9 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   };
 
   const openApartmentDetails = (apartment: Apartment) => {
-    const url = `/${language}/project/${projectId}/apartment/${apartment.id}`;
+    // Используем slug если он есть, иначе ID с префиксом
+    const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+    const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
     window.open(url, '_blank');
   };
 
@@ -74,13 +76,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // Load apartments
   const loadApartments = useCallback(async () => {
-    if (apartmentsLoaded) return;
+    if (apartmentsLoaded || !project?.id) return;
 
     try {
       const { data, error } = await supabase
         .from('apartments')
         .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
-        .eq('project_id', projectId);
+        .eq('project_id', project.id);
 
       if (error) throw error;
 
@@ -90,13 +92,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     } catch (error) {
       console.error('Error loading apartments:', error);
     }
-  }, [projectId, apartmentsLoaded]);
+  }, [project?.id, apartmentsLoaded]);
 
   useEffect(() => {
-    if (projectId) {
+    if (project?.id) {
       loadApartments();
     }
-  }, [projectId, loadApartments]);
+  }, [project?.id, loadApartments]);
 
   // Set default floor when apartments load
   useEffect(() => {
@@ -111,7 +113,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Preload layout photos
   useEffect(() => {
     const preloadLayoutPhotos = async () => {
-      if (!projectId || apartments.length === 0) return;
+      if (!project?.id || apartments.length === 0) return;
       
       const uniqueLayouts = new Set<string>(
         apartments.map(a => (Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room`))
@@ -123,7 +125,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         const { data, error } = await supabase
           .from('layout_photos')
           .select('id, project_id, layout_type, image_url, description, order_index')
-          .eq('project_id', projectId)
+          .eq('project_id', project.id)
           .in('layout_type', Array.from(uniqueLayouts))
           .order('order_index', { ascending: true });
 
@@ -143,7 +145,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     };
 
     preloadLayoutPhotos();
-  }, [projectId, apartments]);
+  }, [project?.id, apartments]);
 
   useEffect(() => {
     setSelectedApartment(null);
@@ -152,6 +154,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Load polygons for floor plan view
   useEffect(() => {
     const loadPolygonsForFloor = async (floor: number) => {
+      if (!projectId) return;
+      
       try {
         const { data, error } = await supabase
           .from('apartments')
@@ -394,7 +398,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 // Building facade view with interactive floor polygons
                 <div className="w-full bg-white">
                   <BuildingFacadeView
-                    projectId={projectId}
+                    projectId={project.id}
                     project={project}
                     apartments={filters.filteredApartments}
                     onFloorSelect={(floor) => {

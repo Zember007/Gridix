@@ -67,7 +67,7 @@ const ApartmentDetailsWithFields = ({
       const { data: settingsData, error: settingsError } = await supabase
         .from('project_field_settings')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId) // Этот компонент получает реальный ID проекта
         .eq('is_visible', true)
         .order('sort_order');
 
@@ -77,7 +77,7 @@ const ApartmentDetailsWithFields = ({
       const { data: customData, error: customError } = await supabase
         .from('project_custom_fields')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId) // Этот компонент получает реальный ID проекта
         .eq('is_visible', true)
         .order('sort_order');
 

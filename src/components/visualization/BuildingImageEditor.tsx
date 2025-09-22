@@ -56,7 +56,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       const { data: floorsData } = await supabase
         .from('building_floors')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', project?.id || projectId)
         .order('floor_number');
 
       // Normalize the polygon data to match the expected type
@@ -107,10 +107,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         .from('project-images')
         .getPublicUrl(fileName);
 
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ building_image_url: publicUrl })
-        .eq('id', projectId);
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update({ building_image_url: publicUrl })
+          .eq('id', project?.id || projectId);
 
       if (updateError) throw updateError;
 
@@ -176,7 +176,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         const { error } = await supabase
           .from('building_floors')
           .insert({
-            project_id: projectId,
+            project_id: project?.id || projectId,
             floor_number: selectedFloor,
             polygon: currentShape.points as { x: number; y: number }[],
             color: currentShape.color
@@ -189,7 +189,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
           const { error: projectError } = await supabase
             .from('projects')
             .update({ floors: selectedFloor })
-            .eq('id', projectId);
+            .eq('id', project?.id || projectId);
 
           if (projectError) throw projectError;
         }

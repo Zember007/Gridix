@@ -3,12 +3,18 @@ import { useParams } from 'react-router-dom';
 import ProjectEditor from '@/components/projects/ProjectEditor';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
-const ProjectEditorPage = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+interface ProjectEditorPageProps {
+  useId?: boolean;
+}
+
+const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
+  const { projectId, projectSlug } = useParams<{ projectId?: string; projectSlug?: string }>();
   const { navigate } = useLanguageNavigation();
   
-  const isNew = !projectId || projectId === 'new';
-  const actualProjectId = isNew ? '' : projectId;
+  // Определяем идентификатор проекта в зависимости от типа маршрута
+  const projectIdentifier = useId ? projectId : (projectSlug || projectId);
+  const isNew = !projectIdentifier || projectIdentifier === 'new';
+  const actualProjectId = isNew ? '' : projectIdentifier;
 
   const goBack = () => {
     navigate('/admin');

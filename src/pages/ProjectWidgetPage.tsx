@@ -6,11 +6,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
 import { useEffect } from "react";
 
+interface ProjectWidgetPageProps {
+  useId?: boolean;
+}
 
-
-const ProjectWidgetPage = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
+  const { projectId, projectSlug } = useParams<{ projectId?: string; projectSlug?: string }>();
   const { t } = useLanguage();
+  
+  // Определяем идентификатор проекта в зависимости от типа маршрута
+  const projectIdentifier = useId ? projectId : (projectSlug || projectId);
 
 
   useEffect(() => {
@@ -34,7 +39,7 @@ const ProjectWidgetPage = () => {
   }, []);
   
 
-  if (!projectId) {
+  if (!projectIdentifier) {
     return (
       <div className="min-h-full bg-background flex items-center justify-center">
         <div className="text-center">
@@ -58,7 +63,7 @@ const ProjectWidgetPage = () => {
      <div className="flex justify-end p-4">
         <LanguageToggle />
       </div>}
-      <ProjectApartmentSelector projectId={projectId}  />
+      <ProjectApartmentSelector projectId={projectIdentifier}  />
     </div>
   );
 };

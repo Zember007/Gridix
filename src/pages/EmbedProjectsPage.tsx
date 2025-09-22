@@ -50,8 +50,11 @@ const EmbedProjectsPage = () => {
   // Состояние для отображения
   const userNotFound = userExists === false;
 
-  const handleViewProject = (projectId: string) => {
-    window.open(`/embed/project/${projectId}`, '_blank');
+  const handleViewProject = (project: any) => {
+    const url = project.slug 
+      ? `/embed/project/${project.slug}` 
+      : `/embed/project/id/${project.id}`;
+    window.open(url, '_blank');
   };
 
   if (loading) {
@@ -253,7 +256,7 @@ viewMode === 'map' ?
                     )}
 
                     <Button
-                      onClick={() => handleViewProject(project.id)}
+                      onClick={() => handleViewProject(project)}
                       className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white py-3 rounded-lg font-medium"
                     >
                       <Eye className="h-4 w-4 mr-2" />

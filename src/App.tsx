@@ -42,9 +42,14 @@ function App() {
 
               {/* Language-specific routes with :lang parameter */}
               <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/widget/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/:projectId/apartment/:apartmentId" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/widget/:projectSlug" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/:projectSlug" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage /></LanguageWrapper></LanguageProvider>} />
+              
+              {/* Backward compatibility routes - redirect old ID-based URLs to new slug-based ones */}
+              <Route path="/:lang/widget/id/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage useId /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/id/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage useId /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage useId /></LanguageWrapper></LanguageProvider>} />
               
               {/* Legal pages */}
               <Route path="/:lang/privacy-policy" element={<LanguageProvider><LanguageWrapper><PrivacyPolicyPage /></LanguageWrapper></LanguageProvider>} />
@@ -66,7 +71,7 @@ function App() {
                   </LanguageWrapper>
                 </LanguageProvider>
               } />
-              <Route path="/:lang/admin/project/:projectId" element={
+              <Route path="/:lang/admin/project/:projectSlug" element={
                 <LanguageProvider>
                   <LanguageWrapper>
                     <ProtectedRoute>
@@ -75,10 +80,22 @@ function App() {
                   </LanguageWrapper>
                 </LanguageProvider>
               } />
+              {/* Backward compatibility for admin */}
+              <Route path="/:lang/admin/project/id/:projectId" element={
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <ProjectEditorPage useId />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
+              } />
 
               {/* Embed routes without language prefix but with EmbedLanguageProvider */}
               <Route path="/embed/projects/:userId" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
-              <Route path="/embed/project/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage /></EmbedLanguageProvider>} />
+              <Route path="/embed/project/:projectSlug" element={<EmbedLanguageProvider><ProjectWidgetPage /></EmbedLanguageProvider>} />
+              {/* Backward compatibility for embed */}
+              <Route path="/embed/project/id/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage useId /></EmbedLanguageProvider>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

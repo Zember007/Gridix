@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X, Globe } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
+import { generateSlug } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';

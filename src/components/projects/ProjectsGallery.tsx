@@ -260,7 +260,16 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
           <Card 
             key={project.id}
             className="hover:shadow-lg transition-shadow cursor-pointer group overflow-hidden"
-            onClick={() => onProjectSelect ? onProjectSelect(project.id) : window.open(`/project/${project.id}`, '_blank')}
+            onClick={() => {
+              if (onProjectSelect) {
+                onProjectSelect(project.id);
+              } else {
+                const url = project.slug 
+                  ? `/project/${project.slug}` 
+                  : `/project/id/${project.id}`;
+                window.open(url, '_blank');
+              }
+            }}
           >
             <div className="aspect-video bg-gray-100 overflow-hidden relative">
               {project.building_image_url ? (

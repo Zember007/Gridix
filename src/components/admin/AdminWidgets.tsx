@@ -239,14 +239,26 @@ const AdminWidgets = () => {
               <Label>{t('adminWidgets.selectedProject')}</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  value={`${window.location.origin}/embed/project/${selectedProject}`}
+                  value={(() => {
+                    const project = projects.find(p => p.id === selectedProject);
+                    const url = project?.slug 
+                      ? `${window.location.origin}/embed/project/${project.slug}`
+                      : `${window.location.origin}/embed/project/id/${selectedProject}`;
+                    return url;
+                  })()}
                   readOnly
                   className="bg-gray-50"
                 />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`${window.location.origin}/embed/project/${selectedProject}`, '_blank')}
+                  onClick={() => {
+                    const project = projects.find(p => p.id === selectedProject);
+                    const url = project?.slug 
+                      ? `${window.location.origin}/embed/project/${project.slug}`
+                      : `${window.location.origin}/embed/project/id/${selectedProject}`;
+                    window.open(url, '_blank');
+                  }}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>

@@ -72,11 +72,14 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
     project.latitude !== null && project.longitude !== null
   );
 
-  const handleViewProject = (projectId: string) => {
+  const handleViewProject = (project: any) => {
     if (onProjectSelect) {
-      onProjectSelect(projectId);
+      onProjectSelect(project.id);
     } else {
-      window.open(`/embed/project/${projectId}`, '_blank');
+      const url = project.slug 
+        ? `/embed/project/${project.slug}` 
+        : `/embed/project/id/${project.id}`;
+      window.open(url, '_blank');
     }
   };
 
@@ -160,7 +163,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
                   </div> */}
 
                   <Button
-                    onClick={() => handleViewProject(project.id)}
+                    onClick={() => handleViewProject(project)}
                     className="w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white"
                     size="sm"
                   >

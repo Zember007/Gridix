@@ -15,13 +15,19 @@ export interface FieldSetting {
   field_options?: string[];
 }
 
-export const useFields = (projectId: string) => {
+export const useFields = (projectId: string | null) => {
   const [fields, setFields] = useState<FieldSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { t } = useLanguage();
 
   const loadFieldSettings = useCallback(async () => {
+    if (!projectId) {
+      setFields([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       // Загружаем настройки полей
       const { data: settingsData, error: settingsError } = await supabase
