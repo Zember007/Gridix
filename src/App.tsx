@@ -21,6 +21,7 @@ import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import DomainProjectPage from "./pages/DomainProjectPage";
+import DomainApartmentPage from "./pages/DomainApartmentPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,7 +35,10 @@ function App() {
           <AuthProvider>
             <Routes>
               {/* Default route - check for custom domain or redirect to default language */}
-              <Route path="/" element={<DomainProjectPage />} />
+              <Route path="/" element={<EmbedLanguageProvider><DomainProjectPage /></EmbedLanguageProvider>} />
+              
+              {/* Custom domain apartment route */}
+              <Route path="/apartment/:apartmentId" element={<EmbedLanguageProvider><DomainApartmentPage /></EmbedLanguageProvider>} />
 
               {/* Language-specific routes with :lang parameter */}
               <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />

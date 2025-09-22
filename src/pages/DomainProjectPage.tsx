@@ -2,6 +2,8 @@ import { Navigate } from "react-router-dom";
 import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { useProjectByDomain } from "@/hooks/useProjectByDomain";
 import { Loader2 } from "lucide-react";
+import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 export default function DomainProjectPage() {
   const { project, loading, error, isDomainProject } = useProjectByDomain();
@@ -26,6 +28,13 @@ export default function DomainProjectPage() {
     return <Navigate to={`/${DEFAULT_LANGUAGE}`} replace />;
   }
 
-  // If project found via custom domain, redirect to the project page
-  return <Navigate to={`/${DEFAULT_LANGUAGE}/project/${project.id}`} replace />;
+  // If project found via custom domain, render the project directly
+  return (
+    <div className="min-h-full bg-background">
+      <div className="flex justify-end p-4">
+        <LanguageToggle />
+      </div>
+      <ProjectApartmentSelector projectId={project.id} />
+    </div>
+  );
 }
