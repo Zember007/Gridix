@@ -462,7 +462,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                               }}
                             >
                               <div className={`${isMobile ? ' w-full' : 'w-24 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm`}>
-                                <CarouselContent className={`h-full ${isMobile ? '' : 'flex-col'}`}>
+                                <CarouselContent className={`max-h-[600px] ${isMobile ? '' : 'flex-col'}`}>
                                   {filters.getUniqueFloors().map((floor, index) => (
                                     <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
                                       <button

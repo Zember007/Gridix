@@ -9,7 +9,7 @@ import { Language } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
