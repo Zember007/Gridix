@@ -71,11 +71,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
     
     // Если мы уже находимся на странице проекта, открываем в той же вкладке
-    if (window.location.pathname.includes('/project/')) {
-      window.location.href = url;
-    } else {
-      window.open(url, '_blank');
-    }
+    window.open(url, '_blank');
   };
 
   const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(Math.round(price));
