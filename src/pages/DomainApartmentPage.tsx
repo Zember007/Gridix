@@ -277,6 +277,7 @@ export default function DomainApartmentPage() {
                       <DialogTitle>{t('apartment.installmentCalculator')}</DialogTitle>
                     </DialogHeader>
                     <InstallmentCalculator 
+                      applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
                       apartmentPrice={apartment.price} 
                       currency={project?.currency || 'USD'}
                       minDownPaymentPercent={20}
