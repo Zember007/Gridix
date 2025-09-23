@@ -870,6 +870,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                                   <DialogTitle>{t('installment.calculator')}</DialogTitle>
                                 </DialogHeader>
                                 <InstallmentCalculator
+                                  applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
                                   apartmentPrice={apartment.price}
                                   currency={project.currency}
                                   minDownPaymentPercent={project.min_down_payment_percent || 20}
@@ -898,7 +899,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
             {/* Recommendations Section */}
             {recommendedApartments.length > 0 && (
-              <div className="mt-12 space-y-6">
+              <div className="mt-12 space-y-6 bg-gray-50 rounded-2xl p-10">
                 <h2 className="text-3xl font-medium text-gray-900 font-poppins">Recommended apartments</h2>
                 <div className="grid grid-cols-4 gap-6">
                   {recommendedApartments.map((recApartment) => (
@@ -907,7 +908,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                       onClick={() => openApartmentDetails(recApartment)}
                     >
-                      <div className="aspect-[16/9] bg-gray-100 relative overflow-hidden">
+                      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
                         {recommendationThumbnails[recApartment.id] ? (
                           <img
                             src={recommendationThumbnails[recApartment.id] as string}
@@ -998,6 +999,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         <DialogTitle>{t('installment.calculator')}</DialogTitle>
                       </DialogHeader>
                       <InstallmentCalculator
+                        applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
                         apartmentPrice={apartment.price}
                         currency={project.currency}
                         minDownPaymentPercent={project.min_down_payment_percent || 20}

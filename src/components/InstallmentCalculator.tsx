@@ -12,6 +12,7 @@ interface InstallmentCalculatorProps {
   currency: string | null;
   minDownPaymentPercent: number;
   maxInstallmentMonths: number;
+  applyInstallment: () => void;
   onCalculate?: (calculation: InstallmentCalculation) => void;
   themeColor?: string;
 }
@@ -30,6 +31,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
   currency,
   minDownPaymentPercent,
   maxInstallmentMonths,
+  applyInstallment,
   onCalculate,
   themeColor = '#000000'
 }) => {
@@ -146,6 +148,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
         <Button 
           className="w-full gap-2 text-white hover:opacity-90" 
           size="lg"
+          onClick={applyInstallment}
           style={{ backgroundColor: themeColor }}
         >
           <CreditCard className="h-4 w-4" />
