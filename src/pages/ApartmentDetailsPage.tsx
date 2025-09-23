@@ -908,7 +908,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                       onClick={() => openApartmentDetails(recApartment)}
                     >
-                      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                      <div className="aspect-[16/9] bg-gray-100 relative overflow-hidden">
                         {recommendationThumbnails[recApartment.id] ? (
                           <img
                             src={recommendationThumbnails[recApartment.id] as string}
