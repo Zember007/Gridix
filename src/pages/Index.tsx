@@ -56,7 +56,7 @@ const Index = () => {
   useEffect(() => {
     const handleAnchorClick = (e: Event) => {
       const target = e.target as HTMLAnchorElement;
-      if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
+      if (target.tagName === 'A' && target.getAttribute('href')?.includes('#')) {
         e.preventDefault();
         const elementId = target.getAttribute('href')?.substring(1);
         if (elementId) {
