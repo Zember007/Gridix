@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useInstallment } from '@/hooks/useInstallment';
 import { Apartment } from '@/types/apartment';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 import { toast } from 'sonner';
@@ -89,26 +90,8 @@ export const ListView = ({
   const getButtonClass = (isActive: boolean) => 
     isActive ? 'text-white' : 'border-gray-300';
 
-  // Calculate installment payment
- 
-
-  const calculateInstallmentPayment = (price: number): number => {
-    if (!project?.installment_enabled || !project.max_installment_months) return 0;
-  
-    const minDp = project.min_down_payment_percent ?? 20;
-    const maxDp =  50; 
-    const targetDp = 50;
-  
-    const downPercent = Math.min(Math.max(targetDp, minDp), maxDp);
-    console.log('downPercent', downPercent);
-    
-    const downPayment = (price * downPercent) / 100;
-    const remaining = price - downPayment;
-  
-    const months = project.max_installment_months;
-
-    return remaining / months;
-  };
+  // Installment calculation
+  const { calculateMonthlyPayment } = useInstallment(project);
 
   // Handle favorite toggle
   const handleShare = async (e: React.MouseEvent, apartment: Apartment) => {
@@ -244,7 +227,7 @@ export const ListView = ({
                               {/* Installment pricing for mobile */}
                               {apartment.price && project?.installment_enabled && (
                                 <div className="text-xs text-gray-500">
-                                  {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))} {getCurrencySymbolSafe(selectedCurrency)}
+                                  {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))} {getCurrencySymbolSafe(selectedCurrency)}
                                 </div>
                               )}
                               {/* Custom fields for mobile */}
@@ -442,7 +425,7 @@ export const ListView = ({
                             </div>
                             {apartment.price && project?.installment_enabled && (
                               <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
-                                {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                                {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
                               </div>
                             )}
                           </div>
@@ -558,7 +541,7 @@ export const ListView = ({
                             {/* Installment pricing for grid */}
                             {apartment.price && project?.installment_enabled && (
                               <div className="text-[10px] text-gray-500">
-                                {t('project.installmentFrom')} {formatPrice(convertPrice(calculateInstallmentPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                                {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
                               </div>
                             )}
                           </div>

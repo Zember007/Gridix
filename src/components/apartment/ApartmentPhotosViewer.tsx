@@ -195,7 +195,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <img
             src={photos[currentPhotoIndex].image_url}
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
-            className="w-full h-64 object-cover rounded-lg cursor-pointer"
+            className="w-full h-64 md:h-auto md:aspect-[16/9] object-cover rounded-lg cursor-pointer"
             onClick={openLightbox}
           />
           
@@ -203,7 +203,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <Button
             variant="outline"
             size="sm"
-            className="absolute md:bottom-2 bottom-10 right-2 bg-white/80 hover:bg-white"
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
             onClick={openLightbox}
           >
             <Expand className="h-4 w-4" />

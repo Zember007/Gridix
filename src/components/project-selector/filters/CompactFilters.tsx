@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import CurrencyToggle from '@/components/common/CurrencyToggle';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -116,34 +116,13 @@ export const CompactFilters = ({
         />
       </div>
 
-      {/* Currency filter - pill toggles */}
-      {(() => {
-        type Currency = 'RUB' | 'USD' | 'EUR' | 'GEL'
-        const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR']
-        const projectCurrency = (project?.currency || 'RUB') as Currency
-        const list: Currency[] = [...preferredOrder, ...(preferredOrder.includes(projectCurrency as Exclude<Currency, 'RUB'>) ? [] : [projectCurrency])]
-        const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i)
-        const symbol: Record<'RUB' | 'USD' | 'EUR' | 'GEL', string> = { RUB: '₽', USD: '$', EUR: '€', GEL: '₾' }
-        return (
-          <ToggleGroup type="single" value={selectedCurrency} onValueChange={(v) => v && setSelectedCurrency(v)} className="gap-2">
-            {currenciesToShow.map((c) => (
-              <ToggleGroupItem
-                key={c}
-                value={c}
-                size="sm"
-                aria-label={c}
-                className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:text-white"
-                style={{
-                  '--tw-bg-opacity': selectedCurrency === c ? '1' : undefined,
-                  backgroundColor: selectedCurrency === c ? themeColor : undefined
-                } as React.CSSProperties}
-              >
-                {symbol[c]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        )
-      })()}
+      {/* Currency filter */}
+      <CurrencyToggle
+        selectedCurrency={selectedCurrency}
+        onChange={(c) => setSelectedCurrency(c)}
+        projectCurrency={project?.currency}
+        themeColor={themeColor}
+      />
 
       {/* Available only switch */}
       <div className="flex items-center space-x-2">

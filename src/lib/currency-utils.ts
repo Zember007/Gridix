@@ -74,3 +74,23 @@ export const formatPriceWithCurrency = (price: number, currency: string | null, 
   
   return `${formatter.format(price)} ${symbol}`;
 };
+
+// Simple fixed-rate conversion helper, aligned with useProjectFilters logic
+const EXCHANGE_RATES: Record<CurrencyType, number> = {
+  RUB: 1,
+  USD: 0.011,
+  EUR: 0.01,
+  GEL: 0.03,
+};
+
+export const convertPrice = (
+  price: number,
+  fromCurrency: string | null | undefined,
+  toCurrency: string | null | undefined
+): number => {
+  if (!price) return 0;
+  const from: CurrencyType = isValidCurrency(String(fromCurrency)) ? (fromCurrency as CurrencyType) : 'RUB';
+  const to: CurrencyType = isValidCurrency(String(toCurrency)) ? (toCurrency as CurrencyType) : 'RUB';
+  const priceInRub = from === 'RUB' ? price : price / EXCHANGE_RATES[from];
+  return to === 'RUB' ? priceInRub : priceInRub * EXCHANGE_RATES[to];
+};

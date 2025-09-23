@@ -256,12 +256,6 @@ const translations: Translations = {
     ka: 'დამატებითი ინფორმაცია',
     ar: 'معلومات إضافية'
   },
-  'project.installmentFrom': {
-    ru: 'В рассрочку от',
-    en: 'Installment from',
-    ka: 'განვადებით -და',
-    ar: 'بالتقسيط من'
-  },
   'project.from': {
     ru: 'от',
     en: 'from',
@@ -865,7 +859,7 @@ const translations: Translations = {
     en: 'Apartment #',
     ka: 'ბინა №',
     ar: 'شقة رقم'
-  },            
+  },
   'apartment.floor': {
     ru: 'Этаж',
     en: 'Floor',
@@ -989,16 +983,34 @@ const translations: Translations = {
     ar: 'الدفعة الأولى'
   },
   'installment.period': {
-    ru: 'Срок рассрочки',
-    en: 'Installment Period',
-    ka: 'განვადების ვადა',
-    ar: 'فترة التقسيط'
+    ru: 'На',
+    en: 'On',
+    ka: 'და',
+    ar: 'على'
+  },
+  'installment.low': {
+    ru: 'Рассрочка 0%',
+    en: 'Installment 0%',
+    ka: 'განვადება 0%',
+    ar: 'تقسيط 0%'
   },
   'installment.months': {
     ru: 'месяцев',
     en: 'months',
     ka: 'თვე',
     ar: 'شهور'
+  },
+  'installment.perMonth': {
+    ru: 'месяц',
+    en: 'month',
+    ka: 'თვე',
+    ar: 'شهر'
+  },
+  'installment.downPaymentFrom': {
+    ru: 'Первый взнос от',
+    en: 'Down payment from',
+    ka: 'პირველი შენატანი დან',
+    ar: 'دفعة أولى من'
   },
   'installment.month': {
     ru: 'месяц',
@@ -3671,7 +3683,7 @@ const translations: Translations = {
     en: 'Floor {floor} already exists',
     ka: 'სართული {floor} უკვე არსებობს'
   },
-  
+
   // Filters
   'project.moreFilters': {
     ru: 'Больше фильтров',
@@ -3914,7 +3926,7 @@ const translations: Translations = {
     ru: 'Проверяем существующий аккаунт...',
     en: 'Checking existing account...',
     ka: 'არსებული ანგარიშის შემოწმება...'
-  },  
+  },
   // Admin Sidebar (extra)
   'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი', ar: 'لوحة الإدارة' },
   'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი', ar: 'محرر المشروع' },
@@ -3925,7 +3937,7 @@ const translations: Translations = {
   'projectEditor.photosTab': { ru: 'Фото', en: 'Photos', ka: 'ფოტოები', ar: 'الصور' },
   'projectEditor.fieldsTab': { ru: 'Поля', en: 'Fields', ka: 'ველები', ar: 'الحقول' },
   'projectEditor.integrations': { ru: 'Интеграции', en: 'Integrations', ka: 'ინტეგრაციები', ar: 'التكاملات' },
-  
+
   // Leads Manager
   'leads.title': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
   'leads.description': { ru: 'Все заявки от клиентов с информацией о статусе отправки в CRM', en: 'All client requests with CRM delivery status', ka: 'ყველა კლიენტის განაცხადი CRM-ში გაგზავნის სტატუსით', ar: 'جميع طلبات العملاء مع حالة الإرسال إلى CRM' },
@@ -4058,7 +4070,7 @@ const translations: Translations = {
     ka: 'საბერძნეთი',
     ar: 'اليونان'
   },
-  
+
   // Landing page translations
   'landing.workWithoutBorders': {
     ru: 'работайте без границ',
@@ -4126,7 +4138,7 @@ const translations: Translations = {
     ka: 'Gridix ეხმარება შექმნას ნათელი და მოსახერხებელი უძრავი ქონების გეგმები: მონიშნეთ ბინების სტატუსები, შეაერთეთ CRM ინტეგრაციები და გაუზიარეთ გეგმები ერთი ხაზის კოდით. ყველაფერი მარტივი, სწრაფი და ზედმეტი ხარჯების გარეშე.',
     ar: 'يساعد Gridix في إنشاء خطط عقارية واضحة ومريحة: ضع علامة على حالات الشقق، واربط تكاملات CRM وشارك الخطط بسطر واحد من الكود. كل شيء بسيط وسريع وبدون تكاليف غير ضرورية.'
   },
-  
+
   // Additional landing page sections
   'landing.whatWeGiveClients': {
     ru: 'что мы даём клиентам',
@@ -4479,13 +4491,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const t = (key: string, params?: Record<string, string | number>): string => {
     const base = translations[key] || {};
     const translation = (base[language] ?? base.en ?? base.ru ?? key);
-    
+
     if (params) {
       return Object.keys(params).reduce((text, param) => {
         return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
       }, translation);
     }
-    
+
     return translation;
   };
 
@@ -4506,19 +4518,19 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
     if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
       return langParam as Language;
     }
-    
+
     // Then check localStorage
     const savedLanguage = localStorage.getItem('embed-language');
     if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
       return savedLanguage as Language;
     }
-    
+
     return DEFAULT_LANGUAGE;
   });
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
-    
+
     setLanguageState(newLanguage);
     localStorage.setItem('embed-language', newLanguage);
   };
@@ -4526,13 +4538,13 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
   const t = (key: string, params?: Record<string, string | number>): string => {
     const base = translations[key] || {};
     const translation = (base[language] ?? base.en ?? base.ru ?? key);
-    
+
     if (params) {
       return Object.keys(params).reduce((text, param) => {
         return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
       }, translation);
     }
-    
+
     return translation;
   };
 

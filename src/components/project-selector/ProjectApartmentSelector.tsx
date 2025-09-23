@@ -69,7 +69,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     // Используем slug если он есть, иначе ID с префиксом
     const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
     const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-    window.open(url, '_blank');
+    
+    // Если мы уже находимся на странице проекта, открываем в той же вкладке
+    if (window.location.pathname.includes('/project/')) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   };
 
   const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(Math.round(price));

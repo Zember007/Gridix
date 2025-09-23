@@ -3,7 +3,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/hooks/useProjects';
 import { useApartment } from '@/hooks/useApartment';
 import { useFields } from '@/hooks/useFields';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { formatPriceWithCurrency, convertPrice, getCurrencySymbolSafe } from '@/lib/currency-utils';
+import CurrencyToggle from '@/components/common/CurrencyToggle';
 import { Language } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -11,13 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useInstallment } from '@/hooks/useInstallment';
 import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { useFavorites } from '@/hooks/useFavorites';
 
@@ -26,34 +28,35 @@ interface ApartmentDetailsPageProps {
 }
 
 const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
-  const { 
-    projectId, 
-    projectSlug, 
-    apartmentId, 
-    apartmentNumber, 
-    lang 
-  } = useParams<{ 
-    projectId?: string; 
+  const {
+    projectId,
+    projectSlug,
+    apartmentId,
+    apartmentNumber,
+    lang
+  } = useParams<{
+    projectId?: string;
     projectSlug?: string;
-    apartmentId?: string; 
+    apartmentId?: string;
     apartmentNumber?: string;
-    lang?: string; 
+    lang?: string;
   }>();
-  
+
   // Определяем идентификаторы в зависимости от типа маршрута
   const projectIdentifier = useId ? projectId : (projectSlug || projectId);
   const apartmentIdentifier = useId ? apartmentId : (apartmentNumber || apartmentId);
-  
+
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project, loading: projectLoading, error: projectError } = useProject(projectIdentifier || '');
   const { apartment, loading: apartmentLoading, error: apartmentError } = useApartment(
-    projectIdentifier, 
-    apartmentIdentifier, 
+    projectIdentifier,
+    apartmentIdentifier,
     { useId }
   );
   const { fields: fieldSettings } = useFields(project?.id || '');
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { calculateMonthlyPayment } = useInstallment(project || undefined);
 
   // Логируем состояние проекта для диагностики
   useEffect(() => {
@@ -73,6 +76,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [recommendedApartments, setRecommendedApartments] = useState<Apartment[]>([]);
+  const [recommendationThumbnails, setRecommendationThumbnails] = useState<Record<string, string | null>>({});
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
 
   const handleShare = async () => {
     try {
@@ -95,6 +101,13 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
       }
     }
   };
+
+  // Initialize currency from project if available
+  useEffect(() => {
+    if (project?.currency) {
+      setSelectedCurrency(project.currency);
+    }
+  }, [project?.currency]);
 
   const handleToggleFavorite = () => {
     if (!apartment) return;
@@ -223,12 +236,83 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     // Если вкладка не закрылась (например, не была открыта через JS), перенаправляем назад
     setTimeout(() => {
       // Используем slug вместо ID для обратной ссылки
-      const projectUrl = useId 
-        ? `/${lang}/project/id/${projectId}` 
+      const projectUrl = useId
+        ? `/${lang}/project/id/${projectId}`
         : `/${lang}/project/${project?.slug || projectIdentifier}`;
       window.location.href = projectUrl;
     }, 100);
   };
+
+  const openApartmentDetails = (apartment: Apartment) => {
+    // Используем slug если он есть, иначе ID с префиксом
+    const projectPath = project?.slug ? project.slug : `id/${project?.id || projectIdentifier}`;
+    const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+    window.location.href = url;
+  };
+
+  // Load recommended apartments
+  const loadRecommendedApartments = useCallback(async () => {
+    if (!apartment || !project?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('apartments')
+        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
+        .eq('project_id', project.id)
+        .eq('rooms', apartment.rooms.toString())
+        .neq('id', apartment.id)
+        .eq('status', 'available')
+        .limit(4);
+
+      if (error) throw error;
+
+      const normalizedApartments = (data || []).map(normalizeApartmentData);
+      setRecommendedApartments(normalizedApartments);
+      // После загрузки рекомендаций загрузим для них превью (фото квартиры или планировки)
+      try {
+        const thumbnails: Record<string, string | null> = {};
+        for (const apt of normalizedApartments) {
+          // Сначала пробуем первое фото квартиры
+          const { data: aptPhotos, error: aptPhotosError } = await supabase
+            .from('apartment_photos')
+            .select('image_url, order_index')
+            .eq('apartment_id', apt.id)
+            .order('order_index', { ascending: true })
+            .limit(1);
+          if (!aptPhotosError && aptPhotos && aptPhotos.length > 0) {
+            thumbnails[apt.id] = aptPhotos[0].image_url;
+            continue;
+          }
+
+          // Если у квартиры нет фото — берём первую планировку по типу комнат
+          const layoutType = apt.rooms === 0 ? 'studio' : `${apt.rooms}-room`;
+          const { data: layoutPhotos, error: layoutError } = await supabase
+            .from('layout_photos')
+            .select('image_url, order_index')
+            .eq('project_id', project.id)
+            .eq('layout_type', layoutType)
+            .order('order_index', { ascending: true })
+            .limit(1);
+          if (!layoutError && layoutPhotos && layoutPhotos.length > 0) {
+            thumbnails[apt.id] = layoutPhotos[0].image_url;
+          } else {
+            thumbnails[apt.id] = null;
+          }
+        }
+        setRecommendationThumbnails(thumbnails);
+      } catch (thumbError) {
+        console.error('Error loading recommendation thumbnails:', thumbError);
+      }
+    } catch (error) {
+      console.error('Error loading recommended apartments:', error);
+    }
+  }, [apartment, project?.id]);
+
+  useEffect(() => {
+    if (apartment && project?.id) {
+      loadRecommendedApartments();
+    }
+  }, [apartment, project?.id, loadRecommendedApartments]);
 
   const handleGeneratePDF = async () => {
     if (!apartment || !project?.id) return;
@@ -315,7 +399,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-   
+
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{t('adminWidgets.loading')}</p>
         </div>
@@ -337,9 +421,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
   // Перенаправляем только если проект или квартира не найдены после завершения загрузки
   if (!loading && (!project || !apartment)) {
-    console.warn('Project or apartment not found after loading completed:', { 
-      projectIdentifier, 
-      apartmentIdentifier, 
+    console.warn('Project or apartment not found after loading completed:', {
+      projectIdentifier,
+      apartmentIdentifier,
       project: !!project,
       apartment: !!apartment
     });
@@ -405,8 +489,8 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                     variant="outline"
                     onClick={handleToggleFavorite}
                     className={`px-4 py-3 rounded-2xl border-2 hover:border-gray-300 h-15 w-15 ${isFavorite(apartment?.id || '')
-                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
-                        : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
+                      : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
                     <Heart className={`!h-5 !w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
@@ -441,7 +525,10 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
             {apartment.price && (
               <div className="mb-6">
                 <div className="text-3xl font-bold text-gray-900">
-                  {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+                  {formatPriceWithCurrency(
+                    convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                    selectedCurrency
+                  )}
                 </div>
               </div>
             )}
@@ -515,7 +602,12 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       <div key={field.id} className="flex justify-between items-center py-2">
                         <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
                         <span className="font-medium text-gray-900">
-                          {formatFieldValue(value, field.field_type, field.field_name)}
+                          {field.field_name === 'price'
+                            ? formatPriceWithCurrency(
+                                convertPrice(value as number, project?.currency || null, selectedCurrency),
+                                selectedCurrency
+                              )
+                            : formatFieldValue(value, field.field_type, field.field_name)}
                         </span>
                       </div>
                     );
@@ -527,121 +619,100 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:block py-10">
-          <div className="max-w-6xl mx-auto">
-            {/* Gallery at top */}
-            <div className="relative mb-8">
-              <div className="relative rounded-xl border bg-white shadow-sm overflow-hidden">
-                <div className="absolute top-4 left-4 z-10">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={goBackToProject}
-                    className="bg-black/20 hover:bg-black/30 text-white rounded-full w-10 h-10"
-                    aria-label={t('admin.back')}
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-                <div className="absolute top-4 right-4 z-10">
-                  <Badge
-                    className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
-                    style={getStatusStyle(apartment.status)}
-                  >
-                    {getStatusLabel(apartment.status)}
-                  </Badge>
-                </div>
-                <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+        <div className="hidden md:block py-6">
+          <div className="max-w-7xl mx-auto px-6">
+            {/* Back button and title section */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={goBackToProject}
+                  className="rounded-full w-10 h-10 border border-gray-200 hover:bg-gray-50"
+                  aria-label={t('admin.back')}
+                >
+                  <ArrowLeft className="h-5 w-5 text-gray-700" />
+                </Button>
+                <h1 className="text-2xl font-semibold text-gray-900 font-poppins">
+                  {t('apartment.apartment')} № {apartment.apartment_number}
+                </h1>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleToggleFavorite}
+                  className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${isFavorite(apartment?.id || '')
+                    ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'border-gray-200'
+                    }`}
+                  aria-label="favorite"
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleShare}
+                  className="px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
+                  aria-label="share"
+                >
+                  <Share2 className="h-5 w-5" />
+                </Button>
               </div>
             </div>
 
-            {/* Title and basic info section */}
-            <div className="mb-8">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <h1 className="text-4xl font-bold text-gray-900">
-                    {t('apartment.apartment')} № {apartment.apartment_number}
-                  </h1>
-                  <p className="mt-2 text-lg text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleToggleFavorite}
-                    className={`px-3 py-2 rounded-lg border hover:border-gray-300 ${isFavorite(apartment?.id || '')
-                        ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100'
-                        : 'border-gray-200'
-                      }`}
-                    aria-label="favorite"
-                  >
-                    <Heart className={`h-5 w-5 ${isFavorite(apartment?.id || '') ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleShare}
-                    className="px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300"
-                    aria-label="share"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Basic metrics */}
-              <div className="flex items-center gap-8 text-lg">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Home className="h-6 w-6 text-gray-400" />
-                  <span>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Square className="h-6 w-6 text-gray-400" />
-                  <span>{apartment.area} м²</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Two-column layout: Data on left, Price and actions on right */}
-            <div className="grid grid-cols-3 gap-8">
-              {/* Left column - Apartment data (2/3 width) */}
-              <div className="col-span-2 space-y-6">
-                {/* Project description */}
-                {project?.description && (
-                  <div className="rounded-xl border bg-white shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('projectEditor.description')}</h3>
-                    <p className="text-gray-600 leading-relaxed">{project.description}</p>
+            {/* Main content grid */}
+            <div className="grid grid-cols-12 gap-8">
+              {/* Left side - Gallery and details */}
+              <div className="col-span-8 space-y-4">
+                {/* Gallery */}
+                <div className="relative">
+                  <div className="absolute top-4 left-4 z-10">
+                    <Badge
+                      className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium font-poppins`}
+                      style={getStatusStyle(apartment.status)}
+                    >
+                      {getStatusLabel(apartment.status)}
+                    </Badge>
                   </div>
-                )}
+                  <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+                  {/* Gallery navigation line */}
 
-                {/* Basic apartment details */}
-                <div className="rounded-xl border bg-white shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.details')}</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-gray-600">{t('apartment.number')}</span>
-                      <span className="font-medium text-gray-900">{apartment.apartment_number}</span>
+                </div>
+
+                <div className="flex h-[70px] items-center justify-center">
+                  <div className="h-0.5 w-[80%] bg-gray-300 rounded-full"></div>
+                </div>
+
+                {/* Apartment Details Section */}
+                <div className="space-y-6">
+                  <h2 className="text-3xl font-medium text-gray-900 font-poppins">Apartment details</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-gray-600 font-poppins">{t('apartment.number')}</span>
+                      <span className="font-medium text-gray-900 font-poppins">{apartment.apartment_number}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-gray-600">{t('apartment.floor')}</span>
-                      <span className="font-medium text-gray-900">{apartment.floor_number}</span>
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-gray-600 font-poppins">{t('apartment.floor')}</span>
+                      <span className="font-medium text-gray-900 font-poppins">{apartment.floor_number}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                      <span className="text-gray-600">{t('apartment.area')}</span>
-                      <span className="font-medium text-gray-900">{apartment.area} м²</span>
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-gray-600 font-poppins">{t('apartment.area')}</span>
+                      <span className="font-medium text-gray-900 font-poppins">{apartment.area} м²</span>
                     </div>
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-600">{t('apartment.rooms')}</span>
-                      <span className="font-medium text-gray-900">
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-gray-600 font-poppins">{t('apartment.rooms')}</span>
+                      <span className="font-medium text-gray-900 font-poppins">
                         {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Additional fields */}
+                {/* Additional Information Section */}
                 {getVisibleFields().length > 0 && (
-                  <div className="rounded-xl border bg-white shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('apartment.additionalInfo')}</h3>
-                    <div className="space-y-3">
+                  <div className="space-y-6">
+                    <h2 className="text-3xl font-medium text-gray-900 font-poppins">Additional Information</h2>
+                    <div className="space-y-4">
                       {getVisibleFields().map((field) => {
                         let value: unknown = null;
                         if (field.is_custom) {
@@ -674,9 +745,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         if (value === null) return null;
 
                         return (
-                          <div key={field.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                            <span className="text-gray-600">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
-                            <span className="font-medium text-gray-900">
+                          <div key={field.id} className="flex items-center justify-between py-3">
+                            <span className="text-gray-600 font-poppins">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                            <span className="font-medium text-gray-900 font-poppins">
                               {formatFieldValue(value, field.field_type, field.field_name)}
                             </span>
                           </div>
@@ -687,82 +758,203 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                 )}
               </div>
 
-              <div className="relative h-full">
-                {/* Right column - Price and actions (1/3 width) */}
-                <div className="space-y-6 w-full sticky top-10">
-                  {/* Price card */}
-                  {apartment.price && (
-                    <div className="rounded-xl border bg-white shadow-sm p-6 text-center">
-                      <div className="text-3xl font-bold text-gray-900 mb-2">
-                        {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+              {/* Right side - Price and actions */}
+              <div className="col-span-4">
+                <div className="sticky top-6">
+                  <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] ">
+                    {/* Currency selector */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-xl font-medium text-gray-900  font-poppins">
+                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`} {apartment.area} m2
                       </div>
-                      <p className="text-gray-500 text-sm">{t('project.price')}</p>
+                      <div className="text-xl font-light text-gray-500  font-poppins">
+                        {apartment.floor_number} floor
+                      </div>
                     </div>
-                  )}
+                    <div className="flex justify-between gap-[15px]">
 
-                  {/* Action buttons */}
-                  {apartment.status === 'available' && (
-                    <div className="space-y-3">
-                      <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            className="w-full text-white py-4 rounded-xl text-lg font-semibold hover:opacity-90"
-                            style={getButtonStyle('available')}
-                          >
-                            {t('common.reserve')}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                          <DialogHeader>
-                            <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
-                          </DialogHeader>
-                          <ApartmentReservationForm
-                            apartmentId={apartment.id}
-                            projectId={apartment.project_id}
-                            onSubmit={() => setIsReserveDialogOpen(false)}
-                            onCancel={() => setIsReserveDialogOpen(false)}
+                      <div className="flex flex-col items-start whitespace-nowrap">
+                        {apartment.price && (
+                          <>
+                            <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
+                              {formatPriceWithCurrency(
+                                convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                                selectedCurrency
+                              )}
+                            </div>
+
+                            {project?.installment_enabled && (
+                              <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
+                                {t('project.from')} {formatPriceWithCurrency(
+                                  convertPrice(
+                                    calculateMonthlyPayment(apartment.price),
+                                    project?.currency || null,
+                                    selectedCurrency
+                                  ),
+                                  selectedCurrency
+                                )} / {t('installment.perMonth')}
+                              </div>
+                            )}
+
+                          </>
+                        )}
+                          <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
+                          {t('installment.low')}
+                        </Badge>
+                      </div>
+                      <div className="flex-col gap-[10px] flex">
+                        <div className="flex ">
+                          <CurrencyToggle
+                            selectedCurrency={selectedCurrency}
+                            onChange={(c) => setSelectedCurrency(c)}
+                            projectCurrency={project?.currency}
                             themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                           />
-                        </DialogContent>
-                      </Dialog>
+                        </div>
+                        <div>
+                          {project?.installment_enabled && project?.max_installment_months && (
+                            <div className="text-sm font-light text-gray-700 font-poppins">
+                              {t('installment.period')} {project.max_installment_months} {t('installment.months')}
+                            </div>
+                          )}
+                          <div className="text-sm font-light text-gray-700 font-poppins">
+                            {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                      {project?.installment_enabled && apartment.price && (
-                        <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                    {/* Price */}
+
+
+                    {/* Action buttons */}
+                    {apartment.status === 'available' && (
+                      <div className="space-y-3">
+                        {/* Green installment button */}
+                      
+
+                        {/* Main reserve button */}
+                        <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                           <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white">
-                              <Calculator className="h-5 w-5 mr-2" />
-                              {t('installment.calculator')}
+                            <Button
+                              className="w-full text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 font-poppins"
+                              style={getButtonStyle('available')}
+                            >
+                               {t('common.reserve')}
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
+                          <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                              <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                              <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
                             </DialogHeader>
-                            <InstallmentCalculator
-                              apartmentPrice={apartment.price}
-                              currency={project.currency}
-                              minDownPaymentPercent={project.min_down_payment_percent || 20}
-                              maxInstallmentMonths={project.max_installment_months || 24}
+                            <ApartmentReservationForm
+                              apartmentId={apartment.id}
+                              projectId={apartment.project_id}
+                              onSubmit={() => setIsReserveDialogOpen(false)}
+                              onCancel={() => setIsReserveDialogOpen(false)}
                               themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                             />
                           </DialogContent>
                         </Dialog>
-                      )}
 
-                      <Button
-                        variant="outline"
-                        onClick={handleGeneratePDF}
-                        disabled={isGeneratingPDF}
-                        className="w-full py-4 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-white"
-                      >
-                        <FileDown className="h-5 w-5 mr-2" />
-                        PDF
-                      </Button>
-                    </div>
-                  )}
+                        {/* Secondary buttons row */}
+                        <div className="flex gap-3">
+                          {project?.installment_enabled && apartment.price && (
+                            <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" className="flex-1 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm">
+                                {t('installment.calculator')}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[600px]">
+                                <DialogHeader>
+                                  <DialogTitle>{t('installment.calculator')}</DialogTitle>
+                                </DialogHeader>
+                                <InstallmentCalculator
+                                  apartmentPrice={apartment.price}
+                                  currency={project.currency}
+                                  minDownPaymentPercent={project.min_down_payment_percent || 20}
+                                  maxInstallmentMonths={project.max_installment_months || 24}
+                                  themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            onClick={handleGeneratePDF}
+                            disabled={isGeneratingPDF}
+                            className="px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm"
+                          >
+                            PDF
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Recommendations Section */}
+            {recommendedApartments.length > 0 && (
+              <div className="mt-12 space-y-6">
+                <h2 className="text-3xl font-medium text-gray-900 font-poppins">Recommended apartments</h2>
+                <div className="grid grid-cols-2 gap-6">
+                  {recommendedApartments.map((recApartment) => (
+                    <div
+                      key={recApartment.id}
+                      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      onClick={() => openApartmentDetails(recApartment)}
+                    >
+                      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                        {recommendationThumbnails[recApartment.id] ? (
+                          <img
+                            src={recommendationThumbnails[recApartment.id] as string}
+                            alt={`Apartment ${recApartment.apartment_number}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <Home className="h-12 w-12 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3">
+                          <Badge
+                            className={`${getStatusColor(recApartment.status)} px-2 py-1 rounded-full text-xs font-medium font-poppins`}
+                            style={getStatusStyle(recApartment.status)}
+                          >
+                            {getStatusLabel(recApartment.status)}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-medium text-gray-900 font-poppins">
+                          {t('apartment.apartment')} № {recApartment.apartment_number}
+                          </h3>
+                          <span className="text-sm text-gray-500 font-poppins">
+                            {recApartment.floor_number} {t('project.floor')}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2 font-poppins">
+                          {recApartment.rooms === 0 ? t('apartment.studio') : `${recApartment.rooms} ${t('apartment.room')}`} • {recApartment.area} m²
+                        </div>
+                        {recApartment.price && (
+                          <div className="text-lg font-medium text-gray-900 font-poppins">
+                            {formatPriceWithCurrency(
+                              convertPrice(recApartment.price, project?.currency || null, selectedCurrency),
+                              selectedCurrency
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
