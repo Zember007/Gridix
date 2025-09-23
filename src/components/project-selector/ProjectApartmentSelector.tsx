@@ -466,7 +466,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                   {filters.getUniqueFloors().map((floor, index) => (
                                     <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
                                       <button
-                                        className={`w-full ${isMobile ? 'h-full' : 'h-12'} flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${
+                                        className={`w-full h-12 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${
                                           selectedFloorForPlan === floor
                                             ? 'text-white'
                                             : 'hover:bg-gray-100 text-gray-700'
