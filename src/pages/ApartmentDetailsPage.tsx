@@ -7,7 +7,6 @@ import { formatPriceWithCurrency, convertPrice, getCurrencySymbolSafe } from '@/
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import { Language } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
@@ -901,7 +900,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
             {recommendedApartments.length > 0 && (
               <div className="mt-12 space-y-6">
                 <h2 className="text-3xl font-medium text-gray-900 font-poppins">Recommended apartments</h2>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-4 gap-6">
                   {recommendedApartments.map((recApartment) => (
                     <div
                       key={recApartment.id}
