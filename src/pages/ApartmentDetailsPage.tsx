@@ -812,11 +812,11 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         </div>
                         <div>
                           {project?.installment_enabled && project?.max_installment_months && (
-                            <div className="text-sm font-light text-gray-700 font-poppins">
+                            <div className="text-[14px] font-light text-gray-700 font-poppins">
                               {t('installment.period')} {project.max_installment_months} {t('installment.months')}
                             </div>
                           )}
-                          <div className="text-sm font-light text-gray-700 font-poppins">
+                          <div className="text-[14px] font-light text-gray-700 font-poppins">
                             {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
                           </div>
                         </div>
