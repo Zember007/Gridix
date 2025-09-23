@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест виджета Gridix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тестирование виджета Gridix</h1>
+        
+        <div class="test-section">
+            <h2>Пример кода виджета:</h2>
+            <div class="code-block">
+&lt;!-- Gridix Widget --&gt;<br>
+&lt;div id="gridix-widget-container"&gt;&lt;/div&gt;<br>
+&lt;script&gt;<br>
+&nbsp;&nbsp;window.GridixWidgetConfig = {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"type": "projects",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"userId": "test-user-id",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"language": "ru"<br>
+&nbsp;&nbsp;};<br>
+&lt;/script&gt;<br>
+&lt;script src="/widget.js" async&gt;&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Виджет в действии:</h2>
+            <p>Ниже должен отобразиться виджет со списком проектов:</p>
+            
+            <!-- Gridix Widget -->
+            <div id="gridix-widget-container"></div>
+            <!-- Gridix Widget -->
+<script>
+  window.GridixWidgetConfig = {
+  "type": "projects",
+  "userId": "5cac1e45-b354-4ef1-9f29-60b8e221b4e3",
+  "language": "ru"
+};
+</script>
+            <script src="./widget.js" async></script>
+        </div>
+        
+        <div class="test-section">
+            <h2>Информация</h2>
+            <p>Этот файл служит для тестирования виджета Gridix в изолированной среде.</p>
+            <p>Для корректной работы виджета необходимо:</p>
+            <ul>
+                <li>Запущенный сервер разработки</li>
+                <li>Настроенная база данных Supabase</li>
+                <li>Корректная конфигурация виджета</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

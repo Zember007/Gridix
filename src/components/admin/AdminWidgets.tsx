@@ -35,35 +35,30 @@ const AdminWidgets = () => {
 
   const generateEmbedCode = () => {
     const baseUrl = window.location.origin;
-    let embedUrl = '';
+    let widgetConfig = {};
 
     if (selectedProject === 'all') {
-      embedUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
+      widgetConfig = {
+        type: 'projects',
+        userId: user?.id,
+        language: defaultLanguage
+      };
     } else {
-      embedUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
+      const project = projects.find(p => p.id === selectedProject);
+      widgetConfig = {
+        type: 'project',
+        projectId: selectedProject,
+        projectSlug: project?.slug,
+        language: defaultLanguage
+      };
     }
 
-    return `<iframe 
-  id="gridix-widget"
-  src="${embedUrl}" 
-  width="100%" 
-  height="100%"
-  style="height: 100vh; width: 100%;"
-  frameborder="0"
-  allowfullscreen>
-</iframe>
-
+    return `<!-- Gridix Widget -->
+<div id="gridix-widget-container"></div>
 <script>
-    const iframe = document.getElementById("gridix-widget");
-
-    window.addEventListener("message", (event) => {
-        
-        if (event.data.type === "IFRAME_HEIGHT") {
-            iframe.style.height = event.data.height + "px";
-        }
-    });
+  window.GridixWidgetConfig = ${JSON.stringify(widgetConfig, null, 2)};
 </script>
-`;
+<script src="${baseUrl}/widget.js" async></script>`;
   };
 
   const copyEmbedCode = () => {
@@ -76,9 +71,14 @@ const AdminWidgets = () => {
     let previewUrl = '';
 
     if (selectedProject === 'all') {
-      previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
+      previewUrl = `${baseUrl}/widget/preview?type=projects&userId=${user?.id}&lang=${defaultLanguage}`;
     } else {
-      previewUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
+      const project = projects.find(p => p.id === selectedProject);
+      if (project?.slug) {
+        previewUrl = `${baseUrl}/widget/preview?type=project&projectSlug=${project.slug}&lang=${defaultLanguage}`;
+      } else {
+        previewUrl = `${baseUrl}/widget/preview?type=project&projectId=${selectedProject}&lang=${defaultLanguage}`;
+      }
     }
 
     window.open(previewUrl, '_blank');
@@ -217,54 +217,53 @@ const AdminWidgets = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('adminWidgets.allProjects')}</Label>
+            <Label>{t('adminWidgets.widgetScript')}</Label>
             <div className="flex items-center gap-2">
               <Input
-                value={`${window.location.origin}/embed/projects/${user?.id}`}
+                value={`${window.location.origin}/widget.js`}
                 readOnly
                 className="bg-gray-50"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`${window.location.origin}/embed/projects/${user?.id}`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/widget.js`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
+            <p className="text-xs text-gray-500">{t('adminWidgets.widgetScriptDesc')}</p>
           </div>
 
-          {selectedProject !== 'all' && (
-            <div className="space-y-2">
-              <Label>{t('adminWidgets.selectedProject')}</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={(() => {
+          <div className="space-y-2">
+            <Label>{t('adminWidgets.previewUrl')}</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={(() => {
+                  if (selectedProject === 'all') {
+                    return `${window.location.origin}/widget/preview?type=projects&userId=${user?.id}&lang=${defaultLanguage}`;
+                  } else {
                     const project = projects.find(p => p.id === selectedProject);
-                    const url = project?.slug 
-                      ? `${window.location.origin}/embed/project/${project.slug}`
-                      : `${window.location.origin}/embed/project/id/${selectedProject}`;
-                    return url;
-                  })()}
-                  readOnly
-                  className="bg-gray-50"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const project = projects.find(p => p.id === selectedProject);
-                    const url = project?.slug 
-                      ? `${window.location.origin}/embed/project/${project.slug}`
-                      : `${window.location.origin}/embed/project/id/${selectedProject}`;
-                    window.open(url, '_blank');
-                  }}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
+                    if (project?.slug) {
+                      return `${window.location.origin}/widget/preview?type=project&projectSlug=${project.slug}&lang=${defaultLanguage}`;
+                    } else {
+                      return `${window.location.origin}/widget/preview?type=project&projectId=${selectedProject}&lang=${defaultLanguage}`;
+                    }
+                  }
+                })()}
+                readOnly
+                className="bg-gray-50"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openPreview}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
             </div>
-          )}
+            <p className="text-xs text-gray-500">{t('adminWidgets.previewUrlDesc')}</p>
+          </div>
         </CardContent>
       </Card>
     </div>

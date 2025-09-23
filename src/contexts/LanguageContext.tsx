@@ -2217,6 +2217,30 @@ const translations: Translations = {
     ka: 'აირჩიეთ ნაგულისხმევი ენა ვიჯეტისთვის',
     ar: 'اختر اللغة الافتراضية للودجت'
   },
+  'adminWidgets.widgetScript': {
+    ru: 'Скрипт виджета',
+    en: 'Widget script',
+    ka: 'ვიჯეტის სკრიპტი',
+    ar: 'نص الودجت'
+  },
+  'adminWidgets.widgetScriptDesc': {
+    ru: 'Основной JavaScript файл для виджета',
+    en: 'Main JavaScript file for the widget',
+    ka: 'ვიჯეტის ძირითადი JavaScript ფაილი',
+    ar: 'ملف الجافا سكريبت الرئيسي للودجت'
+  },
+  'adminWidgets.previewUrl': {
+    ru: 'URL для предварительного просмотра',
+    en: 'Preview URL',
+    ka: 'წინასწარი ნახვის URL',
+    ar: 'رابط المعاينة'
+  },
+  'adminWidgets.previewUrlDesc': {
+    ru: 'Ссылка для тестирования виджета',
+    en: 'Link to test the widget',
+    ka: 'ლინკი ვიჯეტის ტესტირებისთვის',
+    ar: 'رابط لاختبار الودجت'
+  },
 
   // Languages
   'language.ru': {

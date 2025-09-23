@@ -22,6 +22,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import DomainProjectPage from "./pages/DomainProjectPage";
 import DomainApartmentPage from "./pages/DomainApartmentPage";
+import WidgetPreviewPage from "./pages/WidgetPreviewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -96,6 +97,9 @@ function App() {
               <Route path="/embed/project/:projectSlug" element={<EmbedLanguageProvider><ProjectWidgetPage /></EmbedLanguageProvider>} />
               {/* Backward compatibility for embed */}
               <Route path="/embed/project/id/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage useId /></EmbedLanguageProvider>} />
+              
+              {/* Widget preview routes */}
+              <Route path="/widget/preview" element={<EmbedLanguageProvider><WidgetPreviewPage /></EmbedLanguageProvider>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
