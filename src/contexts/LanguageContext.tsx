@@ -1812,6 +1812,12 @@ const translations: Translations = {
     ka: 'ფაილი ძალიან დიდია (მაქს. 10MB)',
     ar: 'الملف كبير جداً (الحد الأقصى 10 ميجابايت)'
   },
+  'projectEditor.save&continue': {
+    ru: 'Сохранить и продолжить',
+    en: 'Save and continue',
+    ka: 'შეინახოთ და გაგაგრძელოთ',
+    ar: 'احفظ و استمر'
+  },
   'projectEditor.pdfUploadSuccess': {
     ru: 'PDF успешно загружен',
     en: 'PDF uploaded successfully',

@@ -225,35 +225,9 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization') || ''
     const userClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
-
-    // Получение настроек AmoCRM
-    console.log('Fetching AmoCRM settings for project:', projectId);
-    const { data: amocrmSettings, error: settingsError } = await userClient
-      .from('amocrm_settings')
-      .select('*')
-      .eq('project_id', projectId)
-      .single();
-
-    // If no AmoCRM settings found, just return success (lead saved to DB)
-    if (settingsError || !amocrmSettings) {
-      console.log('AmoCRM settings not found for project:', projectId, 'Lead saved to DB only');
-      
-      // Update lead status to indicate it's saved but not sent to CRM
-      await svc
-        .from('leads')
-        .update({ status: 'saved_only' })
-        .eq('id', savedLead.id);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
-          crmIntegration: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Service role client for privileged DB operations
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const svc = createClient(supabaseUrl, supabaseServiceKey);
 
     // Получение данных о квартире
     console.log('Fetching apartment data for:', apartmentId);
@@ -277,11 +251,7 @@ serve(async (req) => {
       );
     }
 
-    // Create service role client for database operations
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const svc = createClient(supabaseUrl, supabaseServiceKey);
-    
-    const settings = amocrmSettings as AmoCRMSettings;
+    // Получение настроек AmoCRM ПЕРЕНЕСЕНО ниже после сохранения лида
 
     // Check for duplicate leads (same email + apartment)
     console.log('Checking for duplicate leads...');
@@ -332,6 +302,36 @@ serve(async (req) => {
     }
 
     console.log('Lead saved to database with ID:', savedLead.id);
+
+    // Получение настроек AmoCRM (после сохранения лида)
+    console.log('Fetching AmoCRM settings for project:', projectId);
+    const { data: amocrmSettings, error: settingsError } = await userClient
+      .from('amocrm_settings')
+      .select('*')
+      .eq('project_id', projectId)
+      .single();
+
+    // If no AmoCRM settings found, just mark lead as saved_only and return success
+    if (settingsError || !amocrmSettings) {
+      console.log('AmoCRM settings not found for project:', projectId, 'Lead saved to DB only');
+
+      await svc
+        .from('leads')
+        .update({ status: 'saved_only', amocrm_error: 'AmoCRM not configured for this project' })
+        .eq('id', savedLead.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          leadId: savedLead.id,
+          message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
+          crmIntegration: false
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const settings = amocrmSettings as AmoCRMSettings;
 
     // Get valid access token for AmoCRM
     const accessToken = await getValidAccessToken(settings, svc);
