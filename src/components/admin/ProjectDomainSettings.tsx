@@ -22,6 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectDomainSettingsProps {
   projectId: string;
@@ -53,23 +54,20 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
     setIsAddingDomain(true);
     
     try {
-      // Call the automated domain manager
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-domain-manager`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+      // Directly call the Edge Function via Supabase client
+      const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
+        body: {
           domain: newDomain.trim(),
           project_id: projectId,
           dns_provider: dnsProvider,
           api_key: dnsApiKey,
           zone_id: dnsZoneId,
-        }),
+        },
       });
 
-      const result = await response.json();
+      if (error) {
+        throw error;
+      }
 
       if (result.success) {
         toast.success(result.message);

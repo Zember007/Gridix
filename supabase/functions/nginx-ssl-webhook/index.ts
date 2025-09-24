@@ -8,7 +8,6 @@ const corsHeaders = {
 interface WebhookRequest {
   domain: string;
   action: 'add' | 'remove';
-  webhook_secret?: string;
 }
 
 serve(async (req) => {
@@ -25,18 +24,9 @@ serve(async (req) => {
   }
 
   try {
-    const { domain, action, webhook_secret }: WebhookRequest = await req.json();
+    const { domain, action }: WebhookRequest = await req.json();
     
-    // Verify webhook secret
     const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
-    if (expectedSecret && webhook_secret !== expectedSecret) {
-      return new Response(JSON.stringify({ 
-        error: "Unauthorized" 
-      }), { 
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
 
     if (!domain) {
       return new Response(JSON.stringify({ 

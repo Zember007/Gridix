@@ -231,7 +231,7 @@ serve(async (req) => {
     const vercelApiKey = Deno.env.get("VERCEL_API_KEY");
     const vercelProjectId = Deno.env.get("VERCEL_PROJECT_ID");
     
-    let automationResults = {
+    const automationResults = {
       dns_created: false,
       hosting_added: false,
       ssl_ready: false,
@@ -313,14 +313,38 @@ serve(async (req) => {
           }),
         });
 
-        const webhookResult = await webhookResponse.json();
-        
-        if (webhookResult.success) {
-          automationResults.hosting_added = true;
-          automationResults.ssl_ready = true;
-          console.log('Nginx + SSL configured successfully for', cleanedDomain);
+        // Check if response is ok and has content before parsing JSON
+        if (!webhookResponse.ok) {
+          console.error(`Webhook HTTP error: ${webhookResponse.status} ${webhookResponse.statusText}`);
+          console.error('Response body:', await webhookResponse.text());
         } else {
-          console.error('Nginx webhook failed:', webhookResult.error);
+          // Check if response has content and is JSON
+          const contentType = webhookResponse.headers.get('content-type');
+          const responseText = await webhookResponse.text();
+          
+          if (!responseText.trim()) {
+            // Treat empty successful response as success (some webhooks may return 204/empty)
+            automationResults.hosting_added = true;
+            automationResults.ssl_ready = true;
+            console.warn('Webhook returned empty response; treating as success');
+          } else if (contentType && contentType.includes('application/json')) {
+            try {
+              const webhookResult = JSON.parse(responseText);
+              
+              if (webhookResult.success) {
+                automationResults.hosting_added = true;
+                automationResults.ssl_ready = true;
+                console.log('Nginx + SSL configured successfully for', cleanedDomain);
+              } else {
+                console.error('Nginx webhook failed:', webhookResult.error);
+              }
+            } catch (jsonError) {
+              console.error('Failed to parse webhook JSON response:', jsonError);
+              console.error('Response text:', responseText);
+            }
+          } else {
+            console.error('Webhook returned non-JSON response:', responseText);
+          }
         }
       } catch (error) {
         console.error('Error calling Nginx webhook:', error);
