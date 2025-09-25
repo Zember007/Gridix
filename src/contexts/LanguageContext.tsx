@@ -17,6 +17,12 @@ interface Translations {
 }
 
 const translations: Translations = {
+  // Common
+  'common.cancel': { ru: 'Отмена', en: 'Cancel', ka: 'გაუქმება', ar: 'إلغاء' },
+  'common.continue': { ru: 'Продолжить', en: 'Continue', ka: 'გაგრძელება', ar: 'متابعة' },
+  'common.back': { ru: 'Назад', en: 'Back', ka: 'უკან', ar: 'رجوع' },
+  'common.example': { ru: 'Пример', en: 'Example', ka: 'მაგალითი', ar: 'مثال' },
+
   // Navigation
   'nav.projects': {
     ru: 'Проекты',
@@ -182,6 +188,101 @@ const translations: Translations = {
     ka: 'სიის სახით',
     ar: 'عرض القائمة'
   },
+
+  // Admin project creation/import
+  'admin.project.create.title': { ru: 'Создать новый проект', en: 'Create new project', ka: 'ახალი პროექტის შექმნა', ar: 'إنشاء مشروع جديد' },
+  'admin.project.create.description': { ru: 'Выберите способ создания проекта', en: 'Choose how to create the project', ka: 'აირჩიეთ პროექტის შექმნის მეთოდი', ar: 'اختر كيفية إنشاء المشروع' },
+  'admin.project.create.manual.title': { ru: 'Ручная настройка', en: 'Manual setup', ka: 'ხელით დაყენება', ar: 'إعداد يدوي' },
+  'admin.project.create.manual.description': { ru: 'Создать проект с нуля и настроить все самостоятельно', en: 'Create a project from scratch and configure everything yourself', ka: 'პროექტის შექმნა ნულიდან და ყველაფრის ხელით დაყენება', ar: 'أنشئ مشروعًا من الصفر وقم بتكوينه بنفسك' },
+  'admin.project.create.manual.start': { ru: 'Начать ручное создание', en: 'Start manual creation', ka: 'ხელით შექმნის დაწყება', ar: 'بدء الإنشاء اليدوي' },
+  'admin.project.create.import.title': { ru: 'Импорт из Excel', en: 'Import from Excel', ka: 'იმპორტი Excel-დან', ar: 'الاستيراد من Excel' },
+  'admin.project.create.import.description': { ru: 'Загрузить Excel файл с данными квартир и автоматически создать проект', en: 'Upload an Excel file with apartment data to create a project automatically', ka: 'ატვირთეთ ბინების მონაცემებით Excel ფაილი პროექტის ავტომატურად შესაქმნელად', ar: 'قم بتحميل ملف Excel يحتوي على بيانات الشقق لإنشاء مشروع تلقائيًا' },
+  'admin.project.create.import.uploadTab': { ru: 'Загрузить файл', en: 'Upload file', ka: 'ფაილის ატვირთვა', ar: 'رفع ملف' },
+  'admin.project.create.import.urlTab': { ru: 'По ссылке', en: 'By link', ka: 'ბმულით', ar: 'عبر الرابط' },
+  'admin.project.create.import.uploadButton': { ru: 'Загрузить Excel файл', en: 'Upload Excel file', ka: 'ატვირთეთ Excel ფაილი', ar: 'رفع ملف Excel' },
+  'admin.project.create.import.processing': { ru: 'Обработка...', en: 'Processing...', ka: 'დამუშავება...', ar: 'جارٍ المعالجة...' },
+  'admin.project.create.import.template': { ru: 'Скачать шаблон', en: 'Download template', ka: 'შაბლონის ჩამოტვირთვა', ar: 'تنزيل النموذج' },
+  'admin.project.create.import.byLink': { ru: 'Импорт по ссылке', en: 'Import by link', ka: 'იმპორტი ბმულით', ar: 'الاستيراد عبر الرابط' },
+  'admin.project.create.import.benefitsTitle': { ru: 'Преимущества импорта по ссылке:', en: 'Advantages of import by link:', ka: 'ბმულით იმპორტის უპირატესობები:', ar: 'مزایا الاستيراد عبر الرابط:' },
+  'admin.project.create.import.benefit.sync': { ru: 'Автоматическая синхронизация при изменении данных', en: 'Automatic sync when data changes', ka: 'ავტომატური სინქრონიზაცია მონაცემების ცვლილებისას', ar: 'مزامنة تلقائية عند تغيير البيانات' },
+  'admin.project.create.import.benefit.noReupload': { ru: 'Не нужно загружать файл повторно', en: 'No need to re-upload the file', ka: 'ფაილის თავიდან ატვირთვა არ არის საჭირო', ar: 'لا حاجة لإعادة رفع الملف' },
+  'admin.project.create.import.benefit.fresh': { ru: 'Данные всегда актуальны', en: 'Data is always up-to-date', ka: 'მონაცემები ყოველთვის ახლდება', ar: 'البيانات دائمًا محدثة' },
+  'admin.project.create.supportedFormats': { ru: 'Поддерживаемые форматы:', en: 'Supported formats:', ka: 'მხარდაჭერილი ფორმატები:', ar: 'التنسيقات المدعومة:' },
+  'admin.project.create.requiredData': { ru: 'Необходимые данные:', en: 'Required data:', ka: 'საჭირო მონაცემები:', ar: 'البيانات المطلوبة:' },
+  'admin.project.create.requiredData.fields': { ru: 'Номера квартир, этажи, комнаты, площадь, цена, статус', en: 'Apartment numbers, floors, rooms, area, price, status', ka: 'ბინის ნომრები, სართულები, ოთახები, ფართობი, ფასი, სტატუსი', ar: 'أرقام الشقق، الطوابق، الغرف، المساحة، السعر، الحالة' },
+  'admin.project.create.googleSheets': { ru: 'Google Sheets:', en: 'Google Sheets:', ka: 'Google Sheets:', ar: 'Google Sheets:' },
+  'admin.project.create.infoText': { ru: 'Любой формат ссылки, автоматическое преобразование и синхронизация', en: 'Any link format, automatic conversion and sync', ka: 'ნებისმიერი ბმის ფორმატი, ავტომატური კონვერტაცია და სინქი', ar: 'أي تنسيق للرابط، تحويل ومزامنة تلقائيان' },
+  'admin.project.create.layout.title': { ru: 'Планировка этажей', en: 'Floor layout', ka: 'სართულის გეგმა', ar: 'مخطط الطوابق' },
+  'admin.project.create.layout.question': { ru: 'Одинаковая ли планировка на всех этажах здания?', en: 'Is the layout the same on all floors?', ka: 'ყველა სართულზე ერთნაირი გეგმაა?', ar: 'هل المخطط نفسه في جميع الطوابق؟' },
+  'admin.project.create.layout.same': { ru: 'Да, планировка одинаковая', en: 'Yes, the layout is the same', ka: 'დიახ, გეგმა ერთნაირია', ar: 'نعم، المخطط نفسه' },
+  'admin.project.create.layout.same.help': { ru: 'Вы сможете один раз выделить квартиры на плане, и они автоматически применятся ко всем этажам', en: 'You can mark apartments once and apply to all floors automatically', ka: 'ერთხელ მონიშნავთ ბინებს და ავტომატურად გავრცელდება ყველა სართულზე', ar: 'يمكنك تحديد الشقق مرة واحدة وتطبيقها تلقائيًا على جميع الطوابق' },
+  'admin.project.create.layout.different': { ru: 'Нет, планировка разная', en: 'No, the layout differs', ka: 'არა, გეგმა განსხვავდება', ar: 'لا، المخطط يختلف' },
+  'admin.project.create.layout.different.help': { ru: 'Вам нужно будет отдельно настроить каждый этаж', en: 'You will need to configure each floor separately', ka: 'თითოეული სართულის ცალ-ცალკე დაყენება დაგჭირდებათ', ar: 'ستحتاج إلى ضبط كل طابق بشكل منفصل' },
+
+  // Messaging and errors
+  'messages.fileProcessed': { ru: 'Файл обработан успешно! Найдено {count} записей', en: 'File processed successfully! Found {count} records', ka: 'ფაილი წარმატებით დამუშავდა! ნაპოვნია {count} ჩანაწერი', ar: 'تمت معالجة الملف بنجاح! تم العثور على {count} سجل' },
+  'messages.templateDownloaded': { ru: 'Шаблон загружен', en: 'Template downloaded', ka: 'შაბლონი ჩამოიტვირთა', ar: 'تم تنزيل القالب' },
+  'errors.file.noData': { ru: 'Файл не содержит данных', en: 'File contains no data', ka: 'ფაილი ცარიელია', ar: 'الملف لا يحتوي على بيانات' },
+  'errors.file.process': { ru: 'Ошибка при обработке файла', en: 'Error processing file', ka: 'ფაილის დამუშავების შეცდომა', ar: 'خطأ في معالجة الملف' },
+  'errors.file.read': { ru: 'Ошибка при чтении файла', en: 'Error reading file', ka: 'ფაილის წაკითხვის შეცდომა', ar: 'خطأ في قراءة الملف' },
+  'errors.file.upload': { ru: 'Ошибка при загрузке файла', en: 'Error uploading file', ka: 'ფაილის ატვირთვის შეცდომა', ar: 'خطأ في رفع الملف' },
+  'state.creatingProject': { ru: 'Создание проекта...', en: 'Creating project...', ka: 'პროექტის შექმნა...', ar: 'جارٍ إنشاء المشروع...' },
+
+  // Excel Column Mapper
+  'excel.mapper.projectInfo.title': { ru: 'Информация о проекте', en: 'Project information', ka: 'პროექტის ინფორმაცია', ar: 'معلومات المشروع' },
+  'excel.mapper.projectInfo.description': { ru: 'Основная информация о вашем проекте', en: 'Basic information about your project', ka: 'ძირითადი ინფორმაცია თქვენი პროექტის შესახებ', ar: 'معلومات أساسية عن مشروعك' },
+  'excel.mapper.project.name': { ru: 'Название проекта*', en: 'Project name*', ka: 'პროექტის სახელი*', ar: 'اسم المشروع*' },
+  'excel.mapper.project.description': { ru: 'Описание', en: 'Description', ka: 'აღწერა', ar: 'الوصف' },
+  'excel.mapper.project.floors': { ru: 'Количество этажей', en: 'Number of floors', ka: 'სართულების რაოდენობა', ar: 'عدد الطوابق' },
+  'excel.mapper.project.floors.hint': { ru: 'Будет автоматически скорректировано на основе данных из таблицы', en: 'Will be adjusted based on data from the table', ka: 'ცხრილის მონაცემებზე დაყრდნობით ავტომატურად დარეგულირდება', ar: 'سيتم التعديل تلقائيًا بناءً على بيانات الجدول' },
+  'excel.mapper.columns.title': { ru: 'Соотнести столбцы Excel', en: 'Map Excel columns', ka: 'დაამთხვიე Excel-ის სვეტები', ar: 'ربط أعمدة Excel' },
+  'excel.mapper.columns.description': { ru: 'Укажите, какие столбцы из вашего Excel файла соответствуют полям квартир', en: 'Specify which columns from your Excel file correspond to apartment fields', ka: 'მიუთითეთ, რომელი სვეტები შეესაბამება ბინების ველებს', ar: 'حدد الأعمدة من ملف Excel التي تتوافق مع حقول الشقق' },
+  'excel.mapper.preview.title': { ru: 'Предварительный просмотр данных', en: 'Data preview', ka: 'მონაცემების წინასწარი დათვალიერება', ar: 'معاينة البيانات' },
+  'excel.mapper.preview.description': { ru: 'Как будут импортированы ваши данные ({count} записей)', en: 'How your data will be imported ({count} records)', ka: 'როგორ იქნება თქვენი მონაცემები იმპორტირებული ({count} ჩანაწერი)', ar: 'كيفية استيراد بياناتك ({count} سجل)' },
+  'excel.mapper.validation.title': { ru: 'Валидация данных', en: 'Data validation', ka: 'მონაცემების ვალიდაცია', ar: 'التحقق من البيانات' },
+  'excel.mapper.validation.description': { ru: 'Настройте соответствие значений из Excel к стандартным форматам', en: 'Map Excel values to standard formats', ka: 'დაამთხვიეთ Excel-ის მნიშვნელობები სტანდარტულ ფორმატებს', ar: 'ربط قيم Excel بالتنسيقات القياسية' },
+  'excel.mapper.validation.status.title': { ru: 'Настройка статусов квартир', en: 'Configure apartment statuses', ka: 'ბინების სტატუსების კონფიგურაცია', ar: 'تكوين حالات الشقق' },
+  'excel.mapper.validation.rooms.title': { ru: 'Настройка количества комнат', en: 'Configure number of rooms', ka: 'ოთახებების რაოდენობის კონფიგურაცია', ar: 'تكوين عدد الغرف' },
+  'excel.mapper.actions.createProject': { ru: 'Создать проект с данными', en: 'Create project with data', ka: 'პროექტის შექმნა მონაცემებით', ar: 'إنشاء مشروع بالبيانات' },
+
+  // Rooms labels
+  'rooms.studio': { ru: 'Студия (0)', en: 'Studio (0)', ka: 'სტუდიო (0)', ar: 'استوديو (0)' },
+  'rooms.one': { ru: '1 комната', en: '1 room', ka: '1 ოთახი', ar: 'غرفة واحدة' },
+  'rooms.two': { ru: '2 комнаты', en: '2 rooms', ka: '2 ოთახი', ar: 'غرفتان' },
+  'rooms.three': { ru: '3 комнаты', en: '3 rooms', ka: '3 ოთახი', ar: '3 غرف' },
+  'rooms.four': { ru: '4 комнаты', en: '4 rooms', ka: '4 ოთახი', ar: '4 غرف' },
+  'rooms.fivePlus': { ru: '5+ комнат', en: '5+ rooms', ka: '5+ ოთახი', ar: '5+ غرف' },
+
+  // Excel URL Importer
+  'excel.url.title': { ru: 'Импорт из Excel', en: 'Import from Excel', ka: 'იმპორტი Excel-იდან', ar: 'الاستيراد من Excel' },
+  'excel.url.title.googleSheets': { ru: 'Импорт из Google Sheets', en: 'Import from Google Sheets', ka: 'იმპორტი Google Sheets-დან', ar: 'الاستيراد من Google Sheets' },
+  'excel.url.title.link': { ru: 'Импорт по ссылке', en: 'Import by link', ka: 'იმპორტი ბმულით', ar: 'الاستيراد عبر الرابط' },
+  'excel.url.desc.googleSheets': { ru: 'Импортируйте данные напрямую из Google Sheets документа', en: 'Import data directly from a Google Sheets document', ka: 'მონაცემების იმპორტი უშუალოდ Google Sheets-დან', ar: 'استيراد البيانات مباشرة من مستند Google Sheets' },
+  'excel.url.desc.link': { ru: 'Импортируйте данные напрямую из Excel файла по ссылке', en: 'Import data from an Excel file by link', ka: 'მონაცემების იმპორტი Excel ფაილიდან ბმულით', ar: 'استيراد البيانات من ملف Excel عبر رابط' },
+  'excel.url.input.gs': { ru: 'Ссылка на Google Sheets*', en: 'Google Sheets link*', ka: 'ბმული Google Sheets-ზე*', ar: 'رابط Google Sheets*' },
+  'excel.url.input.excel': { ru: 'Ссылка на Excel файл*', en: 'Excel file link*', ka: 'Excel ფაილის ბმული*', ar: 'رابط ملف Excel*' },
+  'excel.url.check': { ru: 'Проверить', en: 'Check', ka: 'შემოწმება', ar: 'فحص' },
+  'excel.url.checking': { ru: 'Проверка...', en: 'Checking...', ka: 'შემოწმება...', ar: 'جارٍ الفحص...' },
+  'excel.url.link.ok': { ru: '✓ Ссылка доступна', en: '✓ Link is accessible', ka: '✓ ბმული ხელმისაწვდომია', ar: '✓ الرابط متاح' },
+  'excel.url.link.fail': { ru: '✗ Ссылка недоступна', en: '✗ Link is not accessible', ka: '✗ ბმული მიუწვდომელია', ar: '✗ الرابط غير متاح' },
+  'excel.url.toast.enterLink': { ru: 'Введите ссылку на файл', en: 'Enter a link to the file', ka: 'შეიყვანეთ ფაილის ბმული', ar: 'أدخل رابط الملف' },
+  'excel.url.toast.gsAccessible': { ru: 'Google Sheets доступен для импорта', en: 'Google Sheets is accessible for import', ka: 'Google Sheets ხელმისაწვდომია იმპორტისთვის', ar: 'Google Sheets متاح للاستيراد' },
+  'excel.url.toast.linkAccessible': { ru: 'Ссылка доступна для импорта', en: 'Link is accessible for import', ka: 'ბმული ხელმისაწვდომია იმპორტისთვის', ar: 'الرابط متاح للاستيراد' },
+  'excel.url.toast.fileInaccessible': { ru: 'Файл недоступен по указанной ссылке', en: 'File is not accessible via the provided link', ka: 'ფაილი მიუწვდომელია ბმულით', ar: 'الملف غير متاح عبر الرابط' },
+  'excel.url.toast.checkError': { ru: 'Ошибка при проверке ссылки. Убедитесь, что файл доступен публично', en: 'Error checking the link. Ensure the file is publicly accessible', ka: 'ბმულის შემოწმების შეცდომა. დარწმუნდით, რომ ფაილი საჯაროდ ხელმისაწვდომია', ar: 'حدث خطأ أثناء فحص الرابط. تأكد من أن الملف متاح للعامة' },
+  'excel.url.toast.invalidGs': { ru: 'Некорректная ссылка Google Sheets', en: 'Invalid Google Sheets link', ka: 'არასწორი Google Sheets ბმული', ar: 'رابط Google Sheets غير صالح' },
+  'excel.url.toast.fetchFailed': { ru: 'Не удалось загрузить файл', en: 'Failed to load file', ka: 'ფაილის ჩატვირთვა ვერ მოხერხდა', ar: 'فشل تحميل الملف' },
+  'excel.url.importing': { ru: 'Импорт...', en: 'Importing...', ka: 'იმპორტი...', ar: 'جارٍ الاستيراد...' },
+  'excel.url.importData': { ru: 'Импортировать данные', en: 'Import data', ka: 'მონაცემების იმპორტი', ar: 'استيراد البيانات' },
+  'excel.url.detectedGs': { ru: 'Google Sheets обнаружен', en: 'Google Sheets detected', ka: 'აღმოჩენილია Google Sheets', ar: 'تم اكتشاف Google Sheets' },
+  'excel.url.autoConvert': { ru: 'Ссылка будет автоматически преобразована для импорта данных', en: 'The link will be automatically converted for data import', ka: 'ბმული ავტომატურად გარდაიქმნება მონაცემების იმპორტისთვის', ar: 'سيتم تحويل الرابط تلقائيًا لاستيراد البيانات' },
+  'excel.url.howToSetup': { ru: 'Как настроить доступ:', en: 'How to set up access:', ka: 'როგორ დავაყენოთ წვდომა:', ar: 'كيفية إعداد الوصول:' },
+  'excel.url.req.title': { ru: 'Требования к файлу:', en: 'File requirements:', ka: 'ფაილის მოთხოვნები:', ar: 'متطلبات الملف:' },
+  'excel.url.req.p1': { ru: 'Файл должен быть доступен публично (без авторизации)', en: 'The file must be publicly accessible (no auth)', ka: 'ფაილი უნდა იყოს საჯაროდ ხელმისაწვდომი (აუთენტიკაციის გარეშე)', ar: 'يجب أن يكون الملف متاحًا للعامة (بدون مصادقة)' },
+  'excel.url.req.p2': { ru: 'Поддерживаются: Excel (.xlsx, .xls) и Google Sheets', en: 'Supported: Excel (.xlsx, .xls) and Google Sheets', ka: 'მხარდაჭერილია: Excel (.xlsx, .xls) და Google Sheets', ar: 'مدعوم: Excel (.xlsx, .xls) وGoogle Sheets' },
+  'excel.url.req.p3': { ru: 'Первая строка должна содержать заголовки столбцов', en: 'First row must contain column headers', ka: 'პირველი ხაზი უნდა შეიცავდეს სვეტების სათაურებს', ar: 'يجب أن تحتوي الصف الأول على عناوين الأعمدة' },
+  'excel.url.req.p4': { ru: 'Для автосинхронизации файл не должен перемещаться', en: 'For auto-sync the file should not be moved', ka: 'ავტო-სინქისთვის ფაილი არ უნდა გადაიტანოთ', ar: 'للمزامنة التلقائية لا يجب نقل الملف' },
+  'excel.url.importedCount': { ru: 'Импортировано {count} записей', en: 'Imported {count} records', ka: 'იმპორტირებულია {count} ჩანაწერი', ar: 'تم استيراد {count} سجل' },
 
   // Favorites
   'favorites.title': {

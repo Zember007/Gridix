@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link } from 'lucide-react';
+import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/data-import/ExcelColumnMapper';
 import ExcelUrlImporter from '@/components/data-import/ExcelUrlImporter';
 import * as XLSX from 'xlsx';
-import { ADMIN_THEME } from '@/lib/admin-theme-config';
+import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectCreationModalProps {
   open: boolean;
@@ -20,11 +21,13 @@ interface ProjectCreationModalProps {
   onManualCreate: (sameLayout?: boolean) => void;
 }
 
+type ImportedCell = string | number | null | undefined;
 interface ImportedRow {
-  [key: string]: any;
+  [key: string]: ImportedCell;
 }
 
 const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreationModalProps) => {
+  const { t } = useLanguage();
   const [importedData, setImportedData] = useState<ImportedRow[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -41,7 +44,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     if (!file) return;
 
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      toast.error('Поддерживаются только Excel (.xlsx, .xls) и CSV файлы');
+      toast.error(t('admin.project.create.supportedFormats') || 'Поддерживаемые форматы: Excel (.xlsx, .xls) и CSV');
       return;
     }
 
@@ -50,22 +53,22 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
     try {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
-          
+
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          
+
           // Читаем данные как JSON с первой строкой в качестве заголовков
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+          const jsonData = XLSX.utils.sheet_to_json<ImportedRow>(worksheet, {
             defval: '' // Заполняем пустые ячейки пустой строкой
-          }) as any[];
-          
+          });
+
           if (jsonData.length === 0) {
-            toast.error('Файл не содержит данных');
+            toast.error(t('errors.file.noData') || 'Файл не содержит данных');
             setIsProcessing(false);
             return;
           }
@@ -75,23 +78,23 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
           console.log('Извлеченные заголовки:', headers);
           console.log('Обработанные данные:', jsonData.slice(0, 3));
-          
+
           setExcelColumns(headers);
           setImportedData(jsonData);
           setShowColumnMapper(true);
           setProgress(100);
-          toast.success(`Файл обработан успешно! Найдено ${jsonData.length} записей`);
-          
+          toast.success((t('messages.fileProcessed') || 'Файл обработан успешно! Найдено {{count}} записей').replace('{{count}}', String(jsonData.length)));
+
         } catch (error) {
           console.error('Ошибка обработки файла:', error);
-          toast.error('Ошибка при обработке файла');
+          toast.error(t('errors.file.process') || 'Ошибка при обработке файла');
         } finally {
           setIsProcessing(false);
         }
       };
 
       reader.onerror = () => {
-        toast.error('Ошибка при чтении файла');
+        toast.error(t('errors.file.read') || 'Ошибка при чтении файла');
         setIsProcessing(false);
       };
 
@@ -111,11 +114,11 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
         reader.readAsArrayBuffer(file);
       }
 
-      toast.info('Обработка Excel файла...');
-      
+      toast.info(t('admin.project.create.import.processing') || 'Обработка Excel файла...');
+
     } catch (error) {
       console.error('Ошибка:', error);
-      toast.error('Ошибка при загрузке файла');
+      toast.error(t('errors.file.upload') || 'Ошибка при загрузке файла');
       setIsProcessing(false);
     }
   };
@@ -140,7 +143,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
     link.href = URL.createObjectURL(blob);
     link.download = 'apartment_template.csv';
     link.click();
-    toast.success('Шаблон загружен');
+    toast.success(t('messages.templateDownloaded') || 'Шаблон загружен');
   };
 
   const handleManualCreateClick = () => {
@@ -171,22 +174,9 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
       <Dialog open={open} onOpenChange={handleCloseModal}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-real-estate-600" />
-                  Соотнести столбцы Excel
-                </DialogTitle>
-                <DialogDescription>
-                  Укажите, какие столбцы из вашего Excel файла соответствуют полям квартир
-                </DialogDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleCloseModal}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+          
           </DialogHeader>
-          <ExcelColumnMapper 
+          <ExcelColumnMapper
             excelColumns={excelColumns}
             importedData={importedData}
             onComplete={handleCloseModal}
@@ -201,22 +191,17 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
       <Dialog open={open} onOpenChange={handleCloseModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="flex items-center gap-2">
-                  <Link className="h-6 w-6 text-real-estate-600" />
-                  Импорт по ссылке
-                </DialogTitle>
-                <DialogDescription>
-                  Импортируйте данные из Excel файла по прямой ссылке
-                </DialogDescription>
-              </div>
+
+            <div className="flex">
               <Button variant="ghost" size="sm" onClick={() => setShowUrlImporter(false)}>
-                <X className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
+                Назад
               </Button>
+
+
             </div>
           </DialogHeader>
-          <ExcelUrlImporter 
+          <ExcelUrlImporter
             onDataImported={handleUrlImport}
             onClose={() => setShowUrlImporter(false)}
           />
@@ -232,28 +217,28 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-real-estate-600" />
-              Планировка этажей
+              {t('admin.project.create.layout.title') || 'Планировка этажей'}
             </DialogTitle>
             <DialogDescription>
-              Одинаковая ли планировка на всех этажах здания?
+              {t('admin.project.create.layout.question') || 'Одинаковая ли планировка на всех этажах здания?'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            <RadioGroup 
+            <RadioGroup
               value={sameLayoutForAllFloors === null ? undefined : sameLayoutForAllFloors.toString()}
               onValueChange={(value) => setSameLayoutForAllFloors(value === 'true')}
             >
               <div className="space-y-4">
-                <Card 
-                className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
+                <Card
+                  className="p-4 cursor-pointer hover:bg-real-estate-50 transition-colors">
                   <div className="flex items-start space-x-3">
                     <RadioGroupItem value="true" id="same-layout" className="mt-1" />
                     <div className="flex-1">
                       <Label htmlFor="same-layout" className="cursor-pointer">
-                        <div className="font-medium text-real-estate-900">Да, планировка одинаковая</div>
+                        <div className="font-medium text-real-estate-900">{t('admin.project.create.layout.same') || 'Да, планировка одинаковая'}</div>
                         <div className="text-sm text-real-estate-600 mt-1">
-                          Вы сможете один раз выделить квартиры на плане, и они автоматически применятся ко всем этажам
+                          {t('admin.project.create.layout.same.help') || 'Вы сможете один раз выделить квартиры на плане, и они автоматически применятся ко всем этажам'}
                         </div>
                       </Label>
                     </div>
@@ -265,9 +250,9 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                     <RadioGroupItem value="false" id="different-layout" className="mt-1" />
                     <div className="flex-1">
                       <Label htmlFor="different-layout" className="cursor-pointer">
-                        <div className="font-medium text-real-estate-900">Нет, планировка разная</div>
+                        <div className="font-medium text-real-estate-900">{t('admin.project.create.layout.different') || 'Нет, планировка разная'}</div>
                         <div className="text-sm text-real-estate-600 mt-1">
-                          Вам нужно будет отдельно настроить каждый этаж
+                          {t('admin.project.create.layout.different.help') || 'Вам нужно будет отдельно настроить каждый этаж'}
                         </div>
                       </Label>
                     </div>
@@ -280,16 +265,16 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
               <Button
                 onClick={() => handleLayoutSelection(sameLayoutForAllFloors || false)}
                 disabled={sameLayoutForAllFloors === null}
-                className="flex-1 bg-real-estate-600 hover:bg-real-estate-700"
+                className={`flex-1 ${admin.primary} ${admin.primaryHover}`}
               >
-                Продолжить
+                {t('common.continue') || 'Продолжить'}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowLayoutQuestion(false)}
                 className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
               >
-                Назад
+                {t('common.back') || 'Назад'}
               </Button>
             </div>
           </div>
@@ -304,10 +289,10 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
-            Создать новый проект
+            {t('admin.project.create.title') || 'Создать новый проект'}
           </DialogTitle>
           <DialogDescription>
-            Выберите способ создания проекта
+            {t('admin.project.create.description') || 'Выберите способ создания проекта'}
           </DialogDescription>
         </DialogHeader>
 
@@ -317,15 +302,15 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-real-estate-600" />
-                Ручная настройка
+                {t('admin.project.create.manual.title') || 'Ручная настройка'}
               </CardTitle>
               <CardDescription>
-                Создать проект с нуля и настроить все самостоятельно
+                {t('admin.project.create.manual.description') || 'Создать проект с нуля и настроить все самостоятельно'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-real-estate-600 hover:bg-real-estate-700">
-                Начать ручное создание
+              <Button className={`w-full ${admin.primary} ${admin.primaryHover}`}>
+                {t('admin.project.create.manual.start') || 'Начать ручное создание'}
               </Button>
             </CardContent>
           </Card>
@@ -335,10 +320,10 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-real-estate-600" />
-                Импорт из Excel
+                {t('admin.project.create.import.title') || 'Импорт из Excel'}
               </CardTitle>
               <CardDescription>
-                Загрузить Excel файл с данными квартир и автоматически создать проект
+                {t('admin.project.create.import.description') || 'Загрузить Excel файл с данными квартир и автоматически создать проект'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -346,23 +331,23 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="file" className="flex items-center gap-2">
                     <Upload className="h-4 w-4" />
-                    Загрузить файл
+                    {t('admin.project.create.import.uploadTab') || 'Загрузить файл'}
                   </TabsTrigger>
                   <TabsTrigger value="url" className="flex items-center gap-2">
                     <Link className="h-4 w-4" />
-                    По ссылке
+                    {t('admin.project.create.import.urlTab') || 'По ссылке'}
                   </TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="file" className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isProcessing}
-                      className="bg-real-estate-600 hover:bg-real-estate-700"
+                      className={`${admin.primary} ${admin.primaryHover}`}
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      {isProcessing ? 'Обработка...' : 'Загрузить Excel файл'}
+                      {isProcessing ? (t('admin.project.create.import.processing') || 'Обработка...') : (t('admin.project.create.import.uploadButton') || 'Загрузить Excel файл')}
                     </Button>
                     <Button
                       variant="outline"
@@ -370,10 +355,10 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                       className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Скачать шаблон
+                      {t('admin.project.create.import.template') || 'Скачать шаблон'}
                     </Button>
                   </div>
-                  
+
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -385,7 +370,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                   {isProcessing && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Обработка файла...</span>
+                        <span>{t('admin.project.create.import.processing') || 'Обработка файла...'}</span>
                         <span>{progress}%</span>
                       </div>
                       <Progress value={progress} className="w-full" />
@@ -396,29 +381,29 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                 <TabsContent value="url" className="space-y-4">
                   <Button
                     onClick={() => setShowUrlImporter(true)}
-                    className="w-full bg-real-estate-600 hover:bg-real-estate-700"
+                    className={`w-full ${admin.primary} ${admin.primaryHover}`}
                   >
                     <Link className="h-4 w-4 mr-2" />
-                    Импорт по ссылке
+                    {t('admin.project.create.import.byLink') || 'Импорт по ссылке'}
                   </Button>
-                  
+
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      <strong>Преимущества импорта по ссылке:</strong>
+                      <strong>{t('admin.project.create.import.benefitsTitle') || 'Преимущества импорта по ссылке:'}</strong>
                     </p>
                     <ul className="list-disc list-inside text-sm text-blue-600 mt-1">
-                      <li>Автоматическая синхронизация при изменении данных</li>
-                      <li>Не нужно загружать файл повторно</li>
-                      <li>Данные всегда актуальны</li>
+                      <li>{t('admin.project.create.import.benefit.sync') || 'Автоматическая синхронизация при изменении данных'}</li>
+                      <li>{t('admin.project.create.import.benefit.noReupload') || 'Не нужно загружать файл повторно'}</li>
+                      <li>{t('admin.project.create.import.benefit.fresh') || 'Данные всегда актуальны'}</li>
                     </ul>
                   </div>
                 </TabsContent>
               </Tabs>
 
               <div className="text-sm text-real-estate-600 bg-real-estate-50 p-3 rounded-md">
-                <p><strong>Поддерживаемые форматы:</strong> Excel (.xlsx, .xls), CSV и Google Sheets</p>
-                <p><strong>Необходимые данные:</strong> Номера квартир, этажи, комнаты, площадь, цена, статус</p>
-                <p><strong>Google Sheets:</strong> Любой формат ссылки, автоматическое преобразование и синхронизация</p>
+                <p><strong>{t('admin.project.create.supportedFormats') || 'Поддерживаемые форматы:'}</strong> Excel (.xlsx, .xls), CSV {t('admin.project.create.googleSheets') || 'и Google Sheets'}</p>
+                <p><strong>{t('admin.project.create.requiredData') || 'Необходимые данные:'}</strong> {t('admin.project.create.requiredData.fields') || 'Номера квартир, этажи, комнаты, площадь, цена, статус'}</p>
+                <p><strong>{t('admin.project.create.googleSheets') || 'Google Sheets:'}</strong> {t('admin.project.create.infoText') || 'Любой формат ссылки, автоматическое преобразование и синхронизация'}</p>
               </div>
             </CardContent>
           </Card>

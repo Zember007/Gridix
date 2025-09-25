@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
 import { Language } from '@/lib/language-utils';
 
 interface ImportedRowData {
@@ -165,13 +166,13 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [showValidation, setShowValidation] = useState(false);
 
   const fieldLabels = useMemo(() => ({
-    apartmentNumber: 'Номер квартиры',
-    floor: 'Этаж',
-    rooms: 'Количество комнат',
-    area: 'Площадь (м²)',
-    price: 'Цена',
-    status: 'Статус'
-  }), []);
+    apartmentNumber: t('excel.fields.apartmentNumber') || 'Номер квартиры',
+    floor: t('project.floor') || 'Этаж',
+    rooms: t('project.rooms') || 'Количество комнат',
+    area: t('project.area') || 'Площадь (м²)',
+    price: t('project.price') || 'Цена',
+    status: t('project.status') || 'Статус'
+  }), [t]);
 
   const requiredFields = useMemo(() => ['apartmentNumber', 'floor', 'rooms', 'area'], []);
 
@@ -386,7 +387,12 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         slug: null,
         currency: null,
         is_public: false,
-        is_featured: false
+        is_featured: false,
+        installment_enabled: false,
+        min_down_payment_percent: 0,
+        max_installment_months: 0,
+        pdf_presentation_url: null,
+        theme_color: null
       });
 
       if (!project) throw new Error('Failed to create project');
@@ -513,7 +519,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           project_id: project.id,
           apartment_number: apartmentNumber,
           floor_number: floorNumber,
-          rooms: rooms,
+          rooms: String(rooms),
           area: area,
           price: price || null,
           status: status,
@@ -593,32 +599,32 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       {/* Информация о проекте */}
       <Card>
         <CardHeader>
-          <CardTitle>Информация о проекте</CardTitle>
-          <CardDescription>Основная информация о вашем проекте</CardDescription>
+          <CardTitle>{t('excel.mapper.projectInfo.title') || 'Информация о проекте'}</CardTitle>
+          <CardDescription>{t('excel.mapper.projectInfo.description') || 'Основная информация о вашем проекте'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="projectName">Название проекта*</Label>
+            <Label htmlFor="projectName">{t('excel.mapper.project.name') || 'Название проекта*'}</Label>
             <Input
               id="projectName"
               value={projectData.name}
               onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Введите название проекта"
+              placeholder={t('placeholders.projectName') || 'Введите название проекта'}
               className="mt-1"
             />
           </div>
           <div>
-            <Label htmlFor="projectDescription">Описание</Label>
+            <Label htmlFor="projectDescription">{t('excel.mapper.project.description') || 'Описание'}</Label>
             <Input
               id="projectDescription"
               value={projectData.description}
               onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Краткое описание проекта"
+              placeholder={t('placeholders.projectDescription') || 'Краткое описание проекта'}
               className="mt-1"
             />
           </div>
           <div>
-            <Label htmlFor="floors">Количество этажей</Label>
+            <Label htmlFor="floors">{t('excel.mapper.project.floors') || 'Количество этажей'}</Label>
             <Input
               id="floors"
               type="number"
@@ -629,7 +635,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               className="mt-1"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Будет автоматически скорректировано на основе данных из таблицы
+              {t('excel.mapper.project.floors.hint') || 'Будет автоматически скорректировано на основе данных из таблицы'}
             </p>
           </div>
         </CardContent>
@@ -644,9 +650,9 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       {/* Соотнести столбцы */}
       <Card>
         <CardHeader>
-          <CardTitle>Соотнести столбцы Excel</CardTitle>
+          <CardTitle>{t('excel.mapper.columns.title') || 'Соотнести столбцы Excel'}</CardTitle>
           <CardDescription>
-            Укажите, какие столбцы из вашего Excel файла соответствуют полям квартир
+            {t('excel.mapper.columns.description') || 'Укажите, какие столбцы из вашего Excel файла соответствуют полям квартир'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -679,7 +685,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   </Select>
                   {currentValue && currentValue !== '__none__' && (
                     <div className="flex items-center gap-2 text-sm text-real-estate-600 bg-real-estate-50 p-2 rounded">
-                      <span>Пример:</span>
+                      <span>{t('common.example') || 'Пример'}:</span>
                       <ArrowRight className="h-3 w-3" />
                       <strong>{getPreviewValue(field as keyof ColumnMapping)}</strong>
                     </div>
@@ -697,7 +703,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Валидация данных
+              {t('excel.mapper.validation.title') || 'Валидация данных'}
               {((statusValidation && statusValidation.invalidCount > 0) || 
                 (roomsValidation && roomsValidation.invalidCount > 0)) && (
                 <Badge variant="destructive" className="flex items-center gap-1">
@@ -707,7 +713,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               )}
             </CardTitle>
             <CardDescription>
-              Настройте соответствие значений из Excel к стандартным форматам
+              {t('excel.mapper.validation.description') || 'Настройте соответствие значений из Excel к стандартным форматам'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -748,7 +754,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 {/* Валидация статусов */}
                 {columnMapping.status && columnMapping.status !== '__none__' && statusValidation && (
                   <div className="space-y-4">
-                    <Label className="text-lg font-semibold">Настройка статусов квартир</Label>
+                    <Label className="text-lg font-semibold">{t('excel.mapper.validation.status.title') || 'Настройка статусов квартир'}</Label>
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Распределение статусов в данных:</Label>
                       {Object.entries(statusValidation.statusDistribution).map(([value, count]) => {
@@ -785,19 +791,19 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                                 <SelectItem value="available">
                                   <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-green-500 rounded"></div>
-                                    Свободна
+                                    {t('project.available') || 'Свободна'}
                                   </div>
                                 </SelectItem>
                                 <SelectItem value="reserved">
                                   <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-                                    Забронирована
+                                    {t('project.reserved') || 'Забронирована'}
                                   </div>
                                 </SelectItem>
                                 <SelectItem value="sold">
                                   <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-red-500 rounded"></div>
-                                    Продана
+                                    {t('project.sold') || 'Продана'}
                                   </div>
                                 </SelectItem>
                                 <SelectItem value="invalid">
@@ -846,7 +852,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 {/* Валидация комнат */}
                 {columnMapping.rooms && columnMapping.rooms !== '__none__' && roomsValidation && (
                   <div className="space-y-4">
-                    <Label className="text-lg font-semibold">Настройка количества комнат</Label>
+                    <Label className="text-lg font-semibold">{t('excel.mapper.validation.rooms.title') || 'Настройка количества комнат'}</Label>
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Распределение комнат в данных:</Label>
                       {Object.entries(roomsValidation.roomsDistribution).map(([value, count]) => {
@@ -887,37 +893,37 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                                   <SelectItem value="0">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                                      Студия (0)
+                                      {t('rooms.studio') || 'Студия (0)'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="1">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                                      1 комната
+                                      {t('rooms.one') || '1 комната'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="2">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-green-500 rounded"></div>
-                                      2 комнаты
+                                      {t('rooms.two') || '2 комнаты'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="3">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-                                      3 комнаты
+                                      {t('rooms.three') || '3 комнаты'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="4">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                                      4 комнаты
+                                      {t('rooms.four') || '4 комнаты'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="5">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-red-500 rounded"></div>
-                                      5+ комнат
+                                      {t('rooms.fivePlus') || '5+ комнат'}
                                     </div>
                                   </SelectItem>
                                   <SelectItem value="invalid">
@@ -998,9 +1004,9 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       {/* Предварительный просмотр данных */}
       <Card>
         <CardHeader>
-          <CardTitle>Предварительный просмотр данных</CardTitle>
+          <CardTitle>{t('excel.mapper.preview.title') || 'Предварительный просмотр данных'}</CardTitle>
           <CardDescription>
-            Как будут импортированы ваши данные ({importedData.length} записей)
+            {(t('excel.mapper.preview.description') || 'Как будут импортированы ваши данные ({{count}} записей)').replace('{{count}}', String(importedData.length))}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1008,7 +1014,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-3 font-semibold text-real-estate-900">Статус</th>
+                  <th className="text-left p-3 font-semibold text-real-estate-900">{t('project.status') || 'Статус'}</th>
                   {Object.entries(allFields).map(([field, label]) => (
                     <th key={field} className="text-left p-3 font-semibold text-real-estate-900">
                       {label}
@@ -1047,14 +1053,14 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       {/* Кнопки действий */}
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={onComplete}>
-          Отмена
+          {t('common.cancel') || 'Отмена'}
         </Button>
         <Button
           onClick={createProjectWithData}
           disabled={!isValidWithCustom || !projectData.name.trim() || isCreating}
-          className="bg-real-estate-600 hover:bg-real-estate-700"
+          className={`${admin.primary} ${admin.primaryHover}`}
         >
-          {isCreating ? 'Создание проекта...' : 'Создать проект с данными'}
+          {isCreating ? (t('state.creatingProject') || 'Создание проекта...') : (t('excel.mapper.actions.createProject') || 'Создать проект с данными')}
         </Button>
       </div>
     </div>

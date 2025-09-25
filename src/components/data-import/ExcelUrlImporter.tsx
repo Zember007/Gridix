@@ -14,6 +14,8 @@ import {
   validateGoogleSheetsAccess,
   getGoogleSheetsInstructions 
 } from '@/lib/google-sheets-utils';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
 
 interface ExcelUrlImporterProps {
   onDataImported: (data: any[], columns: string[]) => void;
@@ -21,6 +23,7 @@ interface ExcelUrlImporterProps {
 }
 
 const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) => {
+  const { t } = useLanguage();
   const [excelUrl, setExcelUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [testConnection, setTestConnection] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
@@ -46,7 +49,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
 
   const testExcelConnection = async () => {
     if (!excelUrl.trim()) {
-      toast.error('Введите ссылку на файл');
+      toast.error(t('excel.url.toast.enterLink'));
       return;
     }
 
@@ -59,7 +62,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
         const validation = await validateGoogleSheetsAccess(excelUrl);
         if (!validation.isAccessible) {
           setTestConnection('error');
-          toast.error(validation.error || 'Google Sheets недоступен');
+          toast.error(validation.error || t('excel.url.toast.checkError'));
           setShowInstructions(true);
           return;
         }
@@ -74,23 +77,23 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       if (response.ok) {
         setTestConnection('success');
         if (urlType === 'google_sheets') {
-          toast.success('Google Sheets доступен для импорта');
+          toast.success(t('excel.url.toast.gsAccessible'));
         } else {
-          toast.success('Ссылка доступна для импорта');
+          toast.success(t('excel.url.toast.linkAccessible'));
         }
       } else {
         setTestConnection('error');
-        toast.error('Файл недоступен по указанной ссылке');
+        toast.error(t('excel.url.toast.fileInaccessible'));
       }
     } catch (error) {
       setTestConnection('error');
-      toast.error('Ошибка при проверке ссылки. Убедитесь, что файл доступен публично');
+      toast.error(t('excel.url.toast.checkError'));
     }
   };
 
   const importFromUrl = async () => {
     if (!excelUrl.trim()) {
-      toast.error('Введите ссылку на файл');
+      toast.error(t('excel.url.toast.enterLink'));
       return;
     }
   
@@ -104,7 +107,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
           urlToFetch = convertGoogleSheetsUrl(excelUrl);
           console.log('Converted Google Sheets URL:', urlToFetch);
         } catch (error) {
-          toast.error('Некорректная ссылка Google Sheets');
+          toast.error(t('excel.url.toast.invalidGs'));
           setIsLoading(false);
           return;
         }
@@ -113,7 +116,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       const response = await fetch(urlToFetch);
       
       if (!response.ok) {
-        throw new Error('Не удалось загрузить файл');
+        throw new Error(t('excel.url.toast.fetchFailed'));
       }
   
       const arrayBuffer = await response.arrayBuffer();
@@ -130,7 +133,7 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       }) as any[];
       
       if (jsonData.length === 0) {
-        toast.error('Файл не содержит данных');
+        toast.error(t('errors.file.noData'));
         return;
       }
 
@@ -142,11 +145,11 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       console.log('Обработанные данные:', jsonData.slice(0, 3));
       
       onDataImported(jsonData, headers);
-      toast.success(`Импортировано ${jsonData.length} записей`);
+      toast.success(t('excel.url.importedCount', { count: jsonData.length }));
       
     } catch (error) {
       console.error('Ошибка импорта:', error);
-      toast.error('Ошибка при импорте файла по ссылке');
+      toast.error(t('errors.file.process'));
     } finally {
       setIsLoading(false);
     }
@@ -169,19 +172,19 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
             ) : (
               <Link className="h-5 w-5 text-real-estate-600" />
             )}
-            {urlType === 'google_sheets' ? 'Импорт из Google Sheets' : 'Импорт по ссылке'}
+            {urlType === 'google_sheets' ? t('excel.url.title.googleSheets') : t('excel.url.title.link')}
           </CardTitle>
           <CardDescription>
             {urlType === 'google_sheets' 
-              ? 'Импортируйте данные напрямую из Google Sheets документа'
-              : 'Импортируйте данные напрямую из Excel файла по ссылке'
+              ? t('excel.url.desc.googleSheets')
+              : t('excel.url.desc.link')
             }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="excel-url">
-              {urlType === 'google_sheets' ? 'Ссылка на Google Sheets*' : 'Ссылка на Excel файл*'}
+              {urlType === 'google_sheets' ? t('excel.url.input.gs') : t('excel.url.input.excel')}
             </Label>
             <div className="flex gap-2 mt-1">
               <div className="flex-1 relative">
@@ -209,15 +212,15 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
                 {testConnection === 'testing' ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Проверить'
+                  t('excel.url.check')
                 )}
               </Button>
             </div>
             {testConnection === 'success' && (
-              <p className="text-sm text-green-600 mt-1">✓ Ссылка доступна</p>
+              <p className="text-sm text-green-600 mt-1">{t('excel.url.link.ok')}</p>
             )}
             {testConnection === 'error' && (
-              <p className="text-sm text-red-600 mt-1">✗ Ссылка недоступна</p>
+              <p className="text-sm text-red-600 mt-1">{t('excel.url.link.fail')}</p>
             )}
           </div>
 
@@ -229,13 +232,13 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
               <div className="flex gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-green-800">Google Sheets обнаружен</p>
+                  <p className="font-medium text-green-800">{t('excel.url.detectedGs')}</p>
                   <p className="text-green-700 mt-1">
-                    Ссылка будет автоматически преобразована для импорта данных
+                    {t('excel.url.autoConvert')}
                   </p>
                   {showInstructions && (
                     <div className="mt-3 p-3 bg-white rounded border">
-                      <p className="font-medium text-gray-800 mb-2">Как настроить доступ:</p>
+                      <p className="font-medium text-gray-800 mb-2">{t('excel.url.howToSetup')}</p>
                       <ol className="list-decimal list-inside text-gray-700 text-xs space-y-1">
                         <li>Откройте ваш Google Sheets документ</li>
                         <li>Нажмите "Поделиться" → "Изменить доступ"</li>
@@ -252,12 +255,12 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
               <div className="flex gap-2">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-amber-800">Требования к файлу:</p>
+                  <p className="font-medium text-amber-800">{t('excel.url.req.title')}</p>
                   <ul className="list-disc list-inside text-amber-700 mt-1 space-y-1">
-                    <li>Файл должен быть доступен публично (без авторизации)</li>
-                    <li>Поддерживаются: Excel (.xlsx, .xls) и Google Sheets</li>
-                    <li>Первая строка должна содержать заголовки столбцов</li>
-                    <li>Для автосинхронизации файл не должен перемещаться</li>
+                    <li>{t('excel.url.req.p1')}</li>
+                    <li>{t('excel.url.req.p2')}</li>
+                    <li>{t('excel.url.req.p3')}</li>
+                    <li>{t('excel.url.req.p4')}</li>
                   </ul>
                 </div>
               </div>
@@ -268,12 +271,12 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
             <Button
               onClick={importFromUrl}
               disabled={isLoading || !excelUrl.trim()}
-              className="flex-1 bg-real-estate-600 hover:bg-real-estate-700"
+              className={`flex-1 ${admin.primary} ${admin.primaryHover}`}
             >
               {isLoading ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Импорт...
+                  {t('excel.url.importing')}
                 </>
               ) : (
                 <>
@@ -282,12 +285,12 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
                   ) : (
                     <Link className="h-4 w-4 mr-2" />
                   )}
-                  Импортировать данные
+                  {t('excel.url.importData')}
                 </>
               )}
             </Button>
             <Button variant="outline" onClick={onClose}>
-              Отмена
+              {t('common.cancel')}
             </Button>
           </div>
         </CardContent>
