@@ -72,13 +72,25 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     });
   }, [projectIdentifier, apartmentIdentifier, project, apartment, projectLoading, apartmentLoading, projectError, apartmentError]);
 
-  const loading = projectLoading || apartmentLoading;
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [recommendedApartments, setRecommendedApartments] = useState<Apartment[]>([]);
   const [recommendationThumbnails, setRecommendationThumbnails] = useState<Record<string, string | null>>({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
+
+  // Photos preloading moved to parent component
+  interface CombinedPhoto {
+    id: string;
+    image_url: string;
+    description?: string | null;
+    order_index: number;
+    type: 'layout' | 'apartment';
+  }
+  const [photos, setPhotos] = useState<CombinedPhoto[]>([]);
+  const [photosLoading, setPhotosLoading] = useState<boolean>(true);
+
+
 
   const handleShare = async () => {
     try {
@@ -108,6 +120,57 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
       setSelectedCurrency(project.currency);
     }
   }, [project?.currency]);
+
+  // Load photos (layout + apartment) in parent and pass down
+  useEffect(() => {
+    const loadPhotos = async () => {
+      if (!apartment || !project?.id) return;
+      setPhotosLoading(true);
+      try {
+        const layoutType = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+
+        const [layoutRes, aptRes] = await Promise.all([
+          supabase
+            .from('layout_photos')
+            .select('*')
+            .eq('project_id', project.id)
+            .eq('layout_type', layoutType)
+            .order('order_index', { ascending: true }),
+          supabase
+            .from('apartment_photos')
+            .select('*')
+            .eq('apartment_id', apartment.id)
+            .order('order_index', { ascending: true })
+        ]);
+
+        const layoutPhotos = (layoutRes.data || []).map((photo) => ({
+          id: photo.id as string,
+          image_url: photo.image_url as string,
+          description: (photo as { description?: string | null }).description ?? null,
+          order_index: (photo as { order_index: number }).order_index,
+          type: 'layout' as const
+        }));
+
+        const apartmentPhotos = (aptRes.data || []).map((photo) => ({
+          id: photo.id as string,
+          image_url: photo.image_url as string,
+          description: (photo as { description?: string | null }).description ?? null,
+          order_index: (photo as { order_index: number }).order_index,
+          type: 'apartment' as const
+        }));
+
+        const combined: CombinedPhoto[] = [...layoutPhotos, ...apartmentPhotos];
+        setPhotos(combined);
+      } catch (err) {
+        console.error('Error loading photos in parent:', err);
+        setPhotos([]);
+      } finally {
+        setPhotosLoading(false);
+      }
+    };
+
+    loadPhotos();
+  }, [apartment, project?.id]);
 
   const handleToggleFavorite = () => {
     if (!apartment) return;
@@ -382,7 +445,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
           available: t('apartment.available'),
           reserved: t('apartment.reserved'),
           sold: t('apartment.sold'),
-          generatedOn: t('pdf.generatedOn')
+              generatedOn: t('pdf.generatedOn'),
+              facilities: t('pdf.facilities'),
+              apartmentForSale: t('pdf.apartmentForSale')
         }
       });
 
@@ -393,6 +458,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
       setIsGeneratingPDF(false);
     }
   };
+
+  
+  const loading = projectLoading || apartmentLoading || photosLoading;
 
   // Показываем загрузку, если данные еще загружаются
   if (loading) {
@@ -467,7 +535,18 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
             {/* Main apartment image */}
             <div className="h-70  relative overflow-hidden rounded-t-3xl">
-              <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+              {photosLoading ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Loader size="lg" />
+                </div>
+              ) : (
+                <ApartmentPhotosViewer
+                  apartmentId={apartment.id}
+                  projectId={apartment.project_id}
+                  preloadedLayoutPhotos={photos}
+                  fetchMode="preloaded-only"
+                />
+              )}
             </div>
           </div>
 
@@ -670,7 +749,18 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       {getStatusLabel(apartment.status)}
                     </Badge>
                   </div>
-                  <ApartmentPhotosViewer apartmentId={apartment.id} projectId={apartment.project_id} />
+                  {photosLoading ? (
+                    <div className="w-full h-[480px] flex items-center justify-center bg-gray-100 rounded-lg">
+                      <Loader size="lg" />
+                    </div>
+                  ) : (
+                    <ApartmentPhotosViewer
+                      apartmentId={apartment.id}
+                      projectId={apartment.project_id}
+                      preloadedLayoutPhotos={photos}
+                      fetchMode="preloaded-only"
+                    />
+                  )}
                   {/* Gallery navigation line */}
 
                 </div>

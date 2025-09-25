@@ -164,7 +164,7 @@ const drawCheckbox = (pdf: jsPDF, x: number, y: number, scale: (n: number) => nu
 };
 
 // Функция для рисования информационного блока недвижимости с бежевым фоном
-const drawRealEstateInfo = (pdf: jsPDF, apartment: Apartment, projectCurrency: string | null, translations: any, x: number, y: number, width: number, scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
+const drawRealEstateInfo = (pdf: jsPDF, apartment: Apartment, projectCurrency: string | null, translations: PDFGenerationOptions['translations'], x: number, y: number, width: number, scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
   let currentY = y;
 
   // Коричневый фон для заголовка
@@ -284,7 +284,7 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
 
     let yPosition = margin;
 
-    // === ПОЛНОРАЗМЕРНОЕ ФОНОВОЕ ИЗОБРАЖЕНИЕ ===
+    // === ГЛАВНОЕ ФОТО ВО ВСЮ ШИРИНУ В ВЕРХУ ===
     const layoutPhotos = photos.filter(p => p.type === 'layout');
     const apartmentPhotos = photos.filter(p => p.type === 'apartment');
     
@@ -300,26 +300,26 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
           tempImg.src = base64Image;
         });
 
-        // Фоновое изображение на всю страницу или большую её часть
-        const backgroundHeight = pageHeight * 0.7; // 70% высоты страницы
-        const dimensions = getImageDimensions(tempImg.width, tempImg.height, pageWidth, backgroundHeight);
+        // Главное фото во всю ширину страницы в верху
+        const headerHeight = scale(80); // фиксированная высота для заголовочного фото
+        const dimensions = getImageDimensions(tempImg.width, tempImg.height, pageWidth, headerHeight);
         
-        // Центрируем изображение
+        // Центрируем изображение по ширине
         const imageX = (pageWidth - dimensions.width) / 2;
         const imageY = 0;
         
-        // Добавляем фоновое изображение
+        // Добавляем главное фото в верхней части
         pdf.addImage(base64Image, 'JPEG', imageX, imageY, dimensions.width, dimensions.height);
         
-        // Устанавливаем начальную позицию для контента поверх изображения
-        yPosition = scale(20); // отступ сверху
+        // Устанавливаем начальную позицию для контента после фото
+        yPosition = headerHeight + scale(15); // отступ после фото
       } catch (error) {
         console.error('Failed to load main layout photo:', error);
         yPosition = margin;
       }
     }
 
-    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ СЛЕВА, ФОТОГРАФИИ СПРАВА (ПОВЕРХ ФОНА) ===
+    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ СЛЕВА, ФОТОГРАФИИ СПРАВА ===
     const leftWidth = contentWidth * 0.55; // 55% для информации
     const rightWidth = contentWidth * 0.4;  // 40% для фотографий
     const gap = contentWidth * 0.05; // 5% промежуток
@@ -328,7 +328,7 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     const rightX = margin + leftWidth + gap;
     const sectionStartY = yPosition;
 
-    // ЛЕВАЯ ЧАСТЬ - Информация о квартире (поверх фонового изображения)
+    // ЛЕВАЯ ЧАСТЬ - Информация о квартире
     const infoEndY = drawRealEstateInfo(
       pdf, 
       apartment, 
