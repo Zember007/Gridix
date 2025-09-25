@@ -23,13 +23,13 @@ interface Project {
   min_price: number | null;
 }
 
-const EmbedProjectsPage = ({ UserId }: { UserId: string }) => {
+const EmbedProjectsPage = ({ UserId }: { UserId?: string }) => {
   const { userId: routeUserId } = useParams<{ userId: string }>();
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const { t } = useLanguage();
   
   // Пытаемся получить userId из URL параметров или query string для совместимости с iframe
-  const userId = routeUserId || UserId;
+  const userId = UserId || routeUserId;
   
   // Добавляем отладочную информацию для диагностики
   console.log('Debug EmbedProjectsPage:', {
