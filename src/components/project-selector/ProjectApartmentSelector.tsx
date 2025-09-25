@@ -47,6 +47,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
   const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
   const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
+  const [preloadLayoutLoaded, setPreloadLayoutLoaded] = useState(false);
   const [buildingImageNaturalSize, setBuildingImageNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -148,7 +149,9 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         apartments.map(a => (Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room`))
       );
 
-      if (uniqueLayouts.size === 0) return;
+      if (uniqueLayouts.size === 0){
+        setPreloadLayoutLoaded(true);
+        return;}
 
       try {
         const { data, error } = await supabase
@@ -168,6 +171,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         });
 
         setPreloadedLayoutPhotosByRooms(grouped);
+        setPreloadLayoutLoaded(true);
       } catch (e) {
         console.error('Error preloading layout photos:', e);
       }
@@ -293,7 +297,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   if(!project) return null;
 
-  if ( !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
+  if ( !apartmentsLoaded || !preloadLayoutLoaded || (viewMode === 'facade' && !buildingImageLoaded)) {
     return (
       <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
           <Loader
