@@ -14,6 +14,7 @@ type InitOptions = {
   theme?: 'light' | 'dark' | 'auto';
   width?: string; // e.g. '100%'
   height?: string; // e.g. '700px'
+  cssUrl?: string; // optional explicit URL to style.css
 };
 
 const DEFAULT_CONTAINER_ID = 'gridix-widget-root';
@@ -33,6 +34,31 @@ function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   if (opts?.width) el.style.width = opts.width;
   if (opts?.height) el.style.height = opts.height;
   el.style.boxSizing = 'border-box';
+}
+
+function ensureStyles(options: InitOptions) {
+  const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
+  if (existing) return;
+
+  // Prefer explicit cssUrl if provided
+  let cssHref = options.cssUrl || '';
+
+  if (!cssHref) {
+    // Try to derive from the script tag that loaded widget.js
+    const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
+    const widgetScript = scripts.reverse().find(s => s.src && /widget\.js(\?.*)?$/.test(s.src));
+    if (widgetScript && widgetScript.src) {
+      cssHref = widgetScript.src.replace(/widget\.js(\?.*)?$/, 'style.css$1');
+    }
+  }
+
+  if (!cssHref) return; // fail silently if we can't resolve
+
+  const link = document.createElement('link');
+  link.id = 'gridix-widget-style';
+  link.rel = 'stylesheet';
+  link.href = cssHref;
+  document.head.appendChild(link);
 }
 
 function WidgetApp(props: InitOptions) {
@@ -69,7 +95,11 @@ function init(options: InitOptions = {}) {
       theme: options.theme ?? (qp.get('theme') as any) ?? 'light',
       width: options.width ?? qp.get('width') ?? '100%',
       height: options.height ?? qp.get('height') ?? '600px',
+      cssUrl: options.cssUrl ?? qp.get('cssUrl') ?? undefined,
     };
+
+    // Ensure CSS is loaded before rendering
+    ensureStyles(opts);
 
     const container = ensureContainer(opts.containerId);
     applyContainerStyles(container, opts);
