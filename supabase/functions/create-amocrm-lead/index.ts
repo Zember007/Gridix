@@ -1,24 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-function parseAllowedOrigins(): string[] {
-  const siteUrl = (Deno.env.get('SITE_URL') || '').trim()
-  const extra = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map(s => s.trim()).filter(Boolean)
-  const defaults = [
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'https://localhost:8080',
-    'https://127.0.0.1:8080',
-  ]
-  const all = [...new Set([...(siteUrl ? [siteUrl] : []), ...extra, ...defaults])]
-  return all
-}
 
-function isOriginAllowed(origin: string | null): boolean {
-  if (!origin) return true // allow same-origin/no CORS requests
-  const allowed = parseAllowedOrigins()
-  return allowed.includes(origin)
-}
 
 function getAllowedCorsHeaders(origin: string | null) {
   const headers: Record<string, string> = {
@@ -26,9 +9,7 @@ function getAllowedCorsHeaders(origin: string | null) {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
   }
-  if (origin && isOriginAllowed(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin
-  }
+  headers['Access-Control-Allow-Origin'] = '*'
   return headers
 }
 
@@ -84,7 +65,7 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
     const expiresAt = new Date(settings.token_expires_at);
     const now = new Date();
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-    
+
     if (expiresAt > fiveMinutesFromNow) {
       return settings.access_token;
     }
@@ -118,10 +99,10 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Token refresh failed:', { 
-        status: response.status, 
+      console.error('Token refresh failed:', {
+        status: response.status,
         statusText: response.statusText,
-        errorText 
+        errorText
       });
       return null;
     }
@@ -165,10 +146,10 @@ async function getContactFields(settings: AmoCRMSettings, accessToken: string) {
       if (fieldsData._embedded && fieldsData._embedded.custom_fields) {
         const emailFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'EMAIL');
         const phoneFieldData = fieldsData._embedded.custom_fields.find((f: any) => f.code === 'PHONE');
-        
+
         if (emailFieldData) emailFieldId = emailFieldData.id;
         if (phoneFieldData) phoneFieldId = phoneFieldData.id;
-        
+
         console.log('Found contact fields:', { emailFieldId, phoneFieldId });
       }
     } else {
@@ -190,9 +171,7 @@ serve(async (req) => {
   }
 
   try {
-    if (!isOriginAllowed(origin)) {
-      return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    // CORS is permissive; no origin restrictions
 
     const requestBody = await req.json();
     console.log('Received request:', requestBody);
@@ -203,7 +182,7 @@ serve(async (req) => {
     if (!name || !email || !phone || !apartmentId || !projectId) {
       console.error('Missing required fields:', { name: !!name, email: !!email, phone: !!phone, apartmentId: !!apartmentId, projectId: !!projectId });
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Missing required fields',
           required: ['name', 'email', 'phone', 'apartmentId', 'projectId']
         }),
@@ -214,7 +193,7 @@ serve(async (req) => {
     // Инициализация Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase configuration');
       return new Response(
@@ -265,7 +244,7 @@ serve(async (req) => {
     if (existingLead && !duplicateCheckError) {
       console.log('Duplicate lead found:', existingLead.id);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Заявка с таким email на эту квартиру уже существует',
           existingLeadId: existingLead.id,
           existingLeadDate: existingLead.created_at
@@ -293,9 +272,9 @@ serve(async (req) => {
     if (leadSaveError || !savedLead) {
       console.error('Failed to save lead to database:', leadSaveError);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Failed to save lead. Please try again.',
-          details: leadSaveError?.message 
+          details: leadSaveError?.message
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -305,12 +284,13 @@ serve(async (req) => {
 
     // Получение настроек AmoCRM (после сохранения лида)
     console.log('Fetching AmoCRM settings for project:', projectId);
-    const { data: amocrmSettings, error: settingsError } = await userClient
+    const { data: amocrmSettings, error: settingsError } = await svc
       .from('amocrm_settings')
       .select('*')
       .eq('project_id', projectId)
-      .single();
+      .maybeSingle();
 
+    if (settingsError) console.error('Error fetching AmoCRM settings:', settingsError);
     // If no AmoCRM settings found, just mark lead as saved_only and return success
     if (settingsError || !amocrmSettings) {
       console.log('AmoCRM settings not found for project:', projectId, 'Lead saved to DB only');
@@ -340,7 +320,7 @@ serve(async (req) => {
       // Update lead status to saved_only (not failed, since DB save was successful)
       await svc
         .from('leads')
-        .update({ 
+        .update({
           status: 'saved_only',
           amocrm_error: 'AmoCRM authorization failed. Please re-authorize the integration.'
         })
@@ -348,7 +328,7 @@ serve(async (req) => {
 
       // Return success since lead was saved to DB
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: true,
           leadId: savedLead.id,
           message: 'Lead successfully saved. AmoCRM authorization failed - please re-authorize the integration.',
@@ -366,7 +346,7 @@ serve(async (req) => {
         const userInfoResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/account`, {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-        
+
         if (userInfoResponse.ok) {
           const userInfo = await userInfoResponse.json();
           responsibleUserId = userInfo.current_user_id || userInfo._embedded?.users?.[0]?.id;
@@ -384,7 +364,7 @@ serve(async (req) => {
       // Update lead status to saved_only (not failed, since DB save was successful)
       await svc
         .from('leads')
-        .update({ 
+        .update({
           status: 'saved_only',
           amocrm_error: 'Unable to determine responsible user for the lead. Please configure responsible_user_id in AmoCRM settings.'
         })
@@ -392,7 +372,7 @@ serve(async (req) => {
 
       // Return success since lead was saved to DB
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: true,
           leadId: savedLead.id,
           message: 'Lead successfully saved. Unable to determine responsible user for AmoCRM - please configure responsible_user_id.',
@@ -410,7 +390,7 @@ serve(async (req) => {
       // Update lead status to saved_only (not failed, since DB save was successful)
       await svc
         .from('leads')
-        .update({ 
+        .update({
           status: 'saved_only',
           amocrm_error: 'Unable to configure contact fields in AmoCRM'
         })
@@ -418,7 +398,7 @@ serve(async (req) => {
 
       // Return success since lead was saved to DB
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: true,
           leadId: savedLead.id,
           message: 'Lead successfully saved. Unable to configure contact fields in AmoCRM.',
@@ -468,18 +448,18 @@ serve(async (req) => {
 
     if (!amocrmResponse.ok) {
       const errorText = await amocrmResponse.text();
-      console.error('AmoCRM API error:', { 
-        status: amocrmResponse.status, 
+      console.error('AmoCRM API error:', {
+        status: amocrmResponse.status,
         statusText: amocrmResponse.statusText,
-        errorText 
+        errorText
       });
-      
+
       let errorMessage = 'Failed to create lead in AmoCRM';
       try {
         const errorData = JSON.parse(errorText);
         if (errorData.detail) errorMessage = errorData.detail;
         else if (errorData.message) errorMessage = errorData.message;
-        
+
         if (errorData['validation-errors']) {
           console.error('Validation errors:', JSON.stringify(errorData['validation-errors'], null, 2));
           errorMessage += '. Validation errors: ' + JSON.stringify(errorData['validation-errors']);
@@ -491,16 +471,16 @@ serve(async (req) => {
       // Update lead status to saved_only with error details (not failed, since DB save was successful)
       await svc
         .from('leads')
-        .update({ 
+        .update({
           status: 'saved_only',
           amocrm_error: errorMessage,
           amocrm_retries: 1
         })
         .eq('id', savedLead.id);
-      
+
       // Return success since lead was saved to DB
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: true,
           leadId: savedLead.id,
           message: 'Lead successfully saved. Failed to send to AmoCRM - you can copy the details and add manually.',
@@ -518,10 +498,10 @@ serve(async (req) => {
     if (amocrmResult[0]?.id) {
       const amocrmLeadId = amocrmResult[0].id;
       const amocrmContactId = amocrmResult[0]._embedded?.contacts?.[0]?.id;
-      
+
       await svc
         .from('leads')
-        .update({ 
+        .update({
           status: 'sent_to_crm',
           amocrm_lead_id: amocrmLeadId,
           amocrm_contact_id: amocrmContactId,
@@ -536,9 +516,9 @@ serve(async (req) => {
     // Add a detailed note with apartment and client information
     if (amocrmResult[0]?.id) {
       const leadId = amocrmResult[0].id;
-      
+
       // Create a detailed note with all the information
-      const currentDate = new Date().toLocaleString('ru-RU', { 
+      const currentDate = new Date().toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
         year: 'numeric',
         month: 'long',
@@ -546,7 +526,7 @@ serve(async (req) => {
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       const noteText = `📋 APARTMENT INQUIRY | ${currentDate}
 
 👤 CLIENT:
@@ -609,22 +589,22 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
 
   } catch (error) {
     console.error('Unexpected error creating AmoCRM lead:', error);
-    
+
     // Try to update lead status if we have a saved lead
     try {
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const svc = createClient(supabaseUrl, supabaseServiceKey);
-      
+
       // We need to extract savedLead.id from the scope, but it might not be available
       // So we'll just log the error for now
       console.log('Unable to update lead status due to unexpected error');
     } catch (updateError) {
       console.error('Failed to update lead status after error:', updateError);
     }
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       }),
