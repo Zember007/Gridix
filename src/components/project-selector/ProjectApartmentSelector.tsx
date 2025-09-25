@@ -291,10 +291,14 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }));
   }, [filters]);
 
-  if (!project || !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
+  if(!project) return null;
+
+  if ( !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
     return (
       <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
-          <Loader size="lg" className="mx-auto" />
+          <Loader
+          color={getThemeColor()}
+          size="lg" className="mx-auto" />
       </div>
     );
   }

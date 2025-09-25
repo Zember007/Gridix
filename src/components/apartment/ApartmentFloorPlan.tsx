@@ -64,7 +64,7 @@ const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect,
 
   if (!buildingFloors.length || selectedFloor === null) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <Building2 className="h-16 w-16 mb-4" />
         <p className="text-lg font-medium">{t('project.noBuildingPlan')}</p>
         <p className="text-sm">{t('project.contactAdmin')}</p>
