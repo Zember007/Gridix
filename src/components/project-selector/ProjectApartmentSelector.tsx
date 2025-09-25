@@ -293,7 +293,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   if(!project) return null;
 
-  if ( !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
+  /* if ( !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
     return (
       <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
           <Loader
@@ -301,7 +301,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           size="lg" className="mx-auto" />
       </div>
     );
-  }
+  } */
 
   return (
     <div className="min-h-full bg-white flex flex-col">

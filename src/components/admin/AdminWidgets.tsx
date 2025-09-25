@@ -35,30 +35,48 @@ const AdminWidgets = () => {
 
   const generateEmbedCode = () => {
     const baseUrl = window.location.origin;
-    let widgetConfig = {};
-
+    
+    let embedParams = '';
     if (selectedProject === 'all') {
-      widgetConfig = {
-        type: 'projects',
-        userId: user?.id,
-        language: defaultLanguage
-      };
+      embedParams = `data-user-id="${user?.id}"`;
     } else {
       const project = projects.find(p => p.id === selectedProject);
-      widgetConfig = {
-        type: 'project',
-        projectId: selectedProject,
-        projectSlug: project?.slug,
-        language: defaultLanguage
-      };
+      if (project?.slug) {
+        embedParams = `data-project-slug="${project.slug}"`;
+      } else {
+        embedParams = `data-project-id="${selectedProject}"`;
+      }
     }
 
-    return `<!-- Gridix Widget -->
-<div id="gridix-widget-container"></div>
+    return `<!-- Gridix Widget - JavaScript Embed (Direct DOM Integration) -->
+<div id="gridix-widget" 
+     data-gridix-embed 
+     ${embedParams}
+     data-lang="${defaultLanguage}"
+     data-theme="default"
+     data-show-header="true"
+     style="width: 100%; min-height: 400px;">
+</div>
+
+<script src="${baseUrl}/gridix-embed.js"></script>
+
+<!-- Alternative manual initialization -->
+<!-- 
 <script>
-  window.GridixWidgetConfig = ${JSON.stringify(widgetConfig, null, 2)};
+  // Manual initialization if needed
+  new GridixEmbed({
+    container: '#gridix-widget',
+    ${selectedProject === 'all' ? `userId: '${user?.id}'` : 
+      projects.find(p => p.id === selectedProject)?.slug ? 
+        `projectSlug: '${projects.find(p => p.id === selectedProject)?.slug}'` : 
+        `projectId: '${selectedProject}'`
+    },
+    lang: '${defaultLanguage}',
+    theme: 'default',
+    showHeader: true
+  });
 </script>
-<script src="${baseUrl}/widget.js" async></script>`;
+-->`;
   };
 
   const copyEmbedCode = () => {
@@ -67,21 +85,65 @@ const AdminWidgets = () => {
   };
 
   const openPreview = () => {
-    const baseUrl = window.location.origin;
-    let previewUrl = '';
+    // Create a preview page with our widget
+    const embedCode = generateEmbedCode();
+    const previewHTML = `
+<!DOCTYPE html>
+<html lang="${defaultLanguage}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gridix Widget Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .preview-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .preview-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+        .preview-subtitle {
+            color: #6b7280;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <h1 class="preview-title">Gridix Widget Preview</h1>
+            <p class="preview-subtitle">This is how your widget will look when embedded on a website</p>
+        </div>
+        ${embedCode}
+    </div>
+</body>
+</html>`;
 
-    if (selectedProject === 'all') {
-      previewUrl = `${baseUrl}/widget/preview?type=projects&userId=${user?.id}&lang=${defaultLanguage}`;
-    } else {
-      const project = projects.find(p => p.id === selectedProject);
-      if (project?.slug) {
-        previewUrl = `${baseUrl}/widget/preview?type=project&projectSlug=${project.slug}&lang=${defaultLanguage}`;
-      } else {
-        previewUrl = `${baseUrl}/widget/preview?type=project&projectId=${selectedProject}&lang=${defaultLanguage}`;
-      }
-    }
-
-    window.open(previewUrl, '_blank');
+    const blob = new Blob([previewHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    
+    // Clean up the URL after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   if (loading) {
@@ -192,10 +254,10 @@ const AdminWidgets = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Code className="h-5 w-5" />
-              {t('adminWidgets.embedCode')}
+              JavaScript код для встраивания
             </CardTitle>
             <CardDescription>
-              {t('adminWidgets.embedCodeDesc')}
+              Скопируйте этот код и вставьте на ваш сайт. Виджет встроится напрямую в DOM без iframe
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -217,39 +279,41 @@ const AdminWidgets = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('adminWidgets.widgetScript')}</Label>
+            <Label>JavaScript файл виджета</Label>
             <div className="flex items-center gap-2">
               <Input
-                value={`${window.location.origin}/widget.js`}
+                value={`${window.location.origin}/gridix-embed.js`}
                 readOnly
                 className="bg-gray-50"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(`${window.location.origin}/widget.js`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/gridix-embed.js`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500">{t('adminWidgets.widgetScriptDesc')}</p>
+            <p className="text-xs text-gray-500">JavaScript файл для прямого встраивания виджета в DOM</p>
           </div>
 
           <div className="space-y-2">
-            <Label>{t('adminWidgets.previewUrl')}</Label>
+            <Label>API URL для данных виджета</Label>
             <div className="flex items-center gap-2">
               <Input
                 value={(() => {
+                  const params = new URLSearchParams({ lang: defaultLanguage });
                   if (selectedProject === 'all') {
-                    return `${window.location.origin}/widget/preview?type=projects&userId=${user?.id}&lang=${defaultLanguage}`;
+                    params.append('userId', user?.id || '');
                   } else {
                     const project = projects.find(p => p.id === selectedProject);
                     if (project?.slug) {
-                      return `${window.location.origin}/widget/preview?type=project&projectSlug=${project.slug}&lang=${defaultLanguage}`;
+                      params.append('projectSlug', project.slug);
                     } else {
-                      return `${window.location.origin}/widget/preview?type=project&projectId=${selectedProject}&lang=${defaultLanguage}`;
+                      params.append('projectId', selectedProject);
                     }
                   }
+                  return `${window.location.origin}/functions/v1/widget-embed-api?${params.toString()}`;
                 })()}
                 readOnly
                 className="bg-gray-50"
@@ -257,12 +321,25 @@ const AdminWidgets = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={openPreview}
+                onClick={() => {
+                  const params = new URLSearchParams({ lang: defaultLanguage });
+                  if (selectedProject === 'all') {
+                    params.append('userId', user?.id || '');
+                  } else {
+                    const project = projects.find(p => p.id === selectedProject);
+                    if (project?.slug) {
+                      params.append('projectSlug', project.slug);
+                    } else {
+                      params.append('projectId', selectedProject);
+                    }
+                  }
+                  window.open(`${window.location.origin}/functions/v1/widget-embed-api?${params.toString()}`, '_blank');
+                }}
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500">{t('adminWidgets.previewUrlDesc')}</p>
+            <p className="text-xs text-gray-500">API endpoint для получения данных проекта виджетом</p>
           </div>
         </CardContent>
       </Card>
