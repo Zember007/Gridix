@@ -29,23 +29,10 @@ interface PDFGenerationOptions {
     reserved: string;
     sold: string;
     generatedOn: string;
+    facilities: string;
+    apartmentForSale: string;
   };
 }
-
-// Современная цветовая палитра
-const COLORS = {
-  primary: { r: 79, g: 70, b: 229 },      // Indigo-600
-  secondary: { r: 71, g: 85, b: 105 },     // Slate-600  
-  success: { r: 34, g: 197, b: 94 },       // Emerald-500
-  warning: { r: 245, g: 158, b: 11 },      // Amber-500
-  danger: { r: 239, g: 68, b: 68 },        // Red-500
-  light: { r: 248, g: 250, b: 252 },       // Slate-50
-  dark: { r: 15, g: 23, b: 42 },           // Slate-900
-  border: { r: 226, g: 232, b: 240 },      // Slate-200
-  accent: { r: 168, g: 85, b: 247 },       // Purple-500
-  surface: { r: 255, g: 255, b: 255 },     // White
-  muted: { r: 148, g: 163, b: 184 }        // Slate-400
-};
 
 // Функция для загрузки PDF файла
 const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promise<ArrayBuffer> => {
@@ -72,29 +59,32 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         reject(new Error('Failed to get canvas context'));
         return;
       }
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      
+
       try {
-        const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
         resolve(dataURL);
       } catch (error) {
         reject(error);
       }
     };
-    
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+
+    img.onerror = () => {
+      reject(new Error(`Failed to load image: ${url}`));
+    };
+
     img.src = url;
   });
 };
@@ -108,131 +98,158 @@ const getImageDimensions = (imgWidth: number, imgHeight: number, maxWidth: numbe
   };
 };
 
-// Утилиты
-const capitalizeFirstLetter = (str: string) => {
+function capitalizeFirstLetter(str: string) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Цвета для дизайна
+const COLORS = {
+  primary: '#2563eb',
+  secondary: '#64748b',
+  success: '#16a34a',
+  warning: '#d97706',
+  danger: '#dc2626',
+  light: '#f8fafc',
+  dark: '#1e293b',
+  border: '#e2e8f0',
+  brown: '#8B4513',
+  lightGreen: '#90EE90'
 };
 
-const setColor = (pdf: jsPDF, color: {r: number, g: number, b: number}, type: 'fill' | 'text' | 'draw' = 'fill') => {
-  if (type === 'fill') pdf.setFillColor(color.r, color.g, color.b);
-  else if (type === 'text') pdf.setTextColor(color.r, color.g, color.b);
-  else pdf.setDrawColor(color.r, color.g, color.b);
+// Функция для рисования прямоугольника с закругленными углами
+const drawRoundedRect = (pdf: jsPDF, x: number, y: number, width: number, height: number, radius: number = 2) => {
+  pdf.roundedRect(x, y, width, height, radius, radius, 'F');
 };
 
-// Современные компоненты дизайна
-const drawModernCard = (pdf: jsPDF, x: number, y: number, width: number, height: number, scale: (n: number) => number, elevated = false) => {
-  // Тень (для elevated карточек)
-  if (elevated) {
-    setColor(pdf, { r: 0, g: 0, b: 0 });
-    pdf.setGState(new (pdf as any).GState({ opacity: 0.1 }));
-    pdf.roundedRect(x + scale(1), y + scale(1), width, height, scale(4), scale(4), 'F');
-    pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
+// Функция для рисования карточки
+const drawCard = (pdf: jsPDF, x: number, y: number, width: number, height: number, scale: (n: number) => number) => {
+  pdf.setFillColor(255, 255, 255);
+  drawRoundedRect(pdf, x, y, width, height, scale(3));
+  pdf.setDrawColor(226, 232, 240);
+  pdf.setLineWidth(Math.max(0.25, scale(0.5)));
+  pdf.roundedRect(x, y, width, height, scale(3), scale(3), 'D');
+};
+
+// Функция для получения цвета статуса
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'available':
+      return COLORS.success;
+    case 'reserved':
+      return COLORS.warning;
+    case 'sold':
+      return COLORS.danger;
+    default:
+      return COLORS.secondary;
   }
-  
-  // Основная карточка
-  setColor(pdf, COLORS.surface);
-  pdf.roundedRect(x, y, width, height, scale(4), scale(4), 'F');
-  
-  // Тонкая граница
-  setColor(pdf, COLORS.border, 'draw');
-  pdf.setLineWidth(scale(0.3));
-  pdf.roundedRect(x, y, width, height, scale(4), scale(4), 'D');
 };
 
-const drawGradientHeader = (pdf: jsPDF, x: number, y: number, width: number, height: number, scale: (n: number) => number) => {
-  // Основной градиент (имитируем через несколько прямоугольников)
-  const steps = 20;
-  const stepHeight = height / steps;
+// Функция для рисования чекбокса с галочкой
+const drawCheckbox = (pdf: jsPDF, x: number, y: number, scale: (n: number) => number) => {
+  const size = scale(4);
   
-  for (let i = 0; i < steps; i++) {
-    const ratio = i / steps;
-    const r = Math.round(COLORS.primary.r + (COLORS.accent.r - COLORS.primary.r) * ratio);
-    const g = Math.round(COLORS.primary.g + (COLORS.accent.g - COLORS.primary.g) * ratio);
-    const b = Math.round(COLORS.primary.b + (COLORS.accent.b - COLORS.primary.b) * ratio);
-    
-    pdf.setFillColor(r, g, b);
-    pdf.rect(x, y + (i * stepHeight), width, stepHeight, 'F');
-  }
+  // Рисуем коричневый круг
+  pdf.setFillColor(139, 69, 19); // brown
+  pdf.setDrawColor(139, 69, 19);
+  pdf.circle(x + size/2, y - size/2 + scale(0.5), size/2, 'FD');
   
-  // Закругленные углы поверх
-  setColor(pdf, COLORS.primary);
-  pdf.roundedRect(x, y, width, height, scale(4), scale(4), 'F');
-  
-  // Добавляем легкий блик
-  setColor(pdf, { r: 255, g: 255, b: 255 });
-  pdf.setGState(new (pdf as any).GState({ opacity: 0.2 }));
-  pdf.roundedRect(x, y, width, height * 0.5, scale(4), scale(4), 'F');
-  pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
+  // Рисуем белую галочку
+  pdf.setDrawColor(255, 255, 255); // white
+  pdf.setLineWidth(scale(0.6));
+  const centerX = x + size/2;
+  const centerY = y - size/2 + scale(0.5);
+  pdf.line(centerX - scale(1), centerY, centerX - scale(0.3), centerY + scale(0.7));
+  pdf.line(centerX - scale(0.3), centerY + scale(0.7), centerX + scale(1), centerY - scale(0.7));
 };
 
-const drawIconText = (pdf: jsPDF, icon: string, text: string, x: number, y: number, scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
-  // Иконка (используем символы Unicode)
-  setColor(pdf, COLORS.primary, 'text');
-  pdf.setFontSize(scaledFontSize(12, 8, 20));
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(icon, x, y);
-  
-  // Текст
-  setColor(pdf, COLORS.dark, 'text');
+// Функция для рисования информационного блока недвижимости с бежевым фоном
+const drawRealEstateInfo = (pdf: jsPDF, apartment: Apartment, projectCurrency: string | null, translations: any, x: number, y: number, width: number, scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
+  let currentY = y;
+
+  // Коричневый фон для заголовка
+  pdf.setFillColor(139, 69, 19); // brown
+  drawRoundedRect(pdf, x, currentY, width, scale(12), scale(2));
+
+  // Белый текст компании сверху
   pdf.setFontSize(scaledFontSize(10, 8, 16));
   pdf.setFont('helvetica', 'normal');
-  pdf.text(text, x + scale(6), y);
-};
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('Giggling Property', x + scale(4), currentY + scale(4));
 
-const drawModernBadge = (pdf: jsPDF, text: string, x: number, y: number, colorType: 'success' | 'warning' | 'danger' | 'primary', scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
-  const color = COLORS[colorType];
-  
-  // Измеряем текст
-  pdf.setFontSize(scaledFontSize(9, 7, 14));
+  // Заголовок "Apartment for Sale"
+  pdf.setFontSize(scaledFontSize(24, 16, 36));
   pdf.setFont('helvetica', 'bold');
-  const textWidth = pdf.getTextWidth(text);
-  const badgeWidth = textWidth + scale(8);
-  const badgeHeight = scale(5.5);
-  
-  // Фон бейджа с градиентом (упрощенная версия)
-  setColor(pdf, color);
-  pdf.roundedRect(x, y - badgeHeight + scale(1), badgeWidth, badgeHeight, scale(2.5), scale(2.5), 'F');
-  
-  // Блик на бейдже
-  setColor(pdf, { r: 255, g: 255, b: 255 });
-  pdf.setGState(new (pdf as any).GState({ opacity: 0.3 }));
-  pdf.roundedRect(x, y - badgeHeight + scale(1), badgeWidth, badgeHeight * 0.5, scale(2.5), scale(2.5), 'F');
-  pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
-  
-  // Текст
-  setColor(pdf, { r: 255, g: 255, b: 255 }, 'text');
-  pdf.text(text, x + scale(4), y - scale(1.5));
-  
-  return badgeWidth;
-};
+  pdf.text(translations.apartmentForSale || 'Apartment for Sale', x + scale(4), currentY + scale(9));
 
-const drawStatCard = (pdf: jsPDF, icon: string, label: string, value: string, x: number, y: number, width: number, scale: (n: number) => number, scaledFontSize: (n: number, min?: number, max?: number) => number) => {
-  const cardHeight = scale(16);
-  
-  // Карточка
-  drawModernCard(pdf, x, y, width, cardHeight, scale, true);
-  
-  // Иконка
-  setColor(pdf, COLORS.primary, 'text');
-  pdf.setFontSize(scaledFontSize(14, 10, 24));
-  pdf.text(icon, x + scale(4), y + scale(8));
-  
-  // Значение (крупно)
-  setColor(pdf, COLORS.dark, 'text');
-  pdf.setFontSize(scaledFontSize(14, 10, 24));
+  currentY += scale(18);
+
+  // Бежевый фон для секции с информацией (более насыщенный для лучшей читаемости)
+  const infoSectionHeight = scale(60); // примерная высота секции с информацией
+  pdf.setFillColor(240, 230, 210); // более насыщенный бежевый фон для лучшей читаемости
+  drawRoundedRect(pdf, x, currentY, width, infoSectionHeight, scale(3));
+
+  currentY += scale(5);
+
+  // Секция FACILITIES
+  pdf.setFontSize(scaledFontSize(14, 10, 20));
   pdf.setFont('helvetica', 'bold');
-  pdf.text(value, x + scale(12), y + scale(8));
-  
-  // Лейбл (мелко)
-  setColor(pdf, COLORS.muted, 'text');
-  pdf.setFontSize(scaledFontSize(8, 6, 14));
+  pdf.setTextColor(80, 60, 40); // темно-коричневый для лучшей читаемости
+  pdf.text(translations.facilities || 'FACILITIES', x + scale(4), currentY);
+
+  currentY += scale(8);
+
+  // Список удобств с чекбоксами
+  const facilities = [
+    `${apartment.rooms === 0 ? translations.studio : apartment.rooms} ${apartment.rooms === 0 ? '' : apartment.rooms === 1 ? 'Bedroom' : 'Bedrooms'}`,
+    '2 Bathroom', // можно добавить в данные квартиры если есть
+    'Living Room',
+    'Kitchen',
+    'Laundry Room'
+  ];
+
+  facilities.forEach((facility, index) => {
+    drawCheckbox(pdf, x + scale(4), currentY + scale(6), scale);
+    
+    pdf.setFontSize(scaledFontSize(11, 9, 16));
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 50, 40); // темно-коричневый текст
+    pdf.text(facility, x + scale(11), currentY + scale(5));
+    
+    currentY += scale(8);
+  });
+
+  currentY += scale(10);
+
+  // Цена в коричневом блоке
+  pdf.setFillColor(139, 69, 19); // brown
+  drawRoundedRect(pdf, x, currentY, width, scale(15), scale(2));
+
+  if (apartment.price) {
+    const priceText = formatPriceWithCurrency(apartment.price, projectCurrency);
+    pdf.setFontSize(scaledFontSize(28, 20, 42));
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(priceText, x + scale(4), currentY + scale(8));
+
+    pdf.setFontSize(scaledFontSize(12, 10, 18));
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('/year', x + scale(4), currentY + scale(12));
+  }
+
+  currentY += scale(20);
+
+  // Контактная информация
+  pdf.setFontSize(scaledFontSize(11, 9, 16));
   pdf.setFont('helvetica', 'normal');
-  pdf.text(label, x + scale(4), y + scale(13));
+  pdf.setTextColor(100, 100, 100);
+  pdf.text('123-456-7890 (Richard Sanchez)', x, currentY);
+
+  return currentY + scale(10);
 };
 
 /**
- * Генерирует стильный и компактный PDF с деталями квартиры
+ * Генерирует PDF с деталями квартиры в стиле недвижимости
  */
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, projectCurrency, photos, translations, pdf_main } = options;
@@ -253,7 +270,6 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     
-    // Масштабирование
     const unit = (firstPage ? 'pt' : 'mm') as 'pt' | 'mm';
     const unitToMm = unit === 'pt' ? (25.4 / 72) : 1;
     const baseShortSideMm = 210;
@@ -262,114 +278,185 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     const scale = (nMm: number) => (nMm * scaleFactor) / unitToMm;
     const scaledFontSize = (n: number, min = 6, max = 28) => Math.max(min, Math.min(max, n * scaleFactor));
     
-    const margin = scale(8);
+    const pctMargin = Math.min(pageWidth, pageHeight) * 0.05;
+    const margin = Math.max(scale(12), pctMargin);
     const contentWidth = pageWidth - (margin * 2);
-    
+
     let yPosition = margin;
 
-    // === СТИЛЬНЫЙ ЗАГОЛОВОК ===
-    const headerHeight = scale(35);
-    drawGradientHeader(pdf, 0, 0, pageWidth, headerHeight, scale);
+    // === ПОЛНОРАЗМЕРНОЕ ФОНОВОЕ ИЗОБРАЖЕНИЕ ===
+    const layoutPhotos = photos.filter(p => p.type === 'layout');
+    const apartmentPhotos = photos.filter(p => p.type === 'apartment');
     
-    // Номер квартиры (крупно, слева)
-    setColor(pdf, { r: 255, g: 255, b: 255 }, 'text');
-    pdf.setFontSize(scaledFontSize(28, 16, 48));
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`${apartment.apartment_number}`, margin, scale(16));
-    
-    // Статус (справа)
-    let statusText: string = apartment.status;
-    let statusColor: 'success' | 'warning' | 'danger' = 'success';
-    
-    switch (apartment.status) {
-      case 'available':
-        statusText = translations.available;
-        statusColor = 'success';
-        break;
-      case 'reserved':
-        statusText = translations.reserved;
-        statusColor = 'warning';
-        break;
-      case 'sold':
-        statusText = translations.sold;
-        statusColor = 'danger';
-        break;
+    if (layoutPhotos.length > 0) {
+      try {
+        const mainPhoto = layoutPhotos[0];
+        const base64Image = await loadImageAsBase64(mainPhoto.image_url);
+        
+        const tempImg = new Image();
+        await new Promise((resolve, reject) => {
+          tempImg.onload = resolve;
+          tempImg.onerror = reject;
+          tempImg.src = base64Image;
+        });
+
+        // Фоновое изображение на всю страницу или большую её часть
+        const backgroundHeight = pageHeight * 0.7; // 70% высоты страницы
+        const dimensions = getImageDimensions(tempImg.width, tempImg.height, pageWidth, backgroundHeight);
+        
+        // Центрируем изображение
+        const imageX = (pageWidth - dimensions.width) / 2;
+        const imageY = 0;
+        
+        // Добавляем фоновое изображение
+        pdf.addImage(base64Image, 'JPEG', imageX, imageY, dimensions.width, dimensions.height);
+        
+        // Устанавливаем начальную позицию для контента поверх изображения
+        yPosition = scale(20); // отступ сверху
+      } catch (error) {
+        console.error('Failed to load main layout photo:', error);
+        yPosition = margin;
+      }
     }
-    
-    const badgeX = pageWidth - margin - scale(25);
-    drawModernBadge(pdf, statusText, badgeX, scale(18), statusColor, scale, scaledFontSize);
-    
-    yPosition = headerHeight + scale(8);
 
-    // === КОМПАКТНАЯ ИНФОРМАЦИЯ В 4 КОЛОНКИ ===
-    const statCards = [
-      { icon: '🏢', label: capitalizeFirstLetter(translations.floor), value: apartment.floor_number.toString() },
-      { icon: '🏠', label: capitalizeFirstLetter(translations.rooms), value: apartment.rooms === 0 ? translations.studio : apartment.rooms.toString() },
-      { icon: '📐', label: capitalizeFirstLetter(translations.area), value: `${apartment.area} m²` },
-      ...(apartment.price ? [{ icon: '💰', label: translations.price, value: formatPriceWithCurrency(apartment.price, projectCurrency) }] : [])
-    ];
-    
-    const cardWidth = (contentWidth - (scale(3) * (statCards.length - 1))) / statCards.length;
-    
-    statCards.forEach((card, index) => {
-      const x = margin + index * (cardWidth + scale(3));
-      drawStatCard(pdf, card.icon, card.label, card.value, x, yPosition, cardWidth, scale, scaledFontSize);
-    });
-    
-    yPosition += scale(20);
+    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ СЛЕВА, ФОТОГРАФИИ СПРАВА (ПОВЕРХ ФОНА) ===
+    const leftWidth = contentWidth * 0.55; // 55% для информации
+    const rightWidth = contentWidth * 0.4;  // 40% для фотографий
+    const gap = contentWidth * 0.05; // 5% промежуток
 
-    // === ФОТОГРАФИИ В КОМПАКТНОЙ СЕТКЕ ===
-    if (photos.length > 0) {
-      // Заголовок секции
-      setColor(pdf, COLORS.dark, 'text');
-      pdf.setFontSize(scaledFontSize(16, 12, 28));
+    const leftX = margin;
+    const rightX = margin + leftWidth + gap;
+    const sectionStartY = yPosition;
+
+    // ЛЕВАЯ ЧАСТЬ - Информация о квартире (поверх фонового изображения)
+    const infoEndY = drawRealEstateInfo(
+      pdf, 
+      apartment, 
+      projectCurrency, 
+      translations, 
+      leftX, 
+      sectionStartY, 
+      leftWidth, 
+      scale, 
+      scaledFontSize
+    );
+
+    // ПРАВАЯ ЧАСТЬ - Фотографии квартиры
+    let rightY = sectionStartY;
+    const remainingPhotos = apartmentPhotos.slice(0, 3); // Максимум 3 фотографии справа
+
+    for (const photo of remainingPhotos) {
+      try {
+        if (rightY > pageHeight - scale(60)) break; // Проверяем место на странице
+
+        const base64Image = await loadImageAsBase64(photo.image_url);
+        
+        const tempImg = new Image();
+        await new Promise((resolve, reject) => {
+          tempImg.onload = resolve;
+          tempImg.onerror = reject;
+          tempImg.src = base64Image;
+        });
+
+        // Фотографии справа квадратного формата с белой рамкой
+        const photoSize = Math.min(rightWidth, scale(45));
+        const dimensions = getImageDimensions(tempImg.width, tempImg.height, photoSize, photoSize);
+        
+        // Белая рамка для фотографий
+        pdf.setFillColor(255, 255, 255);
+        pdf.setDrawColor(220, 220, 220);
+        pdf.setLineWidth(1);
+        const frameX = rightX + (rightWidth - dimensions.width) / 2 - scale(1);
+        const frameY = rightY - scale(1);
+        pdf.roundedRect(frameX, frameY, dimensions.width + scale(2), dimensions.height + scale(2), scale(1), scale(1), 'FD');
+        
+        // Центрируем по ширине правой колонки
+        const photoX = rightX + (rightWidth - dimensions.width) / 2;
+        
+        pdf.addImage(base64Image, 'JPEG', photoX, rightY, dimensions.width, dimensions.height);
+        
+        rightY += dimensions.height + scale(8);
+      } catch (error) {
+        console.error(`Failed to load apartment photo ${photo.id}:`, error);
+        rightY += scale(5);
+      }
+    }
+
+    // Устанавливаем yPosition для следующего контента
+    yPosition = Math.max(infoEndY, rightY) + scale(15);
+
+    // === ДОПОЛНИТЕЛЬНЫЕ ФОТОГРАФИИ (если есть) ===
+    const remainingLayoutPhotos = layoutPhotos.slice(1);
+    const remainingApartmentPhotos = apartmentPhotos.slice(3);
+    
+    if (remainingLayoutPhotos.length > 0 || remainingApartmentPhotos.length > 0) {
+      // Проверяем место на странице
+      if (yPosition > pageHeight - scale(100)) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Заголовок для дополнительных фотографий
+      pdf.setFontSize(scaledFontSize(16, 12, 24));
       pdf.setFont('helvetica', 'bold');
-      pdf.text(translations.photos, margin, yPosition);
-      yPosition += scale(8);
-      
-      // Разделяем фото по типам
-      const layoutPhotos = photos.filter(p => p.type === 'layout');
-      const apartmentPhotos = photos.filter(p => p.type === 'apartment');
-      
-      // Планировки (приоритет, больший размер)
-      if (layoutPhotos.length > 0) {
-        yPosition = await addCompactPhotoSection(pdf, layoutPhotos, translations.layout, margin, yPosition, contentWidth, pageHeight, scale, scaledFontSize, 'large');
+      pdf.setTextColor(37, 99, 235);
+      pdf.text(translations.photos || 'Additional Photos', margin, yPosition);
+      yPosition += scale(15);
+
+      // Добавляем оставшиеся фотографии планировки
+      for (const photo of remainingLayoutPhotos) {
+        yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations, scale, scaledFontSize);
       }
-      
-      // Фото квартиры (сетка 2x2 или 3x2)
-      if (apartmentPhotos.length > 0) {
-        yPosition = await addCompactPhotoSection(pdf, apartmentPhotos, translations.apartmentPhoto, margin, yPosition, contentWidth, pageHeight, scale, scaledFontSize, 'grid');
+
+      // Добавляем оставшиеся фотографии квартиры
+      for (const photo of remainingApartmentPhotos) {
+        yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations, scale, scaledFontSize);
       }
     }
 
-    // === МИНИМАЛИСТИЧНЫЙ ФУТЕР ===
-    const footerY = pageHeight - scale(8);
-    setColor(pdf, COLORS.muted, 'text');
-    pdf.setFontSize(scaledFontSize(7, 6, 12));
-    pdf.setFont('helvetica', 'normal');
-    
+    // === FOOTER ===
     const currentDate = new Date().toLocaleDateString();
-    pdf.text(`${translations.generatedOn}: ${currentDate}`, margin, footerY);
-    pdf.text('Gridix Live', pageWidth - margin - pdf.getTextWidth('Gridix Live'), footerY);
+    pdf.setFontSize(scaledFontSize(8, 7, 14));
+    pdf.setTextColor(148, 163, 184);
 
-    // Объединение с основным PDF или сохранение
+    pdf.setFillColor(248, 250, 252);
+    pdf.rect(0, pageHeight - scale(15), pageWidth, scale(15), 'F');
+
+    pdf.text(
+      `${translations.generatedOn}: ${currentDate}`,
+      margin,
+      pageHeight - scale(5)
+    );
+
+    pdf.setTextColor(100, 116, 139);
+    pdf.text(
+      'Gridix Live',
+      pageWidth - margin - pdf.getTextWidth('Gridix Live'),
+      pageHeight - scale(5)
+    );
+
+    // === СОХРАНЕНИЕ PDF ===
     if (pdf_main) {
       try {
         const generatedPdfBytes = pdf.output('arraybuffer');
         const mergedPdfDoc = await PDFDocument.create();
         const generatedPdfDoc = await PDFDocument.load(generatedPdfBytes);
-        
-        // Сначала страницы с деталями квартиры
-        const generatedPages = await mergedPdfDoc.copyPages(generatedPdfDoc, generatedPdfDoc.getPageIndices());
-        generatedPages.forEach(page => mergedPdfDoc.addPage(page));
-        
-        // Затем основной PDF
-        const mainPages = await mergedPdfDoc.copyPages(mainPdfDoc!, mainPdfDoc!.getPageIndices());
-        mainPages.forEach(page => mergedPdfDoc.addPage(page));
-        
+
+        const generatedPages = await mergedPdfDoc.copyPages(
+          generatedPdfDoc,
+          generatedPdfDoc.getPageIndices()
+        );
+        generatedPages.forEach((page) => mergedPdfDoc.addPage(page));
+
+        const mainPages = await mergedPdfDoc.copyPages(
+          mainPdfDoc,
+          mainPdfDoc.getPageIndices()
+        );
+        mainPages.forEach((page) => mergedPdfDoc.addPage(page));
+
         const mergedPdfBytes = await mergedPdfDoc.save();
         const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
-        
+
         const blob = new Blob([new Uint8Array(mergedPdfBytes)], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -379,13 +466,15 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
       } catch (mergeError) {
         console.error('Error merging PDFs:', mergeError);
-        pdf.save(`apartment_${apartment.apartment_number}_details.pdf`);
+        const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
+        pdf.save(fileName);
       }
     } else {
-      pdf.save(`apartment_${apartment.apartment_number}_details.pdf`);
+      const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
+      pdf.save(fileName);
     }
 
   } catch (error) {
@@ -394,103 +483,81 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
   }
 };
 
-// Функция для добавления компактной секции фотографий
-const addCompactPhotoSection = async (
+// Вспомогательная функция для добавления фото в PDF (оставлена без изменений)
+const addPhotoToPDF = async (
   pdf: jsPDF,
-  photos: Array<{id: string, image_url: string, description?: string, type: 'layout' | 'apartment'}>,
-  sectionTitle: string,
+  photo: {
+    id: string;
+    image_url: string;
+    description?: string;
+    type: 'layout' | 'apartment';
+  },
   margin: number,
   yPosition: number,
   contentWidth: number,
   pageHeight: number,
+  translations: {
+    apartmentPhoto: string;
+    [key: string]: string;
+  },
   scale: (n: number) => number,
-  scaledFontSize: (n: number, min?: number, max?: number) => number,
-  layout: 'large' | 'grid'
+  scaledFontSize: (n: number, min?: number, max?: number) => number
 ): Promise<number> => {
-  
-  // Подзаголовок
-  setColor(pdf, COLORS.secondary, 'text');
-  pdf.setFontSize(scaledFontSize(12, 9, 20));
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(sectionTitle, margin, yPosition);
-  yPosition += scale(6);
-  
-  if (layout === 'large') {
-    // Большие изображения для планировок (по одному в ряд)
-    for (let i = 0; i < Math.min(photos.length, 2); i++) {
-      const photo = photos[i];
-      
-      if (yPosition > pageHeight - scale(80)) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-      
-      try {
-        const base64Image = await loadImageAsBase64(photo.image_url);
-        const tempImg = new Image();
-        await new Promise((resolve, reject) => {
-          tempImg.onload = resolve;
-          tempImg.onerror = reject;
-          tempImg.src = base64Image;
-        });
-        
-        const maxImageHeight = scale(60);
-        const dimensions = getImageDimensions(tempImg.width, tempImg.height, contentWidth - scale(4), maxImageHeight);
-        
-        const imageX = margin + (contentWidth - dimensions.width) / 2;
-        
-        // Карточка для изображения
-        drawModernCard(pdf, margin, yPosition, contentWidth, dimensions.height + scale(6), scale, true);
-        
-        pdf.addImage(base64Image, 'JPEG', imageX, yPosition + scale(3), dimensions.width, dimensions.height);
-        
-        yPosition += dimensions.height + scale(10);
-        
-      } catch (error) {
-        console.error(`Failed to load image ${photo.image_url}:`, error);
-        yPosition += scale(8);
-      }
-    }
-    
-  } else {
-    // Сетка для фотографий квартиры (2-3 в ряд)
-    const photosPerRow = 3;
-    const imageSize = (contentWidth - scale(2) * (photosPerRow - 1)) / photosPerRow;
-    const rows = Math.ceil(Math.min(photos.length, 6) / photosPerRow);
-    
-    if (yPosition > pageHeight - scale(40) * rows) {
+  try {
+    if (yPosition > pageHeight - scale(120)) {
       pdf.addPage();
       yPosition = margin;
     }
-    
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < photosPerRow; col++) {
-        const photoIndex = row * photosPerRow + col;
-        if (photoIndex >= photos.length) break;
-        
-        const photo = photos[photoIndex];
-        const x = margin + col * (imageSize + scale(2));
-        const y = yPosition + row * (scale(35));
-        
-        try {
-          const base64Image = await loadImageAsBase64(photo.image_url);
-          
-          // Квадратная карточка
-          drawModernCard(pdf, x, y, imageSize, scale(32), scale);
-          pdf.addImage(base64Image, 'JPEG', x + scale(1), y + scale(1), imageSize - scale(2), scale(30));
-          
-        } catch (error) {
-          // Карточка ошибки
-          drawModernCard(pdf, x, y, imageSize, scale(32), scale);
-          setColor(pdf, COLORS.muted, 'text');
-          pdf.setFontSize(scaledFontSize(8, 6, 14));
-          pdf.text('Изображение\nне загружено', x + scale(2), y + scale(16));
-        }
-      }
+
+    const base64Image = await loadImageAsBase64(photo.image_url);
+
+    const tempImg = new Image();
+    await new Promise((resolve, reject) => {
+      tempImg.onload = resolve;
+      tempImg.onerror = reject;
+      tempImg.src = base64Image;
+    });
+
+    const dimensions = getImageDimensions(tempImg.width, tempImg.height, contentWidth - scale(10), scale(120));
+
+    const cardHeight = dimensions.height + scale(20);
+    drawCard(pdf, margin, yPosition, contentWidth, cardHeight, scale);
+
+    const imageX = margin + (contentWidth - dimensions.width) / 2;
+    const imageY = yPosition + scale(5);
+
+    pdf.addImage(
+      base64Image,
+      'JPEG',
+      imageX,
+      imageY,
+      dimensions.width,
+      dimensions.height
+    );
+
+    if (photo.description) {
+      pdf.setFontSize(scaledFontSize(10, 8, 18));
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(100, 116, 139);
+      const descY = imageY + dimensions.height + scale(8);
+
+      const descWidth = pdf.getTextWidth(photo.description);
+      const descX = margin + (contentWidth - descWidth) / 2;
+      pdf.text(photo.description, descX, descY);
     }
-    
-    yPosition += rows * scale(35) + scale(5);
+
+    return yPosition + cardHeight + scale(10);
+
+  } catch (error) {
+    console.error(`Failed to load image ${photo.image_url}:`, error);
+
+    drawCard(pdf, margin, yPosition, contentWidth, scale(30), scale);
+
+    pdf.setFontSize(scaledFontSize(12, 9, 18));
+    pdf.setTextColor(220, 38, 38);
+    pdf.text(`[${translations.apartmentPhoto} не удалось загрузить]`, margin + scale(10), yPosition + scale(15));
+
+    pdf.setTextColor(0, 0, 0);
+    return yPosition + scale(40);
   }
-  
-  return yPosition;
 };
