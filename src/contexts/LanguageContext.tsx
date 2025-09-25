@@ -244,6 +244,7 @@ const translations: Translations = {
   'excel.mapper.validation.status.title': { ru: 'Настройка статусов квартир', en: 'Configure apartment statuses', ka: 'ბინების სტატუსების კონფიგურაცია', ar: 'تكوين حالات الشقق' },
   'excel.mapper.validation.rooms.title': { ru: 'Настройка количества комнат', en: 'Configure number of rooms', ka: 'ოთახებების რაოდენობის კონფიგურაცია', ar: 'تكوين عدد الغرف' },
   'excel.mapper.actions.createProject': { ru: 'Создать проект с данными', en: 'Create project with data', ka: 'პროექტის შექმნა მონაცემებით', ar: 'إنشاء مشروع بالبيانات' },
+  'common.view': { ru: 'Посмотреть', en: 'View', ka: 'ნახვა', ar: 'عرض' },
 
   // Rooms labels
   'rooms.studio': { ru: 'Студия (0)', en: 'Studio (0)', ka: 'სტუდიო (0)', ar: 'استوديو (0)' },

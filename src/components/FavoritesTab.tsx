@@ -150,7 +150,7 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
                 }}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                {t('common.view') || 'Посмотреть'}
+                {t('common.view')}
               </Button>
             </CardContent>
           </Card>
