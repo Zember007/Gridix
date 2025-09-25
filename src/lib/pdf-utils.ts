@@ -319,16 +319,15 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       }
     }
 
-    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ СЛЕВА, ФОТОГРАФИИ СПРАВА ===
-    const leftWidth = contentWidth * 0.55; // 55% для информации
-    const rightWidth = contentWidth * 0.4;  // 40% для фотографий
-    const gap = contentWidth * 0.05; // 5% промежуток
-
+    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ ВО ВСЮ ШИРИНУ, ФОТОГРАФИИ СПРАВА ПОВЕРХ ===
+    const leftWidth = contentWidth; // Информация во всю ширину
+    const rightWidth = contentWidth * 0.35;  // Ширина для фотографий справа
+    
     const leftX = margin;
-    const rightX = margin + leftWidth + gap;
+    const rightX = margin + contentWidth - rightWidth; // Позиция справа
     const sectionStartY = yPosition;
 
-    // ЛЕВАЯ ЧАСТЬ - Информация о квартире
+    // ЛЕВАЯ ЧАСТЬ - Информация о квартире во всю ширину
     const infoEndY = drawRealEstateInfo(
       pdf, 
       apartment, 
@@ -341,7 +340,7 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       scaledFontSize
     );
 
-    // ПРАВАЯ ЧАСТЬ - Фотографии квартиры
+    // ПРАВАЯ ЧАСТЬ - Фотографии квартиры поверх информации
     let rightY = sectionStartY;
     const remainingPhotos = apartmentPhotos.slice(0, 3); // Максимум 3 фотографии справа
 
@@ -358,8 +357,8 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
           tempImg.src = base64Image;
         });
 
-        // Фотографии справа квадратного формата с белой рамкой
-        const photoSize = Math.min(rightWidth, scale(45));
+        // Фотографии справа квадратного формата с белой рамкой (увеличены в 1.5 раза)
+        const photoSize = Math.min(rightWidth, scale(67.5)); // scale(45) * 1.5 = scale(67.5)
         const dimensions = getImageDimensions(tempImg.width, tempImg.height, photoSize, photoSize);
         
         // Белая рамка для фотографий
@@ -375,10 +374,10 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
         
         pdf.addImage(base64Image, 'JPEG', photoX, rightY, dimensions.width, dimensions.height);
         
-        rightY += dimensions.height + scale(8);
+        rightY += dimensions.height + scale(12); // Увеличиваем отступ между фото пропорционально
       } catch (error) {
         console.error(`Failed to load apartment photo ${photo.id}:`, error);
-        rightY += scale(5);
+        rightY += scale(7.5); // Увеличиваем отступ при ошибке
       }
     }
 
