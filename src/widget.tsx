@@ -36,29 +36,39 @@ function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   el.style.boxSizing = 'border-box';
 }
 
-function ensureStyles(options: InitOptions) {
-  const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
-  if (existing) return;
-
-  // Prefer explicit cssUrl if provided
-  let cssHref = options.cssUrl || '';
-
-  if (!cssHref) {
-    // Try to derive from the script tag that loaded widget.js
-    const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
-    const widgetScript = scripts.reverse().find(s => s.src && /widget\.js(\?.*)?$/.test(s.src));
-    if (widgetScript && widgetScript.src) {
-      cssHref = widgetScript.src.replace(/widget\.js(\?.*)?$/, 'style.css$1');
+function ensureStyles(options: InitOptions): Promise<void> {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
+    if (existing) {
+      resolve();
+      return;
     }
-  }
 
-  if (!cssHref) return; // fail silently if we can't resolve
+    // Prefer explicit cssUrl if provided
+    let cssHref = options.cssUrl || '';
 
-  const link = document.createElement('link');
-  link.id = 'gridix-widget-style';
-  link.rel = 'stylesheet';
-  link.href = cssHref;
-  document.head.appendChild(link);
+    if (!cssHref) {
+      // Try to derive from the script tag that loaded widget.js
+      const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
+      const widgetScript = scripts.reverse().find(s => s.src && /widget\.js(\?.*)?$/.test(s.src));
+      if (widgetScript && widgetScript.src) {
+        cssHref = widgetScript.src.replace(/widget\.js(\?.*)?$/, 'style.css$1');
+      }
+    }
+
+    if (!cssHref) {
+      resolve(); // fail silently if we can't resolve
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.id = 'gridix-widget-style';
+    link.rel = 'stylesheet';
+    link.href = cssHref;
+    link.onload = () => resolve();
+    link.onerror = () => resolve(); // continue even if CSS fails to load
+    document.head.appendChild(link);
+  });
 }
 
 function WidgetApp(props: InitOptions) {
@@ -81,7 +91,7 @@ function WidgetApp(props: InitOptions) {
   );
 }
 
-function init(options: InitOptions = {}) {
+async function init(options: InitOptions = {}) {
   try {
     // Allow URL params to override or provide defaults if not passed explicitly
     const url = new URL(window.location.href);
@@ -92,14 +102,14 @@ function init(options: InitOptions = {}) {
       userId: options.userId ?? qp.get('userId') ?? undefined,
       lang: options.lang ?? qp.get('lang') ?? undefined,
       containerId: options.containerId ?? undefined,
-      theme: options.theme ?? (qp.get('theme') as any) ?? 'light',
+      theme: options.theme ?? (qp.get('theme') as 'light' | 'dark' | 'auto') ?? 'light',
       width: options.width ?? qp.get('width') ?? '100%',
       height: options.height ?? qp.get('height') ?? '600px',
       cssUrl: options.cssUrl ?? qp.get('cssUrl') ?? undefined,
     };
 
     // Ensure CSS is loaded before rendering
-    ensureStyles(opts);
+    await ensureStyles(opts);
 
     const container = ensureContainer(opts.containerId);
     applyContainerStyles(container, opts);
@@ -116,7 +126,7 @@ function init(options: InitOptions = {}) {
 }
 
 // Expose global API
-// @ts-ignore
+// @ts-expect-error - Adding to global window object
 window.GridixWidget = { init };
 
 export {};
