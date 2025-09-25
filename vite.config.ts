@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
     },
     ...(isWidgetBuild ? {
       build: {
+        outDir: 'dist-widget',
         cssCodeSplit: false,
         lib: {
           entry: path.resolve(__dirname, 'src/widget.tsx'),
@@ -47,6 +48,10 @@ export default defineConfig(({ mode }) => {
             inlineDynamicImports: true,
           }
         }
+      },
+      define: {
+        'process.env.NODE_ENV': '"production"',
+        'process.env': '{}'
       }
     } : {})
   });
