@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Home, Square, MapPin, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 interface FavoritesTabProps {
   projectId: string;
@@ -15,7 +15,15 @@ interface FavoritesTabProps {
 const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
   const { t, language } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
-  const navigate = useNavigate();
+  const [isWidgetContext, setIsWidgetContext] = useState(false);
+
+  useEffect(() => {
+    // Detect if we're in a widget/iframe context
+    const isInIframe = window.self !== window.top;
+    const hasWidgetParam = window.location.search.includes('widget') || 
+                          window.location.pathname.includes('/widget/');
+    setIsWidgetContext(isInIframe || hasWidgetParam);
+  }, []);
 
   // Фильтруем избранные только для текущего проекта
   const projectFavorites = favorites.filter(fav => fav.project_id === projectId);
@@ -39,11 +47,11 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
   };
 
   const handleViewApartment = (apartmentId: string) => {
-    const currentPath = window.location.pathname;
-    const langMatch = currentPath.match(/^\/([a-z]{2})\//);
-    const langPrefix = langMatch ? `/${langMatch[1]}` : '';
-    
-    navigate(`${langPrefix}/apartment/${projectId}/${apartmentId}`);
+    // Always open in new tab for now to avoid router issues in widget context
+    // This is the safest approach that works in both contexts
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}/${language}/project/${projectId}/apartment/${apartmentId}`;
+    window.open(url, '_blank');
   };
 
   const handleRemoveFromFavorites = (apartmentId: string, e: React.MouseEvent) => {

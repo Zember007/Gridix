@@ -70,7 +70,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const openApartmentDetails = (apartment: Apartment) => {
     // Используем slug если он есть, иначе ID с префиксом
     const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-    const url = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+    const url = `${process.env.VITE_SERVER_DOMAIN}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
     
     // Если мы уже находимся на странице проекта, открываем в той же вкладке
     window.open(url, '_blank');
