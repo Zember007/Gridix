@@ -181,13 +181,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Load polygons for floor plan view
   useEffect(() => {
     const loadPolygonsForFloor = async (floor: number) => {
-      if (!projectId) return;
+      if (!project?.id) return;
       
       try {
         const { data, error } = await supabase
           .from('apartments')
           .select('id, polygon')
-          .eq('project_id', projectId)
+          .eq('project_id', project.id)
           .eq('floor_number', floor);
 
         if (error) throw error;
@@ -463,8 +463,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     {/* Main floor plan area */}
                     <div className="flex-1 relative">
                       <ApartmentFloorPlan
-                        projectId={projectId}
-                        project={project}
+                        projectId={project.id}
                         apartments={filters.filteredApartments.filter(apt =>
                           selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
                         )}

@@ -8,11 +8,6 @@ import FloorPlanView from '@/components/visualization/FloorPlanView';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
-  project: {
-    id: string;
-    name: string;
-    building_image_url: string | null;
-  };
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
   selectedFloorNumber?: number;
@@ -25,7 +20,7 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ projectId, project, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({ projectId, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
