@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { Building2, SlidersHorizontal } from 'lucide-react';
+import {  SlidersHorizontal } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -269,8 +269,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   if (!project) {
     return (
-      <div className="min-h-full bg-white flex items-center justify-center">
-          <Loader size="lg" className="mx-auto mb-4" />
+      <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
+          <Loader size="lg" className="mx-auto" />
       </div>
     );
   }
