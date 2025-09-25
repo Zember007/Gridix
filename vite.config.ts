@@ -7,6 +7,8 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   const isWidgetBuild = process.env.WIDGET_BUILD === 'true';
 
+  console.log('isWidgetBuild', isWidgetBuild);
+
   return ({
     server: {
       host: "::",
