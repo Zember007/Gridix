@@ -32,6 +32,14 @@ export default defineConfig(({ mode }) => {
       },
     },
     ...(isWidgetBuild ? {
+      optimizeDeps: {
+        esbuildOptions: {
+          define: {
+            'process.env.NODE_ENV': '"production"',
+            'process.env': '{}'
+          }
+        }
+      },
       build: {
         outDir: 'dist-widget',
         cssCodeSplit: false,
