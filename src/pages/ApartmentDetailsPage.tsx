@@ -8,6 +8,7 @@ import CurrencyToggle from '@/components/common/CurrencyToggle';
 import { Language } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
@@ -397,11 +398,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('adminWidgets.loading')}</p>
-        </div>
+          <Loader size="lg" className="mx-auto mb-4" />
       </div>
     );
   }

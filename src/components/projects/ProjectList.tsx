@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Loader } from '@/components/ui/loader';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { useUserProjects, useProjectCRUD } from '@/hooks/useProjects';
@@ -88,10 +89,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Building2 
-          className="h-8 w-8 animate-pulse" 
-          style={{ color: ADMIN_THEME.primary }}
-        />
+        <Loader size="md" color={ADMIN_THEME.primary} />
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Loader } from '@/components/ui/loader';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3, Building } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useManagerProjects, Project } from '@/hooks/useManagerProjects';
@@ -43,7 +44,7 @@ const ManagerProjectList = ({ onCreateNew, onEditProject }: ManagerProjectListPr
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Building2 className="h-8 w-8 text-real-estate-600 animate-pulse" />
+        <Loader size="md" color={ADMIN_THEME.primary} />
       </div>
     );
   }

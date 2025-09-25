@@ -5,6 +5,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Building2, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ApartmentDetailsPanel from './ApartmentDetailsPanel';
@@ -270,8 +271,7 @@ const ProjectViewer = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-real-estate-50 via-white to-real-estate-100 flex items-center justify-center">
         <div className="text-center">
-          <Building2 className="h-12 w-12 text-real-estate-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-real-estate-600">Loading project...</p>
+          <Loader size="lg" color="#2563eb" className="mx-auto mb-4" />
         </div>
       </div>
     );

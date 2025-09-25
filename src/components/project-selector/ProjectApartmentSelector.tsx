@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Building2, SlidersHorizontal } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -269,10 +270,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   if (!project) {
     return (
       <div className="min-h-full bg-white flex items-center justify-center">
-        <div className="text-center">
-          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">{t('project.loading')}</p>
-        </div>
+          <Loader size="lg" className="mx-auto mb-4" />
       </div>
     );
   }
