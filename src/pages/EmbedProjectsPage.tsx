@@ -21,6 +21,7 @@ interface Project {
   longitude: number | null;
   currency: string | null;
   min_price: number | null;
+  slug?: string;
 }
 
 interface EmbedProjectsPageProps {
@@ -67,7 +68,7 @@ const EmbedProjectsPage = ({
   // Состояние для отображения
   const userNotFound = userExists === false;
 
-  const handleViewProject = (project: any) => {
+  const handleViewProject = (project: Project) => {
     const url = project.slug 
       ? `/embed/project/${project.slug}` 
       : `/embed/project/id/${project.id}`;
