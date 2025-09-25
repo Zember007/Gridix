@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { EmbedLanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
-import ProjectsGallery from '@/components/projects/ProjectsGallery';
+import EmbedProjectsPage from '@/pages/EmbedProjectsPage';
 import '@/index.css';
 
 type InitOptions = {
@@ -76,11 +76,7 @@ function WidgetApp(props: InitOptions) {
 
   const content = projectId
     ? <ProjectApartmentSelector projectId={projectId} />
-    : <ProjectsGallery embedMode={true} showHeader={true} onProjectSelect={(pid) => {
-        // Open project widget in new tab as fallback when clicking from gallery
-        const url = `${window.location.origin}/embed/project/${pid}`;
-        window.open(url, '_blank');
-      }} />;
+    : <EmbedProjectsPage UserId={userId} />;
 
   return (
     <EmbedLanguageProvider>
