@@ -33,9 +33,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [containerHeight, setContainerHeight] = useState(COLLAPSED_HEIGHT);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0});
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -44,21 +45,18 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
 
-  const updateHeight = useCallback(() => {
+  const getContainerHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
       const filtersHeight = filtersRef.current.offsetHeight;
       const margin = isMobile ? 10 : 20;
       const newHeight = window.innerHeight - filtersHeight - margin;
   
       const minHeight = isMobile ? 300 : 400;
-      const maxHeight = isMobile ? 800 : 1200; // 👈 верхний предел
+      const maxHeight = isMobile ? 800 : 1200;
   
-      setContainerHeight(
-        Math.min(Math.max(newHeight, minHeight), maxHeight)
-      );
+      return Math.min(Math.max(newHeight, minHeight), maxHeight);
     } else {
-      const collapsedHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
-      setContainerHeight(collapsedHeight);
+      return isMobile ? 200 : COLLAPSED_HEIGHT;
     }
   }, [isExpanded, filtersRef, isMobile]);
   
@@ -66,38 +64,36 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const updateImageDimensions = useCallback(() => {
     const imgEl = imgRef.current;
     const containerEl = containerRef.current;
-    if (!imgEl || !containerEl) return;
-    if (imgEl.naturalHeight === 0) return;
+    if (!imgEl || !containerEl || !imageLoaded || imageNaturalSize.width === 0) return;
   
-    // высота фильтров/отступы (если используешь)
-    const filtersHeight = filtersRef?.current ? filtersRef.current.offsetHeight : 0;
-    const margin = 20;
-  
-    // Используем containerHeight (который ты вычисляешь в updateHeight)
-    // Если его нет — падаем back на window.innerHeight - filters - margin
-    const baseHeight = typeof containerHeight === "number"
-      ? containerHeight
-      : Math.max(0, window.innerHeight - filtersHeight - margin);
-  
-    // Можно учесть паддинги контейнера, если нужно:
-    const containerPaddingTop = parseFloat(getComputedStyle(containerEl).paddingTop) || 0;
-    const containerPaddingBottom = parseFloat(getComputedStyle(containerEl).paddingBottom) || 0;
-    const availableHeight = Math.max(0, baseHeight - containerPaddingTop - containerPaddingBottom);
+    const containerHeight = getContainerHeight();
+    const containerWidth = containerEl.clientWidth;
+    const aspect = imageNaturalSize.width / imageNaturalSize.height;
     
-    // Считаем пропорции по натуральному соотношению
-    const aspect = imgEl.naturalWidth / imgEl.naturalHeight;
-    let width = Math.round(aspect * availableHeight);
-    let height = Math.round(availableHeight);
-  
-    // Ограничиваем ширину контейнером, чтобы не выходила боком
-    const containerWidth = containerEl.clientWidth || Infinity;
-    if (width > containerWidth) {
-      width = containerWidth;
-      height = Math.round(containerWidth / aspect);
+    if (isExpanded) {
+      // В развернутом режиме - object-contain поведение
+      let width = containerWidth;
+      let height = containerWidth / aspect;
+      
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspect;
+      }
+      
+      setImgDimensions({ width: Math.round(width), height: Math.round(height) });
+    } else {
+      // В свернутом режиме - object-cover поведение
+      let width = containerWidth;
+      let height = containerWidth / aspect;
+      
+      if (height < containerHeight) {
+        height = containerHeight;
+        width = height * aspect;
+      }
+      
+      setImgDimensions({ width: Math.round(width), height: Math.round(height) });
     }
-  
-    setImgDimensions({ width, height });
-  }, [imgRef, containerRef, filtersRef, containerHeight]);
+  }, [imgRef, containerRef, imageLoaded, imageNaturalSize, isExpanded, getContainerHeight]);
   
 
   const loadBuildingFloors = useCallback(async () => {
@@ -136,20 +132,18 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [loadBuildingFloors]);
 
   useEffect(() => {
-    
-    updateHeight()
     const handleResize = () => {
-      updateHeight();
       updateImageDimensions();
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateHeight, updateImageDimensions]);
+  }, [updateImageDimensions]);
 
   useEffect(() => {
-    
-    updateImageDimensions()
-  }, [containerHeight, updateImageDimensions]);
+    if (imageLoaded) {
+      updateImageDimensions();
+    }
+  }, [isExpanded, updateImageDimensions, imageLoaded]);
 
   // Handle escape key to close popup
   useEffect(() => {
@@ -280,20 +274,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     const containerRect = containerRef.current.getBoundingClientRect();
     
     // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
-    let svgLeft, svgTop, svgWidth, svgHeight;
+    if (!isExpanded || imgDimensions.width === 0) return;
     
-    if (isExpanded && imgDimensions.width > 0) {
-      svgWidth = imgDimensions.width;
-      svgHeight = imgDimensions.height;
-      svgLeft = (containerRect.width - svgWidth) / 2;
-      svgTop = (containerRect.height - svgHeight) / 2;
-    } else {
-      // В свернутом режиме используем размеры контейнера
-      svgWidth = containerRect.width;
-      svgHeight = containerRect.height;
-      svgLeft = 0;
-      svgTop = 0;
-    }
+    const svgWidth = imgDimensions.width;
+    const svgHeight = imgDimensions.height;
+    const svgLeft = (containerRect.width - svgWidth) / 2;
+    const svgTop = (containerRect.height - svgHeight) / 2;
     
     // Переводим проценты полигона в пиксели
     const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
@@ -357,25 +343,58 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
 
 
-  return (
-    <div
-      ref={containerRef}
-      className={`relative w-full mx-auto transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg'} ${isMobile ? 'touch-manipulation' : ''}`}
-      style={{
-        height: containerHeight,
-        width: '100%',
-        maxWidth: '100vw',
-        boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
-      }}
-    >
-      <img
-        ref={imgRef}
-        src={project.building_image_url}
-        alt={project.name}
-        className={`w-full h-full  transition-all duration-500 ${isExpanded ? 'object-contain' : 'object-cover'}`}
-        onLoad={updateImageDimensions}
-        draggable={false}
-      />
+    const containerHeight = getContainerHeight();
+
+    return (
+      <div
+        ref={containerRef}
+        className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+        style={{
+          height: containerHeight,
+          width: isExpanded ? '100vw' : '100%',
+          maxWidth: isExpanded ? '100vw' : undefined,
+          boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
+        }}
+      >
+      {/* Показываем изображение только после загрузки для предотвращения скачков */}
+      {imageLoaded ? (
+        <img
+          ref={imgRef}
+          src={project.building_image_url}
+          alt={project.name}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500"
+          style={{
+            width: imgDimensions.width || 'auto',
+            height: imgDimensions.height || 'auto',
+          }}
+          draggable={false}
+        />
+      ) : (
+        <>
+          {/* Скрытое изображение для загрузки */}
+          <img
+            ref={imgRef}
+            src={project.building_image_url}
+            alt={project.name}
+            className="invisible absolute"
+            onLoad={(e) => {
+              const img = e.target as HTMLImageElement;
+              setImageNaturalSize({
+                width: img.naturalWidth,
+                height: img.naturalHeight
+              });
+              setImageLoaded(true);
+              // Принудительно вызываем пересчет размеров после загрузки
+              setTimeout(() => updateImageDimensions(), 0);
+            }}
+            draggable={false}
+          />
+          {/* Индикатор загрузки */}
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
+          </div>
+        </>
+      )}
       
       {/* SVG полигоны - точно поверх отображаемого изображения */}
       {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
@@ -454,7 +473,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full md:flex hidden items-center justify-center z-10 transition-all ${
             isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
           }`}
-          onClick={() => {setIsExpanded(true)}}
+          onClick={() => setIsExpanded(true)}
           style={{ touchAction: 'manipulation' }}
         >
           <Maximize2 className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-7 w-7'}`} />
