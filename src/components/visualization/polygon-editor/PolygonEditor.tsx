@@ -94,14 +94,14 @@ const PolygonEditor = ({
       setShapes([completedShape]);
       setCurrentShape(completedShape);
       addToHistory([completedShape]);
-      toast.success('Полигон завершен и готов к сохранению');
+      onSave(completedShape.points);
       return;
     }
 
     // Если полигон уже завершен, сохраняем его
     // Приоритет: currentShape > shapes с isSelected
     let pointsToSave: Point[] = [];
-    
+
     if (currentShape && currentShape.isSelected) {
       pointsToSave = currentShape.points;
     } else {

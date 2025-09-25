@@ -34,36 +34,24 @@ const AdminWidgets = () => {
   const { projects, loading, error } = useUserProjects(user?.id);
 
   const generateEmbedCode = () => {
-    const baseUrl = window.location.origin;
-    let embedUrl = '';
+    const origin = window.location.origin;
+    const scriptUrl = `${origin}/widget.js`;
 
-    if (selectedProject === 'all') {
-      embedUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
-    } else {
-      embedUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
-    }
+    const params: Record<string, string> = { lang: defaultLanguage } as Record<string, string>;
+    if (selectedProject !== 'all') params.projectId = selectedProject;
+    if (selectedProject === 'all' && user?.id) params.userId = user.id;
 
-    return `<iframe 
-  id="gridix-widget"
-  src="${embedUrl}" 
-  width="100%" 
-  height="100%"
-  style="height: 100vh; width: 100%;"
-  frameborder="0"
-  allowfullscreen>
-</iframe>
+    const attrs = Object.entries(params)
+      .map(([k, v]) => `${k}: "${v}"`)
+      .join(', ');
 
+    return `<div id="gridix-widget-root"></div>
+<script src="${scriptUrl}"></script>
 <script>
-    const iframe = document.getElementById("gridix-widget");
-
-    window.addEventListener("message", (event) => {
-        
-        if (event.data.type === "IFRAME_HEIGHT") {
-            iframe.style.height = event.data.height + "px";
-        }
-    });
-</script>
-`;
+  document.addEventListener('DOMContentLoaded', function() {
+    window.GridixWidget && window.GridixWidget.init({ ${attrs} });
+  });
+</script>`;
   };
 
   const copyEmbedCode = () => {
@@ -74,13 +62,11 @@ const AdminWidgets = () => {
   const openPreview = () => {
     const baseUrl = window.location.origin;
     let previewUrl = '';
-
     if (selectedProject === 'all') {
       previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
       previewUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
     }
-
     window.open(previewUrl, '_blank');
   };
 
@@ -216,23 +202,23 @@ const AdminWidgets = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('adminWidgets.allProjects')}</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                value={`${window.location.origin}/embed/projects/${user?.id}`}
-                readOnly
-                className="bg-gray-50"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`${window.location.origin}/embed/projects/${user?.id}`, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
+            <div className="space-y-2">
+              <Label>{t('adminWidgets.allProjects')}</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={`${window.location.origin}/embed/projects/${user?.id}`}
+                  readOnly
+                  className="bg-gray-50"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`${window.location.origin}/embed/projects/${user?.id}`, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
 
           {selectedProject !== 'all' && (
             <div className="space-y-2">

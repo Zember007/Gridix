@@ -4,26 +4,48 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-    proxy: {
-      '/api/widget': {
-        target: 'http://localhost:54321/functions/v1/widget-api',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/widget/, '')
+export default defineConfig(({ mode }) => {
+  const isWidgetBuild = process.env.WIDGET_BUILD === 'true';
+
+  return ({
+    server: {
+      host: "::",
+      port: 8080,
+      proxy: {
+        '/api/widget': {
+          target: 'http://localhost:54321/functions/v1/widget-api',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/widget/, '')
+        }
       }
-    }
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
     },
-  },
-}));
+    plugins: [
+      react(),
+      mode === 'development' &&
+      componentTagger(),
+    ].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    ...(isWidgetBuild ? {
+      build: {
+        cssCodeSplit: false,
+        lib: {
+          entry: path.resolve(__dirname, 'src/widget.tsx'),
+          name: 'GridixWidget',
+          formats: ['iife'],
+          fileName: () => 'widget.js',
+        },
+        rollupOptions: {
+          // Ensure no externalization to bundle everything into a single file
+          external: [],
+          output: {
+            inlineDynamicImports: true,
+          }
+        }
+      }
+    } : {})
+  });
+});
