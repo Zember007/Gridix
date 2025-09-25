@@ -39,7 +39,6 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
 
   // State
   const [apartments, setApartments] = useState<Apartment[]>([]);
-  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites'>('facade');
   const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
@@ -47,6 +46,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
   const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
+  const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
+  const [buildingImageNaturalSize, setBuildingImageNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
@@ -103,6 +104,29 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
   }, [project?.id, loadApartments]);
 
+  // Preload building facade image in parent
+  useEffect(() => {
+    setBuildingImageLoaded(false);
+    setBuildingImageNaturalSize({ width: 0, height: 0 });
+    const imageUrl = project?.building_image_url;
+    if (!imageUrl) return;
+
+    const img = new Image();
+    img.onload = () => {
+      setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+      setBuildingImageLoaded(true);
+    };
+    img.onerror = () => {
+      // In case of error, still allow UI to proceed to avoid blocking
+      setBuildingImageLoaded(true);
+    };
+    img.src = imageUrl;
+
+    return () => {
+      // No special cleanup required
+    };
+  }, [project?.building_image_url]);
+
   // Set default floor when apartments load
   useEffect(() => {
     if (apartments.length > 0 && selectedFloorForPlan === null) {
@@ -116,6 +140,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Preload layout photos
   useEffect(() => {
     const preloadLayoutPhotos = async () => {
+      
+      
       if (!project?.id || apartments.length === 0) return;
       
       const uniqueLayouts = new Set<string>(
@@ -150,9 +176,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     preloadLayoutPhotos();
   }, [project?.id, apartments]);
 
-  useEffect(() => {
-    setSelectedApartment(null);
-  }, [viewMode]);
+
 
   // Load polygons for floor plan view
   useEffect(() => {
@@ -267,7 +291,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }));
   }, [filters]);
 
-  if (!project) {
+  if (!project || !apartmentsLoaded || !Object.keys(preloadedLayoutPhotosByRooms).length || (viewMode === 'facade' && !buildingImageLoaded)) {
     return (
       <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
           <Loader size="lg" className="mx-auto" />
@@ -407,6 +431,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     }}
                     onApartmentSelect={openApartmentDetails}
                     filtersRef={filtersRef}
+                    externalImageLoaded={buildingImageLoaded}
+                    externalImageNaturalSize={buildingImageNaturalSize}
                   />
 
                   {/* Layout gallery below facade when not expanded */}

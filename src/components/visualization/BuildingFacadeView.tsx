@@ -17,6 +17,8 @@ interface BuildingFacadeViewProps {
   onFloorSelect?: (floor: number) => void;
   onApartmentSelect: (apartment: Apartment) => void;
   filtersRef?: React.RefObject<HTMLDivElement>;
+  externalImageLoaded?: boolean;
+  externalImageNaturalSize?: { width: number; height: number };
 }
 
 interface BuildingFloor {
@@ -28,7 +30,7 @@ interface BuildingFloor {
 
 const COLLAPSED_HEIGHT = 288;
 
-const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef }: BuildingFacadeViewProps) => {
+const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef, externalImageLoaded, externalImageNaturalSize }: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,6 +146,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       updateImageDimensions();
     }
   }, [isExpanded, updateImageDimensions, imageLoaded]);
+
+  // Sync image loading state with parent when provided
+  useEffect(() => {
+    if (externalImageLoaded && externalImageNaturalSize && externalImageNaturalSize.width > 0) {
+      setImageNaturalSize(externalImageNaturalSize);
+      setImageLoaded(true);
+    }
+  }, [externalImageLoaded, externalImageNaturalSize]);
 
   // Handle escape key to close popup
   useEffect(() => {
@@ -327,10 +337,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   // Находим границы всех полигонов для масштабирования
 
+  const containerHeight = getContainerHeight();
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div
+      style={{
+        height: containerHeight,
+      }}
+      className="w-full h-full flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
       </div>
     );
@@ -343,7 +358,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
 
 
-    const containerHeight = getContainerHeight();
 
     return (
       <div
@@ -371,28 +385,27 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         />
       ) : (
         <>
-          {/* Скрытое изображение для загрузки */}
-          <img
-            ref={imgRef}
-            src={project.building_image_url}
-            alt={project.name}
-            className="invisible absolute"
-            onLoad={(e) => {
-              const img = e.target as HTMLImageElement;
-              setImageNaturalSize({
-                width: img.naturalWidth,
-                height: img.naturalHeight
-              });
-              setImageLoaded(true);
-              // Принудительно вызываем пересчет размеров после загрузки
-              setTimeout(() => updateImageDimensions(), 0);
-            }}
-            draggable={false}
-          />
-          {/* Индикатор загрузки */}
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
-          </div>
+          {/* Если родитель не предоставил состояние загрузки, используем локальную подгрузку */}
+          {!externalImageLoaded ? (
+            <>
+              <img
+                ref={imgRef}
+                src={project.building_image_url}
+                alt={project.name}
+                className="invisible absolute"
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                  setImageLoaded(true);
+                  setTimeout(() => updateImageDimensions(), 0);
+                }}
+                draggable={false}
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
+              </div>
+            </>
+          ) : null}
         </>
       )}
       
