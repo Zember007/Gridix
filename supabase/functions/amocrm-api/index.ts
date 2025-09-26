@@ -1,13 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-function getAllowedCorsHeaders(origin: string | null) {
-  const siteUrl = Deno.env.get('SITE_URL') || ''
+function getAllowedCorsHeaders(_origin: string | null) {
   const headers: Record<string, string> = {
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  }
-  if (!origin || (siteUrl && origin === siteUrl)) {
-    headers['Access-Control-Allow-Origin'] = origin || siteUrl || '*'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400'
   }
   return headers
 }
@@ -65,13 +64,11 @@ serve(async (req) => {
   const origin = req.headers.get('Origin')
   const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { status: 204, headers: corsHeaders })
   }
 
   try {
-    if (origin && (!corsHeaders['Access-Control-Allow-Origin'] || corsHeaders['Access-Control-Allow-Origin'] === '*')) {
-      return new Response(JSON.stringify({ error: 'origin_not_allowed' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
+    // No CORS origin checks — fully permissive
 
     if (req.method !== 'POST') {
       return new Response(

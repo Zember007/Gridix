@@ -544,6 +544,12 @@ const translations: Translations = {
     ka: 'დეტალები',
     ar: 'المزيد من التفاصيل'
   },
+  'common.menu': {
+    ru: 'Меню',
+    en: 'Menu',
+    ka: 'მენიუ',
+    ar: 'القائمة'
+  },
   'common.priceOnRequest': {
     ru: 'По запросу',
     en: 'On request',
@@ -1208,6 +1214,12 @@ const translations: Translations = {
   },
 
   // Project Editor - Installment Settings
+  'projectEditor.title': {
+    ru: 'Редактор Проекта',
+    en: 'Project Editor',
+    ka: 'პროექტის რედაქტორი',
+    ar: 'محرر المشروع'
+  },
   'projectEditor.installmentSettings': {
     ru: 'Настройки рассрочки',
     en: 'Installment Settings',

@@ -68,13 +68,13 @@ serve(async (req) => {
     const referer = url.searchParams.get('referer') // важный параметр для определения субдомена
     const error = url.searchParams.get('error')
 
-    console.log('AmoCRM callback received:', { 
-      hasCode: !!code, 
-      codeLength: code?.length, 
+    console.log('AmoCRM callback received:', {
+      hasCode: !!code,
+      codeLength: code?.length,
       hasState: !!signedState,
-      referer, 
+      referer,
       error,
-      fullUrl: req.url 
+      fullUrl: req.url
     })
 
     if (error) {
@@ -129,18 +129,18 @@ serve(async (req) => {
       .eq('project_id', state)
       .single()
 
-    console.log('Existing settings check:', { 
-      found: !!existingSettings, 
+    console.log('Existing settings check:', {
+      found: !!existingSettings,
       hasAuthCode: !!existingSettings?.authorization_code,
       hasAccessToken: !!existingSettings?.access_token,
       codeMatch: existingSettings?.authorization_code === code,
-      checkError: checkError?.message 
+      checkError: checkError?.message
     })
 
     // Если этот же код авторизации уже был использован, значит это повторный вызов
     if (existingSettings && existingSettings.authorization_code === code) {
       console.log('Same authorization code already processed for project:', state)
-      
+
       // Если уже есть access_token, значит авторизация завершена успешно
       if (existingSettings.access_token) {
         return new Response(`<script>
@@ -150,8 +150,9 @@ window.parent.postMessage({
   timestamp: Date.now()
 }, '*');
 window.close();
-</script>`, { 
-          headers: { 'Content-Type': 'text/html; charset=utf-8' } 
+</script>`, {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
         })
       } else {
         return new Response(JSON.stringify({ error: 'authorization_code_already_used' }), {
@@ -175,7 +176,7 @@ window.close();
     // Определяем субдомен из referer или используем стандартный API endpoint
     let tokenUrl = 'https://www.amocrm.ru/oauth2/access_token'
     let subdomain = 'www'
-    
+
     if (referer && referer.includes('.amocrm.ru')) {
       subdomain = referer.replace('.amocrm.ru', '')
       tokenUrl = `https://${referer}/oauth2/access_token`
@@ -237,7 +238,7 @@ window.close();
     try {
       const accountUrl = `https://${subdomain}.amocrm.ru/api/v4/leads/pipelines`
       console.log('Fetching account data from:', accountUrl)
-      
+
       const accountResponse = await fetch(accountUrl, {
         headers: {
           'Authorization': `Bearer ${tokenResult.access_token}`,
@@ -247,12 +248,12 @@ window.close();
 
       if (accountResponse.ok) {
         accountData = await accountResponse.json() as AmoCRMAccountData
-        
+
         // Находим первую активную воронку или главную воронку
         const pipelines = accountData?._embedded?.pipelines || []
         const mainPipeline = pipelines.find((p: AmoCRMPipeline) => p.is_main && !p.is_archive)
         const firstActivePipeline = pipelines.find((p: AmoCRMPipeline) => !p.is_archive)
-        
+
         if (mainPipeline) {
           pipelineId = mainPipeline.id
           pipelineName = mainPipeline.name
@@ -304,8 +305,9 @@ window.parent.postMessage({
   timestamp: Date.now()
 }, '*');
 window.close();
-</script>`, { 
-      headers: { 'Content-Type': 'text/html; charset=utf-8' } 
+</script>`, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
     })
 
   } catch (error) {

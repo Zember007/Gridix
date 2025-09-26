@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import ManagerProjectList from '@/components/projects/ManagerProjectList';
@@ -78,142 +79,191 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       <div className="min-h-screen bg-background">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-2">
-                <Button variant="ghost" size="sm" onClick={onBack} className="self-start">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" onClick={onBack}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   {t('admin.back')}
                 </Button>
-                <div>
-                  <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
-                  <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                {/* User Info */}
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {userProfile?.email || user?.email || 'Unknown user'}
-                    </span>
-                  </div>
-                  {isManager && userRole.managerData && (
-                    <div className="flex flex-col gap-1">
-                      {userRole.managerData.map((data, index) => (
-                        <div key={data.id} className="flex items-center gap-2">
-                          <Shield className="h-3 w-3 text-blue-600" />
-                          <span className="text-xs text-blue-600">
-                            Менеджер: {data.developer_profile?.company_name}
+                
+                {/* Mobile Navigation Drawer */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <Menu className="h-4 w-4 mr-2" />
+                      {t('common.menu')}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80">
+                    <SheetHeader>
+                      <SheetTitle>{t('admin.dashboard')}</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <nav className="space-y-2">
+                        <button
+                          onClick={() => setActiveTab('projects')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'projects' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <Building2 className="h-4 w-4" />
+                          {t('admin.projects')}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('leads')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'leads' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <UserCheck className="h-4 w-4" />
+                          {t('admin.leads')}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('widgets')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'widgets' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <Code className="h-4 w-4" />
+                          {t('admin.widgets')}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('analytics')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'analytics' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          {t('admin.analytics')}
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('settings')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'settings' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <Settings className="h-4 w-4" />
+                          {t('admin.settings')}
+                        </button>
+                      </nav>
+                    </div>
+                    
+                    {/* User Info in Drawer */}
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="border-t pt-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground truncate">
+                            {userProfile?.email || user?.email || 'Unknown user'}
                           </span>
                         </div>
-                      ))}
+                        {isManager && userRole.managerData && (
+                          <div className="mb-3">
+                            {userRole.managerData.map((data) => (
+                              <div key={data.id} className="flex items-center gap-2">
+                                <Shield className="h-3 w-3 text-blue-600" />
+                                <span className="text-xs text-blue-600 truncate">
+                                  Менеджер: {data.developer_profile?.company_name}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleSignOut}
+                            className="flex-1"
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            {t('auth.signOut')}
+                          </Button>
+                          <LanguageToggle />
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                
-                {/* Sign Out Button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 self-end"
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                    borderColor: ADMIN_THEME.primary,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  {t('auth.signOut')}
-                </Button>
-                
-                <LanguageToggle />
+                  </SheetContent>
+                </Sheet>
+              </div>
+              
+              <div>
+                <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
+                <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 gap-1">
-              <TabsTrigger value="projects" className="flex items-center gap-1 text-xs">
-                <Building2 className="h-3 w-3" />
-                {t('admin.projects').substring(0, 8)}
-              </TabsTrigger>
-              <TabsTrigger value="leads" className="flex items-center gap-1 text-xs">
-                <UserCheck className="h-3 w-3" />
-                Лиды
-              </TabsTrigger>
-              <TabsTrigger value="widgets" className="flex items-center gap-1 text-xs">
-                <Code className="h-3 w-3" />
-                {t('admin.widgets').substring(0, 8)}
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs">
-                <BarChart3 className="h-3 w-3" />
-                {t('admin.analytics').substring(0, 8)}
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-1 text-xs">
-                <Settings className="h-3 w-3" />
-                {t('admin.settings').substring(0, 8)}
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="mt-6">
-              <TabsContent value="projects" className="space-y-6">
-                {isManager ? (
-                  <ManagerProjectList 
-                    onCreateNew={handleCreateNew}
-                    onEditProject={handleEditProject}
-                  />
-                ) : (
-                  <ProjectList 
-                    onCreateNew={handleCreateNew}
-                    onEditProject={handleEditProject}
-                    developerId={user?.id}
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value="leads" className="space-y-6">
-                <LeadsManager showProjectColumn={!isManager} />
-              </TabsContent>
-
-              <TabsContent value="widgets" className="space-y-6">
-                <AdminWidgets />
-              </TabsContent>
-
-              <TabsContent value="analytics" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('admin.analytics')}</CardTitle>
-                    <CardDescription>
-                      {t('admin.analyticsDescription')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="settings" className="space-y-6">
-                <AdminSettings 
-                  userProfile={user!} 
-                  loading={loading} 
-                  developerId={developerId}
-                  isManager={isManager}
-                  managerData={userRole.managerData}
+          {/* Show content based on activeTab without Tabs wrapper */}
+          
+          {activeTab === 'projects' && (
+            <div className="space-y-6">
+              {isManager ? (
+                <ManagerProjectList 
+                  onCreateNew={handleCreateNew}
+                  onEditProject={handleEditProject}
                 />
-              </TabsContent>
+              ) : (
+                <ProjectList 
+                  onCreateNew={handleCreateNew}
+                  onEditProject={handleEditProject}
+                  developerId={developerId}
+                />
+              )}
             </div>
-          </Tabs>
+          )}
+
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              <LeadsManager showProjectColumn={!isManager} />
+            </div>
+          )}
+
+          {activeTab === 'widgets' && (
+            <div className="space-y-6">
+              <AdminWidgets />
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('admin.analytics')}</CardTitle>
+                  <CardDescription>
+                    {t('admin.analyticsDescription')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <AdminSettings 
+                userProfile={user!} 
+                loading={loading} 
+                developerId={developerId}
+                isManager={isManager}
+                managerData={userRole.managerData}
+              />
+            </div>
+          )}
         </div>
 
         {/* Project Creation Modal */}
@@ -280,50 +330,63 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-
-            <div className="mt-6">
-              <TabsContent value="projects" className="space-y-6">
+          {/* Remove Tabs wrapper and show content based on activeTab */}
+          {activeTab === 'projects' && (
+            <div className="space-y-6">
+              {isManager ? (
+                <ManagerProjectList 
+                  onCreateNew={handleCreateNew}
+                  onEditProject={handleEditProject}
+                />
+              ) : (
                 <ProjectList 
                   onCreateNew={handleCreateNew}
                   onEditProject={handleEditProject}
                   developerId={developerId}
                 />
-              </TabsContent>
-
-              <TabsContent value="leads" className="space-y-6">
-                <LeadsManager showProjectColumn={!isManager} />
-              </TabsContent>
-
-              <TabsContent value="widgets" className="space-y-6">
-                <AdminWidgets />
-              </TabsContent>
-
-              <TabsContent value="analytics" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('admin.analytics')}</CardTitle>
-                    <CardDescription>
-                      {t('admin.analyticsDescription')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="settings" className="space-y-6">
-                <AdminSettings 
-                  userProfile={user!} 
-                  loading={loading} 
-                  developerId={developerId}
-                  isManager={isManager}
-                  managerData={userRole.managerData}
-                />
-              </TabsContent>
+              )}
             </div>
-          </Tabs>
+          )}
+
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              <LeadsManager showProjectColumn={!isManager} />
+            </div>
+          )}
+
+          {activeTab === 'widgets' && (
+            <div className="space-y-6">
+              <AdminWidgets />
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('admin.analytics')}</CardTitle>
+                  <CardDescription>
+                    {t('admin.analyticsDescription')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <AdminSettings 
+                userProfile={user!} 
+                loading={loading} 
+                developerId={developerId}
+                isManager={isManager}
+                managerData={userRole.managerData}
+              />
+            </div>
+          )}
         </div>
 
         {/* Project Creation Modal */}

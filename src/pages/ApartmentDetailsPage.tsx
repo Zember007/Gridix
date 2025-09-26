@@ -736,9 +736,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
             </div>
 
             {/* Main content grid */}
-            <div className="grid grid-cols-12 gap-8">
+            <div className="flex gap-8">
               {/* Left side - Gallery and details */}
-              <div className="col-span-8 space-y-4">
+              <div className="flex-1 space-y-4">
                 {/* Gallery */}
                 <div className="relative">
                   <div className="absolute top-4 left-4 z-10">
@@ -823,7 +823,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
               </div>
 
               {/* Right side - Price and actions */}
-              <div className="col-span-4">
+              <div className="w-[400px]">
                 <div className="sticky top-6">
                   <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] ">
                     {/* Currency selector */}
