@@ -4259,9 +4259,9 @@ const translations: Translations = {
     ar: 'نقل تلقائي للعملاء المحتملين وبيانات الشقق إلى AmoCRM و Bitrix24 و HubSpot وأنظمة CRM أخرى. لا توجد طلبات مفقودة — جميع العملاء في قمعك على الفور.'
   },
   'landing.interactivePlansTitle': {
-    ru: 'Интерактивные планы для застройщиков и риелторов',
-    en: 'Interactive plans for developers and realtors',
-    ka: 'ინტერაქტიული გეგმები დეველოპერებისა და რიელტორებისთვის',
+    ru: 'Интерактивные шахматки и планы для застройщиков и агентств недвижимости',
+    en: 'Interactive chessboard and plans for developers and real estate agencies',
+    ka: 'ინტერაქტიული შაქრმანი და გეგმები დეველოპერებისა და რიელტორებისთვის',
     ar: 'خطط تفاعلية للمطورين والوسطاء العقاريين'
   },
   'landing.interactivePlansDesc': {
