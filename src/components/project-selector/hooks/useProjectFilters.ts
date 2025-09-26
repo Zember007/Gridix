@@ -17,7 +17,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
-  const [areaRange, setAreaRange] = useState<number[]>([0, 200]);
+  const [areaRange, setAreaRange] = useState<number[]>([0, 1000]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
@@ -77,6 +77,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
   useEffect(() => {
     if (apartments.length > 0) {
       setPriceRange([minPrice, maxPrice]);
+      setAreaRange([minArea, maxArea]);
     }
   }, [selectedCurrency, project?.currency, minPrice, maxPrice, apartments.length]);
 
@@ -108,6 +109,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
       const price = apt.price || 0;
       const convertedPrice = convertPrice(price, project?.currency, selectedCurrency);
       const area = apt.area || 0;
+
       return convertedPrice >= priceRange[0] && convertedPrice <= priceRange[1] &&
         area >= areaRange[0] && area <= areaRange[1];
     });
