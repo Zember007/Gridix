@@ -13,31 +13,31 @@ interface ProjectWidgetPageProps {
 const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
   const { projectId, projectSlug } = useParams<{ projectId?: string; projectSlug?: string }>();
   const { t } = useLanguage();
-  
+
   // Определяем идентификатор проекта в зависимости от типа маршрута
   const projectIdentifier = useId ? projectId : (projectSlug || projectId);
 
 
   useEffect(() => {
     function sendHeight() {
-      const height =   document.body.scrollHeight
+      const height = document.body.scrollHeight
 
       console.log('Height:', height,
         document.documentElement.scrollHeight);
-  
+
       window.parent.postMessage(
         { type: "IFRAME_HEIGHT", height },
         "*" // лучше вместо "*" указать точный origin родителя
       );
     }
-  
+
     window.onload = sendHeight;
     window.onresize = sendHeight;
-  
+
     // На случай динамического контента
     new ResizeObserver(sendHeight).observe(document.body);
   }, []);
-  
+
 
   if (!projectIdentifier) {
     return (
@@ -52,18 +52,17 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const langParam = urlParams.get('lang');
- 
+
 
 
   return (
     <div className="min-h-full bg-background">
-     {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
-     null
-     :
-     <div className="flex justify-end p-4">
-        <LanguageToggle />
-      </div>}
-      <ProjectApartmentSelector projectId={projectIdentifier}  />
+      {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
+        null
+        : <LanguageToggle  
+          classNameButton="absolute top-4 right-4 z-50"
+        />}
+      <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
   );
 };

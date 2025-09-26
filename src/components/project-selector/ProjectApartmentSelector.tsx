@@ -315,7 +315,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
           {/* View mode buttons */}
           <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'} mb-4`}>
             <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
-            <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
+            <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 2xl:pr-0 pr-10`}>
               <ViewModeButtons
                 viewMode={viewMode}
                 setViewMode={setViewMode}

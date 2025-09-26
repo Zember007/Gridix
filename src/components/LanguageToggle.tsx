@@ -10,14 +10,14 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Language, LANGUAGE_CONFIG } from '@/lib/language-utils';
 
-export const LanguageToggle = () => {
+export const LanguageToggle = ({ classNameButton = '' }: { classNameButton?: string }) => {
   
   const { language, setLanguage } = useLanguage();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+        <Button variant="ghost" size="sm" className={`h-9 w-9 p-0 ${classNameButton}`}>
           <Globe className="h-4 w-4" />
           <span className="sr-only">Toggle language</span>
         </Button>

@@ -445,9 +445,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
           available: t('apartment.available'),
           reserved: t('apartment.reserved'),
           sold: t('apartment.sold'),
-              generatedOn: t('pdf.generatedOn'),
-              facilities: t('pdf.facilities'),
-              apartmentForSale: t('pdf.apartmentForSale')
+          generatedOn: t('pdf.generatedOn'),
+          facilities: t('pdf.facilities'),
+          apartmentForSale: t('pdf.apartmentForSale')
         }
       });
 
@@ -459,14 +459,14 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     }
   };
 
-  
+
   const loading = projectLoading || apartmentLoading || photosLoading;
 
   // Показываем загрузку, если данные еще загружаются
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-          <Loader size="lg" className="mx-auto mb-4" />
+        <Loader size="lg" className="mx-auto mb-4" />
       </div>
     );
   }
@@ -679,9 +679,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         <span className="font-medium text-gray-900">
                           {field.field_name === 'price'
                             ? formatPriceWithCurrency(
-                                convertPrice(value as number, project?.currency || null, selectedCurrency),
-                                selectedCurrency
-                              )
+                              convertPrice(value as number, project?.currency || null, selectedCurrency),
+                              selectedCurrency
+                            )
                             : formatFieldValue(value, field.field_type, field.field_name)}
                         </span>
                       </div>
@@ -769,35 +769,13 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                   <div className="h-0.5 w-[80%] bg-gray-300 rounded-full"></div>
                 </div>
 
-                {/* Apartment Details Section */}
-                <div className="space-y-6">
-                  <h2 className="text-3xl font-medium text-gray-900 font-poppins">Apartment details</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-gray-600 font-poppins">{t('apartment.number')}</span>
-                      <span className="font-medium text-gray-900 font-poppins">{apartment.apartment_number}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-gray-600 font-poppins">{t('apartment.floor')}</span>
-                      <span className="font-medium text-gray-900 font-poppins">{apartment.floor_number}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-gray-600 font-poppins">{t('apartment.area')}</span>
-                      <span className="font-medium text-gray-900 font-poppins">{apartment.area} м²</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-gray-600 font-poppins">{t('apartment.rooms')}</span>
-                      <span className="font-medium text-gray-900 font-poppins">
-                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+
 
                 {/* Additional Information Section */}
                 {getVisibleFields().length > 0 && (
                   <div className="space-y-6">
-                    <h2 className="text-3xl font-medium text-gray-900 font-poppins">Additional Information</h2>
+                    <h2 className="text-3xl font-medium text-gray-900 font-poppins">{t('apartment.details')}</h2>
+
                     <div className="space-y-4">
                       {getVisibleFields().map((field) => {
                         let value: unknown = null;
@@ -884,7 +862,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
                           </>
                         )}
-                          <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
+                        <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
                           {t('installment.low')}
                         </Badge>
                       </div>
@@ -917,7 +895,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                     {apartment.status === 'available' && (
                       <div className="space-y-3">
                         {/* Green installment button */}
-                      
+
 
                         {/* Main reserve button */}
                         <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
@@ -926,7 +904,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                               className="w-full text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 font-poppins"
                               style={getButtonStyle('available')}
                             >
-                               {t('common.reserve')}
+                              {t('common.reserve')}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-[500px]">
@@ -949,7 +927,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                             <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
                               <DialogTrigger asChild>
                                 <Button variant="outline" className="flex-1 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm">
-                                {t('installment.calculator')}
+                                  {t('installment.calculator')}
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[600px]">
@@ -957,7 +935,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                                   <DialogTitle>{t('installment.calculator')}</DialogTitle>
                                 </DialogHeader>
                                 <InstallmentCalculator
-                                  applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
+                                  applyInstallment={() => { setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true); }}
                                   apartmentPrice={apartment.price}
                                   currency={project.currency}
                                   minDownPaymentPercent={project.min_down_payment_percent || 20}
@@ -1019,7 +997,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       <div className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-medium text-gray-900 font-poppins">
-                          {t('apartment.apartment')} № {recApartment.apartment_number}
+                            {t('apartment.apartment')} № {recApartment.apartment_number}
                           </h3>
                           <span className="text-sm text-gray-500 font-poppins">
                             {recApartment.floor_number} {t('project.floor')}
@@ -1086,7 +1064,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         <DialogTitle>{t('installment.calculator')}</DialogTitle>
                       </DialogHeader>
                       <InstallmentCalculator
-                        applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
+                        applyInstallment={() => { setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true); }}
                         apartmentPrice={apartment.price}
                         currency={project.currency}
                         minDownPaymentPercent={project.min_down_payment_percent || 20}
