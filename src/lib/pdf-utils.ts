@@ -284,134 +284,93 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
 
     let yPosition = margin;
 
-    // === ГЛАВНОЕ ФОТО ВО ВСЮ ШИРИНУ В ВЕРХУ ===
+    // === ВСЕ ФОТОГРАФИИ СВЕРХУ С НЕБОЛЬШИМИ ОТСТУПАМИ ===
     const layoutPhotos = photos.filter(p => p.type === 'layout');
     const apartmentPhotos = photos.filter(p => p.type === 'apartment');
-    
-    if (layoutPhotos.length > 0) {
-      try {
-        const mainPhoto = layoutPhotos[0];
-        const base64Image = await loadImageAsBase64(mainPhoto.image_url);
-        
-        const tempImg = new Image();
-        await new Promise((resolve, reject) => {
-          tempImg.onload = resolve;
-          tempImg.onerror = reject;
-          tempImg.src = base64Image;
-        });
+    const allTopPhotos = [...layoutPhotos, ...apartmentPhotos];
 
-        // Главное фото во всю ширину страницы в верху
-        const headerHeight = scale(80); // фиксированная высота для заголовочного фото
-        const dimensions = getImageDimensions(tempImg.width, tempImg.height, pageWidth, headerHeight);
-        
-        // Центрируем изображение по ширине
-        const imageX = (pageWidth - dimensions.width) / 2;
-        const imageY = 0;
-        
-        // Добавляем главное фото в верхней части
-        pdf.addImage(base64Image, 'JPEG', imageX, imageY, dimensions.width, dimensions.height);
-        
-        // Устанавливаем начальную позицию для контента после фото
-        yPosition = headerHeight + scale(15); // отступ после фото
-      } catch (error) {
-        console.error('Failed to load main layout photo:', error);
-        yPosition = margin;
+    if (allTopPhotos.length > 0) {
+      const gap = scale(5);
+      const targetHeight = scale(60);
+      let currentX = margin;
+      let currentY = margin;
+      let rowMaxHeight = targetHeight;
+
+      for (const photo of allTopPhotos) {
+        try {
+          const base64Image = await loadImageAsBase64(photo.image_url);
+          const tempImg = new Image();
+          await new Promise((resolve, reject) => {
+            tempImg.onload = resolve;
+            tempImg.onerror = reject;
+            tempImg.src = base64Image;
+          });
+
+          const ratio = tempImg.width / tempImg.height;
+          const imgWidth = targetHeight * ratio;
+
+          // Перенос на следующую строку при нехватке места
+          if (currentX + imgWidth > pageWidth - margin) {
+            currentX = margin;
+            currentY += rowMaxHeight + gap;
+            rowMaxHeight = targetHeight;
+            // Если не хватает места на странице, переносим на новую
+            if (currentY + targetHeight > pageHeight - scale(100)) {
+              pdf.addPage();
+              currentY = margin;
+            }
+          }
+
+          // Рамка
+          pdf.setFillColor(255, 255, 255);
+          pdf.setDrawColor(220, 220, 220);
+          pdf.setLineWidth(1);
+          pdf.roundedRect(currentX - scale(1), currentY - scale(1), imgWidth + scale(2), targetHeight + scale(2), scale(1), scale(1), 'FD');
+
+          // Добавляем изображение
+          pdf.addImage(base64Image, 'JPEG', currentX, currentY, imgWidth, targetHeight);
+
+          currentX += imgWidth + gap;
+          rowMaxHeight = Math.max(rowMaxHeight, targetHeight);
+        } catch (error) {
+          console.error(`Failed to load photo ${photo.id}:`, error);
+          // Пропускаем проблемное фото, добавляя пустое место для сохранения ритма
+          const placeholderWidth = targetHeight * 1.3;
+          if (currentX + placeholderWidth > pageWidth - margin) {
+            currentX = margin;
+            currentY += rowMaxHeight + gap;
+            rowMaxHeight = targetHeight;
+          }
+          pdf.setFillColor(245, 245, 245);
+          pdf.setDrawColor(230, 230, 230);
+          pdf.roundedRect(currentX, currentY, placeholderWidth, targetHeight, scale(1), scale(1), 'FD');
+          currentX += placeholderWidth + gap;
+        }
       }
+
+      // Устанавливаем позицию после фотосекции
+      yPosition = currentY + rowMaxHeight + scale(15);
     }
 
-    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ ВО ВСЮ ШИРИНУ, ФОТОГРАФИИ СПРАВА ПОВЕРХ ===
-    const leftWidth = contentWidth; // Информация во всю ширину
-    const rightWidth = contentWidth * 0.35;  // Ширина для фотографий справа
-    
+    // === ОСНОВНАЯ СЕКЦИЯ: ИНФОРМАЦИЯ ВО ВСЮ ШИРИНУ ===
+    const leftWidth = contentWidth;
     const leftX = margin;
-    const rightX = margin + contentWidth - rightWidth; // Позиция справа
     const sectionStartY = yPosition;
 
-    // ЛЕВАЯ ЧАСТЬ - Информация о квартире во всю ширину
     const infoEndY = drawRealEstateInfo(
-      pdf, 
-      apartment, 
-      projectCurrency, 
-      translations, 
-      leftX, 
-      sectionStartY, 
-      leftWidth, 
-      scale, 
+      pdf,
+      apartment,
+      projectCurrency,
+      translations,
+      leftX,
+      sectionStartY,
+      leftWidth,
+      scale,
       scaledFontSize
     );
 
-    // ПРАВАЯ ЧАСТЬ - Фотографии квартиры поверх информации
-    let rightY = sectionStartY;
-    const remainingPhotos = apartmentPhotos.slice(0, 3); // Максимум 3 фотографии справа
-
-    for (const photo of remainingPhotos) {
-      try {
-        if (rightY > pageHeight - scale(60)) break; // Проверяем место на странице
-
-        const base64Image = await loadImageAsBase64(photo.image_url);
-        
-        const tempImg = new Image();
-        await new Promise((resolve, reject) => {
-          tempImg.onload = resolve;
-          tempImg.onerror = reject;
-          tempImg.src = base64Image;
-        });
-
-        // Фотографии справа квадратного формата с белой рамкой (увеличены в 1.5 раза)
-        const photoSize = Math.min(rightWidth, scale(67.5)); // scale(45) * 1.5 = scale(67.5)
-        const dimensions = getImageDimensions(tempImg.width, tempImg.height, photoSize, photoSize);
-        
-        // Белая рамка для фотографий
-        pdf.setFillColor(255, 255, 255);
-        pdf.setDrawColor(220, 220, 220);
-        pdf.setLineWidth(1);
-        const frameX = rightX + (rightWidth - dimensions.width) / 2 - scale(1);
-        const frameY = rightY - scale(1);
-        pdf.roundedRect(frameX, frameY, dimensions.width + scale(2), dimensions.height + scale(2), scale(1), scale(1), 'FD');
-        
-        // Центрируем по ширине правой колонки
-        const photoX = rightX + (rightWidth - dimensions.width) / 2;
-        
-        pdf.addImage(base64Image, 'JPEG', photoX, rightY, dimensions.width, dimensions.height);
-        
-        rightY += dimensions.height + scale(12); // Увеличиваем отступ между фото пропорционально
-      } catch (error) {
-        console.error(`Failed to load apartment photo ${photo.id}:`, error);
-        rightY += scale(7.5); // Увеличиваем отступ при ошибке
-      }
-    }
-
     // Устанавливаем yPosition для следующего контента
-    yPosition = Math.max(infoEndY, rightY) + scale(15);
-
-    // === ДОПОЛНИТЕЛЬНЫЕ ФОТОГРАФИИ (если есть) ===
-    const remainingLayoutPhotos = layoutPhotos.slice(1);
-    const remainingApartmentPhotos = apartmentPhotos.slice(3);
-    
-    if (remainingLayoutPhotos.length > 0 || remainingApartmentPhotos.length > 0) {
-      // Проверяем место на странице
-      if (yPosition > pageHeight - scale(100)) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-
-      // Заголовок для дополнительных фотографий
-      pdf.setFontSize(scaledFontSize(16, 12, 24));
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(37, 99, 235);
-      pdf.text(translations.photos || 'Additional Photos', margin, yPosition);
-      yPosition += scale(15);
-
-      // Добавляем оставшиеся фотографии планировки
-      for (const photo of remainingLayoutPhotos) {
-        yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations, scale, scaledFontSize);
-      }
-
-      // Добавляем оставшиеся фотографии квартиры
-      for (const photo of remainingApartmentPhotos) {
-        yPosition = await addPhotoToPDF(pdf, photo, margin, yPosition, contentWidth, pageHeight, translations, scale, scaledFontSize);
-      }
-    }
+    yPosition = infoEndY + scale(15);
 
     // === FOOTER ===
     const currentDate = new Date().toLocaleDateString();
@@ -422,7 +381,7 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     pdf.rect(0, pageHeight - scale(15), pageWidth, scale(15), 'F');
 
     pdf.text(
-      `${translations.generatedOn}: ${currentDate}`,
+      `${currentDate}`,
       margin,
       pageHeight - scale(5)
     );
