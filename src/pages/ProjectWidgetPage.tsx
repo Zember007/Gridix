@@ -60,7 +60,7 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
       {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
         null
         : <LanguageToggle  
-          classNameButton="absolute top-4 right-4 z-50"
+          classNameButton="fixed top-4 right-4 z-50"
         />}
       <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
