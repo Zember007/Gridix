@@ -234,7 +234,6 @@ const drawRealEstateInfo = (pdf: jsPDF, apartment: Apartment, projectCurrency: s
 
     pdf.setFontSize(scaledFontSize(12, 10, 18));
     pdf.setFont('helvetica', 'normal');
-    pdf.text('/year', x + scale(4), currentY + scale(12));
   }
 
   currentY += scale(20);
