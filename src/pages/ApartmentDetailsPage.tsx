@@ -18,7 +18,6 @@ import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useInstallment } from '@/hooks/useInstallment';
 import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -47,7 +46,6 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
   const apartmentIdentifier = useId ? apartmentId : (apartmentNumber || apartmentId);
 
   const { t, language } = useLanguage();
-  const isMobile = useIsMobile();
   const { project, loading: projectLoading, error: projectError } = useProject(projectIdentifier || '');
   const { apartment, loading: apartmentLoading, error: apartmentError } = useApartment(
     projectIdentifier,
@@ -508,9 +506,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
   return (
     <div className="min-h-screen ">
-      <div className="container px-0 md:px-6 mx-auto">
+      <div className="container px-0 lg:px-6 mx-auto">
         {/* Mobile Layout */}
-        <div className="md:hidden ">
+        <div className="lg:hidden ">
           {/* Header with back button and status badge */}
           <div className="relative">
             <div className="absolute top-4 left-4 z-10">
@@ -694,7 +692,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:block py-6">
+        <div className="hidden lg:block py-6">
           <div className="max-w-7xl mx-auto px-6">
             {/* Back button and title section */}
             <div className="flex items-center justify-between mb-6">
@@ -1025,7 +1023,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
         {/* Fixed Action Buttons - Mobile (bottom) */}
         {apartment.status === 'available' && (
-          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div className="max-w-sm mx-auto space-y-3">
               <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                 <DialogTrigger asChild>

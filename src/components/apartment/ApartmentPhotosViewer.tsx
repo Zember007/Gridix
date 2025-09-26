@@ -195,7 +195,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <img
             src={photos[currentPhotoIndex].image_url}
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
-            className="w-full h-64 md:h-auto md:aspect-[16/9] object-cover rounded-lg cursor-pointer"
+            className="w-full h-72 lg:h-auto lg:aspect-[16/9] object-cover rounded-lg cursor-pointer"
             onClick={openLightbox}
           />
           
@@ -203,7 +203,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <Button
             variant="outline"
             size="sm"
-            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+            className="absolute lg:top-2 bottom-10 lg:bottom-auto right-2 bg-white/80 hover:bg-white"
             onClick={openLightbox}
           >
             <Expand className="h-4 w-4" />
@@ -243,7 +243,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
                 <ChevronRight className="h-4 w-4" />
               </Button>
               
-              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+              <div className="absolute lg:bottom-2 bottom-10 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
                 {currentPhotoIndex + 1} / {photos.length}
               </div>
             </>
