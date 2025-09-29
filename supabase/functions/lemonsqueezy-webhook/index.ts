@@ -1,0 +1,329 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
+const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+async function verifyWebhookSignature(payload, signature, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), {
+    name: "HMAC",
+    hash: "SHA-256"
+  }, false, [
+    "sign"
+  ]);
+  const expectedSignature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  const expectedHex = Array.from(new Uint8Array(expectedSignature)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return signature === expectedHex;
+}
+async function fetchOrderData(orderId) {
+  const apiKey = Deno.env.get("LEMONSQUEEZY_API_KEY");
+  if (!apiKey) {
+    console.error("LemonSqueezy API key not found");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`https://api.lemonsqueezy.com/v1/orders/${orderId}`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch order ${orderId}:`, response.status, await response.text());
+      return null;
+    }
+
+    const orderData = await response.json();
+    return orderData.data;
+  } catch (error) {
+    console.error("Error fetching order data:", error);
+    return null;
+  }
+}
+
+async function handleSubscriptionCreated(data) {
+  const { attributes } = data;
+  
+  // Try to find user by custom user_id first, then fallback to email
+  let user = null;
+  let userError = null;
+  let customUserId = null;
+
+  // Fetch order data to get custom fields
+  const orderData = await fetchOrderData(attributes.order_id);
+  console.log('orderData', orderData)
+  if (orderData && orderData.attributes && orderData.attributes.custom) {
+    customUserId = orderData.attributes.custom.user_id;
+    console.log("Found custom user_id from order:", customUserId);
+  }
+
+  // Check if custom user_id is provided in the order data
+  if (customUserId) {
+    const { data: userData, error: userIdError } = await supabase.auth.admin.getUserById(customUserId);
+    if (!userIdError && userData && userData.user) {
+      user = userData.user;
+    }
+  }
+  
+  // Fallback to email lookup if user not found by ID
+  if (!user) {
+    // Use listUsers to find user by email since getUserByEmail doesn't exist
+    const { data: usersData, error: emailError } = await supabase.auth.admin.listUsers();
+    if (!emailError && usersData && usersData.users) {
+      const foundUser = usersData.users.find(u => u.email === attributes.user_email);
+      if (foundUser) {
+        user = foundUser;
+      }
+    }
+    userError = emailError;
+  }
+  
+  if (userError || !user) {
+    console.error("User not found:", { 
+      email: attributes.user_email, 
+      customUserId,
+      orderId: attributes.order_id,
+      error: userError 
+    });
+    return;
+  }
+  console.log('ok', user)
+  
+  // Determine plan_id from product_name
+  let planId = null;
+  if (attributes.product_name === "Basic Plan") {
+    // Get Basic plan ID
+    const { data: basicPlan } = await supabase.from("subscription_plans").select("id").eq("slug", "basic").single();
+    planId = basicPlan?.id;
+  } else if (attributes.product_name === "Pro Plan") {
+    // Get Pro plan ID  
+    const { data: proPlan } = await supabase.from("subscription_plans").select("id").eq("slug", "pro").single();
+    planId = proPlan?.id;
+  }
+  
+  if (!planId) {
+    console.error("Unable to determine plan_id for product:", attributes.product_name);
+    return;
+  }
+  
+  // Determine duration and discount from variant_name
+  let durationMonths = 1;
+  let discountPercentage = 0;
+  
+  if (attributes.variant_name) {
+    const variantName = attributes.variant_name.toLowerCase();
+    if (variantName.includes('3 month')) {
+      durationMonths = 3;
+      discountPercentage = 5;
+    } else if (variantName.includes('6 month')) {
+      durationMonths = 6;
+      discountPercentage = 10;
+    } else if (variantName.includes('12 month') || variantName.includes('1 year')) {
+      durationMonths = 12;
+      discountPercentage = 20;
+    } else if (variantName.includes('24 month') || variantName.includes('2 year')) {
+      durationMonths = 24;
+      discountPercentage = 30;
+    } else if (variantName.includes('36 month') || variantName.includes('3 year')) {
+      durationMonths = 36;
+      discountPercentage = 50;
+    }
+  }
+  
+  // Check if subscription already exists for this user
+  const { data: existingSubscription } = await supabase
+    .from("user_subscriptions")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  
+  let subscriptionError = null;
+  
+  if (existingSubscription) {
+    // Update existing subscription
+    const { error: updateError } = await supabase.from("user_subscriptions").update({
+      plan_id: planId,
+      lemon_squeezy_subscription_id: data.id,
+      lemon_squeezy_customer_id: attributes.customer_id.toString(),
+      status: attributes.status,
+      trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
+      current_period_start: new Date(attributes.created_at),
+      current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : null,
+      duration_months: durationMonths,
+      discount_percentage: discountPercentage,
+      updated_at: new Date()
+    }).eq("user_id", user.id);
+    subscriptionError = updateError;
+  } else {
+    // Create new subscription
+    const { error: insertError } = await supabase.from("user_subscriptions").insert({
+      user_id: user.id,
+      plan_id: planId,
+      lemon_squeezy_subscription_id: data.id,
+      lemon_squeezy_customer_id: attributes.customer_id.toString(),
+      status: attributes.status,
+      trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
+      current_period_start: new Date(attributes.created_at),
+      current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : null,
+      duration_months: durationMonths,
+      discount_percentage: discountPercentage,
+      cancel_at_period_end: false,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    subscriptionError = insertError;
+  }
+  
+  if (subscriptionError) {
+    console.error("Failed to create/update subscription:", subscriptionError);
+    return;
+  }
+  
+  // Get subscription ID for history logging
+  const { data: currentSubscription } = await supabase
+    .from("user_subscriptions")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+  
+  // Log subscription history
+  if (currentSubscription) {
+    await supabase.from("subscription_history").insert({
+      user_id: user.id,
+      subscription_id: currentSubscription.id,
+      action: "subscription_created",
+      new_status: attributes.status,
+      metadata: {
+        lemon_squeezy_id: data.id,
+        custom_user_id: customUserId,
+        order_id: attributes.order_id
+      }
+    });
+  }
+}
+async function handleSubscriptionUpdated(data) {
+  const { attributes } = data;
+  // Find subscription by LemonSqueezy ID
+  const { data: subscription, error: subError } = await supabase.from("user_subscriptions").select("*").eq("lemon_squeezy_subscription_id", data.id).single();
+  if (subError || !subscription) {
+    console.error("Subscription not found:", data.id);
+    return;
+  }
+  const oldStatus = subscription.status;
+  // Update subscription
+  const { error: updateError } = await supabase.from("user_subscriptions").update({
+    status: attributes.status,
+    trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
+    cancel_at_period_end: attributes.cancelled,
+    cancelled_at: attributes.cancelled ? new Date() : null,
+    updated_at: new Date()
+  }).eq("id", subscription.id);
+  if (updateError) {
+    console.error("Failed to update subscription:", updateError);
+    return;
+  }
+  // Log subscription history
+  await supabase.from("subscription_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    action: "subscription_updated",
+    old_status: oldStatus,
+    new_status: attributes.status,
+    metadata: {
+      lemon_squeezy_id: data.id,
+      cancelled: attributes.cancelled
+    }
+  });
+}
+async function handleSubscriptionCancelled(data) {
+  const { attributes } = data;
+  // Find subscription by LemonSqueezy ID
+  const { data: subscription, error: subError } = await supabase.from("user_subscriptions").select("*").eq("lemon_squeezy_subscription_id", data.id).single();
+  if (subError || !subscription) {
+    console.error("Subscription not found:", data.id);
+    return;
+  }
+  // Update subscription
+  const { error: updateError } = await supabase.from("user_subscriptions").update({
+    status: "cancelled",
+    cancelled_at: new Date(),
+    updated_at: new Date()
+  }).eq("id", subscription.id);
+  if (updateError) {
+    console.error("Failed to cancel subscription:", updateError);
+    return;
+  }
+  // Log subscription history
+  await supabase.from("subscription_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    action: "subscription_cancelled",
+    old_status: subscription.status,
+    new_status: "cancelled",
+    metadata: {
+      lemon_squeezy_id: data.id
+    }
+  });
+}
+Deno.serve(async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", {
+      status: 405
+    });
+  }
+  try {
+    const signature = req.headers.get("x-signature");
+    const webhookSecret = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET");
+    if (!signature || !webhookSecret) {
+      return new Response("Missing signature or webhook secret", {
+        status: 400
+      });
+    }
+    const payload = await req.text();
+    // Verify webhook signature
+    const isValid = await verifyWebhookSignature(payload, signature, webhookSecret);
+    if (!isValid) {
+      return new Response("Invalid signature", {
+        status: 401
+      });
+    }
+    const webhookPayload = JSON.parse(payload);
+    const { meta, data } = webhookPayload;
+    console.log(`Received webhook: ${meta.event_name}`);
+    switch (meta.event_name) {
+      case "subscription_created":
+        await handleSubscriptionCreated(data);
+        break;
+      case "subscription_updated":
+        await handleSubscriptionUpdated(data);
+        break;
+      case "subscription_cancelled":
+        await handleSubscriptionCancelled(data);
+        break;
+      case "subscription_resumed":
+        await handleSubscriptionUpdated(data);
+        break;
+      case "subscription_expired":
+        await handleSubscriptionUpdated(data);
+        break;
+      case "subscription_paused":
+        await handleSubscriptionUpdated(data);
+        break;
+      case "subscription_unpaused":
+        await handleSubscriptionUpdated(data);
+        break;
+      default:
+        console.log(`Unhandled webhook event: ${meta.event_name}`);
+    }
+    return new Response("OK", {
+      status: 200
+    });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return new Response("Internal server error", {
+      status: 500
+    });
+  }
+});

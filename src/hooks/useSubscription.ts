@@ -1,0 +1,199 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  base_price: string;
+  currency: string;
+  features: string[];
+  is_active: boolean;
+  pricing: {
+    durationMonths: number;
+    discountPercentage: number;
+    monthlyPrice: number;
+    totalPrice: number;
+    savings: number;
+  }[];
+}
+
+export interface UserSubscription {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  lemon_squeezy_subscription_id: string | null;
+  lemon_squeezy_customer_id: string | null;
+  status: string;
+  trial_ends_at: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  cancelled_at: string | null;
+  duration_months: number;
+  discount_percentage: number;
+  final_price: number | null;
+  subscription_plans: {
+    name: string;
+    slug: string;
+    description: string;
+    base_price: string;
+    features: string[];
+  };
+}
+
+export interface SubscriptionData {
+  subscription: UserSubscription;
+  isTrialActive: boolean;
+  trialDaysRemaining: number;
+}
+
+export function useSubscription() {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSubscription = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: {},
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSubscription(data);
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch subscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPlans = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: { action: 'get-plans' },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPlans(data.plans || []);
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch plans');
+    }
+  };
+
+  const getPurchaseLinks = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: { action: 'get-purchase-links' },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Error getting purchase links:', err);
+      throw err;
+    }
+  };
+
+  const getManagementUrl = async () => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: { action: 'get-management-url' },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data.managementUrl;
+    } catch (err) {
+      console.error('Error getting management URL:', err);
+      throw err;
+    }
+  };
+
+  const hasFeature = (feature: string): boolean => {
+    if (!subscription) return false;
+    
+    const plan = subscription.subscription.subscription_plans;
+    return plan.features.includes(feature);
+  };
+
+  const isActive = (): boolean => {
+    if (!subscription) return false;
+    
+    const { status } = subscription.subscription;
+    return ['active', 'trialing'].includes(status);
+  };
+
+  const isPro = (): boolean => {
+    if (!subscription) return false;
+    
+    return subscription.subscription.subscription_plans.slug === 'pro';
+  };
+
+  const isBasic = (): boolean => {
+    if (!subscription) return false;
+    
+    return subscription.subscription.subscription_plans.slug === 'basic';
+  };
+
+  useEffect(() => {
+    fetchSubscription();
+    fetchPlans();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return {
+    subscription,
+    plans,
+    loading,
+    error,
+    getPurchaseLinks,
+    getManagementUrl,
+    refreshSubscription: fetchSubscription,
+    hasFeature,
+    isActive,
+    isPro,
+    isBasic,
+  };
+}

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu } from 'lucide-react';
+import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import ManagerProjectList from '@/components/projects/ManagerProjectList';
@@ -121,6 +121,13 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                         >
                           <UserCheck className="h-4 w-4" />
                           {t('admin.leads')}
+                        </button>
+                        <button
+                          onClick={() => navigate('/subscription')}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 hover:bg-muted"
+                        >
+                          <Crown className="h-4 w-4" />
+                          {t('admin.subscription')}
                         </button>
                         <button
                           onClick={() => setActiveTab('widgets')}

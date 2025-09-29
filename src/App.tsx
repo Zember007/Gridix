@@ -23,6 +23,9 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import DomainProjectPage from "./pages/DomainProjectPage";
 import DomainApartmentPage from "./pages/DomainApartmentPage";
 import WidgetPreviewPage from "./pages/WidgetPreviewPage";
+import SubscriptionPage from "./pages/SubscriptionPage";
+import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
+import SubscriptionCancelPage from "./pages/SubscriptionCancelPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +61,35 @@ function App() {
               
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
+              
+              {/* Subscription routes */}
+              <Route path="/:lang/subscription" element={
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <SubscriptionPage />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
+              } />
+              <Route path="/:lang/subscription/success" element={
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <SubscriptionSuccessPage />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
+              } />
+              <Route path="/:lang/subscription/cancel" element={
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <SubscriptionCancelPage />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
+              } />
               
               {/* Invitation acceptance route - no auth required */}
               <Route path="/accept-invitation" element={<EmbedLanguageProvider><AcceptInvitationPage /></EmbedLanguageProvider>} />

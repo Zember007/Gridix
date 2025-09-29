@@ -44,6 +44,7 @@ import {
   Camera,
   UserCheck,
   Globe,
+  Crown,
 } from "lucide-react";
 
 // Softer spring animation curve
@@ -54,6 +55,7 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 const getAdminNavItems = (t: (k: string) => string, onNavigate?: (path: string) => void) => [
   { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
   { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
+  { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
   { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
   { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics') },
   { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
@@ -251,6 +253,10 @@ export function AdminSidebar({
   const [isCollapsed, setIsCollapsed] = useState(true); // Collapsed by default
 
   const handleSectionChange = (section: string) => {
+    if (section === 'subscription') {
+      onNavigate?.('/subscription');
+      return;
+    }
     setActiveSection(section);
     onTabChange?.(section);
   };

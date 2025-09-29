@@ -1,0 +1,7 @@
+---
+alwaysApply: false
+---
+When integrating LemonSqueezy:
+1. Use @lemonsqueezy/lemonsqueezy.js SDK
+2. Use environment variables for API keys
+3. Follow LemonSqueezy best practices from their docs @web https://docs.lemonsqueezy.com/api

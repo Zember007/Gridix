@@ -4075,6 +4075,7 @@ const translations: Translations = {
   'adminSidebar.title': { ru: 'Админ Панель', en: 'Admin Panel', ka: 'ადმინ პანელი', ar: 'لوحة الإدارة' },
   'projectEditorSidebar.title': { ru: 'Редактор Проекта', en: 'Project Editor', ka: 'პროექტის რედაქტორი', ar: 'محرر المشروع' },
   'admin.leads': { ru: 'Лиды', en: 'Leads', ka: 'ლიდები', ar: 'العملاء المحتملون' },
+  'admin.subscription': { ru: 'Подписка', en: 'Subscription', ka: 'გამოწერა', ar: 'الاشتراك' },
   'projectEditor.general': { ru: 'Основное', en: 'General', ka: 'ძირითადი', ar: 'عام' },
   'projectEditor.apartmentsTab': { ru: 'Квартиры', en: 'Apartments', ka: 'ბინები', ar: 'الشقق' },
   'projectEditor.floorplan': { ru: 'Планировки', en: 'Floor plans', ka: 'გეგმები', ar: 'المخططات' },
