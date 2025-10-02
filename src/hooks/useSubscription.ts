@@ -86,11 +86,17 @@ export function useSubscription() {
 
   const fetchPlans = async () => {
     try {
+      const session = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      
+      // Add authorization header only if user is logged in
+      if (session.data.session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.data.session.access_token}`;
+      }
+
       const { data, error } = await supabase.functions.invoke('subscription-management', {
         body: { action: 'get-plans' },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
+        headers,
       });
 
       if (error) {
@@ -190,7 +196,10 @@ export function useSubscription() {
   };
 
   useEffect(() => {
-    fetchSubscription();
+    if (user) {
+      fetchSubscription();
+    }
+    // Always fetch plans, even for non-authenticated users
     fetchPlans();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 

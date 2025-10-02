@@ -209,9 +209,11 @@ async function handleGetManagementUrl(req) {
 async function handleGetPlans(req) {
   try {
     // Get all active plans with discounts
+    // No authentication required for viewing plans
     const { data: plans, error: plansError } = await supabase.from("subscription_plans").select("*").eq("is_active", true).order("base_price");
     const { data: discounts, error: discountsError } = await supabase.from("subscription_discounts").select("*").eq("is_active", true).order("duration_months");
     if (plansError || discountsError) {
+      console.error("Error fetching plans:", plansError || discountsError);
       return new Response("Failed to fetch plans", {
         status: 500,
         headers: corsHeaders

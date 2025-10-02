@@ -24,8 +24,7 @@ import DomainProjectPage from "./pages/DomainProjectPage";
 import DomainApartmentPage from "./pages/DomainApartmentPage";
 import WidgetPreviewPage from "./pages/WidgetPreviewPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
-import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
-import SubscriptionCancelPage from "./pages/SubscriptionCancelPage";
+import PricingPage from "./pages/PricingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +58,9 @@ function App() {
               <Route path="/:lang/privacy-policy" element={<LanguageProvider><LanguageWrapper><PrivacyPolicyPage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/terms-of-service" element={<LanguageProvider><LanguageWrapper><TermsOfServicePage /></LanguageWrapper></LanguageProvider>} />
               
+              {/* Public Pricing Page */}
+              <Route path="/:lang/pricing" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />
+              
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
               
@@ -72,25 +74,8 @@ function App() {
                   </LanguageWrapper>
                 </LanguageProvider>
               } />
-              <Route path="/:lang/subscription/success" element={
-                <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <SubscriptionSuccessPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
-                </LanguageProvider>
-              } />
-              <Route path="/:lang/subscription/cancel" element={
-                <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <SubscriptionCancelPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
-                </LanguageProvider>
-              } />
-              
+       
+       
               {/* Invitation acceptance route - no auth required */}
               <Route path="/accept-invitation" element={<EmbedLanguageProvider><AcceptInvitationPage /></EmbedLanguageProvider>} />
               
