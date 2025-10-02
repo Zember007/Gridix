@@ -43,6 +43,28 @@ async function fetchOrderData(orderId) {
   }
 }
 
+async function getPlanIdFromProductName(productName) {
+  if (!productName) return null;
+  
+  if (productName === "Basic Plan" || productName.includes("Basic")) {
+    const { data: basicPlan } = await supabase
+      .from("subscription_plans")
+      .select("id")
+      .eq("slug", "basic")
+      .single();
+    return basicPlan?.id;
+  } else if (productName === "Pro Plan" || productName.includes("Pro")) {
+    const { data: proPlan } = await supabase
+      .from("subscription_plans")
+      .select("id")
+      .eq("slug", "pro")
+      .single();
+    return proPlan?.id;
+  }
+  
+  return null;
+}
+
 async function handleSubscriptionCreated(data) {
   const { attributes } = data;
   
@@ -53,10 +75,8 @@ async function handleSubscriptionCreated(data) {
 
   // Fetch order data to get custom fields
   const orderData = await fetchOrderData(attributes.order_id);
-  console.log('orderData', orderData)
   if (orderData && orderData.attributes && orderData.attributes.custom) {
     customUserId = orderData.attributes.custom.user_id;
-    console.log("Found custom user_id from order:", customUserId);
   }
 
   // Check if custom user_id is provided in the order data
@@ -89,48 +109,16 @@ async function handleSubscriptionCreated(data) {
     });
     return;
   }
-  console.log('ok', user)
   
   // Determine plan_id from product_name
-  let planId = null;
-  if (attributes.product_name === "Basic Plan") {
-    // Get Basic plan ID
-    const { data: basicPlan } = await supabase.from("subscription_plans").select("id").eq("slug", "basic").single();
-    planId = basicPlan?.id;
-  } else if (attributes.product_name === "Pro Plan") {
-    // Get Pro plan ID  
-    const { data: proPlan } = await supabase.from("subscription_plans").select("id").eq("slug", "pro").single();
-    planId = proPlan?.id;
-  }
+  const planId = await getPlanIdFromProductName(attributes.product_name);
   
   if (!planId) {
     console.error("Unable to determine plan_id for product:", attributes.product_name);
     return;
   }
   
-  // Determine duration and discount from variant_name
-  let durationMonths = 1;
-  let discountPercentage = 0;
-  
-  if (attributes.variant_name) {
-    const variantName = attributes.variant_name.toLowerCase();
-    if (variantName.includes('3 month')) {
-      durationMonths = 3;
-      discountPercentage = 5;
-    } else if (variantName.includes('6 month')) {
-      durationMonths = 6;
-      discountPercentage = 10;
-    } else if (variantName.includes('12 month') || variantName.includes('1 year')) {
-      durationMonths = 12;
-      discountPercentage = 20;
-    } else if (variantName.includes('24 month') || variantName.includes('2 year')) {
-      durationMonths = 24;
-      discountPercentage = 30;
-    } else if (variantName.includes('36 month') || variantName.includes('3 year')) {
-      durationMonths = 36;
-      discountPercentage = 50;
-    }
-  }
+  // Minimal data only: do not derive or store subscription duration or discounts
   
   // Check if subscription already exists for this user
   const { data: existingSubscription } = await supabase
@@ -151,8 +139,6 @@ async function handleSubscriptionCreated(data) {
       trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
       current_period_start: new Date(attributes.created_at),
       current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : null,
-      duration_months: durationMonths,
-      discount_percentage: discountPercentage,
       updated_at: new Date()
     }).eq("user_id", user.id);
     subscriptionError = updateError;
@@ -167,8 +153,6 @@ async function handleSubscriptionCreated(data) {
       trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
       current_period_start: new Date(attributes.created_at),
       current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : null,
-      duration_months: durationMonths,
-      discount_percentage: discountPercentage,
       cancel_at_period_end: false,
       created_at: new Date(),
       updated_at: new Date()
@@ -212,14 +196,24 @@ async function handleSubscriptionUpdated(data) {
     return;
   }
   const oldStatus = subscription.status;
-  // Update subscription
-  const { error: updateError } = await supabase.from("user_subscriptions").update({
+  
+  // Check if plan changed (upgrade/downgrade)
+  const newPlanId = await getPlanIdFromProductName(attributes.product_name);
+  const planChanged = newPlanId && newPlanId !== subscription.plan_id;
+  
+  // Prepare update object
+  const updateData = {
     status: attributes.status,
     trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : null,
     cancel_at_period_end: attributes.cancelled,
     cancelled_at: attributes.cancelled ? new Date() : null,
-    updated_at: new Date()
-  }).eq("id", subscription.id);
+    current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : (attributes.ends_at ? new Date(attributes.ends_at) : subscription.current_period_end),
+    updated_at: new Date(),
+    ...(planChanged && { plan_id: newPlanId })
+  };
+  
+  // Update subscription
+  const { error: updateError } = await supabase.from("user_subscriptions").update(updateData).eq("id", subscription.id);
   if (updateError) {
     console.error("Failed to update subscription:", updateError);
     return;
@@ -228,14 +222,66 @@ async function handleSubscriptionUpdated(data) {
   await supabase.from("subscription_history").insert({
     user_id: subscription.user_id,
     subscription_id: subscription.id,
-    action: "subscription_updated",
+    action: planChanged ? "plan_changed" : "subscription_updated",
     old_status: oldStatus,
     new_status: attributes.status,
     metadata: {
       lemon_squeezy_id: data.id,
-      cancelled: attributes.cancelled
+      cancelled: attributes.cancelled,
+      plan_changed: planChanged,
+      new_plan_id: planChanged ? newPlanId : undefined,
+      product_name: attributes.product_name
     }
   });
+
+  console.log('subscription_updated', attributes.status, planChanged ? `(plan changed to ${attributes.product_name})` : '');
+  
+}
+async function handleSubscriptionResumed(data) {
+  const { attributes } = data;
+  // Find subscription by LemonSqueezy ID
+  const { data: subscription, error: subError } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("lemon_squeezy_subscription_id", data.id)
+    .single();
+  if (subError || !subscription) {
+    console.error("Subscription not found:", data.id);
+    return;
+  }
+  const oldStatus = subscription.status;
+
+  // When subscription is resumed, reset cancellation flags
+  const { error: updateError } = await supabase
+    .from("user_subscriptions")
+    .update({
+      status: attributes.status || "active",
+      cancel_at_period_end: false,
+      cancelled_at: null,
+      trial_ends_at: attributes.trial_ends_at ? new Date(attributes.trial_ends_at) : subscription.trial_ends_at,
+      current_period_end: attributes.renews_at ? new Date(attributes.renews_at) : subscription.current_period_end,
+      updated_at: new Date(),
+    })
+    .eq("id", subscription.id);
+
+  if (updateError) {
+    console.error("Failed to resume subscription:", updateError);
+    return;
+  }
+
+  await supabase.from("subscription_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    action: "subscription_resumed",
+    old_status: oldStatus,
+    new_status: attributes.status || "active",
+    metadata: {
+      lemon_squeezy_id: data.id,
+    },
+  });
+
+  console.log('subscription_resumed', attributes.status || "active");
+
 }
 async function handleSubscriptionCancelled(data) {
   const { attributes } = data;
@@ -266,6 +312,55 @@ async function handleSubscriptionCancelled(data) {
       lemon_squeezy_id: data.id
     }
   });
+  
+  console.log('subscription_cancelled', data.id);
+}
+
+async function handleSubscriptionExpired(data) {
+  const { attributes } = data;
+  // Find subscription by LemonSqueezy ID
+  const { data: subscription, error: subError } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("lemon_squeezy_subscription_id", data.id)
+    .single();
+  
+  if (subError || !subscription) {
+    console.error("Subscription not found:", data.id);
+    return;
+  }
+  
+  const oldStatus = subscription.status;
+  
+  // Update subscription to expired status
+  const { error: updateError } = await supabase
+    .from("user_subscriptions")
+    .update({
+      status: "expired",
+      current_period_end: attributes.ends_at ? new Date(attributes.ends_at) : subscription.current_period_end,
+      updated_at: new Date()
+    })
+    .eq("id", subscription.id);
+    
+  if (updateError) {
+    console.error("Failed to expire subscription:", updateError);
+    return;
+  }
+  
+  // Log subscription history
+  await supabase.from("subscription_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    action: "subscription_expired",
+    old_status: oldStatus,
+    new_status: "expired",
+    metadata: {
+      lemon_squeezy_id: data.id,
+      ended_at: attributes.ends_at
+    }
+  });
+  
+  console.log('subscription_expired', data.id);
 }
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -292,6 +387,7 @@ Deno.serve(async (req) => {
     const webhookPayload = JSON.parse(payload);
     const { meta, data } = webhookPayload;
     console.log(`Received webhook: ${meta.event_name}`);
+    console.log('data', data)
     switch (meta.event_name) {
       case "subscription_created":
         await handleSubscriptionCreated(data);
@@ -303,16 +399,16 @@ Deno.serve(async (req) => {
         await handleSubscriptionCancelled(data);
         break;
       case "subscription_resumed":
-        await handleSubscriptionUpdated(data);
+        await handleSubscriptionResumed(data);
         break;
       case "subscription_expired":
-        await handleSubscriptionUpdated(data);
+        await handleSubscriptionExpired(data);
         break;
       case "subscription_paused":
         await handleSubscriptionUpdated(data);
         break;
       case "subscription_unpaused":
-        await handleSubscriptionUpdated(data);
+        await handleSubscriptionResumed(data);
         break;
       default:
         console.log(`Unhandled webhook event: ${meta.event_name}`);

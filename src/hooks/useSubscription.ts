@@ -162,8 +162,19 @@ export function useSubscription() {
   const isActive = (): boolean => {
     if (!subscription) return false;
     
-    const { status } = subscription.subscription;
-    return ['active', 'trialing'].includes(status);
+    const { status, current_period_end } = subscription.subscription;
+    
+    // Check if subscription is in active status
+    if (['active', 'trialing'].includes(status)) {
+      return true;
+    }
+    
+    // Check if subscription is cancelled but still in paid period
+    if (subscription.subscription.cancel_at_period_end && current_period_end) {
+      return new Date(current_period_end) > new Date();
+    }
+    
+    return false;
   };
 
   const isPro = (): boolean => {

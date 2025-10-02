@@ -19,7 +19,12 @@ export default function SubscriptionPage() {
     );
   }
 
-  const hasActiveSubscription = subscription && ['active', 'trialing'].includes(subscription.subscription.status);
+  // Check if subscription is active - includes cancelled subscriptions that are still in their paid period
+  const hasActiveSubscription = subscription && 
+    (['active', 'trialing'].includes(subscription.subscription.status) || 
+    (subscription.subscription.cancel_at_period_end && 
+     subscription.subscription.current_period_end && 
+     new Date(subscription.subscription.current_period_end) > new Date()));
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -57,17 +62,19 @@ export default function SubscriptionPage() {
         </Tabs>
       ) : (
         <div className="space-y-8">
-          {/* Trial Expired or No Subscription */}
-          {subscription?.subscription.status === 'trial_expired' && (
+          {/* Trial Expired or Subscription Expired */}
+          {(subscription?.subscription.status === 'trial_expired' || 
+            subscription?.subscription.status === 'expired') && (
             <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
                   <Crown className="w-5 h-5" />
-                  Пробный период истек
+                  {subscription.subscription.status === 'trial_expired' ? 'Пробный период истек' : 'Подписка истекла'}
                 </CardTitle>
                 <CardDescription className="text-yellow-700 dark:text-yellow-300">
-                  Ваш 14-дневный пробный период Pro плана завершился. 
-                  Выберите подходящий план для продолжения работы с расширенными возможностями.
+                  {subscription.subscription.status === 'trial_expired' 
+                    ? 'Ваш 14-дневный пробный период Pro плана завершился. Выберите подходящий план для продолжения работы с расширенными возможностями.'
+                    : 'Срок действия вашей подписки истек. Выберите план для продолжения работы с расширенными возможностями.'}
                 </CardDescription>
               </CardHeader>
             </Card>

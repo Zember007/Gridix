@@ -5,6 +5,17 @@ import { Badge } from '../ui/badge';
 import { Check, Crown, Zap } from 'lucide-react';
 import { useSubscription } from '../../hooks/useSubscription';
 import { cn } from '../../lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+declare global {
+  interface Window {
+    LemonSqueezy?: {
+      Url?: {
+        Open: (link: string) => void;
+      };
+    };
+  }
+}
 
 interface PricingPlansProps {
   className?: string;
@@ -22,6 +33,34 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
   const { subscription, loading, getPurchaseLinks } = useSubscription();
   const [purchaseLinks, setPurchaseLinks] = useState<{basic: PurchaseLink, pro: PurchaseLink} | null>(null);
   const [linksLoading, setLinksLoading] = useState(true);
+  const { language } = useLanguage();
+
+  const t = {
+    ru: {
+      title: 'Выберите тарифный план',
+      recommended: 'Рекомендуется',
+      currentPlan: 'Текущий план',
+      choosePlan: 'Выбрать план',
+    },
+    en: {
+      title: 'Choose your plan',
+      recommended: 'Recommended',
+      currentPlan: 'Current plan',
+      choosePlan: 'Choose plan',
+    },
+    ka: {
+      title: 'აირჩიეთ ტარიფი',
+      recommended: 'რეკომენდებულია',
+      currentPlan: 'მიმდინარე გეგმა',
+      choosePlan: 'გეგმის არჩევა',
+    },
+    ar: {
+      title: 'اختر خطتك',
+      recommended: 'موصى به',
+      currentPlan: 'الخطة الحالية',
+      choosePlan: 'اختر الخطة',
+    },
+  } as const;
 
   useEffect(() => {
     const loadPurchaseLinks = async () => {
@@ -47,14 +86,17 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
 
     // Find the purchase link for this plan
     const link = planSlug === 'basic' ? purchaseLinks?.basic.link : purchaseLinks?.pro.link;
-    if ( link) {
-      // Create a temporary link element to trigger LemonSqueezy overlay
-      (window as any).LemonSqueezy.Url.Open(link);
+    if (link) {
+      window.LemonSqueezy?.Url?.Open(link);
     }
   };
 
   const isCurrentPlan = (planSlug: string) => {
-    return subscription?.subscription.subscription_plans.slug === planSlug;
+    if (!subscription) return false;
+    
+    // Check if it's the current active plan
+    return subscription.subscription.subscription_plans.slug === planSlug &&
+           ['active', 'trialing'].includes(subscription.subscription.status);
   };
 
   if (loading || linksLoading) {
@@ -82,10 +124,7 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
     <div className={cn('space-y-8', className)}>
       {/* Header */}
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold tracking-tight">Выберите тарифный план</h2>
-        <p className="text-muted-foreground text-lg">
-          Начните с 14-дневного бесплатного пробного периода Pro
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight">{t[language].title}</h2>
       </div>
 
 
@@ -108,7 +147,7 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground px-3 py-1">
                     <Crown className="w-3 h-3 mr-1" />
-                    Рекомендуется
+                    {t[language].recommended}
                   </Badge>
                 </div>
               )}
@@ -149,31 +188,13 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
                   disabled={isCurrentUserPlan}
                   onClick={() => handlePlanSelect(plan.slug)}
                 >
-                  {isCurrentUserPlan ? (
-                    'Текущий план'
-                  ) : isPro && !subscription ? (
-                    'Начать бесплатный пробный период'
-                  ) : (
-                    'Выбрать план'
-                  )}
+                  {isCurrentUserPlan ? t[language].currentPlan : t[language].choosePlan}
                 </Button>
               </CardFooter>
             </Card>
           );
         })}
       </div>
-      
-      {/* Trial Information */}
-      {!subscription && (
-        <div className="text-center space-y-2 max-w-2xl mx-auto">
-          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>14-дневный бесплатный пробный период:</strong> Начните с Pro плана без привязки карты. 
-              Вы сможете отменить в любое время до окончания пробного периода.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
