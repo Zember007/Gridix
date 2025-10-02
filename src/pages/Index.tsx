@@ -33,6 +33,14 @@ const Index = () => {
     navigate('/terms-of-service');
   };
 
+  const goToRefundPolicy = () => {
+    navigate('/refund-policy');
+  };
+
+  const goToPricing = () => {
+    navigate('/pricing');
+  };
+
   // Функция для плавной прокрутки к элементу
   const smoothScrollTo = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -363,8 +371,7 @@ const Index = () => {
               <h4 className="text-lg font-semibold mb-4 text-white">{t('landing.quickLinks')}</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">{t('landing.adminPanel')}</button></li>
-                {/*              <li><button className="hover:text-blue-400 transition-colors">Демо</button></li>
-                <li><button className="hover:text-blue-400 transition-colors">Документация</button></li> */}
+                <li><button onClick={goToPricing} className="hover:text-blue-400 transition-colors">{t('landing.pricing')}</button></li>
                 <li><button
                   onClick={() => {
                     window.open('https://t.me/Klasterdigital', '_blank');
@@ -379,7 +386,7 @@ const Index = () => {
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">{t('landing.privacyPolicy')}</button></li>
                 <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">{t('landing.termsOfService')}</button></li>
-                {/* <li><button className="hover:text-blue-400 transition-colors">Cookie Policy</button></li> */}
+                <li><button onClick={goToRefundPolicy} className="hover:text-blue-400 transition-colors">{t('landing.refundPolicy')}</button></li>
               </ul>
             </div>
           </div>

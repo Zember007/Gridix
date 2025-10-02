@@ -104,7 +104,7 @@ const translations = {
 } as const;
 
 export function EnhancedPricingPlans({ className, showHeader = true, requireAuth = true }: EnhancedPricingPlansProps) {
-  const { subscription, loading, plans: plansData } = useSubscription();
+  const { subscription, loading, plansLoading, plans: plansData } = useSubscription();
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
@@ -136,9 +136,10 @@ export function EnhancedPricingPlans({ className, showHeader = true, requireAuth
            ['active', 'trialing'].includes(subscription.subscription.status);
   };
 
-  if (loading) {
+  if (loading || plansLoading) {
     return (
       <div className={cn('flex justify-center items-center py-12', className)}>
+
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );

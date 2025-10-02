@@ -20,6 +20,7 @@ import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import RefundPolicyPage from "./pages/RefundPolicyPage";
 import DomainProjectPage from "./pages/DomainProjectPage";
 import DomainApartmentPage from "./pages/DomainApartmentPage";
 import WidgetPreviewPage from "./pages/WidgetPreviewPage";
@@ -57,9 +58,14 @@ function App() {
               {/* Legal pages */}
               <Route path="/:lang/privacy-policy" element={<LanguageProvider><LanguageWrapper><PrivacyPolicyPage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/terms-of-service" element={<LanguageProvider><LanguageWrapper><TermsOfServicePage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/refund-policy" element={<LanguageProvider><LanguageWrapper><RefundPolicyPage /></LanguageWrapper></LanguageProvider>} />
               
               {/* Public Pricing Page */}
               <Route path="/:lang/pricing" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/price" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />
+              {/* Redirect bare pricing routes to default language */}
+              <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
+              <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
               
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />

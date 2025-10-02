@@ -4387,6 +4387,18 @@ const translations: Translations = {
     ka: 'მომხმარებლის შეთანხმება',
     ar: 'شروط الخدمة'
   },
+  'landing.refundPolicy': {
+    ru: 'Политика возврата',
+    en: 'Refund policy',
+    ka: 'დაბრუნების პოლიტიკა',
+    ar: 'سياسة الاسترداد'
+  },
+  'landing.pricing': {
+    ru: 'Тарифы',
+    en: 'Pricing',
+    ka: 'ფასები',
+    ar: 'التسعير'
+  },
   'landing.copyright': {
     ru: '© 2024 Gridix. Все права защищены.',
     en: '© 2024 Gridix. All rights reserved.',

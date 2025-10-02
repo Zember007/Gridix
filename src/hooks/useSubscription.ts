@@ -55,6 +55,7 @@ export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
@@ -85,6 +86,7 @@ export function useSubscription() {
   };
 
   const fetchPlans = async () => {
+    setPlansLoading(true);
     try {
       const session = await supabase.auth.getSession();
       const headers: Record<string, string> = {};
@@ -107,6 +109,8 @@ export function useSubscription() {
     } catch (err) {
       console.error('Error fetching plans:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch plans');
+    } finally {
+      setPlansLoading(false);
     }
   };
 
@@ -198,6 +202,8 @@ export function useSubscription() {
   useEffect(() => {
     if (user) {
       fetchSubscription();
+    } else {
+      setLoading(false);
     }
     // Always fetch plans, even for non-authenticated users
     fetchPlans();
@@ -207,6 +213,7 @@ export function useSubscription() {
     subscription,
     plans,
     loading,
+    plansLoading,
     error,
     getPurchaseLinks,
     getManagementUrl,
