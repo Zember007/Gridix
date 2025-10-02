@@ -1,0 +1,94 @@
+{
+  "address": "العنوان",
+  "adminPanel": "لوحة الإدارة",
+  "badge": "حل مبتكر للعقارات",
+  "company": "الشركة",
+  "companyDescription": "منصة مبتكرة لإنشاء خطط عقارية تفاعلية. نحن نبسط عملية البيع ونزيد التحويل.",
+  "copyright": "© 2024 Gridix. جميع الحقوق محفوظة.",
+  "crmIntegrationDesc": "نقل تلقائي للعملاء المحتملين وبيانات الشقق إلى AmoCRM و Bitrix24 و HubSpot وأنظمة CRM أخرى. لا توجد طلبات مفقودة — جميع العملاء في قمعك على الفور.",
+  "crmIntegrationTitle": "التكامل مع أنظمة CRM الشائعة",
+  "dataImportDesc": "قم بتحميل حالات وأسعار الشقق من Excel أو CSV أو Google Sheets. ستتم مزامنة جميع البيانات تلقائياً مع النظام.",
+  "dataImportTitle": "استيراد البيانات",
+  "description": "منصة احترافية لإنشاء وإدارة مخططات العقارات التفاعلية. ارفع المخططات، اضبط الشقق، وادمج الأدوات في موقعك.",
+  "email": "البريد الإلكتروني",
+  "embeddableWidget": "ويجتات قابلة للدمج",
+  "embeddableWidgetDesc": "ادمج المخططات التفاعلية في موقعك بكود HTML بسيط",
+  "enterAdmin": "دخول لوحة الإدارة",
+  "excelIntegration": "تكامل Excel",
+  "excelIntegrationDesc": "استورد بيانات الشقق من ملفات Excel وزامن المعلومات",
+  "feature": {
+    "mobile": {
+      "desc": "يعمل على جميع الأجهزة",
+      "title": "متوافق مع الهاتف"
+    },
+    "multilang": {
+      "desc": "يدعم 4 لغات",
+      "title": "متعدد اللغات"
+    },
+    "quality": {
+      "desc": "نتائج مهنية",
+      "title": "الجودة"
+    },
+    "quickSetup": {
+      "desc": "أنشئ مشروعاً في 5 دقائق",
+      "title": "إعداد سريع"
+    },
+    "security": {
+      "desc": "تخزين آمن للبيانات",
+      "title": "الأمان"
+    },
+    "simplicity": {
+      "desc": "واجهة بديهية",
+      "title": "البساطة"
+    }
+  },
+  "features": "ميزات المنصة",
+  "freeTrial": "فترة تجريبية مجانية",
+  "getStarted": "ابدأ الآن",
+  "howItLooks": "كيف يبدو",
+  "interactiveDemo": "عرض تفاعلي",
+  "interactiveEditing": "التحرير التفاعلي",
+  "interactiveEditingDesc": "أنشئ وحرر مضلعات الشقق مباشرة في المتصفح بمحرر مريح",
+  "interactivePlansDesc": "يساعد Gridix في إنشاء خطط عقارية واضحة ومريحة: ضع علامة على حالات الشقق، واربط تكاملات CRM وشارك الخطط بسطر واحد من الكود. كل شيء بسيط وسريع وبدون تكاليف غير ضرورية.",
+  "interactivePlansTitle": "خطط تفاعلية للمطورين والوسطاء العقاريين",
+  "legalInfo": "المعلومات القانونية",
+  "multiProject": "مشاريع متعددة",
+  "multiProjectDesc": "أدر عدة مشاريع عقارية في لوحة إدارة واحدة",
+  "noObligations": "بدون التزامات",
+  "ourAdvantages": "مزايانا",
+  "planUpload": "رفع المخططات",
+  "planUploadDesc": "ارفع صور مخططات المباني وأنشئ خرائط شقق تفاعلية",
+  "pricing": "التسعير",
+  "privacyPolicy": "سياسة الخصوصية",
+  "quickLinks": "روابط سريعة",
+  "readyToStart": "مستعد للبدء؟",
+  "readyToStartDesc": "أنشئ مخططك العقاري التفاعلي الأول اليوم",
+  "refundPolicy": "سياسة الاسترداد",
+  "sellFromAnywhere": "بع من أي مكان في العالم",
+  "setupIn5Minutes": "إعداد في 5 دقائق",
+  "stats": {
+    "companies": "شركات",
+    "projects": "مشاريع",
+    "support": "الدعم",
+    "uptime": "وقت التشغيل"
+  },
+  "statusManagement": "إدارة الحالة",
+  "statusManagementDesc": "تتبع حالات الشقق: متاح، محجوز، مباع",
+  "subtitle": "بسهولة",
+  "support": "الدعم",
+  "termsOfService": "شروط الخدمة",
+  "testimonials": {
+    "ratingSummary": "4.9/5 متوسط التقييم من 100+ عميل",
+    "subtitle": "اسمع من محترفي العقارات الذين يستخدمون منتجنا",
+    "title": "ماذا يقول عملاؤنا"
+  },
+  "title": "إنشاء مخططات أرضية تفاعلية",
+  "toolsHeadline": "أدوات قوية لبناء مخططات عقارية تفاعلية",
+  "trialBadge": "تجربة مجانية • بدون التزام • إعداد في 5 دقائق",
+  "videoNotSupported": "متصفحك لا يدعم الفيديو.",
+  "viewDemo": "عرض التوضيحي",
+  "whatWeGiveClients": "ما نقدمه للعملاء",
+  "widgetsDesc": "خطط تفاعلية قابلة للتضمين بسطر واحد من الكود. يعمل على أي نظام إدارة محتوى (WordPress, Tilda, 1C-Bitrix).",
+  "widgetsTitle": "ودجات جاهزة لأي موقع ويب",
+  "workWithoutBorders": "اعمل بدون حدود"
+}

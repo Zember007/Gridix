@@ -1,0 +1,20 @@
+{
+  "authRequired": "يلزم تسجيل الدخول للعمل مع الإعدادات",
+  "company": "الشركة",
+  "companyAddress": "عنوان الشركة",
+  "companyAddressPlaceholder": "المدينة، الشارع، 1",
+  "companyDescription": "وصف الشركة",
+  "companyDescriptionPlaceholder": "وصف مختصر لأنشطة الشركة...",
+  "companyInfo": "معلومات الشركة",
+  "companyInfoDesc": "معلومات أساسية عن شركتك",
+  "companyName": "اسم الشركة",
+  "companyNamePlaceholder": "شركة ذات مسؤولية محدودة \"اسم الشركة\"",
+  "contacts": "حسابات المدراء",
+  "description": "إدارة إعدادات الشركة ومعلومات الاتصال",
+  "errorLoading": "خطأ في تحميل الإعدادات",
+  "errorSaving": "خطأ في حفظ الإعدادات",
+  "save": "حفظ",
+  "saving": "جاري الحفظ...",
+  "settingsSaved": "تم حفظ الإعدادات",
+  "title": "الإعدادات"
+}

@@ -1,0 +1,78 @@
+{
+  "mapper": {
+    "actions": {
+      "createProject": "Create project with data"
+    },
+    "columns": {
+      "description": "Specify which columns from your Excel file correspond to apartment fields",
+      "title": "Map Excel columns"
+    },
+    "preview": {
+      "description": "How your data will be imported ({count} records)",
+      "title": "Data preview"
+    },
+    "project": {
+      "description": "Description",
+      "floors": {
+        "hint": "Will be adjusted based on data from the table"
+      },
+      "name": "Project name*"
+    },
+    "projectInfo": {
+      "description": "Basic information about your project",
+      "title": "Project information"
+    },
+    "validation": {
+      "description": "Map Excel values to standard formats",
+      "rooms": {
+        "title": "Configure number of rooms"
+      },
+      "status": {
+        "title": "Configure apartment statuses"
+      },
+      "title": "Data validation"
+    }
+  },
+  "url": {
+    "autoConvert": "The link will be automatically converted for data import",
+    "check": "Check",
+    "checking": "Checking...",
+    "desc": {
+      "googleSheets": "Import data directly from a Google Sheets document",
+      "link": "Import data from an Excel file by link"
+    },
+    "detectedGs": "Google Sheets detected",
+    "howToSetup": "How to set up access:",
+    "importData": "Import data",
+    "importedCount": "Imported {count} records",
+    "importing": "Importing...",
+    "input": {
+      "excel": "Excel file link*",
+      "gs": "Google Sheets link*"
+    },
+    "link": {
+      "fail": "✗ Link is not accessible",
+      "ok": "✓ Link is accessible"
+    },
+    "req": {
+      "p1": "The file must be publicly accessible (no auth)",
+      "p2": "Supported: Excel (.xlsx, .xls) and Google Sheets",
+      "p3": "First row must contain column headers",
+      "p4": "For auto-sync the file should not be moved",
+      "title": "File requirements:"
+    },
+    "title": {
+      "googleSheets": "Import from Google Sheets",
+      "link": "Import by link"
+    },
+    "toast": {
+      "checkError": "Error checking the link. Ensure the file is publicly accessible",
+      "enterLink": "Enter a link to the file",
+      "fetchFailed": "Failed to load file",
+      "fileInaccessible": "File is not accessible via the provided link",
+      "gsAccessible": "Google Sheets is accessible for import",
+      "invalidGs": "Invalid Google Sheets link",
+      "linkAccessible": "Link is accessible for import"
+    }
+  }
+}

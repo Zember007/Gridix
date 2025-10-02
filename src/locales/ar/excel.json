@@ -1,0 +1,78 @@
+{
+  "mapper": {
+    "actions": {
+      "createProject": "إنشاء مشروع بالبيانات"
+    },
+    "columns": {
+      "description": "حدد الأعمدة من ملف Excel التي تتوافق مع حقول الشقق",
+      "title": "ربط أعمدة Excel"
+    },
+    "preview": {
+      "description": "كيفية استيراد بياناتك ({count} سجل)",
+      "title": "معاينة البيانات"
+    },
+    "project": {
+      "description": "الوصف",
+      "floors": {
+        "hint": "سيتم التعديل تلقائيًا بناءً على بيانات الجدول"
+      },
+      "name": "اسم المشروع*"
+    },
+    "projectInfo": {
+      "description": "معلومات أساسية عن مشروعك",
+      "title": "معلومات المشروع"
+    },
+    "validation": {
+      "description": "ربط قيم Excel بالتنسيقات القياسية",
+      "rooms": {
+        "title": "تكوين عدد الغرف"
+      },
+      "status": {
+        "title": "تكوين حالات الشقق"
+      },
+      "title": "التحقق من البيانات"
+    }
+  },
+  "url": {
+    "autoConvert": "سيتم تحويل الرابط تلقائيًا لاستيراد البيانات",
+    "check": "فحص",
+    "checking": "جارٍ الفحص...",
+    "desc": {
+      "googleSheets": "استيراد البيانات مباشرة من مستند Google Sheets",
+      "link": "استيراد البيانات من ملف Excel عبر رابط"
+    },
+    "detectedGs": "تم اكتشاف Google Sheets",
+    "howToSetup": "كيفية إعداد الوصول:",
+    "importData": "استيراد البيانات",
+    "importedCount": "تم استيراد {count} سجل",
+    "importing": "جارٍ الاستيراد...",
+    "input": {
+      "excel": "رابط ملف Excel*",
+      "gs": "رابط Google Sheets*"
+    },
+    "link": {
+      "fail": "✗ الرابط غير متاح",
+      "ok": "✓ الرابط متاح"
+    },
+    "req": {
+      "p1": "يجب أن يكون الملف متاحًا للعامة (بدون مصادقة)",
+      "p2": "مدعوم: Excel (.xlsx, .xls) وGoogle Sheets",
+      "p3": "يجب أن تحتوي الصف الأول على عناوين الأعمدة",
+      "p4": "للمزامنة التلقائية لا يجب نقل الملف",
+      "title": "متطلبات الملف:"
+    },
+    "title": {
+      "googleSheets": "الاستيراد من Google Sheets",
+      "link": "الاستيراد عبر الرابط"
+    },
+    "toast": {
+      "checkError": "حدث خطأ أثناء فحص الرابط. تأكد من أن الملف متاح للعامة",
+      "enterLink": "أدخل رابط الملف",
+      "fetchFailed": "فشل تحميل الملف",
+      "fileInaccessible": "الملف غير متاح عبر الرابط",
+      "gsAccessible": "Google Sheets متاح للاستيراد",
+      "invalidGs": "رابط Google Sheets غير صالح",
+      "linkAccessible": "الرابط متاح للاستيراد"
+    }
+  }
+}

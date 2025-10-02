@@ -1,0 +1,81 @@
+{
+  "actions": {
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "editNotes": "Edit notes",
+    "openInCrm": "Open in CRM"
+  },
+  "cancel": "Cancel",
+  "crm": {
+    "notSent": "Not sent"
+  },
+  "description": "All client requests with CRM delivery status",
+  "empty": "No leads found",
+  "error": "Error",
+  "filters": {
+    "dateFrom": "Date from",
+    "dateTo": "Date to",
+    "status": "Status",
+    "title": "Filters"
+  },
+  "loading": "Loading leads...",
+  "notes": {
+    "client": "Client",
+    "placeholder": "Enter notes...",
+    "title": "Lead notes"
+  },
+  "save": "Save",
+  "stats": {
+    "cancelled": "Cancelled",
+    "failed": "Failed",
+    "pending": "Pending",
+    "savedOnly": "Saved only",
+    "sent": "Sent to CRM",
+    "total": "Total leads"
+  },
+  "status": {
+    "all": "All",
+    "cancelled": "Cancelled",
+    "failed": "Failed",
+    "pending": "Pending",
+    "saved_only": "Saved only",
+    "sent_to_crm": "Sent to CRM"
+  },
+  "table": {
+    "actions": "Actions",
+    "apartment": "Apartment",
+    "client": "Client",
+    "contacts": "Contacts",
+    "crm": "CRM",
+    "date": "Date",
+    "project": "Project",
+    "status": "Status"
+  },
+  "title": "Leads",
+  "toast": {
+    "cancelError": {
+      "desc": "Failed to cancel lead",
+      "title": "Error"
+    },
+    "cancelled": {
+      "desc": "Lead cancelled",
+      "title": "Success"
+    },
+    "copied": {
+      "desc": "Lead info copied to clipboard",
+      "title": "Copied"
+    },
+    "copyError": {
+      "desc": "Failed to copy info",
+      "title": "Error"
+    },
+    "notesError": {
+      "desc": "Failed to update notes",
+      "title": "Error"
+    },
+    "notesSaved": {
+      "desc": "Notes updated",
+      "title": "Success"
+    }
+  }
+}

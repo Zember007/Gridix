@@ -1,0 +1,21 @@
+{
+  "available": "Available",
+  "back": "Back",
+  "cancel": "Cancel",
+  "continue": "Continue",
+  "copied": "Link copied to clipboard",
+  "error": "An error occurred",
+  "example": "Example",
+  "grid": "Grid",
+  "hide": "Hide",
+  "list": "List",
+  "menu": "Menu",
+  "more": "More details",
+  "priceOnRequest": "On request",
+  "reserve": "Reserve",
+  "reserved": "Reserved",
+  "search": "Search",
+  "sold": "Sold",
+  "unavailable": "Unavailable",
+  "view": "View"
+}

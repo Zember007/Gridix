@@ -15,6 +15,12 @@ const TermsOfServicePage = () => {
     navigate('/');
   };
 
+  const currentDate = new Date().toLocaleDateString(t('legal.locale') || 'ru-RU', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
@@ -60,10 +66,10 @@ const TermsOfServicePage = () => {
               </div>
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('legal.terms.title')}
+              {t('terms.title')}
             </h1>
             <p className="text-xl text-gray-600">
-              Последнее обновление: {new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {t('terms.lastUpdated')} {currentDate}
             </p>
           </div>
 
@@ -74,22 +80,15 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <FileText className="h-6 w-6 text-blue-600" />
-                  Общие положения
+                  {t('terms.general.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между 
-                  компанией Gridix (далее — «Компания», «мы») и пользователями сервиса FloorPlan Wizard 
-                  (далее — «Сервис», «Платформа»).
-                </p>
-                <p className="mb-4">
-                  Используя наш Сервис, вы соглашаетесь с условиями данного Соглашения. 
-                  Если вы не согласны с какими-либо условиями, пожалуйста, не используйте Сервис.
-                </p>
+                <p className="mb-4">{t('terms.general.text1')}</p>
+                <p className="mb-4">{t('terms.general.text2')}</p>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-blue-800">
-                    <strong>Важно:</strong> Внимательно ознакомьтесь со всеми условиями перед началом использования Сервиса.
+                    <strong>{t('terms.general.important')}</strong> {t('terms.general.importantText')}
                   </p>
                 </div>
               </CardContent>
@@ -100,22 +99,22 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Building2 className="h-6 w-6 text-blue-600" />
-                  Информация о компании
+                  {t('terms.companyInfo.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Building2 className="h-5 w-5 text-gray-500" />
-                    <span><strong>Название:</strong> Gridix</span>
+                    <span><strong>{t('terms.companyInfo.name')}</strong> {t('terms.companyInfo.nameValue')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-gray-500" />
-                    <span><strong>Адрес:</strong> Грузия, Батуми, ул. Леселидзе 3</span>
+                    <span><strong>{t('terms.companyInfo.address')}</strong> {t('terms.companyInfo.addressValue')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-gray-500" />
-                    <span><strong>Email:</strong> inbox@gridix.live</span>
+                    <span><strong>{t('terms.companyInfo.email')}</strong> {t('terms.companyInfo.emailValue')}</span>
                   </div>
                 </div>
               </CardContent>
@@ -124,20 +123,17 @@ const TermsOfServicePage = () => {
             {/* Service Description */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Описание сервиса</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.serviceDescription.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  FloorPlan Wizard — это облачная платформа для создания интерактивных планов недвижимости, 
-                  предоставляющая следующие возможности:
-                </p>
+                <p className="mb-4">{t('terms.serviceDescription.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Загрузка и редактирование планов зданий</li>
-                  <li>Создание интерактивных карт квартир</li>
-                  <li>Управление статусами и характеристиками квартир</li>
-                  <li>Интеграция с внешними системами (Excel, CRM)</li>
-                  <li>Создание встраиваемых виджетов для веб-сайтов</li>
-                  <li>Аналитика и отчетность</li>
+                  <li>{t('terms.serviceDescription.item1')}</li>
+                  <li>{t('terms.serviceDescription.item2')}</li>
+                  <li>{t('terms.serviceDescription.item3')}</li>
+                  <li>{t('terms.serviceDescription.item4')}</li>
+                  <li>{t('terms.serviceDescription.item5')}</li>
+                  <li>{t('terms.serviceDescription.item6')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -147,26 +143,26 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Users className="h-6 w-6 text-blue-600" />
-                  Учетные записи пользователей
+                  {t('terms.userAccounts.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Регистрация:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.userAccounts.registration.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Для использования Сервиса необходимо создать учетную запись</li>
-                      <li>Вы должны предоставить точную и актуальную информацию</li>
-                      <li>Вы несете ответственность за конфиденциальность своего пароля</li>
-                      <li>Одно лицо может иметь только одну учетную запись</li>
+                      <li>{t('terms.userAccounts.registration.item1')}</li>
+                      <li>{t('terms.userAccounts.registration.item2')}</li>
+                      <li>{t('terms.userAccounts.registration.item3')}</li>
+                      <li>{t('terms.userAccounts.registration.item4')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Требования к пользователям:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.userAccounts.requirements.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Возраст не менее 18 лет или согласие родителей/опекунов</li>
-                      <li>Правоспособность для заключения договоров</li>
-                      <li>Соблюдение применимого законодательства</li>
+                      <li>{t('terms.userAccounts.requirements.item1')}</li>
+                      <li>{t('terms.userAccounts.requirements.item2')}</li>
+                      <li>{t('terms.userAccounts.requirements.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -176,18 +172,18 @@ const TermsOfServicePage = () => {
             {/* User Obligations */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Обязательства пользователей</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.userObligations.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">Используя Сервис, вы обязуетесь:</p>
+                <p className="mb-4">{t('terms.userObligations.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Использовать Сервис только в законных целях</li>
-                  <li>Не нарушать права третьих лиц</li>
-                  <li>Не загружать вредоносный контент</li>
-                  <li>Не пытаться получить несанкционированный доступ к системе</li>
-                  <li>Не использовать Сервис для спама или мошенничества</li>
-                  <li>Соблюдать авторские права на загружаемые материалы</li>
-                  <li>Не перепродавать доступ к Сервису без разрешения</li>
+                  <li>{t('terms.userObligations.item1')}</li>
+                  <li>{t('terms.userObligations.item2')}</li>
+                  <li>{t('terms.userObligations.item3')}</li>
+                  <li>{t('terms.userObligations.item4')}</li>
+                  <li>{t('terms.userObligations.item5')}</li>
+                  <li>{t('terms.userObligations.item6')}</li>
+                  <li>{t('terms.userObligations.item7')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -197,22 +193,22 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <AlertTriangle className="h-6 w-6 text-red-600" />
-                  Запрещенные виды использования
+                  {t('terms.prohibitedUses.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="bg-red-50 p-4 rounded-lg mb-4">
-                  <p className="text-red-800 font-semibold mb-2">Строго запрещается:</p>
+                  <p className="text-red-800 font-semibold mb-2">{t('terms.prohibitedUses.warning')}</p>
                 </div>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Использование Сервиса для незаконной деятельности</li>
-                  <li>Нарушение интеллектуальных прав</li>
-                  <li>Распространение вредоносного ПО</li>
-                  <li>Попытки взлома или обхода систем безопасности</li>
-                  <li>Создание фальшивых аккаунтов</li>
-                  <li>Спам и навязчивая реклама</li>
-                  <li>Сбор персональных данных других пользователей</li>
-                  <li>Использование автоматизированных средств без разрешения</li>
+                  <li>{t('terms.prohibitedUses.item1')}</li>
+                  <li>{t('terms.prohibitedUses.item2')}</li>
+                  <li>{t('terms.prohibitedUses.item3')}</li>
+                  <li>{t('terms.prohibitedUses.item4')}</li>
+                  <li>{t('terms.prohibitedUses.item5')}</li>
+                  <li>{t('terms.prohibitedUses.item6')}</li>
+                  <li>{t('terms.prohibitedUses.item7')}</li>
+                  <li>{t('terms.prohibitedUses.item8')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -220,23 +216,20 @@ const TermsOfServicePage = () => {
             {/* Intellectual Property */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Интеллектуальная собственность</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.intellectualProperty.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Права Компании:</h4>
-                    <p className="mb-2">
-                      Все права на Сервис, включая программное обеспечение, дизайн, 
-                      товарные знаки и контент, принадлежат Компании.
-                    </p>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.intellectualProperty.companyRights.title')}</h4>
+                    <p className="mb-2">{t('terms.intellectualProperty.companyRights.text')}</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Права пользователей:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.intellectualProperty.userRights.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Вы сохраняете права на загружаемый вами контент</li>
-                      <li>Вы предоставляете Компании лицензию на использование контента для работы Сервиса</li>
-                      <li>Вы гарантируете, что имеете права на загружаемые материалы</li>
+                      <li>{t('terms.intellectualProperty.userRights.item1')}</li>
+                      <li>{t('terms.intellectualProperty.userRights.item2')}</li>
+                      <li>{t('terms.intellectualProperty.userRights.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -248,34 +241,34 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <CreditCard className="h-6 w-6 text-blue-600" />
-                  Условия оплаты
+                  {t('terms.paymentTerms.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Тарифы и оплата:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.paymentTerms.pricing.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Сервис предоставляется на основе подписочной модели</li>
-                      <li>Цены указаны на официальном сайте и могут изменяться</li>
-                      <li>Оплата производится заранее за выбранный период</li>
-                      <li>Доступны различные способы оплаты</li>
+                      <li>{t('terms.paymentTerms.pricing.item1')}</li>
+                      <li>{t('terms.paymentTerms.pricing.item2')}</li>
+                      <li>{t('terms.paymentTerms.pricing.item3')}</li>
+                      <li>{t('terms.paymentTerms.pricing.item4')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Возврат средств:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.paymentTerms.refunds.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Возврат возможен в течение 14 дней с момента оплаты</li>
-                      <li>При существенных нарушениях со стороны Компании</li>
-                      <li>Неиспользованная часть подписки не возмещается при досрочном расторжении</li>
+                      <li>{t('terms.paymentTerms.refunds.item1')}</li>
+                      <li>{t('terms.paymentTerms.refunds.item2')}</li>
+                      <li>{t('terms.paymentTerms.refunds.item3')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Приостановка услуг:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.paymentTerms.suspension.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>При просрочке платежа более 7 дней</li>
-                      <li>При нарушении условий Соглашения</li>
-                      <li>По техническим причинам (с уведомлением)</li>
+                      <li>{t('terms.paymentTerms.suspension.item1')}</li>
+                      <li>{t('terms.paymentTerms.suspension.item2')}</li>
+                      <li>{t('terms.paymentTerms.suspension.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -287,26 +280,26 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Gavel className="h-6 w-6 text-blue-600" />
-                  Ответственность и гарантии
+                  {t('terms.liability.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Ограничение ответственности:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.liability.limitation.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Сервис предоставляется "как есть" без каких-либо гарантий</li>
-                      <li>Компания не несет ответственности за косвенные убытки</li>
-                      <li>Максимальная ответственность ограничена суммой, уплаченной за Сервис</li>
-                      <li>Компания не гарантирует бесперебойную работу Сервиса</li>
+                      <li>{t('terms.liability.limitation.item1')}</li>
+                      <li>{t('terms.liability.limitation.item2')}</li>
+                      <li>{t('terms.liability.limitation.item3')}</li>
+                      <li>{t('terms.liability.limitation.item4')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Ответственность пользователя:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.liability.userLiability.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>За сохранность данных учетной записи</li>
-                      <li>За законность загружаемого контента</li>
-                      <li>За ущерб, причиненный нарушением Соглашения</li>
+                      <li>{t('terms.liability.userLiability.item1')}</li>
+                      <li>{t('terms.liability.userLiability.item2')}</li>
+                      <li>{t('terms.liability.userLiability.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -316,24 +309,24 @@ const TermsOfServicePage = () => {
             {/* Data and Privacy */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Обработка данных</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.dataProcessing.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <p className="mb-4">
-                  Обработка персональных данных регулируется нашей 
+                  {t('terms.dataProcessing.text')}
                   <button 
                     onClick={() => navigate('/privacy-policy')} 
                     className="text-blue-600 hover:underline mx-1"
                   >
-                    Политикой конфиденциальности
+                    {t('terms.dataProcessing.linkText')}
                   </button>.
                 </p>
-                <p className="mb-4">Основные принципы:</p>
+                <p className="mb-4">{t('terms.dataProcessing.principles')}</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>Сбор только необходимых данных</li>
-                  <li>Обеспечение безопасности данных</li>
-                  <li>Соблюдение прав субъектов данных</li>
-                  <li>Прозрачность обработки</li>
+                  <li>{t('terms.dataProcessing.item1')}</li>
+                  <li>{t('terms.dataProcessing.item2')}</li>
+                  <li>{t('terms.dataProcessing.item3')}</li>
+                  <li>{t('terms.dataProcessing.item4')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -341,24 +334,24 @@ const TermsOfServicePage = () => {
             {/* Termination */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Прекращение действия соглашения</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.termination.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Прекращение пользователем:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.termination.byUser.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>В любое время путем удаления учетной записи</li>
-                      <li>Данные могут быть удалены в течение 30 дней</li>
-                      <li>Неиспользованная часть подписки не возмещается</li>
+                      <li>{t('terms.termination.byUser.item1')}</li>
+                      <li>{t('terms.termination.byUser.item2')}</li>
+                      <li>{t('terms.termination.byUser.item3')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Прекращение Компанией:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.termination.byCompany.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>При нарушении условий Соглашения</li>
-                      <li>При неоплате услуг</li>
-                      <li>При прекращении деятельности Сервиса (с уведомлением за 30 дней)</li>
+                      <li>{t('terms.termination.byCompany.item1')}</li>
+                      <li>{t('terms.termination.byCompany.item2')}</li>
+                      <li>{t('terms.termination.byCompany.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -368,42 +361,36 @@ const TermsOfServicePage = () => {
             {/* Changes to Terms */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Изменения в соглашении</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.changes.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Компания оставляет за собой право изменять условия данного Соглашения. 
-                  О существенных изменениях мы уведомим пользователей не менее чем за 30 дней:
-                </p>
+                <p className="mb-4">{t('terms.changes.text')}</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li>По электронной почте</li>
-                  <li>Через уведомления в Сервисе</li>
-                  <li>На официальном сайте</li>
+                  <li>{t('terms.changes.item1')}</li>
+                  <li>{t('terms.changes.item2')}</li>
+                  <li>{t('terms.changes.item3')}</li>
                 </ul>
-                <p className="mt-4">
-                  Продолжение использования Сервиса после вступления изменений в силу 
-                  означает ваше согласие с новыми условиями.
-                </p>
+                <p className="mt-4">{t('terms.changes.continuation')}</p>
               </CardContent>
             </Card>
 
             {/* Applicable Law */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Применимое право и разрешение споров</CardTitle>
+                <CardTitle className="text-2xl">{t('terms.applicableLaw.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Применимое право:</h4>
-                    <p>Настоящее Соглашение регулируется законодательством Грузии.</p>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.applicableLaw.law.title')}</h4>
+                    <p>{t('terms.applicableLaw.law.text')}</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Разрешение споров:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('terms.applicableLaw.disputes.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Приоритет отдается досудебному урегулированию</li>
-                      <li>Споры рассматриваются судами Грузии</li>
-                      <li>Возможно использование медиации</li>
+                      <li>{t('terms.applicableLaw.disputes.item1')}</li>
+                      <li>{t('terms.applicableLaw.disputes.item2')}</li>
+                      <li>{t('terms.applicableLaw.disputes.item3')}</li>
                     </ul>
                   </div>
                 </div>
@@ -415,26 +402,24 @@ const TermsOfServicePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Mail className="h-6 w-6 text-blue-600" />
-                  Контактная информация
+                  {t('terms.contact.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700">
-                <p className="mb-4">
-                  По всем вопросам, связанным с данным Соглашением, обращайтесь к нам:
-                </p>
+                <p className="mb-4">{t('terms.contact.text')}</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-blue-600" />
-                    <span>Email: inbox@gridix.live</span>
+                    <span>{t('terms.contact.email')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-blue-600" />
-                    <span>Адрес: Грузия, Батуми, ул. Леселидзе 3</span>
+                    <span>{t('terms.contact.address')}</span>
                   </div>
                 </div>
                 <div className="mt-6 p-4 bg-blue-100 rounded-lg">
                   <p className="text-blue-800 text-sm">
-                    <strong>Время ответа:</strong> Мы стремимся отвечать на все обращения в течение 24 часов в рабочие дни.
+                    <strong>{t('terms.contact.responseTime')}</strong> {t('terms.contact.responseTimeText')}
                   </p>
                 </div>
               </CardContent>

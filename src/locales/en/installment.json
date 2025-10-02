@@ -1,0 +1,20 @@
+{
+  "apply": "Apply for Installment",
+  "calculator": "Installment Calculator",
+  "downPayment": "Down Payment",
+  "downPaymentFrom": "Down payment from",
+  "info": {
+    "contactManager": "Contact manager to apply",
+    "earlyPayment": "Early payment option available",
+    "noInterest": "Interest-free installment"
+  },
+  "low": "Installment 0%",
+  "maximum": "Maximum",
+  "minimum": "Minimum",
+  "month": "month",
+  "monthlyPayment": "Monthly Payment",
+  "months": "months",
+  "period": "On",
+  "perMonth": "month",
+  "remainingAmount": "Remaining Amount"
+}

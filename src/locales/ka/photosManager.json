@@ -1,0 +1,21 @@
+{
+  "apartmentOption": "ბინა {number} (სართული {floor})",
+  "authRequired": "ფოტოების ატვირთვისთვის ავტორიზაცია საჭიროა",
+  "deleteError": "ფოტოს წაშლის შეცდომა",
+  "deleteSuccess": "ფოტო წაშლილია",
+  "description": "ატვირთეთ ინდივიდუალური ფოტოები კონკრეტული ბინებისთვის",
+  "duplicateError": "ფოტოების დუბლირების შეცდომა",
+  "duplicateSuccess": "ფოტოები დუბლირებულია {count} მსგავსი ბინისთვის",
+  "duplicateToSimilar": "მსგავს ბინებზე დუბლირება",
+  "individualPhotos": "ინდივიდუალური ფოტოები",
+  "layoutPhotos": "განლაგების ფოტოები",
+  "noPhotos": "ფოტოები არ არის ატვირთული",
+  "noPhotosDesc": "ატვირთეთ ფოტოები არჩეული ბინისთვის",
+  "selectApartment": "აირჩიეთ ბინა",
+  "selectApartmentPlaceholder": "აირჩიეთ ბინა რედაქტირებისთვის",
+  "title": "ბინების ფოტოების მართვა",
+  "uploadError": "ფოტოების ატვირთვის შეცდომა",
+  "uploadMultiple": "შეგიძლიათ რამდენიმე ფაილი ერთდროულად აირჩიოთ",
+  "uploadPhotos": "ფოტოების ატვირთვა",
+  "uploadSuccess": "ფოტოები ატვირთულია"
+}

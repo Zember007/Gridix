@@ -1,0 +1,20 @@
+{
+  "authRequired": "Authentication required to work with settings",
+  "company": "Company",
+  "companyAddress": "Company address",
+  "companyAddressPlaceholder": "City, Street, 1",
+  "companyDescription": "Company description",
+  "companyDescriptionPlaceholder": "Brief description of company activities...",
+  "companyInfo": "Company information",
+  "companyInfoDesc": "Basic information about your company",
+  "companyName": "Company name",
+  "companyNamePlaceholder": "LLC \"Company Name\"",
+  "contacts": "Manager accounts",
+  "description": "Manage company settings and contact information",
+  "errorLoading": "Error loading settings",
+  "errorSaving": "Error saving settings",
+  "save": "Save",
+  "saving": "Saving...",
+  "settingsSaved": "Settings saved",
+  "title": "Settings"
+}

@@ -1,0 +1,21 @@
+{
+  "apartmentOption": "Apartment {number} (Floor {floor})",
+  "authRequired": "Authentication required to upload photos",
+  "deleteError": "Error deleting photo",
+  "deleteSuccess": "Photo deleted",
+  "description": "Upload individual photos for specific apartments",
+  "duplicateError": "Error duplicating photos",
+  "duplicateSuccess": "Photos duplicated for {count} similar apartments",
+  "duplicateToSimilar": "Duplicate to similar apartments",
+  "individualPhotos": "Individual Photos",
+  "layoutPhotos": "Layout Photos",
+  "noPhotos": "No photos uploaded",
+  "noPhotosDesc": "Upload photos for the selected apartment",
+  "selectApartment": "Select Apartment",
+  "selectApartmentPlaceholder": "Select apartment to edit",
+  "title": "Apartment Photos Management",
+  "uploadError": "Error uploading photos",
+  "uploadMultiple": "You can select multiple files at once",
+  "uploadPhotos": "Upload Photos",
+  "uploadSuccess": "Photos uploaded"
+}

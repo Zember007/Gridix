@@ -1,0 +1,56 @@
+{
+  "analytics": "Analytics",
+  "analyticsComingSoon": "Analytics feature will be added later",
+  "analyticsDescription": "Statistics on projects and apartments",
+  "back": "Back",
+  "dashboard": "Admin Dashboard",
+  "dashboardDescription": "Manage projects and settings",
+  "leads": "Leads",
+  "project": {
+    "create": {
+      "description": "Choose how to create the project",
+      "googleSheets": "Google Sheets:",
+      "import": {
+        "benefit": {
+          "fresh": "Data is always up-to-date",
+          "noReupload": "No need to re-upload the file",
+          "sync": "Automatic sync when data changes"
+        },
+        "benefitsTitle": "Advantages of import by link:",
+        "byLink": "Import by link",
+        "description": "Upload an Excel file with apartment data to create a project automatically",
+        "processing": "Processing...",
+        "template": "Download template",
+        "title": "Import from Excel",
+        "uploadButton": "Upload Excel file",
+        "uploadTab": "Upload file",
+        "urlTab": "By link"
+      },
+      "infoText": "Any link format, automatic conversion and sync",
+      "layout": {
+        "different": {
+          "help": "You will need to configure each floor separately"
+        },
+        "question": "Is the layout the same on all floors?",
+        "same": {
+          "help": "You can mark apartments once and apply to all floors automatically"
+        },
+        "title": "Floor layout"
+      },
+      "manual": {
+        "description": "Create a project from scratch and configure everything yourself",
+        "start": "Start manual creation",
+        "title": "Manual setup"
+      },
+      "requiredData": {
+        "fields": "Apartment numbers, floors, rooms, area, price, status"
+      },
+      "supportedFormats": "Supported formats:",
+      "title": "Create new project"
+    }
+  },
+  "projects": "Projects",
+  "settings": "Settings",
+  "subscription": "Subscription",
+  "widgets": "Widgets"
+}

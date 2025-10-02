@@ -1,0 +1,23 @@
+{
+  "apartments": "Apartments",
+  "authRequired": "Authentication required",
+  "copyWidgetCode": "Copy widget code",
+  "created": "Created",
+  "createFirst": "Create first project",
+  "createFirstDescription": "Create your first real estate project with interactive floor and apartment plans",
+  "createNew": "Create project",
+  "deleteConfirm": "Are you sure you want to delete project {name}?",
+  "deleteProject": "Delete project",
+  "editProject": "Edit project",
+  "errorDeleting": "Error deleting project",
+  "errorLoading": "Error loading projects",
+  "floors": "Floors",
+  "manageDescription": "Manage real estate projects",
+  "noProjects": "No projects",
+  "projectDeleted": "Project deleted",
+  "projects": "Projects",
+  "timeoutError": "Loading projects took too long",
+  "updated": "Updated",
+  "viewProject": "View project",
+  "widgetCodeCopied": "Widget code copied"
+}

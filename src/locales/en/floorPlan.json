@@ -1,0 +1,69 @@
+{
+  "apartments": {
+    "add": "Add Apartment",
+    "area": "Area (m²)",
+    "available": "Available",
+    "deleteError": "Error deleting apartment",
+    "deleteSuccess": "Apartment deleted",
+    "editApartment": "Edit Polygon - Apartment #{number}",
+    "fillAllFields": "Fill all fields and create polygon (minimum 3 points)",
+    "list": "Apartments on floor:",
+    "loading": {
+      "error": "Error loading apartments"
+    },
+    "newApartment": "New Apartment",
+    "noPhotos": "No photos",
+    "noPhotosDesc": "Upload apartment photos",
+    "number": "Apartment Number",
+    "numberPlaceholder": "Example: 101",
+    "parameters": "Apartment Parameters",
+    "photoDeleteError": "Error deleting photo",
+    "photoDeleteSuccess": "Photo deleted",
+    "photos": "Photos",
+    "photoUploadError": "Error uploading photos",
+    "photoUploadSuccess": "Photos uploaded successfully",
+    "price": "Price",
+    "reserved": "Reserved",
+    "rooms": "Rooms",
+    "roomsShort": "rooms",
+    "saveError": "Error saving apartment",
+    "saveSuccess": "Apartment saved",
+    "sold": "Sold",
+    "status": "Status",
+    "title": "Apartment Management",
+    "uploadMultiplePhotos": "Select multiple images to upload"
+  },
+  "duplicate": {
+    "error": "Error duplicating to all floors",
+    "noData": "No data to duplicate",
+    "success": "Plan and polygons duplicated to all floors"
+  },
+  "duplicateToAllFloors": "Duplicate to all floors",
+  "image": {
+    "loadError": "Failed to load plan image"
+  },
+  "loading": {
+    "error": "Error loading floor plan"
+  },
+  "settings": {
+    "backToEditor": "Back to Editor",
+    "title": "Floor {floor} Polygon Settings"
+  },
+  "title": "Floor Plan",
+  "upload": {
+    "authRequired": "Authentication required to upload floor plans",
+    "changeImage": "Change Image",
+    "clickToChange": "Click to change image",
+    "dragDrop": "Drag and drop image here",
+    "dropToReplace": "Drop to replace image",
+    "error": "Error uploading floor plan",
+    "floorPlan": "Floor {floor} plan",
+    "imageUploaded": "Image uploaded",
+    "invalidFileType": "Please select an image file",
+    "loading": "Loading...",
+    "orClickToSelect": "or click to select file",
+    "selectImage": "Select Image",
+    "success": "Floor plan uploaded",
+    "title": "Floor Plan Upload"
+  }
+}

@@ -8,6 +8,7 @@
   "build": "vite build",                 
   "build:dev": "vite build --mode development",
   "build:widget": "WIDGET_BUILD=true vite build --outDir dist-widget",
+    "i18n:generate": "node scripts/generate-translations.js --input translations.json --locales src/locales",
   "lint": "eslint .",
   "preview": "vite preview"
 },

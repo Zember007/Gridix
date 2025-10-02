@@ -1,0 +1,20 @@
+{
+  "apply": "تطبيق التقسيط",
+  "calculator": "حاسبة التقسيط",
+  "downPayment": "الدفعة الأولى",
+  "downPaymentFrom": "دفعة أولى من",
+  "info": {
+    "contactManager": "اتصل بالمدير للتقديم",
+    "earlyPayment": "خيار الدفع المبكر متاح",
+    "noInterest": "تقسيط بدون فوائد"
+  },
+  "low": "تقسيط 0%",
+  "maximum": "الحد الأقصى",
+  "minimum": "الحد الأدنى",
+  "month": "شهر",
+  "monthlyPayment": "الدفعة الشهرية",
+  "months": "شهور",
+  "period": "على",
+  "perMonth": "شهر",
+  "remainingAmount": "المبلغ المتبقي"
+}

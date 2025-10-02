@@ -1,0 +1,12 @@
+{
+  "allCities": "Все города",
+  "allStatuses": "Все статусы",
+  "applyFilters": "Применить фильтры",
+  "city": "Город",
+  "maxPrice": "Макс. цена",
+  "minPrice": "Мин. цена",
+  "priceRange": "Диапазон цен",
+  "resetFilters": "Сбросить фильтры",
+  "search": "Поиск...",
+  "status": "Статус"
+}

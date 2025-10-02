@@ -1,0 +1,23 @@
+{
+  "apartments": "Квартир",
+  "authRequired": "Необходима авторизация",
+  "copyWidgetCode": "Копировать код виджета",
+  "created": "Создан",
+  "createFirst": "Создать первый проект",
+  "createFirstDescription": "Создайте свой первый проект недвижимости с интерактивными планами этажей и квартир",
+  "createNew": "Создать проект",
+  "deleteConfirm": "Вы уверены, что хотите удалить проект {name}?",
+  "deleteProject": "Удалить проект",
+  "editProject": "Редактировать проект",
+  "errorDeleting": "Ошибка удаления проекта",
+  "errorLoading": "Ошибка загрузки проектов",
+  "floors": "Этажей",
+  "manageDescription": "Управление проектами недвижимости",
+  "noProjects": "Нет проектов",
+  "projectDeleted": "Проект удален",
+  "projects": "Проекты",
+  "timeoutError": "Загрузка проектов заняла слишком много времени",
+  "updated": "Обновлен",
+  "viewProject": "Посмотреть проект",
+  "widgetCodeCopied": "Код виджета скопирован"
+}

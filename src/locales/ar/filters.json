@@ -1,0 +1,12 @@
+{
+  "allCities": "جميع المدن",
+  "allStatuses": "جميع الحالات",
+  "applyFilters": "تطبيق التصفيات",
+  "city": "المدينة",
+  "maxPrice": "أعلى سعر",
+  "minPrice": "أقل سعر",
+  "priceRange": "نطاق الأسعار",
+  "resetFilters": "إعادة تعيين التصفيات",
+  "search": "بحث...",
+  "status": "الحالة"
+}

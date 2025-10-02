@@ -1,0 +1,94 @@
+{
+  "address": "Address",
+  "adminPanel": "Admin panel",
+  "badge": "Innovative solution for real estate",
+  "company": "Company",
+  "companyDescription": "Innovative platform for creating interactive real estate plans. We simplify the sales process and increase conversion.",
+  "copyright": "© 2024 Gridix. All rights reserved.",
+  "crmIntegrationDesc": "Automatic transfer of leads and apartment data to AmoCRM, Bitrix24, HubSpot and other CRM systems. No lost applications — all clients are immediately in your funnel.",
+  "crmIntegrationTitle": "Integration with popular CRM systems",
+  "dataImportDesc": "Upload apartment statuses and prices from Excel, CSV or Google Sheets. All data will automatically sync to the system.",
+  "dataImportTitle": "Data Import",
+  "description": "Professional platform for creating and managing interactive real estate floor plans. Upload plans, configure apartments, and embed widgets on your website.",
+  "email": "Email",
+  "embeddableWidget": "Embeddable Widgets",
+  "embeddableWidgetDesc": "Embed interactive plans on your website with simple HTML code",
+  "enterAdmin": "Enter Admin Panel",
+  "excelIntegration": "Excel Integration",
+  "excelIntegrationDesc": "Import apartment data from Excel files and synchronize information",
+  "feature": {
+    "mobile": {
+      "desc": "Works on all devices",
+      "title": "Mobile friendly"
+    },
+    "multilang": {
+      "desc": "Supports 3 languages",
+      "title": "Multilingual"
+    },
+    "quality": {
+      "desc": "Professional results",
+      "title": "Quality"
+    },
+    "quickSetup": {
+      "desc": "Create a project in 5 minutes",
+      "title": "Quick setup"
+    },
+    "security": {
+      "desc": "Secure data storage",
+      "title": "Security"
+    },
+    "simplicity": {
+      "desc": "Intuitive interface",
+      "title": "Simplicity"
+    }
+  },
+  "features": "Platform Features",
+  "freeTrial": "Free trial period",
+  "getStarted": "Get Started",
+  "howItLooks": "how it looks",
+  "interactiveDemo": "INTERACTIVE DEMO",
+  "interactiveEditing": "Interactive Editing",
+  "interactiveEditingDesc": "Create and edit apartment polygons directly in the browser with a convenient editor",
+  "interactivePlansDesc": "Gridix helps create clear and convenient real estate plans: mark apartment statuses, connect CRM integrations and share plans with one line of code. Everything is simple, fast and without unnecessary costs.",
+  "interactivePlansTitle": "Interactive chessboard and plans for developers and real estate agencies",
+  "legalInfo": "Legal information",
+  "multiProject": "Multi-Projects",
+  "multiProjectDesc": "Manage multiple real estate projects in one admin panel",
+  "noObligations": "No obligations",
+  "ourAdvantages": "OUR ADVANTAGES",
+  "planUpload": "Plan Upload",
+  "planUploadDesc": "Upload building plan images and create interactive apartment maps",
+  "pricing": "Pricing",
+  "privacyPolicy": "Privacy policy",
+  "quickLinks": "Quick links",
+  "readyToStart": "Ready to Start?",
+  "readyToStartDesc": "Create your first interactive real estate plan today",
+  "refundPolicy": "Refund policy",
+  "sellFromAnywhere": "SELL FROM ANYWHERE IN THE WORLD",
+  "setupIn5Minutes": "Setup in 5 minutes",
+  "stats": {
+    "companies": "Companies",
+    "projects": "Projects",
+    "support": "Support",
+    "uptime": "Uptime"
+  },
+  "statusManagement": "Status Management",
+  "statusManagementDesc": "Track apartment statuses: available, reserved, sold",
+  "subtitle": "with ease",
+  "support": "Support",
+  "termsOfService": "Terms of service",
+  "testimonials": {
+    "ratingSummary": "4.9/5 average rating from 100+ clients",
+    "subtitle": "Hear from real estate professionals who use our product",
+    "title": "What our clients say"
+  },
+  "title": "Create Interactive Floor Plans",
+  "toolsHeadline": "Powerful tools to build interactive real estate floor plans",
+  "trialBadge": "Free trial • No commitment • Setup in 5 minutes",
+  "videoNotSupported": "Your browser does not support video.",
+  "viewDemo": "View Demo",
+  "whatWeGiveClients": "what we give clients",
+  "widgetsDesc": "Embeddable interactive plans with one line of code. Works on any CMS (WordPress, Tilda, 1C-Bitrix).",
+  "widgetsTitle": "Ready-made widgets for any website",
+  "workWithoutBorders": "work without borders"
+}

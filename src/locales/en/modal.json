@@ -1,0 +1,9 @@
+{
+  "chooseMethod": "Choose project creation method",
+  "createProject": "Create new project",
+  "importExcel": "Import from Excel",
+  "importExcelDesc": "Upload Excel file with apartment data and automatically create project",
+  "manualSetup": "Manual setup",
+  "manualSetupDesc": "Create project from scratch and configure everything manually",
+  "startManual": "Start manual creation"
+}

@@ -1,0 +1,22 @@
+{
+  "subscription": {
+    "title": "Subscriptions",
+    "subtitle": "Manage your subscription and get access to advanced features",
+    "mySubscription": "My Subscription",
+    "plans": "Plans",
+    "trialExpired": "Trial Period Expired",
+    "subscriptionExpired": "Subscription Expired",
+    "trialExpiredDesc": "Your 14-day Pro plan trial has ended. Choose a suitable plan to continue using advanced features.",
+    "subscriptionExpiredDesc": "Your subscription has expired. Choose a plan to continue using advanced features.",
+    "faqTitle": "Frequently Asked Questions",
+    "faq1Title": "What does the free trial include?",
+    "faq1Text": "The 14-day trial includes all Pro plan features: CRM integration, custom domain, advanced templates, and priority support. No credit card required.",
+    "faq2Title": "Can I change my plan?",
+    "faq2Text": "Yes, you can upgrade or downgrade your plan at any time. When upgrading, the difference will be prorated for the remaining period.",
+    "faq3Title": "How do discounts work?",
+    "faq3Text": "The longer the subscription period, the bigger the discount: 3 months - 5%, 6 months - 10%, 1 year - 20%, 2 years - 30%, 3 years - 50%. Discounts are applied automatically.",
+    "faq4Title": "What happens when I cancel?",
+    "faq4Text": "When you cancel your subscription, you retain access until the end of the paid period. After that, your account is switched to the Basic plan with limited features."
+  }
+}
+

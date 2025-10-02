@@ -1,0 +1,119 @@
+{
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated:",
+    "introduction": {
+      "title": "Introduction",
+      "text1": "Gridix company (hereinafter - \"we\", \"us\", \"our\") takes your privacy protection seriously. This Privacy Policy describes how we collect, use, store and protect your personal information when using our FloorPlan Wizard service.",
+      "text2": "By using our service, you agree to the terms of this Privacy Policy."
+    },
+    "companyInfo": {
+      "title": "Company Information",
+      "name": "Name:",
+      "nameValue": "Gridix",
+      "address": "Address:",
+      "addressValue": "Georgia, Batumi, Leselidze St. 3",
+      "email": "Email:",
+      "emailValue": "inbox@gridix.live"
+    },
+    "dataCollection": {
+      "title": "What Data We Collect",
+      "personal": {
+        "title": "Personal Data:",
+        "item1": "First and last name",
+        "item2": "Email address",
+        "item3": "Phone number (if provided)",
+        "item4": "Company information (upon registration)"
+      },
+      "technical": {
+        "title": "Technical Information:",
+        "item1": "IP address",
+        "item2": "Browser type and version",
+        "item3": "Operating system",
+        "item4": "Cookies and session data",
+        "item5": "Service usage logs"
+      },
+      "content": {
+        "title": "User Content:",
+        "item1": "Uploaded building plans",
+        "item2": "Apartment and project data",
+        "item3": "Project settings",
+        "item4": "Photos and images"
+      }
+    },
+    "dataUsage": {
+      "title": "How We Use Your Data",
+      "text": "We use the collected information for the following purposes:",
+      "item1": "Providing and supporting service functionality",
+      "item2": "Creating and managing your account",
+      "item3": "Processing your requests and support inquiries",
+      "item4": "Sending important service notifications",
+      "item5": "Improving service quality and user experience",
+      "item6": "Ensuring security and preventing fraud",
+      "item7": "Complying with legal obligations"
+    },
+    "dataSharing": {
+      "title": "Data Sharing with Third Parties",
+      "text": "We do not sell, rent or transfer your personal data to third parties, except in the following cases:",
+      "item1": "With your explicit consent",
+      "item2": "To provide services you requested",
+      "item3": "When using trusted service providers (hosting, analytics)",
+      "item4": "In case of legal requirement or court order",
+      "item5": "To protect our rights and user security"
+    },
+    "dataSecurity": {
+      "title": "Data Security",
+      "text": "We take reasonable technical and organizational measures to protect your data:",
+      "item1": "Data encryption during transmission (SSL/TLS)",
+      "item2": "Encryption of sensitive data at rest",
+      "item3": "Limited access to personal data",
+      "item4": "Regular security audits",
+      "item5": "Employee training on privacy matters"
+    },
+    "userRights": {
+      "title": "Your Rights",
+      "text": "You have the following rights regarding your personal data:",
+      "access": "Right of access:",
+      "accessDesc": "obtain information about what data we process",
+      "rectification": "Right to rectification:",
+      "rectificationDesc": "correct inaccurate or incomplete data",
+      "erasure": "Right to erasure:",
+      "erasureDesc": "delete your personal data",
+      "restriction": "Right to restriction:",
+      "restrictionDesc": "restrict processing in certain cases",
+      "portability": "Right to portability:",
+      "portabilityDesc": "receive data in a structured format",
+      "objection": "Right to object:",
+      "objectionDesc": "object to data processing",
+      "contact": "To exercise your rights, contact us at: inbox@gridix.live"
+    },
+    "cookies": {
+      "title": "Use of Cookies",
+      "text": "We use cookies and similar technologies to improve service functionality:",
+      "necessary": "Necessary cookies:",
+      "necessaryDesc": "for basic site functionality",
+      "functional": "Functional cookies:",
+      "functionalDesc": "to remember your settings",
+      "analytical": "Analytical cookies:",
+      "analyticalDesc": "to analyze service usage",
+      "manage": "You can manage cookie settings in your browser."
+    },
+    "dataRetention": {
+      "title": "Data Retention",
+      "text": "We store your personal data only for the necessary period:",
+      "account": "Account data: until account deletion or 3 years of inactivity",
+      "projects": "Project data: until project deletion by user",
+      "logs": "System logs: up to 12 months",
+      "support": "Support data: up to 3 years after case closure"
+    },
+    "changes": {
+      "title": "Policy Changes",
+      "text": "We may periodically update this Privacy Policy. We will notify you of significant changes by email or through service notifications. The last update date is indicated at the beginning of the document."
+    },
+    "contact": {
+      "title": "Contact Information",
+      "text": "If you have questions about this Privacy Policy or data processing, contact us:",
+      "email": "Email: inbox@gridix.live",
+      "address": "Address: Georgia, Batumi, Leselidze St. 3"
+    }
+}
+

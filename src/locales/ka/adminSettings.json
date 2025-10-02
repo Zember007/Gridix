@@ -1,0 +1,20 @@
+{
+  "authRequired": "პარამეტრებთან მუშაობისთვის ავტორიზაცია საჭიროა",
+  "company": "კომპანია",
+  "companyAddress": "კომპანიის მისამართი",
+  "companyAddressPlaceholder": "ქალაქი, ქუჩა, 1",
+  "companyDescription": "კომპანიის აღწერა",
+  "companyDescriptionPlaceholder": "კომპანიის საქმიანობის მოკლე აღწერა...",
+  "companyInfo": "კომპანიის ინფორმაცია",
+  "companyInfoDesc": "თქვენი კომპანიის ძირითადი ინფორმაცია",
+  "companyName": "კომპანიის სახელი",
+  "companyNamePlaceholder": "LLC \"კომპანიის სახელი\"",
+  "contacts": "მენეჯერების ანგარიშები",
+  "description": "კომპანიის პარამეტრების და საკონტაქტო ინფორმაციის მართვა",
+  "errorLoading": "პარამეტრების ჩატვირთვის შეცდომა",
+  "errorSaving": "პარამეტრების შენახვის შეცდომა",
+  "save": "შენახვა",
+  "saving": "შენახვა...",
+  "settingsSaved": "პარამეტრები შენახულია",
+  "title": "პარამეტრები"
+}

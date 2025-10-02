@@ -1,0 +1,20 @@
+{
+  "authRequired": "Необходима авторизация для работы с настройками",
+  "company": "Компания",
+  "companyAddress": "Адрес компании",
+  "companyAddressPlaceholder": "г. Город, ул. Улица, д. 1",
+  "companyDescription": "Описание компании",
+  "companyDescriptionPlaceholder": "Краткое описание деятельности компании...",
+  "companyInfo": "Информация о компании",
+  "companyInfoDesc": "Основная информация о вашей компании",
+  "companyName": "Название компании",
+  "companyNamePlaceholder": "ООО «Название компании»",
+  "contacts": "Аккаунты менеджеров",
+  "description": "Управление настройками компании и контактной информацией",
+  "errorLoading": "Ошибка загрузки настроек",
+  "errorSaving": "Ошибка сохранения настроек",
+  "save": "Сохранить",
+  "saving": "Сохранение...",
+  "settingsSaved": "Настройки сохранены",
+  "title": "Настройки"
+}

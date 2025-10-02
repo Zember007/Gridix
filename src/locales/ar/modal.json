@@ -1,0 +1,9 @@
+{
+  "chooseMethod": "اختر طريقة إنشاء المشروع",
+  "createProject": "إنشاء مشروع جديد",
+  "importExcel": "استيراد من Excel",
+  "importExcelDesc": "قم بتحميل ملف Excel ببيانات الشقق وإنشاء المشروع تلقائياً",
+  "manualSetup": "إعداد يدوي",
+  "manualSetupDesc": "أنشئ مشروعاً من الصفر واضبط كل شيء يدوياً",
+  "startManual": "بدء الإنشاء اليدوي"
+}

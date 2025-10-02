@@ -1,0 +1,31 @@
+{
+  "authRequired": "Authentication required to upload images",
+  "description": "Upload building facade image for floor configuration",
+  "floors": {
+    "addNew": "Add Floor",
+    "canvas": "Drawing Canvas",
+    "configured": "Configured floors:",
+    "creatingNew": "Creating floor {floor}",
+    "description": "Select a floor and mark its area on the building image",
+    "edit": "Edit",
+    "floor": "Floor:",
+    "floorNumber": "Floor {floor}",
+    "title": "Floor Configuration"
+  },
+  "polygon": {
+    "cancel": "Cancel",
+    "create": "Create",
+    "createError": "Error creating polygon",
+    "createSuccess": "Polygon for floor {floor} created",
+    "deleteError": "Error deleting polygon",
+    "deleteSuccess": "Floor polygon deleted",
+    "save": "Save",
+    "saveError": "Error saving polygon",
+    "saveSuccess": "Polygon for floor {floor} saved"
+  },
+  "title": "Building Image",
+  "upload": "Upload Image",
+  "uploadError": "Error uploading image",
+  "uploading": "Uploading...",
+  "uploadSuccess": "Building image uploaded"
+}

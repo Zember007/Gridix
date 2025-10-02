@@ -1,0 +1,8 @@
+{
+  "file": {
+    "noData": "File contains no data",
+    "process": "Error processing file",
+    "read": "Error reading file",
+    "upload": "Error uploading file"
+  }
+}

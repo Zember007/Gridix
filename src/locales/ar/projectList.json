@@ -1,0 +1,23 @@
+{
+  "apartments": "شقق",
+  "authRequired": "المصادقة مطلوبة",
+  "copyWidgetCode": "نسخ كود الودجت",
+  "created": "تم الإنشاء",
+  "createFirst": "إنشاء المشروع الأول",
+  "createFirstDescription": "أنشئ مشروعك العقاري الأول مع مخططات الطوابق والشقق التفاعلية",
+  "createNew": "إنشاء مشروع",
+  "deleteConfirm": "هل أنت متأكد أنك تريد حذف المشروع {name}؟",
+  "deleteProject": "حذف المشروع",
+  "editProject": "تعديل المشروع",
+  "errorDeleting": "خطأ في حذف المشروع",
+  "errorLoading": "خطأ في تحميل المشاريع",
+  "floors": "طوابق",
+  "manageDescription": "إدارة مشاريع العقارات",
+  "noProjects": "لا توجد مشاريع",
+  "projectDeleted": "تم حذف المشروع",
+  "projects": "المشاريع",
+  "timeoutError": "استغرق تحميل المشاريع وقتاً طويلاً",
+  "updated": "تم التحديث",
+  "viewProject": "عرض المشروع",
+  "widgetCodeCopied": "تم نسخ كود الودجت"
+}

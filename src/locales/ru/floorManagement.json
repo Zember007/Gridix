@@ -1,0 +1,21 @@
+{
+  "add": "Добавить",
+  "addFloor": "Добавить этаж",
+  "addFloorError": "Ошибка при добавлении этажа",
+  "addFloorSuccess": "Этаж {floor} успешно добавлен",
+  "apartment": "квартира",
+  "apartments": "квартир",
+  "deleteFloorConfirm": "Вы уверены, что хотите удалить {floor} этаж?",
+  "deleteFloorError": "Ошибка при удалении этажа",
+  "deleteFloorSuccess": "Этаж {floor} успешно удален",
+  "deleteFloorWithApartmentsConfirm": "Вы уверены, что хотите удалить {floor} этаж? На нем находится {count} квартир, которые также будут удалены.",
+  "description": "Добавляйте или удаляйте этажи в проекте",
+  "existingFloors": "Существующие этажи",
+  "floor": "Этаж",
+  "floorAlreadyExists": "Этаж {floor} уже существует",
+  "floorNumber": "Номер этажа",
+  "invalidFloorNumber": "Неверный номер этажа",
+  "manageFloors": "Управление этажами",
+  "noFloors": "Этажи не созданы",
+  "title": "Управление этажами"
+}

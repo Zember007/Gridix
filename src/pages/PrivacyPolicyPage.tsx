@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, ArrowLeft, Shield, Eye, Database, Mail, Phone, MapPin } from 'lucide-react';
+import { Building2, ArrowLeft, Shield, Eye, Database, Mail, MapPin } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -14,6 +14,12 @@ const PrivacyPolicyPage = () => {
   const goHome = () => {
     navigate('/');
   };
+
+  const currentDate = new Date().toLocaleDateString(t('legal.locale') || 'ru-RU', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
@@ -60,10 +66,10 @@ const PrivacyPolicyPage = () => {
               </div>
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('legal.privacy.title')}
+              {t('privacy.title')}
             </h1>
             <p className="text-xl text-gray-600">
-              Последнее обновление: {new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}
+              {t('privacy.lastUpdated')} {currentDate}
             </p>
           </div>
 
@@ -74,18 +80,12 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Eye className="h-6 w-6 text-blue-600" />
-                  Введение
+                  {t('privacy.introduction.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Компания Gridix (далее — «мы», «нас», «наша») серьезно относится к защите вашей конфиденциальности. 
-                  Настоящая Политика конфиденциальности описывает, как мы собираем, используем, храним и защищаем 
-                  вашу персональную информацию при использовании нашего сервиса FloorPlan Wizard.
-                </p>
-                <p>
-                  Используя наш сервис, вы соглашаетесь с условиями данной Политики конфиденциальности.
-                </p>
+                <p className="mb-4">{t('privacy.introduction.text1')}</p>
+                <p>{t('privacy.introduction.text2')}</p>
               </CardContent>
             </Card>
 
@@ -94,22 +94,22 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Building2 className="h-6 w-6 text-blue-600" />
-                  Информация о компании
+                  {t('privacy.companyInfo.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Building2 className="h-5 w-5 text-gray-500" />
-                    <span><strong>Название:</strong> Gridix</span>
+                    <span><strong>{t('privacy.companyInfo.name')}</strong> {t('privacy.companyInfo.nameValue')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-gray-500" />
-                    <span><strong>Адрес:</strong> Грузия, Батуми, ул. Леселидзе 3</span>
+                    <span><strong>{t('privacy.companyInfo.address')}</strong> {t('privacy.companyInfo.addressValue')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-gray-500" />
-                    <span><strong>Email:</strong> inbox@gridix.live</span>
+                    <span><strong>{t('privacy.companyInfo.email')}</strong> {t('privacy.companyInfo.emailValue')}</span>
                   </div>
                 </div>
               </CardContent>
@@ -120,37 +120,37 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Database className="h-6 w-6 text-blue-600" />
-                  Какие данные мы собираем
+                  {t('privacy.dataCollection.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Персональные данные:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('privacy.dataCollection.personal.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Имя и фамилия</li>
-                      <li>Адрес электронной почты</li>
-                      <li>Номер телефона (при предоставлении)</li>
-                      <li>Информация о компании (при регистрации)</li>
+                      <li>{t('privacy.dataCollection.personal.item1')}</li>
+                      <li>{t('privacy.dataCollection.personal.item2')}</li>
+                      <li>{t('privacy.dataCollection.personal.item3')}</li>
+                      <li>{t('privacy.dataCollection.personal.item4')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Техническая информация:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('privacy.dataCollection.technical.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>IP-адрес</li>
-                      <li>Тип браузера и его версия</li>
-                      <li>Операционная система</li>
-                      <li>Файлы cookie и данные сессий</li>
-                      <li>Логи использования сервиса</li>
+                      <li>{t('privacy.dataCollection.technical.item1')}</li>
+                      <li>{t('privacy.dataCollection.technical.item2')}</li>
+                      <li>{t('privacy.dataCollection.technical.item3')}</li>
+                      <li>{t('privacy.dataCollection.technical.item4')}</li>
+                      <li>{t('privacy.dataCollection.technical.item5')}</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-2">Контент пользователей:</h4>
+                    <h4 className="font-semibold text-lg mb-2">{t('privacy.dataCollection.content.title')}</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>Загруженные планы зданий</li>
-                      <li>Данные о квартирах и проектах</li>
-                      <li>Настройки проектов</li>
-                      <li>Фотографии и изображения</li>
+                      <li>{t('privacy.dataCollection.content.item1')}</li>
+                      <li>{t('privacy.dataCollection.content.item2')}</li>
+                      <li>{t('privacy.dataCollection.content.item3')}</li>
+                      <li>{t('privacy.dataCollection.content.item4')}</li>
                     </ul>
                   </div>
                 </div>
@@ -162,19 +162,19 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Eye className="h-6 w-6 text-blue-600" />
-                  Как мы используем ваши данные
+                  {t('privacy.dataUsage.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">Мы используем собранную информацию для следующих целей:</p>
+                <p className="mb-4">{t('privacy.dataUsage.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Предоставление и поддержка функциональности сервиса</li>
-                  <li>Создание и управление вашим аккаунтом</li>
-                  <li>Обработка ваших запросов и обращений в службу поддержки</li>
-                  <li>Отправка важных уведомлений о сервисе</li>
-                  <li>Улучшение качества нашего сервиса и пользовательского опыта</li>
-                  <li>Обеспечение безопасности и предотвращение мошенничества</li>
-                  <li>Соблюдение правовых обязательств</li>
+                  <li>{t('privacy.dataUsage.item1')}</li>
+                  <li>{t('privacy.dataUsage.item2')}</li>
+                  <li>{t('privacy.dataUsage.item3')}</li>
+                  <li>{t('privacy.dataUsage.item4')}</li>
+                  <li>{t('privacy.dataUsage.item5')}</li>
+                  <li>{t('privacy.dataUsage.item6')}</li>
+                  <li>{t('privacy.dataUsage.item7')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -182,19 +182,16 @@ const PrivacyPolicyPage = () => {
             {/* Data Sharing */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Передача данных третьим лицам</CardTitle>
+                <CardTitle className="text-2xl">{t('privacy.dataSharing.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Мы не продаем, не сдаем в аренду и не передаем ваши персональные данные третьим лицам, 
-                  за исключением следующих случаев:
-                </p>
+                <p className="mb-4">{t('privacy.dataSharing.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>С вашего явного согласия</li>
-                  <li>Для предоставления запрошенных вами услуг</li>
-                  <li>При использовании доверенных сервис-провайдеров (хостинг, аналитика)</li>
-                  <li>В случае требования закона или судебного решения</li>
-                  <li>Для защиты наших прав и безопасности пользователей</li>
+                  <li>{t('privacy.dataSharing.item1')}</li>
+                  <li>{t('privacy.dataSharing.item2')}</li>
+                  <li>{t('privacy.dataSharing.item3')}</li>
+                  <li>{t('privacy.dataSharing.item4')}</li>
+                  <li>{t('privacy.dataSharing.item5')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -204,19 +201,17 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Shield className="h-6 w-6 text-blue-600" />
-                  Безопасность данных
+                  {t('privacy.dataSecurity.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Мы принимаем разумные технические и организационные меры для защиты ваших данных:
-                </p>
+                <p className="mb-4">{t('privacy.dataSecurity.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Шифрование данных при передаче (SSL/TLS)</li>
-                  <li>Шифрование чувствительных данных при хранении</li>
-                  <li>Ограниченный доступ к персональным данным</li>
-                  <li>Регулярные проверки безопасности системы</li>
-                  <li>Обучение сотрудников вопросам конфиденциальности</li>
+                  <li>{t('privacy.dataSecurity.item1')}</li>
+                  <li>{t('privacy.dataSecurity.item2')}</li>
+                  <li>{t('privacy.dataSecurity.item3')}</li>
+                  <li>{t('privacy.dataSecurity.item4')}</li>
+                  <li>{t('privacy.dataSecurity.item5')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -224,58 +219,50 @@ const PrivacyPolicyPage = () => {
             {/* User Rights */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Ваши права</CardTitle>
+                <CardTitle className="text-2xl">{t('privacy.userRights.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">У вас есть следующие права в отношении ваших персональных данных:</p>
+                <p className="mb-4">{t('privacy.userRights.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Право доступа:</strong> получение информации о том, какие данные мы обрабатываем</li>
-                  <li><strong>Право на исправление:</strong> исправление неточных или неполных данных</li>
-                  <li><strong>Право на удаление:</strong> удаление ваших персональных данных</li>
-                  <li><strong>Право на ограничение:</strong> ограничение обработки в определенных случаях</li>
-                  <li><strong>Право на портируемость:</strong> получение данных в структурированном формате</li>
-                  <li><strong>Право на возражение:</strong> возражение против обработки данных</li>
+                  <li><strong>{t('privacy.userRights.access')}</strong> {t('privacy.userRights.accessDesc')}</li>
+                  <li><strong>{t('privacy.userRights.rectification')}</strong> {t('privacy.userRights.rectificationDesc')}</li>
+                  <li><strong>{t('privacy.userRights.erasure')}</strong> {t('privacy.userRights.erasureDesc')}</li>
+                  <li><strong>{t('privacy.userRights.restriction')}</strong> {t('privacy.userRights.restrictionDesc')}</li>
+                  <li><strong>{t('privacy.userRights.portability')}</strong> {t('privacy.userRights.portabilityDesc')}</li>
+                  <li><strong>{t('privacy.userRights.objection')}</strong> {t('privacy.userRights.objectionDesc')}</li>
                 </ul>
-                <p className="mt-4">
-                  Для реализации ваших прав обращайтесь по адресу: inbox@gridix.live
-                </p>
+                <p className="mt-4">{t('privacy.userRights.contact')}</p>
               </CardContent>
             </Card>
 
             {/* Cookies */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Использование файлов cookie</CardTitle>
+                <CardTitle className="text-2xl">{t('privacy.cookies.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Мы используем файлы cookie и аналогичные технологии для улучшения функциональности сервиса:
-                </p>
+                <p className="mb-4">{t('privacy.cookies.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Необходимые cookie:</strong> для базовой функциональности сайта</li>
-                  <li><strong>Функциональные cookie:</strong> для запоминания ваших настроек</li>
-                  <li><strong>Аналитические cookie:</strong> для анализа использования сервиса</li>
+                  <li><strong>{t('privacy.cookies.necessary')}</strong> {t('privacy.cookies.necessaryDesc')}</li>
+                  <li><strong>{t('privacy.cookies.functional')}</strong> {t('privacy.cookies.functionalDesc')}</li>
+                  <li><strong>{t('privacy.cookies.analytical')}</strong> {t('privacy.cookies.analyticalDesc')}</li>
                 </ul>
-                <p className="mt-4">
-                  Вы можете управлять настройками cookie в вашем браузере.
-                </p>
+                <p className="mt-4">{t('privacy.cookies.manage')}</p>
               </CardContent>
             </Card>
 
             {/* Data Retention */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Сроки хранения данных</CardTitle>
+                <CardTitle className="text-2xl">{t('privacy.dataRetention.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p className="mb-4">
-                  Мы храним ваши персональные данные только в течение необходимого периода:
-                </p>
+                <p className="mb-4">{t('privacy.dataRetention.text')}</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Данные аккаунта: до удаления аккаунта или 3 года неактивности</li>
-                  <li>Проектные данные: до удаления проекта пользователем</li>
-                  <li>Логи системы: до 12 месяцев</li>
-                  <li>Данные поддержки: до 3 лет после закрытия обращения</li>
+                  <li>{t('privacy.dataRetention.account')}</li>
+                  <li>{t('privacy.dataRetention.projects')}</li>
+                  <li>{t('privacy.dataRetention.logs')}</li>
+                  <li>{t('privacy.dataRetention.support')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -283,14 +270,10 @@ const PrivacyPolicyPage = () => {
             {/* Changes */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Изменения в политике</CardTitle>
+                <CardTitle className="text-2xl">{t('privacy.changes.title')}</CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700 leading-relaxed">
-                <p>
-                  Мы можем периодически обновлять данную Политику конфиденциальности. 
-                  О существенных изменениях мы уведомим вас по электронной почте или 
-                  через уведомления в сервисе. Дата последнего обновления указана в начале документа.
-                </p>
+                <p>{t('privacy.changes.text')}</p>
               </CardContent>
             </Card>
 
@@ -299,22 +282,19 @@ const PrivacyPolicyPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <Mail className="h-6 w-6 text-blue-600" />
-                  Контактная информация
+                  {t('privacy.contact.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-gray-700">
-                <p className="mb-4">
-                  Если у вас есть вопросы о данной Политике конфиденциальности или обработке ваших данных, 
-                  свяжитесь с нами:
-                </p>
+                <p className="mb-4">{t('privacy.contact.text')}</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-blue-600" />
-                    <span>Email: inbox@gridix.live</span>
+                    <span>{t('privacy.contact.email')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-blue-600" />
-                    <span>Адрес: Грузия, Батуми, ул. Леселидзе 3</span>
+                    <span>{t('privacy.contact.address')}</span>
                   </div>
                 </div>
               </CardContent>
