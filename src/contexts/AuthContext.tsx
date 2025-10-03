@@ -18,6 +18,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  requiresPasswordSetup: boolean;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
 }
@@ -43,6 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false);
 
   const loadingProfileRef = useRef<Set<string>>(new Set());
   const profileLoadedRef = useRef<Set<string>>(new Set());
@@ -70,6 +72,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          // Проверяем, требуется ли установка пароля
+          const requiresPassword = session.user.user_metadata?.requires_password_setup === true;
+          setRequiresPasswordSetup(requiresPassword);
+          
           await loadUserProfile(session.user.id, session.user, session, abortController.signal);
         } else {
           setLoading(false);
@@ -90,9 +96,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
+        // Проверяем, требуется ли установка пароля
+        const requiresPassword = newSession.user.user_metadata?.requires_password_setup === true;
+        setRequiresPasswordSetup(requiresPassword);
+        
         await loadUserProfile(newSession.user.id, newSession.user, newSession, abortController.signal);
       } else {
         setUserProfile(null);
+        setRequiresPasswordSetup(false);
         profileLoadedRef.current.clear();
         loadingProfileRef.current.clear();
         setLoading(false);
@@ -224,6 +235,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     userProfile,
     session,
     loading,
+    requiresPasswordSetup,
     signOut,
     updateProfile,
   };

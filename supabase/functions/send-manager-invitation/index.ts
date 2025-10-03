@@ -86,27 +86,87 @@ serve(async (req) => {
     const encodedToken = encodeURIComponent(invitation_token)
     const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`
 
-    console.log('Attempting to send invitation email via Supabase Auth to:', email)
+    console.log('Attempting to send magic link invitation to:', email)
 
-    // Отправляем приглашение через Supabase Auth
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: invitationUrl,
-      data: {
-        full_name,
-        phone,
-        developer_name,
-        company_name,
-        invitation_token,
-        invited_by: user.id
+    // Проверяем существует ли пользователь
+    let userData = null
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email === email)
+
+    if (existingUser) {
+      console.log('User already exists, updating metadata:', email)
+      // Обновляем метаданные существующего пользователя
+      const { data: updatedData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          user_metadata: {
+            full_name,
+            phone,
+            developer_name,
+            company_name,
+            invitation_token,
+            invited_by: user.id,
+            requires_password_setup: true
+          }
+        }
+      )
+      
+      if (updateError) {
+        console.error('Error updating user metadata:', updateError)
+        throw new Error(`Failed to update user: ${updateError.message}`)
+      }
+      
+      userData = updatedData
+    } else {
+      console.log('Creating new user:', email)
+      // Создаем нового пользователя
+      const { data: newUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        email_confirm: true,
+        user_metadata: {
+          full_name,
+          phone,
+          developer_name,
+          company_name,
+          invitation_token,
+          invited_by: user.id,
+          requires_password_setup: true
+        }
+      })
+
+      if (createUserError) {
+        console.error('Error creating user:', createUserError)
+        throw new Error(`Failed to create user: ${createUserError.message}`)
+      }
+      
+      userData = newUserData
+    }
+
+    console.log('User ready:', email)
+
+    // Отправляем magic link через signInWithOtp
+    const { error: otpError } = await supabaseAdmin.auth.signInWithOtp({
+      email: email,
+      options: {
+        emailRedirectTo: invitationUrl,
+        data: {
+          full_name,
+          phone,
+          developer_name,
+          company_name,
+          invitation_token,
+          invited_by: user.id,
+          requires_password_setup: true
+        }
       }
     })
 
-    if (inviteError) {
-      console.error('Supabase invitation error:', inviteError)
-      throw new Error(`Failed to send invitation: ${inviteError.message}`)
+    if (otpError) {
+      console.error('Error sending magic link:', otpError)
+      throw new Error(`Failed to send magic link: ${otpError.message}`)
     }
 
-    console.log('Invitation sent successfully via Supabase Auth to:', email)
+    console.log('Magic link sent successfully to:', email)
 
     // Опционально: сохраняем информацию о приглашении в базе данных
     try {
@@ -136,9 +196,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Invitation email sent successfully via Supabase',
+        message: 'Magic link invitation sent successfully',
         invitation_url: invitationUrl,
-        user_id: inviteData?.user?.id
+        email: email,
+        user: userData?.user
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

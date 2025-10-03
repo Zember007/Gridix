@@ -51,24 +51,39 @@ const AcceptInvitationPage = () => {
       setCheckingUser(true);
       console.log('Checking if user exists with email:', email);
 
-      // Проверяем, существует ли пользователь с таким email в user_profiles
-      const { data: existingUser, error: userError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
+      // Сохраняем текущую сессию перед проверкой
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
 
-      if (userError && userError.code !== 'PGRST116') {
-        console.error('Error checking user existence:', userError);
-        return;
-      }
+      // Пытаемся войти с пустым паролем, чтобы узнать, существует ли пользователь
+      // Это безопасно, т.к. вход не произойдет, но ошибка покажет, есть ли пользователь
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: 'dummy_password_to_check_existence_12345'
+      });
 
-      if (existingUser) {
-        console.log('User exists, setting isExistingUser to true');
-        setIsExistingUser(true);
+      if (signInError) {
+        // Если ошибка "Invalid login credentials" - пользователь существует
+        if (
+          signInError.message.includes('Invalid login credentials') || 
+          signInError.message.includes('Email not confirmed')
+        ) {
+          console.log('User exists (invalid credentials), setting isExistingUser to true');
+          setIsExistingUser(true);
+        } 
+        // Если другая ошибка - пользователя нет или email не зарегистрирован
+        else {
+          console.log('User does not exist, setting isExistingUser to false');
+          setIsExistingUser(false);
+        }
       } else {
-        console.log('User does not exist, setting isExistingUser to false');
-        setIsExistingUser(false);
+        // Если вход прошел успешно (очень маловероятно) - пользователь точно существует
+        console.log('User exists (somehow logged in with dummy password), setting isExistingUser to true');
+        setIsExistingUser(true);
+        // Выходим и восстанавливаем предыдущую сессию если была
+        await supabase.auth.signOut();
+        if (currentSession) {
+          await supabase.auth.setSession(currentSession);
+        }
       }
     } catch (error) {
       console.error('Error in checkUserExists:', error);
@@ -79,12 +94,69 @@ const AcceptInvitationPage = () => {
     }
   }, []);
 
+  const autoAcceptInvitation = useCallback(async (invitationData: InvitationData, userId: string) => {
+    try {
+      console.log('Auto-accepting invitation for user:', userId);
+
+      // Создаем запись менеджера
+      const { error: managerError } = await supabase
+        .from('manager_accounts')
+        .insert({
+          developer_id: invitationData.developer_id,
+          manager_id: userId,
+          email: invitationData.email,
+          full_name: invitationData.full_name,
+          phone: invitationData.phone,
+          status: 'active',
+          accepted_at: new Date().toISOString()
+        });
+
+      if (managerError) {
+        // Проверяем, может уже существует
+        if (managerError.code === '23505') { // duplicate key
+          console.log('Manager account already exists');
+        } else {
+          throw managerError;
+        }
+      }
+
+      // Обновляем статус приглашения на 'accepted'
+      const { error: updateError } = await supabase
+        .from('manager_invitations')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invitationData.id);
+
+      if (updateError) {
+        console.error('Error updating invitation status:', updateError);
+      }
+
+      toast.success(t('invitation.acceptedSuccess'));
+      
+      // Перенаправляем на установку пароля или в админку
+      setTimeout(() => {
+        navigate('/admin');
+      }, 1000);
+
+    } catch (error: unknown) {
+      console.error('Error auto-accepting invitation:', error);
+      const errorMessage = error instanceof Error ? error.message : t('invitation.acceptError');
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  }, [navigate, t]);
+
   const loadInvitationData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       console.log('Loading invitation with token:', token);
+      
+      // Проверяем, авторизован ли уже пользователь
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
       // Загружаем данные приглашения
       const { data: invitationData, error: invitationError } = await supabase
@@ -135,8 +207,19 @@ const AcceptInvitationPage = () => {
         company_name: developerData?.company_name || t('invitation.unknown')
       });
 
-      // Автоматически проверяем, существует ли пользователь с таким email
-      await checkUserExists(invitationData.email);
+      // Если пользователь уже авторизован с правильным email - автоматически принимаем приглашение
+      if (currentUser && currentUser.email === invitationData.email) {
+        console.log('User already authenticated with correct email, auto-accepting invitation');
+        // Автоматически принимаем приглашение
+        await autoAcceptInvitation(invitationData, currentUser.id);
+        return;
+      }
+
+      // Если пользователь НЕ авторизован - проверяем, существует ли он в системе
+      if (!currentUser) {
+        console.log('User not authenticated, checking if account exists');
+        await checkUserExists(invitationData.email);
+      }
 
     } catch (err: unknown) {
       console.error('Error in loadInvitationData:', err);
@@ -145,7 +228,7 @@ const AcceptInvitationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, t, checkUserExists]);
+  }, [token, t, checkUserExists, autoAcceptInvitation]);
 
   useEffect(() => {
     if (!token) {
@@ -156,6 +239,23 @@ const AcceptInvitationPage = () => {
 
     loadInvitationData();
   }, [token, loadInvitationData, t]);
+
+  // Отслеживаем изменения авторизации и автоматически принимаем приглашение
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      
+      // Если пользователь авторизовался и есть приглашение
+      if (event === 'SIGNED_IN' && session?.user && invitation && session.user.email === invitation.email) {
+        console.log('User signed in via magic link, auto-accepting invitation');
+        await autoAcceptInvitation(invitation, session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [invitation, autoAcceptInvitation]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {

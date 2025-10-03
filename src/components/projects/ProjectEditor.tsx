@@ -86,9 +86,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { navigate } = useLanguageNavigation();
   const { user, userProfile } = useAuth();
   const { t } = useLanguage();
-  const { userRole, isManager, developerIds } = useUserRole();
+  const { isManager, developerIds } = useUserRole();
   const { project: cachedProject } = useProject(projectId);
-  const { updateProject } = useProjectCRUD();
   const isMobile = useIsMobile();
 
   // Применяем CSS переменные темы
@@ -99,55 +98,56 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     });
   }, []);
 
-  const loadProject = useCallback(async () => {
+  useEffect(() => {
+    if (isNew || !projectId || !cachedProject) {
+      setLoading(false);
+      return;
+    }
+
+    console.log('loadProject effect triggered');
+    
     try {
-      if (cachedProject) {
-        // Проверяем права на редактирование
-        const canEdit = user && (
-          // Владелец проекта может редактировать
-          cachedProject.user_id === user.id ||
-          // Менеджер может редактировать, если проект принадлежит застройщику, к которому он имеет доступ
-          (isManager && developerIds.includes(cachedProject.user_id))
-        );
-        
-        if (!canEdit) {
-          setAccessError(t('projectEditor.noEditRights'));
-          setLoading(false);
-          return;
-        }
-        
-        setProject({
-          id: cachedProject.id,
-          name: cachedProject.name || '',
-          description: cachedProject.description || '',
-          address: cachedProject.address || '',
-          floors: cachedProject.floors || 1,
-          has_parking: cachedProject.has_parking || false,
-          has_commercial: cachedProject.has_commercial || false,
-          building_image_url: cachedProject.building_image_url,
-          latitude: cachedProject.latitude,
-          longitude: cachedProject.longitude,
-          currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY,
-          installment_enabled: cachedProject.installment_enabled || false,
-          min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
-          max_installment_months: cachedProject.max_installment_months || 24,
-          pdf_presentation_url: cachedProject.pdf_presentation_url,
-          theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000'
-        });
+      // Проверяем права на редактирование
+      const canEdit = user && (
+        // Владелец проекта может редактировать
+        cachedProject.user_id === user.id ||
+        // Менеджер может редактировать, если проект принадлежит застройщику, к которому он имеет доступ
+        (isManager && developerIds.includes(cachedProject.user_id))
+      );
+      
+      if (!canEdit) {
+        console.log('canEdit', canEdit);
+        setAccessError(t('projectEditor.noEditRights'));
+        setLoading(false);
+        return;
       }
+      
+      setProject({
+        id: cachedProject.id,
+        name: cachedProject.name || '',
+        description: cachedProject.description || '',
+        address: cachedProject.address || '',
+        floors: cachedProject.floors || 1,
+        has_parking: cachedProject.has_parking || false,
+        has_commercial: cachedProject.has_commercial || false,
+        building_image_url: cachedProject.building_image_url,
+        latitude: cachedProject.latitude,
+        longitude: cachedProject.longitude,
+        currency: (cachedProject.currency as CurrencyType) || DEFAULT_CURRENCY,
+        installment_enabled: cachedProject.installment_enabled || false,
+        min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
+        max_installment_months: cachedProject.max_installment_months || 24,
+        pdf_presentation_url: cachedProject.pdf_presentation_url,
+        theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000'
+      });
+      setLoading(false);
     } catch (error) {
       console.error('Error loading project:', error);
       toast.error(t('projectEditor.errorLoading'));
-    } finally {
       setLoading(false);
     }
-  }, [user, cachedProject, t, isManager, developerIds]);
-
-  useEffect(() => {
-    if (!isNew && projectId) {
-      loadProject();
-    }
-  }, [projectId, isNew, loadProject]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, cachedProject?.id]);
 
   const handleSave = async () => {
     if (!project.name.trim()) {
@@ -210,7 +210,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         toast.success(t('projectEditor.projectCreated'));
         navigate(`/admin/project/${data.id}`);
       } else {
-        // Дополнительная проверка прав (хотя основная проверка уже сделана в loadProject)
         const canEdit = user && (
           cachedProject?.user_id === user.id ||
           (isManager && cachedProject?.user_id && developerIds.includes(cachedProject.user_id))

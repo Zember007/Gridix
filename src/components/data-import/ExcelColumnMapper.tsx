@@ -389,8 +389,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         is_public: false,
         is_featured: false,
         installment_enabled: false,
-        min_down_payment_percent: 0,
-        max_installment_months: 0,
+        min_down_payment_percent: null,
+        max_installment_months: null,
         pdf_presentation_url: null,
         theme_color: null
       });

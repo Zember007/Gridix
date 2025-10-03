@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, requiresPasswordSetup } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -26,6 +26,8 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
     const authPath = addLanguageToPath('/auth', currentLanguage);
     return <Navigate to={`${authPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
+
+
 
   return <>{children}</>;
 }; 

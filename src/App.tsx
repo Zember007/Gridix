@@ -16,6 +16,7 @@ import ProjectEditorPage from "./pages/ProjectEditorPage";
 import EmbedProjectsPage from "./pages/EmbedProjectsPage";
 import EmbedProjectsMap from "./pages/EmbedProjectsMap";
 import AuthPage from "./pages/AuthPage";
+import SetPasswordPage from "./pages/SetPasswordPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
