@@ -35,7 +35,7 @@ function ensureContainer(containerId?: string): HTMLElement {
 
 function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   if (opts?.width) el.style.width = opts.width;
-  if (opts?.height) el.style.height = opts.height;
+  /* if (opts?.height) el.style.height = opts.height; */
   el.style.boxSizing = 'border-box';
 }
 
