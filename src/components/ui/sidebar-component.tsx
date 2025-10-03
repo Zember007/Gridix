@@ -250,7 +250,7 @@ export function AdminSidebar({
 }) {
   const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
-  const [isCollapsed, setIsCollapsed] = useState(true); // Collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
 
   const handleSectionChange = (section: string) => {
     if (section === 'subscription') {
@@ -287,7 +287,7 @@ export function ProjectEditorSidebar({
 }) {
   const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState(activeTab || "general");
-  const [isCollapsed, setIsCollapsed] = useState(true); // Collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
