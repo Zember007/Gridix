@@ -4,6 +4,7 @@
   "badge": "Innovative solution for real estate",
   "company": "Company",
   "companyDescription": "Innovative platform for creating interactive real estate plans. We simplify the sales process and increase conversion.",
+  "contacts": "Contacts",
   "copyright": "© 2024 Gridix. All rights reserved.",
   "crmIntegrationDesc": "Automatic transfer of leads and apartment data to AmoCRM, Bitrix24, HubSpot and other CRM systems. No lost applications — all clients are immediately in your funnel.",
   "crmIntegrationTitle": "Integration with popular CRM systems",
@@ -13,7 +14,7 @@
   "email": "Email",
   "embeddableWidget": "Embeddable Widgets",
   "embeddableWidgetDesc": "Embed interactive plans on your website with simple HTML code",
-  "enterAdmin": "Enter Admin Panel",
+  "enterAdmin": "Try for free",
   "excelIntegration": "Excel Integration",
   "excelIntegrationDesc": "Import apartment data from Excel files and synchronize information",
   "feature": {

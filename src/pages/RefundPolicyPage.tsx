@@ -1,19 +1,13 @@
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, ArrowLeft, CreditCard, Calendar, AlertCircle, CheckCircle, Mail, MapPin } from 'lucide-react';
+import { CreditCard, Calendar, AlertCircle, CheckCircle, Mail, MapPin, Building2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { useIsMobile } from '@/hooks/use-mobile';
+import HeroHeader from '@/components/index/header';
+import Footer from '@/components/index/footer';
 
 const RefundPolicyPage = () => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
-
-  const goHome = () => {
-    navigate('/');
-  };
 
   const currentDate = new Date().toLocaleDateString(t('legal.locale') || 'ru-RU', { 
     year: 'numeric', 
@@ -24,39 +18,10 @@ const RefundPolicyPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Building2 className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-blue-600`} />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent`}>
-                  Gridix
-                </h1>
-                <p className="text-xs text-gray-500">FloorPlan Wizard</p>
-              </div>
-            </div>
-            <div className={`flex ${isMobile ? 'justify-center' : ''} items-center gap-3`}>
-              <LanguageToggle />
-              <Button 
-                onClick={goHome}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                size={isMobile ? 'sm' : 'default'}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('legal.backHome')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <HeroHeader />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto">
           {/* Title */}
           <div className="text-center mb-12">
@@ -382,6 +347,9 @@ const RefundPolicyPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

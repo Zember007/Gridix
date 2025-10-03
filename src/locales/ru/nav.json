@@ -2,5 +2,12 @@
   "about": "О нас",
   "admin": "Админ панель",
   "contact": "Контакты",
-  "projects": "Проекты"
+  "contacts": "Контакты",
+  "demo": "Демо",
+  "features": "Возможности",
+  "getStarted": "Начать",
+  "login": "Войти",
+  "pricing": "Цены",
+  "projects": "Проекты",
+  "signUp": "Регистрация"
 }

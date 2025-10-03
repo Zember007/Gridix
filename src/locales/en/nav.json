@@ -2,5 +2,12 @@
   "about": "About",
   "admin": "Admin Panel",
   "contact": "Contact",
-  "projects": "Projects"
+  "contacts": "Contacts",
+  "demo": "Demo",
+  "features": "Features",
+  "getStarted": "Get Started",
+  "login": "Login",
+  "pricing": "Pricing",
+  "projects": "Projects",
+  "signUp": "Sign Up"
 }

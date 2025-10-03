@@ -4,6 +4,7 @@
   "badge": "حل مبتكر للعقارات",
   "company": "الشركة",
   "companyDescription": "منصة مبتكرة لإنشاء خطط عقارية تفاعلية. نحن نبسط عملية البيع ونزيد التحويل.",
+  "contacts": "اتصل بنا",
   "copyright": "© 2024 Gridix. جميع الحقوق محفوظة.",
   "crmIntegrationDesc": "نقل تلقائي للعملاء المحتملين وبيانات الشقق إلى AmoCRM و Bitrix24 و HubSpot وأنظمة CRM أخرى. لا توجد طلبات مفقودة — جميع العملاء في قمعك على الفور.",
   "crmIntegrationTitle": "التكامل مع أنظمة CRM الشائعة",
@@ -13,7 +14,7 @@
   "email": "البريد الإلكتروني",
   "embeddableWidget": "ويجتات قابلة للدمج",
   "embeddableWidgetDesc": "ادمج المخططات التفاعلية في موقعك بكود HTML بسيط",
-  "enterAdmin": "دخول لوحة الإدارة",
+  "enterAdmin": "جرب مجانا",
   "excelIntegration": "تكامل Excel",
   "excelIntegrationDesc": "استورد بيانات الشقق من ملفات Excel وزامن المعلومات",
   "feature": {

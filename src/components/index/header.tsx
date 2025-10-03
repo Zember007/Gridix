@@ -7,19 +7,17 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { LanguageToggle } from "../LanguageToggle"
 import { useLanguage } from "@/contexts/LanguageContext"
 
-const menuItems = [
-    { name: 'Features', href: '#features' },
-    /* { name: 'Solution', href: '#link' }, */
-  /*   { name: 'Pricing', href: '#link' },
-    { name: 'About', href: '#link' }, */
-
-    { name: 'Demo', href: '#demo' }
-]
-
 const HeroHeader = () => {
-    const { language } = useLanguage()
+    const { language, t } = useLanguage()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
+    
+    const menuItems = [
+        { name: t('nav.features'), href: '#features' },
+        { name: t('nav.pricing'), href: `/${language}/pricing` },
+        { name: t('nav.demo'), href: '#demo' },
+        { name: t('nav.contacts'), href: `/${language}/contacts` }
+    ]
 
     React.useEffect(() => {
         const handleScroll = () => {
@@ -101,7 +99,7 @@ const HeroHeader = () => {
                                     size="sm"
                                     className={cn(isScrolled && 'lg:hidden')}>
                                     <Link to={`/${language}/admin`}>
-                                        <span>Login</span>
+                                        <span>{t('nav.login')}</span>
                                     </Link>
                                 </Button>
                                 <Button
@@ -109,7 +107,7 @@ const HeroHeader = () => {
                                     size="sm"
                                     className={cn(isScrolled && 'lg:hidden')}>
                                     <Link to={`/${language}/admin`}>
-                                        <span>Sign Up</span>
+                                        <span>{t('nav.signUp')}</span>
                                     </Link>
                                 </Button>
                                 <Button
@@ -117,7 +115,7 @@ const HeroHeader = () => {
                                     size="sm"
                                     className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}>
                                     <Link to={`/${language}/admin`}>
-                                        <span>Get Started</span>
+                                        <span>{t('nav.getStarted')}</span>
                                     </Link>
                                 </Button>
 

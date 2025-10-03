@@ -27,6 +27,7 @@ import DomainApartmentPage from "./pages/DomainApartmentPage";
 import WidgetPreviewPage from "./pages/WidgetPreviewPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import PricingPage from "./pages/PricingPage";
+import ContactsPage from "./pages/ContactsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,10 @@ function App() {
               <Route path="/:lang/privacy-policy" element={<LanguageProvider><LanguageWrapper><PrivacyPolicyPage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/terms-of-service" element={<LanguageProvider><LanguageWrapper><TermsOfServicePage /></LanguageWrapper></LanguageProvider>} />
               <Route path="/:lang/refund-policy" element={<LanguageProvider><LanguageWrapper><RefundPolicyPage /></LanguageWrapper></LanguageProvider>} />
+              
+              {/* Contacts Page */}
+              <Route path="/:lang/contacts" element={<LanguageProvider><LanguageWrapper><ContactsPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
               
               {/* Public Pricing Page */}
               <Route path="/:lang/pricing" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />

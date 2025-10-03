@@ -3,6 +3,8 @@ import { EnhancedPricingPlans } from '../components/subscription/EnhancedPricing
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Crown, Check, Zap, Shield, Globe, TrendingUp } from 'lucide-react';
+import HeroHeader from '@/components/index/header';
+import Footer from '@/components/index/footer';
 
 const translations = {
   en: {
@@ -132,7 +134,11 @@ export default function PricingPage() {
   const t = translations[language] || translations.en;
 
   return (
-    <div className="container mx-auto px-4 py-12 space-y-16">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+      {/* Header */}
+      <HeroHeader />
+
+      <div className="container mx-auto px-4 py-20 md:py-32 space-y-16">
       {/* Hero Section */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <h1 className="text-5xl font-bold tracking-tight">
@@ -301,6 +307,10 @@ export default function PricingPage() {
           </Card>
         </div>
       </div>
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
