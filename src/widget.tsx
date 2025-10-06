@@ -38,9 +38,19 @@ function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   el.style.boxSizing = 'border-box';
 }
 
-function ensureStyles(options: InitOptions): Promise<void> {
+function createShadowRoot(container: HTMLElement): ShadowRoot {
+  // Check if shadow root already exists
+  if (container.shadowRoot) {
+    return container.shadowRoot;
+  }
+  // Create shadow DOM for style isolation
+  return container.attachShadow({ mode: 'open' });
+}
+
+function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
   return new Promise((resolve) => {
-    const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
+    // Check if styles already loaded in shadow root
+    const existing = shadowRoot.getElementById('gridix-widget-style') as HTMLLinkElement | null;
     if (existing) {
       resolve();
       return;
@@ -69,7 +79,7 @@ function ensureStyles(options: InitOptions): Promise<void> {
     link.href = cssHref;
     link.onload = () => resolve();
     link.onerror = () => resolve(); // continue even if CSS fails to load
-    document.head.appendChild(link);
+    shadowRoot.appendChild(link);
   });
 }
 
@@ -123,13 +133,27 @@ async function init(options: InitOptions = {}) {
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
     };
 
-    // Ensure CSS is loaded before rendering
-    await ensureStyles(opts);
-
+    // Create container and shadow DOM
     const container = ensureContainer(opts.containerId);
     applyContainerStyles(container, opts);
+    
+    const shadowRoot = createShadowRoot(container);
 
-    const root = createRoot(container);
+    // Ensure CSS is loaded into shadow DOM before rendering
+    await ensureStylesInShadow(shadowRoot, opts);
+
+    // Create a mount point inside shadow DOM
+    let mountPoint = shadowRoot.getElementById('gridix-mount-point');
+    if (!mountPoint) {
+      mountPoint = document.createElement('div');
+      mountPoint.id = 'gridix-mount-point';
+      mountPoint.style.height = '100%';
+      mountPoint.style.width = '100%';
+      shadowRoot.appendChild(mountPoint);
+    }
+
+    // Render React app into shadow DOM
+    const root = createRoot(mountPoint);
     root.render(
       <AuthProvider>
         <WidgetApp {...opts} />
