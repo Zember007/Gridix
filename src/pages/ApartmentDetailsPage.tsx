@@ -616,29 +616,11 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
               </div>
             )} */}
 
-            {/* Details section */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.details')}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Home className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-600">{t('apartment.number')}: {apartment.apartment_number}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-600">{t('apartment.floor')}: {apartment.floor_number}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Square className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-600">{t('apartment.area')}: {apartment.area} м²</span>
-                </div>
-              </div>
-            </div>
-
             {/* Дополнительные поля */}
             {getVisibleFields().length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.additionalInfo')}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.details')}</h3>
+
                 <div className="space-y-3">
                   {getVisibleFields().map((field) => {
                     let value: unknown = null;
