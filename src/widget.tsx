@@ -1,4 +1,3 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { EmbedLanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -37,61 +36,16 @@ function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   if (opts?.width) el.style.width = opts.width;
   /* if (opts?.height) el.style.height = opts.height; */
   el.style.boxSizing = 'border-box';
-  el.style.display = 'block';
 }
 
-/**
- * Creates a Shadow DOM for complete style isolation
- */
-function createShadowRoot(hostElement: HTMLElement): { shadowRoot: ShadowRoot; mountPoint: HTMLElement } {
-  // Attach shadow DOM in "open" mode for accessibility
-  const shadowRoot = hostElement.attachShadow({ mode: 'open' });
-  
-  // Add base styles to prevent inheritance from parent page
-  const baseStyles = document.createElement('style');
-  baseStyles.textContent = `
-    /* Isolate from parent page styles */
-    :host {
-      display: block;
-      contain: layout style paint;
+function ensureStyles(options: InitOptions): Promise<void> {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
+    if (existing) {
+      resolve();
+      return;
     }
-    
-    /* Base reset for all elements inside shadow DOM */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-    
-    /* Mount point base styles */
-    #gridix-widget-mount {
-      display: block;
-      width: 100%;
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      color: inherit;
-      background: transparent;
-    }
-  `;
-  shadowRoot.appendChild(baseStyles);
-  
-  // Create mount point inside shadow DOM
-  const mountPoint = document.createElement('div');
-  mountPoint.id = 'gridix-widget-mount';
-  
-  shadowRoot.appendChild(mountPoint);
-  
-  return { shadowRoot, mountPoint };
-}
 
-/**
- * Loads styles into the Shadow DOM for complete isolation
- * Fetches CSS content and injects it as <style> to ensure proper loading
- */
-async function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
-  try {
     // Prefer explicit cssUrl if provided
     let cssHref = options.cssUrl || '';
 
@@ -105,31 +59,18 @@ async function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions
     }
 
     if (!cssHref) {
-      console.warn('[GridixWidget] Could not resolve CSS URL. Widget may not display correctly.');
+      resolve(); // fail silently if we can't resolve
       return;
     }
 
-    // Fetch CSS content and inject as <style> tag
-    // This ensures styles work properly inside Shadow DOM
-    const response = await fetch(cssHref);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch CSS: ${response.status} ${response.statusText}`);
-    }
-    
-    const cssText = await response.text();
-    
-    // Create style element and inject CSS
-    const style = document.createElement('style');
-    style.textContent = cssText;
-    
-    // Prepend to shadow root so styles load first
-    shadowRoot.prepend(style);
-    
-    console.log('[GridixWidget] Styles loaded successfully');
-  } catch (err) {
-    console.error('[GridixWidget] Failed to load styles:', err);
-    // Continue anyway - widget will render without styles
-  }
+    const link = document.createElement('link');
+    link.id = 'gridix-widget-style';
+    link.rel = 'stylesheet';
+    link.href = cssHref;
+    link.onload = () => resolve();
+    link.onerror = () => resolve(); // continue even if CSS fails to load
+    document.head.appendChild(link);
+  });
 }
 
 function WidgetApp(props: InitOptions) {
@@ -182,27 +123,20 @@ async function init(options: InitOptions = {}) {
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
     };
 
-    // Get or create host container
-    const hostContainer = ensureContainer(opts.containerId);
-    applyContainerStyles(hostContainer, opts);
+    // Ensure CSS is loaded before rendering
+    await ensureStyles(opts);
 
-    // Create Shadow DOM for style isolation
-    const { shadowRoot, mountPoint } = createShadowRoot(hostContainer);
+    const container = ensureContainer(opts.containerId);
+    applyContainerStyles(container, opts);
 
-    // Load styles into Shadow DOM
-    await loadStylesIntoShadow(shadowRoot, opts);
-
-    // Render React app inside Shadow DOM
-    const root = createRoot(mountPoint);
+    const root = createRoot(container);
     root.render(
       <AuthProvider>
         <WidgetApp {...opts} />
       </AuthProvider>
     );
-
-    console.log('[GridixWidget] Initialized successfully with Shadow DOM isolation');
   } catch (err) {
-    console.error('[GridixWidget] Init error:', err);
+    console.error('GridixWidget init error:', err);
   }
 }
 

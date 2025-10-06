@@ -3,58 +3,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Gridix Widget - Style Isolation Test</title>
-        <style>
-            /* Агрессивные стили сайта для проверки изоляции */
-            * {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            body {
-                font-family: 'Comic Sans MS', cursive !important;
-                background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
-                color: yellow !important;
-                padding: 20px !important;
-            }
-            
-            h1 {
-                color: red !important;
-                font-size: 48px !important;
-                text-align: center;
-                margin-bottom: 30px !important;
-            }
-            
-            div {
-                border: 5px dashed purple !important;
-                background: rgba(255, 255, 0, 0.3) !important;
-            }
-            
-            button {
-                background: hotpink !important;
-                color: white !important;
-                font-size: 20px !important;
-            }
-        </style>
+        <title>Document</title>
     </head>
     <body>
-        <h1>Тест изоляции стилей виджета</h1>
-        <p style="text-align: center; margin-bottom: 20px !important; color: white !important; font-size: 18px;">
-            Виджет ниже использует Shadow DOM и полностью изолирован от агрессивных стилей этой страницы
-        </p>
-        
-        <!-- Виджет будет рендериться здесь с полной изоляцией стилей -->
-        <div id="gridix-widget-root" style="margin: 40px auto !important; max-width: 1200px; border: none !important; background: transparent !important;"></div>
-        
+        <div id="gridix-widget-root"></div>
         <script src="https://gridix.live/widget.js"></script>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
-          window.GridixWidget && window.GridixWidget.init({ 
-            lang: "ru", 
-            projectId: "05bc347c-e19a-41ba-8d87-1f7001d3329b",
-            width: "100%",
-            height: "800px"
-          });
+          window.GridixWidget && window.GridixWidget.init({ lang: "ru", projectId: "05bc347c-e19a-41ba-8d87-1f7001d3329b" });
         });
         </script>
     </body>
