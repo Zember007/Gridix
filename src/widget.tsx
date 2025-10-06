@@ -14,6 +14,7 @@ type InitOptions = {
   width?: string; // e.g. '100%'
   height?: string; // e.g. '700px'
   cssUrl?: string; // optional explicit URL to style.css
+  inlineStyles?: string; // optional inline CSS styles as string
   compactMode?: boolean; // enable compact layout for smaller containers
   showHeader?: boolean; // show/hide header section
   showFilters?: boolean; // show/hide filters section
@@ -50,8 +51,19 @@ function createShadowRoot(container: HTMLElement): ShadowRoot {
 function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
   return new Promise((resolve) => {
     // Check if styles already loaded in shadow root
-    const existing = shadowRoot.getElementById('gridix-widget-style') as HTMLLinkElement | null;
+    const existing = shadowRoot.getElementById('gridix-widget-style');
     if (existing) {
+      resolve();
+      return;
+    }
+
+    // If inline styles provided, use them directly
+    if (options.inlineStyles) {
+      const style = document.createElement('style');
+      style.id = 'gridix-widget-style';
+      style.textContent = options.inlineStyles;
+      shadowRoot.appendChild(style);
+      console.log('GridixWidget: Inline styles applied');
       resolve();
       return;
     }
@@ -68,17 +80,37 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
       }
     }
 
+    // Fallback: look for existing style.css in the same directory as widget.js
     if (!cssHref) {
-      resolve(); // fail silently if we can't resolve
+      const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
+      const widgetScript = scripts.reverse().find(s => s.src && /widget/.test(s.src));
+      if (widgetScript && widgetScript.src) {
+        const scriptUrl = new URL(widgetScript.src);
+        const basePath = scriptUrl.pathname.substring(0, scriptUrl.pathname.lastIndexOf('/'));
+        cssHref = `${scriptUrl.origin}${basePath}/style.css`;
+      }
+    }
+
+    if (!cssHref) {
+      console.warn('GridixWidget: Could not determine CSS path. Widget may not render correctly.');
+      resolve();
       return;
     }
+
+    console.log('GridixWidget: Loading CSS from:', cssHref);
 
     const link = document.createElement('link');
     link.id = 'gridix-widget-style';
     link.rel = 'stylesheet';
     link.href = cssHref;
-    link.onload = () => resolve();
-    link.onerror = () => resolve(); // continue even if CSS fails to load
+    link.onload = () => {
+      console.log('GridixWidget: CSS loaded successfully');
+      resolve();
+    };
+    link.onerror = (err) => {
+      console.error('GridixWidget: Failed to load CSS from:', cssHref, err);
+      resolve();
+    };
     shadowRoot.appendChild(link);
   });
 }
@@ -128,6 +160,7 @@ async function init(options: InitOptions = {}) {
       width: options.width ?? qp.get('width') ?? '100%',
       height: options.height ?? qp.get('height') ?? '600px',
       cssUrl: options.cssUrl ?? qp.get('cssUrl') ?? undefined,
+      inlineStyles: options.inlineStyles ?? undefined,
       compactMode: options.compactMode ?? (qp.get('compactMode') === 'true'),
       showHeader: options.showHeader ?? (qp.get('showHeader') !== 'false'),
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),

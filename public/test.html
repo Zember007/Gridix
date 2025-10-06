@@ -1,17 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-    </head>
-    <body>
-        <div id="gridix-widget-root"></div>
-        <script src="https://gridix.live/widget.js"></script>
-        <script>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gridix Widget - Shadow DOM Demo</title>
+    <style>
+        /* Стили родительской страницы - они НЕ должны влиять на виджет */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .widget-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+        }
+        
+        .info-box code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        /* Эти глобальные стили НЕ повлияют на виджет благодаря Shadow DOM */
+        * {
+            /* Попытка переопределить все стили */
+            box-sizing: border-box !important;
+        }
+        
+        button {
+            background: red !important;
+            color: yellow !important;
+        }
+        
+        div {
+            border: 2px solid red !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Gridix Widget с Shadow DOM</h1>
+        <p class="description">
+            Демонстрация изоляции стилей через Shadow DOM.<br>
+            Глобальные стили страницы (красные рамки, стили кнопок) не влияют на виджет!
+        </p>
+        
+        <div class="info-box">
+            <h3>ℹ️ Что происходит?</h3>
+            <p>
+                На этой странице есть агрессивные глобальные стили:<br>
+                • Все <code>div</code> имеют красную рамку<br>
+                • Все <code>button</code> красные с желтым текстом<br>
+                • Применен <code>!important</code> для переопределения<br>
+                <br>
+                <strong>Но виджет остается нетронутым благодаря Shadow DOM! 🎉</strong>
+            </p>
+        </div>
+        
+        <div class="widget-wrapper">
+            <!-- Контейнер для виджета -->
+            <div id="gridix-widget-root"></div>
+        </div>
+        
+        <div class="info-box">
+            <h3>🔍 Откройте DevTools</h3>
+            <p>
+                Инспектируйте элемент <code>#gridix-widget-root</code> и вы увидите:<br>
+                <code>#shadow-root (open)</code> - виджет изолирован в Shadow DOM!
+            </p>
+        </div>
+    </div>
+    
+    <!-- Загрузка виджета -->
+    <script src="https://gridix.live/widget.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-          window.GridixWidget && window.GridixWidget.init({ lang: "ru", projectId: "05bc347c-e19a-41ba-8d87-1f7001d3329b" });
+            console.log('🚀 Инициализация Gridix Widget с Shadow DOM...');
+            
+            if (window.GridixWidget) {
+                window.GridixWidget.init({
+                    lang: "ru",
+                    projectId: "05bc347c-e19a-41ba-8d87-1f7001d3329b",
+                    width: "100%",
+                    height: "700px",
+                    showHeader: true,
+                    showFilters: true
+                });
+                
+                console.log('✅ Виджет инициализирован');
+                console.log('💡 Совет: откройте DevTools и инспектируйте #gridix-widget-root');
+                console.log('   Вы увидите #shadow-root - это изолированное Shadow DOM дерево!');
+            } else {
+                console.error('❌ GridixWidget не загружен');
+            }
         });
-        </script>
-    </body>
+    </script>
+</body>
 </html>
