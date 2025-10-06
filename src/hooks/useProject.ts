@@ -55,7 +55,7 @@ export const useProject = (identifier?: string) => {
         query = query.eq('slug', id);
       }
 
-      const { data, error } = await query.single();
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -150,7 +150,7 @@ export const useProject = (identifier?: string) => {
             .select('id')
             .eq('slug', finalSlug)
             .neq('id', projectId)
-            .single();
+            .maybeSingle();
             
           if (!existingProject) break;
           
@@ -228,7 +228,7 @@ export const useProject = (identifier?: string) => {
           .from('projects')
           .select('id')
           .eq('slug', finalSlug)
-          .single();
+          .maybeSingle();
           
         if (!existingProject) break;
         

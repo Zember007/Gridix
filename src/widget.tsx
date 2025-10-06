@@ -37,16 +37,33 @@ function applyContainerStyles(el: HTMLElement, opts?: InitOptions) {
   if (opts?.width) el.style.width = opts.width;
   /* if (opts?.height) el.style.height = opts.height; */
   el.style.boxSizing = 'border-box';
+  el.style.display = 'block';
 }
 
-function ensureStyles(options: InitOptions): Promise<void> {
-  return new Promise((resolve) => {
-    const existing = document.getElementById('gridix-widget-style') as HTMLLinkElement | null;
-    if (existing) {
-      resolve();
-      return;
-    }
+/**
+ * Creates a Shadow DOM for complete style isolation
+ */
+function createShadowRoot(hostElement: HTMLElement): { shadowRoot: ShadowRoot; mountPoint: HTMLElement } {
+  // Attach shadow DOM in "open" mode for accessibility
+  const shadowRoot = hostElement.attachShadow({ mode: 'open' });
+  
+  // Create mount point inside shadow DOM
+  const mountPoint = document.createElement('div');
+  mountPoint.id = 'gridix-widget-mount';
+  mountPoint.style.width = '100%';
+  mountPoint.style.height = '100%';
+  mountPoint.style.display = 'block';
+  
+  shadowRoot.appendChild(mountPoint);
+  
+  return { shadowRoot, mountPoint };
+}
 
+/**
+ * Loads styles into the Shadow DOM for complete isolation
+ */
+function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
+  return new Promise((resolve) => {
     // Prefer explicit cssUrl if provided
     let cssHref = options.cssUrl || '';
 
@@ -60,17 +77,26 @@ function ensureStyles(options: InitOptions): Promise<void> {
     }
 
     if (!cssHref) {
-      resolve(); // fail silently if we can't resolve
+      console.warn('[GridixWidget] Could not resolve CSS URL. Widget may not display correctly.');
+      resolve();
       return;
     }
 
+    // Create style link inside shadow DOM
     const link = document.createElement('link');
-    link.id = 'gridix-widget-style';
     link.rel = 'stylesheet';
     link.href = cssHref;
-    link.onload = () => resolve();
-    link.onerror = () => resolve(); // continue even if CSS fails to load
-    document.head.appendChild(link);
+    link.onload = () => {
+      console.log('[GridixWidget] Styles loaded successfully');
+      resolve();
+    };
+    link.onerror = (err) => {
+      console.error('[GridixWidget] Failed to load styles:', err);
+      resolve(); // continue even if CSS fails to load
+    };
+    
+    // Prepend to shadow root so styles load first
+    shadowRoot.prepend(link);
   });
 }
 
@@ -124,20 +150,27 @@ async function init(options: InitOptions = {}) {
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
     };
 
-    // Ensure CSS is loaded before rendering
-    await ensureStyles(opts);
+    // Get or create host container
+    const hostContainer = ensureContainer(opts.containerId);
+    applyContainerStyles(hostContainer, opts);
 
-    const container = ensureContainer(opts.containerId);
-    applyContainerStyles(container, opts);
+    // Create Shadow DOM for style isolation
+    const { shadowRoot, mountPoint } = createShadowRoot(hostContainer);
 
-    const root = createRoot(container);
+    // Load styles into Shadow DOM
+    await loadStylesIntoShadow(shadowRoot, opts);
+
+    // Render React app inside Shadow DOM
+    const root = createRoot(mountPoint);
     root.render(
       <AuthProvider>
         <WidgetApp {...opts} />
       </AuthProvider>
     );
+
+    console.log('[GridixWidget] Initialized successfully with Shadow DOM isolation');
   } catch (err) {
-    console.error('GridixWidget init error:', err);
+    console.error('[GridixWidget] Init error:', err);
   }
 }
 

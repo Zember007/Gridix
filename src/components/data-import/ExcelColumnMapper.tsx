@@ -386,7 +386,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         longitude: null,
         slug: null,
         currency: null,
-        is_public: false,
+        is_public: true,
         is_featured: false,
         installment_enabled: false,
         min_down_payment_percent: null,

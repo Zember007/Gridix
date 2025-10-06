@@ -190,7 +190,7 @@ export const useProjectsManager = () => {
           query = query.eq('slug', identifier);
         }
 
-        const { data, error } = await query.single();
+        const { data, error } = await query.maybeSingle();
 
         if (error) {
           if (error.code === 'PGRST116') {

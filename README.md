@@ -10,6 +10,7 @@
 - 📊 **Управление лидами**: Интеграция с AmoCRM
 - 🎨 **Настройка полей**: Кастомные поля для квартир
 - 📱 **Адаптивный дизайн**: Работа на всех устройствах
+- 🔌 **Встраиваемый виджет**: Интеграция на любой сайт с полной изоляцией стилей
 
 ## Project info
 
@@ -98,3 +99,95 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Встраиваемый виджет
+
+Gridix предоставляет встраиваемый виджет для интеграции интерактивных планировок на любой сайт.
+
+### Изоляция стилей (Shadow DOM)
+
+Виджет использует **Shadow DOM** для полной изоляции стилей. Это означает:
+
+✅ Стили виджета не влияют на стили вашего сайта  
+✅ Стили сайта не влияют на виджет  
+✅ Виджет выглядит одинаково на любом сайте  
+✅ Полная предсказуемость и безопасность  
+
+### Быстрый старт
+
+```html
+<!-- Добавьте контейнер на вашу страницу -->
+<div id="gridix-widget-root"></div>
+
+<!-- Подключите скрипт виджета -->
+<script src="https://gridix.live/widget.js"></script>
+
+<!-- Инициализируйте виджет -->
+<script>
+  window.GridixWidget.init({
+    projectId: "your-project-id",
+    lang: "ru",
+    width: "100%",
+    height: "800px"
+  });
+</script>
+```
+
+### Опции виджета
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `projectId` | string | - | ID или slug проекта |
+| `userId` | string | - | ID пользователя (для галереи проектов) |
+| `lang` | string | `'ru'` | Язык интерфейса: `ru`, `en`, `ka`, `ar` |
+| `theme` | string | `'light'` | Тема: `light`, `dark`, `auto` |
+| `width` | string | `'100%'` | Ширина виджета |
+| `height` | string | `'600px'` | Высота виджета |
+| `containerId` | string | `'gridix-widget-root'` | ID контейнера |
+| `compactMode` | boolean | `false` | Компактный режим |
+| `showHeader` | boolean | `true` | Показать заголовок |
+| `showFilters` | boolean | `true` | Показать фильтры |
+| `cssUrl` | string | - | Явный URL для стилей |
+
+### Примеры использования
+
+**Один проект:**
+```javascript
+window.GridixWidget.init({
+  projectId: "05bc347c-e19a-41ba-8d87-1f7001d3329b",
+  lang: "ru"
+});
+```
+
+**Галерея проектов пользователя:**
+```javascript
+window.GridixWidget.init({
+  userId: "user-uuid",
+  lang: "en",
+  compactMode: true
+});
+```
+
+**С кастомными стилями:**
+```javascript
+window.GridixWidget.init({
+  projectId: "project-id",
+  cssUrl: "https://your-cdn.com/custom-widget-styles.css",
+  theme: "dark"
+});
+```
+
+### Технические детали
+
+Подробная документация по Shadow DOM изоляции: [WIDGET_SHADOW_DOM.md](WIDGET_SHADOW_DOM.md)
+
+### Тестирование
+
+Тестовая страница с демонстрацией изоляции стилей: [public/test.html](public/test.html)
+
+### Браузерная поддержка
+
+- ✅ Chrome 53+
+- ✅ Firefox 63+
+- ✅ Safari 10+
+- ✅ Edge 79+
