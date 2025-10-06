@@ -823,64 +823,66 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
               {/* Right side - Price and actions */}
               <div className="w-[400px]">
                 <div className="sticky top-6">
-                  <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] ">
+                  <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] flex flex-col justify-between h-[340px]">
                     {/* Currency selector */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl font-medium text-gray-900  font-poppins">
-                        {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`} {apartment.area} m2
+                    <div className="space-y-[24px]">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-medium text-gray-900  font-poppins">
+                          {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`} {apartment.area} m2
+                        </div>
+                        <div className="text-xl font-light text-gray-500  font-poppins">
+                          {apartment.floor_number} floor
+                        </div>
                       </div>
-                      <div className="text-xl font-light text-gray-500  font-poppins">
-                        {apartment.floor_number} floor
-                      </div>
-                    </div>
-                    <div className="flex justify-between gap-[15px]">
+                      <div className="flex justify-between gap-[15px]">
 
-                      <div className="flex flex-col items-start whitespace-nowrap">
-                        {apartment.price && (
-                          <>
-                            <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
-                              {formatPriceWithCurrency(
-                                convertPrice(apartment.price, project?.currency || null, selectedCurrency),
-                                selectedCurrency
-                              )}
-                            </div>
-
-                            {project?.installment_enabled && (
-                              <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
-                                {t('project.from')} {formatPriceWithCurrency(
-                                  convertPrice(
-                                    calculateMonthlyPayment(apartment.price),
-                                    project?.currency || null,
-                                    selectedCurrency
-                                  ),
+                        <div className="flex flex-col items-start whitespace-nowrap">
+                          {apartment.price && (
+                            <>
+                              <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
+                                {formatPriceWithCurrency(
+                                  convertPrice(apartment.price, project?.currency || null, selectedCurrency),
                                   selectedCurrency
-                                )} / {t('installment.perMonth')}
+                                )}
+                              </div>
+
+                              {project?.installment_enabled && (
+                                <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
+                                  {t('project.from')} {formatPriceWithCurrency(
+                                    convertPrice(
+                                      calculateMonthlyPayment(apartment.price),
+                                      project?.currency || null,
+                                      selectedCurrency
+                                    ),
+                                    selectedCurrency
+                                  )} / {t('installment.perMonth')}
+                                </div>
+                              )}
+
+                            </>
+                          )}
+                          <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
+                            {t('installment.low')}
+                          </Badge>
+                        </div>
+                        <div className="flex-col gap-[10px] flex">
+                          <div className="flex ">
+                            <CurrencyToggle
+                              selectedCurrency={selectedCurrency}
+                              onChange={(c) => setSelectedCurrency(c)}
+                              projectCurrency={project?.currency}
+                              themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                            />
+                          </div>
+                          <div>
+                            {project?.installment_enabled && project?.max_installment_months && (
+                              <div className="text-[14px] font-light text-gray-700 font-poppins">
+                                {t('installment.period')} {project.max_installment_months} {t('installment.months')}
                               </div>
                             )}
-
-                          </>
-                        )}
-                        <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
-                          {t('installment.low')}
-                        </Badge>
-                      </div>
-                      <div className="flex-col gap-[10px] flex">
-                        <div className="flex ">
-                          <CurrencyToggle
-                            selectedCurrency={selectedCurrency}
-                            onChange={(c) => setSelectedCurrency(c)}
-                            projectCurrency={project?.currency}
-                            themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
-                          />
-                        </div>
-                        <div>
-                          {project?.installment_enabled && project?.max_installment_months && (
                             <div className="text-[14px] font-light text-gray-700 font-poppins">
-                              {t('installment.period')} {project.max_installment_months} {t('installment.months')}
+                              {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
                             </div>
-                          )}
-                          <div className="text-[14px] font-light text-gray-700 font-poppins">
-                            {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
                           </div>
                         </div>
                       </div>

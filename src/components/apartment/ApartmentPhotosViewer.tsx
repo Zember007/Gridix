@@ -167,7 +167,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-center h-48">
+          <div className="flex items-center justify-center h-[340px]">
             <div className="animate-spin rounded-full h-8 w-8 "></div>
           </div>
         </CardContent>
@@ -179,7 +179,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center h-[340px] text-muted-foreground">
             <ImageIcon className="h-12 w-12 mb-2" />
             <p>Фотографии не загружены</p>
           </div>
@@ -195,7 +195,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <img
             src={photos[currentPhotoIndex].image_url}
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
-            className="w-full h-72 lg:h-auto lg:aspect-[16/9] object-cover rounded-lg cursor-pointer"
+            className="w-full h-[340px] lg:h-auto lg:aspect-[16/9] object-cover rounded-lg cursor-pointer"
             onClick={openLightbox}
           />
           
