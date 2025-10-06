@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { EmbedLanguageProvider } from '@/contexts/LanguageContext';
+import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
 import EmbedProjectsPage from '@/pages/EmbedProjectsPage';
@@ -122,9 +123,13 @@ function WidgetApp(props: InitOptions) {
     compactMode = false, 
     showHeader = true, 
     showFilters = true,
+    lang,
     height,
     theme = 'light'
   } = props;
+
+  const initialLang: Language | undefined =
+    lang && (lang in LANGUAGE_CONFIG) ? (lang as Language) : undefined;
 
   const content = projectId
     ? <ProjectApartmentSelector projectId={projectId} />
@@ -138,7 +143,7 @@ function WidgetApp(props: InitOptions) {
       />;
 
   return (
-    <EmbedLanguageProvider>
+    <EmbedLanguageProvider initialLanguage={initialLang}>
       <div className={`h-full bg-background text-foreground ${theme === 'dark' ? 'dark' : ''}`}>
         {content}
       </div>

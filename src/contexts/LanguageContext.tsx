@@ -104,6 +104,8 @@ export const useLanguage = () => {
 
 interface LanguageProviderProps {
   children: ReactNode;
+  // Optional explicit language for embed/widget contexts
+  initialLanguage?: Language;
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
@@ -157,9 +159,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 };
 
 // Embed Language Provider for standalone widgets (without URL routing)
-export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ children, initialLanguage }) => {
   // Initialize language from URL query parameter, localStorage or default
   const [language, setLanguageState] = useState<Language>(() => {
+    // Highest priority: explicit initialLanguage prop (e.g. from widget options)
+    if (initialLanguage && (initialLanguage as Language) in LANGUAGE_CONFIG) {
+      return initialLanguage as Language;
+    }
     // First, check for lang query parameter
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
@@ -175,6 +181,14 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
 
     return DEFAULT_LANGUAGE;
   });
+
+  // Keep state in sync if an explicit initialLanguage prop is provided/changes
+  useEffect(() => {
+    if (initialLanguage && initialLanguage !== language) {
+      setLanguageState(initialLanguage);
+      localStorage.setItem('embed-language', initialLanguage);
+    }
+  }, [initialLanguage, language]);
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
