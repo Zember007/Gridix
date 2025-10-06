@@ -122,7 +122,8 @@ function WidgetApp(props: InitOptions) {
     compactMode = false, 
     showHeader = true, 
     showFilters = true,
-    height 
+    height,
+    theme = 'light'
   } = props;
 
   const content = projectId
@@ -138,7 +139,7 @@ function WidgetApp(props: InitOptions) {
 
   return (
     <EmbedLanguageProvider>
-      <div className="h-full bg-background">
+      <div className={`h-full bg-background text-foreground ${theme === 'dark' ? 'dark' : ''}`}>
         {content}
       </div>
     </EmbedLanguageProvider>
@@ -182,7 +183,16 @@ async function init(options: InitOptions = {}) {
       mountPoint.id = 'gridix-mount-point';
       mountPoint.style.height = '100%';
       mountPoint.style.width = '100%';
+      mountPoint.style.display = 'contents'; // Allow styles to flow through
+      
+      // Apply CSS variables to the mount point for better Shadow DOM support
+      // This ensures Tailwind CSS variables work inside Shadow DOM
+      mountPoint.className = opts.theme === 'dark' ? 'dark' : '';
+      
       shadowRoot.appendChild(mountPoint);
+    } else {
+      // Update theme class if remounting
+      mountPoint.className = opts.theme === 'dark' ? 'dark' : '';
     }
 
     // Render React app into shadow DOM

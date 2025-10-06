@@ -28,8 +28,50 @@ if (!existsSync(cssPath)) {
   process.exit(1);
 }
 
-const cssContent = readFileSync(cssPath, 'utf-8');
+let cssContent = readFileSync(cssPath, 'utf-8');
 console.log(`✓ Read style.css (${(cssContent.length / 1024).toFixed(2)} KB)`);
+
+// Replace :root with :host for Shadow DOM compatibility
+// :host is the shadow DOM root selector
+cssContent = cssContent.replace(/:root\s*{/g, ':host {');
+console.log('✓ Replaced :root with :host for Shadow DOM');
+
+// Replace .dark class with :host(.dark) for Shadow DOM
+// This allows dark theme to work when .dark class is on the shadow host
+cssContent = cssContent.replace(/\.dark\s*{/g, ':host(.dark) {');
+console.log('✓ Replaced .dark with :host(.dark) for Shadow DOM');
+
+// Replace Tailwind's :is(.dark *) pattern with :is(:host(.dark) *)
+// This transforms patterns like: .dark\:bg-black:is(.dark *) 
+// into: .dark\:bg-black:is(:host(.dark) *)
+cssContent = cssContent.replace(/:is\(\.dark \*\)/g, ':is(:host(.dark) *)');
+console.log('✓ Replaced :is(.dark *) pattern for Shadow DOM');
+
+// Replace body selector with :host as well, since body doesn't exist in Shadow DOM
+cssContent = cssContent.replace(/\bbody\s*{/g, ':host {');
+console.log('✓ Replaced body with :host for Shadow DOM');
+
+// Replace html selector with :host
+cssContent = cssContent.replace(/\bhtml\s*{/g, ':host {');
+console.log('✓ Replaced html with :host for Shadow DOM');
+
+// Add additional CSS to ensure variables are inherited
+cssContent = `
+/* Shadow DOM root styles */
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+/* Ensure all elements inherit CSS variables */
+* {
+  box-sizing: border-box;
+}
+
+` + cssContent;
+
+console.log('✓ Added Shadow DOM wrapper styles');
 
 // Read the widget.js file
 const jsPath = join(distDir, 'widget.js');

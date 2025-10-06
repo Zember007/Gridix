@@ -113,7 +113,8 @@
 }
 
 @layer base {
-  :root {
+  :root,
+  :host {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -141,8 +142,18 @@
     --radius: 0.5rem;
     --brand: 27 96% 61%;
     --brand-foreground: 31 97% 72%;
+    /* Sidebar variables */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  .dark {
+  .dark,
+  :host(.dark) {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -168,6 +179,15 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     --brand: 31 97% 72%;
+    /* Sidebar variables */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .theme {
     --animate-appear-zoom: appear-zoom 0.5s ease-out forwards;
