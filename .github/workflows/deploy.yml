@@ -31,4 +31,4 @@ jobs:
             git pull
             npm install
             npm run build
-            build:widget-inline
+            build:widget
