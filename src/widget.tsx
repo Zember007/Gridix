@@ -47,12 +47,39 @@ function createShadowRoot(hostElement: HTMLElement): { shadowRoot: ShadowRoot; m
   // Attach shadow DOM in "open" mode for accessibility
   const shadowRoot = hostElement.attachShadow({ mode: 'open' });
   
+  // Add base styles to prevent inheritance from parent page
+  const baseStyles = document.createElement('style');
+  baseStyles.textContent = `
+    /* Isolate from parent page styles */
+    :host {
+      display: block;
+      contain: layout style paint;
+    }
+    
+    /* Base reset for all elements inside shadow DOM */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+    
+    /* Mount point base styles */
+    #gridix-widget-mount {
+      display: block;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: inherit;
+      background: transparent;
+    }
+  `;
+  shadowRoot.appendChild(baseStyles);
+  
   // Create mount point inside shadow DOM
   const mountPoint = document.createElement('div');
   mountPoint.id = 'gridix-widget-mount';
-  mountPoint.style.width = '100%';
-  mountPoint.style.height = '100%';
-  mountPoint.style.display = 'block';
   
   shadowRoot.appendChild(mountPoint);
   
@@ -61,9 +88,10 @@ function createShadowRoot(hostElement: HTMLElement): { shadowRoot: ShadowRoot; m
 
 /**
  * Loads styles into the Shadow DOM for complete isolation
+ * Fetches CSS content and injects it as <style> to ensure proper loading
  */
-function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
-  return new Promise((resolve) => {
+async function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions): Promise<void> {
+  try {
     // Prefer explicit cssUrl if provided
     let cssHref = options.cssUrl || '';
 
@@ -78,26 +106,30 @@ function loadStylesIntoShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
 
     if (!cssHref) {
       console.warn('[GridixWidget] Could not resolve CSS URL. Widget may not display correctly.');
-      resolve();
       return;
     }
 
-    // Create style link inside shadow DOM
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = cssHref;
-    link.onload = () => {
-      console.log('[GridixWidget] Styles loaded successfully');
-      resolve();
-    };
-    link.onerror = (err) => {
-      console.error('[GridixWidget] Failed to load styles:', err);
-      resolve(); // continue even if CSS fails to load
-    };
+    // Fetch CSS content and inject as <style> tag
+    // This ensures styles work properly inside Shadow DOM
+    const response = await fetch(cssHref);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch CSS: ${response.status} ${response.statusText}`);
+    }
+    
+    const cssText = await response.text();
+    
+    // Create style element and inject CSS
+    const style = document.createElement('style');
+    style.textContent = cssText;
     
     // Prepend to shadow root so styles load first
-    shadowRoot.prepend(link);
-  });
+    shadowRoot.prepend(style);
+    
+    console.log('[GridixWidget] Styles loaded successfully');
+  } catch (err) {
+    console.error('[GridixWidget] Failed to load styles:', err);
+    // Continue anyway - widget will render without styles
+  }
 }
 
 function WidgetApp(props: InitOptions) {
