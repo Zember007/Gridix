@@ -764,7 +764,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                 </div>
 
                 <div className="flex h-[70px] items-center justify-center">
-                  <div className="h-0.5 w-[80%] bg-gray-300 rounded-full"></div>
+                  <div className="h-0.5 w-full bg-gray-300 rounded-full"></div>
                 </div>
 
 
