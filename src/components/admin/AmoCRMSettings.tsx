@@ -124,7 +124,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     } finally {
       setLoadingData(false);
     }
-  }, [projectId]);
+  }, [projectId, t]);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -151,7 +151,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     } finally {
       setLoading(false);
     }
-  }, [projectId, fetchAmoCRMData]);
+  }, [projectId, fetchAmoCRMData, t]);
 
 
   useEffect(() => {
