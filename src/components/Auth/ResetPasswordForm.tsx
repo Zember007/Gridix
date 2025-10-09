@@ -5,12 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ResetPasswordFormProps {
   onSuccess?: () => void;
 }
 
 export const ResetPasswordForm = ({ onSuccess }: ResetPasswordFormProps) => {
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,22 +20,22 @@ export const ResetPasswordForm = ({ onSuccess }: ResetPasswordFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      toast.error('Пароль должен быть не менее 6 символов');
+      toast.error(t('auth.passwordTooShort'));
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('Пароли не совпадают');
+      toast.error(t('auth.passwordsDoNotMatch'));
       return;
     }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success('Пароль обновлен. Теперь вы можете войти.');
+      toast.success(t('auth.passwordUpdated'));
       onSuccess?.();
     } catch (err: any) {
       console.error('Password update error:', err);
-      toast.error(err?.message || 'Не удалось обновить пароль');
+      toast.error(err?.message || t('auth.failedToUpdatePassword'));
     } finally {
       setLoading(false);
     }
@@ -43,17 +45,17 @@ export const ResetPasswordForm = ({ onSuccess }: ResetPasswordFormProps) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Сброс пароля</CardTitle>
-          <CardDescription className="text-center">Введите новый пароль</CardDescription>
+          <CardTitle className="text-2xl text-center">{t('auth.resetPasswordPageTitle')}</CardTitle>
+          <CardDescription className="text-center">{t('auth.resetPasswordPageDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label htmlFor="password">Новый пароль</Label>
+              <Label htmlFor="password">{t('auth.newPassword')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -62,11 +64,11 @@ export const ResetPasswordForm = ({ onSuccess }: ResetPasswordFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Подтверждение пароля</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -75,7 +77,7 @@ export const ResetPasswordForm = ({ onSuccess }: ResetPasswordFormProps) => {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Сохранение...' : 'Сохранить новый пароль'}
+              {loading ? t('auth.saving') : t('auth.saveNewPassword')}
             </Button>
           </form>
         </CardContent>

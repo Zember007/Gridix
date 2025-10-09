@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -14,6 +15,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -49,7 +51,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
         if (error) throw error;
 
-        toast.success('Проверьте почту для подтверждения регистрации');
+        toast.success(t('auth.checkEmail'));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -58,11 +60,11 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
         if (error) throw error;
 
-        toast.success('Добро пожаловать!');
+        toast.success(t('auth.welcome'));
         onSuccess?.();
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Произошла ошибка';
+      const message = error instanceof Error ? error.message : t('auth.errorOccurred');
       console.error('Auth error:', error);
       toast.error(message);
     } finally {
@@ -81,7 +83,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
       if (error) throw error;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Ошибка входа через Google';
+      const message = error instanceof Error ? error.message : t('auth.googleAuthError');
       console.error('Google auth error:', error);
       toast.error(message);
     }
@@ -89,7 +91,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
   const handleSendReset = async () => {
     if (!resetEmail) {
-      toast.error('Введите email');
+      toast.error(t('auth.enterEmail'));
       return;
     }
     setResetLoading(true);
@@ -98,10 +100,10 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         redirectTo: `${window.location.origin}/auth?mode=recovery`,
       });
       if (error) throw error;
-      toast.success('Письмо для восстановления отправлено');
+      toast.success(t('auth.resetEmailSent'));
       setShowReset(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Не удалось отправить письмо';
+      const message = err instanceof Error ? err.message : t('auth.failedToSendEmail');
       console.error('Reset email error:', err);
       toast.error(message);
     } finally {
@@ -114,12 +116,12 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">
-            {mode === 'signin' ? 'Вход в систему' : 'Регистрация'}
+            {mode === 'signin' ? t('auth.signInTitle') : t('auth.signUpTitle')}
           </CardTitle>
           <CardDescription className="text-center">
             {mode === 'signin' 
-              ? 'Войдите в свой аккаунт для управления проектами'
-              : 'Создайте аккаунт для создания проектов'
+              ? t('auth.signInDescription')
+              : t('auth.signUpDescription')
             }
           </CardDescription>
         </CardHeader>
@@ -127,20 +129,20 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         <CardContent>
           <Tabs value={mode} onValueChange={(value) => setMode(value as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Вход</TabsTrigger>
-              <TabsTrigger value="signup">Регистрация</TabsTrigger>
+              <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
+              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
             </TabsList>
             
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <TabsContent value="signin" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('auth.email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       className="pl-10"
@@ -151,13 +153,13 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Пароль</Label>
+                  <Label htmlFor="password">{t('auth.password')}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder={t('auth.passwordPlaceholder')}
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                       className="pl-10 pr-10"
@@ -178,13 +180,13 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
               <TabsContent value="signup" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Полное имя</Label>
+                  <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="Иван Иванов"
+                      placeholder={t('auth.fullNamePlaceholder')}
                       value={formData.fullName}
                       onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                       className="pl-10"
@@ -194,13 +196,13 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Название компании</Label>
+                  <Label htmlFor="companyName">{t('auth.companyName')}</Label>
                   <div className="relative">
                     <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="companyName"
                       type="text"
-                      placeholder="ООО Ваша Компания"
+                      placeholder={t('auth.companyNamePlaceholder')}
                       value={formData.companyName}
                       onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
                       className="pl-10"
@@ -209,13 +211,13 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">{t('auth.email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       className="pl-10"
@@ -225,13 +227,13 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Пароль</Label>
+                  <Label htmlFor="signup-password">{t('auth.password')}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       id="signup-password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder={t('auth.passwordPlaceholder')}
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                       className="pl-10 pr-10"
@@ -253,10 +255,10 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading 
-                  ? 'Загрузка...' 
+                  ? t('auth.loading') 
                   : mode === 'signin' 
-                    ? 'Войти' 
-                    : 'Зарегистрироваться'
+                    ? t('auth.signInButton') 
+                    : t('auth.signUpButton')
                 }
               </Button>
 
@@ -266,7 +268,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                     className="text-primary hover:underline"
                     onClick={() => setShowReset(true)}
                   >
-                    Забыли пароль?
+                    {t('auth.forgotPassword')}
                   </button>
                 </div>
             </form>
@@ -277,7 +279,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Или</span>
+                  <span className="bg-background px-2 text-muted-foreground">{t('auth.or')}</span>
                 </div>
               </div>
 
@@ -305,7 +307,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                     fill="#EA4335"
                   />
                 </svg>
-                Войти через Google
+                {t('auth.signInWithGoogle')}
               </Button>
             </div>
           </Tabs>
@@ -316,25 +318,25 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-background rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">Восстановление пароля</h2>
-              <p className="text-sm text-muted-foreground mt-1">Введите email для отправки ссылки</p>
+              <h2 className="text-lg font-semibold">{t('auth.resetPasswordTitle')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t('auth.resetPasswordDescription')}</p>
             </div>
             <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
+                <Label htmlFor="reset-email">{t('auth.resetEmail')}</Label>
                 <Input
                   id="reset-email"
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="flex gap-2 justify-end">
-                <Button variant="ghost" type="button" onClick={() => setShowReset(false)}>Отмена</Button>
+                <Button variant="ghost" type="button" onClick={() => setShowReset(false)}>{t('auth.cancel')}</Button>
                 <Button type="button" onClick={handleSendReset} disabled={resetLoading}>
-                  {resetLoading ? 'Отправка...' : 'Отправить ссылку'}
+                  {resetLoading ? t('auth.sending') : t('auth.sendLink')}
                 </Button>
               </div>
             </div>
