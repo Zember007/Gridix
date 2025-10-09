@@ -6,7 +6,7 @@ import { SubscriptionManager } from '@/components/subscription/SubscriptionManag
 import { useSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Crown, CreditCard } from 'lucide-react';
-
+ 
 export default function SubscriptionTab() {
   const { subscription, loading } = useSubscription();
   const { t } = useLanguage();

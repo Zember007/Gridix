@@ -148,6 +148,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     }
   }, [isExpanded, updateImageDimensions, imageLoaded]);
 
+
+
   // Sync image loading state with parent when provided
   useEffect(() => {
     if (externalImageLoaded && externalImageNaturalSize && externalImageNaturalSize.width > 0) {

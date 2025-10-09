@@ -142,7 +142,9 @@ export const ListView = ({
     <div className="container mx-auto px-4 md:px-6 py-8 grow">
       <div className={(project?.has_commercial || project?.has_parking) ? "space-y-6" : "space-y-1"}>
         <div className="flex gap-[20px] justify-between">
-          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{t('project.apartmentsList')}</h2>
+          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{
+            project?.project_type === 'object' ? t('project.objectList') : t('project.apartmentsList')
+          }</h2>
           <div className="flex items-center justify-end gap-2">
             <Button
               variant={listViewMode === 'list' ? 'default' : 'outline'}
