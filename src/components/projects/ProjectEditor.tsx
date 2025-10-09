@@ -55,6 +55,7 @@ interface Project {
   max_installment_months: number;
   pdf_presentation_url: string | null;
   theme_color: string;
+  project_type?: 'building' | 'object' | null;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -74,7 +75,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     min_down_payment_percent: 20,
     max_installment_months: 24,
     pdf_presentation_url: null,
-    theme_color: '#000000'
+    theme_color: '#000000',
+    project_type: 'building'
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -138,7 +140,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         min_down_payment_percent: cachedProject.min_down_payment_percent || 20,
         max_installment_months: cachedProject.max_installment_months || 24,
         pdf_presentation_url: cachedProject.pdf_presentation_url,
-        theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000'
+        theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000',
+        project_type: (cachedProject as unknown as Record<string, unknown>).project_type as 'building' | 'object' | null || 'building'
       });
       setLoading(false);
     } catch (error) {
@@ -178,6 +181,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         max_installment_months: project.max_installment_months,
         pdf_presentation_url: project.pdf_presentation_url,
         theme_color: project.theme_color,
+        project_type: project.project_type || 'building',
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -499,20 +503,22 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           }`}
                         >
                           <Image className="h-4 w-4" />
-                          {t('projectEditor.buildingImage')}
+                          {project.project_type === 'object' ? t('projectEditor.objectImage') : t('projectEditor.buildingImage')}
                         </button>
-                        <button
-                          onClick={() => setActiveTab('floors')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'floors' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
-                        >
-                          <Layers3 className="h-4 w-4" />
-                          {t('projectEditor.floors')}
-                        </button>
+                        {project.project_type !== 'object' && (
+                          <button
+                            onClick={() => setActiveTab('floors')}
+                            disabled={isNew}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                              activeTab === 'floors' 
+                                ? 'bg-primary text-primary-foreground' 
+                                : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
+                          >
+                            <Layers3 className="h-4 w-4" />
+                            {t('projectEditor.floors')}
+                          </button>
+                        )}
                         <button
                           onClick={() => setActiveTab('apartments')}
                           disabled={isNew}
@@ -523,7 +529,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           }`}
                         >
                           <Settings className="h-4 w-4" />
-                          {t('projectList.apartments')}
+                          {project.project_type === 'object' ? t('projectEditor.objects') : t('projectList.apartments')}
                         </button>
                         <button
                           onClick={() => setActiveTab('fields')}
@@ -654,15 +660,31 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     placeholder={t('projectEditor.address')}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
-                  <Input
-                    id="floors"
-                    type="number"
-                    min="1"
-                    value={project.floors}
-                    onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="project-type">Тип проекта</Label>
+                    <Select value={project.project_type || 'building'} onValueChange={(v: 'building' | 'object') => setProject(prev => ({ ...prev, project_type: v }))}>
+                      <SelectTrigger id="project-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="building">Многоквартирный дом</SelectItem>
+                        <SelectItem value="object">Виллы/таунхаусы</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {project.project_type !== 'object' && (
+                    <div>
+                      <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
+                      <Input
+                        id="floors"
+                        type="number"
+                        min="1"
+                        value={project.floors}
+                        onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Дополнительные типы помещений */}
@@ -918,7 +940,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             />
           )}
 
-          {activeTab === 'floors' && (
+          {activeTab === 'floors' && project.project_type !== 'object' && (
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -936,7 +958,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           {activeTab === 'apartments' && (
             <div className="space-y-4">
-              <ProjectApartmentsManager projectId={project.id} />
+              <ProjectApartmentsManager projectId={project.id} projectType={project.project_type} />
             </div>
           )}
 
@@ -1037,7 +1059,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   className="flex items-center gap-2"
                 >
                   <Image className="h-4 w-4" />
-                  {t('projectEditor.buildingImage')}
+                  {project.project_type === 'object' ? 'Object Image' : t('projectEditor.buildingImage')}
                 </Button>
               </div>
 
@@ -1342,7 +1364,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             </div>
           )}
 
-          {activeTab === 'floors' && (
+          {activeTab === 'floors' && project.project_type !== 'object' && (
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -1360,7 +1382,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           {activeTab === 'apartments' && (
             <div className="space-y-4">
-              <ProjectApartmentsManager projectId={project.id} />
+              <ProjectApartmentsManager projectId={project.id} projectType={project.project_type} />
             </div>
           )}
 

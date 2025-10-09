@@ -18,6 +18,7 @@ interface Project {
   installment_enabled?: boolean;
   min_down_payment_percent?: number;
   max_installment_months?: number;
+  project_type?: 'building' | 'object' | null;
 }
 
 interface LayoutPhoto {
@@ -116,6 +117,10 @@ export const ListView = ({
       }
     }
   };
+
+  const maxFloor = filteredApartments.reduce((max, apartment) => {
+    return Math.max(max, apartment.floor_number || 0);
+  }, 0);
 
   const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
@@ -219,8 +224,8 @@ export const ListView = ({
                                 {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
                               </Badge>
                             </div>
-                            <div className="text-xs text-gray-600 space-y-1">
-                              <div>{apartment.area} м² • {apartment.floor_number} {t('project.floor').toLowerCase()}</div>
+                              <div className="text-xs text-gray-600 space-y-1">
+                              <div>{apartment.area} м² {project?.project_type !== 'object' ? `• ${apartment.floor_number} ${t('project.floor').toLowerCase()}` : ''}</div>
                               <div className="font-bold text-sm text-gray-900">
                                 {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                               </div>
@@ -385,7 +390,7 @@ export const ListView = ({
                                       value = apartment.status;
                                       break;
                                     case 'floor':
-                                      value = `${apartment.floor_number} ${t('project.from')} 30`;
+                                      value = `${apartment.floor_number} ${t('project.from')} ${maxFloor}`;
                                       break;
                                     case 'number':
                                       value = apartment.apartment_number;
@@ -401,7 +406,7 @@ export const ListView = ({
                                   <div key={field.id} className="flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105">
                                     <div className="text-[16px] font-light text-[#6C6C6C] leading-[21px] hover:text-gray-800 transition-colors duration-200 px-2 py-1 rounded-md hover:bg-gray-50">
                                       {field.field_name === 'floor' ? 
-                                        `${apartment.floor_number} ${t('project.from')} 30` :
+                                        `${apartment.floor_number} ${t('project.from')} ${maxFloor}` :
                                         formatFieldValue(value, field.field_type, field.field_name)
                                       }
                                     </div>
@@ -457,100 +462,106 @@ export const ListView = ({
               )}
             </>
           ) : (
-            // Desktop grid layout - grouped by floors
+            // Grid layout
             <div className=" space-y-8">
-              {groupApartmentsByFloor().map(({ floor, apartments: floorApartments }) => (
-                <div key={floor} className="space-y-4">
-                  {/* Floor header */}
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-semibold text-gray-800">
-                      {floor} {t('project.floor').toLowerCase()}
-                    </h3>
-                    <div className="flex-1 h-px bg-gray-200"></div>
-                    <span className="text-sm text-gray-500">
-                      {floorApartments.length} {floorApartments.length === 1 ? t('apartment.apartment') : t('apartment.apartments')}
-                    </span>
-                  </div>
-
-                  {/* Apartments grid for this floor */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-                    {floorApartments.map((apartment) => (
-                      <Card
-                        key={apartment.id}
-                        className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 relative ${apartment.status === 'available'
-                          ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100'
-                          : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
-                          }`}
-                        onClick={() => openApartmentDetails(apartment)}
-                      >
-                        {/* Action buttons - top right */}
-                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm"
-                            onClick={(e) => handleShare(e, apartment)}
-                          >
-                            <Share2 className="h-3 w-3 text-black" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm"
-                            onClick={(e) => handleFavoriteToggle(e, apartment)}
-                          >
-                            <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
-                          </Button>
-                        </div>
-
-                        <CardContent className="p-3 h-full flex flex-col justify-between">
-                          {/* Apartment number */}
-                          <div className="text-center flex flex-col items-center gap-[5px]">
-                            <div className="text-sm font-bold text-gray-900 ">
-                              {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
-                            </div>
-                            <Badge
-                              variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                              className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available'
-                                ? 'bg-green-500 text-white'
-                                : 'bg-gray-500 text-white'
-                                }`}
-                            >
-                              {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                            </Badge>
+              {project?.project_type === 'object' ? (
+                // Villas: single grid across all units, no floor headers
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                  {filteredApartments.map((apartment) => (
+                    <Card
+                      key={apartment.id}
+                      className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 relative ${apartment.status === 'available'
+                        ? 'border-green-2 00 hover:border-green-400 bg-green-50 hover:bg-green-100'
+                        : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
+                        }`}
+                      onClick={() => openApartmentDetails(apartment)}
+                    >
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                        <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleShare(e, apartment)}>
+                          <Share2 className="h-3 w-3 text-black" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleFavoriteToggle(e, apartment)}>
+                          <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
+                        </Button>
+                      </div>
+                      <CardContent className="p-3 h-full flex flex-col justify-between">
+                        <div className="text-center flex flex-col items-center gap-[5px]">
+                          <div className="text-sm font-bold text-gray-900 ">
+                            {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
                           </div>
-
-                          {/* Apartment info */}
-                          <div className="text-center space-y-1">
-                            <div className="text-sm font-medium text-gray-700">
-                              {!Number.isNaN(apartment.rooms) &&
-                                <>
-                                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
-                                </>
-                              }
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              {apartment.area} м²
-                            </div>
-                            <div className="text-xs font-semibold text-gray-900">
-                              {apartment.price ?
-                                `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}`
-                                : t('project.onRequest')
-                              }
-                            </div>
-                            {/* Installment pricing for grid */}
-                            {apartment.price && project?.installment_enabled && (
-                              <div className="text-[10px] text-gray-500">
-                                {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
-                              </div>
+                          <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                            {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                          </Badge>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <div className="text-sm font-medium text-gray-700">
+                            {!Number.isNaN(apartment.rooms) && (
+                              <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
                             )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          <div className="text-xs text-gray-600">{apartment.area} м²</div>
+                          <div className="text-xs font-semibold text-gray-900">
+                            {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                          </div>
+                          {apartment.price && project?.installment_enabled && (
+                            <div className="text-[10px] text-gray-500">
+                              {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                groupApartmentsByFloor().map(({ floor, apartments: floorApartments }) => (
+                  <div key={floor} className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-xl font-semibold text-gray-800">
+                        {floor} {t('project.floor').toLowerCase()}
+                      </h3>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                      <span className="text-sm text-gray-500">
+                        {floorApartments.length} {floorApartments.length === 1 ? t('apartment.apartment') : t('apartment.apartments')}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                      {floorApartments.map((apartment) => (
+                        <Card key={apartment.id} className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 relative ${apartment.status === 'available' ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100' : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'}`} onClick={() => openApartmentDetails(apartment)}>
+                          <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                            <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleShare(e, apartment)}>
+                              <Share2 className="h-3 w-3 text-black" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleFavoriteToggle(e, apartment)}>
+                              <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
+                            </Button>
+                          </div>
+                          <CardContent className="p-3 h-full flex flex-col justify-between">
+                            <div className="text-center flex flex-col items-center gap-[5px]">
+                              <div className="text-sm font-bold text-gray-900 ">{apartment.apartment_number || `#${apartment.id.slice(-4)}`}</div>
+                              <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                                {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                              </Badge>
+                            </div>
+                            <div className="text-center space-y-1">
+                              <div className="text-sm font-medium text-gray-700">
+                                {!Number.isNaN(apartment.rooms) && <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>}
+                              </div>
+                              <div className="text-xs text-gray-600">{apartment.area} м²</div>
+                              <div className="text-xs font-semibold text-gray-900">
+                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                              </div>
+                              {apartment.price && project?.installment_enabled && (
+                                <div className="text-[10px] text-gray-500">{t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}</div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

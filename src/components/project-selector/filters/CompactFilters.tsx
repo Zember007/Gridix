@@ -10,6 +10,7 @@ interface Project {
   has_commercial?: boolean;
   has_parking?: boolean;
   currency?: string;
+  project_type?: 'building' | 'object' | null;
 }
 
 interface CompactFiltersProps {
@@ -55,7 +56,8 @@ export const CompactFilters = ({
 
   return (
     <div className="flex items-center gap-4 flex-wrap">
-      {/* Rooms filter */}
+      {/* Rooms filter (hide for villas) */}
+      {project?.project_type !== 'object' && (
       <Select value={selectedRooms} onValueChange={setSelectedRooms}>
         <SelectTrigger className="w-32">
           <SelectValue placeholder={t('project.allTypes')} />
@@ -69,8 +71,9 @@ export const CompactFilters = ({
           ))}
         </SelectContent>
       </Select>
+      )}
 
-      {viewMode !== 'floor-plan' && (
+      {viewMode !== 'floor-plan' && project?.project_type !== 'object' && (
         <Select value={selectedFloor} onValueChange={setSelectedFloor}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder={t('project.allFloors')} />

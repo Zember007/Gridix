@@ -20,6 +20,7 @@ import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
+  projectType?: 'building' | 'object' | null;
 }
 
 // Helper function to convert database polygon to our type
@@ -36,7 +37,7 @@ const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
   return polygon as Json;
 };
 
-const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) => {
+const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsManagerProps) => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [filteredApartments, setFilteredApartments] = useState<Apartment[]>([]);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
@@ -417,7 +418,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="apartment_number">{ currentType === 'apartment' ? t('apartmentsManager.apartmentNumber') : t('apartmentsManager.name')}</Label>
+          <Label htmlFor="apartment_number">
+            {projectType === 'object' ? 'Object Number *' : (currentType === 'apartment' ? t('apartmentsManager.apartmentNumber') : t('apartmentsManager.name'))}
+          </Label>
           <Input
             id="apartment_number"
             value={apartment.apartment_number || ''}
@@ -430,22 +433,24 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
             }}
           />
         </div>
-        <div>
-          <Label htmlFor="floor_number">{t('apartmentsManager.floorNumber')}</Label>
-          <Input
-            id="floor_number"
-            type="number"
-            value={apartment.floor_number}
-            onChange={(e) => {
-              const value = parseInt(e.target.value);
-              if (isNew) {
-                setNewApartment(prev => ({ ...prev, floor_number: value }));
-              } else {
-                setEditingApartment(prev => prev ? { ...prev, floor_number: value } : null);
-              }
-            }}
-          />
-        </div>
+        {projectType !== 'object' && (
+          <div>
+            <Label htmlFor="floor_number">{t('apartmentsManager.floorNumber')}</Label>
+            <Input
+              id="floor_number"
+              type="number"
+              value={apartment.floor_number}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (isNew) {
+                  setNewApartment(prev => ({ ...prev, floor_number: value }));
+                } else {
+                  setEditingApartment(prev => prev ? { ...prev, floor_number: value } : null);
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -475,6 +480,9 @@ const ProjectApartmentsManager = ({ projectId }: ProjectApartmentsManagerProps) 
                     {num}
                   </SelectItem>
                 ))}
+                <SelectItem value="free_layout">
+                  Свободная планировка
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

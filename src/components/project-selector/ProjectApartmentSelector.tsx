@@ -219,7 +219,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         loadPolygonsForFloor(floor);
       }
     }
-  }, [viewMode, selectedFloorForPlan, projectId]);
+  }, [viewMode, selectedFloorForPlan, project?.id]);
 
   // Helper functions for fields
   const getVisibleFields = useCallback(() => {
@@ -321,6 +321,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
                 isMobile={isMobile}
+                projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
                 themeColor={getThemeColor()}
               />
 
@@ -443,22 +444,24 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                     externalImageNaturalSize={buildingImageNaturalSize}
                   />
 
-                  {/* Layout gallery below facade when not expanded */}
-                  <LayoutGallery
-                    apartments={apartments}
-                    selectedRooms={filters.selectedRooms}
-                    selectedType={filters.selectedType}
-                    setSelectedRooms={filters.setSelectedRooms}
-                    setSelectedType={filters.setSelectedType}
-                    setViewMode={setViewMode}
-                    getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                    preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                    project={project}
-                    formatPrice={formatPrice}
-                    selectedCurrency={filters.selectedCurrency}
-                    isMobile={isMobile}
-                    themeColor={getThemeColor()}
-                  />
+                  {/* Layout gallery below facade when not expanded - hide for project_type = object */}
+                  {(project as unknown as Record<string, unknown>)?.project_type !== 'object' && (
+                    <LayoutGallery
+                      apartments={apartments}
+                      selectedRooms={filters.selectedRooms}
+                      selectedType={filters.selectedType}
+                      setSelectedRooms={filters.setSelectedRooms}
+                      setSelectedType={filters.setSelectedType}
+                      setViewMode={setViewMode}
+                      getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                      preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                      project={project}
+                      formatPrice={formatPrice}
+                      selectedCurrency={filters.selectedCurrency}
+                      isMobile={isMobile}
+                      themeColor={getThemeColor()}
+                    />
+                  )}
                 </div>
               ) : (
                 // Floor plan view for specific floor with sidebar

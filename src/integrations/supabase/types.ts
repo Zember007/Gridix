@@ -849,6 +849,7 @@ export type Database = {
           max_installment_months: number | null
           min_down_payment_percent: number | null
           name: string
+          project_type: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url: string | null
           polygon_settings: Json | null
           slug: string | null
@@ -875,6 +876,7 @@ export type Database = {
           max_installment_months?: number | null
           min_down_payment_percent?: number | null
           name: string
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url?: string | null
           polygon_settings?: Json | null
           slug?: string | null
@@ -901,6 +903,7 @@ export type Database = {
           max_installment_months?: number | null
           min_down_payment_percent?: number | null
           name?: string
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url?: string | null
           polygon_settings?: Json | null
           slug?: string | null

@@ -1,4 +1,6 @@
 {
+  "objectImage": "Изображение объекта",
+  "objects": "Объекты",
   "accessDenied": "Доступ запрещен",
   "address": "Адрес",
   "apartmentsTab": "Квартиры",

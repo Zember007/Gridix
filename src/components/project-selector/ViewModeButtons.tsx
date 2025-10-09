@@ -9,10 +9,11 @@ interface ViewModeButtonsProps {
   setViewMode: (mode: ViewMode) => void;
   favoritesCount: number;
   isMobile: boolean;
+  projectType?: 'building' | 'object' | null;
   themeColor?: string;
 }
 
-export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, themeColor = '#000000' }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000' }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
 
   const buttonClass = (mode: ViewMode) => 
@@ -34,16 +35,18 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         {!isMobile && t('project.facade')}
       </Button>
       
-      <Button
-        variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
-        size="sm"
-        className={buttonClass('floor-plan')}
-        style={buttonStyle('floor-plan')}
-        onClick={() => setViewMode('floor-plan')}
-      >
-        <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-        {!isMobile && t('project.floorPlan')}
-      </Button>
+      {projectType !== 'object' && (
+        <Button
+          variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
+          size="sm"
+          className={buttonClass('floor-plan')}
+          style={buttonStyle('floor-plan')}
+          onClick={() => setViewMode('floor-plan')}
+        >
+          <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+          {!isMobile && t('project.floorPlan')}
+        </Button>
+      )}
       
       <Button
         variant={viewMode === 'list' ? 'default' : 'outline'}

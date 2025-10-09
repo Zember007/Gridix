@@ -253,10 +253,6 @@ export function AdminSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
 
   const handleSectionChange = (section: string) => {
-    if (section === 'subscription') {
-      onNavigate?.('/subscription');
-      return;
-    }
     setActiveSection(section);
     onTabChange?.(section);
   };

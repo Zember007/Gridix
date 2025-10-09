@@ -12,6 +12,7 @@ interface BuildingFacadeViewProps {
     id: string;
     name: string;
     building_image_url: string | null;
+    project_type?: 'building' | 'object' | null;
   };
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;
@@ -199,6 +200,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   // Floor Popup Component
   const FloorPopup = ({ floorNumber, position }: { floorNumber: number; position: { x: number; y: number } }) => {
     const stats = getFloorStats(floorNumber);
+    const floorApartments = getFloorApartments(floorNumber);
     
     // Position popup to the left of the polygon
     const popupWidth = 256; // min-w-64 = 16rem = 256px
@@ -228,6 +230,28 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
     const { t } = useLanguage();
     
+    // For project_type = object, show area and price instead of floor and available count
+    if (project.project_type === 'object' && floorApartments.length > 0) {
+      const apartment = floorApartments[0];
+      return (
+        <div
+          className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[120px] h-[105px] p-2"
+          style={{
+            left: adjustedX,
+            top: adjustedY,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
+            <div className="text-[16px] leading-[1.1]">{apartment.area} м²</div>
+            {apartment.price && (
+              <div className="text-[16px] leading-[1.1] mt-1">{new Intl.NumberFormat('ru-RU').format(Math.round(apartment.price))}</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div
         className="absolute z-30  uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[100px] h-[105px]"
@@ -253,6 +277,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   };
 
   const handleFloorClick = (floorNumber: number) => {
+    // For project_type = object, directly open apartment details
+    if (project.project_type === 'object') {
+      const floorApartments = getFloorApartments(floorNumber);
+      if (floorApartments.length > 0) {
+        onApartmentSelect(floorApartments[0]);
+      }
+      return;
+    }
+    
     if (onFloorSelect) {
       onFloorSelect(floorNumber);
     } else {

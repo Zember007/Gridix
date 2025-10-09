@@ -11,6 +11,7 @@ import ManagerProjectList from '@/components/projects/ManagerProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
 import { LeadsManager } from './LeadsManager';
+import SubscriptionTab from './SubscriptionTab';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -260,6 +261,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
+          {activeTab === 'subscription' && (
+            <div className="space-y-6">
+              <SubscriptionTab />
+            </div>
+          )}
+
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <AdminSettings 
@@ -358,6 +365,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           {activeTab === 'leads' && (
             <div className="space-y-6">
               <LeadsManager showProjectColumn={!isManager} />
+            </div>
+          )}
+
+          {activeTab === 'subscription' && (
+            <div className="space-y-6">
+              <SubscriptionTab />
             </div>
           )}
 

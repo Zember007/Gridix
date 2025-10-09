@@ -12,6 +12,7 @@ interface Project {
   has_commercial?: boolean;
   has_parking?: boolean;
   currency?: string;
+  project_type?: 'building' | 'object' | null;
 }
 
 interface MobileFiltersProps {
@@ -80,25 +81,27 @@ export const MobileFilters = ({
 
   return (
     <div className="space-y-6">
-      {/* Rooms filter */}
-      <div className="space-y-2">
-        <Label>{t('project.rooms')}</Label>
-        <Select value={selectedRooms} onValueChange={setSelectedRooms}>
-          <SelectTrigger>
-            <SelectValue placeholder={t('project.allTypes')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('project.allTypes')}</SelectItem>
-            {getUniqueRoomCounts().map(rooms => (
-              <SelectItem key={rooms} value={rooms.toString()}>
-                {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Rooms filter (hide for villas) */}
+      {project?.project_type !== 'object' && (
+        <div className="space-y-2">
+          <Label>{t('project.rooms')}</Label>
+          <Select value={selectedRooms} onValueChange={setSelectedRooms}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('project.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('project.allTypes')}</SelectItem>
+              {getUniqueRoomCounts().map(rooms => (
+                <SelectItem key={rooms} value={rooms.toString()}>
+                  {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-      {viewMode !== 'floor-plan' && (
+      {viewMode !== 'floor-plan' && project?.project_type !== 'object' && (
         <div className="space-y-2">
           <Label>{t('project.floor')}</Label>
           <Select value={selectedFloor} onValueChange={setSelectedFloor}>

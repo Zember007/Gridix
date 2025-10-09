@@ -26,6 +26,7 @@ export interface Project {
   max_installment_months: number;
   pdf_presentation_url: string | null;
   theme_color: string | null;
+  project_type?: 'building' | 'object' | null;
   created_at: string;
   updated_at: string;
 }

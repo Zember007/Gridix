@@ -555,7 +555,10 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  {t('apartment.apartment')} № {apartment.apartment_number}
+                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
+                    ? `Object № ${apartment.apartment_number}` 
+                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`
+                  }
                 </h1>
                 <div className="flex gap-2">
                   <Button
@@ -619,7 +622,12 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
             {/* Дополнительные поля */}
             {getVisibleFields().length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('apartment.details')}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
+                    ? 'Object details' 
+                    : t('apartment.details')
+                  }
+                </h3>
 
                 <div className="space-y-3">
                   {getVisibleFields().map((field) => {
@@ -689,7 +697,10 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                   <ArrowLeft className="h-5 w-5 text-gray-700" />
                 </Button>
                 <h1 className="text-2xl font-semibold text-gray-900 font-poppins">
-                  {t('apartment.apartment')} № {apartment.apartment_number}
+                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
+                    ? `Object № ${apartment.apartment_number}` 
+                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`
+                  }
                 </h1>
               </div>
               <div className="flex gap-2">
@@ -754,7 +765,12 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                 {/* Additional Information Section */}
                 {getVisibleFields().length > 0 && (
                   <div className="space-y-6">
-                    <h2 className="text-3xl font-medium text-gray-900 font-poppins">{t('apartment.details')}</h2>
+                    <h2 className="text-3xl font-medium text-gray-900 font-poppins">
+                      {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
+                        ? 'Object details' 
+                        : t('apartment.details')
+                      }
+                    </h2>
 
                     <div className="space-y-4">
                       {getVisibleFields().map((field) => {
