@@ -120,7 +120,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       }
     } catch (error) {
       console.error('Error fetching AmoCRM data:', error);
-      toast.error('Ошибка при загрузке данных из AmoCRM');
+      toast.error(t('amocrm.dataFetchError'));
     } finally {
       setLoadingData(false);
     }
@@ -147,7 +147,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       }
     } catch (error) {
       console.error('Error fetching AmoCRM settings:', error);
-      toast.error('Ошибка при загрузке настроек AmoCRM');
+      toast.error(t('amocrm.settingsLoadError'));
     } finally {
       setLoading(false);
     }
@@ -193,7 +193,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       
     } catch (error) {
       console.error('Ошибка при запуске авторизации:', error);
-      toast.error('Не удалось запустить авторизацию AmoCRM');
+      toast.error(t('amocrm.authError'));
     } finally {
       setAuthorizing(false);
     }
@@ -234,10 +234,10 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       // Обновляем локальное состояние
       setSettings(prev => ({ ...prev, ...updateData }));
-      toast.success('Настройки AmoCRM сохранены');
+      toast.success(t('amocrm.settingsSaveSuccess'));
     } catch (error) {
       console.error('Error saving AmoCRM settings:', error);
-      toast.error('Ошибка при сохранении настроек');
+      toast.error(t('amocrm.settingsSaveError'));
     } finally {
       setSavingSettings(false);
     }
@@ -265,10 +265,10 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       if (error) throw error;
       
       await fetchSettings();
-      toast.success('Интеграция отключена');
+      toast.success(t('amocrm.disconnectSuccess'));
     } catch (error) {
       console.error('Error disconnecting AmoCRM:', error);
-      toast.error('Ошибка при отключении');
+      toast.error(t('amocrm.disconnectError'));
     }
   };
 
@@ -307,7 +307,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       
     } catch (error) {
       console.error('Ошибка при запуске авторизации:', error);
-      toast.error('Не удалось запустить авторизацию AmoCRM');
+      toast.error(t('amocrm.authError'));
     } finally {
       setAuthorizing(false);
     }
@@ -335,7 +335,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
   const handleSaveConfiguration = async () => {
     if (!selectedPipelineId) {
-      toast.error('Выберите воронку');
+      toast.error(t('amocrm.selectPipelineRequired'));
       return;
     }
     
@@ -385,24 +385,24 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
-          Интеграция с AmoCRM
+          {t('amocrm.title')}
           {isConfigured && (
             <Badge variant="default" className="bg-green-100 text-green-800">
               <CheckCircle className="h-3 w-3 mr-1" />
-              Настроена
+              {t('amocrm.configured')}
             </Badge>
           )}
           {isAuthorized && tokenExpired && (
             <Badge variant="destructive">
               <AlertCircle className="h-3 w-3 mr-1" />
-              Требует переподключения
+              {t('amocrm.needsReconnection')}
             </Badge>
           )}
         </CardTitle>
         <CardDescription>
           {isConfigured ? 
-            'Интеграция настроена и готова к работе. Заявки автоматически попадают в AmoCRM.' :
-            'Подключите AmoCRM для автоматической отправки заявок в CRM'
+            t('amocrm.descriptionConfigured') :
+            t('amocrm.description')
           }
         </CardDescription>
       </CardHeader>
@@ -418,28 +418,28 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     <CheckCircle className="h-6 w-6 text-green-600" />
                     <div>
                       <h4 className="font-medium text-green-900">
-                        {settings.account_name ? `Подключено к: ${settings.account_name}` : 'Интеграция активна'}
+                        {settings.account_name ? `${t('amocrm.connectedTo')} ${settings.account_name}` : t('amocrm.integrationActive')}
                       </h4>
                       <p className="text-sm text-green-700">
-                        Аккаунт: {settings.subdomain}.amocrm.ru
+                        {t('amocrm.account')} {settings.subdomain}.amocrm.ru
                       </p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Воронка:</span>
+                      <span className="text-gray-600">{t('amocrm.pipeline')}</span>
                       <span className="font-medium">{settings.pipeline_name || `ID: ${settings.pipeline_id}`}</span>
                     </div>
                     {settings.status_name && (
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Статус:</span>
+                        <span className="text-gray-600">{t('amocrm.status')}</span>
                         <span className="font-medium">{settings.status_name}</span>
                       </div>
                     )}
                     {settings.user_name && (
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">Ответственный:</span>
+                        <span className="text-gray-600">{t('amocrm.responsible')}</span>
                         <span className="font-medium">{settings.user_name}</span>
                       </div>
                     )}
@@ -453,7 +453,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     variant="outline"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    Изменить настройки
+                    {t('amocrm.changeSettings')}
                   </Button>
                   
                   <Button 
@@ -466,7 +466,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     ) : (
                       <RefreshCw className="h-4 w-4 mr-2" />
                     )}
-                    Переподключить
+                    {t('amocrm.reconnect')}
                   </Button>
                   
                   <Button 
@@ -474,7 +474,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     variant="destructive"
                   >
                     <AlertCircle className="h-4 w-4 mr-2" />
-                    Отключить
+                    {t('amocrm.disconnect')}
                   </Button>
                 </div>
               </>
@@ -484,35 +484,35 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                 <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 mb-6">
                   <div className="flex items-center gap-3 mb-2">
                     <Settings className="h-5 w-5 text-amber-600" />
-                    <h4 className="font-medium text-amber-900">Редактирование настроек</h4>
+                    <h4 className="font-medium text-amber-900">{t('amocrm.editingSettings')}</h4>
                   </div>
                   <p className="text-sm text-amber-700">
-                    Измените настройки воронки, статуса и ответственного пользователя.
+                    {t('amocrm.editingSettingsDesc')}
                   </p>
                 </div>
 
                 {loadingData ? (
                   <div className="flex items-center justify-center py-8">
                     <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                    <span>Загрузка данных из AmoCRM...</span>
+                    <span>{t('amocrm.loadingData')}</span>
                   </div>
                 ) : amocrmData ? (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="pipeline-select">Воронка *</Label>
+                      <Label htmlFor="pipeline-select">{t('amocrm.pipelineRequired')}</Label>
                       <Select 
                         onValueChange={handlePipelineChange}
                         value={selectedPipelineId?.toString() || ''}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Выберите воронку" />
+                          <SelectValue placeholder={t('amocrm.selectPipeline')} />
                         </SelectTrigger>
                         <SelectContent>
                           {amocrmData.pipelines
                             .filter(pipeline => !pipeline.is_archive)
                             .map(pipeline => (
                               <SelectItem key={pipeline.id} value={pipeline.id.toString()}>
-                                {pipeline.name} {pipeline.is_main && '(основная)'}
+                                {pipeline.name} {pipeline.is_main && `(${t('amocrm.main')})`}
                               </SelectItem>
                             ))}
                         </SelectContent>
@@ -521,16 +521,16 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
                     {selectedPipelineId && (
                       <div>
-                        <Label htmlFor="status-select">Статус (опционально)</Label>
+                        <Label htmlFor="status-select">{t('amocrm.statusOptional')}</Label>
                         <Select 
                           onValueChange={(value) => setSelectedStatusId(value === 'none' ? null : parseInt(value))}
                           value={selectedStatusId?.toString() || 'none'}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Выберите статус" />
+                            <SelectValue placeholder={t('amocrm.selectStatus')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Не выбрано</SelectItem>
+                            <SelectItem value="none">{t('amocrm.notSelected')}</SelectItem>
                             {getAvailableStatuses().map(status => (
                               <SelectItem key={status.id} value={status.id.toString()}>
                                 {status.name}
@@ -542,19 +542,19 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     )}
 
                     <div>
-                      <Label htmlFor="user-select">Ответственный (опционально)</Label>
+                      <Label htmlFor="user-select">{t('amocrm.responsibleOptional')}</Label>
                       <Select 
                         onValueChange={(value) => setSelectedUserId(value === 'none' ? null : parseInt(value))}
                         value={selectedUserId?.toString() || 'none'}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Выберите ответственного" />
+                          <SelectValue placeholder={t('amocrm.selectResponsible')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">Не выбрано</SelectItem>
+                          <SelectItem value="none">{t('amocrm.notSelected')}</SelectItem>
                           {amocrmData.users.map(user => (
                             <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.name} {user.is_admin && '(админ)'}
+                              {user.name} {user.is_admin && `(${t('amocrm.admin')})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -572,14 +572,14 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                         ) : (
                           <Save className="h-4 w-4 mr-2" />
                         )}
-                        Сохранить изменения
+                        {t('amocrm.saveChanges')}
                       </Button>
                       
                       <Button 
                         onClick={handleCancelEdit}
                         variant="outline"
                       >
-                        Отменить
+                        {t('amocrm.cancel')}
                       </Button>
                     </div>
                   </div>
@@ -587,7 +587,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Не удалось загрузить данные из AmoCRM. Попробуйте переподключиться.
+                      {t('amocrm.dataLoadError')}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -600,32 +600,32 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
               <div className="flex items-center gap-3 mb-2">
                 <Info className="h-5 w-5 text-blue-600" />
-                <h4 className="font-medium text-blue-900">Настройка интеграции</h4>
+                <h4 className="font-medium text-blue-900">{t('amocrm.configurationTitle')}</h4>
               </div>
               <p className="text-sm text-blue-700">
-                Авторизация прошла успешно! Теперь выберите воронку и настройки для автоматической отправки заявок.
+                {t('amocrm.configurationDesc')}
               </p>
             </div>
 
             {loadingData ? (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                <span>Загрузка данных из AmoCRM...</span>
+                <span>{t('amocrm.loadingData')}</span>
               </div>
             ) : amocrmData ? (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="pipeline-select">Воронка *</Label>
+                  <Label htmlFor="pipeline-select">{t('amocrm.pipelineRequired')}</Label>
                   <Select onValueChange={handlePipelineChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите воронку" />
+                      <SelectValue placeholder={t('amocrm.selectPipeline')} />
                     </SelectTrigger>
                     <SelectContent>
                       {amocrmData.pipelines
                         .filter(pipeline => !pipeline.is_archive)
                         .map(pipeline => (
                           <SelectItem key={pipeline.id} value={pipeline.id.toString()}>
-                            {pipeline.name} {pipeline.is_main && '(основная)'}
+                            {pipeline.name} {pipeline.is_main && `(${t('amocrm.main')})`}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -634,13 +634,13 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
                 {selectedPipelineId && (
                   <div>
-                    <Label htmlFor="status-select">Статус (опционально)</Label>
+                    <Label htmlFor="status-select">{t('amocrm.statusOptional')}</Label>
                     <Select onValueChange={(value) => setSelectedStatusId(value === 'none' ? null : parseInt(value))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Выберите статус" />
+                        <SelectValue placeholder={t('amocrm.selectStatus')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Не выбрано</SelectItem>
+                        <SelectItem value="none">{t('amocrm.notSelected')}</SelectItem>
                         {getAvailableStatuses().map(status => (
                           <SelectItem key={status.id} value={status.id.toString()}>
                             {status.name}
@@ -652,16 +652,16 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                 )}
 
                 <div>
-                  <Label htmlFor="user-select">Ответственный (опционально)</Label>
+                  <Label htmlFor="user-select">{t('amocrm.responsibleOptional')}</Label>
                   <Select onValueChange={(value) => setSelectedUserId(value === 'none' ? null : parseInt(value))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите ответственного" />
+                      <SelectValue placeholder={t('amocrm.selectResponsible')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Не выбрано</SelectItem>
+                      <SelectItem value="none">{t('amocrm.notSelected')}</SelectItem>
                       {amocrmData.users.map(user => (
                         <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name} {user.is_admin && '(админ)'}
+                          {user.name} {user.is_admin && `(${t('amocrm.admin')})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -679,14 +679,14 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     ) : (
                       <Save className="h-4 w-4 mr-2" />
                     )}
-                    Сохранить настройки
+                    {t('amocrm.saveSettings')}
                   </Button>
                   
                   <Button 
                     onClick={handleDisconnect}
                     variant="outline"
                   >
-                    Отменить
+                    {t('amocrm.cancel')}
                   </Button>
                 </div>
               </div>
@@ -694,7 +694,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Не удалось загрузить данные из AmoCRM. Попробуйте переподключиться.
+                  {t('amocrm.dataLoadError')}
                 </AlertDescription>
               </Alert>
             )}
@@ -713,15 +713,15 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
               ) : (
                 <ExternalLink className="h-5 w-5 mr-2" />
               )}
-              {authorizing ? 'Подключение...' : 'Подключить AmoCRM'}
+              {authorizing ? t('amocrm.connecting') : t('amocrm.connectAmoCRM')}
             </Button>
 
             <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">Как это работает:</h4>
+              <h4 className="font-medium text-blue-900 mb-2">{t('amocrm.howItWorks')}</h4>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                <li>Нажмите "Подключить AmoCRM"</li>
-                <li>Вас перенаправит на страницу авторизации AmoCRM</li>
-                <li>После подтверждения доступа вы вернетесь в приложение, и мы настроим интеграцию</li>
+                <li>{t('amocrm.howItWorksStep1')}</li>
+                <li>{t('amocrm.howItWorksStep2')}</li>
+                <li>{t('amocrm.howItWorksStep3')}</li>
               </ol>
             </div>
           </>

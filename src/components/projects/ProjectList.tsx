@@ -170,7 +170,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                     <CardDescription
                     style={{ color: ADMIN_THEME.textSecondary }}
                     className="mt-1 line-clamp-2">
-                      {project.description || 'Описание отсутствует'}
+                      {project.description || '-'}
                     </CardDescription>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       }}
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      Открыть
+                      {t('managerAccounts.openLink')}
                     </Button>
                     
                     <Button

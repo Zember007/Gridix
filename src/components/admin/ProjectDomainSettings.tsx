@@ -30,7 +30,7 @@ interface ProjectDomainSettingsProps {
 }
 
 export default function ProjectDomainSettings({ projectId, projectName }: ProjectDomainSettingsProps) {
-  const { domains, loading, addDomain, updateDomain, deleteDomain } = useProjectDomains(projectId);
+  const { domains, loading, updateDomain, deleteDomain } = useProjectDomains(projectId);
   const [newDomain, setNewDomain] = useState("");
   const [isAddingDomain, setIsAddingDomain] = useState(false);
   const [dnsProvider, setDnsProvider] = useState<'manual' | 'cloudflare'>('manual');
