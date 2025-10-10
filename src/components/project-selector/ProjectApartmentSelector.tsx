@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import {  SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -72,7 +72,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     // Используем slug если он есть, иначе ID с префиксом
     const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
     const url = `https://gridix.live/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-    
+
     // Если мы уже находимся на странице проекта, открываем в той же вкладке
     window.open(url, '_blank');
   };
@@ -141,17 +141,18 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   // Preload layout photos
   useEffect(() => {
     const preloadLayoutPhotos = async () => {
-      
-      
+
+
       if (!project?.id || apartments.length === 0) return;
-      
+
       const uniqueLayouts = new Set<string>(
-        apartments.map(a => (Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room`))
+        apartments.map(a => (a.type === 'apartment' ? Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room` : a.type))
       );
 
-      if (uniqueLayouts.size === 0){
+      if (uniqueLayouts.size === 0) {
         setPreloadLayoutLoaded(true);
-        return;}
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -186,7 +187,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   useEffect(() => {
     const loadPolygonsForFloor = async (floor: number) => {
       if (!project?.id) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('apartments')
@@ -295,12 +296,12 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }));
   }, [filters]);
 
-  if(!project) return null;
+  if (!project) return null;
 
-  if ( !apartmentsLoaded || !preloadLayoutLoaded || (viewMode === 'facade' && !buildingImageLoaded)) {
+  if (!apartmentsLoaded || !preloadLayoutLoaded || (viewMode === 'facade' && !buildingImageLoaded)) {
     return (
       <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
-          <Loader
+        <Loader
           color={getThemeColor()}
           size="lg" className="mx-auto" />
       </div>
@@ -478,16 +479,16 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                         selectedFloorNumber={selectedFloorForPlan}
                       />
                     </div>
-                    
+
                     {/* Floor selector sidebar */}
                     <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-32 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
                       <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
-            
-                        
+
+
                         {/* Floor Carousel */}
                         <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-0 py-10'}`}>
                           <div className={`${isMobile ? ' w-full max-w-xs' : 'w-24 h-full'} relative`}>
-                            <Carousel 
+                            <Carousel
                               className="w-full h-full "
                               orientation={isMobile ? "horizontal" : "vertical"}
                               opts={{
@@ -500,11 +501,10 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                   {filters.getUniqueFloors().map((floor, index) => (
                                     <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
                                       <button
-                                        className={`w-full h-12 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${
-                                          selectedFloorForPlan === floor
+                                        className={`w-full h-12 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
                                             ? 'text-white'
                                             : 'hover:bg-gray-100 text-gray-700'
-                                        }`}
+                                          }`}
                                         style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
                                         onClick={() => setSelectedFloorForPlan(floor)}
                                       >
@@ -514,7 +514,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                                   ))}
                                 </CarouselContent>
                               </div>
-                              
+
                               {/* Navigation buttons */}
                               {filters.getUniqueFloors().length > 3 && (
                                 <>
@@ -534,8 +534,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
                             </Carousel>
                           </div>
                         </div>
-                        
-                   
+
+
                       </div>
                     </div>
                   </div>

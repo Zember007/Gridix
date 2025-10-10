@@ -199,22 +199,33 @@ export const LayoutGallery = ({
                 <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="aspect-[4/3] bg-gray-100 relative">
                     {(() => {
-                      if (isCommercial || isParking) {
+                      let layoutKey: string;
+                      if (representativeApt.type === 'commercial') {
+                        layoutKey = 'commercial';
+                      } else if (representativeApt.type === 'parking') {
+                        layoutKey = 'parking';
+                      } else {
+                        layoutKey = representativeApt.rooms === 0 ? 'studio' : `${Number(representativeApt.rooms)}-room`;
+                      }
+                      
+                      const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+                      const first = photos[0];
+                      
+                      if (first) {
+                        return (
+                          <img 
+                            src={first.image_url} 
+                            alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
+                            className="w-full h-full object-cover" 
+                          />
+                        );
+                      } else {
                         return (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            {isCommercial ? t('apartmentsManager.typeCommercial') : t('apartmentsManager.typeParking')}
+                            {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : t('project.layoutPreview')}
                           </div>
                         );
                       }
-                      const layoutKey = representativeApt.rooms === 0 ? 'studio' : `${Number(representativeApt.rooms)}-room`;
-                      const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
-                      const first = photos[0];
-                      return first ? (
-                        <img src={first.image_url} alt={representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`}
-                          className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">{t('project.layoutPreview')}</div>
-                      );
                     })()}
 
                     {/* Status badge */}

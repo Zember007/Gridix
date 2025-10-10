@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -38,17 +38,7 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadApartments();
-  }, [projectId]);
-
-  useEffect(() => {
-    if (selectedLayoutType) {
-      loadLayoutPhotos();
-    }
-  }, [selectedLayoutType]);
-
-  const loadApartments = async () => {
+  const loadApartments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('apartments')
@@ -61,11 +51,22 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
       setApartments(normalizedApartments);
       
       // Определяем доступные типы планировок на основе квартир
-      const uniqueRoomCounts = [...new Set(normalizedApartments.map(apt => apt.rooms))].sort((a, b) => a - b);
-      const types: LayoutType[] = uniqueRoomCounts.map(rooms => ({
-        key: rooms === 0 ? 'studio' : `${rooms}-room`,
-        label: rooms === 0 ? 'Студия' : `${rooms}-комнатная`,
-        rooms
+      const roomTypeMap = new Map<string, {rooms: number, type: string}>();
+      
+      normalizedApartments.forEach(apt => {
+        const key = `${apt.rooms}-${apt.type}`;
+        if (!roomTypeMap.has(key)) {
+          roomTypeMap.set(key, {rooms: Number(apt.rooms), type: apt.type});
+        }
+      });
+      
+      const uniqueRoomCounts = Array.from(roomTypeMap.values());
+      const types: LayoutType[] = uniqueRoomCounts.map(data => ({
+        key: data.type === 'apartment' ? data.rooms === 0 ? 'studio' : `${data.rooms}-room` : data.type,
+        label: data.type === 'apartment' ? data.rooms === 0 ? 'Студия' : `${data.rooms}-комнатная` : 
+               data.type === 'commercial' ? 'Коммерческие помещения' : 
+               data.type === 'parking' ? 'Паркинги' : data.type,
+        rooms: data.rooms
       }));
       
       setLayoutTypes(types);
@@ -79,9 +80,9 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
-  const loadLayoutPhotos = async () => {
+  const loadLayoutPhotos = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('layout_photos')
@@ -96,7 +97,17 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
     } catch (error) {
       console.error('Error loading layout photos:', error);
     }
-  };
+  }, [projectId, selectedLayoutType]);
+
+  useEffect(() => {
+    loadApartments();
+  }, [loadApartments]);
+
+  useEffect(() => {
+    if (selectedLayoutType) {
+      loadLayoutPhotos();
+    }
+  }, [selectedLayoutType, loadLayoutPhotos]);
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -175,7 +186,13 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
     const layoutType = layoutTypes.find(lt => lt.key === layoutKey);
     if (!layoutType) return 0;
     
-    return apartments.filter(apt => apt.rooms === layoutType.rooms).length;
+    // Для коммерческих помещений и паркингов ищем по типу
+    if (layoutKey === 'commercial' || layoutKey === 'parking') {
+      return apartments.filter(apt => apt.type === layoutKey).length;
+    }
+    
+    // Для квартир ищем по количеству комнат
+    return apartments.filter(apt => apt.type === 'apartment' && apt.rooms === layoutType.rooms).length;
   };
 
   if (loading) {
@@ -209,7 +226,7 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
                   <SelectItem key={layoutType.key} value={layoutType.key}>
                     <div className="flex items-center gap-2">
                       <Home className="h-4 w-4" />
-                      {layoutType.label} ({getApartmentCountForLayout(layoutType.key)} квартир)
+                      {layoutType.label} ({getApartmentCountForLayout(layoutType.key)})
                     </div>
                   </SelectItem>
                 ))}

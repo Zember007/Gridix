@@ -125,7 +125,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
       if (!apartment || !project?.id) return;
       setPhotosLoading(true);
       try {
-        const layoutType = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
+        const layoutType = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
 
         const [layoutRes, aptRes] = await Promise.all([
           supabase
@@ -177,7 +177,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
       id: apartment.id,
       project_id: apartment.project_id,
       apartment_number: apartment.apartment_number,
-      rooms: typeof apartment.rooms === 'number' ? apartment.rooms : Number(apartment.rooms),
+      rooms: typeof apartment.rooms === 'number' ? apartment.rooms : 0,
       area: apartment.area,
       price: typeof apartment.price === 'number' ? apartment.price : undefined,
       status: apartment.status,
@@ -274,6 +274,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     }
 
     if (fieldName === 'rooms') {
+      if(Number.isNaN(value)) return '-';
       if (value === 0) {
         return t('apartment.studio');
       }
