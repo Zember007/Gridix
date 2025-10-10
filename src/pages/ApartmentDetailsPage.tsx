@@ -93,7 +93,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
   const handleShare = async () => {
     try {
       const url = window.location.href;
-      const title = `${t('apartment.apartment')} № ${apartment?.apartment_number}`;
+      const title = `${apartment?.type === 'apartment' ? t('apartment.apartment') : apartment?.type} № ${apartment?.apartment_number}`;
       const text = project?.name ? project.name : '';
       if (navigator.share) {
         await navigator.share({ title, text, url });
@@ -274,7 +274,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
     }
 
     if (fieldName === 'rooms') {
-      if(Number.isNaN(value)) return '-';
+      if (Number.isNaN(value)) return '-';
       if (value === 0) {
         return t('apartment.studio');
       }
@@ -556,10 +556,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
 
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
-                    ? `Object № ${apartment.apartment_number}` 
-                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`
-                  }
+                  {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
+                    ? `Object № ${apartment.apartment_number}`
+                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`) : `${apartment.type} № ${apartment.apartment_number}`}
                 </h1>
                 <div className="flex gap-2">
                   <Button
@@ -589,7 +588,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-gray-400" />
                 <span className="text-gray-700">
-                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}
+                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -610,22 +609,13 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
               </div>
             )}
 
-            {/* Description section */}
-            {/*  {project?.description && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('projectEditor.description')}</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {project.description}
-                </p>
-              </div>
-            )} */}
 
             {/* Дополнительные поля */}
             {getVisibleFields().length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
-                    ? 'Object details' 
+                  {(project as unknown as Record<string, unknown>)?.project_type === 'object'
+                    ? 'Object details'
                     : t('apartment.details')
                   }
                 </h3>
@@ -638,7 +628,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                     } else {
                       switch (field.field_name) {
                         case 'rooms':
-                          value = apartment.rooms;
+                          if(typeof apartment.rooms === 'number') {
+                            value = apartment.rooms;
+                          } 
                           break;
                         case 'area':
                           value = apartment.area;
@@ -698,10 +690,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                   <ArrowLeft className="h-5 w-5 text-gray-700" />
                 </Button>
                 <h1 className="text-2xl font-semibold text-gray-900 font-poppins">
-                  {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
-                    ? `Object № ${apartment.apartment_number}` 
-                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`
-                  }
+                  {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
+                    ? `Object № ${apartment.apartment_number}`
+                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`) : `${apartment.type} № ${apartment.apartment_number}`}
                 </h1>
               </div>
               <div className="flex gap-2">
@@ -767,8 +758,8 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                 {getVisibleFields().length > 0 && (
                   <div className="space-y-6">
                     <h2 className="text-3xl font-medium text-gray-900 font-poppins">
-                      {(project as unknown as Record<string, unknown>)?.project_type === 'object' 
-                        ? 'Object details' 
+                      {(project as unknown as Record<string, unknown>)?.project_type === 'object'
+                        ? 'Object details'
                         : t('apartment.details')
                       }
                     </h2>
@@ -781,7 +772,9 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                         } else {
                           switch (field.field_name) {
                             case 'rooms':
-                              value = apartment.rooms;
+                              if(typeof apartment.rooms === 'number') {
+                                value = apartment.rooms;
+                              } 
                               break;
                             case 'area':
                               value = apartment.area;
@@ -827,7 +820,7 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                     <div className="space-y-[24px]">
                       <div className="flex items-center justify-between">
                         <div className="text-xl font-medium text-gray-900  font-poppins">
-                          {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`} {apartment.area} m2
+                          {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m2
                         </div>
                         <div className="text-xl font-light text-gray-500  font-poppins">
                           {apartment.floor_number} floor
@@ -996,14 +989,16 @@ const ApartmentDetailsPage = ({ useId = false }: ApartmentDetailsPageProps) => {
                       <div className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-medium text-gray-900 font-poppins">
-                            {t('apartment.apartment')} № {recApartment.apartment_number}
+                            {recApartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
+                              ? `Object № ${recApartment.apartment_number}`
+                              : `${t('apartment.apartment')} № ${recApartment.apartment_number}`) : `${recApartment.type} № ${recApartment.apartment_number}`}
                           </h3>
                           <span className="text-sm text-gray-500 font-poppins">
                             {recApartment.floor_number} {t('project.floor')}
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 mb-2 font-poppins">
-                          {recApartment.rooms === 0 ? t('apartment.studio') : `${recApartment.rooms} ${t('apartment.room')}`} • {recApartment.area} m²
+                          {recApartment.rooms === 0 ? t('apartment.studio') : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`} • {recApartment.area} m²
                         </div>
                         {recApartment.price && (
                           <div className="text-lg font-medium text-gray-900 font-poppins">

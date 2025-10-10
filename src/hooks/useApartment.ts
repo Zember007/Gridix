@@ -99,6 +99,13 @@ export const useApartment = (projectIdentifier?: string, apartmentIdentifier?: s
     }
   }, [projectIdentifier, apartmentIdentifier, options.useId]);
 
+  const getRooms = (apartment: Apartment) => {
+    if (apartment.type === 'apartment') {
+      return apartment.rooms;
+    }
+    return apartment.type;
+  };
+
   return {
     apartment,
     loading,
