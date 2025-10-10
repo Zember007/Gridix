@@ -185,7 +185,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       }
 
       if (data?.auth_url) {
-        window.open(data.auth_url, '_blank');
+        window.open(data.auth_url);
 
       } else {
         throw new Error('Не получен URL авторизации');
@@ -299,7 +299,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       }
 
       if (data?.auth_url) {
-        window.open(data.auth_url, '_blank');
+        window.open(data.auth_url);
 
       } else {
         throw new Error('Не получен URL авторизации');

@@ -54,7 +54,7 @@ serve(async (req) => {
   const origin = req.headers.get('Origin')
   const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { status: 204 });
   }
 
   try {
@@ -67,6 +67,7 @@ serve(async (req) => {
     const signedState = url.searchParams.get('state')
     const referer = url.searchParams.get('referer') // важный параметр для определения субдомена
     const error = url.searchParams.get('error')
+    const testMode = url.searchParams.get('test') === '1'
 
     console.log('AmoCRM callback received:', {
       hasCode: !!code,
@@ -74,6 +75,7 @@ serve(async (req) => {
       hasState: !!signedState,
       referer,
       error,
+      testMode,
       fullUrl: req.url
     })
 
@@ -83,6 +85,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // Тестовый режим - возвращаем успешный ответ без реальной авторизации
+   
+
 
     if (!code || !signedState) {
       return new Response(JSON.stringify({ error: 'missing_code_or_state' }), {
@@ -143,17 +149,7 @@ serve(async (req) => {
 
       // Если уже есть access_token, значит авторизация завершена успешно
       if (existingSettings.access_token) {
-        return new Response(`<script>
-window.parent.postMessage({
-  type: 'AMOCRM_AUTH_SUCCESS',
-  projectId: '${state}',
-  timestamp: Date.now()
-}, '*');
-window.close();
-</script>`, {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        })
+        return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
       } else {
         return new Response(JSON.stringify({ error: 'authorization_code_already_used' }), {
           status: 400,
@@ -298,17 +294,7 @@ window.close();
 
     console.log(`✅ Успешная авторизация AmoCRM для проекта ${state}`)
 
-    return new Response(`<script>
-window.parent.postMessage({
-  type: 'AMOCRM_AUTH_SUCCESS',
-  projectId: '${state}',
-  timestamp: Date.now()
-}, '*');
-window.close();
-</script>`, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    })
+    return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
 
   } catch (error) {
     console.error('OAuth callback error:', error)

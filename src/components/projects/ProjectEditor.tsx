@@ -31,6 +31,7 @@ import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
 import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSearchParams } from 'react-router-dom';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -91,6 +92,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { isManager, developerIds } = useUserRole();
   const { project: cachedProject } = useProject(projectId);
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -99,6 +101,18 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       document.documentElement.style.setProperty(key, value);
     });
   }, []);
+
+  // Читаем query параметры и устанавливаем активную вкладку
+  useEffect(() => {
+    const page = searchParams.get('page');
+    if (page) {
+      // Валидируем, что page является допустимой вкладкой
+      const validTabs = ['basic', 'building', 'apartments', 'floors', 'photos', 'fields', 'integrations', 'domains'];
+      if (validTabs.includes(page)) {
+        setActiveTab(page);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isNew || !projectId || !cachedProject) {
@@ -436,7 +450,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'floors': return 'floorplan';
       case 'photos': return 'photos';
       case 'fields': return 'fields';
-      case 'amocrm': return 'integrations';
+      case 'integrations': return 'integrations';
       case 'domains': return 'domains';
       default: return 'general';
     }
@@ -449,7 +463,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'floorplan': setActiveTab('floors'); break;
       case 'photos': setActiveTab('photos'); break;
       case 'fields': setActiveTab('fields'); break;
-      case 'integrations': setActiveTab('amocrm'); break;
+      case 'integrations': setActiveTab('integrations'); break;
       case 'domains': setActiveTab('domains'); break;
       default: setActiveTab('basic');
     }
@@ -568,16 +582,16 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           {t('projectEditor.domains')}
                         </button>
                         <button
-                          onClick={() => setActiveTab('amocrm')}
+                          onClick={() => setActiveTab('integrations')}
                           disabled={isNew}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'amocrm' 
+                            activeTab === 'integrations' 
                               ? 'bg-primary text-primary-foreground' 
                               : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
                           }`}
                         >
                           <Zap className="h-4 w-4" />
-                          AmoCRM
+                          Integrations
                         </button>
                       </nav>
                     </div>
@@ -974,7 +988,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <ProjectDomainSettings projectId={project.id} projectName={project.name} />
           )}
 
-          {activeTab === 'amocrm' && (
+          {activeTab === 'integrations' && (
             <AmoCRMSettings projectId={project.id} />
           )}
         </div>
@@ -1398,7 +1412,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <ProjectDomainSettings projectId={project.id} projectName={project.name} />
           )}
 
-          {activeTab === 'amocrm' && (
+          {activeTab === 'integrations' && (
             <AmoCRMSettings projectId={project.id} />
           )}
         </div>
