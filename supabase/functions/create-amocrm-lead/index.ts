@@ -78,8 +78,8 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
   }
 
   try {
-    // According to AmoCRM docs, token refresh should be sent to the global endpoint
-    const tokenUrl = `https://www.amocrm.ru/oauth2/access_token`;
+    // Use account subdomain endpoint for token refresh
+    const tokenUrl = `https://${settings.subdomain}.amocrm.ru/oauth2/access_token`;
     // Use the same redirect_uri as used during authorization
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`

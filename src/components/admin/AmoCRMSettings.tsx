@@ -95,6 +95,12 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const tokenExpired = settings.token_expires_at ? new Date(settings.token_expires_at) < new Date() : false;
   const isConfigured = isAuthorized && !tokenExpired && settings.pipeline_id;
   const needsConfiguration = isAuthorized && !tokenExpired && !settings.pipeline_id;
+  
+  // Don't show token expired message while loading data (token might be refreshed)
+  const showTokenExpired = tokenExpired && !loadingData;
+  
+  // Don't show needs configuration while loading data (token might be refreshed)
+  const showNeedsConfiguration = needsConfiguration && !loadingData;
 
   const fetchAmoCRMData = useCallback(async (currentSettings: AmoCRMSettings, skipReload = false) => {
     if (!currentSettings.access_token || !currentSettings.subdomain) return;
@@ -182,12 +188,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       if (settings?.id) {
         await supabase
           .from('amocrm_settings')
-          .update({ 
-            authorization_code: null,
-            access_token: null,
-            refresh_token: null,
-            token_expires_at: null 
-          })
+          .delete()
           .eq('id', settings.id);
       }
       
@@ -262,25 +263,22 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
   const handleDisconnect = async () => {
     try {
+      // Delete the entire row instead of setting values to null
+      // This avoids NOT NULL constraint violations
       const { error } = await supabase
         .from('amocrm_settings')
-        .update({
-          access_token: null,
-          refresh_token: null,
-          token_expires_at: null,
-          pipeline_id: null,
-          status_id: null,
-          responsible_user_id: null,
-          pipeline_name: null,
-          status_name: null,
-          user_name: null,
-          account_name: null
-        })
+        .delete()
         .eq('project_id', projectId);
 
       if (error) throw error;
       
-      await fetchSettings();
+      // Reset local state to initial values
+      setSettings({
+        project_id: projectId,
+        subdomain: '',
+      });
+      setAmocrmData(null);
+      
       toast.success(t('amocrm.disconnectSuccess'));
     } catch (error) {
       console.error('Error disconnecting AmoCRM:', error);
@@ -296,12 +294,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       if (settings?.id) {
         await supabase
           .from('amocrm_settings')
-          .update({ 
-            authorization_code: null,
-            access_token: null,
-            refresh_token: null,
-            token_expires_at: null 
-          })
+          .delete()
           .eq('id', settings.id);
       }
       
@@ -408,7 +401,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
               {t('amocrm.configured')}
             </Badge>
           )}
-          {isAuthorized && tokenExpired && (
+          {isAuthorized && showTokenExpired && (
             <Badge variant="destructive">
               <AlertCircle className="h-3 w-3 mr-1" />
               {t('amocrm.needsReconnection')}
@@ -610,7 +603,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
               </>
             )}
           </>
-        ) : needsConfiguration ? (
+        ) : showNeedsConfiguration ? (
           // Authorized but not configured - show configuration form
           <>
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
@@ -715,6 +708,12 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
               </Alert>
             )}
           </>
+        ) : loadingData && isAuthorized ? (
+          // Loading data while authorized (token might be refreshed)
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+            <span>{t('amocrm.loadingData')}</span>
+          </div>
         ) : (
           // Not configured state - single button auth
           <>

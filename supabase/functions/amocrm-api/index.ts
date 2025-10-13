@@ -283,8 +283,8 @@ async function getValidAccessToken(settings: AmoCRMSettings, svc: any): Promise<
       return { accessToken: null, tokenExpiresAt: null };
     }
 
-    // Use global endpoint for refresh per AmoCRM docs
-    const tokenUrl = `https://www.amocrm.ru/oauth2/access_token`;
+    // Use account subdomain endpoint for token refresh
+    const tokenUrl = `https://${settings.subdomain}.amocrm.ru/oauth2/access_token`;
     const body = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
