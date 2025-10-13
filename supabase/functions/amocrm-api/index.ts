@@ -20,6 +20,13 @@ interface AmoCRMSettings {
   token_expires_at?: string | null;
 }
 
+interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 interface AmoCRMPipeline {
   id: number;
   name: string;
@@ -148,11 +155,11 @@ serve(async (req) => {
       );
     }
 
-    // Check if token is expired
-    const tokenExpired = settings.token_expires_at ? new Date(settings.token_expires_at) < new Date() : false;
-    if (tokenExpired) {
+    // Ensure we have a valid token (refresh if expired or close to expiry)
+    const { accessToken, tokenExpiresAt } = await getValidAccessToken(settings, svc);
+    if (!accessToken) {
       return new Response(
-        JSON.stringify({ error: 'AmoCRM token expired' }),
+        JSON.stringify({ error: 'AmoCRM token refresh failed' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -163,7 +170,7 @@ serve(async (req) => {
     // Handle different actions
     switch (action) {
       case 'fetch_data':
-        return await fetchAmoCRMData(settings, corsHeaders);
+        return await fetchAmoCRMData({ ...settings, access_token: accessToken }, corsHeaders, tokenExpiresAt);
       
       default:
         return new Response(
@@ -190,7 +197,7 @@ serve(async (req) => {
   }
 });
 
-async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<string, string>): Promise<Response> {
+async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<string, string>, tokenExpiresAt?: string | null): Promise<Response> {
   try {
     const baseUrl = `https://${settings.subdomain}.amocrm.ru/api/v4`;
     const headers = {
@@ -227,7 +234,7 @@ async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<str
     };
 
     return new Response(
-      JSON.stringify({ data }),
+      JSON.stringify({ data, token_expires_at: tokenExpiresAt || settings.token_expires_at || null }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -246,5 +253,93 @@ async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<str
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
+  }
+}
+
+async function getValidAccessToken(settings: AmoCRMSettings, svc: any): Promise<{ accessToken: string | null, tokenExpiresAt: string | null }> {
+  // Determine if token is expiring within 5 minutes
+  const now = new Date();
+  const threshold = new Date(now.getTime() + 5 * 60 * 1000);
+  const currentExpiresAt = settings.token_expires_at ? new Date(settings.token_expires_at) : null;
+
+  if (settings.access_token && currentExpiresAt && currentExpiresAt > threshold) {
+    return { accessToken: settings.access_token, tokenExpiresAt: settings.token_expires_at! };
+  }
+
+  if (!settings.refresh_token) {
+    console.error('No refresh token available for project', settings.project_id);
+    return { accessToken: null, tokenExpiresAt: null };
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`;
+    const clientId = Deno.env.get('AMOCRM_CLIENT_ID');
+    const clientSecret = Deno.env.get('AMOCRM_CLIENT_SECRET');
+
+
+    if (!clientId || !clientSecret) {
+      console.error('Missing AMOCRM client credentials');
+      return { accessToken: null, tokenExpiresAt: null };
+    }
+
+    // Use global endpoint for refresh per AmoCRM docs
+    const tokenUrl = `https://www.amocrm.ru/oauth2/access_token`;
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: settings.refresh_token!,
+      redirect_uri: redirectUri,
+    });
+
+    console.log('Attempting token refresh for project:', settings.project_id, 'subdomain:', settings.subdomain);
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Token refresh failed:', response.status, errorText);
+      
+      // If 401, the refresh token is invalid/revoked - clear tokens in DB so UI knows to re-authorize
+      if (response.status === 401) {
+        console.log('Refresh token invalid/revoked - clearing tokens for project:', settings.project_id);
+        await svc
+          .from('amocrm_settings')
+          .update({
+            access_token: null,
+            refresh_token: null,
+            token_expires_at: null,
+          })
+          .eq('project_id', settings.project_id);
+      }
+      
+      return { accessToken: null, tokenExpiresAt: null };
+    }
+
+    const tokenResult: TokenResponse = await response.json();
+    const expiresAt = new Date(Date.now() + tokenResult.expires_in * 1000).toISOString();
+
+    const { error: updateError } = await svc
+      .from('amocrm_settings')
+      .update({
+        access_token: tokenResult.access_token,
+        refresh_token: tokenResult.refresh_token,
+        token_expires_at: expiresAt,
+      })
+      .eq('project_id', settings.project_id);
+
+    if (updateError) {
+      console.error('Failed to persist refreshed token:', updateError);
+    }
+
+    return { accessToken: tokenResult.access_token, tokenExpiresAt: expiresAt };
+  } catch (e) {
+    console.error('Error refreshing token:', e);
+    return { accessToken: null, tokenExpiresAt: null };
   }
 }

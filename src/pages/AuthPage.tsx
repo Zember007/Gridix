@@ -44,7 +44,7 @@ const AuthPage = () => {
     if (user && !loading && !roleLoading && !isRecovery) {
       // Если redirect содержит языковой префикс, используем его напрямую
       // Иначе добавляем языковой префикс
-      if (redirectTo.match(/^\/(ru|en|ge)\//)) {
+      if (redirectTo.match(/^\/(ru|en|ka)\//)) {
         window.location.href = redirectTo;
       } else {
         // Все пользователи (и застройщики, и менеджеры) попадают в /admin
@@ -78,7 +78,7 @@ const AuthPage = () => {
       <AuthForm 
         redirectTo={redirectTo}
         onSuccess={() => {
-          if (redirectTo.match(/^\/(ru|en|ge)\//)) {
+          if (redirectTo.match(/^\/(ru|en|ka)\//)) {
             window.location.href = redirectTo;
           } else {
             navigate('/admin');

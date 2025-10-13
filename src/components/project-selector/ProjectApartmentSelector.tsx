@@ -68,13 +68,55 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     return (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
   };
 
-  const openApartmentDetails = (apartment: Apartment) => {
-    // Используем slug если он есть, иначе ID с префиксом
-    const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-    const url = `https://gridix.live/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-
-    // Если мы уже находимся на странице проекта, открываем в той же вкладке
-    window.open(url, '_blank');
+  const openApartmentDetails = async (apartment: Apartment) => {
+    try {
+      // Получаем текущий домен
+      const currentHostname = window.location.hostname;
+      
+      // Получаем домены проекта из project_domains
+      const { data: projectDomains } = await supabase
+        .from('project_domains')
+        .select('domain, is_primary, status')
+        .eq('project_id', project?.id || projectId)
+        .eq('status', 'active');
+      
+      // Проверяем, есть ли текущий домен среди доменов проекта
+      const isProjectDomain = projectDomains?.some(
+        pd => pd.domain.toLowerCase() === currentHostname.toLowerCase()
+      );
+      
+      // Определяем базовый домен
+      let baseDomain: string;
+      if (isProjectDomain) {
+        // Используем текущий домен
+        baseDomain = window.location.origin;
+      } else {
+        
+        const primaryDomain = projectDomains?.find(pd => pd.is_primary)?.domain;
+        if(primaryDomain) {
+          baseDomain = 'https://' + primaryDomain;
+        } else {
+          baseDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+        }
+       
+      }
+      
+      // Формируем путь к проекту
+      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+      
+      // Формируем полный URL
+      const url = `${baseDomain}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+      
+      // Открываем в новой вкладке
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error opening apartment details:', error);
+      // В случае ошибки используем запасной вариант
+      const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+      const url = `${fallbackDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+      window.open(url, '_blank');
+    }
   };
 
   const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(Math.round(price));

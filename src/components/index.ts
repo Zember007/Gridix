@@ -5,7 +5,6 @@ export * from './admin';
 export * from './apartment';
 
 // Auth components
-export * from './Auth';
 
 // Data import components
 export * from './data-import';
@@ -23,12 +22,10 @@ export * from './project-selector';
 export * from './visualization';
 
 // UI components
-export * from './ui';
 
 // Standalone components
 export { default as FavoritesTab } from './FavoritesTab';
 export { default as InstallmentCalculator } from './InstallmentCalculator';
-export { default as LanguageToggle } from './LanguageToggle';
 export { default as LanguageWrapper } from './LanguageWrapper';
 export { default as Widget } from './Widget';
 

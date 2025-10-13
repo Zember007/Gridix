@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { LanguageToggle } from "../LanguageToggle"
 import { useLanguage } from "@/contexts/LanguageContext"
+import Logo from "./logo"
 
 const HeroHeader = () => {
     const { language, t } = useLanguage()
@@ -41,17 +42,9 @@ const HeroHeader = () => {
                                 aria-label="home"
                                 className="flex items-center space-x-2">
                                 {/* <Logo /> */}
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <Building2 className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-black`} />
-                                    </div>
-                                    <div>
-                                        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold  text-black `}>
-                                            Gridix
-                                        </h1>
-                                        <p className="text-xs text-gray-500">FloorPlan Wizard</p>
-                                    </div>
-                                </div>
+                                    <Logo />
+                                   
+                                
                             </Link>
 
                             <button

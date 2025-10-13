@@ -96,7 +96,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const isConfigured = isAuthorized && !tokenExpired && settings.pipeline_id;
   const needsConfiguration = isAuthorized && !tokenExpired && !settings.pipeline_id;
 
-  const fetchAmoCRMData = useCallback(async (currentSettings: AmoCRMSettings) => {
+  const fetchAmoCRMData = useCallback(async (currentSettings: AmoCRMSettings, skipReload = false) => {
     if (!currentSettings.access_token || !currentSettings.subdomain) return;
     
     setLoadingData(true);
@@ -110,11 +110,27 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       });
 
       if (error) {
+        // Если токен стал невалидным, перезагружаем настройки из БД один раз
+        if (!skipReload && (error.message?.includes('token') || error.message?.includes('expired') || error.message?.includes('refresh failed'))) {
+          const { data: refreshedSettings } = await supabase
+            .from('amocrm_settings')
+            .select('*')
+            .eq('project_id', projectId)
+            .single();
+          
+          if (refreshedSettings) {
+            setSettings(refreshedSettings);
+          }
+        }
         throw error;
       }
 
       if (data?.data) {
         setAmocrmData(data.data);
+        // Если сервер вернул новое время истечения токена — обновляем локально
+        if (data.token_expires_at) {
+          setSettings(prev => ({ ...prev, token_expires_at: data.token_expires_at }));
+        }
       } else {
         throw new Error('Не удалось загрузить данные из AmoCRM');
       }
@@ -140,8 +156,8 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data) {
         setSettings(data);
-        // Если авторизован, но нет настроек воронки - загружаем данные AmoCRM
-        if (data.access_token && !data.pipeline_id) {
+        // Если авторизован — всегда подтягиваем актуальные данные из AmoCRM API (там же произойдет refresh токена)
+        if (data.access_token) {
           fetchAmoCRMData(data);
         }
       }

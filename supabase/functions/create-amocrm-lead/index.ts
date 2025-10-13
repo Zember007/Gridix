@@ -78,23 +78,35 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
   }
 
   try {
-    const tokenUrl = `https://${settings.subdomain}.amocrm.ru/oauth2/access_token`;
-    const tokenData = {
-      client_id: settings.client_id,
-      client_secret: settings.client_secret,
+    // According to AmoCRM docs, token refresh should be sent to the global endpoint
+    const tokenUrl = `https://www.amocrm.ru/oauth2/access_token`;
+    // Use the same redirect_uri as used during authorization
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`
+    const clientId = Deno.env.get('AMOCRM_CLIENT_ID')
+    const clientSecret = Deno.env.get('AMOCRM_CLIENT_SECRET')
+
+    if (!clientId || !clientSecret) {
+      console.error('AMOCRM client credentials are not configured');
+      return null;
+    }
+
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: 'refresh_token',
       refresh_token: settings.refresh_token,
-      redirect_uri: 'https://yourdomain.com' // Добавьте ваш redirect_uri
-    };
+      redirect_uri: redirectUri,
+    })
 
-    console.log('Refreshing token for subdomain:', settings.subdomain);
+    console.log('Refreshing token for subdomain:', settings.subdomain, 'project:', settings.id);
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(tokenData)
+      body: body.toString()
     });
 
     if (!response.ok) {
@@ -104,6 +116,20 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
         statusText: response.statusText,
         errorText
       });
+      
+      // If 401, the refresh token is invalid/revoked - clear tokens in DB
+      if (response.status === 401) {
+        console.log('Refresh token invalid/revoked - clearing tokens for settings ID:', settings.id);
+        await supabase
+          .from('amocrm_settings')
+          .update({
+            access_token: null,
+            refresh_token: null,
+            token_expires_at: null,
+          })
+          .eq('id', settings.id);
+      }
+      
       return null;
     }
 

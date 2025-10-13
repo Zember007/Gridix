@@ -2,6 +2,7 @@ import { Building2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Logo from './logo';
 
 const Footer = () => {
   const { navigate } = useLanguageNavigation();
@@ -38,17 +39,9 @@ const Footer = () => {
         <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'md:grid-cols-4 gap-8'} mb-8`}>
           {/* Company Info */}
           <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="relative">
-                <Building2 className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">
-                  Gridix
-                </h3>
-                <p className="text-sm text-gray-400">FloorPlan Wizard</p>
-              </div>
-            </div>
+            <Logo 
+              invert={true}
+            />
             <p className="text-gray-400 mb-4 max-w-md">
               {t('landing.companyDescription')}
             </p>

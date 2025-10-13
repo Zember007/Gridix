@@ -10,7 +10,7 @@ export const LANGUAGE_CONFIG = {
   },
   ka: {
     code: 'ka',
-    urlPrefix: '/ge', // Using /ge/ for Georgian as requested
+    urlPrefix: '/ka', 
     name: 'ქართული',
     flag: '🇬🇪'
   },
