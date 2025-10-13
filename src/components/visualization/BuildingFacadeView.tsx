@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -13,6 +14,7 @@ interface BuildingFacadeViewProps {
     name: string;
     building_image_url: string | null;
     project_type?: 'building' | 'object' | null;
+    currency?: string | null;
   };
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;
@@ -36,12 +38,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0});
+  const [isExpanded, setIsExpanded] = useState(project.project_type === 'object');
+  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const initializedRef = useRef(false);
 
   // Floor popup state
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
@@ -53,51 +56,51 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       const filtersHeight = filtersRef.current.offsetHeight;
       const margin = isMobile ? 10 : 20;
       const newHeight = window.innerHeight - filtersHeight - margin;
-  
+
       const minHeight = isMobile ? 300 : 400;
       const maxHeight = isMobile ? 800 : 1200;
-  
+
       return Math.min(Math.max(newHeight, minHeight), maxHeight);
     } else {
       return isMobile ? 200 : COLLAPSED_HEIGHT;
     }
   }, [isExpanded, filtersRef, isMobile]);
-  
+
 
   const updateImageDimensions = useCallback(() => {
     const imgEl = imgRef.current;
     const containerEl = containerRef.current;
     if (!imgEl || !containerEl || !imageLoaded || imageNaturalSize.width === 0) return;
-  
+
     const containerHeight = getContainerHeight();
     const containerWidth = containerEl.clientWidth;
     const aspect = imageNaturalSize.width / imageNaturalSize.height;
-    
+
     if (isExpanded) {
       // В развернутом режиме - object-contain поведение
       let width = containerWidth;
       let height = containerWidth / aspect;
-      
+
       if (height > containerHeight) {
         height = containerHeight;
         width = height * aspect;
       }
-      
+
       setImgDimensions({ width: Math.round(width), height: Math.round(height) });
     } else {
       // В свернутом режиме - object-cover поведение
       let width = containerWidth;
       let height = containerWidth / aspect;
-      
+
       if (height < containerHeight) {
         height = containerHeight;
         width = height * aspect;
       }
-      
+
       setImgDimensions({ width: Math.round(width), height: Math.round(height) });
     }
   }, [imgRef, containerRef, imageLoaded, imageNaturalSize, isExpanded, getContainerHeight]);
-  
+
 
   const loadBuildingFloors = useCallback(async () => {
     if (!projectId) {
@@ -142,11 +145,51 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     return () => window.removeEventListener('resize', handleResize);
   }, [updateImageDimensions]);
 
+  // Пересчет размеров при изменении размеров контейнера
   useEffect(() => {
-    if (imageLoaded) {
-      updateImageDimensions();
+    if (!containerRef.current) return;
+    let frame: number | null = null;
+    const observer = new ResizeObserver(() => {
+      if (!imageLoaded) return;
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        updateImageDimensions();
+      });
+    });
+    observer.observe(containerRef.current);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [imageLoaded, updateImageDimensions]);
+
+  // Пересчет при изменении высоты блока фильтров, влияющего на доступную высоту контейнера
+  useEffect(() => {
+    if (!filtersRef?.current) return;
+    let frame: number | null = null;
+    const observer = new ResizeObserver(() => {
+      if (!imageLoaded) return;
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        updateImageDimensions();
+      });
+    });
+    observer.observe(filtersRef.current);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [filtersRef, imageLoaded, updateImageDimensions]);
+
+  useEffect(() => {
+    if (imageLoaded && buildingFloors.length > 0) {
+        updateImageDimensions();
     }
-  }, [isExpanded, updateImageDimensions, imageLoaded]);
+  }, [isExpanded, updateImageDimensions, imageLoaded, buildingFloors]);
+
+
+
+
 
 
 
@@ -155,8 +198,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     if (externalImageLoaded && externalImageNaturalSize && externalImageNaturalSize.width > 0) {
       setImageNaturalSize(externalImageNaturalSize);
       setImageLoaded(true);
+      // Немедленный пересчет после синхронизации размеров изображения (двойной rAF, чтобы дождаться layout)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          updateImageDimensions();
+        });
+      });
     }
-  }, [externalImageLoaded, externalImageNaturalSize]);
+  }, [externalImageLoaded, externalImageNaturalSize, updateImageDimensions]);
 
   // Handle escape key to close popup
   useEffect(() => {
@@ -186,7 +235,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     const available = floorApartments.filter(apt => apt.status === 'available').length;
     const sold = floorApartments.filter(apt => apt.status === 'sold').length;
     const reserved = floorApartments.filter(apt => apt.status === 'reserved').length;
-    
+
     return {
       total: floorApartments.length,
       available,
@@ -203,35 +252,35 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const FloorPopup = ({ floorNumber, position }: { floorNumber: number; position: { x: number; y: number } }) => {
     const stats = getFloorStats(floorNumber);
     const floorApartments = getFloorApartments(floorNumber);
-    
+
     // Position popup to the left of the polygon
     const popupWidth = 256; // min-w-64 = 16rem = 256px
     const popupHeight = 160; // estimated height
     const margin = 20;
-    
+
     // Позиционируем слева от полигона с отступом
     let adjustedX = position.x - popupWidth - 20;
     let adjustedY = position.y;
-    
+
     // Проверяем границы экрана и корректируем при необходимости
     if (adjustedX < margin) {
       // Если слева не помещается, показываем справа от полигона
       adjustedX = position.x + 20;
     }
-    
+
     // Центрируем всплывающее окно по вертикали относительно позиции полигона
     adjustedY = position.y - popupHeight / 2;
-    
+
     // Проверяем вертикальные границы
     if (adjustedY < margin) {
       adjustedY = margin;
     } else if (adjustedY + popupHeight > window.innerHeight - margin) {
       adjustedY = window.innerHeight - popupHeight - margin;
     }
-    
+
 
     const { t } = useLanguage();
-    
+
     // For project_type = object, show area and price instead of floor and available count
     if (project.project_type === 'object' && floorApartments.length > 0) {
       const apartment = floorApartments[0];
@@ -243,17 +292,20 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             top: adjustedY,
           }}
           onClick={(e) => e.stopPropagation()}
+
         >
+          <div className="text-[16px] text-center">№ <span className="font-bold text-[24px]">{apartment.apartment_number}</span></div>
           <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
-            <div className="text-[16px] leading-[1.1]">{apartment.area} м²</div>
+
+            <div className="text-[16px] leading-[1.1]">{apartment.area} m²</div>
             {apartment.price && (
-              <div className="text-[16px] leading-[1.1] mt-1">{new Intl.NumberFormat('ru-RU').format(Math.round(apartment.price))}</div>
+              <div className="text-[16px] leading-[1.1] mt-1">{formatPriceWithCurrency(apartment.price, project?.currency || null)}</div>
             )}
           </div>
         </div>
       );
     }
-    
+
     return (
       <div
         className="absolute z-30  uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[100px] h-[105px]"
@@ -264,15 +316,15 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center flex items-center justify-center gap-[7px]">
-        {t('project.floor')} <span className='font-bold'>{floorNumber} </span>
+          {t('project.floor')} <span className='font-bold'>{floorNumber} </span>
         </div>
 
         <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
-       
-              <div className="text-[32px] leading-[1.1]">{stats.available}</div>
-              {t('project.available')}
-          </div>
-        
+
+          <div className="text-[32px] leading-[1.1]">{stats.available}</div>
+          {t('project.available')}
+        </div>
+
 
       </div>
     );
@@ -287,7 +339,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       }
       return;
     }
-    
+
     if (onFloorSelect) {
       onFloorSelect(floorNumber);
     } else {
@@ -300,13 +352,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   const handleFloorHover = (floorNumber: number, event: React.MouseEvent) => {
     if (isMobile || !isExpanded) return; // Показываем только в расширенном режиме на десктопе
-    
+
     if (!containerRef.current) return;
-    
+
     // Находим полигон для данного этажа
     const floor = buildingFloors.find(f => f.floor_number === floorNumber);
     if (!floor || !floor.polygon || floor.polygon.length === 0) return;
-    
+
     // Вычисляем границы полигона
     const polygonBounds = {
       minX: Math.min(...floor.polygon.map(p => p.x)),
@@ -314,22 +366,22 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       minY: Math.min(...floor.polygon.map(p => p.y)),
       maxY: Math.max(...floor.polygon.map(p => p.y))
     };
-    
+
     // Преобразуем координаты полигона из процентов SVG в пиксели контейнера
     const containerRect = containerRef.current.getBoundingClientRect();
-    
+
     // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
     if (!isExpanded || imgDimensions.width === 0) return;
-    
+
     const svgWidth = imgDimensions.width;
     const svgHeight = imgDimensions.height;
     const svgLeft = (containerRect.width - svgWidth) / 2;
     const svgTop = (containerRect.height - svgHeight) / 2;
-    
+
     // Переводим проценты полигона в пиксели
     const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
     const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
-    
+
     setSelectedFloor(floorNumber);
     setPopupPosition({ x: polygonLeftPx, y: polygonCenterY });
     setShowPopup(true);
@@ -349,7 +401,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   const handleSVGFloorHover = (floorNumber: number, event: React.MouseEvent<SVGPolygonElement>) => {
     if (isMobile || !isExpanded) return;
-    
+
     setHoveredFloor(floorNumber);
     handleFloorHover(floorNumber, event);
   };
@@ -377,10 +429,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   if (loading) {
     return (
       <div
-      style={{
-        height: containerHeight,
-      }}
-      className="w-full h-full flex items-center justify-center">
+        style={{
+          height: containerHeight,
+        }}
+        className="w-full h-full flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
       </div>
     );
@@ -394,17 +446,17 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
 
 
-    return (
-      <div
-        ref={containerRef}
-        className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
-        style={{
-          height: containerHeight,
-          width: isExpanded ? '100vw' : '100%',
-          maxWidth: isExpanded ? '100vw' : undefined,
-          boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
-        }}
-      >
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden${isExpanded ? '' : ' rounded-lg mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+      style={{
+        height: containerHeight,
+        width: isExpanded ? '100vw' : '100%',
+        maxWidth: isExpanded ? '100vw' : undefined,
+        boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
+      }}
+    >
       {/* Показываем изображение только после загрузки для предотвращения скачков */}
       {imageLoaded ? (
         <img
@@ -432,7 +484,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   const img = e.target as HTMLImageElement;
                   setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
                   setImageLoaded(true);
-                  setTimeout(() => updateImageDimensions(), 0);
+                  // Двойной rAF для гарантии, что контейнер и изображение уже имеют корректные размеры
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      updateImageDimensions();
+                    });
+                  });
                 }}
                 draggable={false}
               />
@@ -443,7 +500,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           ) : null}
         </>
       )}
-      
+
       {/* SVG полигоны - точно поверх отображаемого изображения */}
       {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
         <svg
@@ -451,7 +508,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           style={{
             width: imgDimensions.width,
             height: imgDimensions.height,
-          
+
           }}
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -460,18 +517,18 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           <rect x="0" y="0" width="100" height="100" fill="none" />
           {buildingFloors.map((floor) => {
             if (!floor.polygon || floor.polygon.length < 3) return null;
-            
+
             // Используем исходные координаты полигонов (они уже в процентах 0-100)
             const points = floor.polygon
               .map(point => `${point.x},${point.y}`)
               .join(' ');
-              
+
 
             const statusColor = getFloorStatusColor();
             const isHovered = hoveredFloor === floor.floor_number;
-            
-            
-            
+
+
+
             return (
               <g key={floor.id}>
                 <polygon
@@ -504,23 +561,22 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                       handleFloorLeave();
                     }
                   }}
-                  style={{ 
+                  style={{
                     pointerEvents: 'auto',
                     touchAction: 'manipulation'
                   }}
                 />
-             
+
               </g>
             );
           })}
         </svg>
       )}
-      
+
       {!isExpanded && (
         <button
-          className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full md:flex hidden items-center justify-center z-10 transition-all ${
-            isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
-          }`}
+          className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full md:flex hidden items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+            }`}
           onClick={() => setIsExpanded(true)}
           style={{ touchAction: 'manipulation' }}
         >
@@ -529,9 +585,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       )}
       {isExpanded && (
         <button
-          className={`absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${
-            isMobile ? 'p-3 active:scale-95' : 'p-3 hover:scale-105'
-          }`}
+          className={`absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-3 hover:scale-105'
+            }`}
           onClick={() => setIsExpanded(false)}
           style={{ touchAction: 'manipulation' }}
         >
