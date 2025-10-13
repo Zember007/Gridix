@@ -1,0 +1,38 @@
+[
+    {
+      "id": "nginx-ssl",
+      "execute-command": "/usr/local/bin/auto-ssl-nginx.sh",
+      "command-working-directory": "/usr/local/bin",
+      "pass-arguments-to-command": [
+        {
+          "source": "payload",
+          "name": "domain"
+        }
+      ],
+      "trigger-rule": {
+        "and": [
+          {
+            "match": {
+              "type": "value",
+              "value": "6365ef2da7cbb1fa5d440764867f81c3557c7de795d4aca556898af850a72941",
+              "parameter": {
+                "source": "payload",
+                "name": "webhook_secret"
+              }
+            }
+          },
+          {
+            "match": {
+              "type": "value",
+              "value": "add",
+              "parameter": {
+                "source": "payload",
+                "name": "action"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+  

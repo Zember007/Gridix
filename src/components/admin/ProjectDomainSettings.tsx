@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, Plus, Trash2, ExternalLink, Globe, Info, Copy } from "lucide-react";
+import { AlertCircle, Plus, Trash2, ExternalLink, Globe, Info, Copy, CheckCircle } from "lucide-react";
 import { useProjectDomains } from "@/hooks/useProjectDomains";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -70,32 +70,194 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       }
 
       if (result.success) {
+        // Show main success message
         toast.success(result.message);
         setNewDomain("");
         
-        // Show automation results
-        if (result.automation.dns_created) {
-          toast.success(t('domains.automation.dnsCreated'));
+        // Show detailed automation results
+        if (result.details) {
+          if (result.details.dns_configured) {
+            toast.success("✅ DNS records created automatically");
+          }
+          if (result.details.hosting_configured) {
+            toast.success("✅ Hosting configured automatically");
+          }
+          if (result.details.ssl_ready) {
+            toast.success("✅ SSL certificate ready");
+          }
+          if (result.details.requires_manual_setup) {
+            toast.warning("⚠️ Manual setup required - see instructions below");
+          }
         }
-        if (result.automation.hosting_added) {
-          toast.success(t('domains.automation.hostingAdded'));
+        
+        // Show automation status
+        if (result.automation) {
+          const automationMessages = [];
+          if (result.automation.dns_created) {
+            automationMessages.push("DNS records created");
+          }
+          if (result.automation.hosting_added) {
+            automationMessages.push("Hosting configured");
+          }
+          if (result.automation.ssl_ready) {
+            automationMessages.push("SSL ready");
+          }
+          
+          if (automationMessages.length > 0) {
+            toast.info(`Automation: ${automationMessages.join(", ")}`);
+          }
         }
         
         // Refresh domains list
         window.location.reload();
       } else {
-        toast.error(result.error || t('domains.automation.failed'));
+        // Handle error response
+        const errorMessage = result.error || result.message || t('domains.automation.failed');
+        toast.error(`❌ ${errorMessage}`);
+        
+        // Show additional error details if available
+        if (result.details) {
+          console.error('Domain automation error details:', result.details);
+        }
       }
     } catch (error) {
       console.error('Domain automation error:', error);
-      toast.error(t('domains.automation.error'));
+      
+      // Extract meaningful error message
+      let errorMessage = t('domains.automation.error');
+      
+      if (error && typeof error === 'object') {
+        if ('message' in error) {
+          errorMessage = error.message as string;
+        } else if ('error' in error) {
+          errorMessage = (error as { error: string }).error;
+        }
+      }
+      
+      toast.error(`❌ ${errorMessage}`);
+      
+      // Log full error for debugging
+      console.error('Full error object:', error);
     }
     
     setIsAddingDomain(false);
   };
 
   const handleDeleteDomain = async (domainId: string) => {
-    await deleteDomain(domainId);
+    try {
+      // Find the domain to get its name
+      const domain = domains.find(d => d.id === domainId);
+      if (!domain) {
+        toast.error("Domain not found");
+        return;
+      }
+
+      // Try to remove from Nginx/SSL if webhook is configured
+      const nginxWebhookUrl = import.meta.env.VITE_NGINX_WEBHOOK_URL;
+      const webhookSecret = import.meta.env.VITE_WEBHOOK_SECRET;
+      
+      if (nginxWebhookUrl && webhookSecret) {
+        try {
+          console.log(`Attempting to remove domain from Nginx: ${domain.domain}`);
+          
+          const webhookResponse = await fetch(nginxWebhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              domain: domain.domain,
+              action: 'remove',
+              webhook_secret: webhookSecret,
+            }),
+          });
+
+          if (webhookResponse.ok) {
+            const responseText = await webhookResponse.text();
+            if (responseText.trim()) {
+              try {
+                const webhookResult = JSON.parse(responseText);
+                if (webhookResult.status === 'success') {
+                  toast.success(`✅ Domain ${domain.domain} removed from server`);
+                } else {
+                  console.warn('Webhook removal failed:', webhookResult.message);
+                }
+              } catch (jsonError) {
+                console.warn('Could not parse webhook response:', jsonError);
+              }
+            }
+          } else {
+            console.warn(`Webhook removal failed: ${webhookResponse.status}`);
+          }
+        } catch (webhookError) {
+          console.warn('Error calling removal webhook:', webhookError);
+        }
+      }
+
+      // Remove from database
+      await deleteDomain(domainId);
+      toast.success(`Domain ${domain.domain} removed successfully`);
+      
+    } catch (error) {
+      console.error('Domain removal error:', error);
+      toast.error("Failed to remove domain");
+    }
+  };
+
+  const handleCheckDomainStatus = async (domain: { domain: string; id: string }) => {
+    try {
+      const nginxWebhookUrl = import.meta.env.VITE_NGINX_WEBHOOK_URL;
+      const webhookSecret = import.meta.env.VITE_WEBHOOK_SECRET;
+      
+      if (!nginxWebhookUrl || !webhookSecret) {
+        toast.warning("Webhook not configured for status checking");
+        return;
+      }
+
+      console.log(`Checking status for domain: ${domain.domain}`);
+      
+      const webhookResponse = await fetch(nginxWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          domain: domain.domain,
+          action: 'status',
+          webhook_secret: webhookSecret,
+        }),
+      });
+
+      if (webhookResponse.ok) {
+        const responseText = await webhookResponse.text();
+        if (responseText.trim()) {
+          try {
+            const statusResult = JSON.parse(responseText);
+            if (statusResult.status === 'success') {
+              const statusInfo = {
+                overall: statusResult.overall_status,
+                nginx: statusResult.nginx,
+                ssl: statusResult.ssl
+              };
+              
+              toast.info(`Domain Status: ${statusInfo.overall}`, {
+                description: `Nginx: ${statusInfo.nginx.enabled ? 'Enabled' : 'Disabled'}, SSL: ${statusInfo.ssl.certificate_valid ? 'Valid' : 'Invalid'}`
+              });
+            } else {
+              toast.error(`Status check failed: ${statusResult.message}`);
+            }
+          } catch (jsonError) {
+            console.warn('Could not parse status response:', jsonError);
+            toast.error("Could not parse status response");
+          }
+        }
+      } else {
+        toast.error(`Status check failed: ${webhookResponse.status}`);
+      }
+    } catch (error) {
+      console.error('Status check error:', error);
+      toast.error("Failed to check domain status");
+    }
   };
 
   const handleTogglePrimary = async (domainId: string, isPrimary: boolean) => {
@@ -346,7 +508,17 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleCheckDomainStatus(domain)}
+                      title="Check domain status"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => window.open(`https://${domain.domain}`, '_blank')}
+                      title="Open domain"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>

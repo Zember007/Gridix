@@ -300,54 +300,126 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
     
     if (nginxWebhookUrl && !vercelApiKey) { // Only use Nginx if not using Vercel
-      try {
-        const webhookResponse = await fetch(nginxWebhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            domain: cleanedDomain,
-            action: 'add',
-            webhook_secret: webhookSecret,
-          }),
-        });
-
-        // Check if response is ok and has content before parsing JSON
-        if (!webhookResponse.ok) {
-          console.error(`Webhook HTTP error: ${webhookResponse.status} ${webhookResponse.statusText}`);
-          console.error('Response body:', await webhookResponse.text());
-        } else {
-          // Check if response has content and is JSON
-          const contentType = webhookResponse.headers.get('content-type');
-          const responseText = await webhookResponse.text();
+      console.log(`Attempting to configure Nginx + SSL for domain: ${cleanedDomain}`);
+      console.log(`Webhook URL: ${nginxWebhookUrl}`);
+      
+      // Validate webhook URL
+      if (!nginxWebhookUrl.startsWith('http://') && !nginxWebhookUrl.startsWith('https://')) {
+        console.error('Invalid webhook URL format. Must start with http:// or https://');
+        automationResults.hosting_added = false;
+        automationResults.ssl_ready = false;
+      } else {
+        try {
+          // Test webhook availability first
+          console.log('Testing webhook availability...');
+          const testResponse = await fetch(nginxWebhookUrl, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Supabase-Edge-Function/1.0'
+            }
+          });
           
-          if (!responseText.trim()) {
-            // Treat empty successful response as success (some webhooks may return 204/empty)
-            automationResults.hosting_added = true;
-            automationResults.ssl_ready = true;
-            console.warn('Webhook returned empty response; treating as success');
-          } else if (contentType && contentType.includes('application/json')) {
-            try {
-              const webhookResult = JSON.parse(responseText);
+          console.log(`Webhook test response: ${testResponse.status} ${testResponse.statusText}`);
+          
+          if (testResponse.status === 404) {
+            console.error('Webhook endpoint not found. Please check:');
+            console.error('1. Webhook server is running');
+            console.error('2. Webhook URL is correct');
+            console.error('3. Webhook configuration file is properly set up');
+            automationResults.hosting_added = false;
+            automationResults.ssl_ready = false;
+          } else {
+            const webhookPayload = {
+              domain: cleanedDomain,
+              action: 'add',
+              webhook_secret: webhookSecret,
+            };
+            
+            console.log('Sending webhook request:', {
+              url: nginxWebhookUrl,
+              domain: cleanedDomain,
+              action: 'add'
+            });
+        
+            const webhookResponse = await fetch(nginxWebhookUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(webhookPayload),
+            });
+
+            console.log(`Webhook response status: ${webhookResponse.status} ${webhookResponse.statusText}`);
+            
+            if (!webhookResponse.ok) {
+              const errorText = await webhookResponse.text();
               
-              if (webhookResult.success) {
+              // Handle specific HTTP errors
+              if (webhookResponse.status === 404) {
+                console.error(`Webhook endpoint not found (404). Please check if webhook server is running and URL is correct.`);
+                console.error(`Webhook URL: ${nginxWebhookUrl}`);
+                console.error('Response body:', errorText);
+              } else if (webhookResponse.status === 500) {
+                console.error(`Webhook server error (500). Check webhook server logs.`);
+                console.error('Response body:', errorText);
+              } else if (webhookResponse.status === 401 || webhookResponse.status === 403) {
+                console.error(`Webhook authentication failed (${webhookResponse.status}). Check webhook secret.`);
+                console.error('Response body:', errorText);
+              } else {
+                console.error(`Webhook HTTP error: ${webhookResponse.status} ${webhookResponse.statusText}`);
+                console.error('Response body:', errorText);
+              }
+              
+              automationResults.hosting_added = false;
+              automationResults.ssl_ready = false;
+            } else {
+              const contentType = webhookResponse.headers.get('content-type');
+              const responseText = await webhookResponse.text();
+              
+              console.log('Webhook response content-type:', contentType);
+              console.log('Webhook response body:', responseText);
+              
+              if (!responseText.trim()) {
+                // Treat empty successful response as success
                 automationResults.hosting_added = true;
                 automationResults.ssl_ready = true;
-                console.log('Nginx + SSL configured successfully for', cleanedDomain);
+                console.log('Webhook returned empty response; treating as success');
+              } else if (contentType && contentType.includes('application/json')) {
+                try {
+                  const webhookResult = JSON.parse(responseText);
+                  console.log('Parsed webhook result:', webhookResult);
+                  
+                  if (webhookResult.status === 'success') {
+                    automationResults.hosting_added = true;
+                    automationResults.ssl_ready = true;
+                    console.log(`Nginx + SSL configured successfully for ${cleanedDomain}:`, webhookResult.message);
+                  } else {
+                    console.error('Nginx webhook failed:', {
+                      status: webhookResult.status,
+                      message: webhookResult.message,
+                      error_type: webhookResult.error_type
+                    });
+                    automationResults.hosting_added = false;
+                    automationResults.ssl_ready = false;
+                  }
+                } catch (jsonError) {
+                  console.error('Failed to parse webhook JSON response:', jsonError);
+                  console.error('Response text:', responseText);
+                  automationResults.hosting_added = false;
+                  automationResults.ssl_ready = false;
+                }
               } else {
-                console.error('Nginx webhook failed:', webhookResult.error);
+                console.error('Webhook returned non-JSON response:', responseText);
+                automationResults.hosting_added = false;
+                automationResults.ssl_ready = false;
               }
-            } catch (jsonError) {
-              console.error('Failed to parse webhook JSON response:', jsonError);
-              console.error('Response text:', responseText);
             }
-          } else {
-            console.error('Webhook returned non-JSON response:', responseText);
           }
+        } catch (error) {
+          console.error('Error calling Nginx webhook:', error);
+          automationResults.hosting_added = false;
+          automationResults.ssl_ready = false;
         }
-      } catch (error) {
-        console.error('Error calling Nginx webhook:', error);
       }
     }
 
@@ -367,13 +439,36 @@ serve(async (req) => {
       })
       .eq('id', domainData.id);
 
+    // Determine final status and message
+    let finalStatus = 'active';
+    let finalMessage = '';
+    
+    if (automationResults.dns_created && automationResults.hosting_added) {
+      finalStatus = 'active';
+      finalMessage = "Domain automated successfully! DNS records created and hosting configured. It may take up to 24 hours for DNS changes to propagate.";
+    } else if (automationResults.hosting_added) {
+      finalStatus = 'active';
+      finalMessage = "Hosting configured successfully! Please configure DNS records manually using the provided instructions.";
+    } else if (automationResults.dns_created) {
+      finalStatus = 'pending_setup';
+      finalMessage = "DNS records created successfully! Please configure hosting manually.";
+    } else {
+      finalStatus = 'pending_setup';
+      finalMessage = "Domain added successfully! Please configure DNS records and hosting manually using the provided instructions.";
+    }
+
     return new Response(JSON.stringify({
       success: true,
       domain: cleanedDomain,
+      status: finalStatus,
       automation: automationResults,
-      message: automationResults.dns_created || automationResults.hosting_added
-        ? "Domain automated successfully! It may take up to 24 hours for DNS changes to propagate."
-        : "Domain added successfully! Please configure DNS records manually using the provided instructions."
+      message: finalMessage,
+      details: {
+        dns_configured: automationResults.dns_created,
+        hosting_configured: automationResults.hosting_added,
+        ssl_ready: automationResults.ssl_ready,
+        requires_manual_setup: !automationResults.dns_created && !automationResults.hosting_added
+      }
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
