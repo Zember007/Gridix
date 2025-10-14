@@ -6,6 +6,8 @@ import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { UsersManagement } from '@/components/superadmin/UsersManagement';
 import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';
 import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
+import { Statistics } from '@/components/superadmin/Statistics';
+import { SystemSettings } from '@/components/superadmin/SystemSettings';
 import { Loader2 } from 'lucide-react';
 
 const SuperAdminPage = () => {
@@ -40,19 +42,9 @@ const SuperAdminPage = () => {
       case 'projects':
         return <ProjectsManagement />;
       case 'stats':
-        return (
-          <div className="p-6">
-            <h2 className="text-3xl font-bold mb-4">Статистика</h2>
-            <p className="text-muted-foreground">В разработке...</p>
-          </div>
-        );
+        return <Statistics />;
       case 'settings':
-        return (
-          <div className="p-6">
-            <h2 className="text-3xl font-bold mb-4">Системные настройки</h2>
-            <p className="text-muted-foreground">В разработке...</p>
-          </div>
-        );
+        return <SystemSettings />;
       default:
         return null;
     }
