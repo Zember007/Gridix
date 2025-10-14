@@ -287,6 +287,33 @@ export type Database = {
           },
         ]
       }
+      banned_users: {
+        Row: {
+          banned_at: string
+          banned_by: string
+          id: string
+          reason: string | null
+          unbanned_at: string | null
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string
+          banned_by: string
+          id?: string
+          reason?: string | null
+          unbanned_at?: string | null
+          user_id: string
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string
+          id?: string
+          reason?: string | null
+          unbanned_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       building_floors: {
         Row: {
           color: string
@@ -849,10 +876,11 @@ export type Database = {
           max_installment_months: number | null
           min_down_payment_percent: number | null
           name: string
-          project_type: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url: string | null
           polygon_settings: Json | null
+          project_type: Database["public"]["Enums"]["project_type"]
           slug: string | null
+          theme_color: string | null
           updated_at: string
           user_id: string | null
           view_count: number
@@ -876,10 +904,11 @@ export type Database = {
           max_installment_months?: number | null
           min_down_payment_percent?: number | null
           name: string
-          project_type?: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url?: string | null
           polygon_settings?: Json | null
+          project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
+          theme_color?: string | null
           updated_at?: string
           user_id?: string | null
           view_count?: number
@@ -903,10 +932,11 @@ export type Database = {
           max_installment_months?: number | null
           min_down_payment_percent?: number | null
           name?: string
-          project_type?: Database["public"]["Enums"]["project_type"] | null
           pdf_presentation_url?: string | null
           polygon_settings?: Json | null
+          project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
+          theme_color?: string | null
           updated_at?: string
           user_id?: string | null
           view_count?: number
@@ -920,6 +950,110 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_discounts: {
+        Row: {
+          created_at: string | null
+          discount_percentage: number
+          duration_months: number
+          id: string
+          is_active: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percentage: number
+          duration_months: number
+          id?: string
+          is_active?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_percentage?: number
+          duration_months?: number
+          id?: string
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      subscription_history: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          new_status: string | null
+          old_status: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          old_status?: string | null
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          old_status?: string | null
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          base_price: number
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_price: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       sync_logs: {
         Row: {
@@ -1011,6 +1145,95 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          discount_percentage: number | null
+          duration_months: number | null
+          final_price: number | null
+          id: string
+          lemon_squeezy_customer_id: string | null
+          lemon_squeezy_subscription_id: string | null
+          plan_id: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          discount_percentage?: number | null
+          duration_months?: number | null
+          final_price?: number | null
+          id?: string
+          lemon_squeezy_customer_id?: string | null
+          lemon_squeezy_subscription_id?: string | null
+          plan_id: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          discount_percentage?: number | null
+          duration_months?: number | null
+          final_price?: number | null
+          id?: string
+          lemon_squeezy_customer_id?: string | null
+          lemon_squeezy_subscription_id?: string | null
+          plan_id?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1036,6 +1259,13 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_view_count: {
         Args: { project_id: string }
         Returns: undefined
@@ -1050,6 +1280,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_superadmin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       needs_token_refresh: {
         Args: { settings_id: string }
         Returns: boolean
@@ -1057,7 +1291,9 @@ export type Database = {
     }
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking"
+      app_role: "superadmin" | "admin" | "moderator" | "user"
       currency_type: "RUB" | "USD" | "EUR" | "GEL"
+      project_type: "building" | "object"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1186,7 +1422,9 @@ export const Constants = {
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],
+      app_role: ["superadmin", "admin", "moderator", "user"],
       currency_type: ["RUB", "USD", "EUR", "GEL"],
+      project_type: ["building", "object"],
     },
   },
 } as const

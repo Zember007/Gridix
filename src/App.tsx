@@ -28,6 +28,7 @@ import WidgetPreviewPage from "./pages/WidgetPreviewPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import PricingPage from "./pages/PricingPage";
 import ContactsPage from "./pages/ContactsPage";
+import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,17 @@ function App() {
                   <LanguageWrapper>
                     <ProtectedRoute>
                       <ProjectEditorPage useId />
+                    </ProtectedRoute>
+                  </LanguageWrapper>
+                </LanguageProvider>
+              } />
+
+              {/* Superadmin route */}
+              <Route path="/:lang/superadmin" element={
+                <LanguageProvider>
+                  <LanguageWrapper>
+                    <ProtectedRoute>
+                      <SuperAdminPage />
                     </ProtectedRoute>
                   </LanguageWrapper>
                 </LanguageProvider>

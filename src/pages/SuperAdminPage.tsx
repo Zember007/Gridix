@@ -1,0 +1,71 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
+import { UsersManagement } from '@/components/superadmin/UsersManagement';
+import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';
+import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
+import { Loader2 } from 'lucide-react';
+
+const SuperAdminPage = () => {
+  const { isSuperAdmin, loading } = useSuperAdmin();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('users');
+
+  useEffect(() => {
+    if (!loading && !isSuperAdmin) {
+      navigate('/');
+    }
+  }, [isSuperAdmin, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return null;
+  }
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'users':
+        return <UsersManagement />;
+      case 'subscriptions':
+        return <SubscriptionsManagement />;
+      case 'projects':
+        return <ProjectsManagement />;
+      case 'stats':
+        return (
+          <div className="p-6">
+            <h2 className="text-3xl font-bold mb-4">Статистика</h2>
+            <p className="text-muted-foreground">В разработке...</p>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div className="p-6">
+            <h2 className="text-3xl font-bold mb-4">Системные настройки</h2>
+            <p className="text-muted-foreground">В разработке...</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <SuperAdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <main className="flex-1 overflow-auto">{renderContent()}</main>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default SuperAdminPage;
