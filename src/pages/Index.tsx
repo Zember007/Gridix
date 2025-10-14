@@ -281,7 +281,7 @@ const Index = () => {
 
 
       {/* CTA Section */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} bg-gray-900 text-gray-100 relative overflow-hidden`}>
+      <section className={`${isMobile ? 'py-16' : 'py-24'} text-gray-100 relative overflow-hidden`}>
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
@@ -294,7 +294,7 @@ const Index = () => {
 
           {/* Title */}
           <h3 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-semibold mb-6 animate-appear opacity-0 delay-100`}>
-            <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            <span className="bg-black to-gray-300 bg-clip-text text-transparent">
               {t('landing.readyToStart')}
             </span>
           </h3>

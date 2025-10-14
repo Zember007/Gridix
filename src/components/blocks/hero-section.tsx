@@ -45,12 +45,12 @@ export function HeroSection({
   return (
     <section
       className={cn(
-        "bg-background text-foreground",
-        "py-12 sm:py-24 md:py-32 px-4",
+        " text-foreground",
+        "py-12 sm:py-24 md:py-32 ",
         "fade-bottom overflow-hidden pb-0"
       )}
     >
-      <div className="mx-auto flex container px-4 flex-col gap-12 pt-16 sm:gap-24">
+      <div className="mx-auto flex container flex-col gap-12 pt-16 sm:gap-24">
         <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
           {/* Badge */}
           {badge && (
@@ -69,7 +69,7 @@ export function HeroSection({
           </h1>
 
           {/* Description */}
-          <p className="text-md relative z-10 max-w-[1200px] animate-appear font-medium text-muted-foreground opacity-0 delay-100 sm:text-xl">
+          <p className="text-md relative z-10  animate-appear font-medium text-muted-foreground opacity-0 delay-100 sm:text-xl">
             {description}
           </p>
 
@@ -95,10 +95,10 @@ export function HeroSection({
             >
               <Mockup type="responsive">
                 <img
+                className="w-full h-full object-cover"
                   src={imageSrc}
                   alt={image.alt}
-                  width={1248}
-                  height={765}
+                
                 />
               </Mockup>
             </MockupFrame>

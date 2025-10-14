@@ -122,7 +122,6 @@ function App() {
                 </LanguageProvider>
               } />
 
-              {/* Superadmin route */}
               <Route path="/:lang/superadmin" element={
                 <LanguageProvider>
                   <LanguageWrapper>

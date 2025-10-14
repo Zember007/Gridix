@@ -34,8 +34,8 @@ const Footer = () => {
   };
 
   return (
-    <footer className={`bg-gray-900 text-gray-100 ${isMobile ? 'py-12' : 'py-16'}`}>
-      <div className="container mx-auto px-4">
+    <footer className={`bg-black ${isMobile ? 'py-12' : 'py-16'}`}>
+      <div className="container mx-auto">
         <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'md:grid-cols-4 gap-8'} mb-8`}>
           {/* Company Info */}
           <div className="col-span-2">

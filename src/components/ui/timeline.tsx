@@ -34,7 +34,7 @@ export const Timeline = ({ data, title }: { data: TimelineEntry[], title?: strin
   return (
     <section
     id="features"
-      className="w-full bg-white dark:bg-neutral-950 font-sans md:px-10"
+      className="w-full pt-10 font-sans container"
       ref={containerRef}
     >
       <h2 className=" mx-auto text-center">{title}</h2>
