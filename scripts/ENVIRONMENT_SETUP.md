@@ -22,8 +22,19 @@ VERCEL_API_KEY=your_vercel_api_key
 VERCEL_PROJECT_ID=your_vercel_project_id
 
 # Nginx Webhook (если используете собственный сервер)
-NGINX_WEBHOOK_URL=https://your-server.com/webhook
+# ВАЖНО: URL должен быть базовым, без /hooks/. Endpoint'ы добавляются автоматически.
+NGINX_WEBHOOK_URL=http://localhost:8080
 WEBHOOK_SECRET=your_webhook_secret
+
+# Примеры правильных URL:
+# NGINX_WEBHOOK_URL=http://localhost:8080 (локально)
+# NGINX_WEBHOOK_URL=http://your-server-ip:8080 (удаленный сервер)
+# NGINX_WEBHOOK_URL=https://your-domain.com:8080 (с доменом)
+
+# Система автоматически добавит endpoint'ы:
+# - /hooks/nginx-ssl-add - для добавления домена
+# - /hooks/nginx-ssl-remove - для удаления домена
+# - /hooks/nginx-ssl-status - для проверки статуса
 ```
 
 ## Frontend (Vite)
@@ -42,8 +53,13 @@ VITE_SERVER_DOMAIN=your_server_domain.com
 ### Опциональные переменные:
 ```bash
 # Nginx Webhook (для проверки статуса и удаления доменов)
-VITE_NGINX_WEBHOOK_URL=https://your-server.com/webhook
+# ВАЖНО: URL должен быть базовым, без /hooks/. Endpoint'ы добавляются автоматически.
+VITE_NGINX_WEBHOOK_URL=http://localhost:8080
 VITE_WEBHOOK_SECRET=your_webhook_secret
+
+# Примеры:
+# VITE_NGINX_WEBHOOK_URL=http://localhost:8080 (локально)
+# VITE_NGINX_WEBHOOK_URL=http://your-server-ip:8080 (удаленный сервер)
 ```
 
 ## Настройка в Supabase
@@ -63,7 +79,9 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_SERVER_IP=your_server_ip_address
 VITE_SERVER_DOMAIN=your_server_domain.com
-VITE_NGINX_WEBHOOK_URL=https://your-server.com/webhook
+
+# Webhook URL без /hooks/ endpoint'а
+VITE_NGINX_WEBHOOK_URL=http://localhost:8080
 VITE_WEBHOOK_SECRET=your_webhook_secret
 ```
 
@@ -111,9 +129,20 @@ echo $VITE_SERVER_IP
 
 2. **Проверьте webhook:**
 ```bash
-curl -X POST https://your-server.com/webhook \
+# Проверка статуса домена
+curl -X POST http://localhost:8080/hooks/nginx-ssl-status \
   -H "Content-Type: application/json" \
-  -d '{"domain":"test.com","action":"status","webhook_secret":"your_secret"}'
+  -d '{"domain":"test.com","webhook_secret":"your_secret","action":"status"}'
+
+# Добавление домена
+curl -X POST http://localhost:8080/hooks/nginx-ssl-add \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"test.com","webhook_secret":"your_secret","action":"add"}'
+
+# Удаление домена
+curl -X POST http://localhost:8080/hooks/nginx-ssl-remove \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"test.com","webhook_secret":"your_secret","action":"remove"}'
 ```
 
 3. **Проверьте скрипт:**

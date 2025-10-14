@@ -49,7 +49,10 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
   };
 
   const handleAddDomain = async () => {
-    if (!newDomain.trim()) return;
+    if (!newDomain.trim()) {
+      toast.warning("⚠️ Please enter a domain name");
+      return;
+    }
 
     setIsAddingDomain(true);
     
@@ -66,57 +69,99 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        
+        // Provide user-friendly error messages based on error type
+        if (error.message?.includes('fetch')) {
+          toast.error("❌ Network error: Could not connect to server");
+        } else if (error.message?.includes('unauthorized')) {
+          toast.error("❌ Authorization error: Please check your credentials");
+        } else {
+          toast.error(`❌ Error: ${error.message || 'Unknown error occurred'}`);
+        }
+        
+        setIsAddingDomain(false);
+        return;
       }
 
-      if (result.success) {
+      if (result?.success) {
         // Show main success message
-        toast.success(result.message);
+        toast.success(result.message || '✅ Domain added successfully!');
         setNewDomain("");
+        setDnsApiKey("");
+        setDnsZoneId("");
         
         // Show detailed automation results
         if (result.details) {
-          if (result.details.dns_configured) {
+          const details = result.details;
+          
+          if (details.dns_configured) {
             toast.success("✅ DNS records created automatically");
           }
-          if (result.details.hosting_configured) {
+          if (details.hosting_configured) {
             toast.success("✅ Hosting configured automatically");
           }
-          if (result.details.ssl_ready) {
+          if (details.ssl_ready) {
             toast.success("✅ SSL certificate ready");
           }
-          if (result.details.requires_manual_setup) {
-            toast.warning("⚠️ Manual setup required - see instructions below");
+          if (details.requires_manual_setup) {
+            toast.warning("⚠️ Manual setup required - see instructions below", {
+              duration: 6000
+            });
           }
         }
         
-        // Show automation status
+        // Show automation status summary
         if (result.automation) {
           const automationMessages = [];
           if (result.automation.dns_created) {
-            automationMessages.push("DNS records created");
+            automationMessages.push("DNS ✓");
           }
           if (result.automation.hosting_added) {
-            automationMessages.push("Hosting configured");
+            automationMessages.push("Hosting ✓");
           }
           if (result.automation.ssl_ready) {
-            automationMessages.push("SSL ready");
+            automationMessages.push("SSL ✓");
           }
           
           if (automationMessages.length > 0) {
-            toast.info(`Automation: ${automationMessages.join(", ")}`);
+            toast.info(`🚀 Automation: ${automationMessages.join(", ")}`, {
+              duration: 5000
+            });
           }
         }
         
         // Refresh domains list
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else {
-        // Handle error response
-        const errorMessage = result.error || result.message || t('domains.automation.failed');
-        toast.error(`❌ ${errorMessage}`);
+        // Handle error response from the function
+        const errorMessage = result?.error || result?.message || 'Failed to add domain';
+        
+        // Provide context-specific error messages
+        if (errorMessage.includes('already exists')) {
+          toast.error("❌ This domain is already registered");
+        } else if (errorMessage.includes('Invalid domain')) {
+          toast.error("❌ Invalid domain format. Please check and try again.");
+        } else if (errorMessage.includes('DNS')) {
+          toast.error(`❌ DNS Error: ${errorMessage}`);
+        } else if (errorMessage.includes('webhook') || errorMessage.includes('404')) {
+          toast.error("❌ Server configuration error. Please contact administrator.", {
+            description: "Webhook endpoint not found",
+            duration: 6000
+          });
+        } else if (errorMessage.includes('SSL') || errorMessage.includes('certificate')) {
+          toast.error("❌ SSL configuration failed", {
+            description: errorMessage,
+            duration: 6000
+          });
+        } else {
+          toast.error(`❌ ${errorMessage}`);
+        }
         
         // Show additional error details if available
-        if (result.details) {
+        if (result?.details) {
           console.error('Domain automation error details:', result.details);
         }
       }
@@ -124,7 +169,8 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       console.error('Domain automation error:', error);
       
       // Extract meaningful error message
-      let errorMessage = t('domains.automation.error');
+      let errorMessage = 'An unexpected error occurred';
+      let errorDescription = '';
       
       if (error && typeof error === 'object') {
         if ('message' in error) {
@@ -132,72 +178,62 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
         } else if ('error' in error) {
           errorMessage = (error as { error: string }).error;
         }
+        
+        // Provide user-friendly messages for common errors
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+          errorMessage = 'Network connection failed';
+          errorDescription = 'Please check your internet connection and try again';
+        } else if (errorMessage.includes('timeout')) {
+          errorMessage = 'Request timed out';
+          errorDescription = 'The server took too long to respond. Please try again.';
+        } else if (errorMessage.includes('CORS')) {
+          errorMessage = 'Configuration error';
+          errorDescription = 'Please contact administrator';
+        }
       }
       
-      toast.error(`❌ ${errorMessage}`);
+      toast.error(`❌ ${errorMessage}`, {
+        description: errorDescription || undefined,
+        duration: 6000
+      });
       
       // Log full error for debugging
       console.error('Full error object:', error);
+    } finally {
+      setIsAddingDomain(false);
     }
-    
-    setIsAddingDomain(false);
   };
 
   const handleDeleteDomain = async (domainId: string) => {
     try {
-      // Find the domain to get its name
       const domain = domains.find(d => d.id === domainId);
       if (!domain) {
         toast.error("Domain not found");
         return;
       }
 
-      // Try to remove from Nginx/SSL if webhook is configured
-      const nginxWebhookUrl = import.meta.env.VITE_NGINX_WEBHOOK_URL;
-      const webhookSecret = import.meta.env.VITE_WEBHOOK_SECRET;
-      
-      if (nginxWebhookUrl && webhookSecret) {
-        try {
-          console.log(`Attempting to remove domain from Nginx: ${domain.domain}`);
-          
-          const webhookResponse = await fetch(nginxWebhookUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              domain: domain.domain,
-              action: 'remove',
-              webhook_secret: webhookSecret,
-            }),
-          });
+      const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
+        body: {
+          action: 'remove',
+          domain: domain.domain,
+          project_id: projectId,
+          domain_id: domain.id,
+        },
+      });
 
-          if (webhookResponse.ok) {
-            const responseText = await webhookResponse.text();
-            if (responseText.trim()) {
-              try {
-                const webhookResult = JSON.parse(responseText);
-                if (webhookResult.status === 'success') {
-                  toast.success(`✅ Domain ${domain.domain} removed from server`);
-                } else {
-                  console.warn('Webhook removal failed:', webhookResult.message);
-                }
-              } catch (jsonError) {
-                console.warn('Could not parse webhook response:', jsonError);
-              }
-            }
-          } else {
-            console.warn(`Webhook removal failed: ${webhookResponse.status}`);
-          }
-        } catch (webhookError) {
-          console.warn('Error calling removal webhook:', webhookError);
-        }
+      if (error) {
+        console.error('Remove function error:', error);
+        toast.error(`❌ ${error.message || 'Failed to remove domain'}`);
+        return;
       }
 
-      // Remove from database
-      await deleteDomain(domainId);
-      toast.success(`Domain ${domain.domain} removed successfully`);
-      
+      if (result?.success) {
+        toast.success(`✅ ${result.message || `Domain ${domain.domain} removed`}`);
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        const errorMessage = result?.error || 'Failed to remove domain';
+        toast.error(`❌ ${errorMessage}`);
+      }
     } catch (error) {
       console.error('Domain removal error:', error);
       toast.error("Failed to remove domain");
@@ -206,57 +242,40 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
 
   const handleCheckDomainStatus = async (domain: { domain: string; id: string }) => {
     try {
-      const nginxWebhookUrl = import.meta.env.VITE_NGINX_WEBHOOK_URL;
-      const webhookSecret = import.meta.env.VITE_WEBHOOK_SECRET;
-      
-      if (!nginxWebhookUrl || !webhookSecret) {
-        toast.warning("Webhook not configured for status checking");
+      const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
+        body: {
+          action: 'status',
+          domain: domain.domain,
+          project_id: projectId,
+        },
+      });
+
+      if (error) {
+        console.error('Status function error:', error);
+        toast.error(`❌ ${error.message || 'Failed to check status'}`);
         return;
       }
 
-      console.log(`Checking status for domain: ${domain.domain}`);
-      
-      const webhookResponse = await fetch(nginxWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          domain: domain.domain,
-          action: 'status',
-          webhook_secret: webhookSecret,
-        }),
-      });
-
-      if (webhookResponse.ok) {
-        const responseText = await webhookResponse.text();
-        if (responseText.trim()) {
-          try {
-            const statusResult = JSON.parse(responseText);
-            if (statusResult.status === 'success') {
-              const statusInfo = {
-                overall: statusResult.overall_status,
-                nginx: statusResult.nginx,
-                ssl: statusResult.ssl
-              };
-              
-              toast.info(`Domain Status: ${statusInfo.overall}`, {
-                description: `Nginx: ${statusInfo.nginx.enabled ? 'Enabled' : 'Disabled'}, SSL: ${statusInfo.ssl.certificate_valid ? 'Valid' : 'Invalid'}`
-              });
-            } else {
-              toast.error(`Status check failed: ${statusResult.message}`);
-            }
-          } catch (jsonError) {
-            console.warn('Could not parse status response:', jsonError);
-            toast.error("Could not parse status response");
-          }
-        }
+      if (result?.success) {
+        const payload = result.status; // status payload from edge
+        const overall = payload?.overall_status || 'Unknown';
+        const nginxEnabled = payload?.nginx?.enabled === true;
+        const sslValid = payload?.ssl?.certificate_valid === true;
+        const nginxStatus = nginxEnabled ? '✅ Enabled' : '❌ Disabled';
+        const sslStatus = sslValid ? '✅ Valid' : '❌ Invalid';
+        const overallIcon = overall === 'active' ? '✅' : '⚠️';
+        toast.success(`${overallIcon} Domain Status: ${overall}`, {
+          description: `Nginx: ${nginxStatus} | SSL: ${sslStatus}`,
+          duration: 5000,
+        });
       } else {
-        toast.error(`Status check failed: ${webhookResponse.status}`);
+        const errorMessage = result?.error || 'Failed to check status';
+        toast.error(`❌ ${errorMessage}`);
       }
     } catch (error) {
       console.error('Status check error:', error);
-      toast.error("Failed to check domain status");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`❌ Failed to check domain status: ${errorMessage}`);
     }
   };
 

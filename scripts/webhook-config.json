@@ -3,6 +3,7 @@
       "id": "nginx-ssl-add",
       "execute-command": "/usr/local/bin/auto-ssl-nginx.sh",
       "command-working-directory": "/usr/local/bin",
+      "include-command-output-in-response": true,
       "pass-arguments-to-command": [
         {
           "source": "payload",
@@ -42,6 +43,7 @@
       "id": "nginx-ssl-remove",
       "execute-command": "/usr/local/bin/auto-ssl-nginx.sh",
       "command-working-directory": "/usr/local/bin",
+      "include-command-output-in-response": true,
       "pass-arguments-to-command": [
         {
           "source": "payload",
@@ -81,6 +83,7 @@
       "id": "nginx-ssl-status",
       "execute-command": "/usr/local/bin/auto-ssl-nginx.sh",
       "command-working-directory": "/usr/local/bin",
+      "include-command-output-in-response": true,
       "pass-arguments-to-command": [
         {
           "source": "payload",
