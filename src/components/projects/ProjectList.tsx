@@ -206,7 +206,7 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       <span
                       style={{ color: ADMIN_THEME.textSecondary }}
                       className="text-real-estate-500">
-                        {new Date(project.created_at).toLocaleDateString('ru-RU')}
+                        {new Date(project.created_at).toLocaleDateString('en-US')}
                       </span>
                     </div>
                     

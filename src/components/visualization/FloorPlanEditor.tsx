@@ -1356,7 +1356,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                                   {apartment.price > 0 && (
                                     <>
                                       <span className="text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                                      <span>{new Intl.NumberFormat('ru-RU').format(apartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
+                                      <span>{new Intl.NumberFormat('en-US').format(apartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
                                     </>
                                   )}
                                   <span className="text-gray-600">{t('floorPlan.apartments.status')}:</span>
@@ -1424,7 +1424,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               {selectedApartment.price > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                  <span className="font-bold">{new Intl.NumberFormat('ru-RU').format(selectedApartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
+                  <span className="font-bold">{new Intl.NumberFormat('en-US').format(selectedApartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
                 </div>
               )}
               <div className="pt-2 border-t space-y-2">

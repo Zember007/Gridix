@@ -152,7 +152,7 @@ export function Statistics() {
           .lte('created_at', monthEnd.toISOString());
 
         monthsData.push({
-          name: date.toLocaleDateString('ru-RU', { month: 'short' }),
+          name: date.toLocaleDateString('en-US', { month: 'short' }),
           users: usersInMonth || 0,
           projects: projectsInMonth || 0,
           subscriptions: subscriptionsInMonth || 0,

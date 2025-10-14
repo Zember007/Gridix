@@ -126,7 +126,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
 
   const formatPrice = (price: number | null) => {
     if (!price) return t('common.priceOnRequest');
-    return new Intl.NumberFormat('ru-RU').format(price) + ' $';
+    return new Intl.NumberFormat('en-US').format(price) + ' $';
   };
 
   const cities = Array.from(new Set(

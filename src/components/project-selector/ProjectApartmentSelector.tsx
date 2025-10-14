@@ -119,7 +119,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     }
   };
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('ru-RU').format(Math.round(price));
+  const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(Math.round(price));
 
   // Load apartments
   const loadApartments = useCallback(async () => {

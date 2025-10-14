@@ -36,7 +36,7 @@ const symbol3 = getCurrencySymbolSafe('INVALID'); // '₽'
 **Параметры:**
 - `price: number` - цена
 - `currency: string | null` - код валюты
-- `locale: string` - локаль для форматирования (по умолчанию 'ru-RU')
+- `locale: string` - локаль для форматирования (по умолчанию 'en-US')
 
 **Пример:**
 ```typescript

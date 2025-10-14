@@ -9,7 +9,7 @@ const TermsOfServicePage = () => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
 
-  const currentDate = new Date().toLocaleDateString(t('legal.locale') || 'ru-RU', { 
+  const currentDate = new Date().toLocaleDateString(t('legal.locale') || 'en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 

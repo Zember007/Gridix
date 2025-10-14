@@ -188,7 +188,7 @@ export function ProjectsManagement() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {new Date(project.created_at).toLocaleDateString('ru-RU')}
+                  {new Date(project.created_at).toLocaleDateString('en-US')}
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">

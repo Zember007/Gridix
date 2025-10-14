@@ -63,7 +63,7 @@ export const getCurrencySymbolSafe = (currency: string | null): string => {
   return isValidCurrency(currency) ? getCurrencySymbol(currency) : '₽';
 };
 
-export const formatPriceWithCurrency = (price: number, currency: string | null, locale: string = 'ru-RU'): string => {
+export const formatPriceWithCurrency = (price: number, currency: string | null, locale: string = 'en-US'): string => {
   if (!price) return 'Цена по запросу';
   
   const symbol = getCurrencySymbolSafe(currency);

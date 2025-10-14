@@ -418,7 +418,7 @@ export function UsersManagement() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('ru-RU')}
+                    {new Date(user.created_at).toLocaleDateString('en-US')}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

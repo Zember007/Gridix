@@ -589,7 +589,7 @@ const AcceptInvitationPage = () => {
           <div className="text-center text-sm text-gray-500">
             <p>{t('invitation.validUntil')}</p>
             <p className="font-medium">
-              {new Date(invitation.expires_at).toLocaleDateString('ru-RU', {
+              {new Date(invitation.expires_at).toLocaleDateString('en-US', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',

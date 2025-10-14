@@ -356,7 +356,7 @@ export function SubscriptionsManagement() {
                 </TableCell>
                 <TableCell>
                   {sub.current_period_end
-                    ? new Date(sub.current_period_end).toLocaleDateString('ru-RU')
+                    ? new Date(sub.current_period_end).toLocaleDateString('en-US')
                     : '—'}
                 </TableCell>
                 <TableCell>

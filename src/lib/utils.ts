@@ -63,7 +63,7 @@ export function formatDate(dateString: string | Date, options?: Intl.DateTimeFor
     ...options
   };
   
-  return date.toLocaleDateString('ru-RU', defaultOptions);
+  return date.toLocaleDateString('en-US', defaultOptions);
 }
 
 // Функция для форматирования даты и времени
@@ -79,7 +79,7 @@ export function formatDateTime(dateString: string | Date, options?: Intl.DateTim
     ...options
   };
   
-  return date.toLocaleDateString('ru-RU', defaultOptions);
+  return date.toLocaleDateString('en-US', defaultOptions);
 }
 
 // Функция для получения относительного времени
