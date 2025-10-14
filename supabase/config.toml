@@ -1,1 +1,7 @@
 project_id = "owilwkmenbrcinfwuvyx"
+
+[functions.create-amocrm-lead]
+verify_jwt = false
+
+[functions.amocrm-oauth-callback]
+verify_jwt = false

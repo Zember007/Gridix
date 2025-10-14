@@ -1,15 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
   // Handle CORS
+  const origin = req.headers.get('Origin');
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return createCorsResponse(origin);
   }
 
   try {
@@ -31,13 +28,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
     // Check if user is superadmin
@@ -50,13 +41,7 @@ Deno.serve(async (req) => {
     const isSuperAdmin = profile?.email === 'inbox@gridix.live';
     
     if (!isSuperAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden: Superadmin access required' }),
-        { 
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'Forbidden: Superadmin access required' }, 403, origin);
     }
 
     const { action, ...params } = await req.json();
@@ -91,13 +76,7 @@ Deno.serve(async (req) => {
           throw profileError;
         }
 
-        return new Response(
-          JSON.stringify({ success: true, user: authData.user }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ success: true, user: authData.user }, 200, origin);
       }
 
       case 'impersonate_user': {
@@ -113,16 +92,10 @@ Deno.serve(async (req) => {
           throw sessionError;
         }
 
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            redirect_url: sessionData.properties?.action_link,
-          }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ 
+          success: true, 
+          redirect_url: sessionData.properties?.action_link,
+        }, 200, origin);
       }
 
       case 'unban_user': {
@@ -138,13 +111,7 @@ Deno.serve(async (req) => {
           throw unbanError;
         }
 
-        return new Response(
-          JSON.stringify({ success: true }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ success: true }, 200, origin);
       }
 
       case 'create_subscription': {
@@ -195,13 +162,7 @@ Deno.serve(async (req) => {
           throw subscriptionError;
         }
 
-        return new Response(
-          JSON.stringify({ success: true, subscription: subscriptionData }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ success: true, subscription: subscriptionData }, 200, origin);
       }
 
       case 'cancel_subscription': {
@@ -220,13 +181,7 @@ Deno.serve(async (req) => {
           throw cancelError;
         }
 
-        return new Response(
-          JSON.stringify({ success: true }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ success: true }, 200, origin);
       }
 
       case 'refund_subscription': {
@@ -273,31 +228,13 @@ Deno.serve(async (req) => {
           throw updateError;
         }
 
-        return new Response(
-          JSON.stringify({ success: true, refund: refundData }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ success: true, refund: refundData }, 200, origin);
       }
 
       default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
-          { 
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ error: 'Invalid action' }, 400, origin);
     }
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({ error: error.message }, 500, origin);
   }
 });

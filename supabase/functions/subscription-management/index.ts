@@ -1,17 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { lemonSqueezySetup } from "https://esm.sh/@lemonsqueezy/lemonsqueezy.js@3";
+import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 // Setup LemonSqueezy
 lemonSqueezySetup({
   apiKey: Deno.env.get("LEMONSQUEEZY_API_KEY") ?? "",
   onError: (error)=>console.error("LemonSqueezy error:", error)
 });
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
-};
 
 async function calculatePrice(basePriceStr, durationMonths) {
   const basePrice = parseFloat(basePriceStr);
@@ -25,24 +22,19 @@ async function calculatePrice(basePriceStr, durationMonths) {
     discountPercentage
   };
 }
-async function handleGetPurchaseLinks(req) {
+async function handleGetPurchaseLinks(req, corsHeaders) {
+  const origin = req.headers.get('Origin');
   try {
     // Get user from JWT to include user data in purchase links
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response("Missing authorization header", {
-        status: 401,
-        headers: corsHeaders
-      });
+      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
     }
     
     const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     if (userError || !user) {
-      return new Response("Invalid token", {
-        status: 401,
-        headers: corsHeaders
-      });
+      return createJsonResponse({ error: "Invalid token" }, 401, origin);
     }
 
     // Create purchase links with user data
@@ -81,7 +73,7 @@ async function handleGetPurchaseLinks(req) {
   }
 }
 
-async function handleGetSubscription(req) {
+async function handleGetSubscription(req, corsHeaders) {
   try {
     // Get user from JWT
     const authHeader = req.headers.get("Authorization");
@@ -144,7 +136,7 @@ async function handleGetSubscription(req) {
     });
   }
 }
-async function handleGetManagementUrl(req) {
+async function handleGetManagementUrl(req, corsHeaders) {
   try {
     // Get user from JWT
     const authHeader = req.headers.get("Authorization");
@@ -206,7 +198,7 @@ async function handleGetManagementUrl(req) {
     });
   }
 }
-async function handleGetPlans(req) {
+async function handleGetPlans(req, corsHeaders) {
   try {
     // Get all active plans with discounts
     // No authentication required for viewing plans
@@ -254,12 +246,14 @@ async function handleGetPlans(req) {
   }
 }
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
   const url = new URL(req.url);
   const path = url.pathname;
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { ...corsHeaders } });
+    return createCorsResponse(origin);
   }
 
   try {
@@ -268,20 +262,17 @@ Deno.serve(async (req) => {
     
     switch(action){
       case "get-purchase-links":
-        return await handleGetPurchaseLinks(req);
+        return await handleGetPurchaseLinks(req, corsHeaders);
       case "get-plans":
-        return await handleGetPlans(req);
+        return await handleGetPlans(req, corsHeaders);
       case "get-management-url":
-        return await handleGetManagementUrl(req);
+        return await handleGetManagementUrl(req, corsHeaders);
       default:
         // Default action is get subscription
-        return await handleGetSubscription(req);
+        return await handleGetSubscription(req, corsHeaders);
     }
   } catch (error) {
     console.error("Handler error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    });
+    return createJsonResponse({ error: error.message }, 500, origin);
   }
 });

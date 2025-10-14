@@ -1,15 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-function getAllowedCorsHeaders(origin: string | null) {
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Max-Age': '86400',
-    'Access-Control-Allow-Origin': '*',
-  }
-  return headers
-}
+import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 async function hmacSign(input: string, secret: string): Promise<string> {
   const enc = new TextEncoder()
@@ -28,35 +19,24 @@ async function hmacSign(input: string, secret: string): Promise<string> {
 
 serve(async (req) => {
   const origin = req.headers.get('Origin')
-  const corsHeaders = getAllowedCorsHeaders(origin)
+
+  const corsHeaders = getCorsHeaders(origin);
 
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return createCorsResponse(origin);
   }
 
   try {
     
 
     if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        {
-          status: 405,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
     const { project_id } = await req.json();
 
     if (!project_id) {
-      return new Response(
-        JSON.stringify({ error: 'project_id is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
     }
 
     // Initialize Supabase user client (RLS enforced)
@@ -88,10 +68,7 @@ serve(async (req) => {
     const clientId = Deno.env.get('AMOCRM_CLIENT_ID') ;
     const stateSecret = Deno.env.get('AMOCRM_STATE_SECRET')
     if (!stateSecret) {
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error: missing AMOCRM_STATE_SECRET' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return createJsonResponse({ error: 'Server configuration error: missing AMOCRM_STATE_SECRET' }, 500, origin);
     }
 
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`;
@@ -109,25 +86,13 @@ serve(async (req) => {
       `response_type=code&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-    return new Response(
-      JSON.stringify({ auth_url: authUrl }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({ auth_url: authUrl }, 200, origin);
 
   } catch (error) {
     console.error('AmoCRM start auth error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({
+      error: 'Internal server error',
+      message: error.message
+    }, 500, origin);
   }
 });

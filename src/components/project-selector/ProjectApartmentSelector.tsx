@@ -105,7 +105,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
       
       // Формируем полный URL
-      const url = `${baseDomain}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+      const url = `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
       
       // Открываем в новой вкладке
       window.open(url, '_blank');

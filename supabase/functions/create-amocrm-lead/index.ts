@@ -1,17 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-
-
-function getAllowedCorsHeaders(origin: string | null) {
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Max-Age': '86400',
-  }
-  headers['Access-Control-Allow-Origin'] = '*'
-  return headers
-}
+import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 interface LeadRequest {
   name: string;
@@ -191,9 +180,8 @@ async function getContactFields(settings: AmoCRMSettings, accessToken: string) {
 serve(async (req) => {
   // Обработка CORS
   const origin = req.headers.get('Origin')
-  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return createCorsResponse(origin);
   }
 
   try {
@@ -207,13 +195,10 @@ serve(async (req) => {
     // Валидация обязательных полей
     if (!name || !email || !phone || !apartmentId || !projectId) {
       console.error('Missing required fields:', { name: !!name, email: !!email, phone: !!phone, apartmentId: !!apartmentId, projectId: !!projectId });
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          required: ['name', 'email', 'phone', 'apartmentId', 'projectId']
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        error: 'Missing required fields',
+        required: ['name', 'email', 'phone', 'apartmentId', 'projectId']
+      }, 400, origin);
     }
 
     // Инициализация Supabase
@@ -222,10 +207,7 @@ serve(async (req) => {
 
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase configuration');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({ error: 'Server configuration error' }, 500, origin);
     }
 
     const authHeader = req.headers.get('Authorization') || ''
@@ -250,10 +232,7 @@ serve(async (req) => {
 
     if (apartmentError || !apartment) {
       console.error('Apartment not found:', { apartmentId, apartmentError });
-      return new Response(
-        JSON.stringify({ error: 'Apartment not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({ error: 'Apartment not found' }, 404, origin);
     }
 
     // Получение настроек AmoCRM ПЕРЕНЕСЕНО ниже после сохранения лида
@@ -269,14 +248,11 @@ serve(async (req) => {
 
     if (existingLead && !duplicateCheckError) {
       console.log('Duplicate lead found:', existingLead.id);
-      return new Response(
-        JSON.stringify({
-          error: 'Заявка с таким email на эту квартиру уже существует',
-          existingLeadId: existingLead.id,
-          existingLeadDate: existingLead.created_at
-        }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        error: 'Заявка с таким email на эту квартиру уже существует',
+        existingLeadId: existingLead.id,
+        existingLeadDate: existingLead.created_at
+      }, 409, origin);
     }
 
     // First, save the lead to our database
@@ -297,13 +273,10 @@ serve(async (req) => {
 
     if (leadSaveError || !savedLead) {
       console.error('Failed to save lead to database:', leadSaveError);
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to save lead. Please try again.',
-          details: leadSaveError?.message
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        error: 'Failed to save lead. Please try again.',
+        details: leadSaveError?.message
+      }, 500, origin);
     }
 
     console.log('Lead saved to database with ID:', savedLead.id);
@@ -326,15 +299,12 @@ serve(async (req) => {
         .update({ status: 'saved_only', amocrm_error: 'AmoCRM not configured for this project' })
         .eq('id', savedLead.id);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
-          crmIntegration: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
+        crmIntegration: false
+      }, 200, origin);
     }
 
     const settings = amocrmSettings as AmoCRMSettings;
@@ -353,15 +323,12 @@ serve(async (req) => {
         .eq('id', savedLead.id);
 
       // Return success since lead was saved to DB
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. AmoCRM authorization failed - please re-authorize the integration.',
-          crmIntegration: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. AmoCRM authorization failed - please re-authorize the integration.',
+        crmIntegration: false
+      }, 200, origin);
     }
 
     // Определение ответственного пользователя
@@ -397,15 +364,12 @@ serve(async (req) => {
         .eq('id', savedLead.id);
 
       // Return success since lead was saved to DB
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. Unable to determine responsible user for AmoCRM - please configure responsible_user_id.',
-          crmIntegration: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. Unable to determine responsible user for AmoCRM - please configure responsible_user_id.',
+        crmIntegration: false
+      }, 200, origin);
     }
 
     // Получение полей для контактов
@@ -423,15 +387,12 @@ serve(async (req) => {
         .eq('id', savedLead.id);
 
       // Return success since lead was saved to DB
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. Unable to configure contact fields in AmoCRM.',
-          crmIntegration: false
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. Unable to configure contact fields in AmoCRM.',
+        crmIntegration: false
+      }, 200, origin);
     }
 
     // Building lead payload (simple structure without custom lead fields)
@@ -505,16 +466,13 @@ serve(async (req) => {
         .eq('id', savedLead.id);
 
       // Return success since lead was saved to DB
-      return new Response(
-        JSON.stringify({
-          success: true,
-          leadId: savedLead.id,
-          message: 'Lead successfully saved. Failed to send to AmoCRM - you can copy the details and add manually.',
-          crmIntegration: false,
-          crmError: errorMessage
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. Failed to send to AmoCRM - you can copy the details and add manually.',
+        crmIntegration: false,
+        crmError: errorMessage
+      }, 200, origin);
     }
 
     const amocrmResult = await amocrmResponse.json();
@@ -600,18 +558,15 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
     }
 
     // Возврат успешного результата
-    return new Response(
-      JSON.stringify({
-        success: true,
-        leadId: savedLead.id, // Our internal lead ID
-        amocrmLeadId: amocrmResult[0]?.id, // AmoCRM lead ID
-        contactId: amocrmResult[0]?._embedded?.contacts?.[0]?.id,
-        message: 'Lead successfully created and sent to AmoCRM',
-        crmIntegration: true,
-        leadUrl: `https://${settings.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return createJsonResponse({
+      success: true,
+      leadId: savedLead.id, // Our internal lead ID
+      amocrmLeadId: amocrmResult[0]?.id, // AmoCRM lead ID
+      contactId: amocrmResult[0]?._embedded?.contacts?.[0]?.id,
+      message: 'Lead successfully created and sent to AmoCRM',
+      crmIntegration: true,
+      leadUrl: `https://${settings.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
+    }, 200, origin);
 
   } catch (error) {
     console.error('Unexpected error creating AmoCRM lead:', error);
@@ -629,12 +584,9 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
       console.error('Failed to update lead status after error:', updateError);
     }
 
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return createJsonResponse({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, 500, origin);
   }
 });

@@ -1,15 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-function getAllowedCorsHeaders(_origin: string | null) {
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Max-Age': '86400'
-  }
-  return headers
-}
+import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 interface AmoCRMSettings {
   id?: string;
@@ -69,34 +60,21 @@ interface AmoCRMData {
 
 serve(async (req) => {
   const origin = req.headers.get('Origin')
-  const corsHeaders = getAllowedCorsHeaders(origin)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders })
+    return createCorsResponse(origin);
   }
 
   try {
     // No CORS origin checks — fully permissive
 
     if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        {
-          status: 405,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
     const { project_id, action } = await req.json();
 
     if (!project_id) {
-      return new Response(
-        JSON.stringify({ error: 'project_id is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
     }
 
     // Initialize Supabase user client (RLS enforced)
@@ -115,13 +93,7 @@ serve(async (req) => {
       .single();
 
     if (projectError || !project) {
-      return new Response(
-        JSON.stringify({ error: 'Project not found or access denied' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
     }
 
     // Escalate to service role to read sensitive tokens AFTER access check
@@ -136,68 +108,38 @@ serve(async (req) => {
       .single();
 
     if (settingsError || !settings) {
-      return new Response(
-        JSON.stringify({ error: 'AmoCRM settings not found' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'AmoCRM settings not found' }, 404, origin);
     }
 
     if (!settings.access_token || !settings.subdomain) {
-      return new Response(
-        JSON.stringify({ error: 'AmoCRM not authorized' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'AmoCRM not authorized' }, 401, origin);
     }
 
     // Ensure we have a valid token (refresh if expired or close to expiry)
     const { accessToken, tokenExpiresAt } = await getValidAccessToken(settings, svc);
     if (!accessToken) {
-      return new Response(
-        JSON.stringify({ error: 'AmoCRM token refresh failed' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      return createJsonResponse({ error: 'AmoCRM token refresh failed' }, 401, origin);
     }
 
     // Handle different actions
     switch (action) {
       case 'fetch_data':
-        return await fetchAmoCRMData({ ...settings, access_token: accessToken }, corsHeaders, tokenExpiresAt);
+        return await fetchAmoCRMData({ ...settings, access_token: accessToken }, origin, tokenExpiresAt);
       
       default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
+        return createJsonResponse({ error: 'Invalid action' }, 400, origin);
     }
 
   } catch (error) {
     console.error('AmoCRM API error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({
+      error: 'Internal server error',
+      message: error.message
+    }, 500, origin);
   }
 });
 
-async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<string, string>, tokenExpiresAt?: string | null): Promise<Response> {
+async function fetchAmoCRMData(settings: AmoCRMSettings, origin: string | null, tokenExpiresAt?: string | null): Promise<Response> {
   try {
     const baseUrl = `https://${settings.subdomain}.amocrm.ru/api/v4`;
     const headers = {
@@ -233,26 +175,14 @@ async function fetchAmoCRMData(settings: AmoCRMSettings, corsHeaders: Record<str
       users: usersData._embedded?.users || []
     };
 
-    return new Response(
-      JSON.stringify({ data, token_expires_at: tokenExpiresAt || settings.token_expires_at || null }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({ data, token_expires_at: tokenExpiresAt || settings.token_expires_at || null }, 200, origin);
 
   } catch (error) {
     console.error('Error fetching AmoCRM data:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch AmoCRM data',
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createJsonResponse({
+      error: 'Failed to fetch AmoCRM data',
+      message: error.message
+    }, 500, origin);
   }
 }
 

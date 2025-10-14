@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
+import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 async function verifyWebhookSignature(payload, signature, secret) {
   const encoder = new TextEncoder();
@@ -363,26 +364,26 @@ async function handleSubscriptionExpired(data) {
   console.log('subscription_expired', data.id);
 }
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  
+  if (req.method === 'OPTIONS') {
+    return createCorsResponse(origin);
+  }
+  
   if (req.method !== "POST") {
-    return new Response("Method not allowed", {
-      status: 405
-    });
+    return createJsonResponse({ error: "Method not allowed" }, 405, origin);
   }
   try {
     const signature = req.headers.get("x-signature");
     const webhookSecret = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET");
     if (!signature || !webhookSecret) {
-      return new Response("Missing signature or webhook secret", {
-        status: 400
-      });
+      return createJsonResponse({ error: "Missing signature or webhook secret" }, 400, origin);
     }
     const payload = await req.text();
     // Verify webhook signature
     const isValid = await verifyWebhookSignature(payload, signature, webhookSecret);
     if (!isValid) {
-      return new Response("Invalid signature", {
-        status: 401
-      });
+      return createJsonResponse({ error: "Invalid signature" }, 401, origin);
     }
     const webhookPayload = JSON.parse(payload);
     const { meta, data } = webhookPayload;
@@ -413,13 +414,9 @@ Deno.serve(async (req) => {
       default:
         console.log(`Unhandled webhook event: ${meta.event_name}`);
     }
-    return new Response("OK", {
-      status: 200
-    });
+    return createJsonResponse({ status: "OK" }, 200, origin);
   } catch (error) {
     console.error("Webhook error:", error);
-    return new Response("Internal server error", {
-      status: 500
-    });
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
   }
 });
