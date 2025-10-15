@@ -223,6 +223,12 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
         name,
         subscription_status,
         subscription_expires_at,
+        user_id,
+        users!projects_user_id_fkey (
+          id,
+          email,
+          raw_user_meta_data
+        ),
         user_subscriptions (
           id,
           status,

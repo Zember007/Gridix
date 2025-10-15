@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useSubscription, ProjectSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Crown, AlertCircle, CheckCircle, Clock, FileText, Receipt, Loader2, ExternalLink, Download } from 'lucide-react';
+import { Crown, AlertCircle, CheckCircle, Clock, FileText, Receipt, Loader2, ExternalLink, Download, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
@@ -210,6 +210,17 @@ export default function SubscriptionTab() {
     });
   };
 
+  const getUserName = (project: ProjectSubscription) => {
+    if (!project.users) return project.user_id.substring(0, 8);
+    
+    const userData = project.users.raw_user_meta_data;
+    if (userData?.full_name) return userData.full_name;
+    if (userData?.name) return userData.name;
+    if (project.users.email) return project.users.email.split('@')[0];
+    
+    return project.user_id.substring(0, 8);
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -278,15 +289,15 @@ export default function SubscriptionTab() {
             <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full" onClick={() => setSelectedProjects(expiredProjects.map(p => p.id))}>
-                  <Receipt className="w-4 h-4 mr-2" />
-                  Request Invoice for All Expired Projects
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Renew All Expired Subscriptions
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Request Invoice</DialogTitle>
+                  <DialogTitle>Renew Subscriptions</DialogTitle>
                   <DialogDescription>
-                    Select a plan and duration for your project subscriptions
+                    Select a plan and duration to renew subscriptions for the selected projects
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -341,7 +352,7 @@ export default function SubscriptionTab() {
                     className="w-full"
                   >
                     {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Request Invoice{selectedProjects.length > 1 ? 's' : ''}
+                    Renew {selectedProjects.length} Subscription{selectedProjects.length > 1 ? 's' : ''}
                   </Button>
                 </div>
               </DialogContent>
@@ -371,6 +382,7 @@ export default function SubscriptionTab() {
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Project Name</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Expires</TableHead>
@@ -397,6 +409,7 @@ export default function SubscriptionTab() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{getUserName(project)}</TableCell>
                       <TableCell>
                         {getStatusBadge(subscription?.status || project.subscription_status || 'trial', project.subscription_expires_at)}
                       </TableCell>
@@ -428,14 +441,32 @@ export default function SubscriptionTab() {
                         {needsPayment && (
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => setSelectedProjects([project.id])}>
-                                <Receipt className="w-4 h-4 mr-2" />
-                                Request Invoice
+                              <Button 
+                                variant={isExpired || subscription?.status === 'expired' ? "default" : "outline"} 
+                                size="sm" 
+                                onClick={() => setSelectedProjects([project.id])}
+                              >
+                                {isExpired || subscription?.status === 'expired' ? (
+                                  <>
+                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                    Renew Subscription
+                                  </>
+                                ) : (
+                                  <>
+                                    <Receipt className="w-4 h-4 mr-2" />
+                                    Request Invoice
+                                  </>
+                                )}
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>Request Invoice for {project.name}</DialogTitle>
+                                <DialogTitle>
+                                  {isExpired || subscription?.status === 'expired' 
+                                    ? `Renew Subscription for ${project.name}`
+                                    : `Request Invoice for ${project.name}`
+                                  }
+                                </DialogTitle>
                                 <DialogDescription>
                                   Select a plan and duration for this project
                                 </DialogDescription>
@@ -472,13 +503,28 @@ export default function SubscriptionTab() {
                                   </Select>
                                 </div>
 
+                                {selectedPlanId && (
+                                  <div className="bg-muted p-4 rounded-lg">
+                                    <p className="text-sm font-medium">Selected Plan Details</p>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {plans.find(p => p.id === selectedPlanId)?.name} - ${plans.find(p => p.id === selectedPlanId)?.base_price}/month
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Duration: {selectedDuration} month{selectedDuration > 1 ? 's' : ''}
+                                    </p>
+                                  </div>
+                                )}
+
                                 <Button
                                   onClick={() => handleRequestInvoice(project.id)}
                                   disabled={isProcessing || !selectedPlanId}
                                   className="w-full"
                                 >
                                   {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                  Request Invoice
+                                  {isExpired || subscription?.status === 'expired' 
+                                    ? 'Renew Subscription'
+                                    : 'Request Invoice'
+                                  }
                                 </Button>
                               </div>
                             </DialogContent>

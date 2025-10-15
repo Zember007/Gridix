@@ -99,7 +99,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
         if(primaryDomain) {
           baseDomain = 'https://' + primaryDomain;
         } else {
-          baseDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+          baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
         }
        
       }

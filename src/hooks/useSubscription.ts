@@ -53,6 +53,15 @@ export interface ProjectSubscription {
   name: string;
   subscription_status: string;
   subscription_expires_at: string | null;
+  user_id: string;
+  users?: {
+    id: string;
+    email: string;
+    raw_user_meta_data?: {
+      full_name?: string;
+      name?: string;
+    };
+  };
   user_subscriptions: UserSubscription[];
 }
 
