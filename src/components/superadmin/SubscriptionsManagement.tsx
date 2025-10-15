@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, X, RotateCcw, Loader2 } from 'lucide-react';
+import { Plus, X, Check, Loader2, Upload, ExternalLink, FileText } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -28,13 +28,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 interface Subscription {
   id: string;
   user_id: string;
+  project_id: string;
   status: string;
   current_period_end: string;
+  invoice_number: string | null;
+  invoice_url: string | null;
+  invoice_requested_at: string | null;
+  final_price: number | null;
   subscription_plans: {
     name: string;
     slug: string;
@@ -43,33 +48,46 @@ interface Subscription {
     email: string;
     full_name: string;
   };
+  projects: {
+    name: string;
+  };
+}
+
+interface Project {
+  id: string;
+  name: string;
+  user_id: string;
 }
 
 export function SubscriptionsManagement() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<Array<{id: string, name: string, base_price: number}>>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Form states for creating subscription
   const [createForm, setCreateForm] = useState({
     userEmail: '',
+    projectId: '',
     planId: '',
     durationMonths: 1,
+    invoiceNumber: '',
+    invoiceUrl: '',
   });
   
-  // Form states for refund
-  const [refundForm, setRefundForm] = useState({
-    amount: '',
-    reason: '',
+  // Form states for updating invoice
+  const [invoiceForm, setInvoiceForm] = useState({
+    invoiceNumber: '',
+    invoiceUrl: '',
   });
 
   useEffect(() => {
     fetchSubscriptions();
     fetchPlans();
+    fetchProjects();
   }, []);
 
   const fetchSubscriptions = async () => {
@@ -79,12 +97,34 @@ export function SubscriptionsManagement() {
         .select(`
           *,
           subscription_plans (name, slug),
-          user_profiles (email, full_name)
+          projects!user_subscriptions_project_id_fkey (name)
         `)
+        .not('status', 'eq', 'migrated')
+        .not('project_id', 'is', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSubscriptions((data as unknown as Subscription[]) || []);
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      // Now fetch user profiles separately for each subscription
+      const subscriptionsWithProfiles = await Promise.all(
+        (data || []).map(async (sub: any) => {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('email, full_name')
+            .eq('user_id', sub.user_id)
+            .single();
+          
+          return {
+            ...sub,
+            user_profiles: profile || { email: 'Unknown', full_name: 'Unknown' }
+          };
+        })
+      );
+
+      setSubscriptions((subscriptionsWithProfiles as unknown as Subscription[]) || []);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast({
@@ -111,26 +151,163 @@ export function SubscriptionsManagement() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, user_id')
+        .order('name');
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const handleCreateSubscription = async () => {
+    if (!createForm.userEmail || !createForm.projectId || !createForm.planId) {
+      toast({
+        title: 'Ошибка',
+        description: 'Заполните все обязательные поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Get user by email
+      const { data: userData, error: userError } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('email', createForm.userEmail)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('User not found with this email');
+      }
+
+      // Verify project belongs to user
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('id', createForm.projectId)
+        .eq('user_id', userData.user_id)
+        .single();
+
+      if (projectError || !projectData) {
+        throw new Error('Project not found or does not belong to this user');
+      }
+
+      // Calculate end date
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + createForm.durationMonths);
+
+      // Create subscription
+      const { error: insertError } = await supabase
+        .from('user_subscriptions')
+        .insert({
+          user_id: userData.user_id,
+          project_id: createForm.projectId,
+          plan_id: createForm.planId,
+          status: 'active',
+          duration_months: createForm.durationMonths,
+          current_period_start: startDate.toISOString(),
+          current_period_end: endDate.toISOString(),
+          invoice_number: createForm.invoiceNumber || null,
+          invoice_url: createForm.invoiceUrl || null,
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: 'Успешно',
+        description: 'Подписка создана',
+      });
+
+      setCreateForm({ userEmail: '', projectId: '', planId: '', durationMonths: 1, invoiceNumber: '', invoiceUrl: '' });
+      setIsCreateDialogOpen(false);
+      fetchSubscriptions();
+    } catch (error: any) {
+      console.error('Error creating subscription:', error);
+      toast({
+        title: 'Ошибка',
+        description: error.message || 'Не удалось создать подписку',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleActivateSubscription = async (subscriptionId: string) => {
+    if (!invoiceForm.invoiceNumber) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите номер счета',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Calculate dates based on the subscription's duration
+      const subscription = subscriptions.find(s => s.id === subscriptionId);
+      if (!subscription) throw new Error('Subscription not found');
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      const durationMonths = subscription.final_price ? 1 : 1; // Default to 1 if not set
+      endDate.setMonth(endDate.getMonth() + durationMonths);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          status: 'active',
+          invoice_number: invoiceForm.invoiceNumber,
+          invoice_url: invoiceForm.invoiceUrl || null,
+          current_period_start: startDate.toISOString(),
+          current_period_end: endDate.toISOString(),
+        })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Успешно',
+        description: 'Подписка активирована',
+      });
+
+      setInvoiceForm({ invoiceNumber: '', invoiceUrl: '' });
+      setSelectedSubscription(null);
+      fetchSubscriptions();
+    } catch (error: any) {
+      console.error('Error activating subscription:', error);
+      toast({
+        title: 'Ошибка',
+        description: error.message || 'Не удалось активировать подписку',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleCancelSubscription = async (subscriptionId: string) => {
     setIsProcessing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq('id', subscriptionId);
 
-      const response = await fetch('/api/superadmin-user-management', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          action: 'cancel_subscription',
-          subscription_id: subscriptionId,
-        }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
+      if (error) throw error;
 
       toast({
         title: 'Успешно',
@@ -150,117 +327,41 @@ export function SubscriptionsManagement() {
     }
   };
 
-  const handleCreateSubscription = async () => {
-    if (!createForm.userEmail || !createForm.planId) {
-      toast({
-        title: 'Ошибка',
-        description: 'Заполните все обязательные поля',
-        variant: 'destructive',
-      });
-      return;
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500">Active</Badge>;
+      case 'trialing':
+      case 'trial':
+        return <Badge className="bg-blue-500">Trial</Badge>;
+      case 'pending_payment':
+        return <Badge className="bg-yellow-500">Pending Payment</Badge>;
+      case 'expired':
+        return <Badge variant="destructive">Expired</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
     }
-
-    setIsProcessing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const response = await fetch('/api/superadmin-user-management', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          action: 'create_subscription',
-          user_email: createForm.userEmail,
-          plan_id: createForm.planId,
-          duration_months: createForm.durationMonths,
-        }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-
-      toast({
-        title: 'Успешно',
-        description: 'Подписка создана',
-      });
-
-      setCreateForm({ userEmail: '', planId: '', durationMonths: 1 });
-      setIsCreateDialogOpen(false);
-      fetchSubscriptions();
-    } catch (error) {
-      console.error('Error creating subscription:', error);
-      toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось создать подписку',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleRefundSubscription = async () => {
-    if (!selectedSubscription) return;
-
-    setIsProcessing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const response = await fetch('/api/superadmin-user-management', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          action: 'refund_subscription',
-          subscription_id: selectedSubscription.id,
-          refund_amount: refundForm.amount ? parseFloat(refundForm.amount) : undefined,
-          reason: refundForm.reason || 'Admin refund',
-        }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-
-      toast({
-        title: 'Успешно',
-        description: 'Возврат обработан',
-      });
-
-      setRefundForm({ amount: '', reason: '' });
-      setIsRefundDialogOpen(false);
-      setSelectedSubscription(null);
-      fetchSubscriptions();
-    } catch (error) {
-      console.error('Error processing refund:', error);
-      toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось обработать возврат',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const openRefundDialog = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-    setIsRefundDialogOpen(true);
   };
 
   if (loading) {
     return <div className="p-6">Загрузка...</div>;
   }
 
+  const pendingSubscriptions = subscriptions.filter(s => s.status === 'pending_payment');
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Управление подписками</h2>
+        <div>
+          <h2 className="text-3xl font-bold">Управление подписками</h2>
+          {pendingSubscriptions.length > 0 && (
+            <p className="text-sm text-yellow-600 mt-1">
+              {pendingSubscriptions.length} запрос(ов) на счет ожидает обработки
+            </p>
+          )}
+        </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -268,7 +369,7 @@ export function SubscriptionsManagement() {
               Создать подписку
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Создать новую подписку</DialogTitle>
             </DialogHeader>
@@ -283,6 +384,24 @@ export function SubscriptionsManagement() {
                 />
               </div>
               <div>
+                <Label>Проект *</Label>
+                <Select 
+                  value={createForm.projectId}
+                  onValueChange={(value) => setCreateForm(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите проект" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>План *</Label>
                 <Select 
                   value={createForm.planId}
@@ -294,20 +413,36 @@ export function SubscriptionsManagement() {
                   <SelectContent>
                     {plans.map((plan) => (
                       <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name} - {plan.base_price}₽
+                        {plan.name} - ${plan.base_price}/месяц
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Длительность (месяцев)</Label>
+                <Label>Длительность (месяцев) *</Label>
                 <Input 
                   type="number" 
                   placeholder="1" 
                   min="1" 
                   value={createForm.durationMonths}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || 1 }))}
+                />
+              </div>
+              <div>
+                <Label>Номер счета</Label>
+                <Input 
+                  placeholder="INV-12345" 
+                  value={createForm.invoiceNumber}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>URL счета</Label>
+                <Input 
+                  placeholder="https://..." 
+                  value={createForm.invoiceUrl}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, invoiceUrl: e.target.value }))}
                 />
               </div>
               <Button 
@@ -323,126 +458,163 @@ export function SubscriptionsManagement() {
         </Dialog>
       </div>
 
+      {/* Pending Requests */}
+      {pendingSubscriptions.length > 0 && (
+        <Card className="p-4 border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Запросы на счет
+          </h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Пользователь</TableHead>
+                <TableHead>Проект</TableHead>
+                <TableHead>План</TableHead>
+                <TableHead>Сумма</TableHead>
+                <TableHead>Запрошено</TableHead>
+                <TableHead>Действия</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pendingSubscriptions.map((sub) => (
+                <TableRow key={sub.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
+                      <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{sub.projects?.name || '—'}</TableCell>
+                  <TableCell>{sub.subscription_plans?.name}</TableCell>
+                  <TableCell>${sub.final_price?.toFixed(2) || '—'}</TableCell>
+                  <TableCell>
+                    {sub.invoice_requested_at
+                      ? new Date(sub.invoice_requested_at).toLocaleDateString()
+                      : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => setSelectedSubscription(sub)}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Активировать
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Активировать подписку</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="p-4 bg-muted rounded-lg">
+                            <p><strong>Проект:</strong> {sub.projects?.name}</p>
+                            <p><strong>Пользователь:</strong> {sub.user_profiles?.full_name}</p>
+                            <p><strong>План:</strong> {sub.subscription_plans?.name}</p>
+                            <p><strong>Сумма:</strong> ${sub.final_price?.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <Label>Номер счета *</Label>
+                            <Input 
+                              placeholder="INV-12345"
+                              value={invoiceForm.invoiceNumber}
+                              onChange={(e) => setInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>URL счета</Label>
+                            <Input 
+                              placeholder="https://..."
+                              value={invoiceForm.invoiceUrl}
+                              onChange={(e) => setInvoiceForm(prev => ({ ...prev, invoiceUrl: e.target.value }))}
+                            />
+                          </div>
+                          <Button 
+                            onClick={() => handleActivateSubscription(sub.id)}
+                            disabled={isProcessing}
+                            className="w-full"
+                          >
+                            {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Активировать подписку
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      {/* All Subscriptions */}
       <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Все подписки</h3>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Пользователь</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Проект</TableHead>
               <TableHead>План</TableHead>
               <TableHead>Статус</TableHead>
               <TableHead>Окончание</TableHead>
+              <TableHead>Счет</TableHead>
               <TableHead>Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {subscriptions.map((sub) => (
               <TableRow key={sub.id}>
-                <TableCell>{sub.user_profiles?.full_name || '—'}</TableCell>
-                <TableCell>{sub.user_profiles?.email}</TableCell>
-                <TableCell>{sub.subscription_plans?.name}</TableCell>
                 <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      sub.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : sub.status === 'trialing'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {sub.status}
-                  </span>
+                  <div>
+                    <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
+                    <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
+                  </div>
                 </TableCell>
+                <TableCell>{sub.projects?.name || '—'}</TableCell>
+                <TableCell>{sub.subscription_plans?.name}</TableCell>
+                <TableCell>{getStatusBadge(sub.status)}</TableCell>
                 <TableCell>
                   {sub.current_period_end
-                    ? new Date(sub.current_period_end).toLocaleDateString('en-US')
+                    ? new Date(sub.current_period_end).toLocaleDateString()
                     : '—'}
                 </TableCell>
                 <TableCell>
-                  <div className="flex space-x-2">
+                  {sub.invoice_number ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{sub.invoice_number}</span>
+                      {sub.invoice_url && (
+                        <a href={sub.invoice_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    '—'
+                  )}
+                </TableCell>
+                <TableCell>
+                  {sub.status === 'active' && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleCancelSubscription(sub.id)}
-                      disabled={sub.status === 'cancelled' || sub.status === 'refunded' || isProcessing}
+                      disabled={isProcessing}
                     >
                       <X className="h-4 w-4 mr-1" />
                       Отменить
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => openRefundDialog(sub)}
-                      disabled={sub.status === 'refunded' || isProcessing}
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1" />
-                      Возврат
-                    </Button>
-                  </div>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Card>
-
-      {/* Refund Dialog */}
-      <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Обработать возврат</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedSubscription && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p><strong>Пользователь:</strong> {selectedSubscription.user_profiles?.full_name}</p>
-                <p><strong>Email:</strong> {selectedSubscription.user_profiles?.email}</p>
-                <p><strong>План:</strong> {selectedSubscription.subscription_plans?.name}</p>
-                <p><strong>Статус:</strong> {selectedSubscription.status}</p>
-              </div>
-            )}
-            <div>
-              <Label>Сумма возврата (₽)</Label>
-              <Input 
-                type="number" 
-                placeholder="Оставьте пустым для полного возврата"
-                value={refundForm.amount}
-                onChange={(e) => setRefundForm(prev => ({ ...prev, amount: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label>Причина возврата</Label>
-              <Textarea 
-                placeholder="Укажите причину возврата"
-                value={refundForm.reason}
-                onChange={(e) => setRefundForm(prev => ({ ...prev, reason: e.target.value }))}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsRefundDialogOpen(false);
-                  setSelectedSubscription(null);
-                  setRefundForm({ amount: '', reason: '' });
-                }}
-                className="flex-1"
-              >
-                Отмена
-              </Button>
-              <Button 
-                onClick={handleRefundSubscription}
-                disabled={isProcessing}
-                className="flex-1"
-              >
-                {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Обработать возврат
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -1,17 +1,47 @@
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { EnhancedPricingPlans } from '@/components/subscription/EnhancedPricingPlans';
-import { SubscriptionManager } from '@/components/subscription/SubscriptionManager';
-import { useSubscription } from '@/hooks/useSubscription';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { useSubscription, ProjectSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Crown, CreditCard } from 'lucide-react';
+import { Crown, AlertCircle, CheckCircle, Clock, FileText, Receipt, Loader2, ExternalLink, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '../ui/label';
+import { toast } from 'sonner';
  
 export default function SubscriptionTab() {
-  const { subscription, loading } = useSubscription();
+  const { projectSubscriptions, plans, loading, plansLoading, requestInvoice, requestInvoiceForMultiple, refreshProjectSubscriptions } = useSubscription();
   const { t } = useLanguage();
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [selectedDuration, setSelectedDuration] = useState<number>(1);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  if (loading) {
+  if (loading || plansLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -19,12 +49,166 @@ export default function SubscriptionTab() {
     );
   }
 
-  // Check if subscription is active - includes cancelled subscriptions that are still in their paid period
-  const hasActiveSubscription = subscription && 
-    (['active', 'trialing'].includes(subscription.subscription.status) || 
-    (subscription.subscription.cancel_at_period_end && 
-     subscription.subscription.current_period_end && 
-     new Date(subscription.subscription.current_period_end) > new Date()));
+  const getStatusBadge = (status: string, expiresAt: string | null) => {
+    const isExpired = expiresAt && new Date(expiresAt) < new Date();
+    
+    if (status === 'active' && !isExpired) {
+      return (
+        <Badge className="bg-green-500 hover:bg-green-600">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Active
+        </Badge>
+      );
+    }
+    if (status === 'trialing' || status === 'trial') {
+      return (
+        <Badge className="bg-blue-500 hover:bg-blue-600">
+          <Crown className="w-3 h-3 mr-1" />
+          Trial
+        </Badge>
+      );
+    }
+    if (status === 'pending_payment') {
+      return (
+        <Badge className="bg-yellow-500 hover:bg-yellow-600">
+          <Clock className="w-3 h-3 mr-1" />
+          Pending Payment
+        </Badge>
+      );
+    }
+    if (status === 'expired' || isExpired) {
+      return (
+        <Badge className="bg-red-500 hover:bg-red-600">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Expired
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">{status}</Badge>;
+  };
+
+  const activeProjects = projectSubscriptions.filter((proj: ProjectSubscription) => {
+    const sub = proj.user_subscriptions?.[0];
+    const isExpired = proj.subscription_expires_at && new Date(proj.subscription_expires_at) < new Date();
+    return sub && ['active', 'trialing'].includes(sub.status) && !isExpired;
+  });
+
+  const expiredProjects = projectSubscriptions.filter((proj: ProjectSubscription) => {
+    const sub = proj.user_subscriptions?.[0];
+    const isExpired = proj.subscription_expires_at && new Date(proj.subscription_expires_at) < new Date();
+    return !sub || sub.status === 'expired' || isExpired || !['active', 'trialing', 'pending_payment'].includes(sub.status);
+  });
+
+  const pendingProjects = projectSubscriptions.filter((proj: ProjectSubscription) => {
+    const sub = proj.user_subscriptions?.[0];
+    return sub && sub.status === 'pending_payment';
+  });
+
+  const handleRequestInvoice = async (projectId: string) => {
+    if (!selectedPlanId) {
+      toast.error('Please select a plan');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await requestInvoice(projectId, selectedPlanId, selectedDuration);
+      toast.success('Invoice requested successfully! You can view it now.');
+      await refreshProjectSubscriptions();
+      setIsInvoiceDialogOpen(false);
+      
+      // Optionally open invoice in new tab
+      if (result?.invoice) {
+        const project = projectSubscriptions.find(p => p.id === projectId);
+        const subscription = project?.user_subscriptions?.[0];
+        if (subscription?.id) {
+          handleViewInvoice(subscription.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error requesting invoice:', error);
+      toast.error('Failed to request invoice');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleViewInvoice = async (subscriptionId: string) => {
+    try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session?.access_token) {
+        toast.error('Please log in to view invoice');
+        return;
+      }
+
+      // Call edge function to get invoice HTML
+      const { data, error } = await supabase.functions.invoke('generate-invoice', {
+        body: { subscription_id: subscriptionId },
+        headers: {
+          'Authorization': `Bearer ${session.data.session.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Open invoice HTML in new window
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(data);
+        newWindow.document.close();
+      } else {
+        toast.error('Please allow pop-ups to view invoice');
+      }
+    } catch (error) {
+      console.error('Error opening invoice:', error);
+      toast.error('Failed to open invoice');
+    }
+  };
+
+  const handleRequestMultipleInvoices = async () => {
+    if (!selectedPlanId) {
+      toast.error('Please select a plan');
+      return;
+    }
+
+    if (selectedProjects.length === 0) {
+      toast.error('Please select at least one project');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await requestInvoiceForMultiple(selectedProjects, selectedPlanId, selectedDuration);
+      toast.success(`Invoices requested for ${selectedProjects.length} project(s)`);
+      await refreshProjectSubscriptions();
+      setIsInvoiceDialogOpen(false);
+      setSelectedProjects([]);
+    } catch (error) {
+      console.error('Error requesting invoices:', error);
+      toast.error('Failed to request invoices');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const toggleProjectSelection = (projectId: string) => {
+    setSelectedProjects(prev =>
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -32,110 +216,283 @@ export default function SubscriptionTab() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
           <Crown className="w-8 h-8 text-yellow-500" />
-          {t('subscription.title')}
+          Project Subscriptions
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          {t('subscription.subtitle')}
+          Manage subscriptions for all your projects
         </p>
       </div>
 
-      {hasActiveSubscription ? (
-        <Tabs defaultValue="subscription" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-            <TabsTrigger value="subscription" className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              {t('subscription.mySubscription')}
-            </TabsTrigger>
-            <TabsTrigger value="plans" className="flex items-center gap-2">
-              <Crown className="w-4 h-4" />
-              {t('subscription.plans')}
-            </TabsTrigger>
-          </TabsList>
+      {/* Summary Statistics */}
+      <div className="grid md:grid-cols-3 gap-6">
+          <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Active Projects</CardDescription>
+            <CardTitle className="text-4xl text-green-600">{activeProjects.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+              Projects with active subscriptions
+              </p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="subscription" className="mt-8">
-            <SubscriptionManager />
-          </TabsContent>
+          <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Pending Payment</CardDescription>
+            <CardTitle className="text-4xl text-yellow-600">{pendingProjects.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+              Projects awaiting payment
+              </p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="plans" className="mt-8">
-            <EnhancedPricingPlans showHeader={false} requireAuth={true} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="space-y-8">
-          {/* Trial Expired or Subscription Expired */}
-          {(subscription?.subscription.status === 'trial_expired' || 
-            subscription?.subscription.status === 'expired') && (
-            <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-                  <Crown className="w-5 h-5" />
-                  {subscription.subscription.status === 'trial_expired' 
-                    ? t('subscription.trialExpired') 
-                    : t('subscription.subscriptionExpired')}
-                </CardTitle>
-                <CardDescription className="text-yellow-700 dark:text-yellow-300">
-                  {subscription.subscription.status === 'trial_expired' 
-                    ? t('subscription.trialExpiredDesc')
-                    : t('subscription.subscriptionExpiredDesc')}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
+          <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Expired</CardDescription>
+            <CardTitle className="text-4xl text-red-600">{expiredProjects.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+              Projects requiring renewal
+              </p>
+            </CardContent>
+          </Card>
+      </div>
 
-          <EnhancedPricingPlans showHeader={false} requireAuth={true} />
-        </div>
+      {/* Action Buttons */}
+      {expiredProjects.length > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <AlertCircle className="w-5 h-5" />
+              Action Required
+            </CardTitle>
+            <CardDescription className="text-yellow-700 dark:text-yellow-300">
+              You have {expiredProjects.length} project(s) that need subscription renewal
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full" onClick={() => setSelectedProjects(expiredProjects.map(p => p.id))}>
+                  <Receipt className="w-4 h-4 mr-2" />
+                  Request Invoice for All Expired Projects
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Request Invoice</DialogTitle>
+                  <DialogDescription>
+                    Select a plan and duration for your project subscriptions
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Select Plan</Label>
+                    <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a plan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {plans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.name} - ${plan.base_price}/month
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Duration</Label>
+                    <Select value={selectedDuration.toString()} onValueChange={(v) => setSelectedDuration(Number(v))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 Month</SelectItem>
+                        <SelectItem value="3">3 Months</SelectItem>
+                        <SelectItem value="6">6 Months</SelectItem>
+                        <SelectItem value="12">12 Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Selected Projects ({selectedProjects.length})</p>
+                    <div className="space-y-1">
+                      {selectedProjects.map(projectId => {
+                        const project = projectSubscriptions.find(p => p.id === projectId);
+                        return project ? (
+                          <p key={projectId} className="text-sm text-muted-foreground">
+                            • {project.name}
+                          </p>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleRequestMultipleInvoices}
+                    disabled={isProcessing || !selectedPlanId}
+                    className="w-full"
+                  >
+                    {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Request Invoice{selectedProjects.length > 1 ? 's' : ''}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
       )}
 
-      {/* FAQ Section */}
-      <div className="mt-16 space-y-8">
-        <h2 className="text-2xl font-bold text-center">{t('subscription.faqTitle')}</h2>
-        
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      {/* Projects Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{t('subscription.faq1Title')}</CardTitle>
+          <CardTitle>All Projects</CardTitle>
+          <CardDescription>View and manage subscriptions for each project</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('subscription.faq1Text')}
+          {projectSubscriptions.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No projects found</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Create a project to get started
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Project Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projectSubscriptions.map((project: ProjectSubscription) => {
+                  const subscription = project.user_subscriptions?.[0];
+                  const isExpired = project.subscription_expires_at && new Date(project.subscription_expires_at) < new Date();
+                  const needsPayment = !subscription || isExpired || !['active', 'trialing'].includes(subscription?.status || '');
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('subscription.faq2Title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('subscription.faq2Text')}
-              </p>
-            </CardContent>
-          </Card>
+                  return (
+                    <TableRow key={project.id}>
+                      <TableCell>
+                        {needsPayment && (
+                          <input
+                            type="checkbox"
+                            checked={selectedProjects.includes(project.id)}
+                            onChange={() => toggleProjectSelection(project.id)}
+                            className="rounded border-gray-300"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>
+                        {getStatusBadge(subscription?.status || project.subscription_status || 'trial', project.subscription_expires_at)}
+                      </TableCell>
+                      <TableCell>
+                        {subscription?.subscription_plans?.name || '—'}
+                      </TableCell>
+                      <TableCell>{formatDate(project.subscription_expires_at)}</TableCell>
+                      <TableCell>
+                        {subscription?.invoice_number || subscription?.status === 'pending_payment' ? (
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            <span className="text-sm">{subscription.invoice_number || 'Pending'}</span>
+                            {subscription?.id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewInvoice(subscription.id)}
+                                className="h-6 w-6 p-0"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {needsPayment && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" onClick={() => setSelectedProjects([project.id])}>
+                                <Receipt className="w-4 h-4 mr-2" />
+                                Request Invoice
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Request Invoice for {project.name}</DialogTitle>
+                                <DialogDescription>
+                                  Select a plan and duration for this project
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label>Select Plan</Label>
+                                  <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose a plan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {plans.map((plan) => (
+                                        <SelectItem key={plan.id} value={plan.id}>
+                                          {plan.name} - ${plan.base_price}/month
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('subscription.faq3Title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('subscription.faq3Text')}
-              </p>
-            </CardContent>
-          </Card>
+                                <div>
+                                  <Label>Duration</Label>
+                                  <Select value={selectedDuration.toString()} onValueChange={(v) => setSelectedDuration(Number(v))}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select duration" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1">1 Month</SelectItem>
+                                      <SelectItem value="3">3 Months</SelectItem>
+                                      <SelectItem value="6">6 Months</SelectItem>
+                                      <SelectItem value="12">12 Months</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('subscription.faq4Title')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('subscription.faq4Text')}
-              </p>
+                                <Button
+                                  onClick={() => handleRequestInvoice(project.id)}
+                                  disabled={isProcessing || !selectedPlanId}
+                                  className="w-full"
+                                >
+                                  {isProcessing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                  Request Invoice
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
             </CardContent>
           </Card>
-        </div>
-      </div>
     </div>
   );
 }

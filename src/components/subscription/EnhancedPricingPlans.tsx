@@ -3,25 +3,32 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Check, Crown, Zap, Sparkles } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Receipt } from 'lucide-react';
 import { useSubscription, SubscriptionPlan } from '../../hooks/useSubscription';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-declare global {
-  interface Window {
-    LemonSqueezy?: {
-      Url?: {
-        Open: (link: string) => void;
-      };
-    };
-  }
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '../ui/label';
+import { toast } from 'sonner';
 
 interface EnhancedPricingPlansProps {
   className?: string;
   showHeader?: boolean;
   requireAuth?: boolean;
+  projectId?: string;
 }
 
 const translations = {
@@ -43,6 +50,9 @@ const translations = {
     mostPopular: 'Most Popular',
     bestValue: 'Best Value',
     discount: 'discount',
+    requestInvoice: 'Request Invoice',
+    selectProject: 'Select Project',
+    selectProjectDesc: 'Choose a project for this subscription',
   },
   ru: {
     title: 'Выберите тарифный план',
@@ -62,6 +72,9 @@ const translations = {
     mostPopular: 'Популярный',
     bestValue: 'Выгодно',
     discount: 'скидка',
+    requestInvoice: 'Запросить счет',
+    selectProject: 'Выберите проект',
+    selectProjectDesc: 'Выберите проект для этой подписки',
   },
   ka: {
     title: 'აირჩიეთ ტარიფი',
@@ -81,6 +94,9 @@ const translations = {
     mostPopular: 'პოპულარული',
     bestValue: 'მომგებიანი',
     discount: 'ფასდაკლება',
+    requestInvoice: 'ინვოისის მოთხოვნა',
+    selectProject: 'აირჩიეთ პროექტი',
+    selectProjectDesc: 'აირჩიეთ პროექტი ამ გამოწერისთვის',
   },
   ar: {
     title: 'اختر خطتك',
@@ -100,12 +116,19 @@ const translations = {
     mostPopular: 'الأكثر شعبية',
     bestValue: 'أفضل قيمة',
     discount: 'خصم',
+    requestInvoice: 'طلب فاتورة',
+    selectProject: 'اختر المشروع',
+    selectProjectDesc: 'اختر مشروعًا لهذا الاشتراك',
   },
 } as const;
 
-export function EnhancedPricingPlans({ className, showHeader = true, requireAuth = true }: EnhancedPricingPlansProps) {
-  const { subscription, loading, plansLoading, plans: plansData } = useSubscription();
+export function EnhancedPricingPlans({ className, showHeader = true, requireAuth = true, projectId }: EnhancedPricingPlansProps) {
+  const { projectSubscriptions, loading, plansLoading, plans: plansData, requestInvoice } = useSubscription();
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [selectedProjectForInvoice, setSelectedProjectForInvoice] = useState<string>(projectId || '');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
 
@@ -119,21 +142,53 @@ export function EnhancedPricingPlans({ className, showHeader = true, requireAuth
     return `${months} ${t.months}`;
   };
 
-  const handlePlanSelect = (planSlug: string, durationMonths: number) => {
-    if (requireAuth && !subscription) {
+  const handlePlanSelect = (planId: string, durationMonths: number) => {
+    if (requireAuth && (!projectSubscriptions || projectSubscriptions.length === 0)) {
       // Redirect to auth page
       window.location.href = `/${language}/auth`;
       return;
     }
 
-    // TODO: Open purchase modal with selected plan and duration
-    console.log('Selected plan:', planSlug, 'Duration:', durationMonths);
+    setSelectedPlanId(planId);
+    setSelectedDuration(durationMonths);
+    
+    // If projectId is provided, use it directly
+    if (projectId) {
+      setSelectedProjectForInvoice(projectId);
+    } else if (projectSubscriptions && projectSubscriptions.length === 1) {
+      // Auto-select if only one project
+      setSelectedProjectForInvoice(projectSubscriptions[0].id);
+    }
+    
+    setIsInvoiceDialogOpen(true);
+  };
+
+  const handleRequestInvoice = async () => {
+    if (!selectedProjectForInvoice || !selectedPlanId) {
+      toast.error('Please select a project and plan');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await requestInvoice(selectedProjectForInvoice, selectedPlanId, selectedDuration);
+      toast.success('Invoice requested successfully!');
+      setIsInvoiceDialogOpen(false);
+    } catch (error) {
+      console.error('Error requesting invoice:', error);
+      toast.error('Failed to request invoice');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const isCurrentPlan = (planSlug: string) => {
-    if (!subscription) return false;
-    return subscription.subscription.subscription_plans.slug === planSlug &&
-           ['active', 'trialing'].includes(subscription.subscription.status);
+    if (!projectId || !projectSubscriptions) return false;
+    const project = projectSubscriptions.find(p => p.id === projectId);
+    if (!project) return false;
+    const subscription = project.user_subscriptions?.[0];
+    return subscription?.subscription_plans?.slug === planSlug &&
+           ['active', 'trialing'].includes(subscription?.status || '');
   };
 
   if (loading || plansLoading) {
@@ -275,13 +330,14 @@ export function EnhancedPricingPlans({ className, showHeader = true, requireAuth
                   variant={isPro ? 'default' : 'outline'}
                   size="lg"
                   disabled={isCurrentUserPlan}
-                  onClick={() => handlePlanSelect(plan.slug, selectedDuration)}
+                  onClick={() => handlePlanSelect(plan.id, selectedDuration)}
                 >
+                  <Receipt className="w-4 h-4 mr-2" />
                   {isCurrentUserPlan 
                     ? t.currentPlan 
-                    : requireAuth && !subscription 
+                    : requireAuth && (!projectSubscriptions || projectSubscriptions.length === 0)
                       ? t.signInRequired
-                      : t.choosePlan
+                      : t.requestInvoice
                   }
                 </Button>
               </CardFooter>
@@ -289,6 +345,56 @@ export function EnhancedPricingPlans({ className, showHeader = true, requireAuth
           );
         })}
       </div>
+
+      {/* Invoice Request Dialog */}
+      <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.requestInvoice}</DialogTitle>
+            <DialogDescription>
+              {t.selectProjectDesc}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Project Selector - show only if not pre-selected */}
+            {!projectId && projectSubscriptions && projectSubscriptions.length > 1 && (
+              <div>
+                <Label>{t.selectProject}</Label>
+                <Select value={selectedProjectForInvoice} onValueChange={setSelectedProjectForInvoice}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t.selectProject} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectSubscriptions.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Show selected project name if pre-selected */}
+            {(projectId || (projectSubscriptions && projectSubscriptions.length === 1)) && (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm font-medium">
+                  {t.selectProject}: {projectSubscriptions?.find(p => p.id === selectedProjectForInvoice)?.name || 'Selected Project'}
+                </p>
+              </div>
+            )}
+
+            <Button
+              onClick={handleRequestInvoice}
+              disabled={isProcessing || !selectedProjectForInvoice || !selectedPlanId}
+              className="w-full"
+            >
+              {isProcessing && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />}
+              {t.requestInvoice}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

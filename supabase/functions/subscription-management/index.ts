@@ -1,14 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { lemonSqueezySetup } from "https://esm.sh/@lemonsqueezy/lemonsqueezy.js@3";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
-// Setup LemonSqueezy
-lemonSqueezySetup({
-  apiKey: Deno.env.get("LEMONSQUEEZY_API_KEY") ?? "",
-  onError: (error)=>console.error("LemonSqueezy error:", error)
-});
 
 async function calculatePrice(basePriceStr, durationMonths) {
   const basePrice = parseFloat(basePriceStr);
@@ -22,10 +16,10 @@ async function calculatePrice(basePriceStr, durationMonths) {
     discountPercentage
   };
 }
-async function handleGetPurchaseLinks(req, corsHeaders) {
+async function handleRequestInvoice(req, body, corsHeaders) {
   const origin = req.headers.get('Origin');
   try {
-    // Get user from JWT to include user data in purchase links
+    // Get user from JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
@@ -37,43 +31,104 @@ async function handleGetPurchaseLinks(req, corsHeaders) {
       return createJsonResponse({ error: "Invalid token" }, 401, origin);
     }
 
-    // Create purchase links with user data
-    const userEmail = encodeURIComponent(user.email || '');
-    const userName = encodeURIComponent(user.user_metadata?.full_name || user.email || '');
-    const userId = encodeURIComponent(user.id);
-    
-    const basicPlanLink = `https://gridixlive.lemonsqueezy.com/buy/32720a42-0349-4e77-96d9-7c32f9e7ac3f?embed=1&checkout[email]=${userEmail}&checkout[name]=${userName}&checkout[custom][user_id]=${userId}`;
-    const proPlanLink = `https://gridixlive.lemonsqueezy.com/buy/90042763-2bfc-42e2-a4f5-3c8dd8906b17?embed=1&checkout[email]=${userEmail}&checkout[name]=${userName}&checkout[custom][user_id]=${userId}`;
-    
-    return new Response(JSON.stringify({
-      basic: {
-        name: "Basic Plan",
-        price: "$79/month",
-        link: basicPlanLink,
-        features: ["Floor plan builder", "Basic templates", "Export to PDF", "Email support"]
-      },
-      pro: {
-        name: "Pro Plan", 
-        price: "$129/month",
-        link: proPlanLink,
-        features: ["All Basic features", "CRM integration", "Custom domain", "Advanced templates", "Priority support", "Analytics"]
+    // Expect project_id, plan_id, and duration_months in request body
+    // Body is now passed as parameter
+
+    const projectId = body.project_id as string | undefined;
+    const planId = body.plan_id as string | undefined;
+    const durationMonths = body.duration_months as number | undefined;
+
+    if (!projectId || !planId || !durationMonths) {
+      return createJsonResponse({ error: "Missing required fields: project_id, plan_id, duration_months", data: body }, 400, origin);
+    }
+
+    // Verify user owns the project
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (projectError || !project) {
+      return createJsonResponse({ error: "Project not found or access denied" }, 404, origin);
+    }
+
+    // Get plan details
+    const { data: plan, error: planError } = await supabase
+      .from("subscription_plans")
+      .select("*")
+      .eq("id", planId)
+      .single();
+
+    if (planError || !plan) {
+      return createJsonResponse({ error: "Plan not found" }, 404, origin);
+    }
+
+    // Calculate pricing
+    const { finalPrice, discountPercentage } = await calculatePrice(plan.base_price, durationMonths);
+
+    // Generate invoice number
+    const invoiceNumber = `INV-${Date.now()}-${projectId.substring(0, 8)}`;
+
+    // Create or update subscription with invoice request
+    const { data: existingSub } = await supabase
+      .from("user_subscriptions")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingSub) {
+      // Update existing subscription
+      await supabase
+        .from("user_subscriptions")
+        .update({
+          plan_id: planId,
+          duration_months: durationMonths,
+          discount_percentage: discountPercentage,
+          final_price: finalPrice,
+          status: 'pending_payment',
+          invoice_requested_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", existingSub.id);
+    } else {
+      // Create new subscription request
+      await supabase
+        .from("user_subscriptions")
+        .insert({
+          user_id: user.id,
+          project_id: projectId,
+          plan_id: planId,
+          duration_months: durationMonths,
+          discount_percentage: discountPercentage,
+          final_price: finalPrice,
+          status: 'pending_payment',
+          invoice_requested_at: new Date().toISOString()
+        });
+    }
+
+    return createJsonResponse({
+      success: true,
+      invoice: {
+        invoice_number: invoiceNumber,
+        project_name: project.name,
+        plan_name: plan.name,
+        duration_months: durationMonths,
+        monthly_price: parseFloat(plan.base_price),
+        discount_percentage: discountPercentage,
+        total_price: finalPrice,
+        status: 'pending_payment'
       }
-    }), {
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
-      }
-    });
+    }, 200, origin);
   } catch (error) {
-    console.error("Get purchase links error:", error);
-    return new Response("Internal server error", {
-      status: 500,
-      headers: corsHeaders
-    });
+    console.error("Request invoice error:", error);
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
   }
 }
 
-async function handleGetSubscription(req, corsHeaders) {
+async function handleGetSubscription(req, body, corsHeaders) {
   try {
     // Get user from JWT
     const authHeader = req.headers.get("Authorization");
@@ -90,6 +145,15 @@ async function handleGetSubscription(req, corsHeaders) {
         headers: corsHeaders
       });
     }
+    // Expect project_id in body for per-project subscription
+    // Body is now passed as parameter
+    const projectId = body.project_id as string | undefined;
+    if (!projectId) {
+      return new Response("project_id is required", {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
     // Get user subscription with plan details
     const { data: subscription, error: subError } = await supabase.from("user_subscriptions").select(`
         *,
@@ -100,7 +164,7 @@ async function handleGetSubscription(req, corsHeaders) {
           base_price,
           features
         )
-      `).eq("user_id", user.id).single();
+      `).eq("user_id", user.id).eq("project_id", projectId).maybeSingle();
     if (subError) {
       return new Response("Subscription not found", {
         status: 404,
@@ -109,10 +173,10 @@ async function handleGetSubscription(req, corsHeaders) {
     }
     // Check if trial has expired
     const now = new Date();
-    const trialEndsAt = subscription.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
+    const trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
     const isTrialExpired = trialEndsAt && now > trialEndsAt;
     // Update status if trial expired
-    if (subscription.status === 'trialing' && isTrialExpired) {
+    if (subscription && subscription.status === 'trialing' && isTrialExpired) {
       await supabase.from("user_subscriptions").update({
         status: 'trial_expired'
       }).eq("id", subscription.id);
@@ -120,7 +184,7 @@ async function handleGetSubscription(req, corsHeaders) {
     }
     return new Response(JSON.stringify({
       subscription,
-      isTrialActive: subscription.status === 'trialing' && !isTrialExpired,
+      isTrialActive: subscription ? (subscription.status === 'trialing' && !isTrialExpired) : false,
       trialDaysRemaining: trialEndsAt && !isTrialExpired ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0
     }), {
       headers: {
@@ -136,66 +200,59 @@ async function handleGetSubscription(req, corsHeaders) {
     });
   }
 }
-async function handleGetManagementUrl(req, corsHeaders) {
+async function handleGetProjectSubscriptions(req, corsHeaders) {
+  const origin = req.headers.get('Origin');
   try {
     // Get user from JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response("Missing authorization header", {
-        status: 401,
-        headers: corsHeaders
-      });
+      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
     }
+    
     const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     if (userError || !user) {
-      return new Response("Invalid token", {
-        status: 401,
-        headers: corsHeaders
-      });
+      return createJsonResponse({ error: "Invalid token" }, 401, origin);
     }
-    
-    // Get user subscription
-    const { data: subscription, error: subError } = await supabase.from("user_subscriptions")
-      .select("*")
+
+    // Get all projects for user with their subscription status
+    const { data: projects, error: projectsError } = await supabase
+      .from("projects")
+      .select(`
+        id,
+        name,
+        subscription_status,
+        subscription_expires_at,
+        user_subscriptions (
+          id,
+          status,
+          current_period_end,
+          invoice_number,
+          invoice_url,
+          invoice_requested_at,
+          plan_id,
+          final_price,
+          subscription_plans (
+            name,
+            slug,
+            base_price
+          )
+        )
+      `)
       .eq("user_id", user.id)
-      .single();
-      
-    if (subError || !subscription) {
-      return new Response("Subscription not found", {
-        status: 404,
-        headers: corsHeaders
-      });
+      .order('created_at', { ascending: false });
+
+    if (projectsError) {
+      console.error("Error fetching projects:", projectsError);
+      return createJsonResponse({ error: "Failed to fetch projects" }, 500, origin);
     }
-    
-    // Get management URL from LemonSqueezy
-    const { getSubscription } = await import("https://esm.sh/@lemonsqueezy/lemonsqueezy.js@3");
-    const subscriptionResult = await getSubscription(subscription.lemon_squeezy_subscription_id);
-    
-    if (subscriptionResult.error) {
-      console.error("Failed to get subscription from LemonSqueezy:", subscriptionResult.error);
-      return new Response("Failed to get management URL", {
-        status: 500,
-        headers: corsHeaders
-      });
-    }
-    
-    const managementUrl = subscriptionResult.data?.data.attributes.urls?.customer_portal;
-    
-    return new Response(JSON.stringify({
-      managementUrl: managementUrl || `https://gridixlive.lemonsqueezy.com/billing`
-    }), {
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
-      }
-    });
+
+    return createJsonResponse({
+      projects: projects || []
+    }, 200, origin);
   } catch (error) {
-    console.error("Get management URL error:", error);
-    return new Response("Internal server error", {
-      status: 500,
-      headers: corsHeaders
-    });
+    console.error("Get project subscriptions error:", error);
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
   }
 }
 async function handleGetPlans(req, corsHeaders) {
@@ -257,19 +314,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json();
     const action = body.action;
     
     switch(action){
-      case "get-purchase-links":
-        return await handleGetPurchaseLinks(req, corsHeaders);
       case "get-plans":
         return await handleGetPlans(req, corsHeaders);
-      case "get-management-url":
-        return await handleGetManagementUrl(req, corsHeaders);
+      case "request-invoice":
+        return await handleRequestInvoice(req, body, corsHeaders);
+      case "get-project-subscriptions":
+        return await handleGetProjectSubscriptions(req, corsHeaders);
       default:
-        // Default action is get subscription
-        return await handleGetSubscription(req, corsHeaders);
+        // Default action is get subscription for a specific project
+        return await handleGetSubscription(req, body, corsHeaders);
     }
   } catch (error) {
     console.error("Handler error:", error);

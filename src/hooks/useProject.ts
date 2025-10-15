@@ -17,6 +17,7 @@ interface Project {
   slug: string | null;
   currency: string | null;
   is_public: boolean;
+  is_public_visible: boolean;
   is_featured: boolean;
   view_count: number;
   user_id: string | null;
@@ -25,6 +26,8 @@ interface Project {
   max_installment_months: number;
   pdf_presentation_url: string | null;
   theme_color: string | null;
+  subscription_status: string;
+  subscription_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -301,11 +304,11 @@ export const useProjects = (userId?: string) => {
       let query = supabase.from('projects').select('*');
 
       if (userId) {
-        // Загружаем проекты конкретного пользователя
+        // Загружаем проекты конкретного пользователя (показываем все, независимо от подписки)
         query = query.eq('user_id', userId);
       } else {
-        // Загружаем только публичные проекты
-        query = query.eq('is_public', true);
+        // Загружаем только публичные проекты с активной подпиской
+        query = query.eq('is_public', true).eq('is_public_visible', true);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });

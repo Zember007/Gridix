@@ -23,6 +23,7 @@ export interface SubscriptionPlan {
 export interface UserSubscription {
   id: string;
   user_id: string;
+  project_id: string;
   plan_id: string;
   lemon_squeezy_subscription_id: string | null;
   lemon_squeezy_customer_id: string | null;
@@ -35,6 +36,9 @@ export interface UserSubscription {
   duration_months: number;
   discount_percentage: number;
   final_price: number | null;
+  invoice_number: string | null;
+  invoice_url: string | null;
+  invoice_requested_at: string | null;
   subscription_plans: {
     name: string;
     slug: string;
@@ -44,29 +48,44 @@ export interface UserSubscription {
   };
 }
 
+export interface ProjectSubscription {
+  id: string;
+  name: string;
+  subscription_status: string;
+  subscription_expires_at: string | null;
+  user_subscriptions: UserSubscription[];
+}
+
 export interface SubscriptionData {
   subscription: UserSubscription;
   isTrialActive: boolean;
   trialDaysRemaining: number;
 }
 
-export function useSubscription() {
+export function useSubscription(projectId?: string) {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
+  const [projectSubscriptions, setProjectSubscriptions] = useState<ProjectSubscription[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = async (specificProjectId?: string) => {
     if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const targetProjectId = specificProjectId || projectId;
+    if (!targetProjectId) {
       setLoading(false);
       return;
     }
 
     try {
       const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: {},
+        body: { project_id: targetProjectId },
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
@@ -80,6 +99,33 @@ export function useSubscription() {
     } catch (err) {
       console.error('Error fetching subscription:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch subscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProjectSubscriptions = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: { action: 'get-project-subscriptions' },
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setProjectSubscriptions(data.projects || []);
+    } catch (err) {
+      console.error('Error fetching project subscriptions:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch project subscriptions');
     } finally {
       setLoading(false);
     }
@@ -114,14 +160,19 @@ export function useSubscription() {
     }
   };
 
-  const getPurchaseLinks = async () => {
+  const requestInvoice = async (targetProjectId: string, planId: string, durationMonths: number) => {
     if (!user) {
       throw new Error('User not authenticated');
     }
 
     try {
       const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { action: 'get-purchase-links' },
+        body: { 
+          action: 'request-invoice',
+          project_id: targetProjectId,
+          plan_id: planId,
+          duration_months: durationMonths
+        },
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
@@ -133,31 +184,23 @@ export function useSubscription() {
 
       return data;
     } catch (err) {
-      console.error('Error getting purchase links:', err);
+      console.error('Error requesting invoice:', err);
       throw err;
     }
   };
 
-  const getManagementUrl = async () => {
+  const requestInvoiceForMultiple = async (projectIds: string[], planId: string, durationMonths: number) => {
     if (!user) {
       throw new Error('User not authenticated');
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { action: 'get-management-url' },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return data.managementUrl;
+      const results = await Promise.all(
+        projectIds.map(projectId => requestInvoice(projectId, planId, durationMonths))
+      );
+      return results;
     } catch (err) {
-      console.error('Error getting management URL:', err);
+      console.error('Error requesting invoices for multiple projects:', err);
       throw err;
     }
   };
@@ -201,23 +244,29 @@ export function useSubscription() {
 
   useEffect(() => {
     if (user) {
-      fetchSubscription();
+      if (projectId) {
+        fetchSubscription();
+      } else {
+        fetchProjectSubscriptions();
+      }
     } else {
       setLoading(false);
     }
     // Always fetch plans, even for non-authenticated users
     fetchPlans();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     subscription,
+    projectSubscriptions,
     plans,
     loading,
     plansLoading,
     error,
-    getPurchaseLinks,
-    getManagementUrl,
+    requestInvoice,
+    requestInvoiceForMultiple,
     refreshSubscription: fetchSubscription,
+    refreshProjectSubscriptions: fetchProjectSubscriptions,
     hasFeature,
     isActive,
     isPro,
