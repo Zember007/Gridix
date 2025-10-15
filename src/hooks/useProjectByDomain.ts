@@ -38,7 +38,7 @@ export function useProjectByDomain(hostname?: string): ProjectByDomainResult {
           return;
         }
 
-        // Try to find a project by domain
+        // Try to find a project by domain - include subscription fields
         const { data, error: domainError } = await supabase
           .from("project_domains")
           .select(`
@@ -46,7 +46,12 @@ export function useProjectByDomain(hostname?: string): ProjectByDomainResult {
             domain,
             is_primary,
             status,
-            projects (*)
+            projects!inner (
+              *,
+              subscription_status,
+              subscription_expires_at,
+              is_public_visible
+            )
           `)
           .eq("domain", host)
           .eq("status", "active")

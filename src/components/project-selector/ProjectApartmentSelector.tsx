@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -16,6 +16,8 @@ import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
 import FavoritesTab from '../FavoritesTab';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Import new components
 import { useProjectFilters } from './hooks/useProjectFilters';
@@ -36,6 +38,7 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(project?.id || null);
   const { favoritesCount } = useFavorites(project?.id || null);
+  const { user } = useAuth();
 
   // State
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -350,8 +353,51 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     );
   }
 
+  // Check subscription status
+  const isSubscriptionExpired = project.subscription_expires_at && 
+    new Date(project.subscription_expires_at) < new Date();
+  const isSubscriptionInactive = !['active', 'trialing', 'trial'].includes(project.subscription_status || '') || isSubscriptionExpired;
+  const isOwner = user && project.user_id === user.id;
+
   return (
     <div className="min-h-full bg-white flex flex-col">
+      {/* Subscription Warning Banner */}
+      {isSubscriptionInactive && (
+        <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-200">
+            {isOwner 
+              ? language === 'ru' 
+                ? 'Подписка на проект истекла' 
+                : 'Project Subscription Expired'
+              : language === 'ru'
+                ? 'Этот проект временно недоступен'
+                : 'This project is temporarily unavailable'
+            }
+          </AlertTitle>
+          <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+            {isOwner 
+              ? language === 'ru'
+                ? 'Для продолжения работы с проектом необходимо продлить подписку. Перейдите в раздел "Подписка" в админ-панели.'
+                : 'To continue working with this project, please renew your subscription. Go to the "Subscription" section in the admin panel.'
+              : language === 'ru'
+                ? 'Владелец проекта приостановил доступ к проекту. Пожалуйста, свяжитесь с ним для получения дополнительной информации.'
+                : 'The project owner has suspended access to this project. Please contact them for more information.'
+            }
+          </AlertDescription>
+          {isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+              onClick={() => window.location.href = `/${language}/admin#subscription`}
+            >
+              {language === 'ru' ? 'Перейти к подпискам' : 'Go to Subscriptions'}
+            </Button>
+          )}
+        </Alert>
+      )}
+      
       {/* Top header bar - always visible */}
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 md:px-6 py-4">
