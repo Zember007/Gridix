@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
 import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from '../apartment/ApartmentFloorPlan';
+import ApartmentDetailsPage from '@/pages/ApartmentDetailsPage';
 import BuildingFacadeView from '../visualization/BuildingFacadeView';
 import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
 import FavoritesTab from '../FavoritesTab';
@@ -30,9 +31,10 @@ import { ListView } from './views/ListView';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
+  isWidget?: boolean;
 }
 
-const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) => {
+const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartmentSelectorProps) => {
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
@@ -52,6 +54,8 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
   const [preloadLayoutLoaded, setPreloadLayoutLoaded] = useState(false);
   const [buildingImageNaturalSize, setBuildingImageNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
@@ -72,6 +76,14 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
   };
 
   const openApartmentDetails = async (apartment: Apartment) => {
+    // Если мы в виджете, показываем модальное окно вместо редиректа
+    if (isWidget) {
+      setSelectedApartment(apartment);
+      setIsApartmentModalOpen(true);
+      return;
+    }
+
+    // Иначе открываем в новой вкладке (старая логика)
     try {
       // Получаем текущий домен
       const currentHostname = window.location.hostname;
@@ -358,6 +370,13 @@ const ProjectApartmentSelector = ({ projectId }: ProjectApartmentSelectorProps) 
     new Date(project.subscription_expires_at) < new Date();
   const isSubscriptionInactive = !['active', 'trialing', 'trial'].includes(project.subscription_status || '') || isSubscriptionExpired;
   const isOwner = user && project.user_id === user.id;
+
+  // If widget mode and apartment is selected, show apartment details
+  if (isWidget && isApartmentModalOpen && selectedApartment) {
+    return (
+        <ApartmentDetailsPage useId={true} apartmentIdProp={selectedApartment.id} />
+    );
+  }
 
   return (
     <div className="min-h-full bg-white flex flex-col">

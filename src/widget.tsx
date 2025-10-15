@@ -132,7 +132,7 @@ function WidgetApp(props: InitOptions) {
     lang && (lang in LANGUAGE_CONFIG) ? (lang as Language) : undefined;
 
   const content = projectId
-    ? <ProjectApartmentSelector projectId={projectId} />
+    ? <ProjectApartmentSelector projectId={projectId} isWidget={true} />
     : <EmbedProjectsPage 
         UserId={userId}
         isWidget={true}

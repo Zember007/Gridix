@@ -1,6 +1,4 @@
 export { default as ApartmentCustomFields } from './ApartmentCustomFields';
-export { default as ApartmentDetailsModal } from './ApartmentDetailsModal';
-export { default as ApartmentDetailsPanel } from './ApartmentDetailsPanel';
 export { default as ApartmentDetailsWithFields } from './ApartmentDetailsWithFields';
 export { default as ApartmentFloorPlan } from './ApartmentFloorPlan';
 export { default as ApartmentList } from './ApartmentList';
