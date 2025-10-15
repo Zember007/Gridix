@@ -25,9 +25,10 @@ import { useFavorites } from '@/hooks/useFavorites';
 interface ApartmentDetailsPageProps {
   useId?: boolean;
   apartmentIdProp?: string;
+  projectIdProp?: string;
 }
 
-const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '' }: ApartmentDetailsPageProps) => {
+const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '' }: ApartmentDetailsPageProps) => {
   const {
     projectId,
     projectSlug,
@@ -43,7 +44,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '' }: Apartment
   }>();
 
   // Определяем идентификаторы в зависимости от типа маршрута
-  const projectIdentifier = (projectSlug || projectId);
+  const projectIdentifier = useId ? projectIdProp : (projectSlug || projectId);
   const apartmentIdentifier = useId ? apartmentIdProp : (apartmentNumber || apartmentId);
 
   const { t, language } = useLanguage();

@@ -374,7 +374,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   // If widget mode and apartment is selected, show apartment details
   if (isWidget && isApartmentModalOpen && selectedApartment) {
     return (
-        <ApartmentDetailsPage useId={true} apartmentIdProp={selectedApartment.id} />
+        <ApartmentDetailsPage useId={true} apartmentIdProp={selectedApartment.id} projectIdProp={projectId} />
     );
   }
 
