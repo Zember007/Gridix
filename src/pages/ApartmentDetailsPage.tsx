@@ -26,9 +26,10 @@ interface ApartmentDetailsPageProps {
   useId?: boolean;
   apartmentIdProp?: string;
   projectIdProp?: string;
+  onClose?: () => void;
 }
 
-const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '' }: ApartmentDetailsPageProps) => {
+const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '', onClose = () => {} }: ApartmentDetailsPageProps) => {
   const {
     projectId,
     projectSlug,
@@ -296,10 +297,14 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   };
 
   const goBackToProject = () => {
-    window.close(); // Закрываем текущую вкладку
-    // Если вкладка не закрылась (например, не была открыта через JS), перенаправляем назад
+    if(onClose) {
+      onClose();
+      return;
+    }
+    
+    window.close();
+
     setTimeout(() => {
-      // Используем slug вместо ID для обратной ссылки
       const projectUrl = useId
         ? `/${lang}/project/id/${projectId}`
         : `/${lang}/project/${project?.slug || projectIdentifier}`;
