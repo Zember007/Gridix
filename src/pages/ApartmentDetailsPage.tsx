@@ -43,7 +43,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '' }: Apartment
   }>();
 
   // Определяем идентификаторы в зависимости от типа маршрута
-  const projectIdentifier = useId ? projectId : (projectSlug || projectId);
+  const projectIdentifier = (projectSlug || projectId);
   const apartmentIdentifier = useId ? apartmentIdProp : (apartmentNumber || apartmentId);
 
   const { t, language } = useLanguage();
