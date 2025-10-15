@@ -1026,7 +1026,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
         {/* Fixed Action Buttons - Mobile (bottom) */}
         {apartment.status === 'available' && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+          <div className="lg:hidden sticky bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div className="max-w-sm mx-auto space-y-3">
               <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
                 <DialogTrigger asChild>
