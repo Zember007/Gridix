@@ -168,7 +168,7 @@ function SimplifiedSidebar({
       </div>
 
       {/* Workspace Switcher */}
-      {showWorkspaceSwitcher && availableWorkspaces.length > 1 && !isCollapsed && (
+      {showWorkspaceSwitcher && availableWorkspaces.length > 0 && !isCollapsed && (
         <div 
           className="px-4 py-3"
           style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}

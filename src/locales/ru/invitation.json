@@ -23,6 +23,14 @@
   "incorrectPassword": "Неверный пароль или email",
   "invitedBy": "Пригласил:",
   "loadingError": "Ошибка загрузки приглашения: {message}",
+  "magicLinkError": "Ошибка отправки magic link",
+  "magicLinkSent": "Magic link отправлен на ваш email. Проверьте почту и перейдите по ссылке для установки пароля.",
+  "magicLinkTitle": "Проверьте вашу почту",
+  "magicLinkDescription": "Мы отправили вам magic link для завершения регистрации. Перейдите по ссылке в письме, чтобы установить пароль и принять приглашение.",
+  "magicLinkInstructions": "Перейдите по ссылке в письме для завершения регистрации",
+  "checkEmail": "Проверьте вашу почту",
+  "sendMagicLink": "Отправить magic link",
+  "sendingMagicLink": "Отправляем magic link...",
   "manager": "Менеджер:",
   "minimum8Characters": "Минимум 8 символов",
   "notFound": "Приглашение не найдено или недоступно",
@@ -42,6 +50,8 @@
   "teamInvitation": "Приглашение в команду",
   "tokenNotFound": "Токен приглашения не найден",
   "unknown": "Неизвестно",
+  "userAlreadyExists": "Пользователь уже существует. Используйте magic link для входа.",
+  "userExistsEnterPassword": "Пользователь уже существует. Введите пароль для входа.",
   "validUntil": "Приглашение действительно до:",
   "yourPassword": "Ваш пароль"
 }

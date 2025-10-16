@@ -23,6 +23,14 @@
   "incorrectPassword": "Incorrect password or email",
   "invitedBy": "Invited by:",
   "loadingError": "Error loading invitation: {message}",
+  "magicLinkError": "Error sending magic link",
+  "magicLinkSent": "Magic link sent to your email. Check your email and follow the link to set your password.",
+  "magicLinkTitle": "Check your email",
+  "magicLinkDescription": "We've sent you a magic link to complete your registration. Follow the link in the email to set your password and accept the invitation.",
+  "magicLinkInstructions": "Follow the link in the email to complete registration",
+  "checkEmail": "Check your email",
+  "sendMagicLink": "Send magic link",
+  "sendingMagicLink": "Sending magic link...",
   "manager": "Manager:",
   "minimum8Characters": "Minimum 8 characters",
   "notFound": "Invitation not found or unavailable",
@@ -42,6 +50,8 @@
   "teamInvitation": "Team Invitation",
   "tokenNotFound": "Invitation token not found",
   "unknown": "Unknown",
+  "userAlreadyExists": "User already exists. Please use magic link to sign in.",
+  "userExistsEnterPassword": "User already exists. Please enter your password to sign in.",
   "validUntil": "Invitation valid until:",
   "yourPassword": "Your password"
 }

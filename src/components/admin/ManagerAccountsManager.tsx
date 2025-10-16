@@ -59,10 +59,20 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const [developerProjects, setDeveloperProjects] = useState<any[]>([]);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [loadingAccess, setLoadingAccess] = useState(false);
+  
+  // New manager project access
+  const [newManagerProjectIds, setNewManagerProjectIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadManagerData();
   }, [developerId]);
+
+  // Загружаем проекты при открытии диалога добавления менеджера
+  useEffect(() => {
+    if (isAddDialogOpen) {
+      loadDeveloperProjects();
+    }
+  }, [isAddDialogOpen]);
 
   const loadManagerData = async () => {
     try {
@@ -139,63 +149,54 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
         return;
       }
 
-      // Проверяем, существует ли уже пользователь с таким email
+      // Проверяем, существует ли уже пользователь с таким email в user_profiles
       const { data: existingUser } = await supabase
         .from('user_profiles')
         .select('id')
         .eq('email', newManager.email)
         .single();
 
-      if (existingUser) {
-        // Пользователь уже существует, создаем manager_account
-        const { error: accountError } = await supabase
-          .from('manager_accounts')
-          .insert({
-            developer_id: developerId,
-            manager_id: existingUser.id,
-            email: newManager.email,
-            full_name: newManager.full_name,
-            phone: newManager.phone,
-            status: 'active',
-            accepted_at: new Date().toISOString()
-          });
-
-        if (accountError) throw accountError;
-        toast.success(t('managerAccounts.managerAdded'));
-      } else {
-        // Пользователь не существует, создаем приглашение
-        const invitationToken = await generateInvitationToken();
-        
-        const { error: invitationError } = await supabase
-          .from('manager_invitations')
-          .insert({
-            developer_id: developerId,
-            email: newManager.email,
-            full_name: newManager.full_name,
-            phone: newManager.phone,
-            invitation_token: invitationToken
-          });
-
-        if (invitationError) throw invitationError;
-
-        // Отправляем email с приглашением
-        try {
-          await sendInvitationEmail({
-            email: newManager.email,
-            full_name: newManager.full_name,
-            phone: newManager.phone,
-            invitation_token: invitationToken
-          });
-          toast.success(t('managerAccounts.invitationSent'));
-        } catch (emailError) {
-          console.error('Email sending failed:', emailError);
-          // Показываем предупреждение с подробностями ошибки
-          toast.warning(`Приглашение создано, но письмо не отправлено: ${emailError.message || 'Проверьте настройки SMTP'}`);
-          toast.info('Скопируйте ссылку приглашения вручную из списка ниже');
-        }
+      if (!existingUser) {
+        // Пользователь не зарегистрирован в системе
+        toast.error('Пользователь с таким email не зарегистрирован. Попросите его сначала зарегистрироваться на платформе.');
+        return;
       }
 
+      // Пользователь существует, создаем manager_account
+      const { data: managerAccountData, error: accountError } = await supabase
+        .from('manager_accounts')
+        .insert({
+          developer_id: developerId,
+          manager_id: existingUser.id,
+          email: newManager.email,
+          full_name: newManager.full_name,
+          phone: newManager.phone,
+          status: 'active',
+          accepted_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (accountError) throw accountError;
+
+      // Сохраняем доступ к проектам, если выбраны конкретные проекты
+      if (newManagerProjectIds.length > 0 && managerAccountData) {
+        const accessRecords = newManagerProjectIds.map(projectId => ({
+          manager_account_id: managerAccountData.id,
+          project_id: projectId
+        }));
+
+        const { error: accessError } = await supabase
+          .from('manager_project_access')
+          .insert(accessRecords);
+
+        if (accessError) throw accessError;
+      }
+
+      toast.success(t('managerAccounts.managerAdded'));
+
       setNewManager({ email: '', full_name: '', phone: '' });
+      setNewManagerProjectIds([]);
       setIsAddDialogOpen(false);
       loadManagerData();
     } catch (error) {
@@ -509,8 +510,82 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                   placeholder={t('managerAccounts.phonePlaceholder')}
                 />
               </div>
+              
+              {/* Project Access Selection */}
+              <div className="space-y-2">
+                <Label>{t('workspace.projectAccess')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('workspace.leaveEmptyForAll')}
+                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">
+                    {t('workspace.selectProjects')}: {newManagerProjectIds.length} / {developerProjects.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewManagerProjectIds(developerProjects.map(p => p.id))}
+                    >
+                      {t('workspace.allProjects')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewManagerProjectIds([])}
+                    >
+                      {t('common.clear')}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2 border rounded-lg p-4 max-h-60 overflow-y-auto">
+                  {developerProjects.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {t('workspace.noProjectsSelected')}
+                    </p>
+                  ) : (
+                    developerProjects.map((project) => (
+                      <div
+                        key={project.id}
+                        className="flex items-center space-x-3 p-2 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <Checkbox
+                          id={`new-project-${project.id}`}
+                          checked={newManagerProjectIds.includes(project.id)}
+                          onCheckedChange={() => {
+                            setNewManagerProjectIds(prev => {
+                              if (prev.includes(project.id)) {
+                                return prev.filter(id => id !== project.id);
+                              } else {
+                                return [...prev, project.id];
+                              }
+                            });
+                          }}
+                        />
+                        <label
+                          htmlFor={`new-project-${project.id}`}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <div className="font-medium text-sm">{project.name}</div>
+                          {project.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {project.description}
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button variant="outline" onClick={() => {
+                  setIsAddDialogOpen(false);
+                  setNewManagerProjectIds([]);
+                }}>
                   {t('common.cancel')}
                 </Button>
                 <Button onClick={handleInviteManager} disabled={submitting}>

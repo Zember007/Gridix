@@ -31,7 +31,7 @@ interface ManagerAccountWithProfile {
 }
 
 export interface UserRole {
-  type: 'developer' | 'manager' | 'loading';
+  type: 'developer' | 'manager' | 'both' | 'loading'; // 'both' - пользователь и застройщик, и менеджер
   managerData?: ManagerRole[];  // Массив для поддержки нескольких застройщиков
   developerIds?: string[];      // Массив ID застройщиков
   primaryDeveloperId?: string;  // Основной застройщик (первый)
@@ -68,8 +68,17 @@ export const useUserRole = () => {
           console.error('Error checking manager role:', managerError);
         }
 
+        // Проверяем, есть ли у пользователя собственные проекты (является ли застройщиком)
+        const { data: ownProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+
+        const isDeveloperWithProjects = (ownProjects && ownProjects.length > 0);
+
         if (managerAccounts && managerAccounts.length > 0) {
-          // Пользователь является менеджером
+          // Пользователь является менеджером (и возможно также застройщиком)
           const accountsArray = managerAccounts as unknown as ManagerAccountWithProfile[];
           const managerData: ManagerRole[] = accountsArray.map((account) => ({
             id: account.id,
@@ -88,13 +97,13 @@ export const useUserRole = () => {
           const developerIds = managerAccounts.map(account => account.developer_id);
           
           setUserRole({
-            type: 'manager',
+            type: isDeveloperWithProjects ? 'both' : 'manager', // Новый тип 'both' если пользователь и застройщик, и менеджер
             managerData,
             developerIds,
-            primaryDeveloperId: developerIds[0] // Первый застройщик как основной
+            primaryDeveloperId: isDeveloperWithProjects ? user.id : developerIds[0] // Если пользователь и застройщик, то его ID как основной
           });
         } else {
-          // Пользователь является застройщиком
+          // Пользователь является только застройщиком
           setUserRole({
             type: 'developer',
             developerIds: [user.id],
@@ -120,8 +129,8 @@ export const useUserRole = () => {
   return {
     userRole,
     loading: loading || authLoading,
-    isManager: userRole.type === 'manager',
-    isDeveloper: userRole.type === 'developer',
+    isManager: userRole.type === 'manager' || userRole.type === 'both',
+    isDeveloper: userRole.type === 'developer' || userRole.type === 'both',
     developerIds: userRole.developerIds || [],
     primaryDeveloperId: userRole.primaryDeveloperId,
     // Для обратной совместимости

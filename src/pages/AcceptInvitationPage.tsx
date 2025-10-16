@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, CheckCircle, XCircle, User, Building, Mail } from 'lucide-react';
+import { CheckCircle, XCircle, User, Building, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -37,62 +35,7 @@ const AcceptInvitationPage = () => {
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [accepting, setAccepting] = useState(false);
-  const [isExistingUser, setIsExistingUser] = useState(false);
-  const [loginPassword, setLoginPassword] = useState('');
-  const [checkingUser, setCheckingUser] = useState(false);
-
-  const checkUserExists = useCallback(async (email: string) => {
-    try {
-      setCheckingUser(true);
-      console.log('Checking if user exists with email:', email);
-
-      // Сохраняем текущую сессию перед проверкой
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-
-      // Пытаемся войти с пустым паролем, чтобы узнать, существует ли пользователь
-      // Это безопасно, т.к. вход не произойдет, но ошибка покажет, есть ли пользователь
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: 'dummy_password_to_check_existence_12345'
-      });
-
-      if (signInError) {
-        // Если ошибка "Invalid login credentials" - пользователь существует
-        if (
-          signInError.message.includes('Invalid login credentials') || 
-          signInError.message.includes('Email not confirmed')
-        ) {
-          console.log('User exists (invalid credentials), setting isExistingUser to true');
-          setIsExistingUser(true);
-        } 
-        // Если другая ошибка - пользователя нет или email не зарегистрирован
-        else {
-          console.log('User does not exist, setting isExistingUser to false');
-          setIsExistingUser(false);
-        }
-      } else {
-        // Если вход прошел успешно (очень маловероятно) - пользователь точно существует
-        console.log('User exists (somehow logged in with dummy password), setting isExistingUser to true');
-        setIsExistingUser(true);
-        // Выходим и восстанавливаем предыдущую сессию если была
-        await supabase.auth.signOut();
-        if (currentSession) {
-          await supabase.auth.setSession(currentSession);
-        }
-      }
-    } catch (error) {
-      console.error('Error in checkUserExists:', error);
-      // В случае ошибки по умолчанию показываем форму создания аккаунта
-      setIsExistingUser(false);
-    } finally {
-      setCheckingUser(false);
-    }
-  }, []);
 
   const autoAcceptInvitation = useCallback(async (invitationData: InvitationData, userId: string) => {
     try {
@@ -215,12 +158,6 @@ const AcceptInvitationPage = () => {
         return;
       }
 
-      // Если пользователь НЕ авторизован - проверяем, существует ли он в системе
-      if (!currentUser) {
-        console.log('User not authenticated, checking if account exists');
-        await checkUserExists(invitationData.email);
-      }
-
     } catch (err: unknown) {
       console.error('Error in loadInvitationData:', err);
       const errorMessage = err instanceof Error ? err.message : t('invitation.loadingError', { message: 'Unknown error' });
@@ -228,7 +165,7 @@ const AcceptInvitationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, t, checkUserExists, autoAcceptInvitation]);
+  }, [token, t, autoAcceptInvitation]);
 
   useEffect(() => {
     if (!token) {
@@ -257,22 +194,6 @@ const AcceptInvitationPage = () => {
     };
   }, [invitation, autoAcceptInvitation]);
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
-      return t('invitation.passwordMinLength8');
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return t('invitation.passwordLowercase');
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return t('invitation.passwordUppercase');
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return t('invitation.passwordDigits');
-    }
-    return null;
-  };
-
   const handleAcceptInvitation = async () => {
     if (!invitation) {
       toast.error(t('invitation.dataNotFound'));
@@ -281,75 +202,22 @@ const AcceptInvitationPage = () => {
 
     setAccepting(true);
     try {
-      // Проверяем, есть ли уже пользователь с таким email
-      const { data: { user: existingUser }, error: getUserError } = await supabase.auth.getUser();
+      // Проверяем, авторизован ли пользователь
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      let userId: string;
-      
-      if (existingUser && existingUser.email === invitation.email) {
-        // Пользователь уже авторизован с нужным email
-        userId = existingUser.id;
-        toast.info(t('invitation.alreadyAuthorized'));
-      } else if (isExistingUser) {
-        // Пользователь существует, нужно войти
-        if (!loginPassword) {
-          toast.error(t('invitation.enterLoginPassword'));
-          return;
-        }
-
-        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: invitation.email,
-          password: loginPassword
-        });
-
-        if (signInError) {
-          throw new Error(t('invitation.incorrectPassword'));
-        }
-
-        if (!authData.user) {
-          throw new Error(t('invitation.signInError'));
-        }
-
-        userId = authData.user.id;
-      } else {
-        // Создаем новый аккаунт
-        if (!password || !confirmPassword) {
-          toast.error(t('invitation.fillAllFields'));
-          return;
-        }
-
-        const passwordError = validatePassword(password);
-        if (passwordError) {
-          toast.error(passwordError);
-          return;
-        }
-
-        if (password !== confirmPassword) {
-          toast.error(t('invitation.passwordMismatch'));
-          return;
-        }
-
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-          email: invitation.email,
-          password: password,
-          options: {
-            data: {
-              full_name: invitation.full_name,
-              phone: invitation.phone
-            }
-          }
-        });
-
-        if (signUpError) {
-          throw signUpError;
-        }
-
-        if (!authData.user) {
-          throw new Error(t('invitation.accountCreationError'));
-        }
-
-        userId = authData.user.id;
+      if (!currentUser) {
+        toast.error('Пожалуйста, войдите в систему для принятия приглашения');
+        // Перенаправляем на страницу входа
+        navigate(`/ru/auth?redirect=/ru/accept-invitation?token=${encodeURIComponent(token || '')}`);
+        return;
       }
+
+      if (currentUser.email !== invitation.email) {
+        toast.error(`Это приглашение для ${invitation.email}. Пожалуйста, войдите с правильным email.`);
+        return;
+      }
+
+      const userId = currentUser.id;
 
       // Создаем запись менеджера
       const { error: managerError } = await supabase
@@ -441,7 +309,7 @@ const AcceptInvitationPage = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <CardTitle>{t('invitation.teamInvitation')}</CardTitle>
           <CardDescription>
-            {checkingUser ? t('invitation.checkingExistingUser') : t('invitation.completeRegistration')}
+            {t('invitation.completeRegistration')}
           </CardDescription>
         </CardHeader>
         
@@ -472,116 +340,30 @@ const AcceptInvitationPage = () => {
             )}
           </div>
 
-          {/* Показываем информацию о том, что система автоматически определила */}
-          {!checkingUser && (
-            <div className="text-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              {isExistingUser 
-                ? `✓ ${t('invitation.haveAccount')}` 
-                : `+ ${t('invitation.createAccount')}`
-              }
-            </div>
-          )}
-
-          {isExistingUser ? (
-            /* Форма входа */
-            <div className="space-y-4">
+          {/* Инструкция для пользователя */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <Mail className="h-5 w-5 text-yellow-600" />
+              </div>
               <div>
-                <Label htmlFor="loginPassword">{t('invitation.enterPassword')}</Label>
-                <div className="relative">
-                  <Input
-                    id="loginPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder={t('invitation.yourPassword')}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Важно!
+                </h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Для принятия приглашения войдите в систему с email: <strong>{invitation.email}</strong>
+                </p>
               </div>
             </div>
-          ) : (
-            /* Форма создания пароля */
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="password">{t('invitation.createPassword')}</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('invitation.minimum8Characters')}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="confirmPassword">{t('invitation.confirmPassword')}</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder={t('invitation.repeatPassword')}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Требования к паролю */}
-              <div className="text-sm text-gray-600">
-                <p className="font-medium mb-1">{t('invitation.passwordRequirements')}</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>{t('invitation.passwordMinLength')}</li>
-                  <li>{t('invitation.passwordCase')}</li>
-                  <li>{t('invitation.passwordDigit')}</li>
-                </ul>
-              </div>
-            </div>
-          )}
+          </div>
 
           <Button 
             onClick={handleAcceptInvitation} 
-            disabled={accepting || checkingUser || (isExistingUser ? !loginPassword : (!password || !confirmPassword))}
+            disabled={accepting}
             className="w-full"
           >
             {accepting 
-              ? (isExistingUser ? t('invitation.signingInAndAccepting') : t('invitation.creatingAccount')) 
+              ? 'Принимаем приглашение...'
               : t('invitation.acceptInvitation')
             }
           </Button>
