@@ -78,17 +78,16 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     const workspaces: WorkspaceOption[] = [];
 
-    // Собственный workspace (всегда первый, если пользователь является застройщиком)
-    if (isDeveloper) {
       workspaces.push({
         id: null,
         label: t('workspace.myWorkspace'),
         type: 'owner'
       });
-    }
 
     // Manager workspaces
     if (isManager && userRole.managerData) {
+      console.log(userRole.managerData);
+      
       userRole.managerData.forEach((managerData) => {
         workspaces.push({
           id: managerData.developer_id,

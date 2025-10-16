@@ -207,7 +207,7 @@ function SimplifiedSidebar({
                 >
                   <div className="flex items-center gap-2">
                     {workspace.type === 'owner' ? (
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <Building2 className="h-4 w-4 text-black" />
                     ) : (
                       <UserCheck className="h-4 w-4 text-green-600" />
                     )}
