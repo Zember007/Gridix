@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
       build: {
         outDir: 'dist-widget',
         cssCodeSplit: false,
-        minify: 'terser',
+        minify: 'esbuild',
         lib: {
           entry: path.resolve(__dirname, 'src/widget.tsx'),
           name: 'GridixWidget',
@@ -72,6 +72,8 @@ export default defineConfig(({ mode }) => {
             name: 'GridixWidget',
             // Don't extend window, replace it
             extend: false,
+            // Use only default export
+            exports: 'default',
           }
         }
       },

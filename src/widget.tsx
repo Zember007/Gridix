@@ -251,13 +251,15 @@ declare global {
   }
 }
 
+// Create widget API object
+const GridixWidgetAPI = { init };
+
 // Ensure window object exists (for SSR compatibility)
 if (typeof window !== 'undefined') {
-  window.GridixWidget = { init };
+  window.GridixWidget = GridixWidgetAPI;
 }
 
-// Export for module usage
-export { init };
-export default { init };
+// Export only default for IIFE format
+export default GridixWidgetAPI;
 
 
