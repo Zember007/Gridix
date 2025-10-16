@@ -89,10 +89,14 @@ const escapedCSS = cssContent
   .replace(/`/g, '\\`')
   .replace(/\$/g, '\\$');
 
+// Generate cache busting version
+const cacheVersion = Date.now().toString();
+
 // Inject CSS as a global variable at the start of the widget
 const injectionCode = `
 // Embedded CSS for Shadow DOM
 window.__GRIDIX_WIDGET_STYLES__ = \`${escapedCSS}\`;
+window.__GRIDIX_WIDGET_VERSION__ = '${cacheVersion}';
 `;
 
 // Add the injection code at the beginning

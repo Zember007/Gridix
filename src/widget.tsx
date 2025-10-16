@@ -10,6 +10,14 @@ import '@/index.css';
 // Type declaration for build-time injected version
 declare const __WIDGET_VERSION__: string;
 
+// Global window extensions for widget
+declare global {
+  interface Window {
+    __GRIDIX_WIDGET_STYLES__?: string;
+    __GRIDIX_WIDGET_VERSION__?: string;
+  }
+}
+
 // Context to provide Shadow Root container for portals (internal use only)
 const ShadowRootContext = createContext<HTMLElement | null>(null);
 
@@ -26,13 +34,27 @@ type InitOptions = {
   compactMode?: boolean; // enable compact layout for smaller containers
   showHeader?: boolean; // show/hide header section
   showFilters?: boolean; // show/hide filters section
+  forceReload?: boolean; // force reload of cached resources
+  cacheBust?: string; // custom cache busting parameter
 };
 
 const DEFAULT_CONTAINER_ID = 'gridix-widget-root';
 
-function ensureContainer(containerId?: string): HTMLElement {
+function ensureContainer(containerId?: string, forceReload?: boolean): HTMLElement {
   const id = containerId || DEFAULT_CONTAINER_ID;
   let el = document.getElementById(id);
+  
+  // Force reload: clear existing container and shadow DOM
+  if (el && forceReload) {
+    // Clear any existing shadow root
+    if (el.shadowRoot) {
+      el.shadowRoot.innerHTML = '';
+    }
+    // Clear container content
+    el.innerHTML = '';
+    console.log('GridixWidget: Cleared existing container for force reload');
+  }
+  
   if (!el) {
     el = document.createElement('div');
     el.id = id;
@@ -61,8 +83,13 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
     // Check if styles already loaded in shadow root
     const existing = shadowRoot.getElementById('gridix-widget-style');
     if (existing) {
-      resolve();
-      return;
+      // Force reload if cache busting is requested
+      if (options.forceReload) {
+        existing.remove();
+      } else {
+        resolve();
+        return;
+      }
     }
 
     // If inline styles provided, use them directly
@@ -77,7 +104,10 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
     }
 
     // Get widget version for cache busting
-    const widgetVersion = typeof __WIDGET_VERSION__ !== 'undefined' ? __WIDGET_VERSION__ : Date.now().toString();
+    const buildVersion = typeof __WIDGET_VERSION__ !== 'undefined' ? __WIDGET_VERSION__ : Date.now().toString();
+    const runtimeVersion = typeof window !== 'undefined' && window.__GRIDIX_WIDGET_VERSION__ ? window.__GRIDIX_WIDGET_VERSION__ : null;
+    const customCacheBust = options.cacheBust || options.forceReload ? Date.now().toString() : null;
+    const widgetVersion = customCacheBust || runtimeVersion || buildVersion;
 
     // Prefer explicit cssUrl if provided
     let cssHref = options.cssUrl || '';
@@ -171,6 +201,12 @@ function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
 
 async function init(options: InitOptions = {}) {
   try {
+    // Check if cache should be cleared due to version change
+    const needsCacheClear = shouldClearCache();
+    if (needsCacheClear) {
+      console.log('GridixWidget: Version changed, cache will be cleared');
+    }
+    
     // Allow URL params to override or provide defaults if not passed explicitly
     const url = new URL(window.location.href);
     const qp = url.searchParams;
@@ -188,10 +224,12 @@ async function init(options: InitOptions = {}) {
       compactMode: options.compactMode ?? (qp.get('compactMode') === 'true'),
       showHeader: options.showHeader ?? (qp.get('showHeader') !== 'false'),
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
+      forceReload: options.forceReload ?? ((qp.get('forceReload') === 'true') || needsCacheClear),
+      cacheBust: options.cacheBust ?? qp.get('cacheBust') ?? undefined,
     };
 
     // Create container and shadow DOM
-    const container = ensureContainer(opts.containerId);
+    const container = ensureContainer(opts.containerId, opts.forceReload);
     applyContainerStyles(container, opts);
     
     const shadowRoot = createShadowRoot(container);
@@ -240,17 +278,68 @@ async function init(options: InitOptions = {}) {
   }
 }
 
+// Global cache clearing function
+function clearWidgetCache(containerId?: string) {
+  const id = containerId || DEFAULT_CONTAINER_ID;
+  const el = document.getElementById(id);
+  if (el) {
+    // Clear shadow DOM
+    if (el.shadowRoot) {
+      el.shadowRoot.innerHTML = '';
+    }
+    // Clear container
+    el.innerHTML = '';
+    console.log('GridixWidget: Cache cleared for container', id);
+  }
+}
+
+// Check if cache needs to be cleared based on version change
+function shouldClearCache(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    const currentVersion = typeof __WIDGET_VERSION__ !== 'undefined' ? __WIDGET_VERSION__ : null;
+    const runtimeVersion = window.__GRIDIX_WIDGET_VERSION__;
+    const storedVersion = localStorage.getItem('gridix-widget-version');
+    
+    // Determine the effective version to use
+    const effectiveVersion = runtimeVersion || currentVersion;
+    
+    // If no stored version, this is first load
+    if (!storedVersion) {
+      if (effectiveVersion) {
+        localStorage.setItem('gridix-widget-version', effectiveVersion);
+        console.log('GridixWidget: First load, version stored:', effectiveVersion);
+      }
+      return false;
+    }
+    
+    // If versions don't match, clear cache
+    if (effectiveVersion && storedVersion !== effectiveVersion) {
+      localStorage.setItem('gridix-widget-version', effectiveVersion);
+      console.log('GridixWidget: Version mismatch detected:', storedVersion, '->', effectiveVersion);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.warn('GridixWidget: Error checking version, assuming cache should be cleared:', error);
+    return true;
+  }
+}
+
 // Expose global API
 declare global {
   interface Window {
     GridixWidget: {
       init: typeof init;
+      clearCache: typeof clearWidgetCache;
     };
   }
 }
 
 // Create widget API object
-const GridixWidgetAPI = { init };
+const GridixWidgetAPI = { init, clearCache: clearWidgetCache };
 
 // Ensure window object exists (for SSR compatibility)
 if (typeof window !== 'undefined') {

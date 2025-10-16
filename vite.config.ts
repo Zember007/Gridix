@@ -6,8 +6,10 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isWidgetBuild = process.env.WIDGET_BUILD === 'true';
-  // Generate a version string based on current timestamp for cache busting
-  const buildVersion = Date.now().toString();
+  // Generate a version string based on current timestamp and git hash for cache busting
+  const timestamp = Date.now().toString();
+  const gitHash = process.env.GIT_HASH || 'dev';
+  const buildVersion = `${timestamp}-${gitHash}`;
 
   console.log('isWidgetBuild', isWidgetBuild);
   if (isWidgetBuild) {
