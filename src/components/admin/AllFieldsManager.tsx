@@ -71,7 +71,6 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     const [draggedField] = newFields.splice(draggedIndex, 1);
     newFields.splice(dropIndex, 0, draggedField);
 
-    // Обновляем sort_order для всех полей
     const updatedFields = newFields.map((field, index) => ({
       ...field,
       sort_order: index

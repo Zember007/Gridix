@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -30,19 +30,30 @@ export const useWorkspaceProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isLoadingRef = useRef(false);
+  const lastLoadParamsRef = useRef<string>('');
 
   const loadProjects = useCallback(async () => {
     if (!user || userRole.type === 'loading') {
       return;
     }
 
+    // Создаем ключ для проверки изменений параметров
+    const loadParamsKey = `${user.id}-${activeWorkspaceId}-${isManagerMode}`;
+    
+    // Предотвращаем множественные одновременные запросы с одинаковыми параметрами
+    if (isLoadingRef.current && lastLoadParamsRef.current === loadParamsKey) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    lastLoadParamsRef.current = loadParamsKey;
     setLoading(true);
     setError(null);
 
     try {
       if (isManagerMode && activeWorkspaceId) {
         // Менеджер работает в чужом workspace
-        console.log('Loading projects for manager in workspace:', activeWorkspaceId);
         
         // Получаем manager_account_id для данного workspace
         const { data: managerAccount } = await supabase
@@ -96,7 +107,6 @@ export const useWorkspaceProjects = () => {
         setProjects(projectsWithDeveloper);
       } else {
         // Собственный workspace - загружаем проекты текущего пользователя
-        console.log('Loading projects for owner:', user.id);
         
         const { data: projectsData, error: projectsError } = await supabase
           .from('projects')
@@ -115,6 +125,7 @@ export const useWorkspaceProjects = () => {
       setProjects([]);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   }, [user, activeWorkspaceId, isManagerMode, userRole.type]);
 

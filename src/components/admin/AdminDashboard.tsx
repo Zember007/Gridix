@@ -118,7 +118,6 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                           <UserCheck className="h-4 w-4" />
                           {t('admin.leads')}
                         </button>
-                        {/* Подписки скрыты для менеджеров в чужих workspace */}
                         {!isManagerMode && (
                           <button
                             onClick={() => navigate('/subscription')}

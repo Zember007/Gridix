@@ -104,13 +104,13 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
     <div className="space-y-6">
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <Card className="border-dashed border-2 border-real-estate-200">
+        <Card className="border-dashed border-2 ">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="h-16 w-16 text-real-estate-300 mb-4" />
-            <h3 className="text-xl font-semibold text-real-estate-900 mb-2">
+            <Building2 className="h-16 w-16  mb-4" />
+            <h3 className="text-xl font-semibold  mb-2">
               {t('projectList.noProjects')}
             </h3>
-            <p className="text-real-estate-600 text-center mb-6 max-w-md">
+            <p className=" text-center mb-6 max-w-md">
               {t('projectList.createFirstDescription')}
             </p>
             <Button

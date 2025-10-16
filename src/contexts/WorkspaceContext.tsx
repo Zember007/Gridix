@@ -86,8 +86,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     // Manager workspaces
     if (isManager && userRole.managerData) {
-      console.log(userRole.managerData);
-      
       userRole.managerData.forEach((managerData) => {
         workspaces.push({
           id: managerData.developer_id,
@@ -117,7 +115,8 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       // Если текущий activeWorkspaceId больше не доступен, сбрасываем на собственный
       setActiveWorkspaceId(null);
     }
-  }, [userRole, isManager, isDeveloper, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRole.type, isManager, JSON.stringify(userRole.managerData), t]);
 
   // Определяем, находимся ли мы в режиме менеджера
   const isManagerMode = activeWorkspaceId !== null;

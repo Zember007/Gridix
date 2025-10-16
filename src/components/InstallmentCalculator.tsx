@@ -42,11 +42,9 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
     '--slider-range-color': themeColor,
   } as React.CSSProperties;
   
-  // Состояние для выбранных значений
   const [downPaymentPercent, setDownPaymentPercent] = useState(minDownPaymentPercent);
   const [installmentMonths, setInstallmentMonths] = useState(Math.min(12, maxInstallmentMonths));
 
-  // Расчетные значения
   const calculation = useMemo(() => {
     const downPayment = Math.round((apartmentPrice * downPaymentPercent) / 100);
     const remainingAmount = apartmentPrice - downPayment;
@@ -64,7 +62,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
 
   const { downPayment, remainingAmount, monthlyPayment } = calculation;
 
-  // Вызываем callback при изменении расчетов
   useEffect(() => {
     onCalculate?.(calculation);
   }, [calculation, onCalculate]);
@@ -75,7 +72,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
         
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Стоимость квартиры */}
         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
           <span className="font-medium text-gray-700">{t('apartment.price')}</span>
           <span className="text-lg font-semibold">
@@ -83,7 +79,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </span>
         </div>
 
-        {/* Первоначальный взнос */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label className="text-sm font-medium">{t('installment.downPayment')}</Label>
@@ -107,7 +102,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Количество месяцев */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label className="text-sm font-medium">{t('installment.period')}</Label>
@@ -130,7 +124,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Результаты расчета */}
         <div className="space-y-3 pt-4 border-t">
           <div className="flex justify-between items-center">
             <span className="text-gray-700">{t('installment.remainingAmount')}</span>
@@ -144,7 +137,6 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Кнопка для оформления рассрочки */}
         <Button 
           className="w-full gap-2 text-white hover:opacity-90" 
           size="lg"

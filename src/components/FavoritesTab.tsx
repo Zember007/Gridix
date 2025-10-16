@@ -64,10 +64,10 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Heart className="h-16 w-16 text-gray-300 mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          {t('favorites.empty.title') || 'Нет избранных квартир'}
+          {t('favorites.empty.title')}
         </h3>
         <p className="text-gray-500 max-w-sm">
-          {t('favorites.empty.description') || 'Добавьте квартиры в избранное, нажав на сердечко'}
+          {t('favorites.empty.description')}
         </p>
       </div>
     );

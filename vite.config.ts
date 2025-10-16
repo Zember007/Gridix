@@ -6,8 +6,13 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isWidgetBuild = process.env.WIDGET_BUILD === 'true';
+  // Generate a version string based on current timestamp for cache busting
+  const buildVersion = Date.now().toString();
 
   console.log('isWidgetBuild', isWidgetBuild);
+  if (isWidgetBuild) {
+    console.log('Widget build version:', buildVersion);
+  }
 
   return ({
     server: {
@@ -54,12 +59,20 @@ export default defineConfig(({ mode }) => {
           external: [],
           output: {
             inlineDynamicImports: true,
+            // Add version to CSS filename for cache busting
+            assetFileNames: (assetInfo) => {
+              if (assetInfo.name === 'style.css') {
+                return `style.css?v=${buildVersion}`;
+              }
+              return assetInfo.name || 'asset';
+            },
           }
         }
       },
       define: {
         'process.env.NODE_ENV': '"production"',
-        'process.env': '{}'
+        'process.env': '{}',
+        '__WIDGET_VERSION__': JSON.stringify(buildVersion)
       }
     } : {})
   });

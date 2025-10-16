@@ -107,7 +107,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     
     setLoadingData(true);
     try {
-      // Используем edge function для запросов к AmoCRM API
       const { data, error } = await supabase.functions.invoke('amocrm-api', {
         body: { 
           project_id: projectId,
@@ -116,7 +115,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       });
 
       if (error) {
-        // Если токен стал невалидным, перезагружаем настройки из БД один раз
         if (!skipReload && (error.message?.includes('token') || error.message?.includes('expired') || error.message?.includes('refresh failed'))) {
           const { data: refreshedSettings } = await supabase
             .from('amocrm_settings')
@@ -133,7 +131,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data?.data) {
         setAmocrmData(data.data);
-        // Если сервер вернул новое время истечения токена — обновляем локально
         if (data.token_expires_at) {
           setSettings(prev => ({ ...prev, token_expires_at: data.token_expires_at }));
         }
@@ -162,7 +159,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data) {
         setSettings(data);
-        // Если авторизован — всегда подтягиваем актуальные данные из AmoCRM API (там же произойдет refresh токена)
         if (data.access_token) {
           fetchAmoCRMData(data);
         }
@@ -184,7 +180,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     try {
       setAuthorizing(true);
       
-      // Очищаем предыдущие данные авторизации, если они есть
       if (settings?.id) {
         await supabase
           .from('amocrm_settings')
@@ -192,7 +187,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
           .eq('id', settings.id);
       }
       
-      // Используем edge function для генерации правильного URL авторизации
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
         body: { project_id: projectId }
       });
@@ -217,7 +211,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   };
 
   const handleAuthSuccess = useCallback(async () => {
-    // Обновляем настройки после успешной авторизации
     await fetchSettings();
    
   }, [fetchSettings]);
@@ -249,7 +242,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (error) throw error;
 
-      // Обновляем локальное состояние
       setSettings(prev => ({ ...prev, ...updateData }));
       toast.success(t('amocrm.settingsSaveSuccess'));
     } catch (error) {
@@ -290,7 +282,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     try {
       setAuthorizing(true);
       
-      // Очищаем предыдущие данные авторизации, если они есть
       if (settings?.id) {
         await supabase
           .from('amocrm_settings')
@@ -298,7 +289,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
           .eq('id', settings.id);
       }
       
-      // Используем edge function для генерации правильного URL авторизации
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
         body: { project_id: projectId }
       });
@@ -332,7 +322,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     const id = parseInt(pipelineId);
     setSelectedPipelineId(id);
     
-    // Проверяем, принадлежит ли текущий выбранный статус новой воронке
+    // Проверяем, приндлежит ли текущий выбранный статус новой воронке
     if (selectedStatusId && amocrmData) {
       const newPipeline = amocrmData.pipelines.find(p => p.id === id);
       const statusExists = newPipeline?.statuses.some(s => s.id === selectedStatusId);

@@ -4,7 +4,16 @@ import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
 import EmbedProjectsPage from '@/pages/EmbedProjectsPage';
+import { createContext, useContext } from 'react';
 import '@/index.css';
+
+// Type declaration for build-time injected version
+declare const __WIDGET_VERSION__: string;
+
+// Context to provide Shadow Root container for portals
+const ShadowRootContext = createContext<HTMLElement | null>(null);
+
+export const useShadowRoot = () => useContext(ShadowRootContext);
 
 type InitOptions = {
   projectId?: string; // slug or UUID
@@ -69,6 +78,9 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
       return;
     }
 
+    // Get widget version for cache busting
+    const widgetVersion = typeof __WIDGET_VERSION__ !== 'undefined' ? __WIDGET_VERSION__ : Date.now().toString();
+
     // Prefer explicit cssUrl if provided
     let cssHref = options.cssUrl || '';
 
@@ -77,7 +89,7 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
       const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
       const widgetScript = scripts.reverse().find(s => s.src && /widget\.js(\?.*)?$/.test(s.src));
       if (widgetScript && widgetScript.src) {
-        cssHref = widgetScript.src.replace(/widget\.js(\?.*)?$/, 'style.css$1');
+        cssHref = widgetScript.src.replace(/widget\.js(\?.*)?$/, `style.css?v=${widgetVersion}`);
       }
     }
 
@@ -88,8 +100,13 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
       if (widgetScript && widgetScript.src) {
         const scriptUrl = new URL(widgetScript.src);
         const basePath = scriptUrl.pathname.substring(0, scriptUrl.pathname.lastIndexOf('/'));
-        cssHref = `${scriptUrl.origin}${basePath}/style.css`;
+        cssHref = `${scriptUrl.origin}${basePath}/style.css?v=${widgetVersion}`;
       }
+    }
+
+    // Add version to cssHref if not already present
+    if (cssHref && !cssHref.includes('?v=')) {
+      cssHref += `?v=${widgetVersion}`;
     }
 
     if (!cssHref) {
@@ -116,7 +133,7 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot, options: InitOptions): Pro
   });
 }
 
-function WidgetApp(props: InitOptions) {
+function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
   const { 
     projectId, 
     userId, 
@@ -125,7 +142,8 @@ function WidgetApp(props: InitOptions) {
     showFilters = true,
     lang,
     height,
-    theme = 'light'
+    theme = 'light',
+    portalContainer
   } = props;
 
   const initialLang: Language | undefined =
@@ -143,11 +161,13 @@ function WidgetApp(props: InitOptions) {
       />;
 
   return (
-    <EmbedLanguageProvider initialLanguage={initialLang}>
-      <div className={`h-full bg-background text-foreground ${theme === 'dark' ? 'dark' : ''}`}>
-        {content}
-      </div>
-    </EmbedLanguageProvider>
+    <ShadowRootContext.Provider value={portalContainer}>
+      <EmbedLanguageProvider initialLanguage={initialLang}>
+        <div className={`h-full bg-background text-foreground ${theme === 'dark' ? 'dark' : ''}`}>
+          {content}
+        </div>
+      </EmbedLanguageProvider>
+    </ShadowRootContext.Provider>
   );
 }
 
@@ -200,11 +220,21 @@ async function init(options: InitOptions = {}) {
       mountPoint.className = opts.theme === 'dark' ? 'dark' : '';
     }
 
+    // Create portal container for modals inside shadow DOM
+    let portalContainer = shadowRoot.getElementById('gridix-portal-container');
+    if (!portalContainer) {
+      portalContainer = document.createElement('div');
+      portalContainer.id = 'gridix-portal-container';
+      portalContainer.style.position = 'relative';
+      portalContainer.style.zIndex = '9999';
+      shadowRoot.appendChild(portalContainer);
+    }
+
     // Render React app into shadow DOM
     const root = createRoot(mountPoint);
     root.render(
       <AuthProvider>
-        <WidgetApp {...opts} />
+        <WidgetApp {...opts} portalContainer={portalContainer} />
       </AuthProvider>
     );
   } catch (err) {

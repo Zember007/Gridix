@@ -32,25 +32,47 @@ const DrawerOverlay = React.forwardRef<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+// Helper hook to detect if we're in a Shadow DOM (widget context)
+const useShadowRootContainer = () => {
+  const [container, setContainer] = React.useState<HTMLElement | null>(null);
+  
+  React.useEffect(() => {
+    // Try to find the portal container in Shadow DOM
+    const currentElement = document.getElementById('gridix-widget-root');
+    if (currentElement?.shadowRoot) {
+      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
+      if (portalContainer) {
+        setContainer(portalContainer as HTMLElement);
+      }
+    }
+  }, []);
+  
+  return container;
+};
+
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-        className
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-))
+>(({ className, children, ...props }, ref) => {
+  const shadowContainer = useShadowRootContainer();
+  
+  return (
+    <DrawerPortal container={shadowContainer}>
+      <DrawerOverlay />
+      <DrawerPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+          className
+        )}
+        {...props}
+      >
+        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        {children}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+})
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({

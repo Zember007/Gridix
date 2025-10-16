@@ -174,43 +174,22 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
                 />
               </div>
 
-              {/* <div>
-                <Label htmlFor="company_description">{t('adminSettings.companyDescription')}</Label>
-                <Textarea
-                  id="company_description"
-                  value={settings.company_description}
-                  onChange={(e) => handleInputChange('company_description', e.target.value)}
-                  placeholder={t('adminSettings.companyDescriptionPlaceholder')}
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_address">{t('adminSettings.companyAddress')}</Label>
-                <Input
-                  id="contact_address"
-                  value={settings.contact_address}
-                  onChange={(e) => handleInputChange('contact_address', e.target.value)}
-                  placeholder={t('adminSettings.companyAddressPlaceholder')}
-                />
-              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="contacts">
-          {/* Показываем менеджеров только в собственном workspace */}
           {!isManagerMode && (
             <ManagerAccountsManager developerId={developerId || userProfile?.id || ''} />
           )}
           {isManagerMode && (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                Управление менеджерами доступно только владельцу аккаунта
+                Managing managers is only available to the account owner
               </p>
               {managerData && managerData.length > 0 && (
                 <div className="text-sm text-muted-foreground mt-2">
-                  <p>Обратитесь к владельцам аккаунтов для изменения настроек команды:</p>
+                  <p>Ask owner of the account to add you as a manager</p>
                   <ul className="mt-1 space-y-1">
                     {managerData.map((data) => (
                       <li key={data.id}>

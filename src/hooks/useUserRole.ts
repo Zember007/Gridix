@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,13 +41,28 @@ export const useUserRole = () => {
   const { user, loading: authLoading } = useAuth();
   const [userRole, setUserRole] = useState<UserRole>({ type: 'loading' });
   const [loading, setLoading] = useState(true);
+  const isCheckingRef = useRef(false);
+  const userIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const checkUserRole = async () => {
+      // Предотвращаем множественные одновременные запросы
+      if (isCheckingRef.current) {
+        return;
+      }
+
       if (authLoading || !user) {
         setLoading(false);
         return;
       }
+
+      // Проверяем, изменился ли пользователь
+      if (userIdRef.current === user.id && userRole.type !== 'loading') {
+        return;
+      }
+
+      isCheckingRef.current = true;
+      userIdRef.current = user.id;
 
       try {
         // Проверяем, является ли пользователь менеджером (может быть у нескольких застройщиков)
@@ -79,8 +94,6 @@ export const useUserRole = () => {
         const isDeveloperWithProjects = (ownProjects && ownProjects.length > 0);
 
         if (managerAccounts && managerAccounts.length > 0) {
-        console.log('managerAccounts', managerAccounts);
-        
           // Пользователь является менеджером (и возможно также застройщиком)
           const accountsArray = managerAccounts as unknown as ManagerAccountWithProfile[];
           const managerData: ManagerRole[] = accountsArray.map((account) => ({
@@ -123,13 +136,15 @@ export const useUserRole = () => {
         });
       } finally {
         setLoading(false);
+        isCheckingRef.current = false;
       }
     };
 
     checkUserRole();
-  }, [user, authLoading]);
+  }, [user, authLoading, userRole.type]);
 
-  return {
+  // Мемоизируем возвращаемый объект, чтобы избежать лишних ре-рендеров
+  return useMemo(() => ({
     userRole,
     loading: loading || authLoading,
     isManager: userRole.type === 'manager' || userRole.type === 'both',
@@ -138,5 +153,5 @@ export const useUserRole = () => {
     primaryDeveloperId: userRole.primaryDeveloperId,
     // Для обратной совместимости
     developerId: userRole.primaryDeveloperId
-  };
+  }), [userRole, loading, authLoading]);
 };
