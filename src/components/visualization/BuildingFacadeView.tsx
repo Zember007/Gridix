@@ -15,6 +15,7 @@ interface BuildingFacadeViewProps {
     building_image_url: string | null;
     project_type?: 'building' | 'object' | null;
     currency?: string | null;
+    facade_open?: boolean | null;
   };
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;
@@ -38,7 +39,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
-  const [isExpanded, setIsExpanded] = useState(project.project_type === 'object');
+  const [isExpanded, setIsExpanded] = useState((project.facade_open));
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });

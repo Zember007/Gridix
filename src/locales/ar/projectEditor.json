@@ -74,5 +74,7 @@
   "typeObject": "فلل/منازل",
   "uploading": "جار الرفع...",
   "uploadPdf": "رفع PDF",
-  "view": "عرض"
+  "view": "عرض",
+  "facadeOpen": "واجهة مفتوحة",
+  "facadeOpenDesc": "عرض المبنى بواجهة مفتوحة"
 }

@@ -58,6 +58,7 @@ interface Project {
   pdf_presentation_url: string | null;
   theme_color: string;
   project_type?: 'building' | 'object' | null;
+  facade_open: boolean;
 }
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
@@ -78,7 +79,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     max_installment_months: 24,
     pdf_presentation_url: null,
     theme_color: '#000000',
-    project_type: 'building'
+    project_type: 'building',
+    facade_open: false
   });
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -159,7 +161,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         max_installment_months: cachedProject.max_installment_months || 24,
         pdf_presentation_url: cachedProject.pdf_presentation_url,
         theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000',
-        project_type: (cachedProject as unknown as Record<string, unknown>).project_type as 'building' | 'object' | null || 'building'
+        project_type: (cachedProject as unknown as Record<string, unknown>).project_type as 'building' | 'object' | null || 'building',
+        facade_open: (cachedProject as unknown as Record<string, unknown>).facade_open as boolean || false
       });
       setLoading(false);
     } catch (error) {
@@ -200,6 +203,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         pdf_presentation_url: project.pdf_presentation_url,
         theme_color: project.theme_color,
         project_type: project.project_type || 'building',
+        facade_open: project.facade_open,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -725,6 +729,16 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     />
                     <Label htmlFor="has-commercial">{t('projectEditor.hasCommercial')}</Label>
                   </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="facade-open-mobile"
+                      checked={project.facade_open}
+                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, facade_open: checked }))}
+                    />
+                    <Label htmlFor="facade-open-mobile">{t('projectEditor.facadeOpen')}</Label>
+                  </div>
+                  <p className="text-xs text-gray-500">{t('projectEditor.facadeOpenDesc')}</p>
                 </div>
                 <div>
                   <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>
@@ -1164,6 +1178,16 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         />
                         <Label htmlFor="has-commercial">{t('projectEditor.hasCommercial')}</Label>
                       </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="facade-open-desktop"
+                          checked={project.facade_open}
+                          onCheckedChange={(checked) => setProject(prev => ({ ...prev, facade_open: checked }))}
+                        />
+                        <Label htmlFor="facade-open-desktop">{t('projectEditor.facadeOpen')}</Label>
+                      </div>
+                      <p className="text-xs text-gray-500">{t('projectEditor.facadeOpenDesc')}</p>
                     </div>
                     <div>
                       <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>

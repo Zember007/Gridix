@@ -3,33 +3,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { Tables } from '@/integrations/supabase/types';
 
-export interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
-  floors: number;
-  has_parking: boolean;
-  has_commercial: boolean;
-  building_image_url: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  slug: string | null;
-  currency: string | null;
-  is_public: boolean;
-  is_featured: boolean;
-  view_count: number;
-  user_id: string | null;
-  installment_enabled: boolean;
-  min_down_payment_percent: number;
-  max_installment_months: number;
-  pdf_presentation_url: string | null;
-  theme_color: string | null;
-  project_type?: 'building' | 'object' | null;
-  created_at: string;
-  updated_at: string;
-}
+// Используем тип из Supabase напрямую
+export type Project = Tables<'projects'>;
 
 export interface ProjectFilters {
   userId?: string;
@@ -44,7 +21,7 @@ const projectsCache = new Map<string, { data: Project[]; timestamp: number; filt
 const singleProjectCache = new Map<string, { data: Project; timestamp: number }>();
 
 // Глобальные состояния загрузки для предотвращения дублирования запросов
-const loadingStates = new Map<string, Promise<any>>();
+const loadingStates = new Map();
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
 
@@ -134,7 +111,7 @@ export const useProjectsManager = () => {
         setError(null);
         return projectsData;
 
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading projects:', err);
         const errorMessage = err.message || 'Ошибка загрузки проектов';
         setError(errorMessage);
@@ -216,7 +193,7 @@ export const useProjectsManager = () => {
 
         return project;
 
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error loading project:', err);
         return null;
       } finally {
@@ -268,7 +245,7 @@ export const useProjectsManager = () => {
       
       toast.success('Проект создан');
       return data as Project;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating project:', err);
       toast.error(err.message || 'Ошибка создания проекта');
       return null;
@@ -304,7 +281,7 @@ export const useProjectsManager = () => {
 
       toast.success('Проект обновлен');
       return true;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating project:', err);
       toast.error(err.message || 'Ошибка обновления проекта');
       return false;
@@ -333,7 +310,7 @@ export const useProjectsManager = () => {
 
       toast.success('Проект удален');
       return true;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error deleting project:', err);
       toast.error(err.message || 'Ошибка удаления проекта');
       return false;
