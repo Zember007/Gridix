@@ -457,13 +457,32 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
       }}
     >
+      {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
+      {imageLoaded && project.building_image_url && (
+        <>
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{
+              backgroundImage: `url(${project.building_image_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(8px)',
+              transform: 'scale(1.1)', // Небольшое увеличение для избежания белых краев
+            }}
+          />
+          {/* Затемнение для лучшей читаемости */}
+          <div className="absolute inset-0 bg-black/20" />
+        </>
+      )}
+
       {/* Показываем изображение только после загрузки для предотвращения скачков */}
       {imageLoaded ? (
         <img
           ref={imgRef}
           src={project.building_image_url}
           alt={project.name}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 z-10"
           style={{
             width: imgDimensions.width || 'auto',
             height: imgDimensions.height || 'auto',
@@ -504,7 +523,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       {/* SVG полигоны - точно поверх отображаемого изображения */}
       {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
         <svg
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
           style={{
             width: imgDimensions.width,
             height: imgDimensions.height,
