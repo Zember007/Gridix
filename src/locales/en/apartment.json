@@ -21,5 +21,7 @@
   "sqm": "m²",
   "status": "Status",
   "studio": "Studio",
-  "yes": "Yes"
+  "yes": "Yes",
+  "sendRequest": "Send request",
+  "requestSent": "Request sent successfully! We will contact you soon."
 }

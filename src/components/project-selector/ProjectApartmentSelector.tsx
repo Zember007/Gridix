@@ -75,6 +75,39 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     return (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
   };
 
+  const getBaseDomain = async () => {
+
+    // Получаем текущий домен
+    const currentHostname = window.location.hostname;
+
+    // Получаем домены проекта из project_domains
+    const { data: projectDomains } = await supabase
+      .from('project_domains')
+      .select('domain, is_primary, status')
+      .eq('project_id', project?.id || projectId)
+      .eq('status', 'active');
+
+    // Проверяем, есть ли текущий домен среди доменов проекта
+    const isProjectDomain = projectDomains?.some(
+      pd => pd.domain.toLowerCase() === currentHostname.toLowerCase()
+    );
+    // Определяем базовый домен
+    let baseDomain: string;
+    if (isProjectDomain) {
+      // Используем текущий домен
+      baseDomain = window.location.origin;
+    } else {
+
+      const primaryDomain = projectDomains?.find(pd => pd.is_primary)?.domain;
+      if (primaryDomain) {
+        baseDomain = 'https://' + primaryDomain;
+      } else {
+        baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+      }
+
+    }
+  };
+
   const openApartmentDetails = async (apartment: Apartment) => {
     // Если мы в виджете, показываем модальное окно вместо редиректа
     if (isWidget) {
@@ -85,45 +118,18 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
     // Иначе открываем в новой вкладке (старая логика)
     try {
-      // Получаем текущий домен
-      const currentHostname = window.location.hostname;
-      
-      // Получаем домены проекта из project_domains
-      const { data: projectDomains } = await supabase
-        .from('project_domains')
-        .select('domain, is_primary, status')
-        .eq('project_id', project?.id || projectId)
-        .eq('status', 'active');
-      
-      // Проверяем, есть ли текущий домен среди доменов проекта
-      const isProjectDomain = projectDomains?.some(
-        pd => pd.domain.toLowerCase() === currentHostname.toLowerCase()
-      );
-      
-      // Определяем базовый домен
-      let baseDomain: string;
-      if (isProjectDomain) {
-        // Используем текущий домен
-        baseDomain = window.location.origin;
-      } else {
-        
-        const primaryDomain = projectDomains?.find(pd => pd.is_primary)?.domain;
-        if(primaryDomain) {
-          baseDomain = 'https://' + primaryDomain;
-        } else {
-          baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
-        }
-       
-      }
-      
+
+
+      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : import.meta.env.VITE_SERVER_DOMAIN || '';
+
       // Формируем путь к проекту
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-      
+
       // Формируем полный URL
       const url = `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-      
+
       // Открываем в новой вкладке
-      window.open(url, '_blank');
+      window.open(url,  '_blank');
     } catch (error) {
       console.error('Error opening apartment details:', error);
       // В случае ошибки используем запасной вариант
@@ -366,7 +372,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   }
 
   // Check subscription status
-  const isSubscriptionExpired = project.subscription_expires_at && 
+  const isSubscriptionExpired = project.subscription_expires_at &&
     new Date(project.subscription_expires_at) < new Date();
   const isSubscriptionInactive = !['active', 'trialing', 'trial'].includes(project.subscription_status || '') || isSubscriptionExpired;
   const isOwner = user && project.user_id === user.id;
@@ -374,7 +380,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   // If widget mode and apartment is selected, show apartment details
   if (isWidget && isApartmentModalOpen && selectedApartment) {
     return (
-        <ApartmentDetailsPage
+      <ApartmentDetailsPage
         onClose={() => {
           setIsApartmentModalOpen(false);
           setSelectedApartment(null);
@@ -390,9 +396,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
         <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertTitle className="text-yellow-800 dark:text-yellow-200">
-            {isOwner 
-              ? language === 'ru' 
-                ? 'Подписка на проект истекла' 
+            {isOwner
+              ? language === 'ru'
+                ? 'Подписка на проект истекла'
                 : 'Project Subscription Expired'
               : language === 'ru'
                 ? 'Этот проект временно недоступен'
@@ -400,7 +406,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
             }
           </AlertTitle>
           <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-            {isOwner 
+            {isOwner
               ? language === 'ru'
                 ? 'Для продолжения работы с проектом необходимо продлить подписку. Перейдите в раздел "Подписка" в админ-панели.'
                 : 'To continue working with this project, please renew your subscription. Go to the "Subscription" section in the admin panel.'
@@ -421,7 +427,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           )}
         </Alert>
       )}
-      
+
       {/* Top header bar - always visible */}
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 md:px-6 py-4">
@@ -614,8 +620,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                                     <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
                                       <button
                                         className={`w-full h-12 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
-                                            ? 'text-white'
-                                            : 'hover:bg-gray-100 text-gray-700'
+                                          ? 'text-white'
+                                          : 'hover:bg-gray-100 text-gray-700'
                                           }`}
                                         style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
                                         onClick={() => setSelectedFloorForPlan(floor)}

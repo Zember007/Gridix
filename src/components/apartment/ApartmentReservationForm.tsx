@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { SuccessNotification } from '@/components/ui/success-notification';
 
 interface ApartmentReservationFormProps {
   apartmentId: string;
@@ -20,6 +21,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +57,13 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
         return;
       }
 
-      toast.success('Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+      // Show success notification
+      setShowSuccess(true);
       
       // Clear form
       setName('');
       setEmail('');
       setPhone('');
-      
-      // Close modal if onCancel is provided (typically used to close modal)
-      setTimeout(() => {
-        onCancel?.();
-      }, 1500);
 
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -75,32 +73,71 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
     }
   };
 
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    // Close modal after success notification
+    setTimeout(() => {
+      onCancel?.();
+    }, 300);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="reservation-name">{t('managerAccounts.fullName')}</Label>
-        <Input id="reservation-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('managerAccounts.fullNamePlaceholder')} required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="reservation-email">{t('managerAccounts.email')}</Label>
-        <Input id="reservation-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('managerAccounts.emailPlaceholder')} required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="reservation-phone">{t('managerAccounts.phone')}</Label>
-        <Input id="reservation-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('managerAccounts.phonePlaceholder')} required />
-      </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>{t('managerAccounts.cancel')}</Button>
-        <Button 
-          type="submit" 
-          disabled={submitting}
-          className="text-white hover:opacity-90"
-          style={{ backgroundColor: themeColor }}
-        >
-          {submitting ? 'Отправка...' : 'Отправить заявку'}
-        </Button>
-      </div>
-    </form>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="reservation-name">{t('managerAccounts.fullName')}</Label>
+          <Input 
+            id="reservation-name" 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            placeholder={t('managerAccounts.fullNamePlaceholder')} 
+            required 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="reservation-email">{t('auth.email')}</Label>
+          <Input 
+            id="reservation-email" 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            placeholder={t('managerAccounts.emailPlaceholder')} 
+            required 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="reservation-phone">{t('managerAccounts.phone')}</Label>
+          <Input 
+            id="reservation-phone"
+            type="tel"
+            value={phone} 
+            onChange={(e) => setPhone(e.target.value)} 
+            placeholder="+7 (999) 999-99-99" 
+            required    
+          />
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t('managerAccounts.cancel')}
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={submitting}
+            className="text-white hover:opacity-90"
+            style={{ backgroundColor: themeColor }}
+          >
+            {submitting ? t('auth.sending') : t('apartment.sendRequest')}
+          </Button>
+        </div>
+      </form>
+
+      <SuccessNotification
+        isVisible={showSuccess}
+        onClose={handleSuccessClose}
+        message={t('apartment.requestSent')}
+        duration={2500}
+      />
+    </>
   );
 };
 

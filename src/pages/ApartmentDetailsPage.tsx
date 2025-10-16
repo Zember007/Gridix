@@ -29,7 +29,7 @@ interface ApartmentDetailsPageProps {
   onClose?: () => void;
 }
 
-const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '', onClose = () => {} }: ApartmentDetailsPageProps) => {
+const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '', onClose }: ApartmentDetailsPageProps) => {
   const {
     projectId,
     projectSlug,
@@ -298,6 +298,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const goBackToProject = () => {
     if(onClose) {
+      console.log('onClose', onClose);
       onClose();
       return;
     }
@@ -1044,7 +1045,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                   <ApartmentReservationForm
                     apartmentId={apartment.id}
                     projectId={apartment.project_id}
-                    onSubmit={() => setIsReserveDialogOpen(false)}
                     onCancel={() => setIsReserveDialogOpen(false)}
                     themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
                   />
