@@ -41,6 +41,7 @@
     <div class="test-section">
         <h3>Cache Management</h3>
         <button onclick="clearCache()">Clear Cache</button>
+        <button onclick="clearAllCache()">Clear All Cache</button>
         <button onclick="initWidget()">Init Widget</button>
         <button onclick="initWidgetWithForceReload()">Init with Force Reload</button>
         <button onclick="checkVersion()">Check Version</button>
@@ -61,6 +62,20 @@
             if (window.GridixWidget) {
                 window.GridixWidget.clearCache();
                 console.log('Cache cleared manually');
+            } else {
+                console.log('Widget not loaded yet');
+            }
+        }
+        
+        function clearAllCache() {
+            if (window.GridixWidget) {
+                window.GridixWidget.clearCache();
+                // Also clear localStorage manually
+                localStorage.removeItem('gridix-widget-version');
+                localStorage.removeItem('gridix-widget-last-check');
+                localStorage.removeItem('gridix-widget-load-count');
+                console.log('All cache cleared manually');
+                checkVersion();
             } else {
                 console.log('Widget not loaded yet');
             }
