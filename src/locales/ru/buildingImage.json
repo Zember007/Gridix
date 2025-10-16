@@ -12,6 +12,16 @@
     "floorNumber": "{floor} этаж",
     "title": "Настройка этажей"
   },
+  "object": {
+    "addNew": "Добавить объект",
+    "configured": "Настроенные объекты",
+    "creating": "Создание полигона для объекта №{number}",
+    "number": "Номер объекта",
+    "objectNumber": "Объект №{number}",
+    "plan": "План объектов",
+    "polygonsDescription": "Выделите области на плане для каждого объекта (виллы, таунхауса)",
+    "polygonsTitle": "Полигоны объектов"
+  },
   "polygon": {
     "cancel": "Отмена",
     "create": "Создать",

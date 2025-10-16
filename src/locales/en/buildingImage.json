@@ -12,6 +12,16 @@
     "floorNumber": "Floor {floor}",
     "title": "Floor Configuration"
   },
+  "object": {
+    "addNew": "Add Object",
+    "configured": "Configured Objects",
+    "creating": "Creating polygon for object #{number}",
+    "number": "Object Number",
+    "objectNumber": "Object #{number}",
+    "plan": "Objects Plan",
+    "polygonsDescription": "Mark areas on the plan for each object (villas, townhouses)",
+    "polygonsTitle": "Object Polygons"
+  },
   "polygon": {
     "cancel": "Cancel",
     "create": "Create",

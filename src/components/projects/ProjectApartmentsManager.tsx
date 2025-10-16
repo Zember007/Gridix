@@ -103,7 +103,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = apartment.apartment_number.toLowerCase().includes(searchLower) ||
         apartment.status.toLowerCase().includes(searchLower);
-      
+
       return matchesType && matchesSearch;
     });
     setFilteredApartments(filtered);
@@ -112,7 +112,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
   const handleSaveApartment = async (apartmentData: Partial<Apartment>, isNew: boolean = false) => {
     if (!apartmentData.apartment_number?.trim()) {
       toast.error(t('apartmentsManager.numberRequired'));
-      
+
       return;
     }
 
@@ -125,7 +125,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       const saveData = {
         apartment_number: apartmentData.apartment_number.trim(),
         floor_number: apartmentData.floor_number,
-        rooms: currentType === 'apartment' ? apartmentData.rooms || 0 : currentType,
+        rooms: currentType === 'apartment' ? String(apartmentData.rooms || 0) : currentType,
         area: apartmentData.area || 0,
         price: apartmentData.price,
         status: apartmentData.status || 'available',
@@ -139,7 +139,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       if (isNew) {
         const { data, error } = await supabase
           .from('apartments')
-          .insert([saveData])
+          .insert(saveData)
           .select()
           .single();
 
@@ -172,7 +172,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
         // Use normalizeApartmentData to ensure proper type casting
         const updatedApt = normalizeApartmentData(data);
-        setApartments(prev => 
+        setApartments(prev =>
           prev.map(apt => apt.id === editingApartment.id ? updatedApt : apt)
         );
         setEditingApartment(null);
@@ -225,9 +225,9 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
   const openSyncDialog = (sourceApartment: Apartment) => {
     // Найти все квартиры с такой же площадью и количеством комнат
-    const targetApartments = apartments.filter(apt => 
-      apt.id !== sourceApartment.id && 
-      apt.area === sourceApartment.area && 
+    const targetApartments = apartments.filter(apt =>
+      apt.id !== sourceApartment.id &&
+      apt.area === sourceApartment.area &&
       apt.rooms === sourceApartment.rooms &&
       apt.type === sourceApartment.type
     );
@@ -244,7 +244,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
   const handleSyncComplete = (updatedApartments: Apartment[]) => {
     // Обновить локальное состояние
-    setApartments(prev => 
+    setApartments(prev =>
       prev.map(apt => {
         const updated = updatedApartments.find(updApt => updApt.id === apt.id);
         return updated || apt;
@@ -260,7 +260,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
     try {
       // Генерируем новый номер квартиры с префиксом "Копия"
       const duplicateNumber = `Copy ${apartment.apartment_number}`;
-      
+
       // Проверяем, существует ли уже квартира с таким номером
       let finalNumber = duplicateNumber;
       let counter = 1;
@@ -272,7 +272,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       const duplicateData = {
         apartment_number: finalNumber,
         floor_number: apartment.floor_number,
-        rooms: apartment.rooms,
+        rooms: String(apartment.rooms),
         area: apartment.area,
         price: apartment.price,
         status: apartment.status,
@@ -285,7 +285,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
       const { data, error } = await supabase
         .from('apartments')
-        .insert([duplicateData])
+        .insert(duplicateData)
         .select()
         .single();
 
@@ -294,7 +294,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       // Добавляем новую квартиру в локальное состояние
       const newApt = normalizeApartmentData(data);
       setApartments(prev => [...prev, newApt]);
-      
+
       toast.success(`Квартира продублирована как "${finalNumber}"`);
     } catch (error) {
       console.error('Error duplicating apartment:', error);
@@ -308,7 +308,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
   const handleDeleteFloor = async (floorNumber: number) => {
     const apartmentsOnFloor = apartments.filter(apt => apt.floor_number === floorNumber);
-    
+
     if (apartmentsOnFloor.length > 0) {
       if (!confirm(t('floorManagement.deleteFloorWithApartmentsConfirm', { floor: floorNumber, count: apartmentsOnFloor.length }))) {
         return;
@@ -362,7 +362,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
 
       // Update local state
       setApartments(prev => prev.filter(apt => apt.floor_number !== floorNumber));
-      
+
       toast.success(t('floorManagement.deleteFloorSuccess', { floor: floorNumber }));
     } catch (error) {
       console.error('Error deleting floor:', error);
@@ -530,7 +530,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
           <Select
             value={apartment.status}
             onValueChange={(value: string) => {
-              const validStatus = (['available', 'sold', 'reserved'].includes(value)) 
+              const validStatus = (['available', 'sold', 'reserved'].includes(value))
                 ? value as 'available' | 'sold' | 'reserved'
                 : 'available';
               if (isNew) {
@@ -613,20 +613,24 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setFloorManagementOpen(true)}
-            >
-              <Building className="h-4 w-4 mr-2" />
-              {t('floorManagement.manageFloors')}
-            </Button>
+            {
+              projectType !== 'object' && (
+                <Button
+                  variant="outline"
+                  onClick={() => setFloorManagementOpen(true)}
+                >
+                  <Building className="h-4 w-4 mr-2" />
+                  {t('floorManagement.manageFloors')}
+                </Button>
+              )
+            }
             <Button
               style={{ backgroundColor: ADMIN_THEME.primary }}
               onClick={() => setIsAddingNew(true)}
               className="bg-real-estate-600 hover:bg-real-estate-700"
             >
               <Plus className="h-4 w-4 mr-2" />
-              {t('apartmentsManager.addApartment')}
+              {projectType === 'object' ? t('buildingImage.object.addNew') : t('apartmentsManager.addApartment')}
             </Button>
           </div>
         </div>
@@ -644,7 +648,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         </div>
 
         {/* Type selector tabs */}
-       {(project?.has_commercial || project?.has_parking) && <Tabs value={currentType} onValueChange={(value) => setCurrentType(value as 'apartment' | 'commercial' | 'parking')}>
+        {(project?.has_commercial || project?.has_parking) && <Tabs value={currentType} onValueChange={(value) => setCurrentType(value as 'apartment' | 'commercial' | 'parking')}>
           <TabsList className="flex w-full">
             <TabsTrigger className="w-full" value="apartment">{t('apartmentsManager.typeApartment')}</TabsTrigger>
             {project?.has_commercial && (
@@ -684,17 +688,20 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-lg">
-                              {currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number}
+                              {
+                                projectType === 'object' ? t('buildingImage.object.objectNumber', { number: apartment.apartment_number }) :
+                                  currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number
+                              }
                             </h3>
                             <Badge className={getStatusColor(apartment.status)}>
                               {getStatusLabel(apartment.status)}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} • 
-                            {apartment.type === 'apartment' 
+                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} •
+                            {apartment.type === 'apartment'
                               ? (apartment.rooms === 0 ? t('apartment.studio') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
-                              : apartment.type === 'commercial' 
+                              : apartment.type === 'commercial'
                                 ? t('apartmentsManager.typeCommercial')
                                 : t('apartmentsManager.typeParking')
                             }
@@ -793,7 +800,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
               {t('floorManagement.description')}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6">
             {/* Добавление этажа */}
             <div className="space-y-4">

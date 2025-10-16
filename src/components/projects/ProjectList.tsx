@@ -12,15 +12,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LeadsStats } from '@/components/admin/LeadsNotification';
+import { Project } from '@/hooks/useWorkspaceProjects';
 
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  floors: number;
-  building_image_url: string;
-  created_at: string;
-}
 
 interface ProjectListProps {
   onCreateNew: () => void;
@@ -65,20 +58,20 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
     }
   };
 
-  const viewProject = (project: any) => {
+  const viewProject = (project: Project) => {
     const url = project.slug 
       ? `/${language}/project/${project.slug}` 
       : `/${language}/project/id/${project.id}`;
     window.open(url, '_blank');
   };
 
-  const getWidgetUrl = (project: any) => {
+  const getWidgetUrl = (project: Project) => {
     return project.slug 
       ? `/${language}/embed/project/${project.slug}`
       : `/${language}/embed/project/id/${project.id}`;
   };
 
-  const copyWidgetCode = (project: any) => {
+  const copyWidgetCode = (project: Project) => {
     const widgetCode = `<iframe 
   src="${getWidgetUrl(project)}"
   width="100%"
@@ -139,10 +132,10 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
             <div>
               <h2
               style={{ color: ADMIN_THEME.textPrimary }}
-              className="text-xl font-semibold text-real-estate-900">{t('projectList.projects')}</h2>
+              className="text-xl font-semibold">{t('projectList.projects')}</h2>
               <p 
               style={{ color: ADMIN_THEME.textSecondary }}
-              className="text-real-estate-600">{t('projectList.manageDescription')}</p>
+              >{t('projectList.manageDescription')}</p>
             </div>
             <Button
               onClick={onCreateNew}
@@ -164,13 +157,13 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-real-estate-200">
+            <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle
                     style={{ color: ADMIN_THEME.textPrimary }}
-                    className="text-lg text-real-estate-900 group-hover:text-real-estate-700 transition-colors line-clamp-1">
+                    className="text-lg  transition-colors line-clamp-1">
                       {project.name}
                     </CardTitle>
                     <CardDescription
@@ -206,12 +199,12 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                     <div className="flex items-center justify-between text-sm">
                       <Badge
                       style={{ color: ADMIN_THEME.textSecondary }}
-                      variant="outline" className="border-real-estate-300 text-real-estate-700">
-                        {project.floors} этажей
+                      variant="outline">
+                        {project.floors} {t('projectList.floors')}
                       </Badge>
                       <span
                       style={{ color: ADMIN_THEME.textSecondary }}
-                      className="text-real-estate-500">
+                      >
                         {new Date(project.created_at).toLocaleDateString('en-US')}
                       </span>
                     </div>

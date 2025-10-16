@@ -9,6 +9,7 @@ export interface Project {
   name: string;
   description: string;
   floors: number;
+  slug: string;
   building_image_url: string;
   created_at: string;
   user_id: string;
@@ -99,7 +100,7 @@ export const useWorkspaceProjects = () => {
 
         if (projectsError) throw projectsError;
 
-        const projectsWithDeveloper = (projectsData || []).map((project: any) => ({
+        const projectsWithDeveloper = (projectsData || []).map((project) => ({
           ...project,
           developer_info: project.user_profiles
         }));
@@ -118,7 +119,7 @@ export const useWorkspaceProjects = () => {
 
         setProjects(projectsData || []);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading workspace projects:', err);
       const errorMessage = err.message || 'Ошибка загрузки проектов';
       setError(errorMessage);

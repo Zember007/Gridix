@@ -681,14 +681,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="project-type">Тип проекта</Label>
+                    <Label htmlFor="project-type">{t('projectEditor.projectType')}</Label>
                     <Select value={project.project_type || 'building'} onValueChange={(v: 'building' | 'object') => setProject(prev => ({ ...prev, project_type: v }))}>
                       <SelectTrigger id="project-type">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="building">Многоквартирный дом</SelectItem>
-                        <SelectItem value="object">Виллы/таунхаусы</SelectItem>
+                        <SelectItem value="building">{t('projectEditor.typeBuilding')}</SelectItem>
+                        <SelectItem value="object">{t('projectEditor.typeObject')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -769,7 +769,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                 </div>
                 <div>
-                  <Label htmlFor="theme-color-mobile">Цвет темы проекта</Label>
+                  <Label htmlFor="theme-color-mobile">{t('projectEditor.themeColor')}</Label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-4">
                       <Input
@@ -800,7 +800,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Выберите основной цвет темы для интерфейса проекта</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.themeColorDesc')}</p>
                 </div>
 
                 {/* PDF Presentation Upload */}
@@ -1008,6 +1008,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         onSectionChange={handleSidebarSectionChange}
         activeTab={getSidebarSection(activeTab)}
         userEmail={userProfile?.email || user?.email || 'Unknown user'}
+        projectType={project.project_type}
       />
       
       <div className="flex-1 bg-background">
@@ -1119,14 +1120,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="project-type-desktop">Тип проекта</Label>
+                        <Label htmlFor="project-type-desktop">{t('projectEditor.projectType')}</Label>
                         <Select value={project.project_type || 'building'} onValueChange={(v: 'building' | 'object') => setProject(prev => ({ ...prev, project_type: v }))}>
                           <SelectTrigger id="project-type-desktop">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="building">Многоквартирный дом</SelectItem>
-                            <SelectItem value="object">Виллы/таунхаусы</SelectItem>
+                            <SelectItem value="building">{t('projectEditor.typeBuilding')}</SelectItem>
+                            <SelectItem value="object">{t('projectEditor.typeObject')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1207,7 +1208,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
                     </div>
                     <div>
-                      <Label htmlFor="theme-color">Цвет темы проекта</Label>
+                      <Label htmlFor="theme-color">{t('projectEditor.themeColor')}</Label>
                       <div className="space-y-3">
                         <div className="flex items-center gap-4">
                           <Input
@@ -1238,7 +1239,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           ))}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Выберите основной цвет темы для интерфейса проекта</p>
+                      <p className="text-xs text-gray-500 mt-1">{t('projectEditor.themeColorDesc')}</p>
                     </div>
 
                     {/* PDF Presentation Upload */}

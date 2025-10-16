@@ -1,0 +1,42 @@
+{
+  "authRequired": "المصادقة مطلوبة لتحميل الصور",
+  "description": "قم بتحميل صورة واجهة المبنى لتكوين الطوابق",
+  "floors": {
+    "addNew": "إضافة طابق",
+    "canvas": "لوحة الرسم",
+    "configured": "الطوابق المكوّنة:",
+    "creatingNew": "إنشاء الطابق {floor}",
+    "description": "اختر طابقًا وحدد منطقته على صورة المبنى",
+    "edit": "تعديل",
+    "floor": "الطابق:",
+    "floorNumber": "الطابق {floor}",
+    "title": "تكوين الطوابق"
+  },
+  "object": {
+    "addNew": "إضافة كائن",
+    "configured": "الكائنات المكوّنة",
+    "creating": "إنشاء مضلع للكائن رقم {number}",
+    "number": "رقم الكائن",
+    "objectNumber": "كائن رقم {number}",
+    "plan": "خطة الكائنات",
+    "polygonsDescription": "حدد المناطق على الخطة لكل كائن (فيلات، منازل)",
+    "polygonsTitle": "مضلعات الكائنات"
+  },
+  "polygon": {
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "createError": "خطأ في إنشاء المضلع",
+    "createSuccess": "تم إنشاء مضلع للطابق {floor}",
+    "deleteError": "خطأ في حذف المضلع",
+    "deleteSuccess": "تم حذف مضلع الطابق",
+    "save": "حفظ",
+    "saveError": "خطأ في حفظ المضلع",
+    "saveSuccess": "تم حفظ مضلع الطابق {floor}"
+  },
+  "title": "صورة المبنى",
+  "upload": "تحميل صورة",
+  "uploadError": "خطأ في تحميل الصورة",
+  "uploading": "جارٍ التحميل...",
+  "uploadSuccess": "تم تحميل صورة المبنى"
+}
+

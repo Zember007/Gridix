@@ -37,13 +37,14 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [currentShape, setCurrentShape] = useState<Shape | null>(null);
   const [editingFloorId, setEditingFloorId] = useState<string | null>(null);
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
+  const [apartmentNumbers, setApartmentNumbers] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
   
   // Determine if this is an object project (villas/townhouses) or building
-  const isObjectProject = (project as any)?.project_type === 'object';
+  const isObjectProject = (project)?.project_type === 'object';
 
   const loadBuildingData = useCallback(async () => {
     try {
@@ -53,6 +54,21 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
           setBuildingImage(project.building_image_url);
         }
         setFloors(project.floors || 1);
+      }
+
+      // Load apartments if this is an object project
+      if (isObjectProject) {
+        const { data: apartmentsData } = await supabase
+          .from('apartments')
+          .select('apartment_number')
+          .eq('project_id', project?.id || projectId)
+          .order('apartment_number');
+
+        const numbers = (apartmentsData || [])
+          .map(a => typeof a.apartment_number === 'number' ? a.apartment_number : Number(a.apartment_number))
+          .filter((n): n is number => !isNaN(n));
+        const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
+        setApartmentNumbers(uniqueNumbers);
       }
 
       // Load building floors
@@ -83,7 +99,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     } catch (error) {
       console.error('Error loading building data:', error);
     }
-  }, [projectId, buildingImage, project]);
+  }, [projectId, buildingImage, project, isObjectProject]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -256,13 +272,12 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     if (currentImageUrl !== buildingImage) {
       setBuildingImage(currentImageUrl || null);
     }
-  }, [currentImageUrl]);
+  }, [currentImageUrl, buildingImage]);
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">{t('buildingImage.title')}</CardTitle>
           <CardDescription>
             {t('buildingImage.description')}
           </CardDescription>
@@ -303,11 +318,11 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">
-              {isObjectProject ? 'Полигоны объектов' : t('buildingImage.floors.title')}
+              {isObjectProject ? t('buildingImage.object.polygonsTitle') : t('buildingImage.floors.title')}
             </CardTitle>
             <CardDescription>
               {isObjectProject 
-                ? 'Выделите области на плане для каждого объекта (виллы, таунхауса)'
+                ? t('buildingImage.object.polygonsDescription')
                 : t('buildingImage.floors.description')
               }
             </CardDescription>
@@ -316,7 +331,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <Label htmlFor="floor-select" className="text-sm font-medium">
-                  {isObjectProject ? 'Номер объекта' : t('buildingImage.floors.floor')}
+                  {isObjectProject ? t('buildingImage.object.number') : t('buildingImage.floors.floor')}
                 </Label>
                 <select
                   id="floor-select"
@@ -325,12 +340,30 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   className="px-2 py-1 border rounded text-sm min-w-[80px]"
                   disabled={isEditing}
                 >
-                  {/* Allow floors/objects from 0 to max + 2 */}
-                  {Array.from({ length: Math.max(floors, buildingFloors.length > 0 ? Math.max(...buildingFloors.map(f => f.floor_number)) : 0) + 3 }, (_, i) => i).map(floor => (
-                    <option key={floor} value={floor}>
-                      {floor}
-                    </option>
-                  ))}
+                  {isObjectProject ? (
+                    // For object projects, show actual apartment numbers
+                    apartmentNumbers.length > 0 ? (
+                      apartmentNumbers.map(num => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))
+                    ) : (
+                      // If no apartments yet, show range 1-20
+                      Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))
+                    )
+                  ) : (
+                    // For building projects, show floors from 0 to max + 2
+                    Array.from({ length: Math.max(floors, buildingFloors.length > 0 ? Math.max(...buildingFloors.map(f => f.floor_number)) : 0) + 3 }, (_, i) => i).map(floor => (
+                      <option key={floor} value={floor}>
+                        {floor}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               
@@ -342,7 +375,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   className="h-8"
                 >
                   <ImageIcon className="h-3 w-3 mr-1" />
-                  {isObjectProject ? 'Добавить объект' : t('buildingImage.floors.addNew')}
+                  {isObjectProject ? t('buildingImage.object.addNew') : t('buildingImage.floors.addNew')}
                 </Button>
               )}
             </div>
@@ -353,10 +386,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 <h4 className="font-medium text-sm">
                   {isCreatingNewFloor 
                     ? (isObjectProject 
-                        ? `Создание полигона для объекта №${selectedFloor}`
+                        ? t('buildingImage.object.creating', { number: selectedFloor })
                         : t('buildingImage.floors.creatingNew', { floor: selectedFloor })
                       )
-                    : (isObjectProject ? 'План объектов' : t('buildingImage.floors.canvas'))
+                    : (isObjectProject ? t('buildingImage.object.plan') : t('buildingImage.floors.canvas'))
                   }
                 </h4>
                 {isEditing && (
@@ -397,14 +430,14 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
             {buildingFloors.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">
-                  {isObjectProject ? 'Настроенные объекты' : t('buildingImage.floors.configured')}
+                  {isObjectProject ? t('buildingImage.object.configured') : t('buildingImage.floors.configured')}
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {buildingFloors.map((floor) => (
                     <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
                       <span>
                         {isObjectProject 
-                          ? `Объект №${floor.floor_number}`
+                          ? t('buildingImage.object.objectNumber', { number: floor.floor_number })
                           : t('buildingImage.floors.floorNumber', { floor: floor.floor_number })
                         }
                       </span>

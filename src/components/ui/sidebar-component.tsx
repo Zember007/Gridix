@@ -81,15 +81,24 @@ const getAdminNavItems = (t: (k: string) => string, isManagerMode: boolean = fal
 };
 
 // Simplified project editor navigation items
-const getProjectEditorNavItems = (t: (k: string) => string) => [
-  { id: "general", icon: <Building2 size={20} />, label: t('projectEditor.general') },
-  { id: "apartments", icon: <Layers3 size={20} />, label: t('projectEditor.apartmentsTab') },
-  { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
-  { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
-  { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
-  { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
-  { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
-];
+const getProjectEditorNavItems = (t: (k: string) => string, projectType?: 'building' | 'object' | null) => {
+  const items = [
+    { id: "general", icon: <Building2 size={20} />, label: t('projectEditor.general') },
+    { id: "apartments", icon: <Layers3 size={20} />, label: projectType === 'object' ? t('projectEditor.objects') : t('projectEditor.apartmentsTab') },
+    { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
+    { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
+    { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
+    { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
+    { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
+  ];
+
+  // Hide floorplan tab for object projects (villas/townhouses)
+  if (projectType === 'object') {
+    return items.filter(item => item.id !== 'floorplan');
+  }
+
+  return items;
+};
 
 /* ---------------------------- Simplified Sidebar -------------------------- */
 
@@ -343,11 +352,13 @@ export function AdminSidebar({
 export function ProjectEditorSidebar({ 
   onSectionChange, 
   activeTab,
-  userEmail 
+  userEmail,
+  projectType
 }: { 
   onSectionChange?: (section: string) => void; 
   activeTab?: string;
   userEmail?: string;
+  projectType?: 'building' | 'object' | null;
 }) {
   const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState(activeTab || "general");
@@ -358,7 +369,7 @@ export function ProjectEditorSidebar({
     onSectionChange?.(section);
   };
 
-  const navItems = getProjectEditorNavItems(t);
+  const navItems = getProjectEditorNavItems(t, projectType);
 
   return (
     <SimplifiedSidebar
