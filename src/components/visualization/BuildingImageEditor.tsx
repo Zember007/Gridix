@@ -41,6 +41,9 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
+  
+  // Determine if this is an object project (villas/townhouses) or building
+  const isObjectProject = (project as any)?.project_type === 'object';
 
   const loadBuildingData = useCallback(async () => {
     try {
@@ -299,15 +302,22 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       {buildingImage && (
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">{t('buildingImage.floors.title')}</CardTitle>
+            <CardTitle className="text-lg">
+              {isObjectProject ? 'Полигоны объектов' : t('buildingImage.floors.title')}
+            </CardTitle>
             <CardDescription>
-              {t('buildingImage.floors.description')}
+              {isObjectProject 
+                ? 'Выделите области на плане для каждого объекта (виллы, таунхауса)'
+                : t('buildingImage.floors.description')
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label htmlFor="floor-select" className="text-sm font-medium">{t('buildingImage.floors.floor')}</Label>
+                <Label htmlFor="floor-select" className="text-sm font-medium">
+                  {isObjectProject ? 'Номер объекта' : t('buildingImage.floors.floor')}
+                </Label>
                 <select
                   id="floor-select"
                   value={selectedFloor}
@@ -315,7 +325,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   className="px-2 py-1 border rounded text-sm min-w-[80px]"
                   disabled={isEditing}
                 >
-                  {/* Allow floors from 0 to max(current floors, existing building floors) + 2 */}
+                  {/* Allow floors/objects from 0 to max + 2 */}
                   {Array.from({ length: Math.max(floors, buildingFloors.length > 0 ? Math.max(...buildingFloors.map(f => f.floor_number)) : 0) + 3 }, (_, i) => i).map(floor => (
                     <option key={floor} value={floor}>
                       {floor}
@@ -332,7 +342,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   className="h-8"
                 >
                   <ImageIcon className="h-3 w-3 mr-1" />
-                  {t('buildingImage.floors.addNew')}
+                  {isObjectProject ? 'Добавить объект' : t('buildingImage.floors.addNew')}
                 </Button>
               )}
             </div>
@@ -342,8 +352,11 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-medium text-sm">
                   {isCreatingNewFloor 
-                    ? t('buildingImage.floors.creatingNew', { floor: selectedFloor })
-                    : t('buildingImage.floors.canvas')
+                    ? (isObjectProject 
+                        ? `Создание полигона для объекта №${selectedFloor}`
+                        : t('buildingImage.floors.creatingNew', { floor: selectedFloor })
+                      )
+                    : (isObjectProject ? 'План объектов' : t('buildingImage.floors.canvas'))
                   }
                 </h4>
                 {isEditing && (
@@ -383,11 +396,18 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
             {buildingFloors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">{t('buildingImage.floors.configured')}</h4>
+                <h4 className="font-medium text-sm">
+                  {isObjectProject ? 'Настроенные объекты' : t('buildingImage.floors.configured')}
+                </h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {buildingFloors.map((floor) => (
                     <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
-                      <span>{t('buildingImage.floors.floorNumber', { floor: floor.floor_number })}</span>
+                      <span>
+                        {isObjectProject 
+                          ? `Объект №${floor.floor_number}`
+                          : t('buildingImage.floors.floorNumber', { floor: floor.floor_number })
+                        }
+                      </span>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"

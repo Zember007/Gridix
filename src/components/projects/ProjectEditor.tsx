@@ -1117,15 +1117,31 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         placeholder={t('projectEditor.address')}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
-                      <Input
-                        id="floors"
-                        type="number"
-                        min="1"
-                        value={project.floors}
-                        onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="project-type-desktop">Тип проекта</Label>
+                        <Select value={project.project_type || 'building'} onValueChange={(v: 'building' | 'object') => setProject(prev => ({ ...prev, project_type: v }))}>
+                          <SelectTrigger id="project-type-desktop">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="building">Многоквартирный дом</SelectItem>
+                            <SelectItem value="object">Виллы/таунхаусы</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {project.project_type !== 'object' && (
+                        <div>
+                          <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
+                          <Input
+                            id="floors"
+                            type="number"
+                            min="1"
+                            value={project.floors}
+                            onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
+                          />
+                        </div>
+                      )}
                     </div>
                     
                     {/* Дополнительные типы помещений */}
