@@ -56,10 +56,40 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
     console.log('userProfile', userProfile);
 
     if (userProfile) {
-      setSettings({
-        user_id: userProfile.id,
-        company_name: userProfile.user_metadata.company_name || '',
-      })
+      // Load profile data from user_profiles table instead of user_metadata
+      const loadProfileData = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('company_name')
+            .eq('id', userProfile.id)
+            .single();
+
+          if (error) {
+            console.error('Error loading profile:', error);
+            // Fallback to user_metadata if database query fails
+            setSettings({
+              user_id: userProfile.id,
+              company_name: userProfile.user_metadata.company_name || '',
+            });
+          } else {
+            console.log('Loaded profile data:', data);
+            setSettings({
+              user_id: userProfile.id,
+              company_name: data?.company_name || '',
+            });
+          }
+        } catch (error) {
+          console.error('Error in loadProfileData:', error);
+          // Fallback to user_metadata
+          setSettings({
+            user_id: userProfile.id,
+            company_name: userProfile.user_metadata.company_name || '',
+          });
+        }
+      };
+
+      loadProfileData();
     }
   }, [userProfile]);
 
@@ -78,13 +108,29 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      console.log('Saving data:', saveData);
+      console.log('User ID:', userProfile.id);
+
+      const { data, error } = await supabase
         .from('user_profiles')
         .update(saveData)
         .eq('id', userProfile.id)
+        .select();
 
-      if (error) throw error;
+      console.log('Update result:', { data, error });
 
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      // Update local state with the saved data
+      if (data && data.length > 0) {
+        setSettings(prev => ({
+          ...prev,
+          company_name: data[0].company_name || ''
+        }));
+      }
 
       toast.success(t('adminSettings.settingsSaved'));
     } catch (error) {

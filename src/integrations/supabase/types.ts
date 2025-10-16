@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -627,6 +647,45 @@ export type Database = {
           },
         ]
       }
+      manager_project_access: {
+        Row: {
+          created_at: string
+          id: string
+          manager_account_id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manager_account_id: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manager_account_id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manager_project_access_manager_account_id_fkey"
+            columns: ["manager_account_id"]
+            isOneToOne: false
+            referencedRelation: "manager_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manager_project_access_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_custom_fields: {
         Row: {
           created_at: string
@@ -871,6 +930,7 @@ export type Database = {
           installment_enabled: boolean | null
           is_featured: boolean
           is_public: boolean
+          is_public_visible: boolean | null
           latitude: number | null
           longitude: number | null
           max_installment_months: number | null
@@ -880,6 +940,8 @@ export type Database = {
           polygon_settings: Json | null
           project_type: Database["public"]["Enums"]["project_type"]
           slug: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
           theme_color: string | null
           updated_at: string
           user_id: string | null
@@ -899,6 +961,7 @@ export type Database = {
           installment_enabled?: boolean | null
           is_featured?: boolean
           is_public?: boolean
+          is_public_visible?: boolean | null
           latitude?: number | null
           longitude?: number | null
           max_installment_months?: number | null
@@ -908,6 +971,8 @@ export type Database = {
           polygon_settings?: Json | null
           project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           theme_color?: string | null
           updated_at?: string
           user_id?: string | null
@@ -927,6 +992,7 @@ export type Database = {
           installment_enabled?: boolean | null
           is_featured?: boolean
           is_public?: boolean
+          is_public_visible?: boolean | null
           latitude?: number | null
           longitude?: number | null
           max_installment_months?: number | null
@@ -936,6 +1002,8 @@ export type Database = {
           polygon_settings?: Json | null
           project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           theme_color?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1180,9 +1248,14 @@ export type Database = {
           duration_months: number | null
           final_price: number | null
           id: string
+          invoice_number: string | null
+          invoice_paid_at: string | null
+          invoice_requested_at: string | null
+          invoice_url: string | null
           lemon_squeezy_customer_id: string | null
           lemon_squeezy_subscription_id: string | null
           plan_id: string
+          project_id: string | null
           status: string
           trial_ends_at: string | null
           updated_at: string | null
@@ -1198,9 +1271,14 @@ export type Database = {
           duration_months?: number | null
           final_price?: number | null
           id?: string
+          invoice_number?: string | null
+          invoice_paid_at?: string | null
+          invoice_requested_at?: string | null
+          invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
           plan_id: string
+          project_id?: string | null
           status?: string
           trial_ends_at?: string | null
           updated_at?: string | null
@@ -1216,9 +1294,14 @@ export type Database = {
           duration_months?: number | null
           final_price?: number | null
           id?: string
+          invoice_number?: string | null
+          invoice_paid_at?: string | null
+          invoice_requested_at?: string | null
+          invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
           plan_id?: string
+          project_id?: string | null
           status?: string
           trial_ends_at?: string | null
           updated_at?: string | null
@@ -1230,6 +1313,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1278,6 +1368,10 @@ export type Database = {
         Args: {
           settings_row: Database["public"]["Tables"]["amocrm_settings"]["Row"]
         }
+        Returns: boolean
+      }
+      is_project_owner: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
       is_superadmin: {
@@ -1419,6 +1513,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],
@@ -1428,3 +1525,4 @@ export const Constants = {
     },
   },
 } as const
+

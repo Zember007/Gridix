@@ -67,7 +67,7 @@ const  ApartmentCustomFields = ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
-        field_label_translations: (field as any).field_label_translations as Partial<Record<Language, string>> || {},
+        field_label_translations: field.field_label_translations as Partial<Record<Language, string>> || {},
         field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
         is_required: field.is_required,
         field_options: field.field_options as string[] || [],

@@ -80,7 +80,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
       
       // Загружаем активных менеджеров
       const { data: managersData, error: managersError } = await supabase
-        .from('manager_accounts' as any)
+        .from('manager_accounts')
         .select('*')
         .eq('developer_id', developerId)
         .order('created_at', { ascending: false });
@@ -89,7 +89,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       // Загружаем только активные приглашения (не принятые и не истекшие)
       const { data: invitationsData, error: invitationsError } = await supabase
-        .from('manager_invitations' as any)
+        .from('manager_invitations')
         .select('*')
         .eq('developer_id', developerId)
         .eq('status', 'pending')
@@ -195,7 +195,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleSuspendManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts' as any)
+        .from('manager_accounts')
         .update({ status: 'suspended' })
         .eq('id', managerId);
 
@@ -211,7 +211,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleActivateManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts' as any)
+        .from('manager_accounts')
         .update({ status: 'active' })
         .eq('id', managerId);
 
@@ -227,7 +227,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleRemoveManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts' as any)
+        .from('manager_accounts')
         .delete()
         .eq('id', managerId);
 
@@ -243,7 +243,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_invitations' as any)
+        .from('manager_invitations')
         .delete()
         .eq('id', invitationId);
 
@@ -300,13 +300,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const loadManagerAccess = async (managerAccountId: string) => {
     try {
       const { data: accessRules, error } = await supabase
-        .from('manager_project_access' as any)
+        .from('manager_project_access')
         .select('project_id')
         .eq('manager_account_id', managerAccountId);
 
       if (error) throw error;
 
-      const projectIds = (accessRules || []).map((rule: any) => rule.project_id);
+      const projectIds = (accessRules || []).map((rule) => rule.project_id);
       setSelectedProjectIds(projectIds);
     } catch (error) {
       console.error('Error loading manager access:', error);
@@ -331,7 +331,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     try {
       // Удаляем все существующие записи доступа для этого менеджера
       const { error: deleteError } = await supabase
-        .from('manager_project_access' as any)
+        .from('manager_project_access')
         .delete()
         .eq('manager_account_id', selectedManager.id);
 
@@ -345,7 +345,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
         }));
 
         const { error: insertError } = await supabase
-          .from('manager_project_access' as any)
+          .from('manager_project_access')
           .insert(accessRecords);
 
         if (insertError) throw insertError;
