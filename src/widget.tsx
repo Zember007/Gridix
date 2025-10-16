@@ -204,8 +204,12 @@ async function init(options: InitOptions = {}) {
     // Check if cache should be cleared due to version change
     const needsCacheClear = shouldClearCache();
     if (needsCacheClear) {
-      console.log('GridixWidget: Version changed, cache will be cleared');
+      console.log('GridixWidget: Cache will be cleared due to version/data changes');
     }
+    
+    // For development/testing: always clear cache if no explicit forceReload is set
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const shouldForceReload = isDevelopment && !options.forceReload;
     
     // Allow URL params to override or provide defaults if not passed explicitly
     const url = new URL(window.location.href);
@@ -224,7 +228,7 @@ async function init(options: InitOptions = {}) {
       compactMode: options.compactMode ?? (qp.get('compactMode') === 'true'),
       showHeader: options.showHeader ?? (qp.get('showHeader') !== 'false'),
       showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
-      forceReload: options.forceReload ?? ((qp.get('forceReload') === 'true') || needsCacheClear),
+      forceReload: options.forceReload ?? ((qp.get('forceReload') === 'true') || needsCacheClear || shouldForceReload),
       cacheBust: options.cacheBust ?? qp.get('cacheBust') ?? undefined,
     };
 
@@ -291,6 +295,16 @@ function clearWidgetCache(containerId?: string) {
     el.innerHTML = '';
     console.log('GridixWidget: Cache cleared for container', id);
   }
+  
+  // Clear all widget-related localStorage entries
+  try {
+    localStorage.removeItem('gridix-widget-version');
+    localStorage.removeItem('gridix-widget-last-check');
+    localStorage.removeItem('gridix-widget-load-count');
+    console.log('GridixWidget: All localStorage cache entries cleared');
+  } catch (error) {
+    console.warn('GridixWidget: Error clearing localStorage:', error);
+  }
 }
 
 // Check if cache needs to be cleared based on version change
@@ -318,6 +332,26 @@ function shouldClearCache(): boolean {
     if (effectiveVersion && storedVersion !== effectiveVersion) {
       localStorage.setItem('gridix-widget-version', effectiveVersion);
       console.log('GridixWidget: Version mismatch detected:', storedVersion, '->', effectiveVersion);
+      return true;
+    }
+    
+    // Check for data freshness - clear cache if data is stale
+    const lastDataCheck = localStorage.getItem('gridix-widget-last-check');
+    const now = Date.now();
+    const DATA_FRESHNESS_CHECK = 30 * 1000; // 30 seconds for more frequent updates
+    
+    if (!lastDataCheck || (now - parseInt(lastDataCheck)) > DATA_FRESHNESS_CHECK) {
+      localStorage.setItem('gridix-widget-last-check', now.toString());
+      console.log('GridixWidget: Data freshness check - clearing cache');
+      return true;
+    }
+    
+    // Force cache clear on every 5th load to ensure fresh data
+    const loadCount = parseInt(localStorage.getItem('gridix-widget-load-count') || '0') + 1;
+    localStorage.setItem('gridix-widget-load-count', loadCount.toString());
+    
+    if (loadCount % 5 === 0) {
+      console.log('GridixWidget: Periodic cache clear (every 5 loads)');
       return true;
     }
     

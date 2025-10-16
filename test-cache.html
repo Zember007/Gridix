@@ -93,11 +93,15 @@
             const buildVersion = typeof __WIDGET_VERSION__ !== 'undefined' ? __WIDGET_VERSION__ : 'undefined';
             const runtimeVersion = window.__GRIDIX_WIDGET_VERSION__ || 'undefined';
             const storedVersion = localStorage.getItem('gridix-widget-version') || 'none';
+            const lastCheck = localStorage.getItem('gridix-widget-last-check') || 'none';
+            const loadCount = localStorage.getItem('gridix-widget-load-count') || '0';
             
             document.getElementById('version-info').innerHTML = `
                 <strong>Build Version:</strong> ${buildVersion}<br>
                 <strong>Runtime Version:</strong> ${runtimeVersion}<br>
-                <strong>Stored Version:</strong> ${storedVersion}
+                <strong>Stored Version:</strong> ${storedVersion}<br>
+                <strong>Last Check:</strong> ${lastCheck}<br>
+                <strong>Load Count:</strong> ${loadCount}
             `;
         }
         
