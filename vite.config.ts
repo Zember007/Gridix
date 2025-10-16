@@ -48,6 +48,7 @@ export default defineConfig(({ mode }) => {
       build: {
         outDir: 'dist-widget',
         cssCodeSplit: false,
+        minify: 'terser',
         lib: {
           entry: path.resolve(__dirname, 'src/widget.tsx'),
           name: 'GridixWidget',
@@ -66,6 +67,11 @@ export default defineConfig(({ mode }) => {
               }
               return assetInfo.name || 'asset';
             },
+            // IIFE format configuration
+            format: 'iife',
+            name: 'GridixWidget',
+            // Don't extend window, replace it
+            extend: false,
           }
         }
       },

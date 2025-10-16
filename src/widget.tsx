@@ -243,9 +243,21 @@ async function init(options: InitOptions = {}) {
 }
 
 // Expose global API
-// @ts-expect-error - Adding to global window object
-window.GridixWidget = { init };
+declare global {
+  interface Window {
+    GridixWidget: {
+      init: typeof init;
+    };
+  }
+}
 
-export {};
+// Ensure window object exists (for SSR compatibility)
+if (typeof window !== 'undefined') {
+  window.GridixWidget = { init };
+}
+
+// Export for module usage
+export { init };
+export default { init };
 
 
