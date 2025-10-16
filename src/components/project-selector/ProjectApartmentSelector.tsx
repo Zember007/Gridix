@@ -120,7 +120,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     try {
 
 
-      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : import.meta.env.VITE_SERVER_DOMAIN || '';
+      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : '';
 
       // Формируем путь к проекту
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;

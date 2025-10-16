@@ -1,14 +1,9 @@
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { LanguageProvider, EmbedLanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
-import { DEFAULT_LANGUAGE, getLanguagePrefix } from "@/lib/language-utils";
-import LanguageWrapper from "@/components/LanguageWrapper";
+import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
+import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from "@/components/providers";
 import Index from "./pages/Index";
 import ProjectsGalleryPage from "./pages/ProjectsGalleryPage";
 import ProjectWidgetPage from "./pages/ProjectWidgetPage";
@@ -32,132 +27,111 @@ import ContactsPage from "./pages/ContactsPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
+    <BaseProviders>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
               {/* Default route - check for custom domain or redirect to default language */}
-              <Route path="/" element={<EmbedLanguageProvider><DomainProjectPage /></EmbedLanguageProvider>} />
+              <Route path="/" element={<EmbedProviders><DomainProjectPage /></EmbedProviders>} />
               
               {/* Custom domain apartment route */}
-              <Route path="/apartment/:apartmentId" element={<EmbedLanguageProvider><DomainApartmentPage /></EmbedLanguageProvider>} />
+              <Route path="/apartment/:apartmentId" element={<EmbedProviders><DomainApartmentPage /></EmbedProviders>} />
 
               {/* Language-specific routes with :lang parameter */}
-              <Route path="/:lang" element={<LanguageProvider><LanguageWrapper><Index /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/widget/:projectSlug" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/:projectSlug" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang" element={<LanguageProviders><Index /></LanguageProviders>} />
+              <Route path="/:lang/widget/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
+              <Route path="/:lang/project/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
+              <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProviders><ApartmentDetailsPage /></LanguageProviders>} />
               
               {/* Backward compatibility routes - redirect old ID-based URLs to new slug-based ones */}
-              <Route path="/:lang/widget/id/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage useId /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/id/:projectId" element={<LanguageProvider><LanguageWrapper><ProjectWidgetPage useId /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProvider><LanguageWrapper><ApartmentDetailsPage useId /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/widget/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
+              <Route path="/:lang/project/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
+              <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProviders><ApartmentDetailsPage useId /></LanguageProviders>} />
               
               {/* Legal pages */}
-              <Route path="/:lang/privacy-policy" element={<LanguageProvider><LanguageWrapper><PrivacyPolicyPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/terms-of-service" element={<LanguageProvider><LanguageWrapper><TermsOfServicePage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/refund-policy" element={<LanguageProvider><LanguageWrapper><RefundPolicyPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/privacy-policy" element={<LanguageProviders><PrivacyPolicyPage /></LanguageProviders>} />
+              <Route path="/:lang/terms-of-service" element={<LanguageProviders><TermsOfServicePage /></LanguageProviders>} />
+              <Route path="/:lang/refund-policy" element={<LanguageProviders><RefundPolicyPage /></LanguageProviders>} />
               
               {/* Contacts Page */}
-              <Route path="/:lang/contacts" element={<LanguageProvider><LanguageWrapper><ContactsPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/contacts" element={<LanguageProviders><ContactsPage /></LanguageProviders>} />
               <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
               
               {/* Public Pricing Page */}
-              <Route path="/:lang/pricing" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />
-              <Route path="/:lang/price" element={<LanguageProvider><LanguageWrapper><PricingPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/pricing" element={<LanguageProviders><PricingPage /></LanguageProviders>} />
+              <Route path="/:lang/price" element={<LanguageProviders><PricingPage /></LanguageProviders>} />
               {/* Redirect bare pricing routes to default language */}
               <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
               <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
               
               {/* Auth routes */}
-              <Route path="/:lang/auth" element={<LanguageProvider><LanguageWrapper><AuthPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/auth" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
               
               {/* Subscription routes */}
               <Route path="/:lang/subscription" element={
-                <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <SubscriptionPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
-                </LanguageProvider>
+                <LanguageProviders>
+                  <ProtectedRoute>
+                    <SubscriptionPage />
+                  </ProtectedRoute>
+                </LanguageProviders>
               } />
        
        
               {/* Invitation acceptance route - no auth required */}
-              <Route path="/:lang/accept-invitation" element={<LanguageProvider><LanguageWrapper><AcceptInvitationPage /></LanguageWrapper></LanguageProvider>} />
+              <Route path="/:lang/accept-invitation" element={<LanguageProviders><AcceptInvitationPage /></LanguageProviders>} />
               
               {/* Set password route - for users who need to set password */}
-              <Route path="/set-password" element={<EmbedLanguageProvider><SetPasswordPage /></EmbedLanguageProvider>} />
+              <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={
-                <LanguageProvider>
-                  <WorkspaceProvider>
-                    <LanguageWrapper>
-                      <ProtectedRoute>
-                        <AdminPage />
-                      </ProtectedRoute>
-                    </LanguageWrapper>
-                  </WorkspaceProvider>
-                </LanguageProvider>
+                <AdminProviders>
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                </AdminProviders>
               } />
               <Route path="/:lang/admin/project/:projectSlug" element={
-                <LanguageProvider>
-                  <WorkspaceProvider>
-                    <LanguageWrapper>
-                      <ProtectedRoute>
-                        <ProjectEditorPage />
-                      </ProtectedRoute>
-                    </LanguageWrapper>
-                  </WorkspaceProvider>
-                </LanguageProvider>
+                <AdminProviders>
+                  <ProtectedRoute>
+                    <ProjectEditorPage />
+                  </ProtectedRoute>
+                </AdminProviders>
               } />
               {/* Backward compatibility for admin */}
               <Route path="/:lang/admin/project/id/:projectId" element={
-                <LanguageProvider>
-                  <WorkspaceProvider>
-                    <LanguageWrapper>
-                      <ProtectedRoute>
-                        <ProjectEditorPage useId />
-                      </ProtectedRoute>
-                    </LanguageWrapper>
-                  </WorkspaceProvider>
-                </LanguageProvider>
+                <AdminProviders>
+                  <ProtectedRoute>
+                    <ProjectEditorPage useId />
+                  </ProtectedRoute>
+                </AdminProviders>
               } />
 
               <Route path="/:lang/superadmin" element={
-                <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <SuperAdminPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
-                </LanguageProvider>
+                <LanguageProviders>
+                  <ProtectedRoute>
+                    <SuperAdminPage />
+                  </ProtectedRoute>
+                </LanguageProviders>
               } />
 
               {/* Embed routes without language prefix but with EmbedLanguageProvider */}
-              <Route path="/embed/projects/:userId" element={<EmbedLanguageProvider><EmbedProjectsPage /></EmbedLanguageProvider>} />
-              <Route path="/embed/project/:projectSlug" element={<EmbedLanguageProvider><ProjectWidgetPage /></EmbedLanguageProvider>} />
+              <Route path="/embed/projects/:userId" element={<EmbedProviders><EmbedProjectsPage /></EmbedProviders>} />
+              <Route path="/embed/project/:projectSlug" element={<EmbedProviders><ProjectWidgetPage /></EmbedProviders>} />
               {/* Backward compatibility for embed */}
-              <Route path="/embed/project/id/:projectId" element={<EmbedLanguageProvider><ProjectWidgetPage useId /></EmbedLanguageProvider>} />
+              <Route path="/embed/project/id/:projectId" element={<EmbedProviders><ProjectWidgetPage useId /></EmbedProviders>} />
               
               {/* Widget preview routes */}
-              <Route path="/widget/preview" element={<EmbedLanguageProvider><WidgetPreviewPage /></EmbedLanguageProvider>} />
+              <Route path="/widget/preview" element={<EmbedProviders><WidgetPreviewPage /></EmbedProviders>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
               </Routes>
           </AuthProvider>
         </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    </BaseProviders>
   );
 }
 

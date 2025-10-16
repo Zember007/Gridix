@@ -249,9 +249,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   };
 
   // Floor Popup Component
-  const FloorPopup = ({ floorNumber, position }: { floorNumber: number; position: { x: number; y: number } }) => {
-    const stats = getFloorStats(floorNumber);
-    const floorApartments = getFloorApartments(floorNumber);
+  const FloorPopup = ({ Number, position }: { Number: number; position: { x: number; y: number } }) => {
+    const { t } = useLanguage();
 
     // Position popup to the left of the polygon
     const popupWidth = 256; // min-w-64 = 16rem = 256px
@@ -278,12 +277,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       adjustedY = window.innerHeight - popupHeight - margin;
     }
 
-
-    const { t } = useLanguage();
-
-    // For project_type = object, show area and price instead of floor and available count
-    if (project.project_type === 'object' && floorApartments.length > 0) {
-      const apartment = floorApartments[0];
+    // For project_type = object, Number is apartment number, not floor number
+    if (project.project_type === 'object') {
+      const apartment = apartments.find(apt => apt.apartment_number === Number.toString());
+      
+      if (!apartment) {
+        return null;
+      }
       return (
         <div
           className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[120px] h-[105px] p-2"
@@ -292,11 +292,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             top: adjustedY,
           }}
           onClick={(e) => e.stopPropagation()}
-
         >
           <div className="text-[16px] text-center">№ <span className="font-bold text-[24px]">{apartment.apartment_number}</span></div>
           <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
-
             <div className="text-[16px] leading-[1.1]">{apartment.area} m²</div>
             {apartment.price && (
               <div className="text-[16px] leading-[1.1] mt-1">{formatPriceWithCurrency(apartment.price, project?.currency || null)}</div>
@@ -306,9 +304,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       );
     }
 
+    // For project_type = building, Number is floor number
+    const stats = getFloorStats(Number);
+    const floorApartments = getFloorApartments(Number);
+
     return (
       <div
-        className="absolute z-30  uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[100px] h-[105px]"
+        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[100px] h-[105px]"
         style={{
           left: adjustedX,
           top: adjustedY,
@@ -316,26 +318,23 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center flex items-center justify-center gap-[7px]">
-          {t('project.floor')} <span className='font-bold'>{floorNumber} </span>
+          {t('project.floor')} <span className='font-bold'>{Number}</span>
         </div>
 
         <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
-
           <div className="text-[32px] leading-[1.1]">{stats.available}</div>
           {t('project.available')}
         </div>
-
-
       </div>
     );
   };
 
   const handleFloorClick = (floorNumber: number) => {
-    // For project_type = object, directly open apartment details
+    // For project_type = object, floorNumber is actually apartment number
     if (project.project_type === 'object') {
-      const floorApartments = getFloorApartments(floorNumber);
-      if (floorApartments.length > 0) {
-        onApartmentSelect(floorApartments[0]);
+      const apartment = apartments.find(apt => apt.apartment_number === floorNumber.toString());
+      if (apartment) {
+        onApartmentSelect(apartment);
       }
       return;
     }
@@ -594,7 +593,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         </button>
       )}
       {showPopup && selectedFloor !== null && popupPosition && (
-        <FloorPopup floorNumber={selectedFloor} position={popupPosition} />
+        <FloorPopup Number={selectedFloor} position={popupPosition} />
       )}
     </div>
   );
