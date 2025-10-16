@@ -10,10 +10,8 @@ import '@/index.css';
 // Type declaration for build-time injected version
 declare const __WIDGET_VERSION__: string;
 
-// Context to provide Shadow Root container for portals
+// Context to provide Shadow Root container for portals (internal use only)
 const ShadowRootContext = createContext<HTMLElement | null>(null);
-
-export const useShadowRoot = () => useContext(ShadowRootContext);
 
 type InitOptions = {
   projectId?: string; // slug or UUID
