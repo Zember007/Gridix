@@ -1,0 +1,17 @@
+{
+  "myWorkspace": "مساحة العمل الخاصة بي",
+  "managerMode": "المدير",
+  "switchWorkspace": "تبديل مساحة العمل",
+  "projectAccess": "الوصول إلى المشروع",
+  "selectProjects": "اختر المشاريع",
+  "allProjects": "كل المشاريع",
+  "customAccess": "وصول مخصص",
+  "manageAccess": "إدارة الوصول",
+  "noProjectsSelected": "لم يتم اختيار مشاريع",
+  "accessUpdated": "تم تحديث الوصول",
+  "errorUpdatingAccess": "خطأ في تحديث الوصول",
+  "grantAccessToProjects": "منح الوصول إلى المشاريع",
+  "managerWillSeeProjects": "سيرى المدير المشاريع المحددة فقط",
+  "leaveEmptyForAll": "اتركه فارغًا للوصول إلى جميع المشاريع"
+}
+

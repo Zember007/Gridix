@@ -44,8 +44,31 @@ export const useManagerProjects = () => {
       if (isManager && developerIds.length > 0) {
         console.log('Loading projects for manager, developer IDs:', developerIds);
         
-        // Загружаем проекты всех застройщиков, к которым менеджер имеет доступ
-        const { data: projectsData, error: projectsError } = await supabase
+        // Получаем manager_account_id для текущего пользователя
+        const { data: managerAccounts } = await supabase
+          .from('manager_accounts')
+          .select('id, developer_id')
+          .eq('manager_id', user.id)
+          .in('developer_id', developerIds);
+
+        const managerAccountIds = (managerAccounts || []).map(ma => ma.id);
+        
+        // Проверяем наличие записей в manager_project_access для каждого manager_account
+        const { data: accessRules } = await supabase
+          .from('manager_project_access')
+          .select('manager_account_id, project_id')
+          .in('manager_account_id', managerAccountIds);
+
+        // Группируем access rules по manager_account_id
+        const accessByManagerAccount = new Map<string, string[]>();
+        (accessRules || []).forEach(rule => {
+          const existing = accessByManagerAccount.get(rule.manager_account_id) || [];
+          existing.push(rule.project_id);
+          accessByManagerAccount.set(rule.manager_account_id, existing);
+        });
+        
+        // Загружаем проекты всех застройщиков
+        const { data: allProjectsData, error: projectsError } = await supabase
           .from('projects')
           .select(`
             *,
@@ -57,11 +80,25 @@ export const useManagerProjects = () => {
           .in('user_id', developerIds)
           .order('created_at', { ascending: false });
 
-        console.log('Manager projects query result:', { data: projectsData, error: projectsError });
+        console.log('Manager projects query result:', { data: allProjectsData, error: projectsError });
 
         if (projectsError) throw projectsError;
 
-        const projectsWithDeveloper = (projectsData || []).map((project: any) => ({
+        // Фильтруем проекты на основе access rules
+        const filteredProjects = (allProjectsData || []).filter((project: any) => {
+          // Находим manager_account для этого застройщика
+          const managerAccount = managerAccounts?.find(ma => ma.developer_id === project.user_id);
+          if (!managerAccount) return false;
+
+          // Если нет записей в access rules для этого manager_account - доступ ко всем проектам (backward compatibility)
+          const projectIds = accessByManagerAccount.get(managerAccount.id);
+          if (!projectIds || projectIds.length === 0) return true;
+
+          // Если есть записи - проверяем, есть ли проект в списке доступных
+          return projectIds.includes(project.id);
+        });
+
+        const projectsWithDeveloper = filteredProjects.map((project: any) => ({
           ...project,
           developer_info: project.user_profiles
         }));

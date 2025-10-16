@@ -1,0 +1,17 @@
+{
+  "myWorkspace": "ჩემი სამუშაო სივრცე",
+  "managerMode": "მენეჯერი",
+  "switchWorkspace": "სამუშაო სივრცის შეცვლა",
+  "projectAccess": "პროექტზე წვდომა",
+  "selectProjects": "აირჩიეთ პროექტები",
+  "allProjects": "ყველა პროექტი",
+  "customAccess": "მორგებული წვდომა",
+  "manageAccess": "წვდომის მართვა",
+  "noProjectsSelected": "პროექტები არ არის არჩეული",
+  "accessUpdated": "წვდომა განახლებულია",
+  "errorUpdatingAccess": "წვდომის განახლების შეცდომა",
+  "grantAccessToProjects": "პროექტებზე წვდომის მიცემა",
+  "managerWillSeeProjects": "მენეჯერი მხოლოდ არჩეულ პროექტებს დაინახავს",
+  "leaveEmptyForAll": "დატოვეთ ცარიელი ყველა პროექტზე წვდომისთვის"
+}
+

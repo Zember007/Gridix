@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import {
   Search as SearchIcon,
@@ -45,7 +46,16 @@ import {
   UserCheck,
   Globe,
   Crown,
+  Building,
+  ChevronDown,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Softer spring animation curve
 const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
@@ -82,6 +92,7 @@ function SimplifiedSidebar({
   isCollapsed = false,
   onToggleCollapse,
   title = "Admin Panel",
+  showWorkspaceSwitcher = false,
 }: {
   navItems: Array<{ id: string; icon: React.ReactNode; label: string }>;
   activeSection: string;
@@ -90,8 +101,10 @@ function SimplifiedSidebar({
   isCollapsed?: boolean;
   onToggleCollapse: () => void;
   title?: string;
+  showWorkspaceSwitcher?: boolean;
 }) {
   const { t } = useLanguage();
+  const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -153,6 +166,50 @@ function SimplifiedSidebar({
           </button>
         </div>
       </div>
+
+      {/* Workspace Switcher */}
+      {showWorkspaceSwitcher && availableWorkspaces.length > 1 && !isCollapsed && (
+        <div 
+          className="px-4 py-3"
+          style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+        >
+          <Select
+            value={activeWorkspaceId || 'own'}
+            onValueChange={(value) => setActiveWorkspaceId(value === 'own' ? null : value)}
+          >
+            <SelectTrigger 
+              className="w-full"
+              style={{
+                borderColor: ADMIN_THEME.sidebarBorder,
+                backgroundColor: ADMIN_THEME.sidebarBackground,
+                color: ADMIN_THEME.sidebarText,
+              }}
+            >
+              <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                <Building className="h-4 w-4 flex-shrink-0" />
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {availableWorkspaces.map((workspace) => (
+                <SelectItem 
+                  key={workspace.id || 'own'} 
+                  value={workspace.id || 'own'}
+                >
+                  <div className="flex items-center gap-2">
+                    {workspace.type === 'owner' ? (
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                    ) : (
+                      <UserCheck className="h-4 w-4 text-green-600" />
+                    )}
+                    <span>{workspace.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex-1 p-4">
@@ -268,6 +325,7 @@ export function AdminSidebar({
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('adminSidebar.title')}
+      showWorkspaceSwitcher={true}
     />
   );
 }

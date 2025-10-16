@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Mail, Phone, User, UserMinus, UserCheck, UserX, Copy, ExternalLink } from 'lucide-react';
+import { Plus, Mail, Phone, User, UserMinus, UserCheck, UserX, Copy, ExternalLink, Settings } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -51,6 +52,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     phone: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  
+  // Project access management
+  const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
+  const [selectedManager, setSelectedManager] = useState<ManagerAccount | null>(null);
+  const [developerProjects, setDeveloperProjects] = useState<any[]>([]);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [loadingAccess, setLoadingAccess] = useState(false);
 
   useEffect(() => {
     loadManagerData();
@@ -328,6 +336,106 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     window.open(invitationUrl, '_blank');
   };
 
+  // Project Access Management Functions
+  const loadDeveloperProjects = async () => {
+    try {
+      const { data: projects, error } = await supabase
+        .from('projects')
+        .select('id, name, description')
+        .eq('user_id', developerId)
+        .order('name');
+
+      if (error) throw error;
+      setDeveloperProjects(projects || []);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast.error('Ошибка загрузки проектов');
+    }
+  };
+
+  const loadManagerAccess = async (managerAccountId: string) => {
+    try {
+      const { data: accessRules, error } = await supabase
+        .from('manager_project_access')
+        .select('project_id')
+        .eq('manager_account_id', managerAccountId);
+
+      if (error) throw error;
+
+      const projectIds = (accessRules || []).map(rule => rule.project_id);
+      setSelectedProjectIds(projectIds);
+    } catch (error) {
+      console.error('Error loading manager access:', error);
+      toast.error('Ошибка загрузки доступа');
+    }
+  };
+
+  const handleManageAccess = async (manager: ManagerAccount) => {
+    setSelectedManager(manager);
+    setLoadingAccess(true);
+    setIsAccessDialogOpen(true);
+    
+    await loadDeveloperProjects();
+    await loadManagerAccess(manager.id);
+    
+    setLoadingAccess(false);
+  };
+
+  const handleSaveAccess = async () => {
+    if (!selectedManager) return;
+
+    try {
+      // Удаляем все существующие записи доступа для этого менеджера
+      const { error: deleteError } = await supabase
+        .from('manager_project_access')
+        .delete()
+        .eq('manager_account_id', selectedManager.id);
+
+      if (deleteError) throw deleteError;
+
+      // Если выбраны конкретные проекты, добавляем их
+      if (selectedProjectIds.length > 0) {
+        const accessRecords = selectedProjectIds.map(projectId => ({
+          manager_account_id: selectedManager.id,
+          project_id: projectId
+        }));
+
+        const { error: insertError } = await supabase
+          .from('manager_project_access')
+          .insert(accessRecords);
+
+        if (insertError) throw insertError;
+      }
+      // Если ничего не выбрано, удалили все записи - это означает доступ ко всем проектам
+
+      toast.success(t('workspace.accessUpdated'));
+      setIsAccessDialogOpen(false);
+      setSelectedManager(null);
+      setSelectedProjectIds([]);
+    } catch (error) {
+      console.error('Error saving access:', error);
+      toast.error(t('workspace.errorUpdatingAccess'));
+    }
+  };
+
+  const toggleProjectAccess = (projectId: string) => {
+    setSelectedProjectIds(prev => {
+      if (prev.includes(projectId)) {
+        return prev.filter(id => id !== projectId);
+      } else {
+        return [...prev, projectId];
+      }
+    });
+  };
+
+  const selectAllProjects = () => {
+    setSelectedProjectIds(developerProjects.map(p => p.id));
+  };
+
+  const clearAllProjects = () => {
+    setSelectedProjectIds([]);
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -449,6 +557,16 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
+                    {/* Project Access Management Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleManageAccess(manager)}
+                    >
+                      <Settings className="h-4 w-4 mr-1" />
+                      {t('workspace.manageAccess')}
+                    </Button>
+                    
                     {manager.status === 'active' ? (
                       <Button
                         variant="outline"
@@ -599,6 +717,114 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Project Access Management Dialog */}
+      <Dialog open={isAccessDialogOpen} onOpenChange={setIsAccessDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('workspace.projectAccess')}</DialogTitle>
+            <DialogDescription>
+              {selectedManager && (
+                <>
+                  {t('workspace.grantAccessToProjects')} <strong>{selectedManager.full_name}</strong>
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    {t('workspace.leaveEmptyForAll')}
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingAccess ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Quick Actions */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">
+                  {t('workspace.selectProjects')}: {selectedProjectIds.length} / {developerProjects.length}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllProjects}
+                  >
+                    {t('workspace.allProjects')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAllProjects}
+                  >
+                    {t('common.clear')}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Projects List */}
+              <div className="space-y-2 border rounded-lg p-4 max-h-96 overflow-y-auto">
+                {developerProjects.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('workspace.noProjectsSelected')}
+                  </p>
+                ) : (
+                  developerProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        id={`project-${project.id}`}
+                        checked={selectedProjectIds.includes(project.id)}
+                        onCheckedChange={() => toggleProjectAccess(project.id)}
+                      />
+                      <label
+                        htmlFor={`project-${project.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium">{project.name}</div>
+                        {project.description && (
+                          <div className="text-sm text-muted-foreground">
+                            {project.description}
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Info Message */}
+              {selectedProjectIds.length === 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                  {t('workspace.leaveEmptyForAll')}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAccessDialogOpen(false);
+                    setSelectedManager(null);
+                    setSelectedProjectIds([]);
+                  }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button onClick={handleSaveAccess}>
+                  {t('common.save')}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

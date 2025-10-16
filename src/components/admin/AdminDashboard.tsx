@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
-import ManagerProjectList from '@/components/projects/ManagerProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
 import { LeadsManager } from './LeadsManager';
@@ -19,7 +18,7 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useManagerProjects } from '@/hooks/useManagerProjects';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
 
 interface AdminDashboardProps {
@@ -42,7 +41,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const isMobile = useIsMobile();
   const { user, userProfile, signOut, loading } = useAuth();
   const { userRole, isManager, isDeveloper, developerId, primaryDeveloperId } = useUserRole();
-  const { projects: managerProjects, loading: projectsLoading, refresh: refreshProjects } = useManagerProjects();
+  const { isManagerMode } = useWorkspace();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -82,10 +81,6 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={onBack}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  {t('admin.back')}
-                </Button>
                 
                 {/* Mobile Navigation Drawer */}
                 <Sheet>
@@ -123,13 +118,16 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                           <UserCheck className="h-4 w-4" />
                           {t('admin.leads')}
                         </button>
-                        <button
-                          onClick={() => navigate('/subscription')}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 hover:bg-muted"
-                        >
-                          <Crown className="h-4 w-4" />
-                          {t('admin.subscription')}
-                        </button>
+                        {/* Подписки скрыты для менеджеров в чужих workspace */}
+                        {!isManagerMode && (
+                          <button
+                            onClick={() => navigate('/subscription')}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 hover:bg-muted"
+                          >
+                            <Crown className="h-4 w-4" />
+                            {t('admin.subscription')}
+                          </button>
+                        )}
                         <button
                           onClick={() => setActiveTab('widgets')}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
@@ -218,18 +216,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           
           {activeTab === 'projects' && (
             <div className="space-y-6">
-              {isManager ? (
-                <ManagerProjectList 
-                  onCreateNew={handleCreateNew}
-                  onEditProject={handleEditProject}
-                />
-              ) : (
-                <ProjectList 
-                  onCreateNew={handleCreateNew}
-                  onEditProject={handleEditProject}
-                  developerId={developerId}
-                />
-              )}
+              <ProjectList 
+                onCreateNew={handleCreateNew}
+                onEditProject={handleEditProject}
+              />
             </div>
           )}
 
@@ -261,7 +251,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
-          {activeTab === 'subscription' && (
+          {activeTab === 'subscription' && !isManagerMode && (
             <div className="space-y-6">
               <SubscriptionTab />
             </div>
@@ -347,18 +337,10 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
           {/* Remove Tabs wrapper and show content based on activeTab */}
           {activeTab === 'projects' && (
             <div className="space-y-6">
-              {isManager ? (
-                <ManagerProjectList 
-                  onCreateNew={handleCreateNew}
-                  onEditProject={handleEditProject}
-                />
-              ) : (
-                <ProjectList 
-                  onCreateNew={handleCreateNew}
-                  onEditProject={handleEditProject}
-                  developerId={developerId}
-                />
-              )}
+              <ProjectList 
+                onCreateNew={handleCreateNew}
+                onEditProject={handleEditProject}
+              />
             </div>
           )}
 
@@ -368,7 +350,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
-          {activeTab === 'subscription' && (
+          {activeTab === 'subscription' && !isManagerMode && (
             <div className="space-y-6">
               <SubscriptionTab />
             </div>

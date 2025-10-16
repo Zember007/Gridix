@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider, EmbedLanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { DEFAULT_LANGUAGE, getLanguagePrefix } from "@/lib/language-utils";
 import LanguageWrapper from "@/components/LanguageWrapper";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
@@ -90,35 +91,44 @@ function App() {
        
        
               {/* Invitation acceptance route - no auth required */}
-              <Route path="/accept-invitation" element={<EmbedLanguageProvider><AcceptInvitationPage /></EmbedLanguageProvider>} />
+              <Route path="/:lang/accept-invitation" element={<LanguageProvider><LanguageWrapper><AcceptInvitationPage /></LanguageWrapper></LanguageProvider>} />
+              
+              {/* Set password route - for users who need to set password */}
+              <Route path="/set-password" element={<EmbedLanguageProvider><SetPasswordPage /></EmbedLanguageProvider>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={
                 <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
+                  <WorkspaceProvider>
+                    <LanguageWrapper>
+                      <ProtectedRoute>
+                        <AdminPage />
+                      </ProtectedRoute>
+                    </LanguageWrapper>
+                  </WorkspaceProvider>
                 </LanguageProvider>
               } />
               <Route path="/:lang/admin/project/:projectSlug" element={
                 <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <ProjectEditorPage />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
+                  <WorkspaceProvider>
+                    <LanguageWrapper>
+                      <ProtectedRoute>
+                        <ProjectEditorPage />
+                      </ProtectedRoute>
+                    </LanguageWrapper>
+                  </WorkspaceProvider>
                 </LanguageProvider>
               } />
               {/* Backward compatibility for admin */}
               <Route path="/:lang/admin/project/id/:projectId" element={
                 <LanguageProvider>
-                  <LanguageWrapper>
-                    <ProtectedRoute>
-                      <ProjectEditorPage useId />
-                    </ProtectedRoute>
-                  </LanguageWrapper>
+                  <WorkspaceProvider>
+                    <LanguageWrapper>
+                      <ProtectedRoute>
+                        <ProjectEditorPage useId />
+                      </ProtectedRoute>
+                    </LanguageWrapper>
+                  </WorkspaceProvider>
                 </LanguageProvider>
               } />
 
@@ -143,7 +153,7 @@ function App() {
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

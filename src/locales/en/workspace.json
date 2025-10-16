@@ -1,0 +1,17 @@
+{
+  "myWorkspace": "My Workspace",
+  "managerMode": "Manager",
+  "switchWorkspace": "Switch workspace",
+  "projectAccess": "Project Access",
+  "selectProjects": "Select Projects",
+  "allProjects": "All Projects",
+  "customAccess": "Custom Access",
+  "manageAccess": "Manage Access",
+  "noProjectsSelected": "No projects selected",
+  "accessUpdated": "Access updated",
+  "errorUpdatingAccess": "Error updating access",
+  "grantAccessToProjects": "Grant access to projects",
+  "managerWillSeeProjects": "Manager will only see selected projects",
+  "leaveEmptyForAll": "Leave empty for access to all projects"
+}
+

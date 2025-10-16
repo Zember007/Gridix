@@ -45,7 +45,7 @@ serve(async (req) => {
     // Создаем URL для принятия приглашения
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
     const encodedToken = encodeURIComponent(invitation_token)
-    const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`
+    const invitationUrl = `${siteUrl}en/accept-invitation?token=${encodedToken}`
 
     console.log('Attempting to send magic link invitation to:', email)
 

@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader } from '@/components/ui/loader';
-import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3 } from 'lucide-react';
+import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3, Building } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
-import { useUserProjects, useProjectCRUD } from '@/hooks/useProjects';
+import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
+import { useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -24,13 +25,12 @@ interface Project {
 interface ProjectListProps {
   onCreateNew: () => void;
   onEditProject: (projectId: string, isNew: boolean) => void;
-  developerId?: string;
 }
 
-const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListProps) => {
+const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { projects, loading, error, refresh } = useUserProjects(developerId || user?.id);
+  const { projects, loading, error, refresh, isManagerMode } = useWorkspaceProjects();
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
 
   // Применяем CSS переменные темы
@@ -46,6 +46,12 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
   const deleteProject = async (projectId: string, projectName: string) => {
     if (!user) {
       toast.error(t('projectList.authRequired'));
+      return;
+    }
+
+    // Менеджеры не могут удалять проекты
+    if (isManagerMode) {
+      toast.error('Менеджеры не могут удалять проекты');
       return;
     }
 
@@ -210,6 +216,14 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       </span>
                     </div>
                     
+                    {/* Developer Info для менеджеров */}
+                    {isManagerMode && project.developer_info && (
+                      <div className="flex items-center gap-1 text-xs text-blue-600">
+                        <Building className="h-3 w-3" />
+                        <span>{project.developer_info.company_name || project.developer_info.full_name}</span>
+                      </div>
+                    )}
+                    
                     {/* Leads Stats */}
                     <LeadsStats projectId={project.id} />
                   </div>
@@ -271,14 +285,17 @@ const ProjectList = ({ onCreateNew, onEditProject, developerId }: ProjectListPro
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                     
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deleteProject(project.id, project.name)}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {/* Кнопка удаления скрыта для менеджеров */}
+                    {!isManagerMode && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteProject(project.id, project.name)}
+                        className="text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

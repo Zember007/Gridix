@@ -1,0 +1,17 @@
+{
+  "myWorkspace": "Мое рабочее пространство",
+  "managerMode": "Менеджер",
+  "switchWorkspace": "Переключить workspace",
+  "projectAccess": "Доступ к проектам",
+  "selectProjects": "Выберите проекты",
+  "allProjects": "Все проекты",
+  "customAccess": "Выборочный доступ",
+  "manageAccess": "Управление доступом",
+  "noProjectsSelected": "Проекты не выбраны",
+  "accessUpdated": "Доступ обновлен",
+  "errorUpdatingAccess": "Ошибка обновления доступа",
+  "grantAccessToProjects": "Предоставить доступ к проектам",
+  "managerWillSeeProjects": "Менеджер увидит только выбранные проекты",
+  "leaveEmptyForAll": "Оставьте пустым для доступа ко всем проектам"
+}
+

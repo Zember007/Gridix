@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth, UserProfile } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import ManagerAccountsManager from '@/components/admin/ManagerAccountsManager';
 import { ManagerRole } from '@/hooks/useUserRole';
@@ -36,6 +37,7 @@ interface AdminSettingsProps {
 
 const AdminSettings = ({ userProfile, loading, developerId, isManager, managerData }: AdminSettingsProps) => {
   const { t } = useLanguage();
+  const { isManagerMode } = useWorkspace();
   const [settings, setSettings] = useState<AdminSettings>({
     user_id: userProfile?.id || '',
     company_name: '',
@@ -197,11 +199,11 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
         </TabsContent>
 
         <TabsContent value="contacts">
-          {/* Показываем менеджеров только застройщикам, менеджеры не могут управлять другими менеджерами */}
-          {!isManager && (
+          {/* Показываем менеджеров только в собственном workspace */}
+          {!isManagerMode && (
             <ManagerAccountsManager developerId={developerId || userProfile?.id || ''} />
           )}
-          {isManager && (
+          {isManagerMode && (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 Управление менеджерами доступно только владельцу аккаунта
