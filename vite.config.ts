@@ -60,10 +60,10 @@ export default defineConfig(({ mode }) => {
           external: [],
           output: {
             inlineDynamicImports: true,
-            // Add version to CSS filename for cache busting
+            // Keep CSS filename simple (version will be added as query param when loading)
             assetFileNames: (assetInfo) => {
               if (assetInfo.name === 'style.css') {
-                return `style.css?v=${buildVersion}`;
+                return 'style.css';
               }
               return assetInfo.name || 'asset';
             },
