@@ -62,14 +62,23 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 
 
 // Simplified admin navigation items
-const getAdminNavItems = (t: (k: string) => string, onNavigate?: (path: string) => void) => [
-  { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
-  { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
-  { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
-  { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
-  { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics') },
-  { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
-];
+const getAdminNavItems = (t: (k: string) => string, isManagerMode: boolean = false, onNavigate?: (path: string) => void) => {
+  const items = [
+    { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
+    { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
+    { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
+    { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
+    { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics') },
+    { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
+  ];
+
+  // Фильтруем вкладки для менеджера в режиме manager workspace
+  if (isManagerMode) {
+    return items.filter(item => item.id !== 'subscription' && item.id !== 'settings');
+  }
+
+  return items;
+};
 
 // Simplified project editor navigation items
 const getProjectEditorNavItems = (t: (k: string) => string) => [
@@ -306,6 +315,7 @@ export function AdminSidebar({
   onTabChange?: (tab: string) => void;
 }) {
   const { t } = useLanguage();
+  const { isManagerMode } = useWorkspace();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
   const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
 
@@ -314,7 +324,7 @@ export function AdminSidebar({
     onTabChange?.(section);
   };
 
-  const navItems = getAdminNavItems(t, onNavigate);
+  const navItems = getAdminNavItems(t, isManagerMode, onNavigate);
 
   return (
     <SimplifiedSidebar

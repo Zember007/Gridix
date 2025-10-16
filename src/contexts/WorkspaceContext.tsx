@@ -34,11 +34,43 @@ interface WorkspaceProviderProps {
   children: ReactNode;
 }
 
+const WORKSPACE_STORAGE_KEY = 'gridix_active_workspace_id';
+
+// Загрузка activeWorkspaceId из localStorage
+const loadWorkspaceFromStorage = (): string | null => {
+  try {
+    const stored = localStorage.getItem(WORKSPACE_STORAGE_KEY);
+    return stored === 'null' || stored === null ? null : stored;
+  } catch (error) {
+    console.error('Error loading workspace from localStorage:', error);
+    return null;
+  }
+};
+
+// Сохранение activeWorkspaceId в localStorage
+const saveWorkspaceToStorage = (workspaceId: string | null) => {
+  try {
+    if (workspaceId === null) {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, 'null');
+    } else {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, workspaceId);
+    }
+  } catch (error) {
+    console.error('Error saving workspace to localStorage:', error);
+  }
+};
+
 export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
   const { userRole, isManager, isDeveloper, developerIds } = useUserRole();
   const { t } = useLanguage();
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(loadWorkspaceFromStorage);
   const [availableWorkspaces, setAvailableWorkspaces] = useState<WorkspaceOption[]>([]);
+
+  // Обертка для setActiveWorkspaceId с сохранением в localStorage
+  const setActiveWorkspaceId = (id: string | null) => {
+    setActiveWorkspaceIdState(id);
+    saveWorkspaceToStorage(id);
+  };
 
   // Определяем доступные workspace при изменении роли пользователя
   useEffect(() => {
@@ -46,7 +78,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     const workspaces: WorkspaceOption[] = [];
 
-    // Собственный workspace (всегда первый)
+    // Собственный workspace (всегда первый, если пользователь является застройщиком)
     if (isDeveloper) {
       workspaces.push({
         id: null,
@@ -71,11 +103,22 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     setAvailableWorkspaces(workspaces);
 
-    // Если текущий activeWorkspaceId больше не доступен, сбрасываем на собственный
-    if (activeWorkspaceId !== null && !workspaces.find(w => w.id === activeWorkspaceId)) {
+    // Восстанавливаем workspace из localStorage, если он доступен
+    const storedWorkspaceId = loadWorkspaceFromStorage();
+    if (storedWorkspaceId !== null) {
+      // Проверяем, доступен ли сохраненный workspace
+      const isAvailable = workspaces.find(w => w.id === storedWorkspaceId);
+      if (isAvailable) {
+        setActiveWorkspaceIdState(storedWorkspaceId);
+      } else {
+        // Если сохраненный workspace недоступен, сбрасываем на собственный
+        setActiveWorkspaceId(null);
+      }
+    } else if (activeWorkspaceId !== null && !workspaces.find(w => w.id === activeWorkspaceId)) {
+      // Если текущий activeWorkspaceId больше не доступен, сбрасываем на собственный
       setActiveWorkspaceId(null);
     }
-  }, [userRole, isManager, isDeveloper, activeWorkspaceId, t]);
+  }, [userRole, isManager, isDeveloper, t]);
 
   // Определяем, находимся ли мы в режиме менеджера
   const isManagerMode = activeWorkspaceId !== null;

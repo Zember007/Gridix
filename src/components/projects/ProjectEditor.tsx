@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
@@ -90,6 +91,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { user, userProfile } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
+  const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { project: cachedProject } = useProject(projectId);
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
@@ -127,12 +129,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       const canEdit = user && (
         // Владелец проекта может редактировать
         cachedProject.user_id === user.id ||
-        // Менеджер может редактировать, если проект принадлежит застройщику, к которому он имеет доступ
+        // Менеджер может редактировать, если проект принадлежит застройщику активного workspace
+        (isManagerMode && activeWorkspaceId && cachedProject.user_id === activeWorkspaceId) ||
+        // Или если менеджер имеет доступ к этому застройщику
         (isManager && developerIds.includes(cachedProject.user_id))
       );
       
       if (!canEdit) {
-        console.log('canEdit', canEdit);
+        console.log('canEdit', canEdit, 'isManagerMode', isManagerMode, 'activeWorkspaceId', activeWorkspaceId, 'project.user_id', cachedProject.user_id);
         setAccessError(t('projectEditor.noEditRights'));
         setLoading(false);
         return;
@@ -230,6 +234,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       } else {
         const canEdit = user && (
           cachedProject?.user_id === user.id ||
+          (isManagerMode && activeWorkspaceId && cachedProject?.user_id === activeWorkspaceId) ||
           (isManager && cachedProject?.user_id && developerIds.includes(cachedProject.user_id))
         );
         
