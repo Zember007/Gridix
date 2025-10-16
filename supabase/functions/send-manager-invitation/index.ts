@@ -9,6 +9,7 @@ interface InvitationRequest {
   developer_name: string
   company_name: string
   invitation_token: string
+  project_ids?: string[] // Массив ID проектов для доступа
 }
 
 serve(async (req) => {
@@ -40,16 +41,135 @@ serve(async (req) => {
       return createJsonResponse({ success: false, error: 'Unauthorized' }, 401, origin);
     }
 
-    const { email, full_name, phone, developer_name, company_name, invitation_token }: InvitationRequest = await req.json()
+    const { email, full_name, phone, developer_name, company_name, invitation_token, project_ids }: InvitationRequest = await req.json()
+    
+    const developerId = user.id
+
+    console.log('Processing manager invitation for:', email)
+
+    // ===== ПРОВЕРКИ ПЕРЕД СОЗДАНИЕМ =====
+    
+    // 1. Проверяем, существует ли уже менеджер с таким email
+    const { data: existingManager, error: managerCheckError } = await supabaseAdmin
+      .from('manager_accounts')
+      .select('id, status')
+      .eq('developer_id', developerId)
+      .eq('email', email)
+      .maybeSingle()
+
+    if (managerCheckError) {
+      console.error('Error checking existing manager:', managerCheckError)
+      throw new Error(`Failed to check existing manager: ${managerCheckError.message}`)
+    }
+
+    if (existingManager) {
+      if (existingManager.status === 'active') {
+        return createJsonResponse({ 
+          success: false, 
+          error: 'Manager with this email already exists and is active' 
+        }, 400, origin);
+      } else if (existingManager.status === 'suspended') {
+        return createJsonResponse({ 
+          success: false, 
+          error: 'Manager with this email is suspended. Please reactivate them instead.' 
+        }, 400, origin);
+      }
+    }
+
+    // 2. Проверяем, существует ли активное приглашение с таким email
+    const { data: existingInvitation, error: invitationCheckError } = await supabaseAdmin
+      .from('manager_invitations')
+      .select('id, status, expires_at')
+      .eq('developer_id', developerId)
+      .eq('email', email)
+      .eq('status', 'pending')
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (invitationCheckError) {
+      console.error('Error checking existing invitation:', invitationCheckError)
+      throw new Error(`Failed to check existing invitation: ${invitationCheckError.message}`)
+    }
+
+    if (existingInvitation) {
+      return createJsonResponse({ 
+        success: false, 
+        error: 'Active invitation for this email already exists' 
+      }, 400, origin);
+    }
+
+    // 3. Проверяем, существует ли пользователь в user_profiles
+    const { data: existingUserProfile, error: userProfileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (userProfileError) {
+      console.error('Error checking user profile:', userProfileError)
+      throw new Error(`Failed to check user profile: ${userProfileError.message}`)
+    }
 
     // Создаем URL для принятия приглашения
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
     const encodedToken = encodeURIComponent(invitation_token)
     const invitationUrl = `${siteUrl}en/accept-invitation?token=${encodedToken}`
 
-    console.log('Attempting to send magic link invitation to:', email)
+    // ===== ОБРАБОТКА В ЗАВИСИМОСТИ ОТ НАЛИЧИЯ ПОЛЬЗОВАТЕЛЯ =====
+    
+    if (existingUserProfile) {
+      console.log('User already registered, creating manager account directly:', email)
+      
+      // Пользователь уже зарегистрирован - создаем manager_account сразу
+      const { data: managerAccountData, error: accountError } = await supabaseAdmin
+        .from('manager_accounts')
+        .insert({
+          developer_id: developerId,
+          manager_id: existingUserProfile.id,
+          email: email,
+          full_name: full_name,
+          phone: phone,
+          status: 'active',
+          accepted_at: new Date().toISOString()
+        })
+        .select()
+        .single()
 
-    // Проверяем существует ли пользователь
+      if (accountError) {
+        console.error('Error creating manager account:', accountError)
+        throw new Error(`Failed to create manager account: ${accountError.message}`)
+      }
+
+      // Сохраняем доступ к проектам, если выбраны конкретные проекты
+      if (project_ids && project_ids.length > 0 && managerAccountData) {
+        const accessRecords = project_ids.map(projectId => ({
+          manager_account_id: managerAccountData.id,
+          project_id: projectId
+        }))
+
+        const { error: accessError } = await supabaseAdmin
+          .from('manager_project_access')
+          .insert(accessRecords)
+
+        if (accessError) {
+          console.error('Error creating project access:', accessError)
+          throw new Error(`Failed to create project access: ${accessError.message}`)
+        }
+      }
+
+      return createJsonResponse({
+        success: true,
+        message: 'Manager account created successfully',
+        manager_account: managerAccountData,
+        already_registered: true
+      }, 200, origin);
+    }
+
+    // ===== ПОЛЬЗОВАТЕЛЬ НЕ ЗАРЕГИСТРИРОВАН - СОЗДАЕМ ПРИГЛАШЕНИЕ =====
+    
+    console.log('User not registered, creating invitation:', email)
+
+    // Проверяем существует ли пользователь в auth
     let userData = null
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
     const existingUser = existingUsers?.users?.find(u => u.email === email)
@@ -129,29 +249,39 @@ serve(async (req) => {
 
     console.log('Magic link sent successfully to:', email)
 
-    // Опционально: сохраняем информацию о приглашении в базе данных
+    // Сохраняем информацию о приглашении в таблицу manager_invitations
     try {
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7) // Приглашение действительно 7 дней
+
+      const invitationData: any = {
+        developer_id: developerId,
+        email,
+        full_name,
+        phone,
+        invitation_token,
+        status: 'pending',
+        expires_at: expiresAt.toISOString()
+      }
+
+      // Сохраняем project_ids как JSON, если они есть
+      if (project_ids && project_ids.length > 0) {
+        invitationData.project_ids = project_ids
+      }
+
       const { error: dbError } = await supabaseAdmin
-        .from('invitations') // Создайте эту таблицу, если нужно
-        .insert({
-          email,
-          full_name,
-          phone,
-          developer_name,
-          company_name,
-          invitation_token,
-          invited_by: user.id,
-          invited_at: new Date().toISOString(),
-          status: 'sent'
-        })
+        .from('manager_invitations')
+        .insert(invitationData)
 
       if (dbError) {
-        console.warn('Failed to save invitation to database:', dbError)
-        // Не прерываем выполнение, так как письмо уже отправлено
+        console.error('Failed to save invitation to database:', dbError)
+        throw new Error(`Failed to save invitation: ${dbError.message}`)
       }
+      
+      console.log('Invitation saved to database successfully')
     } catch (dbSaveError) {
-      console.warn('Database save error:', dbSaveError)
-      // Не критично, продолжаем
+      console.error('Database save error:', dbSaveError)
+      throw dbSaveError
     }
     
     return createJsonResponse({
@@ -159,7 +289,7 @@ serve(async (req) => {
       message: 'Magic link invitation sent successfully',
       invitation_url: invitationUrl,
       email: email,
-      user: userData?.user
+      already_registered: false
     }, 200, origin);
 
   } catch (error) {

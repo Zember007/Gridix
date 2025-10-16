@@ -80,7 +80,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
       
       // Загружаем активных менеджеров
       const { data: managersData, error: managersError } = await supabase
-        .from('manager_accounts')
+        .from('manager_accounts' as any)
         .select('*')
         .eq('developer_id', developerId)
         .order('created_at', { ascending: false });
@@ -89,7 +89,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       // Загружаем только активные приглашения (не принятые и не истекшие)
       const { data: invitationsData, error: invitationsError } = await supabase
-        .from('manager_invitations')
+        .from('manager_invitations' as any)
         .select('*')
         .eq('developer_id', developerId)
         .eq('status', 'pending')
@@ -98,8 +98,8 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       if (invitationsError) throw invitationsError;
 
-      setManagers(managersData || []);
-      setInvitations(invitationsData || []);
+      setManagers((managersData || []) as ManagerAccount[]);
+      setInvitations((invitationsData || []) as ManagerInvitation[]);
     } catch (error) {
       console.error('Error loading manager data:', error);
       toast.error(t('managerAccounts.errorLoading'));
@@ -116,84 +116,61 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
     setSubmitting(true);
     try {
-      // Проверяем, существует ли уже менеджер с таким email
-      const { data: existingManager } = await supabase
-        .from('manager_accounts')
-        .select('id, status')
-        .eq('developer_id', developerId)
-        .eq('email', newManager.email)
-        .single();
-
-      if (existingManager) {
-        if (existingManager.status === 'active') {
-          toast.error('Менеджер с таким email уже добавлен');
-          return;
-        } else if (existingManager.status === 'suspended') {
-          toast.error('Менеджер с таким email заблокирован. Разблокируйте его для повторного использования.');
-          return;
-        }
-      }
-
-      // Проверяем, существует ли активное приглашение с таким email
-      const { data: existingInvitation } = await supabase
-        .from('manager_invitations')
-        .select('id, status, expires_at')
-        .eq('developer_id', developerId)
-        .eq('email', newManager.email)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-        .single();
-
-      if (existingInvitation) {
-        toast.error('Активное приглашение для этого email уже существует');
+      // Получаем информацию о текущем разработчике
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Unauthorized');
         return;
       }
 
-      // Проверяем, существует ли уже пользователь с таким email в user_profiles
-      const { data: existingUser } = await supabase
+      // Получаем developer_name и company_name
+      const { data: profile } = await supabase
         .from('user_profiles')
-        .select('id')
-        .eq('email', newManager.email)
+        .select('full_name, company_name')
+        .eq('id', developerId)
         .single();
 
-      if (!existingUser) {
-        // Пользователь не зарегистрирован в системе
-        toast.error('Пользователь с таким email не зарегистрирован. Попросите его сначала зарегистрироваться на платформе.');
-        return;
-      }
+      // Генерируем токен приглашения
+      const invitation_token = await generateInvitationToken();
 
-      // Пользователь существует, создаем manager_account
-      const { data: managerAccountData, error: accountError } = await supabase
-        .from('manager_accounts')
-        .insert({
-          developer_id: developerId,
-          manager_id: existingUser.id,
+      // Вызываем Edge Function для всех проверок и создания
+      const { data, error } = await supabase.functions.invoke('send-manager-invitation', {
+        body: {
           email: newManager.email,
           full_name: newManager.full_name,
           phone: newManager.phone,
-          status: 'active',
-          accepted_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+          developer_name: profile?.full_name || 'Developer',
+          company_name: profile?.company_name || '',
+          invitation_token: invitation_token,
+          project_ids: newManagerProjectIds.length > 0 ? newManagerProjectIds : undefined
+        }
+      });
 
-      if (accountError) throw accountError;
-
-      // Сохраняем доступ к проектам, если выбраны конкретные проекты
-      if (newManagerProjectIds.length > 0 && managerAccountData) {
-        const accessRecords = newManagerProjectIds.map(projectId => ({
-          manager_account_id: managerAccountData.id,
-          project_id: projectId
-        }));
-
-        const { error: accessError } = await supabase
-          .from('manager_project_access')
-          .insert(accessRecords);
-
-        if (accessError) throw accessError;
+      if (error) {
+        console.error('Error from Edge Function:', error);
+        throw error;
       }
 
-      toast.success(t('managerAccounts.managerAdded'));
+      if (!data?.success) {
+        // Обрабатываем ошибки из Edge Function
+        if (data?.error?.includes('already exists and is active')) {
+          toast.error('Менеджер с таким email уже добавлен');
+        } else if (data?.error?.includes('is suspended')) {
+          toast.error('Менеджер с таким email заблокирован. Разблокируйте его для повторного использования.');
+        } else if (data?.error?.includes('Active invitation')) {
+          toast.error('Активное приглашение для этого email уже существует');
+        } else {
+          toast.error(data?.error || t('managerAccounts.errorInviting'));
+        }
+        return;
+      }
+
+      // Успешно создан
+      if (data.already_registered) {
+        toast.success('Менеджер успешно добавлен (пользователь уже зарегистрирован)');
+      } else {
+        toast.success('Приглашение успешно отправлено');
+      }
 
       setNewManager({ email: '', full_name: '', phone: '' });
       setNewManagerProjectIds([]);
@@ -213,46 +190,12 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     return data;
   };
 
-  const sendInvitationEmail = async (invitationData: {
-    email: string;
-    full_name: string;
-    phone?: string;
-    invitation_token: string;
-  }) => {
-    try {
-      // Получаем информацию о застройщике
-      const { data: developerData } = await supabase
-        .from('user_profiles')
-        .select('full_name, company_name')
-        .eq('id', developerId)
-        .single();
 
-      const response = await supabase.functions.invoke('send-manager-invitation', {
-        body: {
-          email: invitationData.email,
-          full_name: invitationData.full_name,
-          phone: invitationData.phone,
-          developer_name: developerData?.full_name || 'Застройщик',
-          company_name: developerData?.company_name || 'Компания',
-          invitation_token: invitationData.invitation_token
-        }
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Error sending invitation email:', error);
-      throw error;
-    }
-  };
 
   const handleSuspendManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts')
+        .from('manager_accounts' as any)
         .update({ status: 'suspended' })
         .eq('id', managerId);
 
@@ -268,7 +211,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleActivateManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts')
+        .from('manager_accounts' as any)
         .update({ status: 'active' })
         .eq('id', managerId);
 
@@ -284,7 +227,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleRemoveManager = async (managerId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_accounts')
+        .from('manager_accounts' as any)
         .delete()
         .eq('id', managerId);
 
@@ -300,7 +243,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const { error } = await supabase
-        .from('manager_invitations')
+        .from('manager_invitations' as any)
         .delete()
         .eq('id', invitationId);
 
@@ -357,13 +300,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const loadManagerAccess = async (managerAccountId: string) => {
     try {
       const { data: accessRules, error } = await supabase
-        .from('manager_project_access')
+        .from('manager_project_access' as any)
         .select('project_id')
         .eq('manager_account_id', managerAccountId);
 
       if (error) throw error;
 
-      const projectIds = (accessRules || []).map(rule => rule.project_id);
+      const projectIds = (accessRules || []).map((rule: any) => rule.project_id);
       setSelectedProjectIds(projectIds);
     } catch (error) {
       console.error('Error loading manager access:', error);
@@ -388,7 +331,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     try {
       // Удаляем все существующие записи доступа для этого менеджера
       const { error: deleteError } = await supabase
-        .from('manager_project_access')
+        .from('manager_project_access' as any)
         .delete()
         .eq('manager_account_id', selectedManager.id);
 
@@ -402,7 +345,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
         }));
 
         const { error: insertError } = await supabase
-          .from('manager_project_access')
+          .from('manager_project_access' as any)
           .insert(accessRecords);
 
         if (insertError) throw insertError;
