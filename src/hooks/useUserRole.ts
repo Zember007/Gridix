@@ -54,15 +54,16 @@ export const useUserRole = () => {
         const { data: managerAccounts, error: managerError } = await supabase
           .from('manager_accounts')
           .select(`
-            *,
-            user_profiles!fk_manager_accounts_developer_profile (
-              full_name,
-              company_name,
-              email
-            )
-          `)
+          *,
+          user_profiles!fk_manager_accounts_developer_profile (
+            full_name,
+            company_name,
+            email
+          )
+        `)
           .eq('manager_id', user.id)
           .eq('status', 'active');
+
 
         if (managerError) {
           console.error('Error checking manager role:', managerError);
@@ -78,6 +79,8 @@ export const useUserRole = () => {
         const isDeveloperWithProjects = (ownProjects && ownProjects.length > 0);
 
         if (managerAccounts && managerAccounts.length > 0) {
+        console.log('managerAccounts', managerAccounts);
+        
           // Пользователь является менеджером (и возможно также застройщиком)
           const accountsArray = managerAccounts as unknown as ManagerAccountWithProfile[];
           const managerData: ManagerRole[] = accountsArray.map((account) => ({
@@ -93,9 +96,9 @@ export const useUserRole = () => {
               email: account.user_profiles.email || ''
             } : undefined
           }));
-          
+
           const developerIds = managerAccounts.map(account => account.developer_id);
-          
+
           setUserRole({
             type: isDeveloperWithProjects ? 'both' : 'manager', // Новый тип 'both' если пользователь и застройщик, и менеджер
             managerData,
