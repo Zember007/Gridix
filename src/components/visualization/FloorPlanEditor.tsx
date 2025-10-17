@@ -982,7 +982,126 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         </div>
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Right sidebar - Apartment Details */}
+          {editingApartment && (
+            <Card className="lg:col-span-3">
+              <CardHeader>
+                <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
+                  <Input
+                    id="apt-number"
+                    value={apartmentData.number}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
+                    placeholder={t('floorPlan.apartments.numberPlaceholder')}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
+                  <Select
+                    value={apartmentData.rooms.toString()}
+                    onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: value }))}
+                  >
+                    <SelectTrigger id="apt-rooms" className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">{t('apartment.studio')}</SelectItem>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
+                  <Input
+                    id="apt-area"
+                    type="number"
+                    value={apartmentData.area}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
+                  <Input
+                    id="apt-price"
+                    type="number"
+                    value={apartmentData.price}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-status">{t('floorPlan.apartments.status')}</Label>
+                  <Select
+                    value={apartmentData.status}
+                    onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger id="apt-status" className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">{t('floorPlan.apartments.available')}</SelectItem>
+                      <SelectItem value="reserved">{t('floorPlan.apartments.reserved')}</SelectItem>
+                      <SelectItem value="sold">{t('floorPlan.apartments.sold')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <ApartmentCustomFields
+                  projectId={projectId}
+                  apartmentId={editingApartment === 'new' ? undefined : editingApartment}
+                  customFieldsData={customFieldsData}
+                  onCustomFieldsChange={setCustomFieldsData}
+                />
+
+                {/* Секция фото */}
+                {editingApartment && editingApartment !== 'new' && (
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      <Label className="text-sm font-medium">{t('floorPlan.apartments.photos')}</Label>
+                    </div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleApartmentPhotoUpload}
+                      disabled={uploadingPhotos}
+                      className="text-xs"
+                    />
+                    {apartmentPhotos.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {apartmentPhotos.map((photo) => (
+                          <div key={photo.id} className="relative group">
+                            <img
+                              src={photo.image_url}
+                              alt="Apartment"
+                              className="w-full h-20 object-cover rounded"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-5 w-5 p-0"
+                              onClick={() => handleDeleteApartmentPhoto(photo.id, photo.image_url)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           {/* Left sidebar - Apartments list */}
           <Card className="lg:col-span-1">
             <CardHeader>
@@ -1133,125 +1252,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             </CardContent>
           </Card>
 
-          {/* Right sidebar - Apartment Details */}
-          {editingApartment && (
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
-                  <Input
-                    id="apt-number"
-                    value={apartmentData.number}
-                    onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
-                    placeholder={t('floorPlan.apartments.numberPlaceholder')}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
-                  <Select
-                    value={apartmentData.rooms.toString()}
-                    onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: value }))}
-                  >
-                    <SelectTrigger id="apt-rooms" className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">{t('apartment.studio')}</SelectItem>
-                      {[1, 2, 3, 4, 5].map(num => (
-                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
-                  <Input
-                    id="apt-area"
-                    type="number"
-                    value={apartmentData.area}
-                    onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
-                  <Input
-                    id="apt-price"
-                    type="number"
-                    value={apartmentData.price}
-                    onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apt-status">{t('floorPlan.apartments.status')}</Label>
-                  <Select
-                    value={apartmentData.status}
-                    onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
-                  >
-                    <SelectTrigger id="apt-status" className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="available">{t('floorPlan.apartments.available')}</SelectItem>
-                      <SelectItem value="reserved">{t('floorPlan.apartments.reserved')}</SelectItem>
-                      <SelectItem value="sold">{t('floorPlan.apartments.sold')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <ApartmentCustomFields
-                  projectId={projectId}
-                  apartmentId={editingApartment === 'new' ? undefined : editingApartment}
-                  customFieldsData={customFieldsData}
-                  onCustomFieldsChange={setCustomFieldsData}
-                />
-
-                {/* Секция фото */}
-                {editingApartment && editingApartment !== 'new' && (
-                  <div className="space-y-2 pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      <Label className="text-sm font-medium">{t('floorPlan.apartments.photos')}</Label>
-                    </div>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleApartmentPhotoUpload}
-                      disabled={uploadingPhotos}
-                      className="text-xs"
-                    />
-                    {apartmentPhotos.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {apartmentPhotos.map((photo) => (
-                          <div key={photo.id} className="relative group">
-                            <img
-                              src={photo.image_url}
-                              alt="Apartment"
-                              className="w-full h-20 object-cover rounded"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-5 w-5 p-0"
-                              onClick={() => handleDeleteApartmentPhoto(photo.id, photo.image_url)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          
         </div>
       </div>
 
