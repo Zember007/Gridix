@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
     Annotorious,
     ImageAnnotation,
@@ -7,33 +7,182 @@ import {
     useAnnotations,
     useAnnotator,
     DrawingStyle,
-    RectangleGeometry,
-    PolygonGeometry
+    Annotation
 } from '@annotorious/react';
 import '@annotorious/react/annotorious-react.css';
 import { Button } from '@/components/ui/button';
 import { Shape, Point } from './GeometryShapes';
+import { getImageSize, shapeToPercents, shapeToPixels } from '@/hooks/use-polygon';
+
+// Тип для selector с геометрией
+interface AnnotationSelector {
+    type: 'POLYGON' | 'RECTANGLE';
+    geometry: {
+        bounds?: {
+            minX: number;
+            minY: number;
+            maxX: number;
+            maxY: number;
+        };
+        points?: Array<[number, number]>;
+    };
+}
 
 interface PolygonAnnotatorProps {
     imageUrl: string;
     shapes?: Shape[];
     currentShape?: Shape | null;
-    onShapeUpdate?: (shapes: Shape[]) => void;
     onCurrentShapeUpdate?: (shape: Shape | null) => void;
     showToolbar?: boolean;
+    drawingEnabled?: boolean;
 }
 
-const AnnotatorContent = ({ 
-    imageUrl, 
+export interface PolygonAnnotatorRef {
+    getCurrentShape: () => Promise<Shape | null>;
+}
+
+const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(({
+    imageUrl,
     shapes = [],
     currentShape,
-    onShapeUpdate,
     onCurrentShapeUpdate,
-    showToolbar = true
-}: PolygonAnnotatorProps) => {
+    showToolbar = true,
+    drawingEnabled = true
+}, ref) => {
     const annotations = useAnnotations();
     const annotator = useAnnotator();
     const [drawingTool, setDrawingTool] = useState<'rectangle' | 'polygon'>('polygon');
+    const isInternalUpdate = useRef(false);
+    const prevShapesRef = useRef<Shape[]>([]);
+    const prevCurrentShapeIdRef = useRef<string | null>(null);
+
+    const convertShapeToAnnotation = useCallback(async (shape: Shape): Promise<Annotation> => {
+        const { width, height } = await getImageSize(imageUrl);
+
+        // Конвертируем shape в пиксели
+        const inPixels = shapeToPixels(shape, width, height);
+
+        // Вычисляем bounds
+        const xCoords = inPixels.points.map(p => p.x);
+        const yCoords = inPixels.points.map(p => p.y);
+        const bounds = {
+            minX: Math.min(...xCoords),
+            minY: Math.min(...yCoords),
+            maxX: Math.max(...xCoords),
+            maxY: Math.max(...yCoords)
+        };
+
+        // Преобразуем точки в формат [[x, y], [x, y], ...]
+        const points = inPixels.points.map(p => [p.x, p.y]);
+
+        // Создаем аннотацию в нужном формате
+        const annotation: Annotation = {
+            id: shape.id,
+            bodies: [],
+            target: {
+                annotation: shape.id,
+                selector: {
+                    type: 'POLYGON',
+                    geometry: {
+                        bounds,
+                        points
+                    }
+                },
+                creator: {
+                    isGuest: true,
+                    id: 'system'
+                },
+                created: new Date()
+            }
+        };
+
+        return annotation;
+    }, [imageUrl]);
+
+    const annotationToShape = useCallback(async (annotation: Annotation): Promise<Shape | null> => {
+        try {
+            const { width, height } = await getImageSize(imageUrl);
+
+            // Извлекаем геометрию из аннотации
+            const selector = annotation.target.selector as AnnotationSelector;
+
+            if (!selector || !selector.geometry) {
+                console.warn('Invalid annotation selector:', annotation);
+                return null;
+            }
+
+            const geometry = selector.geometry;
+            let pointsInPixels: Point[] = [];
+
+            // Обрабатываем разные типы геометрии
+            if (selector.type === 'POLYGON' && geometry.points) {
+                // Для полигона точки уже есть в формате [[x, y], ...]
+                pointsInPixels = geometry.points.map(([x, y]: [number, number]) => ({ x, y }));
+            } else if (selector.type === 'RECTANGLE' && geometry.bounds) {
+                // Для прямоугольника создаем точки из bounds
+                const { minX, minY, maxX, maxY } = geometry.bounds;
+                pointsInPixels = [
+                    { x: minX, y: minY },
+                    { x: maxX, y: minY },
+                    { x: maxX, y: maxY },
+                    { x: minX, y: maxY }
+                ];
+            } else {
+                console.warn('Unknown geometry type:', selector.type);
+                return null;
+            }
+
+            // Создаем shape в пикселях
+            const shapeInPixels: Shape = {
+                id: annotation.id,
+                type: selector.type === 'RECTANGLE' ? 'rectangle' : 'polygon',
+                points: pointsInPixels,
+                color: '#00ff00',
+                isSelected: false
+            };
+
+            // Конвертируем из пикселей в проценты
+            const shapeInPercents = shapeToPercents(shapeInPixels, width, height);
+
+            return shapeInPercents;
+        } catch (error) {
+            console.error('Error converting annotation to shape:', error);
+            return null;
+        }
+    }, [imageUrl]);
+
+    // Экспортируем метод для получения актуального currentShape из аннотатора
+    useImperativeHandle(ref, () => ({
+        getCurrentShape: async () => {
+            if (!annotator || !currentShape) return null;
+            
+            // Сохраняем ID текущей аннотации
+            const currentShapeId = currentShape.id;
+            
+            // Программно снимаем выделение, чтобы закоммитить все изменения
+            annotator.setSelected();
+            
+            // Небольшая задержка для применения изменений
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Получаем все аннотации и находим нужную по ID
+            const allAnnotations = annotations;
+            const updatedAnnotation = allAnnotations.find(a => a.id === currentShapeId);
+            
+            if (updatedAnnotation) {
+                // Конвертируем аннотацию в Shape с актуальными координатами
+                const shape = await annotationToShape(updatedAnnotation as ImageAnnotation);
+                
+                // Восстанавливаем выделение
+                annotator.setSelected(currentShapeId);
+                
+                return shape;
+            }
+            
+            // Если не нашли аннотацию, возвращаем currentShape
+            return currentShape;
+        }
+    }), [annotator, currentShape, annotationToShape, annotations]);
 
     // IMPORTANT! Memo-ize your options to avoid
     // unexpected re-renders of the OSD viewer.
@@ -67,121 +216,180 @@ const AnnotatorContent = ({
         }
     }), [imageUrl]);
 
-    // Конвертируем ImageAnnotation в Shape
-    const annotationToShape = useCallback((annotation: ImageAnnotation): Shape | null => {
-        try {
-            const target = annotation.target;
-            if (!target.selector) return null;
 
-            const selector = target.selector;
-            let points: Point[] = [];
 
-            // Обрабатываем разные типы селекторов
-            if ('geometry' in selector) {
-                const geometry = selector.geometry;
-                
-                // Rectangle shape
-                if ('x' in geometry && 'y' in geometry && 'w' in geometry && 'h' in geometry) {
-                    const rectGeometry = geometry.bounds;
-                    const { minX, minY, maxX, maxY } = rectGeometry;
-                    // Преобразуем прямоугольник в 4 точки полигона
-                    points = [
-                        { x: minX, y: minY },
-                        { x: maxX, y: minY },
-                        { x: maxX, y: maxY },
-                        { x: minX, y: maxY }
-                    ];
-                } 
-                // Polygon shape
-                else if ('points' in geometry) {
-                    const polyGeometry = geometry as PolygonGeometry;
-                    // PolygonGeometry.points это Array<Array<number>>, где каждый внутренний массив [x, y]
-                    // Преобразуем в массив Point объектов
-                    points = polyGeometry.points.map((pointArray: number[]) => ({
-                        x: pointArray[0],
-                        y: pointArray[1]
-                    }));
-                }
-            }
+    // Этот useEffect больше не нужен - мы не синхронизируем обратно в родителя
+    // из-за аннотаций, которые сами пришли от родителя. Обновления идут только
+    // через события создания/обновления/удаления аннотаций пользователем.
 
-            if (points.length === 0) return null;
+    // Функция для конвертации Shape в Annotation
 
-            return {
-                id: annotation.id,
-                type: 'polygon',
-                points,
-                color: '#3b82f6',
-                isSelected: false
-            };
-        } catch (error) {
-            console.error('Error converting annotation to shape:', error);
-            return null;
-        }
-    }, []);
 
-    // Синхронизируем аннотации с внешним состоянием shapes
+
+    const saveShapesToAnnotations = useCallback(async (shapes: Shape[]) => {
+        const annotations = await Promise.all(shapes.map(convertShapeToAnnotation));
+        annotator.setAnnotations(annotations, true);
+    }, [annotator, convertShapeToAnnotation]);
+
+    // Синхронизируем shapes при изменении списка (не при каждом рендере)
     useEffect(() => {
-        if (!annotator || !onShapeUpdate) return;
-
-        const shapes = annotations
-            .map(annotationToShape)
-            .filter((s): s is Shape => s !== null);
+        if (!annotator) return;
         
-        if (shapes.length > 0) {
-            onShapeUpdate(shapes);
+        // Проверяем, изменились ли ID shapes
+        const shapesIds = shapes.map(s => s.id).sort().join(',');
+        const prevShapesIds = prevShapesRef.current.map(s => s.id).sort().join(',');
+        
+        // Если ID не изменились, ничего не делаем (избегаем циклических обновлений)
+        if (shapesIds === prevShapesIds && prevShapesRef.current.length > 0) {
+            return;
         }
-    }, [annotations, annotator, onShapeUpdate, annotationToShape]);
-
-    // Логируем аннотации для отладки
+        
+        console.log('Shapes IDs changed, updating annotator');
+        prevShapesRef.current = shapes;
+        
+        // Показываем только неактивные shapes (фоновые)
+        const backgroundShapes = shapes
+            .filter(shape => !currentShape || shape.id !== currentShape.id)
+            .map(shape => ({ ...shape, isSelected: false }));
+        
+        saveShapesToAnnotations(backgroundShapes);
+    }, [shapes, annotator, saveShapesToAnnotations, currentShape]);
+    
+    // Отдельно обрабатываем изменение currentShape (когда начинаем/завершаем редактирование)
     useEffect(() => {
-        console.log('Current annotations:', annotations);
-        console.log('Current shapes:', shapes);
-    }, [annotations, shapes]);
+        if (!annotator) return;
+        
+        const currentShapeId = currentShape?.id || null;
+        
+        // Если ID currentShape не изменился, ничего не делаем
+        if (currentShapeId === prevCurrentShapeIdRef.current) {
+            return;
+        }
+        
+        console.log('CurrentShape ID changed:', prevCurrentShapeIdRef.current, '->', currentShapeId);
+        prevCurrentShapeIdRef.current = currentShapeId;
+        
+        // Показываем все shapes: фоновые + текущий редактируемый
+        const allShapes: Shape[] = [];
+        
+        shapes.forEach(shape => {
+            if (!currentShape || shape.id !== currentShape.id) {
+                allShapes.push({ ...shape, isSelected: false });
+            }
+        });
+        
+        if (currentShape && currentShape.points.length > 0) {
+            allShapes.push({ ...currentShape, isSelected: true });
+        }
+        
+        saveShapesToAnnotations(allShapes).then(() => {
+            // После загрузки аннотаций, выделяем currentShape для редактирования
+            if (currentShape && currentShape.id) {
+                setTimeout(() => {
+                    const annotation = annotations.find(a => a.id === currentShape.id);
+                    if (annotation) {
+                        console.log('Selecting annotation for editing:', currentShape.id);
+                        annotator.setSelected(annotation.id);
+                    }
+                }, 100);
+            } else {
+                // Снимаем выделение если currentShape === null
+                annotator.setSelected();
+            }
+        });
+    }, [currentShape, shapes, annotator, saveShapesToAnnotations, annotations]);
 
-    // Подписываемся на события создания/обновления аннотаций
+
+
+
+
+
+    // Подписываемся на события создания/обновления/выделения аннотаций
     useEffect(() => {
         if (!annotator) return;
 
-        const handleCreate = (annotation: ImageAnnotation) => {
+        const handleCreate = async (annotation: ImageAnnotation) => {
             console.log('Annotation created:', annotation);
-            const shape = annotationToShape(annotation);
-            if (shape && onCurrentShapeUpdate) {
-                onCurrentShapeUpdate(shape);
+            const shape = await annotationToShape(annotation);
+            
+            if (shape) {
+                // Если мы в режиме редактирования и создаем новый полигон
+                if (drawingEnabled && onCurrentShapeUpdate) {
+                    onCurrentShapeUpdate(shape);
+                }
             }
         };
 
-        const handleUpdate = (annotation: ImageAnnotation) => {
+        const handleUpdate = async (annotation: ImageAnnotation) => {
             console.log('Annotation updated:', annotation);
-            const shape = annotationToShape(annotation);
-            if (shape && onCurrentShapeUpdate) {
-                onCurrentShapeUpdate(shape);
+            const shape = await annotationToShape(annotation);
+            
+            if (shape) {
+                // Если обновляемая аннотация - это currentShape
+                if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
+                    onCurrentShapeUpdate(shape);
+                }
             }
         };
 
         const handleDelete = (annotation: ImageAnnotation) => {
             console.log('Annotation deleted:', annotation);
-            if (onCurrentShapeUpdate) {
+            
+            // Если удалили currentShape, сбрасываем его
+            if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
                 onCurrentShapeUpdate(null);
+            }
+        };
+
+        const handleSelectionChanged = async (selected: ImageAnnotation[]) => {
+            console.log('Selection changed:', selected);
+            
+            if (selected.length > 0) {
+                // Пользователь выделил аннотацию - делаем её currentShape
+                const annotation = selected[0];
+                const shape = await annotationToShape(annotation);
+                
+                if (shape && onCurrentShapeUpdate) {
+                    console.log('Setting currentShape from selection:', shape);
+                    onCurrentShapeUpdate(shape);
+                }
+            } else if (!drawingEnabled) {
+                // Снято выделение и мы не в режиме редактирования
+                if (onCurrentShapeUpdate) {
+                    onCurrentShapeUpdate(null);
+                }
             }
         };
 
         annotator.on('createAnnotation', handleCreate);
         annotator.on('updateAnnotation', handleUpdate);
         annotator.on('deleteAnnotation', handleDelete);
+        annotator.on('selectionChanged', handleSelectionChanged);
+        
+        
 
         return () => {
             annotator.off('createAnnotation', handleCreate);
             annotator.off('updateAnnotation', handleUpdate);
             annotator.off('deleteAnnotation', handleDelete);
+            annotator.off('selectionChanged', handleSelectionChanged);
         };
-    }, [annotator, onCurrentShapeUpdate, annotationToShape]);
+    }, [annotator, onCurrentShapeUpdate, annotationToShape, drawingEnabled, currentShape]);
 
-    // Стиль для аннотаций
-    const annotationStyle = useMemo((): DrawingStyle => ({
-        fill: '#00ff0088',
-        stroke: '#00ff00',
-        strokeWidth: 2
-    }), []);
+    // Стиль для аннотаций (используем функцию для динамического стиля)
+    const annotationStyle = useCallback((annotation: ImageAnnotation): DrawingStyle => {
+        // Если аннотация соответствует currentShape, выделяем её
+        const isEditing = currentShape && annotation.id === currentShape.id;
+        
+        return {
+            fill: isEditing ? '#3b82f688' : '#00ff0044',
+            stroke: isEditing ? '#3b82f6' : '#00ff00',
+            strokeWidth: isEditing ? 3 : 2
+        };
+    }, [currentShape]);
+
+
+
 
     return (
         <div className="h-full w-full flex flex-col gap-2">
@@ -209,12 +417,14 @@ const AnnotatorContent = ({
                 </div>
             )}
 
+       
+
             {/* Область аннотирования */}
             <div className="flex-1 border rounded-lg overflow-hidden">
                 <OpenSeadragonAnnotator
                     tool={drawingTool}
                     style={annotationStyle}
-                    drawingEnabled={true}
+                    drawingEnabled={drawingEnabled}
                 >
                     <OpenSeadragonViewer
                         options={options}
@@ -224,16 +434,20 @@ const AnnotatorContent = ({
             </div>
         </div>
     );
-};
+});
 
-const PolygonAnnotator = (props: PolygonAnnotatorProps) => {
+AnnotatorContent.displayName = 'AnnotatorContent';
+
+const PolygonAnnotator = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>((props, ref) => {
     return (
         <div className="h-[600px] w-full">
             <Annotorious>
-                <AnnotatorContent {...props} />
+                <AnnotatorContent {...props} ref={ref} />
             </Annotorious>
         </div>
     );
-};
+});
+
+PolygonAnnotator.displayName = 'PolygonAnnotator';
 
 export default PolygonAnnotator;

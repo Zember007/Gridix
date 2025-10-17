@@ -423,3 +423,91 @@ svg text {
 [data-theme="light"] {
   height: 100%;
 }
+
+[title="Zoom in"]::after {
+  content: '';
+  background: url("/images/zoomin_rest.svg") no-repeat center center;
+  padding: 4px;
+  height: 30px;
+  width: 30px;
+  padding: 4px;
+  display: block;
+}
+
+[title="Zoom out"]::after {
+  content: '';
+  background: url("/images/zoomout_rest.svg") no-repeat center center;
+  padding: 4px;
+  height: 30px;
+  width: 30px;
+  padding: 4px;
+  display: block;
+}
+
+[title="Go home"]::after {
+  content: '';
+  background: url("/images/home_rest.svg") no-repeat center center;
+  padding: 4px;
+  height: 30px;
+  width: 30px;
+  padding: 4px;
+  display: block;
+}
+
+[title="Toggle full page"]::after {
+  content: '';
+  background: url("/images/fullpage_rest.svg") no-repeat center center;
+  padding: 4px;
+  height: 30px;
+  width: 30px;
+  padding: 4px;
+  display: block;
+}
+
+[title="Zoom in"] img {
+  display: none !important;
+}
+
+[title="Zoom out"] img {
+  display: none !important;
+}
+
+[title="Go home"] img {
+  display: none !important;
+}
+
+[title="Toggle full page"] img {
+  display: none !important;
+}
+
+[title="Zoom in"]  {
+  background: #fff !important;
+  box-shadow: 0 0 10px 1px #000;
+display:block;
+  margin: 5px !important;
+  border-radius: 4px
+}
+
+[title="Zoom out"]  {
+  background: #fff !important;
+  box-shadow: 0 0 10px 1px #000;
+display:block;
+  margin: 5px !important;
+  border-radius: 4px
+}
+
+[title="Go home"]  {
+  background: #fff !important;
+  box-shadow: 0 0 10px 1px #000;
+display:block;
+  margin: 5px !important;
+  border-radius: 4px
+}
+
+[title="Toggle full page"]  {
+  background: #fff !important;
+  box-shadow: 0 0 10px 1px #000;
+display:block;
+  margin: 5px !important;
+  border-radius: 4px
+}

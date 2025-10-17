@@ -601,13 +601,13 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                     </div>
 
                     {/* Floor selector sidebar */}
-                    <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-32 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
+                    <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
                       <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
 
 
                         {/* Floor Carousel */}
-                        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-0 py-10'}`}>
-                          <div className={`${isMobile ? ' w-full max-w-xs' : 'w-24 h-full'} relative`}>
+                        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
+                          <div className={`${isMobile ? ' w-full max-w-xs' : 'w-10 h-full'} relative`}>
                             <Carousel
                               className="w-full h-full "
                               orientation={isMobile ? "horizontal" : "vertical"}
@@ -616,12 +616,12 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                                 loop: filters.getUniqueFloors().length > 3,
                               }}
                             >
-                              <div className={`${isMobile ? ' w-full' : 'w-24 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm`}>
-                                <CarouselContent className={`max-h-[600px] ${isMobile ? '' : 'flex-col'}`}>
+                              <div className={`${isMobile ? ' w-full' : 'w-10 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm flex flex-col justify-center`}>
+                                <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
                                   {filters.getUniqueFloors().map((floor, index) => (
                                     <CarouselItem key={floor} className={`${isMobile ? 'basis-1/3' : 'basis-1/3'} flex items-center justify-center`}>
                                       <button
-                                        className={`w-full h-12 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
+                                        className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
                                           ? 'text-white'
                                           : 'hover:bg-gray-100 text-gray-700'
                                           }`}

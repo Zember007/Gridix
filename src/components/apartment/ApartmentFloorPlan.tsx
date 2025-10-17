@@ -36,7 +36,7 @@ const ApartmentFloorPlan = ({ projectId, apartments, onApartmentSelect, selected
 
         if (error) throw error;
 
-        const processedFloors = (data || []).map((floor: any) => ({
+        const processedFloors = (data || []).map((floor) => ({
           id: floor.id,
           floor_number: floor.floor_number,
           polygon: [],

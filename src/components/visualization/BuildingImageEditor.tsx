@@ -8,7 +8,7 @@ import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCanvas from './polygon-editor/PolygonCanvas';
-import PolygonAnnotator from './polygon-editor/PolygonAnnotator';
+import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,6 +40,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
   const [apartmentNumbers, setApartmentNumbers] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
@@ -185,24 +186,46 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
   const handleCurrentShapeUpdate = (shape: Shape | null) => {
     setCurrentShape(shape);
+    
+  };
+
+  const handleShapeUpdate = (newShapes: Shape[]) => {
+    // Этот callback больше не используется, так как мы избегаем циклических обновлений
+    // Обновления идут только через onCurrentShapeUpdate
+    console.log('Shapes updated from PolygonAnnotator (ignored to avoid loops):', newShapes);
   };
 
   const handlePolygonSave = async () => {
     if (!currentShape) return;
 
     try {
+      // Получаем актуальные координаты из аннотатора
+      let shapeToSave = currentShape;
+      if (polygonAnnotatorRef.current) {
+        const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+        if (actualShape) {
+          shapeToSave = actualShape;
+          console.log('Using actual shape from annotator:', actualShape);
+        }
+      }
+
+      let savedFloorId = editingFloorId;
+      
       if (isCreatingNewFloor) {
         // Create new floor
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('building_floors')
           .insert({
             project_id: project?.id || projectId,
             floor_number: selectedFloor,
-            polygon: currentShape.points as { x: number; y: number }[],
-            color: currentShape.color
-          });
+            polygon: shapeToSave.points as { x: number; y: number }[],
+            color: shapeToSave.color
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+        savedFloorId = data?.id;
 
         // Update project floors count if this is higher than current max
         if (project && selectedFloor > project.floors) {
@@ -219,18 +242,21 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         // Update existing floor
         const { error } = await supabase
           .from('building_floors')
-          .update({ polygon: currentShape.points as { x: number; y: number }[] })
+          .update({ polygon: shapeToSave.points as { x: number; y: number }[] })
           .eq('id', editingFloorId);
 
         if (error) throw error;
         toast.success(t('buildingImage.polygon.saveSuccess', { floor: selectedFloor }));
       }
 
+      // Перезагружаем данные из БД
       await loadBuildingData();
-      setIsEditing(false);
+      
+      // Сбрасываем состояние редактирования
       setEditingFloorId(null);
       setIsCreatingNewFloor(false);
       setCurrentShape(null);
+      setIsEditing(false);
     } catch (error) {
       console.error('Error saving polygon:', error);
       toast.error(isCreatingNewFloor ? t('buildingImage.polygon.createError') : t('buildingImage.polygon.saveError'));
@@ -393,7 +419,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                     : (isObjectProject ? t('buildingImage.object.plan') : t('buildingImage.floors.canvas'))
                   }
                 </h4>
-                {isEditing && (
+                {(isEditing || currentShape) && (
                   <div className="flex items-center gap-2">
                     <Button
                       onClick={handlePolygonSave}
@@ -417,19 +443,17 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 )}
               </div>
               
-             {/*  <PolygonAnnotator
+              <PolygonAnnotator
+                ref={polygonAnnotatorRef}
                 imageUrl={buildingImage}
                 shapes={shapes}
                 currentShape={currentShape}
-                onShapeUpdate={(newShapes) => {
-                  console.log('Shapes updated from PolygonAnnotator:', newShapes);
-                  setShapes(newShapes);
-                }}
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
                 showToolbar={false}
-              /> */}
+                drawingEnabled={isEditing}
+              />
 
-              <PolygonCanvas
+             {/*  <PolygonCanvas
                 imageUrl={buildingImage}
                 shapes={shapes}
                 currentShape={currentShape}
@@ -437,7 +461,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 onShapeUpdate={() => {}}
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
                 className="border rounded"
-              />
+              /> */}
                
             </div>
 
