@@ -233,7 +233,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
     );
 
     if (targetApartments.length === 0) {
-      toast.error('Нет квартир с такой же площадью и количеством комнат для синхронизации');
+      toast.error(t('apartmentsManager.syncError'));
       return;
     }
 

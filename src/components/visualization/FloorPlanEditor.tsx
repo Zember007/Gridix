@@ -5,14 +5,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Upload, Plus, Trash2, Edit3, Settings, X, Copy, RefreshCw, Image as ImageIcon, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import PolygonEditor from './polygon-editor/PolygonEditor';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
+import { Shape } from './polygon-editor/GeometryShapes';
 import ApartmentCustomFields from '@/components/apartment/ApartmentCustomFields';
 import ApartmentSyncDialog from '@/components/apartment/ApartmentSyncDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,13 +96,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showPolygonEditor, setShowPolygonEditor] = useState(false);
-  const [editingPolygon, setEditingPolygon] = useState<Point[]>([]);
   const [polygonSettings, setPolygonSettings] = useState<PolygonSettings | null>(null);
-  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
-  const [hoveredApartment, setHoveredApartment] = useState<string | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
-  const [isDragOver, setIsDragOver] = useState(false);
   const [apartmentPhotos, setApartmentPhotos] = useState<ApartmentPhoto[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
@@ -110,6 +105,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [syncTargetApartments, setSyncTargetApartments] = useState<GlobalApartment[]>([]);
   const [newFloorDialogOpen, setNewFloorDialogOpen] = useState(false);
   const [newFloorNumber, setNewFloorNumber] = useState<number>(0);
+  
+  // Новые состояния для работы с PolygonAnnotator
+  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [currentShape, setCurrentShape] = useState<Shape | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
 
   const { user } = useAuth();
   const { project } = useProject(projectId);
@@ -120,6 +121,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     loadApartments();
     loadPolygonSettings();
     loadProjectFloors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, floorNumber, project]);
 
   const loadProjectFloors = async () => {
@@ -188,6 +190,17 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       }));
 
       setApartments(transformedApartments);
+      
+      // Конвертируем apartments в shapes для отображения
+      const apartmentShapes: Shape[] = transformedApartments.map(apt => ({
+        id: apt.id,
+        type: 'polygon' as const,
+        points: apt.polygon,
+        color: getStatusColor(apt.status),
+        isSelected: false
+      }));
+      
+      setShapes(apartmentShapes);
     } catch (error) {
       console.error('Error loading apartments:', error);
       toast.error(t('floorPlan.loadApartmentsError'));
@@ -398,34 +411,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     await uploadImage(file);
   };
 
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragOver(false);
-  };
-
-  const handleDrop = async (event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragOver(false);
-
-    const files = event.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        await uploadImage(file);
-      } else {
-        toast.error(t('floorPlan.upload.invalidFileType'));
-      }
-    }
-  };
-
   const duplicateToAllFloors = async () => {
     if (!imageUrl && apartments.length === 0) {
       toast.error(t('floorPlan.duplicate.noData'));
@@ -528,6 +513,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const startEditingApartment = (apartmentId: string | null) => {
     if (apartmentId === 'new') {
+      setIsCreatingNew(true);
       setEditingApartment('new');
       setApartmentData({
         number: '',
@@ -536,11 +522,21 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         price: 0,
         status: 'available'
       });
-      setEditingPolygon([]);
-      setShowPolygonEditor(true);
+      setCustomFieldsData({});
+      
+      // Создаем новый пустой shape для нового апартамента
+      const newShape: Shape = {
+        id: `new-apartment-${Date.now()}`,
+        type: 'polygon',
+        points: [],
+        color: getStatusColor('available'),
+        isSelected: true
+      };
+      setCurrentShape(newShape);
     } else if (apartmentId) {
       const apartment = apartments.find(apt => apt.id === apartmentId);
       if (apartment) {
+        setIsCreatingNew(false);
         setEditingApartment(apartmentId);
         setApartmentData({
           number: apartment.apartment_number,
@@ -549,36 +545,61 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           price: apartment.price,
           status: apartment.status
         });
-        setEditingPolygon(apartment.polygon);
+        
         // Загружаем кастомные поля
         if (apartment.custom_fields && typeof apartment.custom_fields === 'object' && !Array.isArray(apartment.custom_fields)) {
           setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
         } else {
           setCustomFieldsData({});
         }
+        
         // Загружаем фото апартамента
         loadApartmentPhotos(apartmentId);
-        setShowPolygonEditor(true);
+        
+        // Устанавливаем текущий shape для редактирования
+        const editingShape: Shape = {
+          id: apartment.id,
+          type: 'polygon',
+          points: apartment.polygon,
+          color: getStatusColor(apartment.status),
+          isSelected: true
+        };
+        setCurrentShape(editingShape);
       }
     }
-    setSelectedApartment(null);
   };
 
-  const handlePolygonSave = async (points: Point[]) => {
-    if (!editingApartment || points.length < 3 || !apartmentData.number) {
+  const handlePolygonSave = async () => {
+    if (!currentShape || !apartmentData.number) {
       toast.error(t('floorPlan.apartments.fillAllFields'));
       return;
     }
 
     try {
-      if (editingApartment === 'new') {
-        const { data, error } = await supabase
+      // Получаем актуальные координаты из аннотатора
+      let shapeToSave = currentShape;
+      if (polygonAnnotatorRef.current) {
+        const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
+        if (actualShape) {
+          shapeToSave = actualShape;
+        }
+      }
+
+      if (shapeToSave.points.length < 3) {
+        toast.error('Полигон должен содержать минимум 3 точки');
+        return;
+      }
+
+      const points = shapeToSave.points;
+
+      if (isCreatingNew) {
+        const { data, error} = await supabase
           .from('apartments')
           .insert({
             project_id: project?.id || projectId,
             floor_number: floorNumber,
             apartment_number: apartmentData.number,
-            rooms: apartmentData.rooms,
+            rooms: typeof apartmentData.rooms === 'string' ? apartmentData.rooms : apartmentData.rooms.toString(),
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
@@ -590,16 +611,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
         if (error) throw error;
 
-        setApartments(prev => [...prev, {
-          id: data.id,
-          apartment_number: data.apartment_number,
-          rooms: data.rooms,
-          area: Number(data.area),
-          price: Number(data.price),
-          status: data.status as 'available' | 'sold' | 'reserved',
-          polygon: points,
-          custom_fields: data.custom_fields as Json | null
-        }]);
+        toast.success(t('floorPlan.apartments.saveSuccess'));
       } else {
         const existingApartment = apartments.find(apt => apt.id === editingApartment);
         if (!existingApartment) return;
@@ -608,7 +620,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           .from('apartments')
           .update({
             apartment_number: apartmentData.number,
-            rooms: apartmentData.rooms,
+            rooms: typeof apartmentData.rooms === 'string' ? apartmentData.rooms : apartmentData.rooms.toString(),
             area: apartmentData.area,
             price: apartmentData.price,
             status: apartmentData.status,
@@ -618,16 +630,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           .eq('id', existingApartment.id);
 
         if (error) throw error;
-
-        setApartments(prev => prev.map(apt =>
-          apt.id === existingApartment.id
-            ? { ...apt, ...apartmentData, polygon: points, custom_fields: customFieldsData as Json }
-            : apt
-        ));
+        toast.success(t('floorPlan.apartments.saveSuccess'));
       }
 
+      // Перезагружаем данные из БД
+      await loadApartments();
       resetEditing();
-      toast.success(t('floorPlan.apartments.saveSuccess'));
     } catch (error) {
       console.error('Error saving apartment:', error);
       toast.error(t('floorPlan.apartments.saveError'));
@@ -635,6 +643,10 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   };
 
   
+
+  const handleCurrentShapeUpdate = (shape: Shape | null) => {
+    setCurrentShape(shape);
+  };
 
   const handlePolygonCancel = () => {
     resetEditing();
@@ -659,8 +671,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
   const resetEditing = () => {
     setEditingApartment(null);
-    setEditingPolygon([]);
-    setShowPolygonEditor(false);
+    setIsCreatingNew(false);
+    setCurrentShape(null);
     setApartmentData({
       number: '',
       rooms: 1,
@@ -670,11 +682,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     });
     setCustomFieldsData({});
     setApartmentPhotos([]);
-  };
-
-  const polygonToPath = (polygon: Point[]) => {
-    if (polygon.length === 0) return '';
-    return `M ${polygon.map(p => `${p.x} ${p.y}`).join(' L ')} Z`;
   };
 
   const getStatusColor = (status: string) => {
@@ -695,36 +702,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  const getPolygonStyle = (status: string, isSelected: boolean = false, isHovered: boolean = false) => {
-    if (!polygonSettings) return {};
-
-    let baseOpacity = polygonSettings.opacity.normal;
-    const hoverOpacity = polygonSettings.opacity.hover;
-
-    if (isSelected) {
-      baseOpacity = 0.8;
-    } else if (isHovered && polygonSettings.hoverEffects.opacityChange) {
-      baseOpacity = hoverOpacity;
-    }
-
-    const style: React.CSSProperties = {
-      fillOpacity: baseOpacity,
-      transition: 'all 0.3s ease',
-      ...(isHovered && polygonSettings.hoverEffects.glow ? {
-        filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))'
-      } : {})
-    };
-
-    return style;
-  };
-
   const handleSettingsChange = (newSettings: PolygonSettings) => {
     setPolygonSettings(newSettings);
-  };
-
-  const handleApartmentClick = (apartment: Apartment) => {
-    if (editingApartment) return;
-    setSelectedApartment(apartment);
   };
 
   const openSyncDialog = (sourceApartment: Apartment) => {
@@ -736,7 +715,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     );
 
     if (targetApartments.length === 0) {
-      toast.error('Нет квартир с такой же площадью и количеством комнат для синхронизации');
+      toast.error(t('apartmentsManager.syncError'));
       return;
     }
 
@@ -851,7 +830,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           project_id: projectId,
           floor_number: floorNumber,
           apartment_number: finalNumber,
-          rooms: apartment.rooms,
+          rooms: typeof apartment.rooms === 'string' ? apartment.rooms : apartment.rooms.toString(),
           area: apartment.area,
           price: apartment.price,
           status: apartment.status,
@@ -923,167 +902,9 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     );
   }
 
-  if (showPolygonEditor) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">
-            {editingApartment === 'new'
-              ? t('floorPlan.apartments.newApartment')
-              : t('floorPlan.apartments.editApartment', { number: apartmentData.number })
-            }
-          </h3>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
-                <Input
-                  id="apt-number"
-                  value={apartmentData.number}
-                  onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
-                  placeholder={t('floorPlan.apartments.numberPlaceholder')}
-                />
-              </div>
-              <div>
-                <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
-                <Select
-                  value={apartmentData.rooms.toString()}
-                  onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: value }))}
-                >
-                  <SelectTrigger id="apt-rooms">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">
-                      {t('apartment.studio')}
-                    </SelectItem>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
-                <Input
-                  id="apt-area"
-                  type="number"
-                  value={apartmentData.area}
-                  onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
-                <Input
-                  id="apt-price"
-                  type="number"
-                  value={apartmentData.price}
-                  onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="apt-status">{t('floorPlan.apartments.status')}</Label>
-                <Select
-                  value={apartmentData.status}
-                  onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger id="apt-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">{t('floorPlan.apartments.available')}</SelectItem>
-                    <SelectItem value="reserved">{t('floorPlan.apartments.reserved')}</SelectItem>
-                    <SelectItem value="sold">{t('floorPlan.apartments.sold')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <ApartmentCustomFields
-              projectId={projectId}
-              apartmentId={editingApartment === 'new' ? undefined : editingApartment}
-              customFieldsData={customFieldsData}
-              onCustomFieldsChange={setCustomFieldsData}
-            />
-
-            {/* Секция управления фото апартамента */}
-            {editingApartment && editingApartment !== 'new' && (
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4" />
-                  <Label className="text-sm font-medium">{t('floorPlan.apartments.photos')}</Label>
-                </div>
-                
-                <div>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleApartmentPhotoUpload}
-                    disabled={uploadingPhotos}
-                    className="mb-2"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t('floorPlan.apartments.uploadMultiplePhotos')}
-                  </p>
-                </div>
-
-                {apartmentPhotos.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-muted rounded-lg">
-                    <ImageIcon className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">{t('floorPlan.apartments.noPhotos')}</p>
-                    <p className="text-xs">{t('floorPlan.apartments.noPhotosDesc')}</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {apartmentPhotos.map((photo) => (
-                      <div key={photo.id} className="relative group">
-                        <img
-                          src={photo.image_url}
-                          alt={photo.description || 'Фото квартиры'}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                          onClick={() => handleDeleteApartmentPhoto(photo.id, photo.image_url)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-
-
-        <PolygonEditor
-          imageUrl={imageUrl}
-          existingPolygons={editingPolygon}
-          onSave={handlePolygonSave}
-          onCancel={handlePolygonCancel}
-          polygonColor={getStatusColor(apartmentData.status)}
-        />
-      </div>
-    );
-  }
-
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="space-y-4">
         <Input
           id="floor-image"
           type="file"
@@ -1092,112 +913,78 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           disabled={loading}
           className="hidden"
         />
-        {/* Main editor */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h3 className="text-lg font-semibold">{t('floorPlan.title')}</h3>
-              {onFloorChange && (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={floorNumber.toString()}
-                    onValueChange={(value) => onFloorChange(parseInt(value))}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allFloors.map(floor => (
-                        <SelectItem key={floor} value={floor.toString()}>
-                          {t('floorPlan.title')} {floor}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // Set default to next available floor number
-                      const maxFloor = allFloors.length > 0 ? Math.max(...allFloors) : 0;
-                      setNewFloorNumber(maxFloor + 1);
-                      setNewFloorDialogOpen(true);
-                    }}
-                    className="h-8"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    {t('floorManagement.addFloor')}
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={duplicateToAllFloors}
-                disabled={loading || (!imageUrl && apartments.length === 0)}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                {t('floorPlan.duplicateToAllFloors')}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowSettings(true)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                {t('floorPlan.settings')}
-              </Button>
-            </div>
+        
+        {/* Header with Floor selector and controls */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-semibold">{t('floorPlan.title')}</h3>
+            {onFloorChange && (
+              <div className="flex items-center gap-2">
+                <Select
+                  value={floorNumber.toString()}
+                  onValueChange={(value) => onFloorChange(parseInt(value))}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allFloors.map(floor => (
+                      <SelectItem key={floor} value={floor.toString()}>
+                        {t('floorPlan.title')} {floor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const maxFloor = allFloors.length > 0 ? Math.max(...allFloors) : 0;
+                    setNewFloorNumber(maxFloor + 1);
+                    setNewFloorDialogOpen(true);
+                  }}
+                  className="h-8"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  {t('floorManagement.addFloor')}
+                </Button>
+              </div>
+            )}
           </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById('floor-image')?.click()}
+              disabled={loading}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {imageUrl ? t('floorPlan.upload.changeImage') : t('floorPlan.upload.selectImage')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={duplicateToAllFloors}
+              disabled={loading || (!imageUrl && apartments.length === 0)}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              {t('floorPlan.duplicateToAllFloors')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettings(true)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {t('floorPlan.settings')}
+            </Button>
+          </div>
+        </div>
 
-          {/* Image Upload */}
-          {!imageUrl && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-md">{t('floorPlan.upload.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Label>{t('floorPlan.upload.floorPlan', { floor: floorNumber })}</Label>
-
-                    <div
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                    >
-                      <div className="text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="mt-4">
-                          <p className="text-sm font-medium text-gray-900">
-                            {t('floorPlan.upload.dragDrop')}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {t('floorPlan.upload.orClickToSelect')}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="mt-4"
-                          onClick={() => document.getElementById('floor-image')?.click()}
-                          disabled={loading}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {t('floorPlan.upload.selectImage')}
-                        </Button>
-                      </div>
-                    </div>
-
-
-                  </div>
-                  {loading && <p className="text-sm text-gray-600">{t('floorPlan.upload.loading')}</p>}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Apartment Controls */}
-          <Card>
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Left sidebar - Apartments list */}
+          <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="text-md">{t('floorPlan.apartments.title')}</CardTitle>
             </CardHeader>
@@ -1206,262 +993,266 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 <Button
                   onClick={() => startEditingApartment('new')}
                   disabled={!!editingApartment}
+                  size="sm"
+                  className="w-full"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('floorPlan.apartments.add')}
                 </Button>
 
                 {/* Apartments List */}
-                <div className="space-y-2">
-                  <h4 className="font-medium">{t('floorPlan.apartments.list')}</h4>
-                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                    {apartments.map(apartment => (
-                      <div key={apartment.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">№{apartment.apartment_number}</span>
-                          <Badge variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                            {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
-                          </Badge>
-                          <span className="text-sm text-gray-600">{apartment.rooms} {t('floorPlan.apartments.roomsShort')}, {apartment.area} м²</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDuplicateApartment(apartment)}
-                            disabled={!!editingApartment}
-                            title="Дублировать квартиру"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openSyncDialog(apartment)}
-                            disabled={!!editingApartment}
-                            title="Синхронизировать с квартирами той же площади и планировки"
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEditingApartment(apartment.id)}
-                            disabled={!!editingApartment}
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => deleteApartment(apartment.id)}
-                            disabled={!!editingApartment}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {apartments.map(apartment => (
+                    <div 
+                      key={apartment.id} 
+                      className={`p-2 border rounded cursor-pointer hover:bg-muted/50 transition-colors ${
+                        editingApartment === apartment.id ? 'border-primary bg-primary/10' : ''
+                      }`}
+                      onClick={() => startEditingApartment(apartment.id)}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">№{apartment.apartment_number}</span>
+                        <Badge 
+                          variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
+                      <div className="text-xs text-muted-foreground">
+                        {apartment.rooms} {t('floorPlan.apartments.roomsShort')}, {apartment.area} м²
+                      </div>
+                      <div className="flex gap-1 mt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicateApartment(apartment);
+                          }}
+                          disabled={!!editingApartment}
+                          className="h-6 px-2"
+                          title="Дублировать"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openSyncDialog(apartment);
+                          }}
+                          disabled={!!editingApartment}
+                          className="h-6 px-2"
+                          title="Синхронизировать"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteApartment(apartment.id);
+                          }}
+                          disabled={!!editingApartment}
+                          className="h-6 px-2"
+                          title="Удалить"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Image Viewer */}
-          {imageUrl && (
-            <Card>
-              <CardContent className="p-6">
-                <div
-                  className="relative inline-block max-w-full"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <img
-                    src={imageUrl}
-                    alt={`Floor ${floorNumber} plan`}
-                    className={`max-w-full max-h-[600px] object-contain rounded-lg transition-all duration-200 ${isDragOver ? 'opacity-50 scale-95' : ''
-                      }`}
-                    onLoad={() => console.log('Floor plan image loaded successfully')}
-                    onError={(e) => {
-                      console.error('Floor plan image failed to load:', e);
-                      toast.error(t('floorPlan.image.loadError'));
-                    }}
-                  />
-
-                  {/* Drag Overlay */}
-                  {isDragOver && (
-                    <div className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center">
-                      <div className="text-center text-blue-700">
-                        <Upload className="mx-auto h-8 w-8 mb-2" />
-                        <p className="text-sm font-medium">{t('floorPlan.upload.dropToReplace')}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Change Image Button */}
-                  <div className="absolute top-2 right-2 z-10">
+          {/* Center - Polygon Editor */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-md">
+                  {isCreatingNew 
+                    ? t('floorPlan.apartments.newApartment')
+                    : editingApartment 
+                      ? `${t('floorPlan.apartments.editApartment', { number: apartmentData.number })}`
+                      : t('floorPlan.title')
+                  }
+                </CardTitle>
+                {(editingApartment || currentShape) && (
+                  <div className="flex items-center gap-2">
                     <Button
+                      onClick={handlePolygonSave}
                       size="sm"
-                      variant="secondary"
-                      onClick={() => document.getElementById('floor-image')?.click()}
-                      disabled={loading}
-                      className="bg-white/90 hover:bg-white shadow-md"
-                      title={t('floorPlan.upload.changeImage')}
+                      disabled={isCreatingNew && currentShape?.points.length === 0}
                     >
-                      <Upload className="h-4 w-4" />
+                      <Save className="h-3 w-3 mr-1" />
+                      {t('buildingImage.polygon.save')}
+                    </Button>
+                    <Button
+                      onClick={handlePolygonCancel}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {t('buildingImage.polygon.cancel')}
                     </Button>
                   </div>
-                  <svg
-                    className="absolute top-0 left-0 w-full h-full"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                  >
-                    {/* Existing apartments */}
-                    {apartments.map(apartment => {
-                      const path = polygonToPath(apartment.polygon);
-                      if (!path) return null;
-
-                      const isSelected = selectedApartment?.id === apartment.id;
-                      const isHovered = hoveredApartment === apartment.id;
-
-                      return (
-                        <g key={apartment.id}>
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <path
-                                d={path}
-                                fill={getStatusColor(apartment.status)}
-                                stroke={isSelected ? '#000' : getStatusColor(apartment.status)}
-                                strokeWidth={isSelected ? "1" : "0.3"}
-                                style={getPolygonStyle(apartment.status, isSelected, isHovered)}
-                                className="transition-all cursor-pointer"
-                                onMouseEnter={() => setHoveredApartment(apartment.id)}
-                                onMouseLeave={() => setHoveredApartment(null)}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApartmentClick(apartment);
-                                }}
-                              />
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-64">
-                              <div className="space-y-2">
-                                <h4 className="font-semibold">Квартира №{apartment.apartment_number}</h4>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <span className="text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                                  <span>{apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms}</span>
-                                  <span className="text-gray-600">{t('floorPlan.apartments.area')}:</span>
-                                  <span>{apartment.area} м²</span>
-                                  {apartment.price > 0 && (
-                                    <>
-                                      <span className="text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                                      <span>{new Intl.NumberFormat('en-US').format(apartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
-                                    </>
-                                  )}
-                                  <span className="text-gray-600">{t('floorPlan.apartments.status')}:</span>
-                                  <Badge variant={apartment.status === 'available' ? 'default' : apartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                                    {apartment.status === 'available' ? t('floorPlan.apartments.available') : apartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                          {polygonSettings?.display.showNumbers && (
-                            <text
-                              x={apartment.polygon.reduce((sum, p) => sum + p.x, 0) / apartment.polygon.length}
-                              y={apartment.polygon.reduce((sum, p) => sum + p.y, 0) / apartment.polygon.length}
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fill="white"
-                              fontSize="1.2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {apartment.apartment_number}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-                  </svg>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-2">
+              {imageUrl ? (
+                <PolygonAnnotator
+                  ref={polygonAnnotatorRef}
+                  imageUrl={imageUrl}
+                  shapes={shapes}
+                  currentShape={currentShape}
+                  onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                  drawingEnabled={!!editingApartment}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[600px] border-2 border-dashed border-muted rounded-lg">
+                  <div className="text-center text-muted-foreground">
+                    <Upload className="mx-auto h-12 w-12 mb-2" />
+                    <p className="text-sm font-medium">{t('floorPlan.upload.title')}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => document.getElementById('floor-image')?.click()}
+                    >
+                      {t('floorPlan.upload.selectImage')}
+                    </Button>
+                  </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Right sidebar - Apartment Details */}
+          {editingApartment && (
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-md">{t('floorPlan.apartments.parameters')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="apt-number">{t('floorPlan.apartments.number')}</Label>
+                  <Input
+                    id="apt-number"
+                    value={apartmentData.number}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, number: e.target.value }))}
+                    placeholder={t('floorPlan.apartments.numberPlaceholder')}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-rooms">{t('floorPlan.apartments.rooms')}</Label>
+                  <Select
+                    value={apartmentData.rooms.toString()}
+                    onValueChange={(value) => setApartmentData(prev => ({ ...prev, rooms: value }))}
+                  >
+                    <SelectTrigger id="apt-rooms" className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">{t('apartment.studio')}</SelectItem>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="apt-area">{t('floorPlan.apartments.area')}</Label>
+                  <Input
+                    id="apt-area"
+                    type="number"
+                    value={apartmentData.area}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, area: parseFloat(e.target.value) || 0 }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-price">{t('floorPlan.apartments.price')}</Label>
+                  <Input
+                    id="apt-price"
+                    type="number"
+                    value={apartmentData.price}
+                    onChange={(e) => setApartmentData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="apt-status">{t('floorPlan.apartments.status')}</Label>
+                  <Select
+                    value={apartmentData.status}
+                    onValueChange={(value: 'available' | 'sold' | 'reserved') => setApartmentData(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger id="apt-status" className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">{t('floorPlan.apartments.available')}</SelectItem>
+                      <SelectItem value="reserved">{t('floorPlan.apartments.reserved')}</SelectItem>
+                      <SelectItem value="sold">{t('floorPlan.apartments.sold')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <ApartmentCustomFields
+                  projectId={projectId}
+                  apartmentId={editingApartment === 'new' ? undefined : editingApartment}
+                  customFieldsData={customFieldsData}
+                  onCustomFieldsChange={setCustomFieldsData}
+                />
+
+                {/* Секция фото */}
+                {editingApartment && editingApartment !== 'new' && (
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      <Label className="text-sm font-medium">{t('floorPlan.apartments.photos')}</Label>
+                    </div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleApartmentPhotoUpload}
+                      disabled={uploadingPhotos}
+                      className="text-xs"
+                    />
+                    {apartmentPhotos.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {apartmentPhotos.map((photo) => (
+                          <div key={photo.id} className="relative group">
+                            <img
+                              src={photo.image_url}
+                              alt="Apartment"
+                              className="w-full h-20 object-cover rounded"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-5 w-5 p-0"
+                              onClick={() => handleDeleteApartmentPhoto(photo.id, photo.image_url)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
         </div>
-
-
-        {selectedApartment && !editingApartment && (
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-md">Квартира №{selectedApartment.apartment_number}</CardTitle>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedApartment(null)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('floorPlan.apartments.status')}:</span>
-                <Badge variant={selectedApartment.status === 'available' ? 'default' : selectedApartment.status === 'sold' ? 'destructive' : 'secondary'}>
-                  {selectedApartment.status === 'available' ? t('floorPlan.apartments.available') : selectedApartment.status === 'sold' ? t('floorPlan.apartments.sold') : t('floorPlan.apartments.reserved')}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('floorPlan.apartments.rooms')}:</span>
-                <span className="font-medium">{selectedApartment.rooms === 0 ? t('apartment.studio') : selectedApartment.rooms}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('floorPlan.apartments.area')}:</span>
-                <span className="font-medium">{selectedApartment.area} м²</span>
-              </div>
-              {selectedApartment.price > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{t('floorPlan.apartments.price')}:</span>
-                  <span className="font-bold">{new Intl.NumberFormat('en-US').format(selectedApartment.price)} {getCurrencySymbolSafe(project?.currency)}</span>
-                </div>
-              )}
-              <div className="pt-2 border-t space-y-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDuplicateApartment(selectedApartment)}
-                  className="w-full"
-                  disabled={!!editingApartment}
-                >
-                  <Copy className="h-3 w-3 mr-1" />
-                  Дублировать
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openSyncDialog(selectedApartment)}
-                  className="w-full"
-                  disabled={!!editingApartment}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Синхронизировать
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => startEditingApartment(selectedApartment.id)}
-                  className="w-full"
-                  disabled={!!editingApartment}
-                >
-                  <Edit3 className="h-3 w-3 mr-1" />
-                  {t('buildingImage.floors.edit')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Диалог синхронизации */}

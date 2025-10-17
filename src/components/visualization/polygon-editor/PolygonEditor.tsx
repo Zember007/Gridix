@@ -1,11 +1,14 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import PolygonToolbar, { PolygonTool } from './PolygonToolbar';
-import PolygonCanvas from './PolygonCanvas';
+import PolygonAnnotator, { PolygonAnnotatorRef } from './PolygonAnnotator';
+
 import { Shape, Point } from './GeometryShapes';
+import { Button } from '@/components/ui/button';
+import { Save } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PolygonEditorProps {
   imageUrl: string;
@@ -20,11 +23,12 @@ const PolygonEditor = ({
   existingPolygons = [],
   onSave,
   onCancel,
-  polygonColor = '#3b82f6'
+  polygonColor = '#3b82f6',
 }: PolygonEditorProps) => {
+  const { t } = useLanguage();
+  const annotatorRef = useRef<PolygonAnnotatorRef>(null);
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [currentShape, setCurrentShape] = useState<Shape | null>(null);
-  const [activeTool, setActiveTool] = useState<PolygonTool>('polygon');
   const [history, setHistory] = useState<Shape[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
@@ -48,6 +52,7 @@ const PolygonEditor = ({
       setShapes([existingShape]);
       addToHistory([existingShape]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingPolygons, polygonColor]);
 
   const handleShapeUpdate = useCallback((newShapes: Shape[]) => {
@@ -57,10 +62,10 @@ const PolygonEditor = ({
 
   const handleCurrentShapeUpdate = useCallback((shape: Shape | null) => {
     setCurrentShape(shape);
-    // Если очищаем текущую фигуру, также очищаем все фигуры в списке
-    if (!shape) {
-      setShapes([]);
-      addToHistory([]);
+    // Если shape завершен (isSelected = true), добавляем его в shapes
+    if (shape && shape.isSelected && shape.points.length >= 3) {
+      setShapes([shape]);
+      addToHistory([shape]);
     }
   }, [addToHistory]);
 
@@ -84,39 +89,33 @@ const PolygonEditor = ({
     toast.success('Все полигоны очищены');
   };
 
-  const handleSave = () => {
-    // Сначала пытаемся завершить текущий полигон, если он есть
-    if (currentShape && !currentShape.isSelected && currentShape.points.length >= 3) {
-      const completedShape = {
-        ...currentShape,
-        isSelected: true
-      };
-      setShapes([completedShape]);
-      setCurrentShape(completedShape);
-      addToHistory([completedShape]);
-      onSave(completedShape.points);
-      return;
-    }
+  const handleSave = async () => {
+    try {
+      // Получаем актуальные данные из PolygonAnnotator
+      let shapeToSave: Shape | null = null;
 
-    // Если полигон уже завершен, сохраняем его
-    // Приоритет: currentShape > shapes с isSelected
-    let pointsToSave: Point[] = [];
-
-    if (currentShape && currentShape.isSelected) {
-      pointsToSave = currentShape.points;
-    } else {
-      const selectedShape = shapes.find(s => s.isSelected);
-      if (selectedShape) {
-        pointsToSave = selectedShape.points;
+      if (annotatorRef.current && currentShape) {
+        // Получаем актуальную версию currentShape с обновленными координатами
+        shapeToSave = await annotatorRef.current.getCurrentShape();
+      } else if (currentShape) {
+        shapeToSave = currentShape;
+      } else if (shapes.length > 0) {
+        // Если нет currentShape, берем первый shape из списка
+        shapeToSave = shapes[0];
       }
-    }
 
-    if (pointsToSave.length < 3) {
-      toast.error('Полигон должен содержать минимум 3 точки');
-      return;
-    }
+      if (!shapeToSave || shapeToSave.points.length < 3) {
+        toast.error('Полигон должен содержать минимум 3 точки');
+        return;
+      }
 
-    onSave(pointsToSave);
+      // Сохраняем актуальные координаты
+      onSave(shapeToSave.points);
+      toast.success('Полигон успешно сохранен');
+    } catch (error) {
+      console.error('Error saving polygon:', error);
+      toast.error('Ошибка при сохранении полигона');
+    }
   };
 
   // Обработка горячих клавиш
@@ -128,26 +127,14 @@ const PolygonEditor = ({
       }
 
       switch (e.key.toLowerCase()) {
-        case 'v':
-          setActiveTool('select');
-          break;
         case 'p':
-          setActiveTool('polygon');
           // При переключении на полигон очищаем все фигуры
           clearAllData();
           break;
-        case 'c':
-          setActiveTool('circle');
-          break;
-        case 'r':
-          setActiveTool('rectangle');
-          break;
-        case 'm':
-          setActiveTool('move');
-          break;
         case 'enter':
-          if (currentShape && !currentShape.isSelected && currentShape.points.length >= 3) {
-            // Завершаем полигон
+          e.preventDefault();
+          if (currentShape && currentShape.points.length >= 3) {
+            // Завершаем полигон - помечаем как isSelected
             const completedShape = {
               ...currentShape,
               isSelected: true
@@ -155,7 +142,7 @@ const PolygonEditor = ({
             setShapes([completedShape]);
             setCurrentShape(completedShape);
             addToHistory([completedShape]);
-            toast.success('Полигон завершен');
+            toast.success('Полигон завершен. Нажмите "Сохранить" для применения изменений');
           }
           break;
         case 'escape':
@@ -166,7 +153,7 @@ const PolygonEditor = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [shapes, currentShape, addToHistory, handleUndo]);
+  }, [shapes, currentShape, addToHistory, handleUndo, clearAllData]);
 
   if (!imageUrl) {
     return (
@@ -179,34 +166,49 @@ const PolygonEditor = ({
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <PolygonToolbar
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
-          canUndo={historyIndex > 0}
-          onUndo={handleUndo}
-          onClear={handleClear}
-          onSave={handleSave}
-          onCancel={onCancel}
-          isEditing={true}
-        />
+     
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => {handleSave()}}
+            disabled={!currentShape && shapes.length === 0}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {t('apartmentsManager.save')}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+          >
+            {t('apartmentsManager.cancel')}
+          </Button>
+
+          {currentShape && currentShape.points.length >= 3 && (
+            <div className="ml-2 text-sm text-muted-foreground">
+              Точек: {currentShape.points.length} | Нажмите Enter для завершения
+            </div>
+          )}
+        </div>
 
         <Card>
           <CardContent className="p-4">
             <div className="space-y-4">
-              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                <strong>Управление:</strong>
-                <ul className="text-xs space-y-1 mt-1">
-                  <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Ctrl</kbd> + колесико - масштаб</li>
-                  <li>• Правая кнопка - удалить последнюю точку</li>
-                  <li>• Клик на первую точку - замкнуть полигон</li>
-                  <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Enter</kbd> или кнопка "Сохранить" - завершить полигон</li>
-                  <li>• Перетаскивание квадратных "граблей" - редактирование точек</li>
-                  <li>• Клик вне фигуры - начать новую фигуру</li>
-                </ul>
-              </div>
+
 
               <div className="border rounded-lg overflow-hidden bg-gray-100">
-                <PolygonCanvas
+                <PolygonAnnotator
+                  ref={annotatorRef}
+                  imageUrl={imageUrl}
+                  shapes={shapes}
+                  currentShape={currentShape}
+                  onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                  drawingEnabled={true}
+                />
+                {/* <PolygonCanvas
                   imageUrl={imageUrl}
                   shapes={shapes}
                   currentShape={currentShape}
@@ -215,7 +217,7 @@ const PolygonEditor = ({
                   onCurrentShapeUpdate={handleCurrentShapeUpdate}
                   onClearAll={clearAllData}
                   className="w-full"
-                />
+                /> */}
               </div>
             </div>
           </CardContent>

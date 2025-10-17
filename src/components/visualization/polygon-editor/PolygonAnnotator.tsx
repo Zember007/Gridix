@@ -33,7 +33,6 @@ interface PolygonAnnotatorProps {
     shapes?: Shape[];
     currentShape?: Shape | null;
     onCurrentShapeUpdate?: (shape: Shape | null) => void;
-    showToolbar?: boolean;
     drawingEnabled?: boolean;
 }
 
@@ -46,12 +45,11 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     shapes = [],
     currentShape,
     onCurrentShapeUpdate,
-    showToolbar = true,
     drawingEnabled = true
 }, ref) => {
     const annotations = useAnnotations();
     const annotator = useAnnotator();
-    const [drawingTool, setDrawingTool] = useState<'rectangle' | 'polygon'>('polygon');
+    
     const isInternalUpdate = useRef(false);
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
@@ -154,33 +152,60 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     // Экспортируем метод для получения актуального currentShape из аннотатора
     useImperativeHandle(ref, () => ({
         getCurrentShape: async () => {
-            if (!annotator || !currentShape) return null;
+            console.log('[getCurrentShape] Starting...');
+            
+            if (!annotator) {
+                console.log('[getCurrentShape] No annotator available');
+                return null;
+            }
+            
+            if (!currentShape) {
+                console.log('[getCurrentShape] No currentShape, checking annotations...');
+                // Пытаемся получить первую аннотацию, если currentShape нет
+                if (annotations.length > 0) {
+                    const shape = await annotationToShape(annotations[0] as ImageAnnotation);
+                    console.log('[getCurrentShape] Returning first annotation as shape:', shape);
+                    return shape;
+                }
+                console.log('[getCurrentShape] No annotations available');
+                return null;
+            }
             
             // Сохраняем ID текущей аннотации
             const currentShapeId = currentShape.id;
+            console.log('[getCurrentShape] CurrentShape ID:', currentShapeId);
             
-            // Программно снимаем выделение, чтобы закоммитить все изменения
-            annotator.setSelected();
-            
-            // Небольшая задержка для применения изменений
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
-            // Получаем все аннотации и находим нужную по ID
-            const allAnnotations = annotations;
-            const updatedAnnotation = allAnnotations.find(a => a.id === currentShapeId);
-            
-            if (updatedAnnotation) {
-                // Конвертируем аннотацию в Shape с актуальными координатами
-                const shape = await annotationToShape(updatedAnnotation as ImageAnnotation);
+            try {
+                // Программно снимаем выделение, чтобы закоммитить все изменения
+                annotator.setSelected();
                 
-                // Восстанавливаем выделение
-                annotator.setSelected(currentShapeId);
+                // Небольшая задержка для применения изменений
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
-                return shape;
+                // Получаем все аннотации и находим нужную по ID
+                const allAnnotations = annotations;
+                console.log('[getCurrentShape] All annotations:', allAnnotations.length);
+                const updatedAnnotation = allAnnotations.find(a => a.id === currentShapeId);
+                
+                if (updatedAnnotation) {
+                    console.log('[getCurrentShape] Found updated annotation');
+                    // Конвертируем аннотацию в Shape с актуальными координатами
+                    const shape = await annotationToShape(updatedAnnotation as ImageAnnotation);
+                    console.log('[getCurrentShape] Converted to shape:', shape);
+                    
+                    // Восстанавливаем выделение
+                    annotator.setSelected(currentShapeId);
+                    
+                    return shape;
+                }
+                
+                console.log('[getCurrentShape] Annotation not found, returning currentShape');
+                // Если не нашли аннотацию, возвращаем currentShape
+                return currentShape;
+            } catch (error) {
+                console.error('[getCurrentShape] Error:', error);
+                return currentShape;
             }
-            
-            // Если не нашли аннотацию, возвращаем currentShape
-            return currentShape;
         }
     }), [annotator, currentShape, annotationToShape, annotations]);
 
@@ -215,14 +240,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             pinchToZoom: true
         }
     }), [imageUrl]);
-
-
-
-    // Этот useEffect больше не нужен - мы не синхронизируем обратно в родителя
-    // из-за аннотаций, которые сами пришли от родителя. Обновления идут только
-    // через события создания/обновления/удаления аннотаций пользователем.
-
-    // Функция для конвертации Shape в Annotation
 
 
 
@@ -309,25 +326,33 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         if (!annotator) return;
 
         const handleCreate = async (annotation: ImageAnnotation) => {
-            console.log('Annotation created:', annotation);
+            console.log('[handleCreate] Annotation created:', annotation.id);
             const shape = await annotationToShape(annotation);
             
             if (shape) {
+                console.log('[handleCreate] Converted to shape:', shape);
                 // Если мы в режиме редактирования и создаем новый полигон
                 if (drawingEnabled && onCurrentShapeUpdate) {
-                    onCurrentShapeUpdate(shape);
+                    // Помечаем новый shape как незавершенный (редактируемый)
+                    const editableShape = { ...shape, isSelected: false };
+                    console.log('[handleCreate] Updating currentShape to:', editableShape);
+                    onCurrentShapeUpdate(editableShape);
                 }
             }
         };
 
         const handleUpdate = async (annotation: ImageAnnotation) => {
-            console.log('Annotation updated:', annotation);
+            console.log('[handleUpdate] Annotation updated:', annotation.id);
             const shape = await annotationToShape(annotation);
             
             if (shape) {
+                console.log('[handleUpdate] Converted to shape:', shape);
                 // Если обновляемая аннотация - это currentShape
                 if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
-                    onCurrentShapeUpdate(shape);
+                    // Сохраняем статус isSelected при обновлении
+                    const updatedShape = { ...shape, isSelected: currentShape.isSelected };
+                    console.log('[handleUpdate] Updating currentShape to:', updatedShape);
+                    onCurrentShapeUpdate(updatedShape);
                 }
             }
         };
@@ -393,36 +418,14 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
     return (
         <div className="h-full w-full flex flex-col gap-2">
-            {/* Панель инструментов */}
-            {showToolbar && (
-                <div className="flex gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                    <Button
-                        onClick={() => setDrawingTool('rectangle')}
-                        variant={drawingTool === 'rectangle' ? 'default' : 'outline'}
-                        size="sm"
-                    >
-                        Прямоугольник
-                    </Button>
-                    <Button
-                        onClick={() => setDrawingTool('polygon')}
-                        variant={drawingTool === 'polygon' ? 'default' : 'outline'}
-                        size="sm"
-                    >
-                        Полигон
-                    </Button>
-                    <div className="flex-1" />
-                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                        Аннотаций: {annotations.length}
-                    </div>
-                </div>
-            )}
+        
 
        
 
             {/* Область аннотирования */}
             <div className="flex-1 border rounded-lg overflow-hidden">
                 <OpenSeadragonAnnotator
-                    tool={drawingTool}
+                    tool={'polygon'}
                     style={annotationStyle}
                     drawingEnabled={drawingEnabled}
                 >

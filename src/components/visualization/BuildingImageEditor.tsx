@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import PolygonCanvas from './polygon-editor/PolygonCanvas';
 import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
@@ -449,19 +448,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 shapes={shapes}
                 currentShape={currentShape}
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
-                showToolbar={false}
                 drawingEnabled={isEditing}
               />
-
-             {/*  <PolygonCanvas
-                imageUrl={buildingImage}
-                shapes={shapes}
-                currentShape={currentShape}
-                activeTool="polygon"
-                onShapeUpdate={() => {}}
-                onCurrentShapeUpdate={handleCurrentShapeUpdate}
-                className="border rounded"
-              /> */}
                
             </div>
 

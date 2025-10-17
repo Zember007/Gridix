@@ -36,5 +36,6 @@
   "typeApartment": "ბინები",
   "typeCommercial": "კომერციული ფართები",
   "typeParking": "პარკინგი",
-  "updateSuccess": "ბინა განახლებულია"
+  "updateSuccess": "ბინა განახლებულია",
+  "syncError": "ბინები არ არის მასზე მოსახველი"
 }

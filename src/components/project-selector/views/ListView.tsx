@@ -85,10 +85,10 @@ export const ListView = ({
 
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const getButtonStyle = (isActive: boolean) => 
+  const getButtonStyle = (isActive: boolean) =>
     isActive ? { backgroundColor: themeColor, color: 'white' } : {};
 
-  const getButtonClass = (isActive: boolean) => 
+  const getButtonClass = (isActive: boolean) =>
     isActive ? 'text-white' : 'border-gray-300';
 
   // Installment calculation
@@ -125,7 +125,7 @@ export const ListView = ({
   const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
     if (!apartment) return;
-    
+
     toggleFavorite({
       id: apartment.id,
       project_id: apartment.project_id,
@@ -226,7 +226,7 @@ export const ListView = ({
                                 {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
                               </Badge>
                             </div>
-                              <div className="text-xs text-gray-600 space-y-1">
+                            <div className="text-xs text-gray-600 space-y-1">
                               <div>{apartment.area} м² {project?.project_type !== 'object' ? `• ${apartment.floor_number} ${t('project.floor').toLowerCase()}` : ''}</div>
                               <div className="font-bold text-sm text-gray-900">
                                 {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
@@ -334,24 +334,24 @@ export const ListView = ({
                           </div>
 
                           {/* Apartment Info - Horizontal scrollable container with gradient indicators */}
-                          <div className="flex-1 overflow-hidden ml-[57px] relative">
+                          <div className="flex-1 overflow-hidden ml-[57px] relative h-full">
                             {/* Left gradient indicator */}
                             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100" id={`left-gradient-${apartment.id}`}></div>
-                            
+
                             {/* Right gradient indicator */}
                             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none opacity-100 transition-opacity duration-300" id={`right-gradient-${apartment.id}`}></div>
-                            
-                            <div 
-                              className="flex items-center gap-8 overflow-x-auto scrollbar-hide pb-1 scroll-smooth hover:scrollbar-thin hover:scrollbar-thumb-gray-300 hover:scrollbar-track-transparent transition-all duration-300"
+
+                            <div
+                              className="h-full flex items-center gap-8 overflow-x-auto scrollbar-hide pb-1 scroll-smooth hover:scrollbar-thin hover:scrollbar-thumb-gray-300 hover:scrollbar-track-transparent transition-all duration-300"
                               onScroll={(e) => {
                                 const container = e.currentTarget;
                                 const leftGradient = document.getElementById(`left-gradient-${apartment.id}`);
                                 const rightGradient = document.getElementById(`right-gradient-${apartment.id}`);
-                                
+
                                 if (leftGradient && rightGradient) {
                                   const isAtStart = container.scrollLeft <= 10;
                                   const isAtEnd = container.scrollLeft >= (container.scrollWidth - container.clientWidth - 10);
-                                  
+
                                   leftGradient.style.opacity = isAtStart ? '0' : '1';
                                   rightGradient.style.opacity = isAtEnd ? '0' : '1';
                                 }
@@ -365,7 +365,10 @@ export const ListView = ({
                               </div>
 
                               {/* Area */}
-                              <div className="flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105">
+                              <div className="relative flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105 ">
+                                <span className="text-[11px] text-gray-400 absolute top-[-15px] left-1/2 -translate-x-1/2">
+                                  {t('project.area')}
+                                </span>
                                 <div className="text-[20px] font-light text-black leading-[24px] hover:text-gray-700 transition-colors duration-200">
                                   {apartment.area} м²
                                 </div>
@@ -374,12 +377,16 @@ export const ListView = ({
                               {/* Custom fields - scrollable */}
                               {getVisibleFields().map((field) => {
                                 let value: unknown = null;
-
+                                let label: string = '';
                                 if (field.is_custom) {
                                   value = getCustomFieldValue(apartment, field.field_name);
+                                  label = getFieldLabel(field)
+
                                 } else {
+                                  label = t(`project.${field.field_name}`);
                                   switch (field.field_name) {
                                     case 'rooms':
+
                                       value = apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`;
                                       break;
                                     case 'area':
@@ -405,9 +412,12 @@ export const ListView = ({
                                 if (value === null || field.field_name === 'rooms' || field.field_name === 'area') return null;
 
                                 return (
-                                  <div key={field.id} className="flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105">
+                                  <div key={field.id} className={`relative flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105 flex flex-col ${label ? '-translate-y-[8px]' : ''}`}>
+                                    <span className="text-[11px] text-gray-400  truncate">
+                                      {label}
+                                    </span>
                                     <div className="text-[16px] font-light text-[#6C6C6C] leading-[21px] hover:text-gray-800 transition-colors duration-200 px-2 py-1 rounded-md hover:bg-gray-50">
-                                      {field.field_name === 'floor' ? 
+                                      {field.field_name === 'floor' ?
                                         `${apartment.floor_number} ${t('project.from')} ${maxFloor}` :
                                         formatFieldValue(value, field.field_type, field.field_name)
                                       }
@@ -416,12 +426,7 @@ export const ListView = ({
                                 );
                               })}
 
-                              {/* Additional custom field */}
-                              <div className="flex-shrink-0 text-center min-w-[105px] transition-transform duration-200 hover:scale-105">
-                                <div className="text-[14px] font-medium text-[rgba(30,30,30,0.5)] leading-[21px] hover:text-[rgba(30,30,30,0.8)] transition-colors duration-200 px-2 py-1 rounded-md hover:bg-gray-50">
-                                  Черный каркас
-                                </div>
-                              </div>
+
                             </div>
                           </div>
 
