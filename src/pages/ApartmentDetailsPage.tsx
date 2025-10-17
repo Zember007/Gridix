@@ -469,11 +469,15 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const loading = projectLoading || apartmentLoading || photosLoading;
 
+  if(!project) return null;
+
   // Показываем загрузку, если данные еще загружаются
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader size="lg" className="mx-auto mb-4" />
+        <Loader size="lg" className="mx-auto mb-4"
+        color={project?.theme_color || '#000000'}
+        />
       </div>
     );
   }

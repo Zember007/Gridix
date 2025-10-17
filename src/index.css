@@ -113,6 +113,7 @@
 }
 
 @layer base {
+
   :root,
   :host {
     --background: 0 0% 100%;
@@ -152,6 +153,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark,
   :host(.dark) {
     --background: 240 10% 3.9%;
@@ -189,6 +191,7 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .theme {
     --animate-appear-zoom: appear-zoom 0.5s ease-out forwards;
     --animate-appear: appear 0.5s ease-out forwards;
@@ -199,6 +202,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -206,11 +210,15 @@
 
 /* Mobile optimizations */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 /* Enhanced scrollbar styles for horizontal scrolling */
@@ -266,6 +274,7 @@ svg text {
 
 /* Mobile interactive elements */
 @media (max-width: 768px) {
+
   .apartment-available,
   .apartment-sold,
   .apartment-reserved {
@@ -297,97 +306,120 @@ svg text {
 
 @theme inline {
   @keyframes appear-zoom {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
     }
-  100% {
-    opacity: 1;
-    transform: scale(1);
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
+
   @keyframes appear {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
     }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
+
   @keyframes loader-item {
-  0% {
-    transform: translate(0%, 0%);
-    opacity: 1;
+    0% {
+      transform: translate(0%, 0%);
+      opacity: 1;
     }
-  95% {
-    opacity: 0;
+
+    95% {
+      opacity: 0;
     }
-  100% {
-    transform: translate(90%, 90%);
-    opacity: 0;
+
+    100% {
+      transform: translate(90%, 90%);
+      opacity: 0;
     }
   }
+
   @keyframes from-left {
-  0% {
-    z-index: 20;
-    opacity: 0;
-    translate: -20px -6px;
+    0% {
+      z-index: 20;
+      opacity: 0;
+      translate: -20px -6px;
     }
-  20% {
-    z-index: 10;
-    opacity: 1;
-    translate: 0px 0px;
+
+    20% {
+      z-index: 10;
+      opacity: 1;
+      translate: 0px 0px;
     }
-  40% {
-    z-index: 9;
-    translate: 0px 4px;
+
+    40% {
+      z-index: 9;
+      translate: 0px 4px;
     }
-  60% {
-    z-index: 8;
-    translate: 0px 8px;
+
+    60% {
+      z-index: 8;
+      translate: 0px 8px;
     }
-  80% {
-    z-index: 7;
-    opacity: 1;
-    translate: 0px 12px;
+
+    80% {
+      z-index: 7;
+      opacity: 1;
+      translate: 0px 12px;
     }
-  100% {
-    z-index: 5;
-    translate: 0px 30px;
-    opacity: 0;
+
+    100% {
+      z-index: 5;
+      translate: 0px 30px;
+      opacity: 0;
     }
   }
+
   @keyframes from-right {
-  0% {
-    z-index: 20;
-    opacity: 0;
-    translate: 20px -6px;
+    0% {
+      z-index: 20;
+      opacity: 0;
+      translate: 20px -6px;
     }
-  20% {
-    z-index: 10;
-    opacity: 1;
-    translate: 0px 0px;
+
+    20% {
+      z-index: 10;
+      opacity: 1;
+      translate: 0px 0px;
     }
-  40% {
-    z-index: 9;
-    translate: 0px 4px;
+
+    40% {
+      z-index: 9;
+      translate: 0px 4px;
     }
-  60% {
-    z-index: 8;
-    translate: 0px 8px;
+
+    60% {
+      z-index: 8;
+      translate: 0px 8px;
     }
-  80% {
-    z-index: 7;
-    opacity: 1;
-    translate: 0px 12px;
+
+    80% {
+      z-index: 7;
+      opacity: 1;
+      translate: 0px 12px;
     }
-  100% {
-    z-index: 5;
-    translate: 0px 30px;
-    opacity: 0;
+
+    100% {
+      z-index: 5;
+      translate: 0px 30px;
+      opacity: 0;
     }
   }
 }
 
+
+
+[data-theme="light"] {
+  height: 100%;
+}

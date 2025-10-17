@@ -8,6 +8,7 @@ import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonCanvas from './polygon-editor/PolygonCanvas';
+import PolygonAnnotator from './polygon-editor/PolygonAnnotator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -416,6 +417,18 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 )}
               </div>
               
+             {/*  <PolygonAnnotator
+                imageUrl={buildingImage}
+                shapes={shapes}
+                currentShape={currentShape}
+                onShapeUpdate={(newShapes) => {
+                  console.log('Shapes updated from PolygonAnnotator:', newShapes);
+                  setShapes(newShapes);
+                }}
+                onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                showToolbar={false}
+              /> */}
+
               <PolygonCanvas
                 imageUrl={buildingImage}
                 shapes={shapes}
@@ -425,6 +438,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
                 className="border rounded"
               />
+               
             </div>
 
             {buildingFloors.length > 0 && (

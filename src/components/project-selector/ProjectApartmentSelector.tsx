@@ -106,6 +106,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       }
 
     }
+
+    return baseDomain;
   };
 
   const openApartmentDetails = async (apartment: Apartment) => {

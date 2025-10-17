@@ -1,11 +1,7 @@
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
-import { Testimonials } from '@/components/ui/testimonials';
-import { Building2, Users, Settings, BarChart3, Upload, Eye, Star, CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-react';
+import {  CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useState, useEffect } from 'react';
@@ -89,10 +85,10 @@ const Index = () => {
             {t('landing.widgetsDesc')}
           </p>
           <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            />
+            src=""
+            controls
+            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+          />
         </div>
       ),
     },
@@ -104,10 +100,10 @@ const Index = () => {
             {t('landing.dataImportDesc')}
           </p>
           <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            />
+            src=""
+            controls
+            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+          />
         </div>
       ),
     },
@@ -119,10 +115,10 @@ const Index = () => {
             {t('landing.crmIntegrationDesc')}
           </p>
           <video
-              src=""
-              controls
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-            />
+            src=""
+            controls
+            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+          />
         </div>
       ),
     },
@@ -132,6 +128,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+
       {/* Header */}
       <HeroHeader />
       <HeroSection
@@ -290,7 +287,7 @@ const Index = () => {
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-       
+
 
           {/* Title */}
           <h3 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-semibold mb-6 animate-appear opacity-0 delay-100`}>
