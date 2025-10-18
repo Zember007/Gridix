@@ -37,5 +37,6 @@
   "typeCommercial": "Commercial spaces",
   "typeParking": "Parking",
   "updateSuccess": "Apartment updated",
-  "syncError": "No apartments with the same area and number of rooms to synchronize"
+  "syncError": "No apartments with the same area and number of rooms to synchronize",
+  "noSearchResults": "No results found"
 }

@@ -20,6 +20,7 @@
   "newApartment": "Новая квартира",
   "noApartments": "Квартиры не добавлены",
   "noApartmentsDesc": "Нажмите \"Добавить квартиру\" чтобы начать",
+  "noSearchResults": "Ничего не найдено",
   "numberRequired": "Номер квартиры обязателен",
   "price": "Цена",
   "priceValue": "{price}",
