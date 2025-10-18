@@ -131,7 +131,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       const url = `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
 
       // Открываем в новой вкладке
-      window.open(url,  '_blank');
+      window.open(url, '_blank');
     } catch (error) {
       console.error('Error opening apartment details:', error);
       // В случае ошибки используем запасной вариант
@@ -547,7 +547,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           {/* Main visualization area */}
           <div className="relative grow flex flex-col">
             {/* Hero section with building visualization */}
-            <div className="relative overflow-hidden">
+            <div className="relative ">
               {viewMode === 'facade' ? (
                 // Building facade view with interactive floor polygons
                 <div className="w-full bg-white">
@@ -591,6 +591,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                     {/* Main floor plan area */}
                     <div className="flex-1 relative">
                       <ApartmentFloorPlan
+                        project={project}
                         projectId={project.id}
                         apartments={filters.filteredApartments.filter(apt =>
                           selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true

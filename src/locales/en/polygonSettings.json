@@ -1,0 +1,22 @@
+{
+  "buildingTitle": "Building Polygon Settings",
+  "floorTitle": "Floor Polygon Settings",
+  "colors": "Colors",
+  "buildingColor": "Building Color",
+  "hoverEffects": "Hover Effects",
+  "colorChange": "Color Change",
+  "opacityChange": "Opacity Change",
+  "glow": "Glow",
+  "display": "Display",
+  "showNumbers": "Show Numbers",
+  "showTooltip": "Show Tooltips",
+  "showArea": "Show Area",
+  "showPrice": "Show Price",
+  "opacity": "Opacity",
+  "normalOpacity": "Normal State",
+  "hoverOpacity": "On Hover",
+  "save": "Save Settings",
+  "saving": "Saving...",
+  "saved": "Settings saved",
+  "saveError": "Error saving settings"
+}

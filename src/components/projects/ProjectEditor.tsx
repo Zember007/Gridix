@@ -6,11 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Save, Building2, Image, Layers3, Settings, ChevronDown, ChevronRight, Camera, Zap, FileText, Upload, X, Globe, Menu } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Image, Settings, Camera, Zap, FileText, Upload, X, Globe, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
-import { generateSlug } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -24,7 +22,6 @@ import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
 import { useProject, useProjectCRUD } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
-import FloorPlanEditor from '@/components/visualization/FloorPlanEditor';
 import BuildingImageEditor from '@/components/visualization/BuildingImageEditor';
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
@@ -33,6 +30,8 @@ import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
+import PolygonCustomizationSettings from '../visualization/PolygonCustomizationSettings';
+import ProjectFloorsManager from './ProjectFloorsManager';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -85,9 +84,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
-  const [floorStates, setFloorStates] = useState<Record<number, boolean>>({});
   const [accessError, setAccessError] = useState<string | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
 
   const { navigate } = useLanguageNavigation();
   const { user, userProfile } = useAuth();
@@ -125,7 +125,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
 
     console.log('loadProject effect triggered');
-    
+
     try {
       // Проверяем права на редактирование
       const canEdit = user && (
@@ -136,14 +136,14 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         // Или если менеджер имеет доступ к этому застройщику
         (isManager && developerIds.includes(cachedProject.user_id))
       );
-      
+
       if (!canEdit) {
         console.log('canEdit', canEdit, 'isManagerMode', isManagerMode, 'activeWorkspaceId', activeWorkspaceId, 'project.user_id', cachedProject.user_id);
         setAccessError(t('projectEditor.noEditRights'));
         setLoading(false);
         return;
       }
-      
+
       setProject({
         id: cachedProject.id,
         name: cachedProject.name || '',
@@ -217,7 +217,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           .single();
 
         if (error) throw error;
-        
+
         // Инициализируем стандартные поля для нового проекта
         // try {
         //   const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
@@ -231,7 +231,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         // } catch (fieldsErr) {
         //   console.error('Error calling initialize_default_fields:', fieldsErr);
         // }
-        
+
         setProject(prev => ({ ...prev, id: data.id }));
         toast.success(t('projectEditor.projectCreated'));
         navigate(`/admin/project/${data.id}`);
@@ -241,7 +241,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           (isManagerMode && activeWorkspaceId && cachedProject?.user_id === activeWorkspaceId) ||
           (isManager && cachedProject?.user_id && developerIds.includes(cachedProject.user_id))
         );
-        
+
         if (!canEdit) {
           throw new Error('У вас нет прав на редактирование этого проекта');
         }
@@ -262,12 +262,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
-  const toggleFloorCollapse = (floor: number) => {
-    setFloorStates(prev => ({
-      ...prev,
-      [floor]: !prev[floor]
-    }));
-  };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData("Text")
@@ -302,7 +296,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     setUploadingPdf(true);
     try {
       const fileName = `${user.id}/${project.id}/presentation_${Date.now()}.pdf`;
-      
+
       const { data, error } = await supabase.storage
         .from('project-files')
         .upload(fileName, file, {
@@ -342,7 +336,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       // Extract file path from URL
       const url = new URL(project.pdf_presentation_url);
       const filePath = url.pathname.split('/').pop();
-      
+
       if (filePath) {
         await supabase.storage
           .from('project-files')
@@ -366,64 +360,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
-  const renderFloorPlanTabs = () => {
-    if (isNew || !project.id) return null;
-
-    const floors = Array.from({ length: project.floors + 1 }, (_, i) => i);
-
-    return (
-      <div className="space-y-2">
-        {floors.map((floor) => {
-          const isOpen = floorStates[floor] || false;
-          
-          return (
-            <Collapsible key={floor} open={isOpen} onOpenChange={() => toggleFloorCollapse(floor)}>
-              <Card className="overflow-hidden">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors py-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          {isOpen ? (
-                            <ChevronDown className="h-3 w-3" />
-                          ) : (
-                            <ChevronRight className="h-3 w-3" />
-                          )}
-                          <Layers3 className="h-3 w-3" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-xs">{t('projectEditor.floor')} {floor}</CardTitle>
-                          <CardDescription className="text-xs">
-                            {t('projectEditor.floorPlanDesc', { floor })}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-xs px-1">
-                        {t('projectEditor.plan')}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <FloorPlanEditor 
-                      projectId={project.id}
-                      floorNumber={floor}
-                    />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          );
-        })}
-      </div>
-    );
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div 
+        <div
           className="animate-spin rounded-full h-8 w-8 border-b-2"
           style={{ borderColor: ADMIN_THEME.primary }}
         ></div>
@@ -431,24 +372,24 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     );
   }
 
-        if (accessError) {
-        return (
-          <div className="min-h-screen bg-background flex items-center justify-center">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="text-center text-red-600">{t('projectEditor.accessDenied')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-center text-muted-foreground">{accessError}</p>
-                <Button onClick={onBack} className="w-full">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  {t('projectEditor.back')}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      }
+  if (accessError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-red-600">{t('projectEditor.accessDenied')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">{accessError}</p>
+            <Button onClick={onBack} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('projectEditor.back')}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Map activeTab to sidebar sections
   const getSidebarSection = (tab: string) => {
@@ -490,7 +431,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   {t('projectEditor.back')}
                 </Button>
-                
+
                 {/* Mobile Navigation Drawer */}
                 <Sheet>
                   <SheetTrigger asChild>
@@ -507,11 +448,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                       <nav className="space-y-2">
                         <button
                           onClick={() => setActiveTab('basic')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'basic' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'basic'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-muted'
+                            }`}
                         >
                           <Building2 className="h-4 w-4" />
                           {t('projectEditor.basicInfo')}
@@ -519,11 +459,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <button
                           onClick={() => setActiveTab('building')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'building' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'building'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Image className="h-4 w-4" />
                           {project.project_type === 'object' ? t('projectEditor.objectImage') : t('projectEditor.buildingImage')}
@@ -532,24 +471,22 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           <button
                             onClick={() => setActiveTab('floors')}
                             disabled={isNew}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                              activeTab === 'floors' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'floors'
+                              ? 'bg-primary text-primary-foreground'
+                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                              }`}
                           >
-                            <Layers3 className="h-4 w-4" />
+                            <Settings className="h-4 w-4" />
                             {t('projectEditor.floors')}
                           </button>
                         )}
                         <button
                           onClick={() => setActiveTab('apartments')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'apartments' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'apartments'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Settings className="h-4 w-4" />
                           {project.project_type === 'object' ? t('projectEditor.objects') : t('projectList.apartments')}
@@ -557,11 +494,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <button
                           onClick={() => setActiveTab('fields')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'fields' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'fields'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Settings className="h-4 w-4" />
                           {t('projectEditor.fields')}
@@ -569,11 +505,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <button
                           onClick={() => setActiveTab('photos')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'photos' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'photos'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Camera className="h-4 w-4" />
                           {t('projectEditor.photos')}
@@ -581,11 +516,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <button
                           onClick={() => setActiveTab('domains')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'domains' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'domains'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Globe className="h-4 w-4" />
                           {t('projectEditor.domains')}
@@ -593,11 +527,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <button
                           onClick={() => setActiveTab('integrations')}
                           disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'integrations' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                          }`}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'integrations'
+                            ? 'bg-primary text-primary-foreground'
+                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
+                            }`}
                         >
                           <Zap className="h-4 w-4" />
                           Integrations
@@ -607,7 +540,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   </SheetContent>
                 </Sheet>
               </div>
-              
+
               <div className="flex-1 text-center">
                 <h1 className="text-lg font-bold">
                   {isNew ? t('projectEditor.newProject') : project.name}
@@ -616,11 +549,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <LanguageToggle />
-                <Button 
-                  onClick={handleSave} 
+                <Button
+                  onClick={handleSave}
                   disabled={saving}
                   size="sm"
                   style={{
@@ -647,7 +580,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         <div className="container mx-auto px-4 py-8">
           {/* Show content based on activeTab without Tabs wrapper */}
-          
+
           {activeTab === 'basic' && (
             <Card>
               <CardHeader>
@@ -709,7 +642,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Дополнительные типы помещений */}
                 <div className="space-y-4 ">
                   <div className="flex items-center space-x-2">
@@ -720,7 +653,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     />
                     <Label htmlFor="has-parking">{t('projectEditor.hasParking')}</Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="has-commercial"
@@ -823,7 +756,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     <FileText className="h-4 w-4" />
                     {t('projectEditor.pdfPresentation')}
                   </h4>
-                  
+
                   {project.pdf_presentation_url ? (
                     <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                       <div className="flex items-center gap-2">
@@ -888,7 +821,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 {/* Настройки рассрочки */}
                 <div className="space-y-4 pt-4 border-t">
                   <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="installment-enabled"
@@ -908,8 +841,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           min="0"
                           max="100"
                           value={project.min_down_payment_percent}
-                          onChange={(e) => setProject(prev => ({ 
-                            ...prev, 
+                          onChange={(e) => setProject(prev => ({
+                            ...prev,
                             min_down_payment_percent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
                           }))}
                           placeholder="20"
@@ -925,8 +858,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           min="1"
                           max="120"
                           value={project.max_installment_months}
-                          onChange={(e) => setProject(prev => ({ 
-                            ...prev, 
+                          onChange={(e) => setProject(prev => ({
+                            ...prev,
                             max_installment_months: Math.min(120, Math.max(1, parseInt(e.target.value) || 1))
                           }))}
                           placeholder="24"
@@ -938,9 +871,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                 </div>
 
                 {isNew && (
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={saving} 
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
                     className="w-full"
                     style={{
                       backgroundColor: ADMIN_THEME.primary,
@@ -966,7 +899,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           )}
 
           {activeTab === 'building' && (
-            <BuildingImageEditor 
+            <BuildingImageEditor
               projectId={project.id}
               currentImageUrl={project.building_image_url}
               onImageUpdate={(imageUrl) => setProject(prev => ({ ...prev, building_image_url: imageUrl }))}
@@ -974,19 +907,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           )}
 
           {activeTab === 'floors' && project.project_type !== 'object' && (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('projectEditor.floorPlans')}</CardTitle>
-                  <CardDescription>
-                    {t('projectEditor.floorPlansDesc')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {renderFloorPlanTabs()}
-                </CardContent>
-              </Card>
-            </div>
+           <ProjectFloorsManager projectId={project.id} />
           )}
 
           {activeTab === 'apartments' && (
@@ -1018,13 +939,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   // Desktop view with sidebar
   return (
     <div className="min-h-screen bg-background flex">
-      <ProjectEditorSidebar 
+      <ProjectEditorSidebar
         onSectionChange={handleSidebarSectionChange}
         activeTab={getSidebarSection(activeTab)}
         userEmail={userProfile?.email || user?.email || 'Unknown user'}
         projectType={project.project_type}
       />
-      
+
       <div className="flex-1 bg-background">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-4">
@@ -1045,8 +966,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <LanguageToggle />
-                <Button 
-                  onClick={handleSave} 
+                <Button
+                  onClick={handleSave}
                   disabled={saving}
                   style={{
                     backgroundColor: ADMIN_THEME.primary,
@@ -1073,7 +994,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         <div className="container mx-auto px-4 py-8">
           {/* Show content based on activeTab without Tabs wrapper */}
-          
+
           {(activeTab === 'basic' || activeTab === 'building') && (
             <div className="space-y-6">
               {/* Sub-navigation for basic/building sections */}
@@ -1158,7 +1079,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Дополнительные типы помещений */}
                     <div className="space-y-4 ">
                       <div className="flex items-center space-x-2">
@@ -1169,7 +1090,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         />
                         <Label htmlFor="has-parking">{t('projectEditor.hasParking')}</Label>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="has-commercial"
@@ -1272,7 +1193,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                         <FileText className="h-4 w-4" />
                         {t('projectEditor.pdfPresentation')}
                       </h4>
-                      
+
                       {project.pdf_presentation_url ? (
                         <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                           <div className="flex items-center gap-2">
@@ -1337,7 +1258,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     {/* Настройки рассрочки */}
                     <div className="space-y-4 pt-4 border-t">
                       <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="installment-enabled"
@@ -1357,8 +1278,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                               min="0"
                               max="100"
                               value={project.min_down_payment_percent}
-                              onChange={(e) => setProject(prev => ({ 
-                                ...prev, 
+                              onChange={(e) => setProject(prev => ({
+                                ...prev,
                                 min_down_payment_percent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
                               }))}
                               placeholder="20"
@@ -1374,8 +1295,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                               min="1"
                               max="120"
                               value={project.max_installment_months}
-                              onChange={(e) => setProject(prev => ({ 
-                                ...prev, 
+                              onChange={(e) => setProject(prev => ({
+                                ...prev,
                                 max_installment_months: Math.min(120, Math.max(1, parseInt(e.target.value) || 1))
                               }))}
                               placeholder="24"
@@ -1387,9 +1308,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                     </div>
 
                     {isNew && (
-                      <Button 
-                        onClick={handleSave} 
-                        disabled={saving} 
+                      <Button
+                        onClick={handleSave}
+                        disabled={saving}
                         className="w-full"
                         style={{
                           backgroundColor: ADMIN_THEME.primary,
@@ -1415,7 +1336,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               )}
 
               {activeTab === 'building' && (
-                <BuildingImageEditor 
+                <BuildingImageEditor
                   projectId={project.id}
                   currentImageUrl={project.building_image_url}
                   onImageUpdate={(imageUrl) => setProject(prev => ({ ...prev, building_image_url: imageUrl }))}
@@ -1425,19 +1346,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           )}
 
           {activeTab === 'floors' && project.project_type !== 'object' && (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('projectEditor.floorPlans')}</CardTitle>
-                  <CardDescription>
-                    {t('projectEditor.floorPlansDesc')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {renderFloorPlanTabs()}
-                </CardContent>
-              </Card>
-            </div>
+            <ProjectFloorsManager projectId={project.id} />
           )}
 
           {activeTab === 'apartments' && (

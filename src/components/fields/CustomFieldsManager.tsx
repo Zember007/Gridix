@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,10 +63,17 @@ const CustomFieldsManager = ({
     is_visible: true
   });
 
+  // Stabilize external deps to avoid refetch loops when parent re-renders
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
+
+  const onFieldsChangeRef = useRef(onFieldsChange);
+  useEffect(() => { onFieldsChangeRef.current = onFieldsChange; }, [onFieldsChange]);
+
   const loadCustomFields = useCallback(async () => {
     if (!projectId) {
       setFields([]);
-      onFieldsChange?.([]);
+      onFieldsChangeRef.current?.([]);
       setLoading(false);
       return;
     }
@@ -104,14 +111,14 @@ const CustomFieldsManager = ({
       }));
 
       setFields(formattedFields);
-      onFieldsChange?.(formattedFields);
+      onFieldsChangeRef.current?.(formattedFields);
     } catch (error) {
       console.error('Error loading custom fields:', error);
-      toast.error(t('customFields.loadError'));
+      toast.error(tRef.current('customFields.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [projectId, t, onFieldsChange]);
+  }, [projectId]);
 
   useEffect(() => {
     loadCustomFields();
@@ -293,7 +300,9 @@ const CustomFieldsManager = ({
       <div>
         <Label>{t('customFields.translations')}</Label>
         <div className="space-y-2 mt-2">
-          {SUPPORTED_LANGUAGES.map((lang) => (
+          {SUPPORTED_LANGUAGES.map((lang) => {
+            
+            return (
             <div key={lang} className="flex items-center gap-2">
               <span className="text-sm w-12 flex items-center gap-1">
                 {LANGUAGE_CONFIG[lang].flag} {LANGUAGE_CONFIG[lang].code.toUpperCase()}
@@ -319,7 +328,7 @@ const CustomFieldsManager = ({
                 className="flex-1"
               />
             </div>
-          ))}
+          )})}
         </div>
       </div>
 
@@ -363,7 +372,6 @@ const CustomFieldsManager = ({
       <div className="flex gap-2">
         <Button
           onClick={() => handleSaveField(field)}
-          className="bg-real-estate-600 hover:bg-real-estate-700"
         >
           <Check className="h-4 w-4 mr-2" />
           {t('customFields.save')}
@@ -432,7 +440,16 @@ const CustomFieldsManager = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEditingField(field)}
+                    onClick={() => {
+                      const normalizedTranslations = SUPPORTED_LANGUAGES.reduce(
+                        (acc, lang) => {
+                          acc[lang] = field.field_label_translations?.[lang] ?? '';
+                          return acc;
+                        },
+                        {} as Partial<Record<Language, string>>
+                      );
+                      setEditingField({ ...field, field_label_translations: normalizedTranslations });
+                    }}
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>

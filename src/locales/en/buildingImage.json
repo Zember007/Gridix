@@ -1,6 +1,7 @@
 {
   "authRequired": "Authentication required to upload images",
   "description": "Upload building facade image for floor configuration",
+  "settings": "Settings facade",
   "floors": {
     "addNew": "Add Floor",
     "canvas": "Drawing Canvas",

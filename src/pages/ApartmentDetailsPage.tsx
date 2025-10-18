@@ -191,13 +191,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   // Get project colors from polygon settings
   const getProjectColors = () => {
     const themeColor = (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
-    /* if (project && 'polygon_settings' in project) {
-      const projectWithSettings = project as Record<string, unknown>;
-      const settings = projectWithSettings.polygon_settings as { colors?: { available: string; sold: string; reserved: string } };
-      if (settings && settings.colors) {
-        return settings.colors;
-      }
-    } */
+   
     return {
       available: themeColor,
       sold: '#ef4444',

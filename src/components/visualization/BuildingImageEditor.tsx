@@ -8,6 +8,7 @@ import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
+import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,7 +44,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
-  
+
   // Determine if this is an object project (villas/townhouses) or building
   const isObjectProject = (project)?.project_type === 'object';
 
@@ -86,7 +87,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       }));
 
       setBuildingFloors(normalizedFloors);
-      
+
       // Convert floors to shapes for display
       const floorShapes: Shape[] = normalizedFloors.map(floor => ({
         id: floor.id,
@@ -95,7 +96,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         color: floor.color || '#3b82f6',
         isSelected: false
       }));
-      
+
       setShapes(floorShapes);
     } catch (error) {
       console.error('Error loading building data:', error);
@@ -116,7 +117,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${projectId}-building.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('project-images')
         .upload(fileName, file, { upsert: true });
@@ -127,10 +128,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         .from('project-images')
         .getPublicUrl(fileName);
 
-        const { error: updateError } = await supabase
-          .from('projects')
-          .update({ building_image_url: publicUrl })
-          .eq('id', project?.id || projectId);
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ building_image_url: publicUrl })
+        .eq('id', project?.id || projectId);
 
       if (updateError) throw updateError;
 
@@ -152,7 +153,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       setSelectedFloor(floor.floor_number);
       setIsEditing(true);
       setIsCreatingNewFloor(false);
-      
+
       // Set current shape for editing
       const editingShape: Shape = {
         id: floor.id,
@@ -169,7 +170,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     setIsCreatingNewFloor(true);
     setIsEditing(true);
     setEditingFloorId(null);
-    
+
     // Create a new empty shape for the new floor
     const newShape: Shape = {
       id: `new-floor-${selectedFloor}`,
@@ -185,7 +186,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
   const handleCurrentShapeUpdate = (shape: Shape | null) => {
     setCurrentShape(shape);
-    
+
   };
 
   const handleShapeUpdate = (newShapes: Shape[]) => {
@@ -209,7 +210,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       }
 
       let savedFloorId = editingFloorId;
-      
+
       if (isCreatingNewFloor) {
         // Create new floor
         const { data, error } = await supabase
@@ -250,7 +251,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
       // Перезагружаем данные из БД
       await loadBuildingData();
-      
+
       // Сбрасываем состояние редактирования
       setEditingFloorId(null);
       setIsCreatingNewFloor(false);
@@ -347,7 +348,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
               {isObjectProject ? t('buildingImage.object.polygonsTitle') : t('buildingImage.floors.title')}
             </CardTitle>
             <CardDescription>
-              {isObjectProject 
+              {isObjectProject
                 ? t('buildingImage.object.polygonsDescription')
                 : t('buildingImage.floors.description')
               }
@@ -392,7 +393,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   )}
                 </select>
               </div>
-              
+
               {!isEditing && (
                 <Button
                   onClick={startCreatingNewFloor}
@@ -410,11 +411,11 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
             <div className="border rounded-lg p-4 bg-muted/30">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-medium text-sm">
-                  {isCreatingNewFloor 
-                    ? (isObjectProject 
-                        ? t('buildingImage.object.creating', { number: selectedFloor })
-                        : t('buildingImage.floors.creatingNew', { floor: selectedFloor })
-                      )
+                  {isCreatingNewFloor
+                    ? (isObjectProject
+                      ? t('buildingImage.object.creating', { number: selectedFloor })
+                      : t('buildingImage.floors.creatingNew', { floor: selectedFloor })
+                    )
                     : (isObjectProject ? t('buildingImage.object.plan') : t('buildingImage.floors.canvas'))
                   }
                 </h4>
@@ -441,7 +442,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   </div>
                 )}
               </div>
-              
+
               <PolygonAnnotator
                 ref={polygonAnnotatorRef}
                 imageUrl={buildingImage}
@@ -450,7 +451,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
                 drawingEnabled={isEditing}
               />
-               
+
             </div>
 
             {buildingFloors.length > 0 && (
@@ -462,7 +463,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   {buildingFloors.map((floor) => (
                     <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
                       <span>
-                        {isObjectProject 
+                        {isObjectProject
                           ? t('buildingImage.object.objectNumber', { number: floor.floor_number })
                           : t('buildingImage.floors.floorNumber', { floor: floor.floor_number })
                         }
@@ -495,6 +496,11 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
           </CardContent>
         </Card>
       )}
+
+      <PolygonCustomizationSettings
+        projectId={project?.id || projectId}
+        type="building"
+      />
     </div>
   );
 };

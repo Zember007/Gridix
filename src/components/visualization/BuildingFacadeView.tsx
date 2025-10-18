@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Building2, Maximize2, X } from 'lucide-react';
+import { Maximize2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import ApartmentPopup from './ApartmentPopup';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -38,7 +38,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const isMobile = useIsMobile();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -47,10 +46,19 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const imgRef = useRef<HTMLImageElement>(null);
   const initializedRef = useRef(false);
 
+  // Project-level facade polygon settings
+  const [facadeSettings, setFacadeSettings] = useState<{ 
+    colors: { building: string };
+    opacity: { normal: number; hover: number }; 
+    hoverEffects: { glow: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
+    display: { showNumbers: boolean; showTooltip: boolean; showArea: boolean; showPrice: boolean };
+  } | null>(null);
+
   // Floor popup state
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
 
   const getContainerHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
@@ -137,6 +145,58 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   useEffect(() => {
     loadBuildingFloors();
   }, [loadBuildingFloors]);
+
+  // Load project-level facade settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('polygon_settings_facade')
+          .eq('id', projectId)
+          .single();
+        if (error) throw error;
+        if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
+          const s = data.polygon_settings_facade as Record<string, unknown>;
+          setFacadeSettings({
+            colors: {
+              building: (s?.colors as Record<string, unknown>)?.building as string || '#3b82f6'
+            },
+            opacity: {
+              normal: typeof (s?.opacity as Record<string, unknown>)?.normal === 'number' ? (s.opacity as Record<string, unknown>).normal as number : 0.4,
+              hover: typeof (s?.opacity as Record<string, unknown>)?.hover === 'number' ? (s.opacity as Record<string, unknown>).hover as number : 0.7,
+            },
+            hoverEffects: {
+              glow: !!(s?.hoverEffects as Record<string, unknown>)?.glow,
+              colorChange: !!(s?.hoverEffects as Record<string, unknown>)?.colorChange,
+              opacityChange: !!(s?.hoverEffects as Record<string, unknown>)?.opacityChange,
+            },
+            display: {
+              showNumbers: !!(s?.display as Record<string, unknown>)?.showNumbers,
+              showTooltip: !!(s?.display as Record<string, unknown>)?.showTooltip,
+              showArea: !!(s?.display as Record<string, unknown>)?.showArea,
+              showPrice: !!(s?.display as Record<string, unknown>)?.showPrice,
+            },
+          });
+        } else {
+          setFacadeSettings({ 
+            colors: { building: '#3b82f6' },
+            opacity: { normal: 0.4, hover: 0.7 }, 
+            hoverEffects: { glow: true, colorChange: true, opacityChange: true },
+            display: { showNumbers: true, showTooltip: false, showArea: false, showPrice: false }
+          });
+        }
+      } catch (e) {
+        setFacadeSettings({ 
+          colors: { building: '#3b82f6' },
+          opacity: { normal: 0.4, hover: 0.7 }, 
+          hoverEffects: { glow: true, colorChange: true, opacityChange: true },
+          display: { showNumbers: true, showTooltip: false, showArea: false, showPrice: false }
+        });
+      }
+    };
+    loadSettings();
+  }, [projectId]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -245,8 +305,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     };
   };
 
-  const getFloorStatusColor = () => {
-    return 'green';
+  const getFloorFillColor = (floor: BuildingFloor) => {
+    return facadeSettings?.colors?.building || floor.color || '#3b82f6';
   };
 
   // Floor Popup Component
@@ -285,29 +345,25 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       if (!apartment) {
         return null;
       }
+      
+      // Use ApartmentPopup for objects
       return (
-        <div
-          className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden text-[12px] shadow-xl border border-gray-200 w-[120px] h-[105px] p-2"
-          style={{
-            left: adjustedX,
-            top: adjustedY,
+        <ApartmentPopup
+          apartment={apartment}
+          position={{ x: adjustedX, y: adjustedY }}
+          settings={{
+            showNumbers: facadeSettings?.display?.showNumbers ?? true,
+            showTooltip: facadeSettings?.display?.showTooltip ?? false,
+            showArea: facadeSettings?.display?.showArea ?? false,
+            showPrice: facadeSettings?.display?.showPrice ?? false,
           }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="text-[16px] text-center">№ <span className="font-bold text-[24px]">{apartment.apartment_number}</span></div>
-          <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
-            <div className="text-[16px] leading-[1.1]">{apartment.area} m²</div>
-            {apartment.price && (
-              <div className="text-[16px] leading-[1.1] mt-1">{formatPriceWithCurrency(apartment.price, project?.currency || null)}</div>
-            )}
-          </div>
-        </div>
+          project={project}
+        />
       );
     }
 
     // For project_type = building, Number is floor number
     const stats = getFloorStats(Number);
-    const floorApartments = getFloorApartments(Number);
 
     return (
       <div
@@ -318,9 +374,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="text-center flex items-center justify-center gap-[7px]">
-          {t('project.floor')} <span className='font-bold'>{Number}</span>
-        </div>
+        {facadeSettings?.display?.showNumbers && (
+          <div className="text-center flex items-center justify-center gap-[7px]">
+            {t('project.floor')} <span className='font-bold'>{Number}</span>
+          </div>
+        )}
 
         <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
           <div className="text-[32px] leading-[1.1]">{stats.available}</div>
@@ -359,36 +417,43 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     const floor = buildingFloors.find(f => f.floor_number === floorNumber);
     if (!floor || !floor.polygon || floor.polygon.length === 0) return;
 
-    // Вычисляем границы полигона
-    const polygonBounds = {
-      minX: Math.min(...floor.polygon.map(p => p.x)),
-      maxX: Math.max(...floor.polygon.map(p => p.x)),
-      minY: Math.min(...floor.polygon.map(p => p.y)),
-      maxY: Math.max(...floor.polygon.map(p => p.y))
-    };
+    // Set hovered floor for visual effects
+    setHoveredFloor(floorNumber);
 
-    // Преобразуем координаты полигона из процентов SVG в пиксели контейнера
-    const containerRect = containerRef.current.getBoundingClientRect();
+    // Show popup if tooltip is enabled in settings
+    if (facadeSettings?.display?.showTooltip) {
+      // Вычисляем границы полигона
+      const polygonBounds = {
+        minX: Math.min(...floor.polygon.map(p => p.x)),
+        maxX: Math.max(...floor.polygon.map(p => p.x)),
+        minY: Math.min(...floor.polygon.map(p => p.y)),
+        maxY: Math.max(...floor.polygon.map(p => p.y))
+      };
 
-    // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
-    if (!isExpanded || imgDimensions.width === 0) return;
+      // Преобразуем координаты полигона из процентов SVG в пиксели контейнера
+      const containerRect = containerRef.current.getBoundingClientRect();
 
-    const svgWidth = imgDimensions.width;
-    const svgHeight = imgDimensions.height;
-    const svgLeft = (containerRect.width - svgWidth) / 2;
-    const svgTop = (containerRect.height - svgHeight) / 2;
+      // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
+      if (!isExpanded || imgDimensions.width === 0) return;
 
-    // Переводим проценты полигона в пиксели
-    const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
-    const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
+      const svgWidth = imgDimensions.width;
+      const svgHeight = imgDimensions.height;
+      const svgLeft = (containerRect.width - svgWidth) / 2;
+      const svgTop = (containerRect.height - svgHeight) / 2;
 
-    setSelectedFloor(floorNumber);
-    setPopupPosition({ x: polygonLeftPx, y: polygonCenterY });
-    setShowPopup(true);
+      // Переводим проценты полигона в пиксели
+      const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
+      const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
+
+      setSelectedFloor(floorNumber);
+      setPopupPosition({ x: polygonLeftPx, y: polygonCenterY });
+      setShowPopup(true);
+    }
   };
 
   const handleFloorLeave = () => {
     if (isMobile || !isExpanded) return;
+    setHoveredFloor(null);
     setShowPopup(false);
   };
 
@@ -542,21 +607,20 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               .map(point => `${point.x},${point.y}`)
               .join(' ');
 
-
-            const statusColor = getFloorStatusColor();
+            const baseColor = getFloorFillColor(floor);
             const isHovered = hoveredFloor === floor.floor_number;
-
-
+            const hoverColor = facadeSettings?.hoverEffects?.colorChange ? 
+              (baseColor === '#3b82f6' ? '#10b981' : baseColor) : baseColor;
 
             return (
               <g key={floor.id}>
                 <polygon
                   points={points}
-                  fill={statusColor}
-                  fillOpacity={isHovered ? 0.6 : 0.4}
-                  stroke={statusColor}
-                  strokeWidth={isHovered ? (isMobile ? 0.4 : 0.3) : (isMobile ? 0.3 : 0.2)}
-                  className="cursor-pointer transition-all"
+                  fill={isHovered ? hoverColor : baseColor}
+                  fillOpacity={isHovered ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
+                  stroke={isHovered ? hoverColor : baseColor}
+                  strokeWidth={isHovered ? (isMobile ? 0.6 : 0.5) : (isMobile ? 0.3 : 0.2)}
+                  className="cursor-pointer transition-all duration-200"
                   onClick={(e) => handleSVGFloorClick(floor.floor_number)}
                   onTouchStart={(e) => {
                     if (isMobile) {
@@ -582,7 +646,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   }}
                   style={{
                     pointerEvents: 'auto',
-                    touchAction: 'manipulation'
+                    touchAction: 'manipulation',
+                    filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
+                    transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
+                    transformOrigin: 'center'
                   }}
                 />
 

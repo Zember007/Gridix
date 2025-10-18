@@ -365,8 +365,8 @@ export const ListView = ({
                               </div>
 
                               {/* Area */}
-                              <div className="relative flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105 ">
-                                <span className="text-[11px] text-gray-400 absolute top-[-15px] left-1/2 -translate-x-1/2">
+                              <div className="relative flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105 flex flex-col -translate-y-[5px]">
+                                <span className="text-[11px] text-gray-400  truncate">
                                   {t('project.area')}
                                 </span>
                                 <div className="text-[20px] font-light text-black leading-[24px] hover:text-gray-700 transition-colors duration-200">
@@ -412,7 +412,7 @@ export const ListView = ({
                                 if (value === null || field.field_name === 'rooms' || field.field_name === 'area') return null;
 
                                 return (
-                                  <div key={field.id} className={`relative flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105 flex flex-col ${label ? '-translate-y-[8px]' : ''}`}>
+                                  <div key={field.id} className={`relative flex-shrink-0 text-center min-w-[97px] transition-transform duration-200 hover:scale-105 flex flex-col ${label ? '-translate-y-[5px]' : ''}`}>
                                     <span className="text-[11px] text-gray-400  truncate">
                                       {label}
                                     </span>

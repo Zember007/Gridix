@@ -8,13 +8,14 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useProjectCRUD } from '@/hooks/useProjects';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PolygonSettings {
   colors: {
     available: string;
     sold: string;
     reserved: string;
+    building?: string; // For building type - single color
   };
   hoverEffects: {
     scale: boolean;
@@ -37,7 +38,6 @@ interface PolygonSettings {
 interface PolygonCustomizationSettingsProps {
   projectId: string;
   type: 'building' | 'floor';
-  floorNumber?: number;
   onSettingsChange?: (settings: PolygonSettings) => void;
 }
 
@@ -45,7 +45,8 @@ const defaultSettings: PolygonSettings = {
   colors: {
     available: '#3b82f6',
     sold: '#ef4444',
-    reserved: '#f59e0b'
+    reserved: '#f59e0b',
+    building: '#3b82f6'
   },
   hoverEffects: {
     scale: false,
@@ -68,45 +69,46 @@ const defaultSettings: PolygonSettings = {
 const PolygonCustomizationSettings = ({ 
   projectId, 
   type, 
-  floorNumber,
   onSettingsChange 
 }: PolygonCustomizationSettingsProps) => {
   const [settings, setSettings] = useState<PolygonSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
-  const { updateProject } = useProjectCRUD();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadSettings();
-  }, [projectId, type, floorNumber]);
+  }, [projectId, type]);
 
   const loadSettings = async () => {
     try {
       if (type === 'building') {
         const { data, error } = await supabase
           .from('projects')
-          .select('building_polygon_settings')
+          .select('polygon_settings_facade')
           .eq('id', projectId)
           .single();
 
         if (error) throw error;
         
-        if (data?.building_polygon_settings) {
-          setSettings(data.building_polygon_settings as unknown as PolygonSettings);
+        if ((data as any)?.polygon_settings_facade) {
+          const loadedSettings = (data as any).polygon_settings_facade as unknown as PolygonSettings;
+          // Ensure building color is set
+          if (!loadedSettings.colors.building) {
+            loadedSettings.colors.building = '#3b82f6';
+          }
+          setSettings(loadedSettings);
         }
       } else {
-        if (!floorNumber) return;
-        
         const { data, error } = await supabase
-          .from('floor_plans')
-          .select('polygon_settings')
-          .eq('project_id', projectId)
-          .eq('floor_number', floorNumber)
-          .maybeSingle();
+          .from('projects')
+          .select('polygon_settings_floor')
+          .eq('id', projectId)
+          .single();
 
         if (error) throw error;
         
-        if (data?.polygon_settings) {
-          setSettings(data.polygon_settings as unknown as PolygonSettings);
+        if ((data as any)?.polygon_settings_floor) {
+          setSettings((data as any).polygon_settings_floor as unknown as PolygonSettings);
         }
       }
     } catch (error) {
@@ -118,27 +120,24 @@ const PolygonCustomizationSettings = ({
     setLoading(true);
     try {
       if (type === 'building') {
-        const success = await updateProject(projectId, { 
-          building_polygon_settings: settings as unknown as any 
-        });
-        if (!success) throw new Error('Failed to update project settings');
-      } else {
-        if (!floorNumber) return;
-
         const { error } = await supabase
-          .from('floor_plans')
-          .update({ polygon_settings: settings as unknown as any })
-          .eq('project_id', projectId)
-          .eq('floor_number', floorNumber);
-
+          .from('projects')
+          .update({ polygon_settings_facade: settings as unknown as any } as any)
+          .eq('id', projectId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('projects')
+          .update({ polygon_settings_floor: settings as unknown as any } as any)
+          .eq('id', projectId);
         if (error) throw error;
       }
 
-      toast.success('Настройки сохранены');
+      toast.success(t('polygonSettings.saved'));
       onSettingsChange?.(settings);
     } catch (error) {
       console.error('Error saving polygon settings:', error);
-      toast.error('Ошибка сохранения настроек');
+      toast.error(t('polygonSettings.saveError'));
     } finally {
       setLoading(false);
     }
@@ -163,75 +162,90 @@ const PolygonCustomizationSettings = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          Настройки полигонов {type === 'building' ? 'здания' : 'этажа'}
+          {type === 'building' ? t('polygonSettings.buildingTitle') : t('polygonSettings.floorTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Цвета статусов */}
+        {/* Цвета - для здания один цвет, для этажа - по статусам */}
         <div className="space-y-4">
-          <h4 className="font-medium">Цвета статусов</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <h4 className="font-medium">{t('polygonSettings.colors')}</h4>
+          {type === 'building' ? (
             <div className="space-y-2">
-              <Label>Свободна</Label>
+              <Label>{t('polygonSettings.buildingColor')}</Label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={settings.colors.available}
-                  onChange={(e) => updateSettings('colors.available', e.target.value)}
+                  value={settings.colors.building || '#3b82f6'}
+                  onChange={(e) => updateSettings('colors.building', e.target.value)}
                   className="w-8 h-8 rounded border cursor-pointer"
                 />
-                <span className="text-sm text-gray-600">{settings.colors.available}</span>
+                <span className="text-sm text-gray-600">{settings.colors.building || '#3b82f6'}</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Продана</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.colors.sold}
-                  onChange={(e) => updateSettings('colors.sold', e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
-                />
-                <span className="text-sm text-gray-600">{settings.colors.sold}</span>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>{t('project.available')}</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={settings.colors.available}
+                    onChange={(e) => updateSettings('colors.available', e.target.value)}
+                    className="w-8 h-8 rounded border cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600">{settings.colors.available}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('project.sold')}</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={settings.colors.sold}
+                    onChange={(e) => updateSettings('colors.sold', e.target.value)}
+                    className="w-8 h-8 rounded border cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600">{settings.colors.sold}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('project.reserved')}</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={settings.colors.reserved}
+                    onChange={(e) => updateSettings('colors.reserved', e.target.value)}
+                    className="w-8 h-8 rounded border cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600">{settings.colors.reserved}</span>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Бронь</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.colors.reserved}
-                  onChange={(e) => updateSettings('colors.reserved', e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
-                />
-                <span className="text-sm text-gray-600">{settings.colors.reserved}</span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         <Separator />
 
         {/* Эффекты при наведении */}
         <div className="space-y-4">
-          <h4 className="font-medium">Эффекты при наведении</h4>
+          <h4 className="font-medium">{t('polygonSettings.hoverEffects')}</h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <Label>Изменение цвета</Label>
+              <Label>{t('polygonSettings.colorChange')}</Label>
               <Switch
                 checked={settings.hoverEffects.colorChange}
                 onCheckedChange={(checked) => updateSettings('hoverEffects.colorChange', checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Изменение прозрачности</Label>
+              <Label>{t('polygonSettings.opacityChange')}</Label>
               <Switch
                 checked={settings.hoverEffects.opacityChange}
                 onCheckedChange={(checked) => updateSettings('hoverEffects.opacityChange', checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Свечение</Label>
+              <Label>{t('polygonSettings.glow')}</Label>
               <Switch
                 checked={settings.hoverEffects.glow}
                 onCheckedChange={(checked) => updateSettings('hoverEffects.glow', checked)}
@@ -244,31 +258,31 @@ const PolygonCustomizationSettings = ({
 
         {/* Отображение информации */}
         <div className="space-y-4">
-          <h4 className="font-medium">Отображение информации</h4>
+          <h4 className="font-medium">{t('polygonSettings.display')}</h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <Label>Показывать номера</Label>
+              <Label>{t('polygonSettings.showNumbers')}</Label>
               <Switch
                 checked={settings.display.showNumbers}
                 onCheckedChange={(checked) => updateSettings('display.showNumbers', checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Всплывающие подсказки</Label>
+              <Label>{t('polygonSettings.showTooltip')}</Label>
               <Switch
                 checked={settings.display.showTooltip}
                 onCheckedChange={(checked) => updateSettings('display.showTooltip', checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Показывать площадь</Label>
+              <Label>{t('polygonSettings.showArea')}</Label>
               <Switch
                 checked={settings.display.showArea}
                 onCheckedChange={(checked) => updateSettings('display.showArea', checked)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Показывать цену</Label>
+              <Label>{t('polygonSettings.showPrice')}</Label>
               <Switch
                 checked={settings.display.showPrice}
                 onCheckedChange={(checked) => updateSettings('display.showPrice', checked)}
@@ -281,10 +295,10 @@ const PolygonCustomizationSettings = ({
 
         {/* Настройки прозрачности */}
         <div className="space-y-4">
-          <h4 className="font-medium">Прозрачность</h4>
+          <h4 className="font-medium">{t('polygonSettings.opacity')}</h4>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Обычное состояние: {Math.round(settings.opacity.normal * 100)}%</Label>
+              <Label>{t('polygonSettings.normalOpacity')}: {Math.round(settings.opacity.normal * 100)}%</Label>
               <Slider
                 value={[settings.opacity.normal]}
                 onValueChange={([value]) => updateSettings('opacity.normal', value)}
@@ -295,7 +309,7 @@ const PolygonCustomizationSettings = ({
               />
             </div>
             <div className="space-y-2">
-              <Label>При наведении: {Math.round(settings.opacity.hover * 100)}%</Label>
+              <Label>{t('polygonSettings.hoverOpacity')}: {Math.round(settings.opacity.hover * 100)}%</Label>
               <Slider
                 value={[settings.opacity.hover]}
                 onValueChange={([value]) => updateSettings('opacity.hover', value)}
@@ -313,7 +327,7 @@ const PolygonCustomizationSettings = ({
           disabled={loading}
           className="w-full"
         >
-          {loading ? 'Сохранение...' : 'Сохранить настройки'}
+          {loading ? t('polygonSettings.saving') : t('polygonSettings.save')}
         </Button>
       </CardContent>
     </Card>

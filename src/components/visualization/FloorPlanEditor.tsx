@@ -95,7 +95,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   });
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [polygonSettings, setPolygonSettings] = useState<PolygonSettings | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
   const [apartmentPhotos, setApartmentPhotos] = useState<ApartmentPhoto[]>([]);
@@ -210,16 +209,17 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const loadPolygonSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('floor_plans')
-        .select('polygon_settings')
-        .eq('project_id', project?.id || projectId)
-        .eq('floor_number', floorNumber)
-        .maybeSingle();
+        .from('projects')
+        .select('polygon_settings_floor')
+        .eq('id', project?.id || projectId)
+        .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
-      if (data?.polygon_settings) {
-        setPolygonSettings(data.polygon_settings as unknown as PolygonSettings);
+      type ProjectsSettingsRow = { polygon_settings_floor?: unknown };
+      const row = data as unknown as ProjectsSettingsRow;
+      if (row?.polygon_settings_floor) {
+        setPolygonSettings(row.polygon_settings_floor as unknown as PolygonSettings);
       } else {
         const defaultSettings: PolygonSettings = {
           colors: {
@@ -287,8 +287,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         const { error: updateError } = await supabase
           .from('floor_plans')
           .update({
-            image_url: newImageUrl,
-            polygon_settings: polygonSettings as unknown as Json
+            image_url: newImageUrl
           })
           .eq('id', existingPlan.id);
 
@@ -299,8 +298,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           .insert({
             project_id: project?.id || projectId,
             floor_number: floorNumber,
-            image_url: newImageUrl,
-            polygon_settings: polygonSettings as unknown as Json
+            image_url: newImageUrl
           });
 
         if (insertError) throw insertError;
@@ -435,7 +433,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               .from('floor_plans')
               .update({
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as unknown as Json
               })
               .eq('id', existingPlan.id);
           } else {
@@ -445,7 +442,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 project_id: project?.id || projectId,
                 floor_number: targetFloor,
                 image_url: imageUrl,
-                polygon_settings: polygonSettings as unknown as Json
               });
           }
         }
@@ -880,27 +876,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  if (showSettings) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{t('floorPlan.settings.title', { floor: floorNumber })}</h3>
-          <Button
-            variant="outline"
-            onClick={() => setShowSettings(false)}
-          >
-            {t('floorPlan.settings.backToEditor')}
-          </Button>
-        </div>
-        <PolygonCustomizationSettings
-          projectId={projectId}
-          type="floor"
-          floorNumber={floorNumber}
-          onSettingsChange={handleSettingsChange}
-        />
-      </div>
-    );
-  }
+
 
   return (
     <TooltipProvider>
@@ -970,14 +946,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               <Copy className="h-4 w-4 mr-2" />
               {t('floorPlan.duplicateToAllFloors')}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettings(true)}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              {t('floorPlan.settings')}
-            </Button>
+           
           </div>
         </div>
 

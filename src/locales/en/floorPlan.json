@@ -1,5 +1,6 @@
 {
   "apartments": {
+    "settings": "Polygon Settings",
     "add": "Add Apartment",
     "area": "Area (m²)",
     "available": "Available",

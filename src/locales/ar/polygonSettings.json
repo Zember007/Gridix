@@ -1,0 +1,22 @@
+{
+  "buildingTitle": "إعدادات مضلعات المبنى",
+  "floorTitle": "إعدادات مضلعات الطابق",
+  "colors": "الألوان",
+  "buildingColor": "لون المبنى",
+  "hoverEffects": "تأثيرات التمرير",
+  "colorChange": "تغيير اللون",
+  "opacityChange": "تغيير الشفافية",
+  "glow": "التوهج",
+  "display": "العرض",
+  "showNumbers": "إظهار الأرقام",
+  "showTooltip": "إظهار التلميحات",
+  "showArea": "إظهار المساحة",
+  "showPrice": "إظهار السعر",
+  "opacity": "الشفافية",
+  "normalOpacity": "الحالة العادية",
+  "hoverOpacity": "عند التمرير",
+  "save": "حفظ الإعدادات",
+  "saving": "جاري الحفظ...",
+  "saved": "تم حفظ الإعدادات",
+  "saveError": "خطأ في حفظ الإعدادات"
+}

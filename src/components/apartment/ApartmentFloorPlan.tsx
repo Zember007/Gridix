@@ -5,12 +5,14 @@ import { Building2 } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import FloorPlanView from '@/components/visualization/FloorPlanView';
+import { Project } from '@/hooks/useProjectsManager';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
   selectedFloorNumber?: number;
+  project: Project;
 }
 
 interface BuildingFloor {
@@ -20,7 +22,7 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ projectId, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 

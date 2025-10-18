@@ -1,0 +1,70 @@
+{
+  "apartments": {
+    "settings": "إعدادات المضلع",
+    "add": "إضافة شقة",
+    "area": "المساحة (م²)",
+    "available": "متاحة",
+    "deleteError": "خطأ في حذف الشقة",
+    "deleteSuccess": "تم حذف الشقة",
+    "editApartment": "تحرير المضلع - الشقة رقم {number}",
+    "fillAllFields": "املأ جميع الحقول وأنشئ مضلع (الحد الأدنى 3 نقاط)",
+    "list": "الشقق في الطابق:",
+    "loading": {
+      "error": "خطأ في تحميل الشقق"
+    },
+    "newApartment": "شقة جديدة",
+    "noPhotos": "لا توجد صور",
+    "noPhotosDesc": "قم برفع صور الشقة",
+    "number": "رقم الشقة",
+    "numberPlaceholder": "مثال: 101",
+    "parameters": "معاملات الشقة",
+    "photoDeleteError": "خطأ في حذف الصورة",
+    "photoDeleteSuccess": "تم حذف الصورة",
+    "photos": "الصور",
+    "photoUploadError": "خطأ في رفع الصور",
+    "photoUploadSuccess": "تم رفع الصور بنجاح",
+    "price": "السعر",
+    "reserved": "محجوزة",
+    "rooms": "الغرف",
+    "roomsShort": "غرف",
+    "saveError": "خطأ في حفظ الشقة",
+    "saveSuccess": "تم حفظ الشقة",
+    "sold": "مباعة",
+    "status": "الحالة",
+    "title": "إدارة الشقق",
+    "uploadMultiplePhotos": "اختر عدة صور للرفع"
+  },
+  "duplicate": {
+    "error": "خطأ في النسخ إلى جميع الطوابق",
+    "noData": "لا توجد بيانات للنسخ",
+    "success": "تم نسخ المخطط والمضلعات إلى جميع الطوابق"
+  },
+  "duplicateToAllFloors": "نسخ إلى جميع الطوابق",
+  "image": {
+    "loadError": "فشل في تحميل صورة المخطط"
+  },
+  "loading": {
+    "error": "خطأ في تحميل مخطط الطابق"
+  },
+  "settings": {
+    "backToEditor": "العودة إلى المحرر",
+    "title": "إعدادات مضلع الطابق {floor}"
+  },
+  "title": "مخطط الطابق",
+  "upload": {
+    "authRequired": "مطلوب المصادقة لرفع مخططات الطوابق",
+    "changeImage": "تغيير الصورة",
+    "clickToChange": "انقر لتغيير الصورة",
+    "dragDrop": "اسحب وأفلت الصورة هنا",
+    "dropToReplace": "أفلت لاستبدال الصورة",
+    "error": "خطأ في رفع مخطط الطابق",
+    "floorPlan": "مخطط الطابق {floor}",
+    "imageUploaded": "تم رفع الصورة",
+    "invalidFileType": "يرجى اختيار ملف صورة",
+    "loading": "جاري التحميل...",
+    "orClickToSelect": "أو انقر لاختيار الملف",
+    "selectImage": "اختر صورة",
+    "success": "تم رفع مخطط الطابق",
+    "title": "رفع مخطط الطابق"
+  }
+}
