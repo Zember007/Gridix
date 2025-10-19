@@ -5,7 +5,8 @@
     },
     "columns": {
       "description": "Specify which columns from your Excel file correspond to apartment fields",
-      "title": "Map Excel columns"
+      "title": "Map Excel columns",
+      "selectColumn": "Select column"
     },
     "preview": {
       "description": "How your data will be imported ({count} records)",
@@ -16,7 +17,12 @@
       "floors": {
         "hint": "Will be adjusted based on data from the table"
       },
-      "name": "Project name*"
+      "name": "Project name*",
+      "type": "Project type*",
+      "types": {
+        "building": "Building (apartments)",
+        "object": "Object (commercial real estate)"
+      }
     },
     "projectInfo": {
       "description": "Basic information about your project",

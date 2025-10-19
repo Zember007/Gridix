@@ -208,7 +208,7 @@ export const useProjectsManager = () => {
   }, [user]); // Только user в зависимостях
 
   // Создание проекта
-  const createProject = useCallback(async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'view_count' | 'user_id'>) => {
+  const createProject = useCallback(async (projectData: Project) => {
     if (!user) {
       toast.error('Необходима авторизация');
       return null;

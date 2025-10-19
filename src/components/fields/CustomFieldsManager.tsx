@@ -151,7 +151,11 @@ const CustomFieldsManager = ({
         // Локальный режим: сохраняем только в памяти
         let updatedFields;
         if (field.id) {
-          updatedFields = fields.map(f => f.id === field.id ? { ...field, field_name: fieldName } : f);
+          updatedFields = fields.map(f => f.id === field.id ? { 
+            ...field, 
+            field_name: fieldName,
+            field_label_translations: field.field_label_translations || {}
+          } : f);
           setFields(updatedFields);
         } else {
           const localField: CustomField = {
@@ -159,7 +163,8 @@ const CustomFieldsManager = ({
             id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             field_name: fieldName,
             sort_order: field.sort_order || fields.length,
-            is_visible: field.is_visible ?? true
+            is_visible: field.is_visible ?? true,
+            field_label_translations: field.field_label_translations || {}
           };
           updatedFields = [...fields, localField];
           setFields(updatedFields);

@@ -6,13 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle, ArrowRight, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Check, ArrowRight, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/contexts/AuthContext';
 import { useProjectCRUD } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
@@ -42,6 +40,7 @@ interface ProjectData {
   name: string;
   description: string;
   floors: number;
+  type: 'building' | 'object';
 }
 
 interface CustomField {
@@ -76,7 +75,6 @@ interface RoomsValidationResult {
 }
 
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
-  const { user } = useAuth();
   const { createProject } = useProjectCRUD();
   const { t, language } = useLanguage();
 
@@ -100,7 +98,8 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [projectData, setProjectData] = useState<ProjectData>({
     name: '',
     description: '',
-    floors: 1
+    floors: 1,
+    type: 'building'
   });
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
@@ -165,16 +164,38 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const [roomsValidation, setRoomsValidation] = useState<RoomsValidationResult | null>(null);
   const [showValidation, setShowValidation] = useState(false);
 
-  const fieldLabels = useMemo(() => ({
-    apartmentNumber: t('excel.fields.apartmentNumber') || 'Номер квартиры',
-    floor: t('project.floor') || 'Этаж',
-    rooms: t('project.rooms') || 'Количество комнат',
-    area: t('project.area') || 'Площадь (м²)',
-    price: t('project.price') || 'Цена',
-    status: t('project.status') || 'Статус'
-  }), [t]);
+  const fieldLabels = useMemo(() => {
+    const baseLabels: Record<string, string> = {
+      apartmentNumber: projectData.type === 'object' ? t('project.objectNumber') || 'Object number' : t('project.apartmentNumber'),
+      floor: t('project.floor'),
+      rooms: t('project.rooms'),
+      area: t('project.area'),
+      price: t('project.price'),
+      status: t('project.status')
+    };
+    
+    // Для типа object убираем поле floor
+    if (projectData.type === 'object') {
+      delete baseLabels.floor;
+    }
+    
+    return baseLabels;
+  }, [t, projectData.type]);
 
-  const requiredFields = useMemo(() => ['apartmentNumber', 'floor', 'rooms', 'area'], []);
+  const requiredFields = useMemo(() => {
+    const baseFields = ['apartmentNumber', 'area'];
+    
+    // Для типа building добавляем floor и rooms
+    if (projectData.type === 'building') {
+      baseFields.push('floor', 'rooms');
+    }
+    // Для типа object rooms не обязательное
+    else if (projectData.type === 'object') {
+      // rooms не добавляем в обязательные для object
+    }
+    
+    return baseFields;
+  }, [projectData.type]);
 
   // Создаем временный проект для настройки кастомных полей
 
@@ -328,9 +349,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     });
   }, []);
 
-  const isValid = useMemo(() => {
-    return requiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
-  }, [columnMapping, requiredFields]);
 
   const handleMappingChange = useCallback((field: keyof ColumnMapping, value: string) => {
     setColumnMapping(prev => ({ ...prev, [field]: value }));
@@ -339,9 +357,23 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
   const getPreviewValue = useCallback((field: keyof ColumnMapping) => {
     const columnName = columnMapping[field];
     if (!columnName || columnName === '__none__' || !importedData.length) return 'Нет данных';
-    const value = importedData[0][columnName];
+    const value = importedData[0]?.[columnName];
     return value !== null && value !== undefined && value !== '' ? value : 'Нет данных';
   }, [columnMapping, importedData]);
+
+  const allRequiredFields = useMemo(() => {
+    return [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
+  }, [customFields, requiredFields]);
+
+  const isValidWithCustom = useMemo(() => {
+    const basicFieldsValid = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
+    
+    // Проверяем, что нет неопознанных значений в статусах и комнатах
+    const statusValid = !statusValidation || statusValidation.invalidCount === 0;
+    const roomsValid = projectData.type === 'building' ? (!roomsValidation || roomsValidation.invalidCount === 0) : true;
+    
+    return basicFieldsValid && statusValid && roomsValid;
+  }, [allRequiredFields, columnMapping, statusValidation, roomsValidation, projectData.type]);
 
   const createProjectWithData = useCallback(async () => {
     if (!isValidWithCustom || !projectData.name.trim()) {
@@ -351,7 +383,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         errorMessage += ' и настройте все неизвестные статусы';
       }
       
-      if (roomsValidation && roomsValidation.invalidCount > 0) {
+      if (projectData.type === 'building' && roomsValidation && roomsValidation.invalidCount > 0) {
         errorMessage += ' и настройте все неизвестные значения комнат';
       }
       
@@ -363,18 +395,21 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     try {
       console.log('Начало создания проекта с данными:', importedData.length, 'записей');
       
-      // Вычисляем максимальный этаж из данных
-      const maxFloor = Math.max(...importedData.map(row => {
-        const floorValue = row[columnMapping.floor];
-        const parsedFloor = parseInt(String(floorValue)) || 1;
-        console.log('Этаж из строки:', floorValue, 'преобразован в:', parsedFloor);
-        return parsedFloor;
-      }));
+      // Вычисляем максимальный этаж из данных (только для типа building)
+      let maxFloor = 1;
+      if (projectData.type === 'building' && columnMapping.floor && columnMapping.floor !== '__none__') {
+        maxFloor = Math.max(...importedData.map(row => {
+          const floorValue = row[columnMapping.floor];
+          const parsedFloor = parseInt(String(floorValue)) || 1;
+          console.log('Этаж из строки:', floorValue, 'преобразован в:', parsedFloor);
+          return parsedFloor;
+        }));
+      }
 
       console.log('Максимальный этаж:', maxFloor);
 
       // Создаем реальный проект
-      const project = await createProject({
+      const projectDataForCreation = {
         name: projectData.name.trim(),
         description: projectData.description.trim() || null,
         floors: Math.max(maxFloor, projectData.floors),
@@ -385,15 +420,25 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         latitude: null,
         longitude: null,
         slug: null,
-        currency: null,
+        currency: 'USD' as const,
         is_public: true,
         is_featured: false,
         installment_enabled: false,
         min_down_payment_percent: null,
         max_installment_months: null,
         pdf_presentation_url: null,
-        theme_color: null
-      });
+        theme_color: null,
+        is_public_visible: true,
+        project_type: projectData.type,
+        subscription_expires_at: null,
+        subscription_status: 'active',
+        view_count: 0,
+        facade_open: true,
+        polygon_settings_facade: {},
+        polygon_settings_floor: {}
+      };
+      
+      const project = await createProject(projectDataForCreation);
 
       if (!project) throw new Error('Failed to create project');
       console.log('Проект создан:', project);
@@ -406,7 +451,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           field_label: field.field_label,
           field_type: field.field_type,
           is_required: field.is_required,
-          field_options: field.field_options
+          field_options: field.field_options || null
         }));
 
         const { error: fieldsError } = await supabase
@@ -418,31 +463,35 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         }
       }
 
-      // Создаем этажи здания для визуализации
-      const floorData = [];
-      for (let i = 1; i <= Math.max(maxFloor, projectData.floors); i++) {
-        floorData.push({
-          project_id: project.id,
-          floor_number: i,
-          polygon: [],
-          color: '#3b82f6'
-        });
-      }
+      // Создаем этажи здания для визуализации (только для типа building)
+      if (projectData.type === 'building') {
+        const floorData = [];
+        for (let i = 1; i <= Math.max(maxFloor, projectData.floors); i++) {
+          floorData.push({
+            project_id: project.id,
+            floor_number: i,
+            polygon: [],
+            color: '#3b82f6'
+          });
+        }
 
-      const { error: floorError } = await supabase
-        .from('building_floors')
-        .insert(floorData);
+        const { error: floorError } = await supabase
+          .from('building_floors')
+          .insert(floorData);
 
-      if (floorError) {
-        console.error('Ошибка при создании этажей:', floorError);
-      } else {
-        console.log('Этажи созданы для визуализации');
+        if (floorError) {
+          console.error('Ошибка при создании этажей:', floorError);
+        } else {
+          console.log('Этажи созданы для визуализации');
+        }
       }
 
       // Обрабатываем и вставляем данные квартир
       const usedApartmentNumbers = new Set<string>();
       const apartmentData = importedData.map((row, index) => {
-        const floorNumber = parseInt(String(row[columnMapping.floor])) || 1;
+        const floorNumber = projectData.type === 'building' 
+          ? (parseInt(String(row[columnMapping.floor])) || 1)
+          : 1; // Для типа object всегда этаж 1
         
         // Обеспечиваем уникальность номеров квартир
         let baseApartmentNumber = String(row[columnMapping.apartmentNumber] || '').trim();
@@ -458,9 +507,9 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         }
         usedApartmentNumbers.add(apartmentNumber);
         
-        // Используем валидацию комнат
+        // Используем валидацию комнат (только для типа building)
         let rooms = 1;
-        if (columnMapping.rooms && columnMapping.rooms !== '__none__') {
+        if (projectData.type === 'building' && columnMapping.rooms && columnMapping.rooms !== '__none__') {
           const roomsValue = String(row[columnMapping.rooms] || '').toLowerCase().trim();
           const mappedRooms = roomsMapping[roomsValue];
           if (typeof mappedRooms === 'number') {
@@ -469,6 +518,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
             console.warn(`Неизвестное количество комнат "${roomsValue}" для квартиры ${apartmentNumber}, используется 1`);
           }
         }
+        // Для типа object rooms всегда 1 (не используется)
         
         const area = parseFloat(String(row[columnMapping.area])) || 0;
         const price = columnMapping.price && columnMapping.price !== '__none__' 
@@ -552,9 +602,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       console.log('Квартиры по этажам:', apartmentsByFloor);
 
-      toast.success(
-        `Проект "${projectData.name}" создан с ${apartmentData.length} квартирами на ${Math.max(maxFloor, projectData.floors)} этажах`
-      );
+      const successMessage = projectData.type === 'building' 
+        ? `Проект "${projectData.name}" создан с ${apartmentData.length} квартирами на ${Math.max(maxFloor, projectData.floors)} этажах`
+        : `Проект "${projectData.name}" создан с ${apartmentData.length} объектами`;
+      
+      toast.success(successMessage);
       
       // Перенаправляем на созданный проект
       setTimeout(() => {
@@ -567,30 +619,16 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     } finally {
       setIsCreating(false);
     }
-  }, [projectData.name, projectData.description, projectData.floors, columnMapping, importedData, customFields, roomsMapping, roomsValidation, statusMapping, statusValidation, createProject, navigate]);
+  }, [projectData.name, projectData.description, projectData.floors, projectData.type, columnMapping, importedData, customFields, roomsMapping, roomsValidation, statusMapping, statusValidation, isValidWithCustom, createProject, navigate]);
 
   // Объединяем стандартные поля и кастомные поля для маппинга
   const allFields = useMemo(() => {
-    const fields = { ...fieldLabels };
+    const fields: Record<string, string> = { ...fieldLabels };
     customFields.forEach(field => {
       fields[field.field_name] = getFieldLabel(field);
     });
     return fields;
   }, [customFields, fieldLabels, getFieldLabel]);
-
-  const allRequiredFields = useMemo(() => {
-    return [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
-  }, [customFields, requiredFields]);
-
-  const isValidWithCustom = useMemo(() => {
-    const basicFieldsValid = allRequiredFields.every(field => columnMapping[field as keyof ColumnMapping] && columnMapping[field as keyof ColumnMapping] !== '__none__');
-    
-    // Проверяем, что нет неопознанных значений в статусах и комнатах
-    const statusValid = !statusValidation || statusValidation.invalidCount === 0;
-    const roomsValid = !roomsValidation || roomsValidation.invalidCount === 0;
-    
-    return basicFieldsValid && statusValid && roomsValid;
-  }, [allRequiredFields, columnMapping, statusValidation, roomsValidation]);
 
   // Режим без временного проекта: сразу показываем интерфейс
 
@@ -609,9 +647,27 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               id="projectName"
               value={projectData.name}
               onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder={t('placeholders.projectName') || 'Введите название проекта'}
               className="mt-1"
             />
+          </div>
+          <div>
+            <Label htmlFor="projectType">{t('excel.mapper.project.type') || 'Тип проекта*'}</Label>
+            <Select
+              value={projectData.type}
+              onValueChange={(value: 'building' | 'object') => setProjectData(prev => ({ ...prev, type: value }))}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="building">
+                  {t('excel.mapper.project.types.building') || 'Здание (квартиры)'}
+                </SelectItem>
+                <SelectItem value="object">
+                  {t('excel.mapper.project.types.object') || 'Объект (коммерческая недвижимость)'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="projectDescription">{t('excel.mapper.project.description') || 'Описание'}</Label>
@@ -619,25 +675,26 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               id="projectDescription"
               value={projectData.description}
               onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder={t('placeholders.projectDescription') || 'Краткое описание проекта'}
               className="mt-1"
             />
           </div>
-          <div>
-            <Label htmlFor="floors">{t('excel.mapper.project.floors') || 'Количество этажей'}</Label>
-            <Input
-              id="floors"
-              type="number"
-              value={projectData.floors}
-              onChange={(e) => setProjectData(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
-              min="1"
-              max="50"
-              className="mt-1"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {t('excel.mapper.project.floors.hint') || 'Будет автоматически скорректировано на основе данных из таблицы'}
-            </p>
-          </div>
+          {projectData.type === 'building' && (
+            <div>
+              <Label htmlFor="floors">{t('projectEditor.floors')}</Label>
+              <Input
+                id="floors"
+                type="number"
+                value={projectData.floors}
+                onChange={(e) => setProjectData(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
+                min="1"
+                max="50"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {t('excel.mapper.project.floors.hint') || 'Будет автоматически скорректировано на основе данных из таблицы'}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -668,11 +725,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                     {isRequired && <Badge variant="destructive" className="text-xs">Обязательно</Badge>}
                   </Label>
                   <Select
-                    value={currentValue}
+                    value={currentValue || ''}
                     onValueChange={(value) => handleMappingChange(field as keyof ColumnMapping, value)}
                   >
                     <SelectTrigger className={(!currentValue || currentValue === '__none__') && isRequired ? 'border-red-300' : ''}>
-                      <SelectValue placeholder="Выберите столбец" />
+                      <SelectValue placeholder={t('excel.mapper.columns.selectColumn') || 'Выберите столбец'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">-- Выберите столбец --</SelectItem>
@@ -699,16 +756,16 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       {/* Валидация статусов и комнат */}
       {((columnMapping.status && columnMapping.status !== '__none__') || 
-        (columnMapping.rooms && columnMapping.rooms !== '__none__')) && (
+        (projectData.type === 'building' && columnMapping.rooms && columnMapping.rooms !== '__none__')) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {t('excel.mapper.validation.title') || 'Валидация данных'}
               {((statusValidation && statusValidation.invalidCount > 0) || 
-                (roomsValidation && roomsValidation.invalidCount > 0)) && (
+                (projectData.type === 'building' && roomsValidation && roomsValidation.invalidCount > 0)) && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  {(statusValidation?.invalidCount || 0) + (roomsValidation?.invalidCount || 0)} неизвестных
+                  {(statusValidation?.invalidCount || 0) + (projectData.type === 'building' ? (roomsValidation?.invalidCount || 0) : 0)} неизвестных
                 </Badge>
               )}
             </CardTitle>
@@ -721,20 +778,20 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {(statusValidation?.validCount || 0) + (roomsValidation?.validCount || 0)}
+                  {(statusValidation?.validCount || 0) + (projectData.type === 'building' ? (roomsValidation?.validCount || 0) : 0)}
                 </div>
                 <div className="text-sm text-gray-600">Валидных значений</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
-                  {(statusValidation?.invalidCount || 0) + (roomsValidation?.invalidCount || 0)}
+                  {(statusValidation?.invalidCount || 0) + (projectData.type === 'building' ? (roomsValidation?.invalidCount || 0) : 0)}
                 </div>
                 <div className="text-sm text-gray-600">Неизвестных значений</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
                   {(statusValidation ? Object.keys(statusValidation.statusDistribution).length : 0) + 
-                   (roomsValidation ? Object.keys(roomsValidation.roomsDistribution).length : 0)}
+                   (projectData.type === 'building' && roomsValidation ? Object.keys(roomsValidation.roomsDistribution).length : 0)}
                 </div>
                 <div className="text-sm text-gray-600">Уникальных значений</div>
               </div>
@@ -850,7 +907,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 )}
 
                 {/* Валидация комнат */}
-                {columnMapping.rooms && columnMapping.rooms !== '__none__' && roomsValidation && (
+                {projectData.type === 'building' && columnMapping.rooms && columnMapping.rooms !== '__none__' && roomsValidation && (
                   <div className="space-y-4">
                     <Label className="text-lg font-semibold">{t('excel.mapper.validation.rooms.title') || 'Настройка количества комнат'}</Label>
                     <div className="space-y-3">
@@ -983,7 +1040,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   </div>
                 )}
 
-                {roomsValidation && roomsValidation.invalidCount > 0 && (
+                {projectData.type === 'building' && roomsValidation && roomsValidation.invalidCount > 0 && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center gap-2 text-yellow-800">
                       <AlertTriangle className="h-4 w-4" />
@@ -1006,7 +1063,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         <CardHeader>
           <CardTitle>{t('excel.mapper.preview.title') || 'Предварительный просмотр данных'}</CardTitle>
           <CardDescription>
-            {(t('excel.mapper.preview.description') || 'Как будут импортированы ваши данные ({{count}} записей)').replace('{{count}}', String(importedData.length))}
+            {(t('excel.mapper.preview.description') || 'Как будут импортированы ваши данные ({{count}} записей)').replace('{{count}}', String(importedData.length))}  
           </CardDescription>
         </CardHeader>
         <CardContent>

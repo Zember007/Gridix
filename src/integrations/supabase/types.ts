@@ -34,45 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_settings: {
-        Row: {
-          company_description: string | null
-          company_name: string | null
-          contact_address: string | null
-          contact_email: string | null
-          contact_name: string | null
-          contact_phone: string | null
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          company_description?: string | null
-          company_name?: string | null
-          contact_address?: string | null
-          contact_email?: string | null
-          contact_name?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          company_description?: string | null
-          company_name?: string | null
-          contact_address?: string | null
-          contact_email?: string | null
-          contact_name?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       amocrm_custom_fields: {
         Row: {
           created_at: string | null
@@ -376,7 +337,6 @@ export type Database = {
           floor_polygons: Json | null
           id: string
           image_url: string | null
-          polygon_settings: Json | null
           project_id: string
           updated_at: string
         }
@@ -386,7 +346,6 @@ export type Database = {
           floor_polygons?: Json | null
           id?: string
           image_url?: string | null
-          polygon_settings?: Json | null
           project_id: string
           updated_at?: string
         }
@@ -396,7 +355,6 @@ export type Database = {
           floor_polygons?: Json | null
           id?: string
           image_url?: string | null
-          polygon_settings?: Json | null
           project_id?: string
           updated_at?: string
         }
@@ -919,10 +877,10 @@ export type Database = {
         Row: {
           address: string | null
           building_image_url: string | null
-          building_polygon_settings: Json | null
           created_at: string
           currency: Database["public"]["Enums"]["currency_type"] | null
           description: string | null
+          facade_open: boolean
           floors: number
           has_commercial: boolean | null
           has_parking: boolean | null
@@ -937,7 +895,8 @@ export type Database = {
           min_down_payment_percent: number | null
           name: string
           pdf_presentation_url: string | null
-          polygon_settings: Json | null
+          polygon_settings_facade: Json | null
+          polygon_settings_floor: Json | null
           project_type: Database["public"]["Enums"]["project_type"]
           slug: string | null
           subscription_expires_at: string | null
@@ -950,10 +909,10 @@ export type Database = {
         Insert: {
           address?: string | null
           building_image_url?: string | null
-          building_polygon_settings?: Json | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
+          facade_open?: boolean
           floors?: number
           has_commercial?: boolean | null
           has_parking?: boolean | null
@@ -968,7 +927,8 @@ export type Database = {
           min_down_payment_percent?: number | null
           name: string
           pdf_presentation_url?: string | null
-          polygon_settings?: Json | null
+          polygon_settings_facade?: Json | null
+          polygon_settings_floor?: Json | null
           project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
           subscription_expires_at?: string | null
@@ -981,10 +941,10 @@ export type Database = {
         Update: {
           address?: string | null
           building_image_url?: string | null
-          building_polygon_settings?: Json | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_type"] | null
           description?: string | null
+          facade_open?: boolean
           floors?: number
           has_commercial?: boolean | null
           has_parking?: boolean | null
@@ -999,7 +959,8 @@ export type Database = {
           min_down_payment_percent?: number | null
           name?: string
           pdf_presentation_url?: string | null
-          polygon_settings?: Json | null
+          polygon_settings_facade?: Json | null
+          polygon_settings_floor?: Json | null
           project_type?: Database["public"]["Enums"]["project_type"]
           slug?: string | null
           subscription_expires_at?: string | null

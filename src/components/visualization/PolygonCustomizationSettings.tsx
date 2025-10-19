@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-
+import { Json } from '@/integrations/supabase/types';
 interface PolygonSettings {
   colors: {
     available: string;
@@ -66,20 +66,16 @@ const defaultSettings: PolygonSettings = {
   }
 };
 
-const PolygonCustomizationSettings = ({ 
-  projectId, 
-  type, 
-  onSettingsChange 
+const PolygonCustomizationSettings = ({
+  projectId,
+  type,
+  onSettingsChange
 }: PolygonCustomizationSettingsProps) => {
   const [settings, setSettings] = useState<PolygonSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    loadSettings();
-  }, [projectId, type]);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       if (type === 'building') {
         const { data, error } = await supabase
@@ -89,9 +85,9 @@ const PolygonCustomizationSettings = ({
           .single();
 
         if (error) throw error;
-        
-        if ((data as any)?.polygon_settings_facade) {
-          const loadedSettings = (data as any).polygon_settings_facade as unknown as PolygonSettings;
+
+        if ((data)?.polygon_settings_facade) {
+          const loadedSettings = (data).polygon_settings_facade as unknown as PolygonSettings;
           // Ensure building color is set
           if (!loadedSettings.colors.building) {
             loadedSettings.colors.building = '#3b82f6';
@@ -106,15 +102,19 @@ const PolygonCustomizationSettings = ({
           .single();
 
         if (error) throw error;
-        
-        if ((data as any)?.polygon_settings_floor) {
-          setSettings((data as any).polygon_settings_floor as unknown as PolygonSettings);
+
+        if ((data)?.polygon_settings_floor) {
+          setSettings((data).polygon_settings_floor as unknown as PolygonSettings);
         }
       }
     } catch (error) {
       console.error('Error loading polygon settings:', error);
     }
-  };
+  }, [projectId, type]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const saveSettings = async () => {
     setLoading(true);
@@ -122,13 +122,13 @@ const PolygonCustomizationSettings = ({
       if (type === 'building') {
         const { error } = await supabase
           .from('projects')
-          .update({ polygon_settings_facade: settings as unknown as any } as any)
+          .update({ polygon_settings_facade: settings as unknown as Json})
           .eq('id', projectId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('projects')
-          .update({ polygon_settings_floor: settings as unknown as any } as any)
+          .update({ polygon_settings_floor: settings as unknown as Json })
           .eq('id', projectId);
         if (error) throw error;
       }
@@ -143,16 +143,16 @@ const PolygonCustomizationSettings = ({
     }
   };
 
-  const updateSettings = (path: string, value: any) => {
+  const updateSettings = (path: string, value: string | number | boolean) => {
     setSettings(prev => {
       const newSettings = { ...prev };
       const keys = path.split('.');
-      let current = newSettings as any;
-      
+      let current: Record<string, unknown> = newSettings;
+
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
+        current = current[keys[i]] as Record<string, unknown>;
       }
-      
+
       current[keys[keys.length - 1]] = value;
       return newSettings;
     });
@@ -322,8 +322,8 @@ const PolygonCustomizationSettings = ({
           </div>
         </div>
 
-        <Button 
-          onClick={saveSettings} 
+        <Button
+          onClick={saveSettings}
           disabled={loading}
           className="w-full"
         >
