@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Tables } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Используем тип из Supabase напрямую
 export type Project = Tables<'projects'>;
@@ -39,6 +40,7 @@ export const useProjectsManager = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
   
   // Мемоизированная функция для загрузки проектов
   const loadProjects = useCallback(async (filters: ProjectFilters = {}) => {
@@ -243,7 +245,7 @@ export const useProjectsManager = () => {
       // Очищаем кеш проектов пользователя
       clearProjectsCache({ userId: user.id });
       
-      toast.success('Проект создан');
+      toast.success(t('projectEditor.projectCreated'));
       return data as Project;
     } catch (err) {
       console.error('Error creating project:', err);

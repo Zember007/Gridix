@@ -604,12 +604,12 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       console.log('Квартиры по этажам:', apartmentsByFloor);
 
       const successMessage = projectData.type === 'building' 
-        ? t('excel.toast.projectCreated', { 
+        ? t('excel.url.toast.projectCreated', { 
             name: projectData.name, 
             count: apartmentData.length, 
             floors: Math.max(maxFloor, projectData.floors) 
           })
-        : t('excel.toast.projectCreatedObjects', { 
+        : t('excel.url.toast.projectCreatedObjects', { 
             name: projectData.name, 
             count: apartmentData.length 
           });
@@ -623,7 +623,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       
     } catch (error) {
       console.error('Ошибка создания проекта:', error);
-      toast.error(t('excel.toast.projectCreationError'));
+      toast.error(t('excel.url.toast.projectCreationError'));
     } finally {
       setIsCreating(false);
     }
@@ -1108,7 +1108,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
             </table>
             {importedData.length > 5 && (
               <p className="text-sm text-real-estate-600 mt-2 text-center">
-                {t('excel.preview.moreRecords', { count: importedData.length - 5 })}
+                {t('excel.mapper.preview.moreRecords', { count: importedData.length - 5 })}
               </p>
             )}
           </div>

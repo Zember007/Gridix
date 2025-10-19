@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from './useUserRole';
 import { generateSlug } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Project {
   id: string;
@@ -38,6 +39,8 @@ export const useProject = (identifier?: string) => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { isManager, developerIds } = useUserRole();
+
+  const { t } = useLanguage();
 
   const loadProject = async (id: string) => {
     if (!id) return;
@@ -265,7 +268,7 @@ export const useProject = (identifier?: string) => {
         console.error('Error calling initialize_default_fields:', fieldsErr);
       }
 
-      toast.success('Проект создан');
+      toast.success(t('projectEditor.projectCreated'));
       return data;
     } catch (err: any) {
       console.error('Error creating project:', err);
