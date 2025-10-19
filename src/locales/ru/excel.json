@@ -78,7 +78,10 @@
       "fileInaccessible": "Файл недоступен по указанной ссылке",
       "gsAccessible": "Google Sheets доступен для импорта",
       "invalidGs": "Некорректная ссылка Google Sheets",
-      "linkAccessible": "Ссылка доступна для импорта"
+      "linkAccessible": "Ссылка доступна для импорта",
+      "projectCreated": "Проект \"{name}\" создан с {count} квартирами на {floors} этажах",
+      "projectCreatedObjects": "Проект \"{name}\" создан с {count} объектами",
+      "projectCreationError": "Ошибка при создании проекта"
     }
   }
 }

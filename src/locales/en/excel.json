@@ -78,7 +78,10 @@
       "fileInaccessible": "File is not accessible via the provided link",
       "gsAccessible": "Google Sheets is accessible for import",
       "invalidGs": "Invalid Google Sheets link",
-      "linkAccessible": "Link is accessible for import"
+      "linkAccessible": "Link is accessible for import",
+      "projectCreated": "Project \"{name}\" created with {count} apartments on {floors} floors",
+      "projectCreatedObjects": "Project \"{name}\" created with {count} objects",
+      "projectCreationError": "Error creating project"
     }
   }
 }

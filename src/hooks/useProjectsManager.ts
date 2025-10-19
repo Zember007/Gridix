@@ -113,7 +113,7 @@ export const useProjectsManager = () => {
 
       } catch (err) {
         console.error('Error loading projects:', err);
-        const errorMessage = err.message || 'Ошибка загрузки проектов';
+        const errorMessage = (err as Error).message || 'Ошибка загрузки проектов';
         setError(errorMessage);
         setProjects([]);
         throw err;
@@ -208,7 +208,7 @@ export const useProjectsManager = () => {
   }, [user]); // Только user в зависимостях
 
   // Создание проекта
-  const createProject = useCallback(async (projectData: Project) => {
+  const createProject = useCallback(async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'view_count' | 'user_id'>) => {
     if (!user) {
       toast.error('Необходима авторизация');
       return null;
@@ -247,7 +247,7 @@ export const useProjectsManager = () => {
       return data as Project;
     } catch (err) {
       console.error('Error creating project:', err);
-      toast.error(err.message || 'Ошибка создания проекта');
+      toast.error((err as Error).message || 'Ошибка создания проекта');
       return null;
     }
   }, [user]);
@@ -283,7 +283,7 @@ export const useProjectsManager = () => {
       return true;
     } catch (err) {
       console.error('Error updating project:', err);
-      toast.error(err.message || 'Ошибка обновления проекта');
+      toast.error((err as Error).message || 'Ошибка обновления проекта');
       return false;
     }
   }, [user]);
@@ -312,7 +312,7 @@ export const useProjectsManager = () => {
       return true;
     } catch (err) {
       console.error('Error deleting project:', err);
-      toast.error(err.message || 'Ошибка удаления проекта');
+      toast.error((err as Error).message || 'Ошибка удаления проекта');
       return false;
     }
   }, [user]);

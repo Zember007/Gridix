@@ -78,7 +78,10 @@
       "fileInaccessible": "ფაილი მიუწვდომელია ბმულით",
       "gsAccessible": "Google Sheets ხელმისაწვდომია იმპორტისთვის",
       "invalidGs": "არასწორი Google Sheets ბმული",
-      "linkAccessible": "ბმული ხელმისაწვდომია იმპორტისთვის"
+      "linkAccessible": "ბმული ხელმისაწვდომია იმპორტისთვის",
+      "projectCreated": "პროექტი \"{name}\" შეიქმნა {count} ბინით {floors} სართულზე",
+      "projectCreatedObjects": "პროექტი \"{name}\" შეიქმნა {count} ობიექტით",
+      "projectCreationError": "პროექტის შექმნის შეცდომა"
     }
   }
 }

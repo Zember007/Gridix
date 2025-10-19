@@ -437,6 +437,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         polygon_settings_facade: {},
         polygon_settings_floor: {}
       };
+
       
       const project = await createProject(projectDataForCreation);
 
@@ -603,8 +604,15 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       console.log('Квартиры по этажам:', apartmentsByFloor);
 
       const successMessage = projectData.type === 'building' 
-        ? `Проект "${projectData.name}" создан с ${apartmentData.length} квартирами на ${Math.max(maxFloor, projectData.floors)} этажах`
-        : `Проект "${projectData.name}" создан с ${apartmentData.length} объектами`;
+        ? t('excel.toast.projectCreated', { 
+            name: projectData.name, 
+            count: apartmentData.length, 
+            floors: Math.max(maxFloor, projectData.floors) 
+          })
+        : t('excel.toast.projectCreatedObjects', { 
+            name: projectData.name, 
+            count: apartmentData.length 
+          });
       
       toast.success(successMessage);
       
@@ -615,11 +623,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       
     } catch (error) {
       console.error('Ошибка создания проекта:', error);
-      toast.error('Ошибка при создании проекта');
+      toast.error(t('excel.toast.projectCreationError'));
     } finally {
       setIsCreating(false);
     }
-  }, [projectData.name, projectData.description, projectData.floors, projectData.type, columnMapping, importedData, customFields, roomsMapping, roomsValidation, statusMapping, statusValidation, isValidWithCustom, createProject, navigate]);
+  }, [projectData.name, projectData.description, projectData.floors, projectData.type, columnMapping, importedData, customFields, roomsMapping, roomsValidation, statusMapping, statusValidation, isValidWithCustom, createProject, navigate, t]);
 
   // Объединяем стандартные поля и кастомные поля для маппинга
   const allFields = useMemo(() => {
