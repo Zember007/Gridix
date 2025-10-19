@@ -10,7 +10,8 @@
     },
     "preview": {
       "description": "How your data will be imported ({count} records)",
-      "title": "Data preview"
+      "title": "Data preview",
+      "moreRecords": "... and {count} more records"
     },
     "project": {
       "description": "Description",

@@ -1108,7 +1108,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
             </table>
             {importedData.length > 5 && (
               <p className="text-sm text-real-estate-600 mt-2 text-center">
-                ... и еще {importedData.length - 5} записей
+                {t('excel.preview.moreRecords', { count: importedData.length - 5 })}
               </p>
             )}
           </div>

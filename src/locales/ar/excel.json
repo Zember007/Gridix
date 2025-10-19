@@ -10,7 +10,8 @@
     },
     "preview": {
       "description": "كيفية استيراد بياناتك ({count} سجل)",
-      "title": "معاينة البيانات"
+      "title": "معاينة البيانات",
+      "moreRecords": "... و {count} سجل إضافي"
     },
     "project": {
       "description": "الوصف",
