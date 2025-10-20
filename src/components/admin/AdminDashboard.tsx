@@ -345,7 +345,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
-          {activeTab === 'subscription' && !isManagerMode && (
+          {activeTab === 'subscription' && userRole.type !== 'manager' && (
             <div className="space-y-6">
               <SubscriptionTab />
             </div>
@@ -373,7 +373,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && userRole.type !== 'manager' && (
             <div className="space-y-6">
               <AdminSettings 
                 userProfile={user!} 

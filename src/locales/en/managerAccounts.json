@@ -50,5 +50,11 @@
   "statusPending": "Pending",
   "statusSuspended": "Suspended",
   "suspend": "Suspend",
-  "title": "Manager Management"
+  "title": "Manager Management",
+  "setPassword": "Set Password",
+  "passwordPlaceholder": "Enter password for new manager",
+  "passwordRequired": "Password is required for new users",
+  "checkingUser": "Checking if user exists...",
+  "userExists": "User with this email already exists",
+  "userNotExists": "New user will be created"
 }

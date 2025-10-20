@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 export interface Lead {
   id: string;
@@ -40,6 +42,8 @@ export interface LeadFilters {
 }
 
 export function useLeads(filters?: LeadFilters) {
+  const { userRole } = useUserRole();
+  const { activeWorkspaceId } = useWorkspace();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +70,30 @@ export function useLeads(filters?: LeadFilters) {
           )
         `)
         .order('created_at', { ascending: false });
+
+      // Для менеджеров - получить доступные проекты
+      if (userRole.type === 'manager' && activeWorkspaceId) {
+        const { data: managerAccount } = await supabase
+          .from('manager_accounts')
+          .select('id')
+          .eq('manager_id', userRole.managerData?.[0]?.manager_id)
+          .eq('developer_id', activeWorkspaceId)
+          .single();
+        
+        if (managerAccount) {
+          const { data: accessRules } = await supabase
+            .from('manager_project_access')
+            .select('project_id')
+            .eq('manager_account_id', managerAccount.id);
+          
+          const projectIds = accessRules?.map(r => r.project_id) || [];
+          
+          // Применить фильтр по project_ids
+          if (projectIds.length > 0) {
+            query = query.in('project_id', projectIds);
+          }
+        }
+      }
 
       // Apply filters
       if (filters?.projectId) {

@@ -78,11 +78,14 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     const workspaces: WorkspaceOption[] = [];
 
+    // Только для застройщиков добавляем собственный workspace
+    if (userRole.type === 'developer') {
       workspaces.push({
         id: null,
         label: t('workspace.myWorkspace'),
         type: 'owner'
       });
+    }
 
     // Manager workspaces
     if (isManager && userRole.managerData) {
@@ -100,20 +103,25 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     setAvailableWorkspaces(workspaces);
 
-    // Восстанавливаем workspace из localStorage, если он доступен
-    const storedWorkspaceId = loadWorkspaceFromStorage();
-    if (storedWorkspaceId !== null) {
-      // Проверяем, доступен ли сохраненный workspace
-      const isAvailable = workspaces.find(w => w.id === storedWorkspaceId);
-      if (isAvailable) {
-        setActiveWorkspaceIdState(storedWorkspaceId);
-      } else {
-        // Если сохраненный workspace недоступен, сбрасываем на собственный
+    // Для менеджеров автоматически выбираем первый доступный workspace
+    if (userRole.type === 'manager' && workspaces.length > 0 && !activeWorkspaceId) {
+      setActiveWorkspaceId(workspaces[0].id);
+    } else {
+      // Восстанавливаем workspace из localStorage, если он доступен
+      const storedWorkspaceId = loadWorkspaceFromStorage();
+      if (storedWorkspaceId !== null) {
+        // Проверяем, доступен ли сохраненный workspace
+        const isAvailable = workspaces.find(w => w.id === storedWorkspaceId);
+        if (isAvailable) {
+          setActiveWorkspaceIdState(storedWorkspaceId);
+        } else {
+          // Если сохраненный workspace недоступен, сбрасываем на собственный
+          setActiveWorkspaceId(null);
+        }
+      } else if (activeWorkspaceId !== null && !workspaces.find(w => w.id === activeWorkspaceId)) {
+        // Если текущий activeWorkspaceId больше не доступен, сбрасываем на собственный
         setActiveWorkspaceId(null);
       }
-    } else if (activeWorkspaceId !== null && !workspaces.find(w => w.id === activeWorkspaceId)) {
-      // Если текущий activeWorkspaceId больше не доступен, сбрасываем на собственный
-      setActiveWorkspaceId(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole.type, isManager, JSON.stringify(userRole.managerData), t]);

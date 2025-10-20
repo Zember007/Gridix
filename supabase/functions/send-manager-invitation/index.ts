@@ -10,6 +10,7 @@ interface InvitationRequest {
   company_name: string
   invitation_token: string
   project_ids?: string[] // Массив ID проектов для доступа
+  password?: string // Пароль для нового пользователя
 }
 
 serve(async (req) => {
@@ -41,14 +42,14 @@ serve(async (req) => {
       return createJsonResponse({ success: false, error: 'Unauthorized' }, 401, origin);
     }
 
-    const { email, full_name, phone, developer_name, company_name, invitation_token, project_ids }: InvitationRequest = await req.json()
-    
+    const { email, full_name, phone, developer_name, company_name, invitation_token, project_ids, password }: InvitationRequest = await req.json()
+
     const developerId = user.id
 
     console.log('Processing manager invitation for:', email)
 
     // ===== ПРОВЕРКИ ПЕРЕД СОЗДАНИЕМ =====
-    
+
     // 1. Проверяем, существует ли уже менеджер с таким email
     const { data: existingManager, error: managerCheckError } = await supabaseAdmin
       .from('manager_accounts')
@@ -64,14 +65,14 @@ serve(async (req) => {
 
     if (existingManager) {
       if (existingManager.status === 'active') {
-        return createJsonResponse({ 
-          success: false, 
-          error: 'Manager with this email already exists and is active' 
+        return createJsonResponse({
+          success: false,
+          error: 'Manager with this email already exists and is active'
         }, 400, origin);
       } else if (existingManager.status === 'suspended') {
-        return createJsonResponse({ 
-          success: false, 
-          error: 'Manager with this email is suspended. Please reactivate them instead.' 
+        return createJsonResponse({
+          success: false,
+          error: 'Manager with this email is suspended. Please reactivate them instead.'
         }, 400, origin);
       }
     }
@@ -92,9 +93,9 @@ serve(async (req) => {
     }
 
     if (existingInvitation) {
-      return createJsonResponse({ 
-        success: false, 
-        error: 'Active invitation for this email already exists' 
+      return createJsonResponse({
+        success: false,
+        error: 'Active invitation for this email already exists'
       }, 400, origin);
     }
 
@@ -116,10 +117,10 @@ serve(async (req) => {
     const invitationUrl = `${siteUrl}en/accept-invitation?token=${encodedToken}`
 
     // ===== ОБРАБОТКА В ЗАВИСИМОСТИ ОТ НАЛИЧИЯ ПОЛЬЗОВАТЕЛЯ =====
-    
+
     if (existingUserProfile) {
       console.log('User already registered, creating manager account directly:', email)
-      
+
       // Пользователь уже зарегистрирован - создаем manager_account сразу
       const { data: managerAccountData, error: accountError } = await supabaseAdmin
         .from('manager_accounts')
@@ -166,7 +167,7 @@ serve(async (req) => {
     }
 
     // ===== ПОЛЬЗОВАТЕЛЬ НЕ ЗАРЕГИСТРИРОВАН - СОЗДАЕМ ПРИГЛАШЕНИЕ =====
-    
+
     console.log('User not registered, creating invitation:', email)
 
     // Проверяем существует ли пользователь в auth
@@ -191,17 +192,17 @@ serve(async (req) => {
           }
         }
       )
-      
+
       if (updateError) {
         console.error('Error updating user metadata:', updateError)
         throw new Error(`Failed to update user: ${updateError.message}`)
       }
-      
+
       userData = updatedData
     } else {
       console.log('Creating new user:', email)
       // Создаем нового пользователя
-      const { data: newUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
+      const createUserOptions: any = {
         email: email,
         email_confirm: true,
         user_metadata: {
@@ -211,15 +212,25 @@ serve(async (req) => {
           company_name,
           invitation_token,
           invited_by: user.id,
-          requires_password_setup: true
+          account_type: 'manager' // Важно! Устанавливаем тип аккаунта
         }
-      })
+      }
+
+      // Если есть пароль, используем его, иначе требуем настройку пароля
+      if (password) {
+        createUserOptions.password = password
+        createUserOptions.user_metadata.requires_password_setup = false
+      } else {
+        createUserOptions.user_metadata.requires_password_setup = true
+      }
+
+      const { data: newUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser(createUserOptions)
 
       if (createUserError) {
         console.error('Error creating user:', createUserError)
         throw new Error(`Failed to create user: ${createUserError.message}`)
       }
-      
+
       userData = newUserData
     }
 
@@ -244,10 +255,34 @@ serve(async (req) => {
 
     if (otpError) {
       console.error('Error sending magic link:', otpError)
-      throw new Error(`Failed to send magic link: ${otpError.message}`)
+    } else {
+      console.log('Magic link sent successfully to:', email)
     }
 
-    console.log('Magic link sent successfully to:', email)
+
+    // Обновляем user_profiles с account_type для нового пользователя
+    if (userData && userData.user) {
+      try {
+        const { error: profileError } = await supabaseAdmin
+          .from('user_profiles')
+          .upsert({
+            id: userData.user.id,
+            email: userData.user.email,
+            full_name,
+            company_name: '',
+            phone,
+            account_type: 'manager'
+          })
+
+        if (profileError) {
+          console.error('Failed to update user profile:', profileError)
+          // Не прерываем процесс, так как основная задача выполнена
+        }
+      } catch (profileError) {
+        console.error('Error updating user profile:', profileError)
+        // Не прерываем процесс
+      }
+    }
 
     // Сохраняем информацию о приглашении в таблицу manager_invitations
     try {
@@ -277,13 +312,13 @@ serve(async (req) => {
         console.error('Failed to save invitation to database:', dbError)
         throw new Error(`Failed to save invitation: ${dbError.message}`)
       }
-      
+
       console.log('Invitation saved to database successfully')
     } catch (dbSaveError) {
       console.error('Database save error:', dbSaveError)
       throw dbSaveError
     }
-    
+
     return createJsonResponse({
       success: true,
       message: 'Magic link invitation sent successfully',
@@ -294,10 +329,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error sending invitation email:', error)
-    
-    return createJsonResponse({ 
-      success: false, 
-      error: error.message || 'Failed to send invitation email' 
+
+    return createJsonResponse({
+      success: false,
+      error: error.message || 'Failed to send invitation email'
     }, 400, origin);
   }
 })

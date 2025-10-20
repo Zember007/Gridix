@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import {
   Search as SearchIcon,
@@ -62,7 +63,7 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 
 
 // Simplified admin navigation items
-const getAdminNavItems = (t: (k: string) => string, isManagerMode: boolean = false, onNavigate?: (path: string) => void) => {
+const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, onNavigate?: (path: string) => void) => {
   const items = [
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
     { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
@@ -72,8 +73,8 @@ const getAdminNavItems = (t: (k: string) => string, isManagerMode: boolean = fal
     { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
   ];
 
-  // Фильтруем вкладки для менеджера в режиме manager workspace
-  if (isManagerMode) {
+  // Убрать подписки и настройки для менеджеров
+  if (isManager) {
     return items.filter(item => item.id !== 'subscription' && item.id !== 'settings');
   }
 
@@ -324,7 +325,7 @@ export function AdminSidebar({
   onTabChange?: (tab: string) => void;
 }) {
   const { t } = useLanguage();
-  const { isManagerMode } = useWorkspace();
+  const { userRole } = useUserRole();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
   const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
 
@@ -333,7 +334,7 @@ export function AdminSidebar({
     onTabChange?.(section);
   };
 
-  const navItems = getAdminNavItems(t, isManagerMode, onNavigate);
+  const navItems = getAdminNavItems(t, userRole.type === 'manager', onNavigate);
 
   return (
     <SimplifiedSidebar

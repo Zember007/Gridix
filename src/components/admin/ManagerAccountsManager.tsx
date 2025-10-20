@@ -53,6 +53,11 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   });
   const [submitting, setSubmitting] = useState(false);
   
+  // User existence check and password
+  const [userExists, setUserExists] = useState<boolean | null>(null);
+  const [managerPassword, setManagerPassword] = useState('');
+  const [checkingUser, setCheckingUser] = useState(false);
+  
   // Project access management
   const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
   const [selectedManager, setSelectedManager] = useState<ManagerAccount | null>(null);
@@ -108,9 +113,41 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     }
   };
 
+  const handleEmailBlur = async () => {
+    if (!newManager.email) {
+      setUserExists(null);
+      return;
+    }
+    
+    setCheckingUser(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-user-exists', {
+        body: { email: newManager.email }
+      });
+      
+      if (!error && data) {
+        setUserExists(data.exists);
+      } else {
+        console.error('Error checking user existence:', error);
+        setUserExists(null);
+      }
+    } catch (error) {
+      console.error('Error checking user existence:', error);
+      setUserExists(null);
+    } finally {
+      setCheckingUser(false);
+    }
+  };
+
   const handleInviteManager = async () => {
     if (!newManager.email || !newManager.full_name) {
       toast.error(t('managerAccounts.fillRequiredFields'));
+      return;
+    }
+
+    // Если пользователь не существует, проверяем наличие пароля
+    if (userExists === false && !managerPassword) {
+      toast.error(t('managerAccounts.passwordRequired'));
       return;
     }
 
@@ -142,7 +179,8 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
           developer_name: profile?.full_name || 'Developer',
           company_name: profile?.company_name || '',
           invitation_token: invitation_token,
-          project_ids: newManagerProjectIds.length > 0 ? newManagerProjectIds : undefined
+          project_ids: newManagerProjectIds.length > 0 ? newManagerProjectIds : undefined,
+          password: userExists === false ? managerPassword : undefined
         }
       });
 
@@ -174,6 +212,8 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       setNewManager({ email: '', full_name: '', phone: '' });
       setNewManagerProjectIds([]);
+      setUserExists(null);
+      setManagerPassword('');
       setIsAddDialogOpen(false);
       loadManagerData();
     } catch (error) {
@@ -432,9 +472,39 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                   type="email"
                   value={newManager.email}
                   onChange={(e) => setNewManager(prev => ({ ...prev, email: e.target.value }))}
+                  onBlur={handleEmailBlur}
                   placeholder={t('managerAccounts.emailPlaceholder')}
+                  disabled={checkingUser}
                 />
+                {checkingUser && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('managerAccounts.checkingUser')}
+                  </p>
+                )}
+                {userExists === true && (
+                  <p className="text-sm text-green-600 mt-1">
+                    {t('managerAccounts.userExists')}
+                  </p>
+                )}
+                {userExists === false && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    {t('managerAccounts.userNotExists')}
+                  </p>
+                )}
               </div>
+              
+              {userExists === false && (
+                <div>
+                  <Label htmlFor="manager_password">{t('managerAccounts.setPassword')}</Label>
+                  <Input
+                    id="manager_password"
+                    type="password"
+                    value={managerPassword}
+                    onChange={(e) => setManagerPassword(e.target.value)}
+                    placeholder={t('managerAccounts.passwordPlaceholder')}
+                  />
+                </div>
+              )}
               <div>
                 <Label htmlFor="full_name">{t('managerAccounts.fullName')}</Label>
                 <Input

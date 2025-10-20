@@ -31,7 +31,7 @@ interface ManagerAccountWithProfile {
 }
 
 export interface UserRole {
-  type: 'developer' | 'manager' | 'both' | 'loading'; // 'both' - пользователь и застройщик, и менеджер
+  type: 'developer' | 'manager' | 'loading'; // Убрали 'both' - пользователь может быть только одного типа
   managerData?: ManagerRole[];  // Массив для поддержки нескольких застройщиков
   developerIds?: string[];      // Массив ID застройщиков
   primaryDeveloperId?: string;  // Основной застройщик (первый)
@@ -65,6 +65,19 @@ export const useUserRole = () => {
       userIdRef.current = user.id;
 
       try {
+        // Получаем account_type из user_profiles
+        const { data: userProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('account_type')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error loading user profile:', profileError);
+        }
+
+        const accountType = userProfile?.account_type || 'developer';
+
         // Проверяем, является ли пользователь менеджером (может быть у нескольких застройщиков)
         const { data: managerAccounts, error: managerError } = await supabase
           .from('manager_accounts')
@@ -79,22 +92,13 @@ export const useUserRole = () => {
           .eq('manager_id', user.id)
           .eq('status', 'active');
 
-
         if (managerError) {
           console.error('Error checking manager role:', managerError);
         }
 
-        // Проверяем, есть ли у пользователя собственные проекты (является ли застройщиком)
-        const { data: ownProjects } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
-
-        const isDeveloperWithProjects = (ownProjects && ownProjects.length > 0);
-
-        if (managerAccounts && managerAccounts.length > 0) {
-          // Пользователь является менеджером (и возможно также застройщиком)
+        // Упрощенная логика: только 'developer' или 'manager'
+        if (accountType === 'manager' && managerAccounts && managerAccounts.length > 0) {
+          // Пользователь является менеджером
           const accountsArray = managerAccounts as unknown as ManagerAccountWithProfile[];
           const managerData: ManagerRole[] = accountsArray.map((account) => ({
             id: account.id,
@@ -113,13 +117,13 @@ export const useUserRole = () => {
           const developerIds = managerAccounts.map(account => account.developer_id);
 
           setUserRole({
-            type: isDeveloperWithProjects ? 'both' : 'manager', // Новый тип 'both' если пользователь и застройщик, и менеджер
+            type: 'manager',
             managerData,
             developerIds,
-            primaryDeveloperId: isDeveloperWithProjects ? user.id : developerIds[0] // Если пользователь и застройщик, то его ID как основной
+            primaryDeveloperId: developerIds[0]
           });
         } else {
-          // Пользователь является только застройщиком
+          // Пользователь является застройщиком
           setUserRole({
             type: 'developer',
             developerIds: [user.id],
@@ -147,8 +151,8 @@ export const useUserRole = () => {
   return useMemo(() => ({
     userRole,
     loading: loading || authLoading,
-    isManager: userRole.type === 'manager' || userRole.type === 'both',
-    isDeveloper: userRole.type === 'developer' || userRole.type === 'both',
+    isManager: userRole.type === 'manager',
+    isDeveloper: userRole.type === 'developer',
     developerIds: userRole.developerIds || [],
     primaryDeveloperId: userRole.primaryDeveloperId,
     // Для обратной совместимости

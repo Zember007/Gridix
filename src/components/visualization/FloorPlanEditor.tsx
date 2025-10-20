@@ -450,50 +450,58 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           // Получаем существующие апартаменты на целевом этаже
           const { data: existingApartments } = await supabase
             .from('apartments')
-            .select('id, apartment_number')
+            .select('id, apartment_number, area')
             .eq('project_id', project?.id || projectId)
             .eq('floor_number', targetFloor);
 
-          // Создаем Map для быстрого поиска по номеру квартиры
-          const existingApartmentsMap = new Map(
-            existingApartments?.map(apt => [apt.apartment_number, apt.id]) || []
-          );
+          // Создаем Map для быстрого поиска по площади квартиры
+          // Используем площадь как ключ, но храним массив квартир с одинаковой площадью
+          const existingApartmentsByArea = new Map<number, Array<{id: string, apartment_number: string}>>();
+          
+          existingApartments?.forEach(apt => {
+            const area = Math.round(apt.area * 100) / 100; // Округляем до 2 знаков после запятой
+            if (!existingApartmentsByArea.has(area)) {
+              existingApartmentsByArea.set(area, []);
+            }
+            existingApartmentsByArea.get(area)!.push({
+              id: apt.id,
+              apartment_number: apt.apartment_number
+            });
+          });
 
           for (const apt of apartments) {
-            // Генерируем номер квартиры для целевого этажа
-            let targetApartmentNumber: string;
-            const originalNumber = apt.apartment_number;
-
-            // Если номер уже начинается с номера этажа, заменяем этаж
-            if (originalNumber.startsWith(floorNumber.toString())) {
-              const apartmentPart = originalNumber.substring(floorNumber.toString().length);
-              targetApartmentNumber = `${targetFloor}${apartmentPart}`;
-            } else {
-              // Иначе добавляем номер этажа в начало
-              targetApartmentNumber = `${targetFloor}${originalNumber.padStart(2, '0')}`;
-            }
-
-            // Проверяем, существует ли апартамент с таким номером на целевом этаже
-            const existingApartmentId = existingApartmentsMap.get(targetApartmentNumber);
-
-            if (existingApartmentId) {
-              // Обновляем только polygon существующего апартамента
-              try {
-                await supabase
-                  .from('apartments')
-                  .update({
-                    polygon: apt.polygon as { x: number; y: number }[]
-                  })
-                  .eq('id', existingApartmentId);
-              } catch (error) {
-                console.error('Error updating apartment polygon:', error, {
-                  apartmentId: existingApartmentId,
-                  apartmentNumber: targetApartmentNumber,
-                  targetFloor
-                });
+            const sourceArea = Math.round(apt.area * 100) / 100; // Округляем до 2 знаков после запятой
+            
+            // Ищем квартиры с такой же площадью на целевом этаже
+            const apartmentsWithSameArea = existingApartmentsByArea.get(sourceArea);
+            
+            if (apartmentsWithSameArea && apartmentsWithSameArea.length > 0) {
+              // Берем первую найденную квартиру с такой же площадью
+              const targetApartment = apartmentsWithSameArea[0];
+              
+              if (targetApartment) {
+                // Обновляем только polygon существующего апартамента
+                try {
+                  await supabase
+                    .from('apartments')
+                    .update({
+                      polygon: apt.polygon as { x: number; y: number }[]
+                    })
+                    .eq('id', targetApartment.id);
+                  
+                  console.log(`Updated polygon for apartment ${targetApartment.apartment_number} (area: ${sourceArea}m²) on floor ${targetFloor}`);
+                } catch (error) {
+                  console.error('Error updating apartment polygon:', error, {
+                    apartmentId: targetApartment.id,
+                    apartmentNumber: targetApartment.apartment_number,
+                    sourceArea,
+                    targetFloor
+                  });
+                }
               }
+            } else {
+              console.log(`No apartment found with area ${sourceArea}m² on floor ${targetFloor} for source apartment ${apt.apartment_number}`);
             }
-            // Если апартамент не существует, игнорируем его (не создаем новый)
           }
         }
       }

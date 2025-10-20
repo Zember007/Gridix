@@ -50,5 +50,11 @@
   "statusPending": "قيد الانتظار",
   "statusSuspended": "موقوف",
   "suspend": "إيقاف",
-  "title": "إدارة المدراء"
+  "title": "إدارة المدراء",
+  "setPassword": "تعيين كلمة المرور",
+  "passwordPlaceholder": "أدخل كلمة المرور للمدير الجديد",
+  "passwordRequired": "كلمة المرور مطلوبة للمستخدمين الجدد",
+  "checkingUser": "جارٍ التحقق من وجود المستخدم...",
+  "userExists": "يوجد مستخدم بهذا البريد الإلكتروني بالفعل",
+  "userNotExists": "سيتم إنشاء مستخدم جديد"
 }

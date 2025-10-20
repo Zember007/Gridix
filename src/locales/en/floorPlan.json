@@ -37,7 +37,7 @@
   "duplicate": {
     "error": "Error duplicating to all floors",
     "noData": "No data to duplicate",
-    "success": "Plan and polygons duplicated to all floors"
+    "success": "Plan and polygons duplicated to all floors by area"
   },
   "duplicateToAllFloors": "Duplicate to all floors",
   "image": {
