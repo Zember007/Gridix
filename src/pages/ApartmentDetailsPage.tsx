@@ -948,7 +948,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             variant="outline"
                             onClick={handleGeneratePDF}
                             disabled={isGeneratingPDF}
-                            className="px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm"
+                            className={`px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                           >
                             PDF
                           </Button>
@@ -1078,7 +1078,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                   variant="outline"
                   onClick={handleGeneratePDF}
                   disabled={isGeneratingPDF}
-                  className="px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300"
+                  className={`px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                 >
                   <FileDown className="h-5 w-5" />
                   <span className="hidden xs:block">PDF</span>

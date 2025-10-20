@@ -224,7 +224,8 @@ serve(async (req) => {
         *,
         projects!inner (
           name,
-          address
+          address,
+          currency
         )
       `)
       .eq('id', apartmentId)
@@ -502,7 +503,7 @@ serve(async (req) => {
       const leadId = amocrmResult[0].id;
 
       // Create a detailed note with all the information
-      const currentDate = new Date().toLocaleString('ru-RU', {
+      const currentDate = new Date().toLocaleString('en-US', {
         timeZone: 'Europe/Moscow',
         year: 'numeric',
         month: 'long',
@@ -522,7 +523,7 @@ serve(async (req) => {
 • Apartment number: ${apartment.apartment_number}
 • Project: ${apartment.projects?.name || 'Not specified'}
 ${apartment.area ? `• Area: ${apartment.area} m²` : ''}
-${apartment.price ? `• Price: ${Number(apartment.price).toLocaleString('ru-RU')} RUB` : ''}
+${apartment.price ? `• Price: ${Number(apartment.price).toLocaleString('en-US')} ${apartment.projects?.currency}` : ''}
 ${apartment.floor ? `• Floor: ${apartment.floor}` : ''}
 ${apartment.rooms ? `• Rooms: ${apartment.rooms}` : ''}
 ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : ''}
