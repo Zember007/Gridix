@@ -11,9 +11,8 @@ interface FloorPlanViewProps {
   floorNumber: number;
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
-  project?: {
-    currency?: string | null;
-  };
+  currency?: string | null;
+
 }
 
 interface FloorPlan {
@@ -21,7 +20,7 @@ interface FloorPlan {
   image_url: string | null;
 }
 
-const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, project }: FloorPlanViewProps) => {
+const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, currency }: FloorPlanViewProps) => {
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
@@ -276,7 +275,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
               showArea: floorSettings?.display?.showArea ?? false,
               showPrice: floorSettings?.display?.showPrice ?? false,
             }}
-            currency={project?.currency}
+            currency={currency}
             onClose={handlePopupClose}
           />
         )}

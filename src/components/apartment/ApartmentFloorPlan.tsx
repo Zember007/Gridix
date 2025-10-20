@@ -72,6 +72,7 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
 
   return (
       <FloorPlanView
+        currency={project?.currency}
         projectId={projectId}
         floorNumber={selectedFloor}
         apartments={floorApartments}

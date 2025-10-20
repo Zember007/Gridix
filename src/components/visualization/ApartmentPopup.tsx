@@ -1,7 +1,7 @@
 import React from 'react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { convertPrice, formatPrice, formatPriceWithCurrency } from '@/lib/currency-utils';
 
 interface ApartmentPopupProps {
   apartment: Apartment;
@@ -14,13 +14,15 @@ interface ApartmentPopupProps {
   };
   currency?:string | null;
   onClose?: () => void;
+  selectedCurrency: string; 
 }
 
 const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
   apartment,
   position,
   settings,
-  currency
+  currency,
+  selectedCurrency
 }) => {
   const { t } = useLanguage();
 
