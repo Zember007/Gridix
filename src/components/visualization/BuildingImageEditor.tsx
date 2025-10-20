@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shape, Point } from './polygon-editor/GeometryShapes';
+import { compressToWebP } from '@/hooks/use-upload';
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -104,8 +105,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   }, [projectId, buildingImage, project, isObjectProject]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !projectId) return;
+    const file_get = event.target.files?.[0];
+    if (!file_get || !projectId) return;
 
     // Проверяем аутентификацию пользователя
     if (!user) {
@@ -115,8 +116,14 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${projectId}-building.${fileExt}`;
+
+
+      const file = await compressToWebP(file_get);
+
+      const fileName = `${Date.now()}.webp`;
+
+      
+
 
       const { error: uploadError } = await supabase.storage
         .from('project-images')

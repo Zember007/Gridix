@@ -21,6 +21,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 import { Apartment as GlobalApartment } from '@/types/apartment';
 import type { Json, Tables } from '@/integrations/supabase/types';
+import { compressToWebP } from '@/hooks/use-upload';
 
 interface Point {
   x: number;
@@ -245,7 +246,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
   };
 
-  const uploadImage = async (file: File) => {
+  const uploadImage = async (file_get: File) => {
     // Проверяем аутентификацию пользователя
     if (!user) {
       toast.error(t('floorPlan.upload.authRequired'));
@@ -253,9 +254,11 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
     }
 
     setLoading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.${fileExt}`;
+    try {     
+
+      const file = await compressToWebP(file_get);
+
+      const fileName = `${projectId}/floor-${floorNumber}-${Date.now()}.webp`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('project-images')
@@ -335,9 +338,12 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
 
     setUploadingPhotos(true);
     try {
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${editingApartment}-${Date.now()}-${index}.${fileExt}`;
+      const uploadPromises = Array.from(files).map(async (file_get, index) => {
+        
+
+        const file = await compressToWebP(file_get);
+
+        const fileName = `${editingApartment}-${Date.now()}-${index}.webp`;
         
         const { error: uploadError } = await supabase.storage
           .from('project-images')
@@ -1026,7 +1032,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </div>
 
                 <ApartmentCustomFields
-
                   apartmentId={editingApartment === 'new' ? undefined : editingApartment}
                   customFieldsData={customFieldsData}
                   onCustomFieldsChange={setCustomFieldsData}

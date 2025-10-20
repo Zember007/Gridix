@@ -13,6 +13,7 @@ import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import LayoutPhotosManager from '@/components/visualization/LayoutPhotosManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { compressToWebP } from '@/hooks/use-upload';
 
 interface ApartmentPhotosManagerProps {
   projectId: string;
@@ -55,7 +56,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         .order('apartment_number', { ascending: true });
 
       if (error) throw error;
-      
+
       const normalizedApartments = (data || []).map(normalizeApartmentData);
       setApartments(normalizedApartments);
     } catch (error) {
@@ -74,7 +75,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      
+
       setPhotos(data || []);
     } catch (error) {
       console.error('Error loading photos:', error);
@@ -93,10 +94,12 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
     setUploading(true);
     try {
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${selectedApartment}-${Date.now()}-${index}.${fileExt}`;
-        
+      const uploadPromises = Array.from(files).map(async (file_get, index) => {
+    
+        const file = await compressToWebP(file_get);
+
+        const fileName = `${selectedApartment}-${Date.now()}-${index}.webp`;
+
         const { error: uploadError } = await supabase.storage
           .from('project-images')
           .upload(`apartments/${fileName}`, file);
@@ -162,7 +165,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
 
       const currentArea = currentApartment.area;
       const currentRooms = currentApartment.rooms;
-      
+
       // Находим квартиры с такой же площадью и количеством комнат
       const similarApartments = apartments.filter(apt => {
         // Проверяем, что площадь и количество комнат совпадают, и это не та же квартира
@@ -230,7 +233,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
             {t('photosManager.layoutPhotos')}
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="apartments">
           <Card>
             <CardHeader>
@@ -240,85 +243,85 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="apartment-select">{t('photosManager.selectApartment')}</Label>
-            <Select value={selectedApartment} onValueChange={setSelectedApartment}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={t('photosManager.selectApartmentPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {apartments.map((apartment) => (
-                  <SelectItem key={apartment.id} value={apartment.id}>
-                    {t('photosManager.apartmentOption', { number: apartment.apartment_number, floor: apartment.floor_number })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedApartment && (
-            <div className="space-y-4">
               <div>
-                <Label htmlFor="photo-upload">{t('photosManager.uploadPhotos')}</Label>
-                <Input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="mt-1"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t('photosManager.uploadMultiple')}
-                </p>
+                <Label htmlFor="apartment-select">{t('photosManager.selectApartment')}</Label>
+                <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={t('photosManager.selectApartmentPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {apartments.map((apartment) => (
+                      <SelectItem key={apartment.id} value={apartment.id}>
+                        {t('photosManager.apartmentOption', { number: apartment.apartment_number, floor: apartment.floor_number })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={duplicatePhotosToSimilarApartments}
-                  disabled={photos.length === 0}
-                >
-                  <Copy className="h-4 w-4 mr-1" />
-                  {t('photosManager.duplicateToSimilar')}
-                </Button>
-              </div>
+              {selectedApartment && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="photo-upload">{t('photosManager.uploadPhotos')}</Label>
+                    <Input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      disabled={uploading}
+                      className="mt-1"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {t('photosManager.uploadMultiple')}
+                    </p>
+                  </div>
 
-              {photos.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-2" />
-                  <p>{t('photosManager.noPhotos')}</p>
-                  <p className="text-sm">{t('photosManager.noPhotosDesc')}</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="relative group">
-                      <img
-                        src={photo.image_url}
-                        alt={photo.description || 'Фото квартиры'}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDeletePhoto(photo.id, photo.image_url)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={duplicatePhotosToSimilarApartments}
+                      disabled={photos.length === 0}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      {t('photosManager.duplicateToSimilar')}
+                    </Button>
+                  </div>
+
+                  {photos.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                      <p>{t('photosManager.noPhotos')}</p>
+                      <p className="text-sm">{t('photosManager.noPhotosDesc')}</p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {photos.map((photo) => (
+                        <div key={photo.id} className="relative group">
+                          <img
+                            src={photo.image_url}
+                            alt={photo.description || 'Фото квартиры'}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleDeletePhoto(photo.id, photo.image_url)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         </TabsContent>
-        
+
         <TabsContent value="layouts">
           <LayoutPhotosManager projectId={projectId} />
         </TabsContent>

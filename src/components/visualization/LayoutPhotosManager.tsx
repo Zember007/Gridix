@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useAuth } from '@/contexts/AuthContext';
+import { compressToWebP } from '@/hooks/use-upload';
 
 interface LayoutPhotosManagerProps {
   projectId: string;
@@ -121,9 +122,12 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
 
     setUploading(true);
     try {
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${projectId}-${selectedLayoutType}-${Date.now()}-${index}.${fileExt}`;
+      const uploadPromises = Array.from(files).map(async (file_get, index) => {
+       
+
+        const file = await compressToWebP(file_get);
+
+        const fileName = `${projectId}-${selectedLayoutType}-${Date.now()}-${index}.webp`;
         
         const { error: uploadError } = await supabase.storage
           .from('project-images')
