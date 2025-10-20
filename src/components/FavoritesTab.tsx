@@ -4,26 +4,21 @@ import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Home, Square, MapPin, ExternalLink } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Heart, Home, Square, ExternalLink } from 'lucide-react';
+
+import { Apartment } from '@/types/apartment';
 
 interface FavoritesTabProps {
   projectId: string;
   projectCurrency?: string | null;
+  handleViewApartment: (apartment: Apartment) => void
 }
 
-const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
-  const { t, language } = useLanguage();
+const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: FavoritesTabProps) => {
+  const { t } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
-  const [isWidgetContext, setIsWidgetContext] = useState(false);
 
-  useEffect(() => {
-    // Detect if we're in a widget/iframe context
-    const isInIframe = window.self !== window.top;
-    const hasWidgetParam = window.location.search.includes('widget') || 
-                          window.location.pathname.includes('/widget/');
-    setIsWidgetContext(isInIframe || hasWidgetParam);
-  }, []);
+  //
 
   // Фильтруем избранные только для текущего проекта
   const projectFavorites = favorites.filter(fav => fav.project_id === projectId);
@@ -46,12 +41,35 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
     }
   };
 
-  const handleViewApartment = (apartmentId: string) => {
-    // Always open in new tab for now to avoid router issues in widget context
-    // This is the safest approach that works in both contexts
-    const baseUrl = window.location.origin;
-    const url = `${baseUrl}/${language}/project/${projectId}/apartment/${apartmentId}`;
-    window.open(url, '_blank');
+  type FavoriteItem = {
+    id: string;
+    project_id: string;
+    apartment_number: string;
+    rooms: number;
+    area: number;
+    price?: number;
+    status: string;
+    floor_number: number;
+  };
+
+  const toApartment = (fav: FavoriteItem): Apartment => {
+    const nowIso = new Date().toISOString();
+    return {
+      id: fav.id,
+      apartment_number: fav.apartment_number,
+      floor_number: Number(fav.floor_number),
+      rooms: Number(fav.rooms),
+      area: Number(fav.area),
+      price: typeof fav.price === 'number' ? fav.price : null,
+      status: (fav.status as 'available' | 'sold' | 'reserved') || 'available',
+      type: 'apartment',
+      polygon: [],
+      custom_fields: null,
+      project_id: fav.project_id,
+      created_at: nowIso,
+      updated_at: nowIso,
+      floor_plan_id: null
+    };
   };
 
   const handleRemoveFromFavorites = (apartmentId: string, e: React.MouseEvent) => {
@@ -86,7 +104,7 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
           <Card 
             key={apartment.id} 
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-            onClick={() => handleViewApartment(apartment.id)}
+            onClick={() => handleViewApartment(toApartment(apartment))}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
@@ -135,7 +153,7 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
               {apartment.price && (
                 <div className="mb-3">
                   <div className="text-lg font-bold text-gray-900">
-                    {formatPriceWithCurrency(apartment.price, projectCurrency)}
+                    {formatPriceWithCurrency(apartment.price, projectCurrency || null)}
                   </div>
                 </div>
               )}
@@ -146,7 +164,7 @@ const FavoritesTab = ({ projectId, projectCurrency }: FavoritesTabProps) => {
                 className="w-full"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleViewApartment(apartment.id);
+                  handleViewApartment(toApartment(apartment));
                 }}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />

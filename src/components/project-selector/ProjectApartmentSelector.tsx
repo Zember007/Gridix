@@ -539,7 +539,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
         />
       ) : viewMode === 'favorites' ? (
         <div className="container mx-auto px-4 md:px-6 py-8 grow">
-          <FavoritesTab projectId={projectId} projectCurrency={project?.currency} />
+          <FavoritesTab
+          handleViewApartment={openApartmentDetails}
+          projectId={project.id} projectCurrency={project?.currency} />
         </div>
       ) : (
         // Facade and Floor Plan views with hero section
