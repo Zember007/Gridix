@@ -345,7 +345,7 @@ export function AdminSidebar({
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('adminSidebar.title')}
-      showWorkspaceSwitcher={true}
+      showWorkspaceSwitcher={userRole.type === 'manager'}
     />
   );
 }

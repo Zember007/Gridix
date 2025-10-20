@@ -55,6 +55,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   
   // User existence check and password
   const [userExists, setUserExists] = useState<boolean | null>(null);
+  const [userAccountType, setUserAccountType] = useState<string | null>(null);
   const [managerPassword, setManagerPassword] = useState('');
   const [checkingUser, setCheckingUser] = useState(false);
   
@@ -127,9 +128,16 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
       
       if (!error && data) {
         setUserExists(data.exists);
+        setUserAccountType(data.accountType);
+        
+        // Если пользователь существует и не является менеджером, показываем ошибку
+        if (data.exists && data.accountType !== 'manager') {
+          toast.error(t('managerAccounts.userNotManager'));
+        }
       } else {
         console.error('Error checking user existence:', error);
         setUserExists(null);
+        setUserAccountType(null);
       }
     } catch (error) {
       console.error('Error checking user existence:', error);
@@ -142,6 +150,12 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const handleInviteManager = async () => {
     if (!newManager.email || !newManager.full_name) {
       toast.error(t('managerAccounts.fillRequiredFields'));
+      return;
+    }
+
+    // Если пользователь существует и не является менеджером, блокируем
+    if (userExists === true && userAccountType !== 'manager') {
+      toast.error(t('managerAccounts.userNotManager'));
       return;
     }
 
@@ -213,6 +227,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
       setNewManager({ email: '', full_name: '', phone: '' });
       setNewManagerProjectIds([]);
       setUserExists(null);
+      setUserAccountType(null);
       setManagerPassword('');
       setIsAddDialogOpen(false);
       loadManagerData();

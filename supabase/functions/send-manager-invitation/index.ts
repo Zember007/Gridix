@@ -113,8 +113,7 @@ serve(async (req) => {
 
     // Создаем URL для принятия приглашения
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
-    const encodedToken = encodeURIComponent(invitation_token)
-    const invitationUrl = `${siteUrl}en/accept-invitation?token=${encodedToken}`
+    const invitationUrl = `${siteUrl}en/admin`
 
     // ===== ОБРАБОТКА В ЗАВИСИМОСТИ ОТ НАЛИЧИЯ ПОЛЬЗОВАТЕЛЯ =====
 
@@ -212,7 +211,7 @@ serve(async (req) => {
           company_name,
           invitation_token,
           invited_by: user.id,
-          account_type: 'manager' // Важно! Устанавливаем тип аккаунта
+          account_type: 'manager'
         }
       }
 
@@ -234,7 +233,7 @@ serve(async (req) => {
       userData = newUserData
     }
 
-    console.log('User ready:', email)
+    console.log('User ready:', userData)
 
     // Отправляем magic link через signInWithOtp
     const { error: otpError } = await supabaseAdmin.auth.signInWithOtp({
@@ -248,7 +247,6 @@ serve(async (req) => {
           company_name,
           invitation_token,
           invited_by: user.id,
-          requires_password_setup: true
         }
       }
     })
@@ -289,7 +287,7 @@ serve(async (req) => {
       const expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + 7) // Приглашение действительно 7 дней
 
-      const invitationData: any = {
+      const invitationData = {
         developer_id: developerId,
         email,
         full_name,
@@ -299,18 +297,32 @@ serve(async (req) => {
         expires_at: expiresAt.toISOString()
       }
 
-      // Сохраняем project_ids как JSON, если они есть
-      if (project_ids && project_ids.length > 0) {
-        invitationData.project_ids = project_ids
-      }
-
-      const { error: dbError } = await supabaseAdmin
+      const { data: invitationResult, error: dbError } = await supabaseAdmin
         .from('manager_invitations')
         .insert(invitationData)
+        .select('id')
+        .single()
 
       if (dbError) {
         console.error('Failed to save invitation to database:', dbError)
         throw new Error(`Failed to save invitation: ${dbError.message}`)
+      }
+
+      // Сохраняем project_ids в отдельной таблице, если они есть
+      if (project_ids && project_ids.length > 0 && invitationResult?.id) {
+        const projectAccessData = project_ids.map(projectId => ({
+          invitation_id: invitationResult.id,
+          project_id: projectId
+        }))
+
+        const { error: accessError } = await supabaseAdmin
+          .from('manager_invitation_projects')
+          .insert(projectAccessData)
+
+        if (accessError) {
+          console.error('Failed to save project access:', accessError)
+          // Не прерываем процесс, так как основная задача выполнена
+        }
       }
 
       console.log('Invitation saved to database successfully')

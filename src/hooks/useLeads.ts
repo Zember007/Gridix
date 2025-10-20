@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -16,26 +16,26 @@ export interface Lead {
   amocrm_contact_id?: number | null;
   amocrm_sent_at?: string | null;
   amocrm_error?: string | null;
-  amocrm_retries: number;
-  status: 'pending' | 'sent_to_crm' | 'saved_only' | 'failed' | 'cancelled';
-  source: string;
+  amocrm_retries: number | null;
+  status: string | null;
+  source: string | null;
   notes?: string | null;
   // Relations
   projects?: {
     name: string;
-    address?: string;
+    address?: string | null;
   };
   apartments?: {
     apartment_number: string;
-    area?: number;
-    price?: number;
-    floor_number?: number;
-    rooms?: string;
+    area?: number | null;
+    price?: number | null;
+    floor_number?: number | null;
+    rooms?: string | null;
   };
 }
 
 export interface LeadFilters {
-  projectId?: string;
+  projectId?: string | undefined;
   status?: Lead['status'];
   dateFrom?: string;
   dateTo?: string;
@@ -48,7 +48,7 @@ export function useLeads(filters?: LeadFilters) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -73,10 +73,14 @@ export function useLeads(filters?: LeadFilters) {
 
       // Для менеджеров - получить доступные проекты
       if (userRole.type === 'manager' && activeWorkspaceId) {
+        // Получаем ID текущего пользователя
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
         const { data: managerAccount } = await supabase
           .from('manager_accounts')
           .select('id')
-          .eq('manager_id', userRole.managerData?.[0]?.manager_id)
+          .eq('manager_id', user.id)
           .eq('developer_id', activeWorkspaceId)
           .single();
         
@@ -91,7 +95,15 @@ export function useLeads(filters?: LeadFilters) {
           // Применить фильтр по project_ids
           if (projectIds.length > 0) {
             query = query.in('project_id', projectIds);
+          } else {
+            // Если нет доступа к проектам, возвращаем пустой результат
+            setLeads([]);
+            return;
           }
+        } else {
+          // Если нет manager_account, возвращаем пустой результат
+          setLeads([]);
+          return;
         }
       }
 
@@ -122,11 +134,11 @@ export function useLeads(filters?: LeadFilters) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userRole.type, activeWorkspaceId, filters?.projectId, filters?.status, filters?.dateFrom, filters?.dateTo]);
 
   useEffect(() => {
     fetchLeads();
-  }, [filters?.projectId, filters?.status, filters?.dateFrom, filters?.dateTo]);
+  }, [fetchLeads]);
 
 
   const cancelLead = async (leadId: string) => {

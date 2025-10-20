@@ -56,5 +56,6 @@
   "passwordRequired": "Password is required for new users",
   "checkingUser": "Checking if user exists...",
   "userExists": "User with this email already exists",
-  "userNotExists": "New user will be created"
+  "userNotExists": "New user will be created",
+  "userNotManager": "This user is not a manager account type"
 }

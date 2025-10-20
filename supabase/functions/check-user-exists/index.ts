@@ -33,13 +33,27 @@ serve(async (req) => {
     }
 
     // Проверяем, существует ли пользователь с таким email
-    const userExists = existingUsers?.users?.some(u => u.email === email) || false
+    const existingUser = existingUsers?.users?.find(u => u.email === email)
+    const userExists = !!existingUser
+
+    // Если пользователь существует, проверяем его тип аккаунта
+    let accountType = null
+    if (existingUser) {
+      const { data: userProfile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('account_type')
+        .eq('id', existingUser.id)
+        .single()
+      
+      accountType = userProfile?.account_type || 'developer'
+    }
     
     console.log('User exists:', userExists)
 
     return createJsonResponse({
       success: true,
-      exists: userExists
+      exists: userExists,
+      accountType: accountType
     }, 200, origin);
 
   } catch (error) {
