@@ -4,7 +4,7 @@ import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
 import EmbedProjectsPage from '@/pages/EmbedProjectsPage';
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import '@/index.css';
 
 // Type declaration for build-time injected version

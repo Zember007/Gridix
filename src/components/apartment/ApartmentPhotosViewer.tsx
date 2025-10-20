@@ -209,19 +209,6 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
             <Expand className="h-4 w-4" />
           </Button>
           
-           {/*     <Badge 
-            variant={photos[currentPhotoIndex].type === 'layout' ? 'default' : 'secondary'}
-            className="absolute top-2 left-2"
-          >
-            {photos[currentPhotoIndex].type === 'layout' ? (
-              <>
-                <Layout className="h-3 w-3 mr-1" />
-                Планировка
-              </>
-            ) : (
-              'Квартира'
-            )}
-          </Badge> */}
           
           {photos.length > 1 && (
             <>
@@ -257,7 +244,6 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
         )}
       </CardContent>
       
-      {/* Lightbox для полноэкранного просмотра */}
       <Lightbox
         open={isLightboxOpen}
         close={closeLightbox}
