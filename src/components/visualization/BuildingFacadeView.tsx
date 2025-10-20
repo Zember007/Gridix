@@ -514,7 +514,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   return (
     <div
       ref={containerRef}
-      className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+      className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden rounded-lg ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
       style={{
         height: containerHeight,
         width: isExpanded ? '100%' : '100%',
