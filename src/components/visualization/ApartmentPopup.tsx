@@ -12,9 +12,7 @@ interface ApartmentPopupProps {
     showArea: boolean;
     showPrice: boolean;
   };
-  project?: {
-    currency?: string | null;
-  };
+  currency?:string | null;
   onClose?: () => void;
 }
 
@@ -22,7 +20,7 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
   apartment,
   position,
   settings,
-  project
+  currency
 }) => {
   const { t } = useLanguage();
 
@@ -82,7 +80,7 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
         {/* Price */}
         {settings.showPrice && apartment.price && (
           <div className="text-sm font-semibold text-green-600">
-            {t('project.price')}: {formatPriceWithCurrency(apartment.price, project?.currency || null)}
+            {t('project.price')}: {formatPriceWithCurrency(apartment.price, currency || null)}
           </div>
         )}
 

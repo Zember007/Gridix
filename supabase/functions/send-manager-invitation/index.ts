@@ -77,27 +77,7 @@ serve(async (req) => {
       }
     }
 
-    // 2. Проверяем, существует ли активное приглашение с таким email
-    const { data: existingInvitation, error: invitationCheckError } = await supabaseAdmin
-      .from('manager_invitations')
-      .select('id, status, expires_at')
-      .eq('developer_id', developerId)
-      .eq('email', email)
-      .eq('status', 'pending')
-      .gt('expires_at', new Date().toISOString())
-      .maybeSingle()
-
-    if (invitationCheckError) {
-      console.error('Error checking existing invitation:', invitationCheckError)
-      throw new Error(`Failed to check existing invitation: ${invitationCheckError.message}`)
-    }
-
-    if (existingInvitation) {
-      return createJsonResponse({
-        success: false,
-        error: 'Active invitation for this email already exists'
-      }, 400, origin);
-    }
+    // 2. (Пропущено) Система приглашений больше не используется — менеджер активируется сразу
 
     // 3. Проверяем, существует ли пользователь в user_profiles
     const { data: existingUserProfile, error: userProfileError } = await supabaseAdmin
@@ -111,7 +91,7 @@ serve(async (req) => {
       throw new Error(`Failed to check user profile: ${userProfileError.message}`)
     }
 
-    // Создаем URL для принятия приглашения
+    // URL редиректа после входа (без шага принятия)
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
     const invitationUrl = `${siteUrl}en/admin`
 
@@ -165,9 +145,9 @@ serve(async (req) => {
       }, 200, origin);
     }
 
-    // ===== ПОЛЬЗОВАТЕЛЬ НЕ ЗАРЕГИСТРИРОВАН - СОЗДАЕМ ПРИГЛАШЕНИЕ =====
+    // ===== ПОЛЬЗОВАТЕЛЬ НЕ ЗАРЕГИСТРИРОВАН - СОЗДАЕМ УЧЕТНУЮ ЗАПИСЬ И АКТИВИРУЕМ СРАЗУ =====
 
-    console.log('User not registered, creating invitation:', email)
+    console.log('User not registered, creating account and activating:', email)
 
     // Проверяем существует ли пользователь в auth
     let userData = null
@@ -235,7 +215,7 @@ serve(async (req) => {
 
     console.log('User ready:', userData)
 
-    // Отправляем magic link через signInWithOtp
+    // Отправляем magic link через signInWithOtp (только для удобного входа)
     const { error: otpError } = await supabaseAdmin.auth.signInWithOtp({
       email: email,
       options: {
@@ -282,62 +262,60 @@ serve(async (req) => {
       }
     }
 
-    // Сохраняем информацию о приглашении в таблицу manager_invitations
+    // Создаем/активируем manager_account сразу и выдаем доступ к проектам
     try {
-      const expiresAt = new Date()
-      expiresAt.setDate(expiresAt.getDate() + 7) // Приглашение действительно 7 дней
+      const managerId = userData?.user?.id
+      if (!managerId) throw new Error('No manager user id available')
 
-      const invitationData = {
-        developer_id: developerId,
-        email,
-        full_name,
-        phone,
-        invitation_token,
-        status: 'pending',
-        expires_at: expiresAt.toISOString()
-      }
-
-      const { data: invitationResult, error: dbError } = await supabaseAdmin
-        .from('manager_invitations')
-        .insert(invitationData)
+      // Проверяем, нет ли уже аккаунта менеджера у этого застройщика
+      const { data: existingAccount } = await supabaseAdmin
+        .from('manager_accounts')
         .select('id')
-        .single()
+        .eq('developer_id', developerId)
+        .eq('manager_id', managerId)
+        .maybeSingle()
 
-      if (dbError) {
-        console.error('Failed to save invitation to database:', dbError)
-        throw new Error(`Failed to save invitation: ${dbError.message}`)
+      let managerAccountId = existingAccount?.id
+
+      if (!managerAccountId) {
+        const { data: createdAccount, error: createAccErr } = await supabaseAdmin
+          .from('manager_accounts')
+          .insert({
+            developer_id: developerId,
+            manager_id: managerId,
+            email,
+            full_name,
+            phone,
+            status: 'active',
+            accepted_at: new Date().toISOString()
+          })
+          .select('id')
+          .single()
+
+        if (createAccErr) throw new Error(`Failed to create manager account: ${createAccErr.message}`)
+        managerAccountId = createdAccount.id
       }
 
-      // Сохраняем project_ids в отдельной таблице, если они есть
-      if (project_ids && project_ids.length > 0 && invitationResult?.id) {
-        const projectAccessData = project_ids.map(projectId => ({
-          invitation_id: invitationResult.id,
-          project_id: projectId
-        }))
-
-        const { error: accessError } = await supabaseAdmin
-          .from('manager_invitation_projects')
-          .insert(projectAccessData)
-
-        if (accessError) {
-          console.error('Failed to save project access:', accessError)
-          // Не прерываем процесс, так как основная задача выполнена
-        }
+      // Выдать доступ к проектам сразу
+      if (project_ids && project_ids.length > 0 && managerAccountId) {
+        const accessRows = project_ids.map(projectId => ({ manager_account_id: managerAccountId!, project_id: projectId }))
+        const { error: accessErr } = await supabaseAdmin
+          .from('manager_project_access')
+          .insert(accessRows)
+        if (accessErr) throw new Error(`Failed to grant project access: ${accessErr.message}`)
       }
 
-      console.log('Invitation saved to database successfully')
-    } catch (dbSaveError) {
-      console.error('Database save error:', dbSaveError)
-      throw dbSaveError
+      return createJsonResponse({
+        success: true,
+        message: 'Manager activated and access granted',
+        invitation_url: invitationUrl,
+        email: email,
+        already_registered: false
+      }, 200, origin)
+    } catch (activateErr: any) {
+      console.error('Activation error:', activateErr)
+      throw activateErr
     }
-
-    return createJsonResponse({
-      success: true,
-      message: 'Magic link invitation sent successfully',
-      invitation_url: invitationUrl,
-      email: email,
-      already_registered: false
-    }, 200, origin);
 
   } catch (error) {
     console.error('Error sending invitation email:', error)

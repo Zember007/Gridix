@@ -66,23 +66,6 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
         if (error) throw error;
 
-        // Обновляем user_profiles с account_type
-        if (selectedAccountType) {
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .upsert({
-              email: formData.email,
-              full_name: formData.fullName,
-              company_name: formData.companyName,
-              phone: formData.phone,
-              account_type: selectedAccountType
-            });
-
-          if (profileError) {
-            console.error('Error updating profile:', profileError);
-          }
-        }
-
         toast.success(t('auth.checkEmail'));
       } else {
         const { error } = await supabase.auth.signInWithPassword({

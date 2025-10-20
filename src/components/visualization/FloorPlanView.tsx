@@ -276,7 +276,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
               showArea: floorSettings?.display?.showArea ?? false,
               showPrice: floorSettings?.display?.showPrice ?? false,
             }}
-            project={project}
+            currency={project?.currency}
             onClose={handlePopupClose}
           />
         )}

@@ -59,7 +59,7 @@ export const isValidCurrency = (currency: string): currency is CurrencyType => {
 };
 
 export const getCurrencySymbolSafe = (currency: string | null): string => {
-  if (!currency) return '₽'; // Default to ruble if no currency specified
+  if (!currency) return '$'; // Default to ruble if no currency specified
   return isValidCurrency(currency) ? getCurrencySymbol(currency) : '₽';
 };
 
