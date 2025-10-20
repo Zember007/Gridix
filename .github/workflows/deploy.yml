@@ -29,6 +29,6 @@ jobs:
 
             git stash
             git pull
-            npm install
+            # npm install
             npm run build
             npm run build:widget

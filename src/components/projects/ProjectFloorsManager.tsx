@@ -73,7 +73,7 @@ const ProjectFloorsManager = ({ projectId }: ProjectFloorsManagerProps) => {
     const renderFloorPlanTabs = () => {
         if (!project) return null;
 
-        const floors = Array.from({ length: project.floors }, (_, i) => i);
+        const floors = Array.from({ length: project.floors + 1 }, (_, i) => i);
 
         return (
             <div className="space-y-2">

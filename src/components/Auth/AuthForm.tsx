@@ -8,6 +8,7 @@ import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AccountTypeSelector } from './AccountTypeSelector';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -22,6 +23,8 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
+  const [showAccountTypeSelector, setShowAccountTypeSelector] = useState(false);
+  const [selectedAccountType, setSelectedAccountType] = useState<'developer' | 'manager' | null>(null);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -31,8 +34,19 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
     phone: ''
   });
 
+  const handleAccountTypeSelect = (accountType: 'developer' | 'manager') => {
+    setSelectedAccountType(accountType);
+    setShowAccountTypeSelector(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (mode === 'signup' && !selectedAccountType) {
+      setShowAccountTypeSelector(true);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -44,12 +58,30 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
             data: {
               full_name: formData.fullName,
               company_name: formData.companyName,
-              phone: formData.phone
+              phone: formData.phone,
+              account_type: selectedAccountType
             }
           }
         });
 
         if (error) throw error;
+
+        // Обновляем user_profiles с account_type
+        if (selectedAccountType) {
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .upsert({
+              email: formData.email,
+              full_name: formData.fullName,
+              company_name: formData.companyName,
+              phone: formData.phone,
+              account_type: selectedAccountType
+            });
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+        }
 
         toast.success(t('auth.checkEmail'));
       } else {
@@ -110,6 +142,15 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
       setResetLoading(false);
     }
   };
+
+  if (showAccountTypeSelector) {
+    return (
+      <AccountTypeSelector
+        onSelect={handleAccountTypeSelect}
+        loading={loading}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

@@ -31,7 +31,6 @@ interface ApartmentCustomFieldsProps {
 
 const  ApartmentCustomFields = ({ 
   projectId, 
-  apartmentId,
   customFieldsData, 
   onCustomFieldsChange,
   readOnly = false 

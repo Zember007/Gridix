@@ -20,20 +20,14 @@ import { useProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 import { Apartment as GlobalApartment } from '@/types/apartment';
-import type { Json } from '@/integrations/supabase/types';
+import type { Json, Tables } from '@/integrations/supabase/types';
 
 interface Point {
   x: number;
   y: number;
 }
 
-interface ApartmentPhoto {
-  id: string;
-  apartment_id: string;
-  image_url: string;
-  description?: string;
-  order_index: number;
-}
+
 
 interface Apartment {
   id: string;
@@ -97,7 +91,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
   const [loading, setLoading] = useState(false);
   const [polygonSettings, setPolygonSettings] = useState<PolygonSettings | null>(null);
   const [allFloors, setAllFloors] = useState<number[]>([]);
-  const [apartmentPhotos, setApartmentPhotos] = useState<ApartmentPhoto[]>([]);
+  const [apartmentPhotos, setApartmentPhotos] = useState<Tables<'apartment_photos'>[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncSourceApartment, setSyncSourceApartment] = useState<GlobalApartment | null>(null);
@@ -1032,7 +1026,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </div>
 
                 <ApartmentCustomFields
-                  projectId={projectId}
+
                   apartmentId={editingApartment === 'new' ? undefined : editingApartment}
                   customFieldsData={customFieldsData}
                   onCustomFieldsChange={setCustomFieldsData}

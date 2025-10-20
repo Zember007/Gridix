@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
+import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -41,11 +42,16 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const isMobile = useIsMobile();
   const { user, userProfile, signOut, loading } = useAuth();
   const { userRole, isManager, isDeveloper, developerId, primaryDeveloperId } = useUserRole();
-  const { isManagerMode } = useWorkspace();
+  const { isManagerMode, availableWorkspaces } = useWorkspace();
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
   };
+
+  // Проверяем, заблокирован ли менеджер
+  if (userRole.type === 'manager' && (!availableWorkspaces || availableWorkspaces.length === 0)) {
+    return <ManagerBlockedScreen />;
+  }
 
   const handleCloseCreateModal = () => {
     setShowCreateModal(false);
