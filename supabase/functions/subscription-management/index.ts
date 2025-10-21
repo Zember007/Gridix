@@ -203,17 +203,23 @@ async function handleGetSubscription(req, body, corsHeaders) {
 async function handleGetProjectSubscriptions(req, corsHeaders) {
   const origin = req.headers.get('Origin');
   try {
+    console.log("handleGetProjectSubscriptions: Starting request");
+    
     // Get user from JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("handleGetProjectSubscriptions: Missing authorization header");
       return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
     }
     
     const jwt = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     if (userError || !user) {
+      console.log("handleGetProjectSubscriptions: Invalid token or user error:", userError);
       return createJsonResponse({ error: "Invalid token" }, 401, origin);
     }
+    
+    console.log("handleGetProjectSubscriptions: User authenticated:", user.id);
 
     // Get all projects for user with their subscription status
     const { data: projects, error: projectsError } = await supabase
@@ -224,10 +230,11 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
         subscription_status,
         subscription_expires_at,
         user_id,
-        users!projects_user_id_fkey (
+        user_profiles!fk_projects_user_profile (
           id,
           email,
-          raw_user_meta_data
+          full_name,
+          company_name
         ),
         user_subscriptions (
           id,
@@ -248,11 +255,14 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
       .eq("user_id", user.id)
       .order('created_at', { ascending: false });
 
+    console.log("handleGetProjectSubscriptions: Projects query result:", { projects, projectsError });
+
     if (projectsError) {
       console.error("Error fetching projects:", projectsError);
       return createJsonResponse({ error: "Failed to fetch projects" }, 500, origin);
     }
 
+    console.log("handleGetProjectSubscriptions: Returning projects:", projects?.length || 0);
     return createJsonResponse({
       projects: projects || []
     }, 200, origin);

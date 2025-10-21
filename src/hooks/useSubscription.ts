@@ -54,13 +54,11 @@ export interface ProjectSubscription {
   subscription_status: string;
   subscription_expires_at: string | null;
   user_id: string;
-  users?: {
+  user_profiles?: {
     id: string;
     email: string;
-    raw_user_meta_data?: {
-      full_name?: string;
-      name?: string;
-    };
+    full_name?: string;
+    company_name?: string;
   };
   user_subscriptions: UserSubscription[];
 }
@@ -115,22 +113,31 @@ export function useSubscription(projectId?: string) {
 
   const fetchProjectSubscriptions = async () => {
     if (!user) {
+      console.log('useSubscription: No user, skipping fetchProjectSubscriptions');
       setLoading(false);
       return;
     }
 
+    console.log('useSubscription: Fetching project subscriptions for user:', user.id);
+    
     try {
+      const session = await supabase.auth.getSession();
+      console.log('useSubscription: Session token available:', !!session.data.session?.access_token);
+      
       const { data, error } = await supabase.functions.invoke('subscription-management', {
         body: { action: 'get-project-subscriptions' },
         headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Authorization': `Bearer ${session.data.session?.access_token}`,
         },
       });
+
+      console.log('useSubscription: Function response:', { data, error });
 
       if (error) {
         throw error;
       }
 
+      console.log('useSubscription: Setting project subscriptions:', data.projects || []);
       setProjectSubscriptions(data.projects || []);
     } catch (err) {
       console.error('Error fetching project subscriptions:', err);

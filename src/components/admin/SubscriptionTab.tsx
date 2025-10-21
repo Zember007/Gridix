@@ -33,7 +33,7 @@ import { Label } from '../ui/label';
 import { toast } from 'sonner';
  
 export default function SubscriptionTab() {
-  const { projectSubscriptions, plans, loading, plansLoading, requestInvoice, requestInvoiceForMultiple, refreshProjectSubscriptions } = useSubscription();
+  const { projectSubscriptions, plans, loading, plansLoading, requestInvoice, requestInvoiceForMultiple, refreshProjectSubscriptions, error } = useSubscription();
   const { t } = useLanguage();
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
@@ -41,10 +41,29 @@ export default function SubscriptionTab() {
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Debug logging
+  console.log('SubscriptionTab: projectSubscriptions:', projectSubscriptions);
+  console.log('SubscriptionTab: loading:', loading);
+  console.log('SubscriptionTab: plansLoading:', plansLoading);
+
   if (loading || plansLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Error loading subscriptions</h3>
+        <p className="text-muted-foreground text-center mb-4">{error}</p>
+        <Button onClick={refreshProjectSubscriptions} variant="outline">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Try Again
+        </Button>
       </div>
     );
   }
@@ -211,12 +230,11 @@ export default function SubscriptionTab() {
   };
 
   const getUserName = (project: ProjectSubscription) => {
-    if (!project.users) return project.user_id.substring(0, 8);
+    if (!project.user_profiles) return project.user_id.substring(0, 8);
     
-    const userData = project.users.raw_user_meta_data;
-    if (userData?.full_name) return userData.full_name;
-    if (userData?.name) return userData.name;
-    if (project.users.email) return project.users.email.split('@')[0];
+    if (project.user_profiles.full_name) return project.user_profiles.full_name;
+    if (project.user_profiles.company_name) return project.user_profiles.company_name;
+    if (project.user_profiles.email) return project.user_profiles.email.split('@')[0];
     
     return project.user_id.substring(0, 8);
   };
@@ -372,9 +390,13 @@ export default function SubscriptionTab() {
             <div className="text-center py-12">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">No projects found</p>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground mt-2 mb-4">
                 Create a project to get started
               </p>
+              <Button onClick={refreshProjectSubscriptions} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
             </div>
           ) : (
             <Table>
