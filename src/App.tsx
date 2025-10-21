@@ -5,15 +5,12 @@ import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from "@/components/providers";
 import Index from "./pages/Index";
-import ProjectsGalleryPage from "./pages/ProjectsGalleryPage";
 import ProjectWidgetPage from "./pages/ProjectWidgetPage";
 import AdminPage from "./pages/AdminPage";
 import ProjectEditorPage from "./pages/ProjectEditorPage";
 import EmbedProjectsPage from "./pages/EmbedProjectsPage";
-import EmbedProjectsMap from "./pages/EmbedProjectsMap";
 import AuthPage from "./pages/AuthPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
-import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
@@ -77,11 +74,7 @@ function App() {
                   </ProtectedRoute>
                 </LanguageProviders>
               } />
-       
-       
-              {/* Invitation acceptance route - no auth required */}
-              <Route path="/:lang/accept-invitation" element={<LanguageProviders><AcceptInvitationPage /></LanguageProviders>} />
-              
+                     
               {/* Set password route - for users who need to set password */}
               <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
               

@@ -531,45 +531,6 @@ export type Database = {
           },
         ]
       }
-      manager_invitations: {
-        Row: {
-          created_at: string
-          developer_id: string
-          email: string
-          expires_at: string
-          full_name: string
-          id: string
-          invitation_token: string
-          phone: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          developer_id: string
-          email: string
-          expires_at?: string
-          full_name: string
-          id?: string
-          invitation_token: string
-          phone?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          developer_id?: string
-          email?: string
-          expires_at?: string
-          full_name?: string
-          id?: string
-          invitation_token?: string
-          phone?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       manager_permissions: {
         Row: {
           allowed: boolean

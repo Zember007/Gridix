@@ -23,27 +23,21 @@ interface ManagerAccount {
   accepted_at?: string;
 }
 
-interface ManagerInvitation {
-  id: string;
-  email: string;
-  full_name: string;
-  phone?: string;
-  status: 'pending' | 'accepted' | 'expired';
-  expires_at: string;
-  created_at: string;
-  invitation_token: string;
-}
-
 interface NewManagerForm {
   email: string;
   full_name: string;
   phone: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+}
+
 const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   const { t } = useLanguage();
   const [managers, setManagers] = useState<ManagerAccount[]>([]);
-  const [invitations, setInvitations] = useState<ManagerInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newManager, setNewManager] = useState<NewManagerForm>({
@@ -62,7 +56,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
   // Project access management
   const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
   const [selectedManager, setSelectedManager] = useState<ManagerAccount | null>(null);
-  const [developerProjects, setDeveloperProjects] = useState<any[]>([]);
+  const [developerProjects, setDeveloperProjects] = useState<Project[]>([]);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [loadingAccess, setLoadingAccess] = useState(false);
   
@@ -93,19 +87,9 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
 
       if (managersError) throw managersError;
 
-      // Загружаем только активные приглашения (не принятые и не истекшие)
-      const { data: invitationsData, error: invitationsError } = await supabase
-        .from('manager_invitations')
-        .select('*')
-        .eq('developer_id', developerId)
-        .eq('status', 'pending')
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false });
-
-      if (invitationsError) throw invitationsError;
+      
 
       setManagers((managersData || []) as ManagerAccount[]);
-      setInvitations((invitationsData || []) as ManagerInvitation[]);
     } catch (error) {
       console.error('Error loading manager data:', error);
       toast.error(t('managerAccounts.errorLoading'));
@@ -295,21 +279,6 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     }
   };
 
-  const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('manager_invitations')
-        .delete()
-        .eq('id', invitationId);
-
-      if (error) throw error;
-      toast.success(t('managerAccounts.invitationCancelled'));
-      loadManagerData();
-    } catch (error) {
-      console.error('Error cancelling invitation:', error);
-      toast.error(t('managerAccounts.errorCancelling'));
-    }
-  };
 
   const copyInvitationLink = async (token: string) => {
     const siteUrl = window.location.origin;
@@ -327,14 +296,6 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     }
   };
 
-  const openInvitationLink = (token: string) => {
-    const siteUrl = window.location.origin;
-    const encodedToken = encodeURIComponent(token);
-    const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`;
-    console.log('Opening invitation URL:', invitationUrl);
-    window.open(invitationUrl, '_blank');
-  };
-
   // Project Access Management Functions
   const loadDeveloperProjects = async () => {
     try {
@@ -345,7 +306,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
         .order('name');
 
       if (error) throw error;
-      setDeveloperProjects(projects || []);
+      setDeveloperProjects((projects || []) as Project[]);
     } catch (error) {
       console.error('Error loading projects:', error);
       toast.error('Ошибка загрузки проектов');
@@ -722,92 +683,8 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
         </Card>
       )}
 
-      {/* Ожидающие приглашения */}
-      {invitations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('managerAccounts.pendingInvitations')}</CardTitle>
-            <CardDescription>{t('managerAccounts.pendingInvitationsDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {invitations.map((invitation) => (
-                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <User className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h4 className="font-medium">{invitation.full_name}</h4>
-                        {getStatusBadge(invitation.status)}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                        <div className="flex items-center space-x-1">
-                          <Mail className="h-3 w-3" />
-                          <span>{invitation.email}</span>
-                        </div>
-                        {invitation.phone && (
-                          <div className="flex items-center space-x-1">
-                            <Phone className="h-3 w-3" />
-                            <span>{invitation.phone}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {t('managerAccounts.expiresAt')}: {new Date(invitation.expires_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyInvitationLink(invitation.invitation_token)}
-                    >
-                      <Copy className="h-4 w-4 mr-1" />
-                      {t('managerAccounts.copyLink')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openInvitationLink(invitation.invitation_token)}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      {t('managerAccounts.openLink')}
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          {t('managerAccounts.cancel')}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>{t('managerAccounts.confirmCancel')}</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t('managerAccounts.confirmCancelDesc', { name: invitation.full_name })}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleCancelInvitation(invitation.id)}
-                          >
-                            {t('managerAccounts.cancel')}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {managers.length === 0 && invitations.length === 0 && (
+      {managers.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
