@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText } from 'lucide-react';
+import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -94,6 +94,10 @@ export function SystemSettings() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingStamp, setUploadingStamp] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const stampInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadSettings();
@@ -101,8 +105,36 @@ export function SystemSettings() {
 
   const loadSettings = async () => {
     try {
-      // В реальном приложении загружайте настройки из базы данных
-      // Здесь используем placeholder данные
+      // Загружаем общие настройки
+      const { data: generalSettings, error: generalError } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'general_settings')
+        .single();
+
+      if (generalError && generalError.code !== 'PGRST116') {
+        throw generalError;
+      }
+
+      if (generalSettings?.setting_value) {
+        setSettings(prev => ({ ...prev, ...(generalSettings.setting_value as unknown as SystemSettings) }));
+      }
+
+      // Загружаем настройки счетов
+      const { data: invoiceSettings, error: invoiceError } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'invoice_config')
+        .single();
+
+      if (invoiceError && invoiceError.code !== 'PGRST116') {
+        throw invoiceError;
+      }
+
+      if (invoiceSettings?.setting_value) {
+        setInvoiceConfig(invoiceSettings.setting_value as unknown as InvoiceConfig);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -118,11 +150,35 @@ export function SystemSettings() {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      // В реальном приложении сохраняйте настройки в базу данных
-      // Пример:
-      // await supabase.from('system_settings').upsert(settings);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Симуляция задержки
+      // Сохраняем общие настройки
+      const { error: generalError } = await supabase
+        .from('system_settings')
+        .upsert({
+          setting_key: 'general_settings',
+          setting_value: JSON.parse(JSON.stringify(settings)),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_key'
+        });
+
+      if (generalError) {
+        throw generalError;
+      }
+
+      // Сохраняем настройки счетов
+      const { error: invoiceError } = await supabase
+        .from('system_settings')
+        .upsert({
+          setting_key: 'invoice_config',
+          setting_value: JSON.parse(JSON.stringify(invoiceConfig)),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_key'
+        });
+
+      if (invoiceError) {
+        throw invoiceError;
+      }
 
       toast({
         title: 'Успешно',
@@ -147,8 +203,14 @@ export function SystemSettings() {
         description: 'Процесс создания резервной копии начат...',
       });
       
-      // В реальном приложении вызовите функцию резервного копирования
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Вызываем Edge Function для создания резервной копии
+      const { error } = await supabase.functions.invoke('database-backup', {
+        body: { action: 'create_backup' }
+      });
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: 'Успешно',
@@ -171,7 +233,18 @@ export function SystemSettings() {
         description: 'Очистка кэша начата...',
       });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Очищаем кэш в localStorage и sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Вызываем Edge Function для очистки серверного кэша
+      const { error } = await supabase.functions.invoke('cache-clear', {
+        body: { action: 'clear_cache' }
+      });
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: 'Успешно',
@@ -184,6 +257,117 @@ export function SystemSettings() {
         description: 'Не удалось очистить кэш',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleTestEmail = async () => {
+    try {
+      toast({
+        title: 'Отправка тестового письма',
+        description: 'Проверка SMTP настроек...',
+      });
+      
+      const { error } = await supabase.functions.invoke('test-email', {
+        body: {
+          smtpHost: settings.smtpHost,
+          smtpPort: settings.smtpPort,
+          smtpUser: settings.smtpUser,
+          smtpPassword: settings.smtpPassword,
+          to: settings.notificationEmail || settings.supportEmail
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: 'Успешно',
+        description: 'Тестовое письмо отправлено',
+      });
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить тестовое письмо',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFileUpload = async (file: File, type: 'logo' | 'stamp') => {
+    try {
+      if (type === 'logo') {
+        setUploadingLogo(true);
+      } else {
+        setUploadingStamp(true);
+      }
+
+      // Создаем уникальное имя файла
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${type}_${Date.now()}.${fileExt}`;
+      const filePath = `invoice-assets/${fileName}`;
+
+      // Загружаем файл в Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('invoices')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Получаем публичный URL
+      const { data } = supabase.storage
+        .from('invoices')
+        .getPublicUrl(filePath);
+
+      // Обновляем соответствующий URL в конфигурации
+      if (type === 'logo') {
+        setInvoiceConfig(prev => ({ ...prev, logo_url: data.publicUrl }));
+      } else {
+        setInvoiceConfig(prev => ({ ...prev, stamp_url: data.publicUrl }));
+      }
+
+      toast({
+        title: 'Успешно',
+        description: `${type === 'logo' ? 'Логотип' : 'Печать'} загружена`,
+      });
+    } catch (error) {
+      console.error(`Error uploading ${type}:`, error);
+      toast({
+        title: 'Ошибка',
+        description: `Не удалось загрузить ${type === 'logo' ? 'логотип' : 'печать'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      if (type === 'logo') {
+        setUploadingLogo(false);
+      } else {
+        setUploadingStamp(false);
+      }
+    }
+  };
+
+  const handleLogoUpload = () => {
+    logoInputRef.current?.click();
+  };
+
+  const handleStampUpload = () => {
+    stampInputRef.current?.click();
+  };
+
+  const handleLogoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, 'logo');
+    }
+  };
+
+  const handleStampFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, 'stamp');
     }
   };
 
@@ -510,7 +694,11 @@ export function SystemSettings() {
                 />
               </div>
 
-              <Button variant="outline">
+              <Button 
+                variant="outline" 
+                onClick={handleTestEmail}
+                disabled={!settings.smtpHost || !settings.smtpUser || !settings.smtpPassword}
+              >
                 <Mail className="h-4 w-4 mr-2" />
                 Отправить тестовое письмо
               </Button>
@@ -756,10 +944,41 @@ export function SystemSettings() {
                       }
                       placeholder="URL логотипа или загрузите файл"
                     />
-                    <Button variant="outline" size="sm">
-                      Загрузить
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleLogoUpload}
+                      disabled={uploadingLogo}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadingLogo ? 'Загрузка...' : 'Загрузить'}
                     </Button>
+                    {invoiceConfig.logo_url && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setInvoiceConfig({ ...invoiceConfig, logo_url: '' })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoFileChange}
+                    className="hidden"
+                  />
+                  {invoiceConfig.logo_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={invoiceConfig.logo_url} 
+                        alt="Логотип" 
+                        className="h-16 w-auto object-contain border rounded"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -772,10 +991,41 @@ export function SystemSettings() {
                       }
                       placeholder="URL печати или загрузите файл"
                     />
-                    <Button variant="outline" size="sm">
-                      Загрузить
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleStampUpload}
+                      disabled={uploadingStamp}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadingStamp ? 'Загрузка...' : 'Загрузить'}
                     </Button>
+                    {invoiceConfig.stamp_url && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setInvoiceConfig({ ...invoiceConfig, stamp_url: '' })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
+                  <input
+                    ref={stampInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleStampFileChange}
+                    className="hidden"
+                  />
+                  {invoiceConfig.stamp_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={invoiceConfig.stamp_url} 
+                        alt="Печать" 
+                        className="h-16 w-auto object-contain border rounded"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

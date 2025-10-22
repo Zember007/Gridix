@@ -159,7 +159,7 @@ export default function SubscriptionTab() {
 
   const handleViewInvoice = async (subscriptionId: string) => {
     try {
-      console.log('handleViewInvoice: Attempting to generate invoice for subscription ID:', subscriptionId);
+    
       
       const session = await supabase.auth.getSession();
       if (!session.data.session?.access_token) {
@@ -179,13 +179,33 @@ export default function SubscriptionTab() {
         throw error;
       }
 
-      // Open invoice HTML in new window
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(data);
-        newWindow.document.close();
+      // Download PDF file
+      if (data.success && data.invoice?.url) {
+        // Fetch the PDF file and create a blob for download
+        try {
+          const response = await fetch(data.invoice.url);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `invoice-${data.invoice.number}.pdf`;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Clean up the blob URL
+          window.URL.revokeObjectURL(url);
+          toast.success('Invoice downloaded successfully');
+        } catch (fetchError) {
+          console.error('Error downloading PDF:', fetchError);
+          // Fallback: open in new tab
+          window.open(data.invoice.url, '_blank');
+          toast.info('Invoice opened in new tab');
+        }
       } else {
-        toast.error('Please allow pop-ups to view invoice');
+        toast.error('Failed to generate invoice');
       }
     } catch (error) {
       console.error('Error opening invoice:', error);

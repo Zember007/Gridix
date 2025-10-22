@@ -21,6 +21,13 @@ import { ManagerRole } from '@/hooks/useUserRole';
 import { Tables } from '@/integrations/supabase/types';
 
 
+interface AdminSettings {
+  id?: string;
+  user_id: string;
+  company_name: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 type CompanySettings = Tables<'company_settings'>;
 
@@ -35,7 +42,10 @@ interface AdminSettingsProps {
 const AdminSettings = ({ userProfile, loading, developerId, managerData }: AdminSettingsProps) => {
   const { t } = useLanguage();
   const { isManagerMode } = useWorkspace();
-
+  const [settings, setSettings] = useState<AdminSettings>({
+    user_id: userProfile?.id || '',
+    company_name: '',
+  });
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     id: '',
     user_id: userProfile?.id || '',
@@ -62,9 +72,41 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
   }, []);
 
   useEffect(() => {
+    console.log('userProfile', userProfile);
 
     if (userProfile) {
-   
+      // Load profile data from user_profiles table instead of user_metadata
+      const loadProfileData = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('company_name')
+            .eq('id', userProfile.id)
+            .single();
+
+          if (error) {
+            console.error('Error loading profile:', error);
+            // Fallback to user_metadata if database query fails
+            setSettings({
+              user_id: userProfile.id,
+              company_name: userProfile.user_metadata.company_name || '',
+            });
+          } else {
+            console.log('Loaded profile data:', data);
+            setSettings({
+              user_id: userProfile.id,
+              company_name: data?.company_name || '',
+            });
+          }
+        } catch (error) {
+          console.error('Error in loadProfileData:', error);
+          // Fallback to user_metadata
+          setSettings({
+            user_id: userProfile.id,
+            company_name: userProfile.user_metadata.company_name || '',
+          });
+        }
+      };
 
       // Load company settings
       const loadCompanySettings = async () => {
@@ -132,6 +174,7 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         }
       };
 
+      loadProfileData();
       loadCompanySettings();
     }
   }, [userProfile]);
@@ -146,7 +189,27 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
 
     setSaving(true);
     try {
-      
+      // Save user profile data
+      const profileData = {
+        company_name: settings.company_name,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving profile data:', profileData);
+      console.log('User ID:', userProfile.id);
+
+      const { data: profileResult, error: profileError } = await supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('id', userProfile.id)
+        .select();
+
+      console.log('Profile update result:', { data: profileResult, error: profileError });
+
+      if (profileError) {
+        console.error('Supabase profile error:', profileError);
+        throw profileError;
+      }
 
       // Save company settings data
       const companyData = {
@@ -177,7 +240,13 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         throw companyError;
       }
 
- 
+      // Update local state with the saved data
+      if (profileResult && profileResult.length > 0) {
+        setSettings(prev => ({
+          ...prev,
+          company_name: profileResult[0]?.company_name || ''
+        }));
+      }
 
       if (companyResult && companyResult.length > 0) {
         setCompanySettings(prev => ({
@@ -194,6 +263,10 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleInputChange = (field: keyof AdminSettings, value: string) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const handleCompanyInputChange = (field: keyof CompanySettings, value: string | boolean | null) => {
@@ -259,6 +332,29 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
             {t('adminSettings.contacts')}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="company">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.companyInfo')}</CardTitle>
+              <CardDescription>
+                {t('adminSettings.companyInfoDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="company_name">{t('adminSettings.companyName')}</Label>
+                <Input
+                  id="company_name"
+                  value={settings.company_name}
+                  onChange={(e) => handleInputChange('company_name', e.target.value)}
+                  placeholder={t('adminSettings.companyNamePlaceholder')}
+                />
+              </div>
+
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="billing">
           <Card>

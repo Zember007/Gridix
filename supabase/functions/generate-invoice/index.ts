@@ -84,12 +84,12 @@ async function generateInvoicePDF(invoiceData: any, language: string = 'ka') {
     stampUrl: stampDataUrl || undefined
   };
 
-  let docDefinition = createEnglishInvoiceTemplate(processedInvoiceData);
- /*  if (language === 'en') {
+  let docDefinition;
+  if (language === 'en') {
     docDefinition = createEnglishInvoiceTemplate(processedInvoiceData);
   } else {
     docDefinition = createGeorgianInvoiceTemplate(processedInvoiceData);
-  } */
+  }
 
   // Check if createPdf exists and is a function
   if (typeof pdfmake.createPdf === 'function') {

@@ -161,18 +161,20 @@ export function createEnglishInvoiceTemplate(data: InvoiceData) {
       // Service details
       {
         table: {
-          widths: ['*', 'auto', 'auto', 'auto'],
+          widths: ['*', 'auto', 'auto', 'auto', 'auto'],
           body: [
             [
               { text: 'Service', fontSize: 12, bold: true, color: '#374151' },
               { text: 'Duration', fontSize: 12, bold: true, color: '#374151' },
               { text: 'Price/Month', fontSize: 12, bold: true, color: '#374151' },
+              { text: 'Discount', fontSize: 12, bold: true, color: '#374151' },
               { text: 'Total', fontSize: 12, bold: true, color: '#374151' }
             ],
             [
               { text: `${data.planName} - ${data.projectName}`, fontSize: 11 },
               { text: `${data.durationMonths} months`, fontSize: 11 },
               { text: `${data.monthlyPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11 },
+              { text: data.discountPercentage > 0 ? `${data.discountPercentage}%` : 'No discount', fontSize: 11, color: data.discountPercentage > 0 ? '#059669' : '#6b7280' },
               { text: `${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11, bold: true }
             ]
           ]

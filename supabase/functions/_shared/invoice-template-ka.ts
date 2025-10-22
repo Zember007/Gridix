@@ -161,18 +161,20 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
       // Service details
       {
         table: {
-          widths: ['*', 'auto', 'auto', 'auto'],
+          widths: ['*', 'auto', 'auto', 'auto', 'auto'],
           body: [
             [
               { text: 'სერვისი', fontSize: 12, bold: true, color: '#374151' },
               { text: 'ხანგრძლივობა', fontSize: 12, bold: true, color: '#374151' },
               { text: 'ფასი/თვე', fontSize: 12, bold: true, color: '#374151' },
+              { text: 'ფასდაკლება', fontSize: 12, bold: true, color: '#374151' },
               { text: 'ჯამი', fontSize: 12, bold: true, color: '#374151' }
             ],
             [
               { text: `${data.planName} - ${data.projectName}`, fontSize: 11 },
               { text: `${data.durationMonths} თვე`, fontSize: 11 },
               { text: `${data.monthlyPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11 },
+              { text: data.discountPercentage > 0 ? `${data.discountPercentage}%` : 'ფასდაკლება არ არის', fontSize: 11, color: data.discountPercentage > 0 ? '#059669' : '#6b7280' },
               { text: `${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11, bold: true }
             ]
           ]
