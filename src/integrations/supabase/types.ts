@@ -330,6 +330,62 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          address: string | null
+          bank_name: string | null
+          company_name: string
+          created_at: string | null
+          currency: string | null
+          email: string | null
+          iban: string | null
+          id: string
+          phone: string | null
+          tax_id: string | null
+          updated_at: string | null
+          user_id: string
+          vat_payer: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          bank_name?: string | null
+          company_name: string
+          created_at?: string | null
+          currency?: string | null
+          email?: string | null
+          iban?: string | null
+          id?: string
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          vat_payer?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          bank_name?: string | null
+          company_name?: string
+          created_at?: string | null
+          currency?: string | null
+          email?: string | null
+          iban?: string | null
+          id?: string
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vat_payer?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       floor_plans: {
         Row: {
           created_at: string
@@ -1102,35 +1158,80 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
+          account_type: string
           avatar_url: string | null
+          bank_name: string | null
+          billing_currency: string | null
           company_name: string | null
           created_at: string
           email: string | null
           full_name: string | null
+          iban: string | null
           id: string
+          is_vat_payer: boolean | null
+          legal_address: string | null
           phone: string | null
+          tax_id: string | null
           updated_at: string
         }
         Insert: {
+          account_type?: string
           avatar_url?: string | null
+          bank_name?: string | null
+          billing_currency?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          iban?: string | null
           id: string
+          is_vat_payer?: boolean | null
+          legal_address?: string | null
           phone?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Update: {
+          account_type?: string
           avatar_url?: string | null
+          bank_name?: string | null
+          billing_currency?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          iban?: string | null
           id?: string
+          is_vat_payer?: boolean | null
+          legal_address?: string | null
           phone?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1170,12 +1271,15 @@ export type Database = {
           duration_months: number | null
           final_price: number | null
           id: string
+          invoice_generated_at: string | null
           invoice_number: string | null
           invoice_paid_at: string | null
           invoice_requested_at: string | null
           invoice_url: string | null
           lemon_squeezy_customer_id: string | null
           lemon_squeezy_subscription_id: string | null
+          payment_method: string | null
+          payment_purpose: string | null
           plan_id: string
           project_id: string | null
           status: string
@@ -1193,12 +1297,15 @@ export type Database = {
           duration_months?: number | null
           final_price?: number | null
           id?: string
+          invoice_generated_at?: string | null
           invoice_number?: string | null
           invoice_paid_at?: string | null
           invoice_requested_at?: string | null
           invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
+          payment_method?: string | null
+          payment_purpose?: string | null
           plan_id: string
           project_id?: string | null
           status?: string
@@ -1216,12 +1323,15 @@ export type Database = {
           duration_months?: number | null
           final_price?: number | null
           id?: string
+          invoice_generated_at?: string | null
           invoice_number?: string | null
           invoice_paid_at?: string | null
           invoice_requested_at?: string | null
           invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
+          payment_method?: string | null
+          payment_purpose?: string | null
           plan_id?: string
           project_id?: string | null
           status?: string

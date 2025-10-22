@@ -1,292 +1,303 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+import { createGeorgianInvoiceTemplate } from '../_shared/invoice-template-ka.ts';
+import { createEnglishInvoiceTemplate } from '../_shared/invoice-template-en.ts';
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-);
+const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
-interface InvoiceData {
-  invoiceNumber: string;
-  projectName: string;
-  userName: string;
-  userEmail: string;
-  planName: string;
-  durationMonths: number;
-  monthlyPrice: number;
-  discountPercentage: number;
-  totalPrice: number;
-  issueDate: string;
+// Import pdfmake dynamically
+async function getPdfMake() {
+    try {
+      const pdfmakeModule = await import("https://esm.sh/pdfmake@0.2.12/build/pdfmake.js");
+      const vfsFontsModule = await import("https://esm.sh/pdfmake@0.2.12/build/vfs_fonts.js");
+    
+      // Получаем объект pdfmake
+      const pdfmake = pdfmakeModule.default || pdfmakeModule.pdfMake || pdfmakeModule;
+
+      if (!pdfmake) {
+        throw new Error("Failed to load pdfmake module");
+    }
+    
+      // Подключаем встроенные шрифты Roboto
+      pdfmake.vfs = vfsFontsModule.default.pdfMake.vfs;
+    
+      // Настраиваем шрифты — используем Roboto из встроенных
+      pdfmake.fonts = {
+        Roboto: {
+          normal: "Roboto-Regular.ttf",
+          bold: "Roboto-Medium.ttf",
+          italics: "Roboto-Italic.ttf",
+          bolditalics: "Roboto-MediumItalic.ttf"
+        }
+      };
+        
+        return pdfmake;
+    } catch (error) {
+        console.error("Error loading pdfmake:", error);
+        throw new Error(`Failed to load pdfmake: ${error.message}`);
+    }
 }
 
-function generateInvoiceHTML(data: InvoiceData): string {
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice ${data.invoiceNumber}</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+async function downloadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    console.log(`Downloading image from: ${url}`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to download image: ${response.status} ${response.statusText}`);
+      return null;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      padding: 40px 20px;
-      background: #f5f5f5;
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const contentType = response.headers.get('content-type') || 'image/png';
+    
+    return `data:${contentType};base64,${base64}`;
+  } catch (error) {
+    console.warn(`Error downloading image from ${url}:`, error);
+    return null;
+  }
+}
+
+async function generateInvoicePDF(invoiceData: any, language: string = 'ka') {
+  const pdfmake = await getPdfMake();
+
+  console.log("pdfmake object keys:", Object.keys(pdfmake));
+  console.log("pdfmake.createPdf type:", typeof pdfmake.createPdf);
+
+  // Download and convert external images to base64
+  let logoDataUrl: string | null = null;
+  let stampDataUrl: string | null = null;
+  
+  if (invoiceData.logoUrl) {
+    logoDataUrl = await downloadImageAsBase64(invoiceData.logoUrl);
+  }
+  
+  if (invoiceData.stampUrl) {
+    stampDataUrl = await downloadImageAsBase64(invoiceData.stampUrl);
+  }
+
+  // Create a copy of invoice data with base64 images
+  const processedInvoiceData = {
+    ...invoiceData,
+    logoUrl: logoDataUrl || undefined,
+    stampUrl: stampDataUrl || undefined
+  };
+
+  let docDefinition = createEnglishInvoiceTemplate(processedInvoiceData);
+ /*  if (language === 'en') {
+    docDefinition = createEnglishInvoiceTemplate(processedInvoiceData);
+  } else {
+    docDefinition = createGeorgianInvoiceTemplate(processedInvoiceData);
+  } */
+
+  // Check if createPdf exists and is a function
+  if (typeof pdfmake.createPdf === 'function') {
+    try {
+      console.log("Creating PDF with standard fonts");
+      return pdfmake.createPdf(docDefinition);
+    } catch (error) {
+      console.error("Error creating PDF:", error);
+      throw new Error(`Failed to create PDF: ${error.message}`);
     }
-    .invoice-container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 60px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  } else {
+    throw new Error(`createPdf is not a function. Available methods: ${Object.keys(pdfmake).join(', ')}`);
+  }
+}
+
+async function uploadToStorage(pdfBuffer: ArrayBuffer, fileName: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('invoices')
+    .upload(fileName, pdfBuffer, {
+      contentType: 'application/pdf',
+      upsert: true
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload PDF: ${error.message}`);
+  }
+
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('invoices')
+    .getPublicUrl(fileName);
+
+  return publicUrl;
+}
+
+async function handleGenerateInvoice(req: Request, body: any) {
+  const origin = req.headers.get('Origin');
+
+  try {
+    // Get user from JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
     }
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      margin-bottom: 50px;
-      padding-bottom: 30px;
-      border-bottom: 3px solid #4f46e5;
+
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    if (userError || !user) {
+      return createJsonResponse({ error: "Invalid token" }, 401, origin);
     }
-    .company-info h1 {
-      color: #4f46e5;
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 10px;
+
+    const { subscription_id } = body;
+    if (!subscription_id) {
+      return createJsonResponse({ error: "Missing subscription_id" }, 400, origin);
     }
-    .company-info p {
-      color: #666;
-      font-size: 14px;
+
+    console.log("generate-invoice: Looking for subscription with ID:", subscription_id);
+
+    // Get subscription details with simplified query
+    const { data: subscription, error: subError } = await supabase
+      .from('user_subscriptions')
+      .select(`
+        *,
+        subscription_plans(name, base_price),
+        projects(name),
+        user_profiles(full_name, company_name)
+      `)
+      .eq('id', subscription_id)
+      .single();
+
+    console.log("generate-invoice: Subscription query result:", { subscription, subError });
+
+    if (subError || !subscription) {
+      console.error("generate-invoice: Subscription not found. Error:", subError);
+
+      // Try to find any subscription for this user to help debug
+      const { data: userSubscriptions } = await supabase
+        .from('user_subscriptions')
+        .select('id, user_id, project_id, status')
+        .eq('user_id', user.id)
+        .limit(5);
+
+      console.log("generate-invoice: User's subscriptions for debugging:", userSubscriptions);
+
+      return createJsonResponse({
+        error: "Subscription not found",
+        debug: {
+          requested_id: subscription_id,
+          user_id: user.id,
+          user_subscriptions: userSubscriptions
+        }
+      }, 404, origin);
     }
-    .invoice-meta {
-      text-align: right;
+
+    // Get system invoice configuration
+    const { data: systemConfig, error: configError } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'invoice_config')
+      .single();
+
+    if (configError || !systemConfig) {
+      return createJsonResponse({ error: "Invoice configuration not found" }, 500, origin);
     }
-    .invoice-meta h2 {
-      font-size: 28px;
-      color: #333;
-      margin-bottom: 10px;
+
+    const invoiceConfig = systemConfig.setting_value;
+
+    // Fetch company settings separately since it's not in the main query
+    const { data: companySettingsData, error: companyError } = await supabase
+      .from('company_settings')
+      .select('company_name, tax_id, address, phone, email, bank_name, iban')
+      .eq('user_id', subscription.user_id)
+      .single();
+
+    console.log("generate-invoice: Company settings query result:", { companySettingsData, companyError });
+
+    if (companyError || !companySettingsData) {
+      return createJsonResponse({
+        error: "Company settings not found",
+        debug: {
+          user_id: subscription.user_id,
+          company_error: companyError
+        }
+      }, 400, origin);
     }
-    .invoice-meta p {
-      color: #666;
-      font-size: 14px;
-      margin: 5px 0;
+
+    const companySettings = companySettingsData;
+
+    // Generate invoice number
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const projectId = subscription.project_id?.substring(0, 8) || '00000000';
+    const invoiceNumber = `INV-${dateStr}-${projectId}`;
+
+    // Generate payment purpose
+    const paymentPurpose = `Payment for ${subscription.duration_months} months of the "${subscription.projects?.name}" project (account ${companySettings.company_name})`;
+
+    // Prepare invoice data
+    const invoiceData = {
+      invoiceNumber,
+      date: now.toLocaleDateString('ka-GE'),
+      companyName: companySettings.company_name,
+      companyTaxId: companySettings.tax_id,
+      companyAddress: companySettings.address,
+      companyPhone: companySettings.phone,
+      companyEmail: companySettings.email,
+      companyBank: companySettings.bank_name,
+      companyIban: companySettings.iban,
+      projectName: subscription.projects?.name,
+      planName: subscription.subscription_plans?.name,
+      durationMonths: subscription.duration_months,
+      monthlyPrice: parseFloat(subscription.subscription_plans?.base_price || '0'),
+      discountPercentage: subscription.discount_percentage || 0,
+      totalPrice: subscription.final_price || 0,
+      paymentPurpose,
+      gridixName: invoiceConfig.company_name,
+      gridixTaxId: invoiceConfig.tax_id,
+      gridixBank: invoiceConfig.bank_name,
+      gridixIban: invoiceConfig.iban,
+      gridixCurrency: invoiceConfig.currency,
+      logoUrl: invoiceConfig.logo_url,
+      stampUrl: invoiceConfig.stamp_url
+    };
+
+    // Generate PDF
+    const pdfDoc = await generateInvoicePDF(invoiceData, invoiceConfig.language);
+
+    // Handle async getBuffer with callback
+    const pdfBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      pdfDoc.getBuffer((buffer: ArrayBuffer) => {
+        resolve(buffer);
+      });
+    });
+
+    // Upload to storage
+    const fileName = `invoice-${invoiceNumber}.pdf`;
+    const publicUrl = await uploadToStorage(pdfBuffer, fileName);
+
+    // Update subscription with invoice details
+    const { error: updateError } = await supabase
+      .from('user_subscriptions')
+      .update({
+        invoice_number: invoiceNumber,
+        invoice_url: publicUrl,
+        invoice_generated_at: now.toISOString(),
+        payment_purpose: paymentPurpose,
+        payment_method: 'invoice'
+      })
+      .eq('id', subscription_id);
+
+    if (updateError) {
+      console.error('Error updating subscription:', updateError);
+      return createJsonResponse({ error: "Failed to update subscription" }, 500, origin);
     }
-    .invoice-meta .invoice-number {
-      color: #4f46e5;
-      font-weight: 600;
-    }
-    .billing-info {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      margin-bottom: 50px;
-    }
-    .info-section h3 {
-      font-size: 14px;
-      text-transform: uppercase;
-      color: #666;
-      margin-bottom: 15px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .info-section p {
-      margin: 8px 0;
-      font-size: 15px;
-    }
-    .info-section .name {
-      font-weight: 600;
-      color: #333;
-      font-size: 16px;
-    }
-    .invoice-table {
-      width: 100%;
-      margin-bottom: 40px;
-      border-collapse: collapse;
-    }
-    .invoice-table thead {
-      background: #f8f9fa;
-    }
-    .invoice-table th {
-      padding: 15px;
-      text-align: left;
-      font-size: 13px;
-      text-transform: uppercase;
-      color: #666;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-    .invoice-table td {
-      padding: 20px 15px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 15px;
-    }
-    .invoice-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-    .text-right {
-      text-align: right;
-    }
-    .invoice-summary {
-      margin-left: auto;
-      width: 350px;
-      margin-bottom: 50px;
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      font-size: 15px;
-    }
-    .summary-row.subtotal {
-      border-top: 1px solid #e5e7eb;
-      padding-top: 15px;
-    }
-    .summary-row.discount {
-      color: #16a34a;
-    }
-    .summary-row.total {
-      border-top: 2px solid #333;
-      margin-top: 10px;
-      padding-top: 15px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #4f46e5;
-    }
-    .invoice-footer {
-      margin-top: 60px;
-      padding-top: 30px;
-      border-top: 1px solid #e5e7eb;
-      color: #666;
-      font-size: 13px;
-      text-align: center;
-    }
-    .invoice-footer p {
-      margin: 8px 0;
-    }
-    .payment-info {
-      background: #f8f9fa;
-      padding: 25px;
-      border-radius: 8px;
-      margin-bottom: 40px;
-    }
-    .payment-info h3 {
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    .payment-info p {
-      margin: 8px 0;
-      font-size: 14px;
-      color: #555;
-    }
-    @media print {
-      body {
-        background: white;
-        padding: 0;
+
+    return createJsonResponse({
+      success: true,
+      invoice: {
+        number: invoiceNumber,
+        url: publicUrl,
+        generated_at: now.toISOString()
       }
-      .invoice-container {
-        box-shadow: none;
-        padding: 40px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="invoice-container">
-    <div class="invoice-header">
-      <div class="company-info">
-        <h1>GRIDIX</h1>
-        <p>Real Estate Management Platform</p>
-        <p>www.gridix.live</p>
-      </div>
-      <div class="invoice-meta">
-        <h2>INVOICE</h2>
-        <p><span class="invoice-number">${data.invoiceNumber}</span></p>
-        <p>Date: ${data.issueDate}</p>
-      </div>
-    </div>
+    }, 200, origin);
 
-    <div class="billing-info">
-      <div class="info-section">
-        <h3>Bill To</h3>
-        <p class="name">${data.userName}</p>
-        <p>${data.userEmail}</p>
-        <p>Project: ${data.projectName}</p>
-      </div>
-      <div class="info-section">
-        <h3>From</h3>
-        <p class="name">Gridix Platform</p>
-        <p>support@gridix.live</p>
-      </div>
-    </div>
-
-    <table class="invoice-table">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th class="text-right">Quantity</th>
-          <th class="text-right">Price</th>
-          <th class="text-right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <strong>${data.planName}</strong><br>
-            <span style="color: #666; font-size: 13px;">
-              Subscription for ${data.durationMonths} month${data.durationMonths > 1 ? 's' : ''}
-            </span>
-          </td>
-          <td class="text-right">${data.durationMonths}</td>
-          <td class="text-right">$${data.monthlyPrice.toFixed(2)}</td>
-          <td class="text-right">$${(data.monthlyPrice * data.durationMonths).toFixed(2)}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="invoice-summary">
-      <div class="summary-row subtotal">
-        <span>Subtotal:</span>
-        <span>$${(data.monthlyPrice * data.durationMonths).toFixed(2)}</span>
-      </div>
-      ${data.discountPercentage > 0 ? `
-      <div class="summary-row discount">
-        <span>Discount (${data.discountPercentage}%):</span>
-        <span>-$${((data.monthlyPrice * data.durationMonths * data.discountPercentage) / 100).toFixed(2)}</span>
-      </div>
-      ` : ''}
-      <div class="summary-row total">
-        <span>Total:</span>
-        <span>$${data.totalPrice.toFixed(2)}</span>
-      </div>
-    </div>
-
-    <div class="payment-info">
-      <h3>Payment Information</h3>
-      <p>This invoice has been generated for your subscription request.</p>
-      <p>Our administrator will contact you shortly with payment details.</p>
-      <p>For any questions, please contact: support@gridix.live</p>
-    </div>
-
-    <div class="invoice-footer">
-      <p><strong>Thank you for your business!</strong></p>
-      <p>This is a computer-generated invoice. Please contact us if you have any questions.</p>
-      <p>© ${new Date().getFullYear()} Gridix. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  } catch (error) {
+    console.error("Generate invoice error:", error);
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -299,88 +310,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
-    }
-    
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
-    }
-
     const body = await req.json();
-    const { subscription_id } = body;
-
-    if (!subscription_id) {
-      return createJsonResponse({ error: "subscription_id is required" }, 400, origin);
-    }
-
-    // Get subscription details
-    const { data: subscription, error: subError } = await supabase
-      .from('user_subscriptions')
-      .select(`
-        *,
-        subscription_plans (name, base_price),
-        projects (name)
-      `)
-      .eq('id', subscription_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (subError || !subscription) {
-      return createJsonResponse({ error: "Subscription not found" }, 404, origin);
-    }
-
-    // Get user profile
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('email, full_name')
-      .eq('user_id', user.id)
-      .single();
-
-    // Generate invoice number if not exists
-    const invoiceNumber = subscription.invoice_number || 
-      `INV-${Date.now()}-${subscription.project_id.substring(0, 8)}`;
-
-    // Update subscription with invoice number if it doesn't exist
-    if (!subscription.invoice_number) {
-      await supabase
-        .from('user_subscriptions')
-        .update({ invoice_number: invoiceNumber })
-        .eq('id', subscription_id);
-    }
-
-    const invoiceData: InvoiceData = {
-      invoiceNumber,
-      projectName: subscription.projects.name,
-      userName: profile?.full_name || user.email || 'Customer',
-      userEmail: profile?.email || user.email || '',
-      planName: subscription.subscription_plans.name,
-      durationMonths: subscription.duration_months || 1,
-      monthlyPrice: parseFloat(subscription.subscription_plans.base_price),
-      discountPercentage: subscription.discount_percentage || 0,
-      totalPrice: subscription.final_price || parseFloat(subscription.subscription_plans.base_price),
-      issueDate: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    };
-
-    const html = generateInvoiceHTML(invoiceData);
-
-    return new Response(html, {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        ...corsHeaders
-      }
-    });
+    return await handleGenerateInvoice(req, body);
   } catch (error) {
-    console.error("Generate invoice error:", error);
-    return createJsonResponse({ error: "Internal server error" }, 500, origin);
+    console.error("Handler error:", error);
+    return createJsonResponse({ error: error.message }, 500, origin);
   }
 });
-

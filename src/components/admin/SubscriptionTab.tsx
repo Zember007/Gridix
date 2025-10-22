@@ -45,6 +45,11 @@ export default function SubscriptionTab() {
   console.log('SubscriptionTab: projectSubscriptions:', projectSubscriptions);
   console.log('SubscriptionTab: loading:', loading);
   console.log('SubscriptionTab: plansLoading:', plansLoading);
+  
+  // Debug subscription IDs
+  projectSubscriptions.forEach(project => {
+    console.log(`Project ${project.name} (${project.id}) subscriptions:`, project.user_subscriptions?.map(sub => ({ id: sub.id, status: sub.status })));
+  });
 
   if (loading || plansLoading) {
     return (
@@ -137,12 +142,12 @@ export default function SubscriptionTab() {
       setIsInvoiceDialogOpen(false);
       
       // Optionally open invoice in new tab
-      if (result?.invoice) {
-        const project = projectSubscriptions.find(p => p.id === projectId);
-        const subscription = project?.user_subscriptions?.[0];
-        if (subscription?.id) {
-          handleViewInvoice(subscription.id);
-        }
+      if (result?.invoice?.subscription_id) {
+        console.log('handleRequestInvoice: Got subscription ID from result:', result.invoice.subscription_id);
+        // Add a small delay to ensure the subscription is fully created
+        setTimeout(() => {
+          handleViewInvoice(result.invoice.subscription_id);
+        }, 1000);
       }
     } catch (error) {
       console.error('Error requesting invoice:', error);
@@ -154,6 +159,8 @@ export default function SubscriptionTab() {
 
   const handleViewInvoice = async (subscriptionId: string) => {
     try {
+      console.log('handleViewInvoice: Attempting to generate invoice for subscription ID:', subscriptionId);
+      
       const session = await supabase.auth.getSession();
       if (!session.data.session?.access_token) {
         toast.error('Please log in to view invoice');

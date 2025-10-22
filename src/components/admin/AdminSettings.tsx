@@ -6,17 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, User, Building } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Save, User, Building, CreditCard } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth, UserProfile } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import ManagerAccountsManager from '@/components/admin/ManagerAccountsManager';
 import { ManagerRole } from '@/hooks/useUserRole';
+import { Tables } from '@/integrations/supabase/types';
 
 
 interface AdminSettings {
@@ -27,6 +29,8 @@ interface AdminSettings {
   updated_at?: string;
 }
 
+type CompanySettings = Tables<'company_settings'>;
+
 interface AdminSettingsProps {
   userProfile: SupabaseUser;
   loading: boolean;
@@ -35,12 +39,27 @@ interface AdminSettingsProps {
   managerData?: ManagerRole[];
 }
 
-const AdminSettings = ({ userProfile, loading, developerId, isManager, managerData }: AdminSettingsProps) => {
+const AdminSettings = ({ userProfile, loading, developerId, managerData }: AdminSettingsProps) => {
   const { t } = useLanguage();
   const { isManagerMode } = useWorkspace();
   const [settings, setSettings] = useState<AdminSettings>({
     user_id: userProfile?.id || '',
     company_name: '',
+  });
+  const [companySettings, setCompanySettings] = useState<CompanySettings>({
+    id: '',
+    user_id: userProfile?.id || '',
+    company_name: '',
+    tax_id: '',
+    address: null,
+    phone: null,
+    email: null,
+    bank_name: null,
+    iban: null,
+    currency: 'GEL',
+    vat_payer: false,
+    created_at: null,
+    updated_at: null,
   });
   const [saving, setSaving] = useState(false);
 
@@ -89,7 +108,74 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
         }
       };
 
+      // Load company settings
+      const loadCompanySettings = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('company_settings')
+            .select('*')
+            .eq('user_id', userProfile.id)
+            .single();
+
+          if (error) {
+            console.error('Error loading company settings:', error);
+            // Set default values if no company settings found
+            setCompanySettings({
+              id: '',
+              user_id: userProfile.id,
+              company_name: '',
+              tax_id: '',
+              address: null,
+              phone: null,
+              email: null,
+              bank_name: null,
+              iban: null,
+              currency: 'GEL',
+              vat_payer: false,
+              created_at: null,
+              updated_at: null,
+            });
+          } else {
+            console.log('Loaded company settings:', data);
+            setCompanySettings({
+              id: data?.id || '',
+              user_id: userProfile.id,
+              company_name: data?.company_name || '',
+              tax_id: data?.tax_id || '',
+              address: data?.address || null,
+              phone: data?.phone || null,
+              email: data?.email || null,
+              bank_name: data?.bank_name || null,
+              iban: data?.iban || null,
+              currency: data?.currency || 'GEL',
+              vat_payer: data?.vat_payer || false,
+              created_at: data?.created_at || null,
+              updated_at: data?.updated_at || null,
+            });
+          }
+        } catch (error) {
+          console.error('Error in loadCompanySettings:', error);
+          // Set default values on error
+          setCompanySettings({
+            id: '',
+            user_id: userProfile.id,
+            company_name: '',
+            tax_id: '',
+            address: null,
+            phone: null,
+            email: null,
+            bank_name: null,
+            iban: null,
+            currency: 'GEL',
+            vat_payer: false,
+            created_at: null,
+            updated_at: null,
+          });
+        }
+      };
+
       loadProfileData();
+      loadCompanySettings();
     }
   }, [userProfile]);
 
@@ -103,32 +189,70 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
 
     setSaving(true);
     try {
-      const saveData = {
+      // Save user profile data
+      const profileData = {
         company_name: settings.company_name,
         updated_at: new Date().toISOString()
       };
 
-      console.log('Saving data:', saveData);
+      console.log('Saving profile data:', profileData);
       console.log('User ID:', userProfile.id);
 
-      const { data, error } = await supabase
+      const { data: profileResult, error: profileError } = await supabase
         .from('user_profiles')
-        .update(saveData)
+        .update(profileData)
         .eq('id', userProfile.id)
         .select();
 
-      console.log('Update result:', { data, error });
+      console.log('Profile update result:', { data: profileResult, error: profileError });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (profileError) {
+        console.error('Supabase profile error:', profileError);
+        throw profileError;
+      }
+
+      // Save company settings data
+      const companyData = {
+        company_name: companySettings.company_name,
+        tax_id: companySettings.tax_id,
+        address: companySettings.address,
+        phone: companySettings.phone,
+        email: companySettings.email,
+        bank_name: companySettings.bank_name,
+        iban: companySettings.iban,
+        currency: companySettings.currency,
+        vat_payer: companySettings.vat_payer,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving company settings:', companyData);
+
+      const { data: companyResult, error: companyError } = await supabase
+        .from('company_settings')
+        .update(companyData)
+        .eq('user_id', userProfile.id)
+        .select();
+
+      console.log('Company settings update result:', { data: companyResult, error: companyError });
+
+      if (companyError) {
+        console.error('Supabase company settings error:', companyError);
+        throw companyError;
       }
 
       // Update local state with the saved data
-      if (data && data.length > 0) {
+      if (profileResult && profileResult.length > 0) {
         setSettings(prev => ({
           ...prev,
-          company_name: data[0].company_name || ''
+          company_name: profileResult[0]?.company_name || ''
+        }));
+      }
+
+      if (companyResult && companyResult.length > 0) {
+        setCompanySettings(prev => ({
+          ...prev,
+          ...(companyResult[0]),
+          user_id: userProfile.id
         }));
       }
 
@@ -143,6 +267,10 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
 
   const handleInputChange = (field: keyof AdminSettings, value: string) => {
     setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCompanyInputChange = (field: keyof CompanySettings, value: string | boolean | null) => {
+    setCompanySettings(prev => ({ ...prev, [field]: value }));
   };
 
   if (loading) {
@@ -195,6 +323,10 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
             <Building className="h-4 w-4" />
             {t('adminSettings.company')}
           </TabsTrigger>
+          <TabsTrigger value="billing" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            {t('adminSettings.billing')}
+          </TabsTrigger>
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             {t('adminSettings.contacts')}
@@ -220,6 +352,121 @@ const AdminSettings = ({ userProfile, loading, developerId, isManager, managerDa
                 />
               </div>
 
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="billing">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.billingInfo')}</CardTitle>
+              <CardDescription>
+                {t('adminSettings.billingInfoDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="company_name_billing">{t('adminSettings.companyName')}</Label>
+                  <Input
+                    id="company_name_billing"
+                    value={companySettings.company_name}
+                    onChange={(e) => handleCompanyInputChange('company_name', e.target.value)}
+                    placeholder={t('adminSettings.companyNamePlaceholder')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tax_id">{t('adminSettings.taxId')}</Label>
+                  <Input
+                    id="tax_id"
+                    value={companySettings.tax_id || ''}
+                    onChange={(e) => handleCompanyInputChange('tax_id', e.target.value || null)}
+                    placeholder={t('adminSettings.taxIdPlaceholder')}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="address">{t('adminSettings.companyAddress')}</Label>
+                <Textarea
+                  id="address"
+                  value={companySettings.address || ''}
+                  onChange={(e) => handleCompanyInputChange('address', e.target.value || null)}
+                  placeholder={t('adminSettings.companyAddressPlaceholder')}
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone">{t('adminSettings.phone')}</Label>
+                  <Input
+                    id="phone"
+                    value={companySettings.phone || ''}
+                    onChange={(e) => handleCompanyInputChange('phone', e.target.value || null)}
+                    placeholder={t('adminSettings.phonePlaceholder')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">{t('adminSettings.email')}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={companySettings.email || ''}
+                    onChange={(e) => handleCompanyInputChange('email', e.target.value || null)}
+                    placeholder={t('adminSettings.emailPlaceholder')}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="bank_name">{t('adminSettings.bankName')}</Label>
+                  <Input
+                    id="bank_name"
+                    value={companySettings.bank_name || ''}
+                    onChange={(e) => handleCompanyInputChange('bank_name', e.target.value || null)}
+                    placeholder={t('adminSettings.bankNamePlaceholder')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="iban">{t('adminSettings.iban')}</Label>
+                  <Input
+                    id="iban"
+                    value={companySettings.iban || ''}
+                    onChange={(e) => handleCompanyInputChange('iban', e.target.value || null)}
+                    placeholder={t('adminSettings.ibanPlaceholder')}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="currency">{t('adminSettings.currency')}</Label>
+                  <Select
+                    value={companySettings.currency || 'GEL'}
+                    onValueChange={(value) => handleCompanyInputChange('currency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('adminSettings.currencyPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GEL">GEL (Georgian Lari)</SelectItem>
+                      <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                      <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                      <SelectItem value="RUB">RUB (Russian Ruble)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-6">
+                  <Checkbox
+                    id="vat_payer"
+                    checked={companySettings.vat_payer || false}
+                    onCheckedChange={(checked) => handleCompanyInputChange('vat_payer', checked as boolean)}
+                  />
+                  <Label htmlFor="vat_payer">{t('adminSettings.vatPayer')}</Label>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

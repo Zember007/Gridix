@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Save, Database, Mail, Shield, Globe, Bell, Palette } from 'lucide-react';
+import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -47,6 +47,18 @@ interface SystemSettings {
   platformTheme: string;
 }
 
+interface InvoiceConfig {
+  company_name: string;
+  tax_id: string;
+  bank_name: string;
+  iban: string;
+  currency: string;
+  logo_url: string;
+  stamp_url: string;
+  language: string;
+  finance_email: string;
+}
+
 export function SystemSettings() {
   const [settings, setSettings] = useState<SystemSettings>({
     maintenanceMode: false,
@@ -68,6 +80,17 @@ export function SystemSettings() {
     privacyPolicyUrl: '/privacy',
     termsOfServiceUrl: '/terms',
     platformTheme: 'light',
+  });
+  const [invoiceConfig, setInvoiceConfig] = useState<InvoiceConfig>({
+    company_name: 'GRIDIX LLC',
+    tax_id: '',
+    bank_name: 'Bank of Georgia',
+    iban: '',
+    currency: 'GEL',
+    logo_url: '',
+    stamp_url: '',
+    language: 'ka',
+    finance_email: 'finance@gridix.io',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -208,6 +231,10 @@ export function SystemSettings() {
           <TabsTrigger value="appearance">
             <Palette className="h-4 w-4 mr-2" />
             Внешний вид
+          </TabsTrigger>
+          <TabsTrigger value="invoices">
+            <FileText className="h-4 w-4 mr-2" />
+            Счета
           </TabsTrigger>
         </TabsList>
 
@@ -610,6 +637,146 @@ export function SystemSettings() {
                     <SelectItem value="system">Системная</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Invoice Settings */}
+        <TabsContent value="invoices" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройки выставления счетов</CardTitle>
+              <CardDescription>
+                Конфигурация реквизитов GRIDIX для генерации счетов
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_company_name">Название получателя</Label>
+                  <Input
+                    id="invoice_company_name"
+                    value={invoiceConfig.company_name}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, company_name: e.target.value })
+                    }
+                    placeholder="GRIDIX LLC"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_tax_id">Идентификационный код</Label>
+                  <Input
+                    id="invoice_tax_id"
+                    value={invoiceConfig.tax_id}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, tax_id: e.target.value })
+                    }
+                    placeholder="Код компании GRIDIX"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_bank_name">Банк</Label>
+                  <Input
+                    id="invoice_bank_name"
+                    value={invoiceConfig.bank_name}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, bank_name: e.target.value })
+                    }
+                    placeholder="Bank of Georgia"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_iban">IBAN</Label>
+                  <Input
+                    id="invoice_iban"
+                    value={invoiceConfig.iban}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, iban: e.target.value })
+                    }
+                    placeholder="Основной расчётный счёт"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_currency">Валюта</Label>
+                  <Input
+                    id="invoice_currency"
+                    value={invoiceConfig.currency}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, currency: e.target.value })
+                    }
+                    placeholder="GEL"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_finance_email">Email для уведомлений</Label>
+                  <Input
+                    id="invoice_finance_email"
+                    type="email"
+                    value={invoiceConfig.finance_email}
+                    onChange={(e) =>
+                      setInvoiceConfig({ ...invoiceConfig, finance_email: e.target.value })
+                    }
+                    placeholder="finance@gridix.io"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoice_language">Язык счёта</Label>
+                  <Select
+                    value={invoiceConfig.language}
+                    onValueChange={(value) =>
+                      setInvoiceConfig({ ...invoiceConfig, language: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ka">Грузинский</SelectItem>
+                      <SelectItem value="en">Английский</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Логотип</Label>
+                  <div className="flex items-center space-x-4">
+                    <Input
+                      value={invoiceConfig.logo_url}
+                      onChange={(e) =>
+                        setInvoiceConfig({ ...invoiceConfig, logo_url: e.target.value })
+                      }
+                      placeholder="URL логотипа или загрузите файл"
+                    />
+                    <Button variant="outline" size="sm">
+                      Загрузить
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Печать</Label>
+                  <div className="flex items-center space-x-4">
+                    <Input
+                      value={invoiceConfig.stamp_url}
+                      onChange={(e) =>
+                        setInvoiceConfig({ ...invoiceConfig, stamp_url: e.target.value })
+                      }
+                      placeholder="URL печати или загрузите файл"
+                    />
+                    <Button variant="outline" size="sm">
+                      Загрузить
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

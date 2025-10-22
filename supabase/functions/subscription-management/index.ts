@@ -79,9 +79,10 @@ async function handleRequestInvoice(req, body, corsHeaders) {
       .eq("user_id", user.id)
       .maybeSingle();
 
+    let subscriptionId;
     if (existingSub) {
       // Update existing subscription
-      await supabase
+      const { error: updateError } = await supabase
         .from("user_subscriptions")
         .update({
           plan_id: planId,
@@ -93,9 +94,14 @@ async function handleRequestInvoice(req, body, corsHeaders) {
           updated_at: new Date().toISOString()
         })
         .eq("id", existingSub.id);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      subscriptionId = existingSub.id;
     } else {
       // Create new subscription request
-      await supabase
+      const { data: newSubscription, error: insertError } = await supabase
         .from("user_subscriptions")
         .insert({
           user_id: user.id,
@@ -106,12 +112,20 @@ async function handleRequestInvoice(req, body, corsHeaders) {
           final_price: finalPrice,
           status: 'pending_payment',
           invoice_requested_at: new Date().toISOString()
-        });
+        })
+        .select('id')
+        .single();
+      
+      if (insertError) {
+        throw insertError;
+      }
+      subscriptionId = newSubscription.id;
     }
 
     return createJsonResponse({
       success: true,
       invoice: {
+        subscription_id: subscriptionId,
         invoice_number: invoiceNumber,
         project_name: project.name,
         plan_name: plan.name,
@@ -230,7 +244,7 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
         subscription_status,
         subscription_expires_at,
         user_id,
-        user_profiles!fk_projects_user_profile (
+        user_profiles (
           id,
           email,
           full_name,
@@ -259,7 +273,7 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
 
     if (projectsError) {
       console.error("Error fetching projects:", projectsError);
-      return createJsonResponse({ error: "Failed to fetch projects" }, 500, origin);
+      return createJsonResponse({ error: "Failed to fetch projects: " + projectsError.message }, 500, origin);
     }
 
     console.log("handleGetProjectSubscriptions: Returning projects:", projects?.length || 0);
@@ -318,6 +332,110 @@ async function handleGetPlans(req, corsHeaders) {
     });
   }
 }
+
+async function handleGenerateInvoice(req: Request, body: any, corsHeaders: Record<string, string>) {
+  const origin = req.headers.get('Origin');
+  
+  try {
+    // Get user from JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
+    }
+    
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    if (userError || !user) {
+      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    }
+
+    const { subscription_id } = body;
+    if (!subscription_id) {
+      return createJsonResponse({ error: "Missing subscription_id" }, 400, origin);
+    }
+
+    // Call the generate-invoice function
+    const { data, error } = await supabase.functions.invoke('generate-invoice', {
+      body: { subscription_id },
+      headers: {
+        'Authorization': `Bearer ${jwt}`,
+      },
+    });
+
+    if (error) {
+      return createJsonResponse({ error: error.message }, 500, origin);
+    }
+
+    return createJsonResponse(data, 200, origin);
+  } catch (error) {
+    console.error("Generate invoice error:", error);
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
+  }
+}
+
+async function handleConfirmPayment(req: Request, body: any, corsHeaders: Record<string, string>) {
+  const origin = req.headers.get('Origin');
+  
+  try {
+    // Get user from JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
+    }
+    
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    if (userError || !user) {
+      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    }
+
+    const { subscription_id } = body;
+    if (!subscription_id) {
+      return createJsonResponse({ error: "Missing subscription_id" }, 400, origin);
+    }
+
+    // Get subscription details
+    const { data: subscription, error: subError } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('id', subscription_id)
+      .single();
+
+    if (subError || !subscription) {
+      return createJsonResponse({ error: "Subscription not found" }, 404, origin);
+    }
+
+    // Calculate subscription period
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + (subscription.duration_months || 1));
+
+    // Update subscription to active
+    const { error: updateError } = await supabase
+      .from('user_subscriptions')
+      .update({
+        status: 'active',
+        invoice_paid_at: new Date().toISOString(),
+        current_period_start: startDate.toISOString(),
+        current_period_end: endDate.toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', subscription_id);
+
+    if (updateError) {
+      return createJsonResponse({ error: "Failed to activate subscription" }, 500, origin);
+    }
+
+    return createJsonResponse({
+      success: true,
+      message: "Payment confirmed and subscription activated"
+    }, 200, origin);
+  } catch (error) {
+    console.error("Confirm payment error:", error);
+    return createJsonResponse({ error: "Internal server error" }, 500, origin);
+  }
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -340,6 +458,10 @@ Deno.serve(async (req) => {
         return await handleRequestInvoice(req, body, corsHeaders);
       case "get-project-subscriptions":
         return await handleGetProjectSubscriptions(req, corsHeaders);
+      case "generate-invoice":
+        return await handleGenerateInvoice(req, body, corsHeaders);
+      case "confirm-payment":
+        return await handleConfirmPayment(req, body, corsHeaders);
       default:
         // Default action is get subscription for a specific project
         return await handleGetSubscription(req, body, corsHeaders);
