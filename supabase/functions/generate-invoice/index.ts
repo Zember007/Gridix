@@ -105,6 +105,32 @@ async function generateInvoicePDF(invoiceData: any, language: string = 'ka') {
   }
 }
 
+async function deleteOldInvoiceFile(oldInvoiceUrl: string): Promise<void> {
+  try {
+    if (!oldInvoiceUrl) return;
+    
+    // Extract filename from URL
+    const urlParts = oldInvoiceUrl.split('/');
+    const fileName = urlParts[urlParts.length - 1];
+    
+    if (!fileName) return;
+    
+    console.log(`Deleting old invoice file: ${fileName}`);
+    
+    const { error } = await supabase.storage
+      .from('invoices')
+      .remove([fileName]);
+    
+    if (error) {
+      console.warn(`Failed to delete old invoice file ${fileName}:`, error);
+    } else {
+      console.log(`Successfully deleted old invoice file: ${fileName}`);
+    }
+  } catch (error) {
+    console.warn(`Error deleting old invoice file:`, error);
+  }
+}
+
 async function uploadToStorage(pdfBuffer: ArrayBuffer, fileName: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('invoices')
@@ -218,11 +244,12 @@ async function handleGenerateInvoice(req: Request, body: any) {
 
     const companySettings = companySettingsData;
 
-    // Generate invoice number
+    // Generate invoice number with timestamp for uniqueness
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const timeStr = now.toISOString().slice(11, 19).replace(/:/g, '');
     const projectId = subscription.project_id?.substring(0, 8) || '00000000';
-    const invoiceNumber = `INV-${dateStr}-${projectId}`;
+    const invoiceNumber = `INV-${dateStr}-${timeStr}-${projectId}`;
 
     // Generate payment purpose
     const paymentPurpose = `Payment for ${subscription.duration_months} months of the "${subscription.projects?.name}" project (account ${companySettings.company_name})`;
@@ -253,6 +280,11 @@ async function handleGenerateInvoice(req: Request, body: any) {
       logoUrl: invoiceConfig.logo_url,
       stampUrl: invoiceConfig.stamp_url
     };
+
+    // Delete old invoice file if it exists
+    if (subscription.invoice_url) {
+      await deleteOldInvoiceFile(subscription.invoice_url);
+    }
 
     // Generate PDF
     const pdfDoc = await generateInvoicePDF(invoiceData, invoiceConfig.language);
