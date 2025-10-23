@@ -30,7 +30,8 @@ export function createEnglishInvoiceTemplate(data: InvoiceData) {
     pageSize: 'A4',
     pageMargins: [40, 60, 40, 60],
     defaultStyle: {
-      fontSize: 10
+      fontSize: 10,
+      font: "Roboto"
     },
     content: [
       // Header with logo and invoice number

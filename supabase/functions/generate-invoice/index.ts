@@ -3,40 +3,73 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
 import { createGeorgianInvoiceTemplate } from '../_shared/invoice-template-ka.ts';
 import { createEnglishInvoiceTemplate } from '../_shared/invoice-template-en.ts';
+import { georgianBoldBase64, georgianRegularBase64 } from "../_shared/fonts.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
+function splitTextByScript(text: string) {
+  const segments: { text: string; font: string }[] = [];
+  let currentFont: string | null = null;
+  let buffer = "";
+
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+
+    // Определяем диапазоны Unicode
+    let font: string;
+    if (code >= 0x10A0 && code <= 0x10FF) font = "Georgian"; // грузинский
+    else font = "Roboto"; // всё остальное (латиница, кириллица и т.п.)
+
+    if (font !== currentFont && buffer) {
+      segments.push({ text: buffer, font: currentFont! });
+      buffer = "";
+    }
+
+    currentFont = font;
+    buffer += char;
+  }
+
+  if (buffer) segments.push({ text: buffer, font: currentFont! });
+  return segments;
+}
+
 // Import pdfmake dynamically
 async function getPdfMake() {
-    try {
-      const pdfmakeModule = await import("https://esm.sh/pdfmake@0.2.12/build/pdfmake.js");
-      const vfsFontsModule = await import("https://esm.sh/pdfmake@0.2.12/build/vfs_fonts.js");
-    
-      // Получаем объект pdfmake
-      const pdfmake = pdfmakeModule.default || pdfmakeModule.pdfMake || pdfmakeModule;
+  try {
+    const pdfmakeModule = await import("https://esm.sh/pdfmake@0.2.12/build/pdfmake.js");
+    const vfsFontsModule = await import("https://esm.sh/pdfmake@0.2.12/build/vfs_fonts.js");
 
-      if (!pdfmake) {
-        throw new Error("Failed to load pdfmake module");
+    // Получаем объект pdfmake
+    const pdfmake = pdfmakeModule.default || pdfmakeModule.pdfMake || pdfmakeModule;
+
+    if (!pdfmake) {
+      throw new Error("Failed to load pdfmake module");
     }
-    
-      // Подключаем встроенные шрифты Roboto
-      pdfmake.vfs = vfsFontsModule.default.pdfMake.vfs;
-    
-      // Настраиваем шрифты — используем Roboto из встроенных
-      pdfmake.fonts = {
-        Roboto: {
-          normal: "Roboto-Regular.ttf",
-          bold: "Roboto-Medium.ttf",
-          italics: "Roboto-Italic.ttf",
-          bolditalics: "Roboto-MediumItalic.ttf"
-        }
-      };
-        
-        return pdfmake;
-    } catch (error) {
-        console.error("Error loading pdfmake:", error);
-        throw new Error(`Failed to load pdfmake: ${error.message}`);
-    }
+
+    // Подключаем встроенные шрифты Roboto
+    pdfmake.vfs = {
+      ...vfsFontsModule.default.pdfMake.vfs,
+      'NotoSansGeorgian-Regular.ttf': georgianRegularBase64,
+      'NotoSansGeorgian-Bold.ttf': georgianBoldBase64
+    };
+
+    // Настраиваем шрифты — используем Roboto из встроенных
+    pdfmake.fonts = {
+      Roboto: {
+        normal: "Roboto-Regular.ttf",
+        bold: "Roboto-Medium.ttf",
+      },
+      Georgian: {  
+        normal: 'NotoSansGeorgian-Regular.ttf',
+        bold: 'NotoSansGeorgian-Bold.ttf'
+      }
+    };
+
+    return pdfmake;
+  } catch (error) {
+    console.error("Error loading pdfmake:", error);
+    throw new Error(`Failed to load pdfmake: ${error.message}`);
+  }
 }
 
 async function downloadImageAsBase64(url: string): Promise<string | null> {
@@ -47,11 +80,11 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
       console.warn(`Failed to download image: ${response.status} ${response.statusText}`);
       return null;
     }
-    
+
     const arrayBuffer = await response.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
     const contentType = response.headers.get('content-type') || 'image/png';
-    
+
     return `data:${contentType};base64,${base64}`;
   } catch (error) {
     console.warn(`Error downloading image from ${url}:`, error);
@@ -68,11 +101,11 @@ async function generateInvoicePDF(invoiceData: any, language: string = 'ka') {
   // Download and convert external images to base64
   let logoDataUrl: string | null = null;
   let stampDataUrl: string | null = null;
-  
+
   if (invoiceData.logoUrl) {
     logoDataUrl = await downloadImageAsBase64(invoiceData.logoUrl);
   }
-  
+
   if (invoiceData.stampUrl) {
     stampDataUrl = await downloadImageAsBase64(invoiceData.stampUrl);
   }
@@ -108,19 +141,19 @@ async function generateInvoicePDF(invoiceData: any, language: string = 'ka') {
 async function deleteOldInvoiceFile(oldInvoiceUrl: string): Promise<void> {
   try {
     if (!oldInvoiceUrl) return;
-    
+
     // Extract filename from URL
     const urlParts = oldInvoiceUrl.split('/');
     const fileName = urlParts[urlParts.length - 1];
-    
+
     if (!fileName) return;
-    
+
     console.log(`Deleting old invoice file: ${fileName}`);
-    
+
     const { error } = await supabase.storage
       .from('invoices')
       .remove([fileName]);
-    
+
     if (error) {
       console.warn(`Failed to delete old invoice file ${fileName}:`, error);
     } else {

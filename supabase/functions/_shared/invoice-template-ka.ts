@@ -1,4 +1,31 @@
 // Georgian invoice template for pdfmake
+
+function splitTextByScript(text: string) {
+  const segments: { text: string; font: string }[] = [];
+  let currentFont: string | null = null;
+  let buffer = "";
+
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+
+    // Определяем диапазоны Unicode
+    let font: string;
+    if (code >= 0x10A0 && code <= 0x10FF) font = "Georgian"; // грузинский
+    else font = "Roboto"; // всё остальное (латиница, кириллица и т.п.)
+
+    if (font !== currentFont && buffer) {
+      segments.push({ text: buffer, font: currentFont! });
+      buffer = "";
+    }
+
+    currentFont = font;
+    buffer += char;
+  }
+
+  if (buffer) segments.push({ text: buffer, font: currentFont! });
+  return segments;
+}
+
 export interface InvoiceData {
   invoiceNumber: string;
   date: string;
@@ -30,7 +57,8 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
     pageSize: 'A4',
     pageMargins: [40, 60, 40, 60],
     defaultStyle: {
-      fontSize: 10
+      fontSize: 10,
+      font: "Georgian"
     },
     content: [
       // Header with logo and invoice number
@@ -89,19 +117,75 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
             [
               {
                 stack: [
-                  { text: data.companyName, fontSize: 14, bold: true },
-                  { text: `საიდენტიფიკაციო კოდი: ${data.companyTaxId}`, fontSize: 10 },
-                  { text: data.companyAddress, fontSize: 10 },
-                  { text: `ტელ: ${data.companyPhone}`, fontSize: 10 },
-                  { text: `ელ-ფოსტა: ${data.companyEmail}`, fontSize: 10 }
+                  { 
+                    text: splitTextByScript(data.companyName).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 14,
+                      bold: true
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`საიდენტიფიკაციო კოდი: ${data.companyTaxId}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(data.companyAddress).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`ტელ: ${data.companyPhone}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`ელ-ფოსტა: ${data.companyEmail}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  }
                 ]
               },
               {
                 stack: [
-                  { text: data.gridixName, fontSize: 14, bold: true },
-                  { text: `საიდენტიფიკაციო კოდი: ${data.gridixTaxId}`, fontSize: 10 },
-                  { text: `ბანკი: ${data.gridixBank}`, fontSize: 10 },
-                  { text: `IBAN: ${data.gridixIban}`, fontSize: 10 }
+                  { 
+                    text: splitTextByScript(data.gridixName).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 14,
+                      bold: true
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`საიდენტიფიკაციო კოდი: ${data.gridixTaxId}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`ბანკი: ${data.gridixBank}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  },
+                  { 
+                    text: splitTextByScript(`IBAN: ${data.gridixIban}`).map(segment => ({
+                      text: segment.text,
+                      font: segment.font,
+                      fontSize: 10
+                    }))
+                  }
                 ]
               }
             ]
@@ -137,8 +221,11 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
             ],
             [
               {
-                text: data.paymentPurpose,
-                fontSize: 11
+                text: splitTextByScript(data.paymentPurpose).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11
+                }))
               },
               {
                 text: `${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`,
@@ -171,11 +258,43 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
               { text: 'ჯამი', fontSize: 12, bold: true, color: '#374151' }
             ],
             [
-              { text: `${data.planName} - ${data.projectName}`, fontSize: 11 },
-              { text: `${data.durationMonths} თვე`, fontSize: 11 },
-              { text: `${data.monthlyPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11 },
-              { text: data.discountPercentage > 0 ? `${data.discountPercentage}%` : 'ფასდაკლება არ არის', fontSize: 11, color: data.discountPercentage > 0 ? '#059669' : '#6b7280' },
-              { text: `${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`, fontSize: 11, bold: true }
+              { 
+                text: splitTextByScript(`${data.planName} - ${data.projectName}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11
+                }))
+              },
+              { 
+                text: splitTextByScript(`${data.durationMonths} თვე`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11
+                }))
+              },
+              { 
+                text: splitTextByScript(`${data.monthlyPrice.toFixed(2)} ${data.gridixCurrency}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11
+                }))
+              },
+              { 
+                text: splitTextByScript(data.discountPercentage > 0 ? `${data.discountPercentage}%` : 'ფასდაკლება არ არის').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11,
+                  color: data.discountPercentage > 0 ? '#059669' : '#6b7280'
+                }))
+              },
+              { 
+                text: splitTextByScript(`${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 11,
+                  bold: true
+                }))
+              }
             ]
           ]
         },
