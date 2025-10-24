@@ -191,7 +191,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   // Get project colors from polygon settings
   const getProjectColors = () => {
     const themeColor = (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
-   
+
     return {
       available: themeColor,
       sold: '#ef4444',
@@ -291,12 +291,12 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   };
 
   const goBackToProject = () => {
-    if(onClose) {
+    if (onClose) {
       console.log('onClose', onClose);
       onClose();
       return;
     }
-    
+
     window.close();
 
     setTimeout(() => {
@@ -460,17 +460,24 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   };
 
+  const priceVisible = fieldSettings.find(field => field.field_name === 'price')?.is_visible;
+  const areaVisible = fieldSettings.find(field => field.field_name === 'area')?.is_visible;
+  const roomsVisible = fieldSettings.find(field => field.field_name === 'rooms')?.is_visible;
+  const statusVisible = fieldSettings.find(field => field.field_name === 'status')?.is_visible;
+  const floorVisible = fieldSettings.find(field => field.field_name === 'floor')?.is_visible;
+  const numberVisible = fieldSettings.find(field => field.field_name === 'number')?.is_visible;
+
 
   const loading = projectLoading || apartmentLoading || photosLoading;
 
-  if(!project) return null;
+  if (!project) return null;
 
   // Показываем загрузку, если данные еще загружаются
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader size="lg" className="mx-auto mb-4"
-        color={project?.theme_color || '#000000'}
+          color={project?.theme_color || '#000000'}
         />
       </div>
     );
@@ -529,14 +536,16 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            <div className="absolute top-4 right-4 z-10">
-              <Badge
-                className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
-                style={getStatusStyle(apartment.status)}
-              >
-                {getStatusLabel(apartment.status)}
-              </Badge>
-            </div>
+            {statusVisible && (
+              <div className="absolute top-4 right-4 z-10">
+                <Badge
+                  className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium`}
+                  style={getStatusStyle(apartment.status)}
+                >
+                  {getStatusLabel(apartment.status)}
+                </Badge>
+              </div>
+            )}
 
             {/* Main apartment image */}
             <div className="h-70  relative overflow-hidden rounded-t-3xl">
@@ -563,8 +572,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
-                    ? `Object № ${apartment.apartment_number}`
-                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`) : `${apartment.type} № ${apartment.apartment_number}`}
+                    ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`
+                    : `${t('apartment.apartment')} ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`) : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`}
                 </h1>
                 <div className="flex gap-2">
                   <Button
@@ -586,34 +595,41 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                   </Button>
                 </div>
               </div>
-              <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
+              {floorVisible && (
+                <p className="text-gray-500">{apartment.floor_number} {t('apartment.floor')}</p>
+              )}
             </div>
 
             {/* Room and area info */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Square className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">{apartment.area} м² {t('apartment.area')}</span>
-              </div>
+              {roomsVisible && (
+                <div className="flex items-center gap-2">
+                  <Home className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-700">
+                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`}
+                  </span>
+                </div>
+              )}
+              {areaVisible && (
+                <div className="flex items-center gap-2">
+                  <Square className="h-5 w-5 text-gray-400" />
+                  <span className="text-gray-700">{apartment.area} м² {t('apartment.area')}</span>
+                </div>
+              )}
             </div>
 
             {/* Price */}
-            {apartment.price && (
-              <div className="mb-6">
-                <div className="text-3xl font-bold text-gray-900">
-                  {formatPriceWithCurrency(
+            <div className="mb-6">
+              <div className="text-3xl font-bold text-gray-900">
+                {apartment.price && priceVisible
+                  ? formatPriceWithCurrency(
                     convertPrice(apartment.price, project?.currency || null, selectedCurrency),
                     selectedCurrency
-                  )}
-                </div>
+                  )
+                  : t('common.priceOnRequest')
+                }
               </div>
-            )}
+            </div>
 
 
             {/* Дополнительные поля */}
@@ -634,9 +650,9 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     } else {
                       switch (field.field_name) {
                         case 'rooms':
-                          if(typeof apartment.rooms === 'number') {
+                          if (typeof apartment.rooms === 'number') {
                             value = apartment.rooms;
-                          } 
+                          }
                           break;
                         case 'area':
                           value = apartment.area;
@@ -697,8 +713,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 </Button>
                 <h1 className="text-2xl font-semibold text-gray-900 font-poppins">
                   {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
-                    ? `Object № ${apartment.apartment_number}`
-                    : `${t('apartment.apartment')} № ${apartment.apartment_number}`) : `${apartment.type} № ${apartment.apartment_number}`}
+                    ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`
+                    : `${t('apartment.apartment')} ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`) : `${apartment.type} ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`}
                 </h1>
               </div>
               <div className="flex gap-2">
@@ -730,14 +746,16 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
               <div className="flex-1 space-y-4">
                 {/* Gallery */}
                 <div className="relative">
-                  <div className="absolute top-4 left-4 z-10">
-                    <Badge
-                      className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium font-poppins`}
-                      style={getStatusStyle(apartment.status)}
-                    >
-                      {getStatusLabel(apartment.status)}
-                    </Badge>
-                  </div>
+                  {statusVisible && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <Badge
+                        className={`${getStatusColor(apartment.status)} px-3 py-1 rounded-full font-medium font-poppins`}
+                        style={getStatusStyle(apartment.status)}
+                      >
+                        {getStatusLabel(apartment.status)}
+                      </Badge>
+                    </div>
+                  )}
                   {photosLoading ? (
                     <div className="w-full h-[480px] flex items-center justify-center bg-gray-100 rounded-lg">
                       <Loader size="lg" />
@@ -778,9 +796,9 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         } else {
                           switch (field.field_name) {
                             case 'rooms':
-                              if(typeof apartment.rooms === 'number') {
+                              if (typeof apartment.rooms === 'number') {
                                 value = apartment.rooms;
-                              } 
+                              }
                               break;
                             case 'area':
                               value = apartment.area;
@@ -834,31 +852,30 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                       </div>
                       <div className="flex justify-between gap-[15px]">
 
-                        <div className="flex flex-col items-start whitespace-nowrap">
-                          {apartment.price && (
-                            <>
-                              <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
-                                {formatPriceWithCurrency(
-                                  convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                        <div className="flex flex-col items-start gap-4 whitespace-nowrap">
+                          <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
+                            {apartment.price && priceVisible
+                              ? formatPriceWithCurrency(
+                                convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                                selectedCurrency
+                              )
+                              : t('common.priceOnRequest')
+                            }
+                          </div>
+
+                          {project?.installment_enabled && apartment.price && (
+                            <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
+                              {t('project.from')} {formatPriceWithCurrency(
+                                convertPrice(
+                                  calculateMonthlyPayment(apartment.price),
+                                  project?.currency || null,
                                   selectedCurrency
-                                )}
-                              </div>
-
-                              {project?.installment_enabled && (
-                                <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
-                                  {t('project.from')} {formatPriceWithCurrency(
-                                    convertPrice(
-                                      calculateMonthlyPayment(apartment.price),
-                                      project?.currency || null,
-                                      selectedCurrency
-                                    ),
-                                    selectedCurrency
-                                  )} / {t('installment.perMonth')}
-                                </div>
-                              )}
-
-                            </>
+                                ),
+                                selectedCurrency
+                              )} / {t('installment.perMonth')}
+                            </div>
                           )}
+
                           <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
                             {t('installment.low')}
                           </Badge>
