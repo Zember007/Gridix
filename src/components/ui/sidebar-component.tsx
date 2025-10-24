@@ -47,6 +47,7 @@ import {
   UserCheck,
   Globe,
   Crown,
+  Handshake,
   Building,
   ChevronDown,
 } from "lucide-react";
@@ -68,6 +69,7 @@ const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, 
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
     { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
+    /* { id: "partners", icon: <Handshake size={20} />, label: 'Партнёры' }, */
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
     { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics') },
     { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },

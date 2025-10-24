@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useSubscription, ProjectSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Crown, AlertCircle, CheckCircle, Clock, FileText, Receipt, Loader2, ExternalLink, Download, RefreshCw } from 'lucide-react';
+import { Crown, AlertCircle, CheckCircle, Clock, FileText, Receipt, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
@@ -137,6 +137,15 @@ export default function SubscriptionTab() {
     setIsProcessing(true);
     try {
       const result = await requestInvoice(projectId, selectedPlanId, selectedDuration);
+      
+      // Check if the result contains an error
+      if (result?.error) {
+        const errorMessage = t('common.invoiceGenerationFailed');
+        
+        toast.error(errorMessage);
+        return;
+      }
+      
       toast.success('Invoice requested successfully! You can view it now.');
       await refreshProjectSubscriptions();
       setIsInvoiceDialogOpen(false);
@@ -151,7 +160,7 @@ export default function SubscriptionTab() {
       }
     } catch (error) {
       console.error('Error requesting invoice:', error);
-      toast.error('Failed to request invoice');
+      toast.error(t('invoiceGenerationFailed'));
     } finally {
       setIsProcessing(false);
     }
@@ -177,6 +186,14 @@ export default function SubscriptionTab() {
 
       if (error) {
         throw error;
+      }
+
+      // Handle specific error responses from the backend
+      if (data.error) {
+        const errorMessage = t('common.invoiceGenerationFailed');
+        
+        toast.error(errorMessage);
+        return;
       }
 
       // Download PDF file
@@ -205,11 +222,11 @@ export default function SubscriptionTab() {
           toast.info('Invoice opened in new tab');
         }
       } else {
-        toast.error('Failed to generate invoice');
+        toast.error(t('common.invoiceGenerationFailed'));
       }
     } catch (error) {
       console.error('Error opening invoice:', error);
-      toast.error('Failed to open invoice');
+      toast.error(t('common.companySettingsIncomplete'));
     }
   };
 
@@ -226,14 +243,24 @@ export default function SubscriptionTab() {
 
     setIsProcessing(true);
     try {
-      await requestInvoiceForMultiple(selectedProjects, selectedPlanId, selectedDuration);
+      const results = await requestInvoiceForMultiple(selectedProjects, selectedPlanId, selectedDuration);
+      
+      // Check if any of the results contain an error
+      const errorResult = results.find(result => result?.error);
+      if (errorResult) {
+        const errorMessage = t('common.invoiceGenerationFailed');
+        
+        toast.error(errorMessage);
+        return;
+      }
+      
       toast.success(`Invoices requested for ${selectedProjects.length} project(s)`);
       await refreshProjectSubscriptions();
       setIsInvoiceDialogOpen(false);
       setSelectedProjects([]);
     } catch (error) {
       console.error('Error requesting invoices:', error);
-      toast.error('Failed to request invoices');
+      toast.error(t('common.invoiceGenerationFailed'));
     } finally {
       setIsProcessing(false);
     }

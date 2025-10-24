@@ -167,6 +167,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               ])
               .select()
               .single();
+
+            // Обрабатываем реферальный код после создания профиля
+            if (!createError && newProfile) {
+              try {
+                // Получаем реферальный код из URL параметров
+                const urlParams = new URLSearchParams(window.location.search);
+                const partnerCode = urlParams.get('ref');
+                
+                if (partnerCode) {
+                  // Вызываем функцию отслеживания реферала
+                  const { data: referralData, error: referralError } = await supabase.functions.invoke('partner-program', {
+                    body: {
+                      action: 'track_referral',
+                      partner_code: partnerCode
+                    }
+                  });
+
+                  if (referralError) {
+                    console.error('Error tracking referral:', referralError);
+                  } else if (referralData?.success) {
+                    console.log('Referral tracked successfully:', referralData.partner_name);
+                  }
+                }
+              } catch (referralErr) {
+                console.error('Error processing referral:', referralErr);
+                // Не прерываем процесс регистрации из-за ошибки реферала
+              }
+            }
   
             if (signal.aborted || currentSession !== session) return;
   

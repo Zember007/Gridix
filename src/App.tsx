@@ -18,7 +18,6 @@ import RefundPolicyPage from "./pages/RefundPolicyPage";
 import DomainProjectPage from "./pages/DomainProjectPage";
 import DomainApartmentPage from "./pages/DomainApartmentPage";
 import WidgetPreviewPage from "./pages/WidgetPreviewPage";
-import SubscriptionPage from "./pages/SubscriptionPage";
 import PricingPage from "./pages/PricingPage";
 import ContactsPage from "./pages/ContactsPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
@@ -65,15 +64,9 @@ function App() {
               
               {/* Auth routes */}
               <Route path="/:lang/auth" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
-              
-              {/* Subscription routes */}
-              <Route path="/:lang/subscription" element={
-                <LanguageProviders>
-                  <ProtectedRoute>
-                    <SubscriptionPage />
-                  </ProtectedRoute>
-                </LanguageProviders>
-              } />
+              <Route path="/:lang/auth/signin" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
+              <Route path="/:lang/auth/signup" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
+ 
                      
               {/* Set password route - for users who need to set password */}
               <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
@@ -109,6 +102,7 @@ function App() {
                   </ProtectedRoute>
                 </LanguageProviders>
               } />
+
 
               {/* Embed routes without language prefix but with EmbedLanguageProvider */}
               <Route path="/embed/projects/:userId" element={<EmbedProviders><EmbedProjectsPage /></EmbedProviders>} />

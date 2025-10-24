@@ -19,5 +19,9 @@
   "unavailable": "Unavailable",
   "view": "View",
   "clear": "Clear",
-  "save": "Save"
+  "save": "Save",
+  "companySettingsNotFound": "Company settings not found. Please configure your company information before generating invoices.",
+  "companySettingsIncomplete": "Please fill in payment details in company settings to generate invoices.",
+  "invoiceGenerationFailed": "Failed to generate invoice",
+  "invoiceDownloadFailed": "Failed to download invoice"
 }

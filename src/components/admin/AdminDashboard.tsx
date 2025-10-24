@@ -2,15 +2,15 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { ArrowLeft, Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown } from 'lucide-react';
+import { Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown, Handshake } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
 import { LeadsManager } from './LeadsManager';
 import SubscriptionTab from './SubscriptionTab';
+import PartnersPage from '../../pages/PartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,11 +22,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 
-interface AdminDashboardProps {
-  onBack: () => void;
-}
-
-const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
+const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -41,7 +37,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const { user, userProfile, signOut, loading } = useAuth();
-  const { userRole, isManager, isDeveloper, developerId, primaryDeveloperId } = useUserRole();
+  const { userRole, isManager, developerId } = useUserRole();
   const { isManagerMode, availableWorkspaces } = useWorkspace();
 
   const handleCreateNew = () => {
@@ -133,6 +129,17 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
                             {t('admin.subscription')}
                           </button>
                         )}
+                      {/*   <button
+                          onClick={() => setActiveTab('partners')}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                            activeTab === 'partners' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          <Handshake className="h-4 w-4" />
+                          Партнёры
+                        </button> */}
                         <button
                           onClick={() => setActiveTab('widgets')}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
@@ -234,6 +241,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
+          {activeTab === 'partners' && (
+            <div className="space-y-6">
+              <PartnersPage />
+            </div>
+          )}
+
           {activeTab === 'widgets' && (
             <div className="space-y-6">
               <AdminWidgets />
@@ -262,14 +275,14 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
             <div className="space-y-6">
               <AdminSettings 
                 userProfile={user!} 
                 loading={loading} 
                 developerId={developerId}
                 isManager={isManager}
-                managerData={userRole.managerData}
+                {...(userRole.managerData && { managerData: userRole.managerData })}
               />
             </div>
           )}
@@ -357,6 +370,12 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             </div>
           )}
 
+          {activeTab === 'partners' && (
+            <div className="space-y-6">
+              <PartnersPage />
+            </div>
+          )}
+
           {activeTab === 'widgets' && (
             <div className="space-y-6">
               <AdminWidgets />
@@ -378,15 +397,14 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </Card>
             </div>
           )}
-
-          {activeTab === 'settings' && userRole.type !== 'manager' && (
+          {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
             <div className="space-y-6">
               <AdminSettings 
                 userProfile={user!} 
                 loading={loading} 
                 developerId={developerId}
                 isManager={isManager}
-                managerData={userRole.managerData}
+                {...(userRole.managerData && { managerData: userRole.managerData })}
               />
             </div>
           )}

@@ -111,11 +111,11 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
       });
       
       if (!error && data) {
-        setUserExists(data.exists);
+        setUserExists(!!data.exists);
         setUserAccountType(data.accountType);
-        
+
         // Если пользователь существует и не является менеджером, показываем ошибку
-        if (data.exists && data.accountType !== 'manager') {
+        if (!!data.exists && data.accountType !== 'manager') {
           toast.error(t('managerAccounts.userNotManager'));
         }
       } else {

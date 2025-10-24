@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
+import { FieldSetting } from '@/hooks/useFields';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -12,7 +13,7 @@ interface FloorPlanViewProps {
   apartments: Apartment[];
   onApartmentSelect: (apartment: Apartment) => void;
   currency?: string | null;
-
+  visibleFields?: FieldSetting[];
 }
 
 interface FloorPlan {
@@ -20,7 +21,7 @@ interface FloorPlan {
   image_url: string | null;
 }
 
-const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, currency }: FloorPlanViewProps) => {
+const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, currency, visibleFields = [] }: FloorPlanViewProps) => {
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   type FloorSettings = {
     colors?: { available: string; reserved: string; sold: string };
     opacity?: { normal: number; hover: number };
-    display?: { showNumbers?: boolean; showTooltip?: boolean; showArea?: boolean; showPrice?: boolean };
+    display?: { showNumbers?: boolean; showTooltip?: boolean;};
     hoverEffects?: { glow?: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
   };
   const [floorSettings, setFloorSettings] = useState<FloorSettings | null>(null);
@@ -121,7 +122,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
 
   const handleApartmentHover = (apartment: Apartment, event: React.MouseEvent) => {
     if (!floorSettings?.display?.showTooltip) return;
-    
+
     setHoveredApartment(apartment);
     setPopupPosition({ x: event.clientX, y: event.clientY });
     setShowPopup(true);
@@ -132,15 +133,12 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
     setShowPopup(false);
   };
 
-  const handlePopupClose = () => {
-    setShowPopup(false);
-    setHoveredApartment(null);
-  };
+
 
   if (loading) {
     return (
       <Card
-         className='h-full grow'
+        className='h-full grow'
       >
         <CardContent className="flex items-center justify-center min-h-96 h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -152,7 +150,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   if (!floorPlan || !floorPlan.image_url) {
     return (
       <Card
-      className='h-full grow'
+        className='h-full grow'
       >
         <CardContent className="flex flex-col items-center justify-center min-h-96 h-full text-gray-500">
           <p>План {floorNumber} этажа не загружен</p>
@@ -201,9 +199,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
 
                   const isHovered = hoveredApartment?.id === apartment.id;
                   const baseColor = getApartmentColor(apartment);
-                  const hoverColor = floorSettings?.hoverEffects?.colorChange ? 
-                    (apartment.status === 'available' ? '#10b981' : 
-                     apartment.status === 'reserved' ? '#f59e0b' : '#ef4444') : baseColor;
+                  const hoverColor = floorSettings?.hoverEffects?.colorChange ?
+                    (apartment.status === 'available' ? '#10b981' :
+                      apartment.status === 'reserved' ? '#f59e0b' : '#ef4444') : baseColor;
 
                   return (
                     <g key={apartment.id}>
@@ -224,16 +222,16 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                         onMouseLeave={handleApartmentLeave}
                       />
                       {floorSettings?.display?.showNumbers !== false && (
-                      <text
-                        x={centerX}
-                        y={centerY}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="fill-white font-bold text-sm pointer-events-none"
-                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
-                      >
-                        {apartment.apartment_number}
-                      </text>
+                        <text
+                          x={centerX}
+                          y={centerY}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="fill-white font-bold text-sm pointer-events-none"
+                          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
+                        >
+                          {apartment.apartment_number}
+                        </text>
                       )}
                     </g>
                   );
@@ -246,19 +244,19 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
         <div className="mt-4 flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-60"
-            style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
+              style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
             ></div>
             <span>{t('project.available')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-60"
-            style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
+              style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
             ></div>
             <span>{t('project.reserved')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-60"
-            style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
+              style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
             ></div>
             <span>{t('project.sold')}</span>
           </div>
@@ -272,11 +270,10 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
             settings={{
               showNumbers: floorSettings?.display?.showNumbers ?? true,
               showTooltip: floorSettings?.display?.showTooltip ?? false,
-              showArea: floorSettings?.display?.showArea ?? false,
-              showPrice: floorSettings?.display?.showPrice ?? false,
+              showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+              showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
             }}
-            currency={currency}
-            onClose={handlePopupClose}
+            currency={currency || null}
           />
         )}
       </CardContent>

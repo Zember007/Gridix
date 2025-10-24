@@ -111,11 +111,11 @@ export function SubscriptionsManagement() {
 
       // Now fetch user profiles separately for each subscription
       const subscriptionsWithProfiles = await Promise.all(
-        (data || []).map(async (sub: any) => {
+        (data || []).map(async (sub) => {
           const { data: profile } = await supabase
             .from('user_profiles')
             .select('email, full_name')
-            .eq('user_id', sub.user_id)
+            .eq('id', sub.user_id)
             .single();
           
           return {
@@ -160,7 +160,7 @@ export function SubscriptionsManagement() {
         .order('name');
 
       if (error) throw error;
-      setProjects(data || []);
+      setProjects(data as Project[] || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
     }
@@ -181,7 +181,7 @@ export function SubscriptionsManagement() {
       // Get user by email
       const { data: userData, error: userError } = await supabase
         .from('user_profiles')
-        .select('user_id')
+        .select('id')
         .eq('email', createForm.userEmail)
         .single();
 
@@ -194,7 +194,7 @@ export function SubscriptionsManagement() {
         .from('projects')
         .select('id')
         .eq('id', createForm.projectId)
-        .eq('user_id', userData.user_id)
+        .eq('user_id', userData.id)
         .single();
 
       if (projectError || !projectData) {
@@ -210,7 +210,7 @@ export function SubscriptionsManagement() {
       const { error: insertError } = await supabase
         .from('user_subscriptions')
         .insert({
-          user_id: userData.user_id,
+          user_id: userData.id,
           project_id: createForm.projectId,
           plan_id: createForm.planId,
           status: 'active',
@@ -231,11 +231,11 @@ export function SubscriptionsManagement() {
       setCreateForm({ userEmail: '', projectId: '', planId: '', durationMonths: 1, invoiceNumber: '', invoiceUrl: '' });
       setIsCreateDialogOpen(false);
       fetchSubscriptions();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating subscription:', error);
       toast({
         title: 'Ошибка',
-        description: error.message || 'Не удалось создать подписку',
+        description: error instanceof Error ? error.message : 'Не удалось создать подписку',
         variant: 'destructive',
       });
     } finally {
@@ -246,7 +246,7 @@ export function SubscriptionsManagement() {
   const handleGenerateInvoice = async (subscriptionId: string) => {
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
+      const { error } = await supabase.functions.invoke('subscription-management', {
         body: { 
           action: 'generate-invoice',
           subscription_id: subscriptionId
@@ -264,11 +264,11 @@ export function SubscriptionsManagement() {
       });
 
       fetchSubscriptions();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error generating invoice:', error);
       toast({
         title: 'Ошибка',
-        description: error.message || 'Не удалось сгенерировать счет',
+        description: error instanceof Error ? error.message : 'Не удалось сгенерировать счет',
         variant: 'destructive',
       });
     } finally {
@@ -279,7 +279,7 @@ export function SubscriptionsManagement() {
   const handleActivateSubscription = async (subscriptionId: string) => {
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
+      const { error } = await supabase.functions.invoke('subscription-management', {
         body: { 
           action: 'confirm-payment',
           subscription_id: subscriptionId
@@ -299,11 +299,11 @@ export function SubscriptionsManagement() {
       setInvoiceForm({ invoiceNumber: '', invoiceUrl: '' });
       setSelectedSubscription(null);
       fetchSubscriptions();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error activating subscription:', error);
       toast({
         title: 'Ошибка',
-        description: error.message || 'Не удалось активировать подписку',
+        description: error instanceof Error ? error.message : 'Не удалось активировать подписку',
         variant: 'destructive',
       });
     } finally {
@@ -492,127 +492,130 @@ export function SubscriptionsManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pendingSubscriptions.map((sub) => (
-                <TableRow key={sub.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
-                      <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{sub.projects?.name || '—'}</TableCell>
-                  <TableCell>{sub.subscription_plans?.name}</TableCell>
-                  <TableCell>${sub.final_price?.toFixed(2) || '—'}</TableCell>
-                  <TableCell>
-                    {sub.invoice_requested_at
-                      ? new Date(sub.invoice_requested_at).toLocaleDateString()
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {!sub.invoice_url ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGenerateInvoice(sub.id)}
-                          disabled={isProcessing}
-                        >
-                          <FileText className="h-4 w-4 mr-1" />
-                          Сгенерировать PDF
-                        </Button>
-                      ) : (
-                        <>
+              {pendingSubscriptions.map((sub) => {
+                console.log(sub);
+                return (
+                  <TableRow key={sub.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
+                        <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{sub.projects?.name || '—'}</TableCell>
+                    <TableCell>{sub.subscription_plans?.name}</TableCell>
+                    <TableCell>${sub.final_price?.toFixed(2) || '—'}</TableCell>
+                    <TableCell>
+                      {sub.invoice_requested_at
+                        ? new Date(sub.invoice_requested_at).toLocaleDateString()
+                        : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {!sub.invoice_url ? (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(sub.invoice_url!, '_blank')}
+                            onClick={() => handleGenerateInvoice(sub.id)}
+                            disabled={isProcessing}
                           >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Просмотр
+                            <FileText className="h-4 w-4 mr-1" />
+                            Сгенерировать PDF
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(sub.invoice_url!, '_blank')}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Скачать
-                          </Button>
-                        </>
-                      )}
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            disabled={!sub.invoice_url || isProcessing}
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Подтвердить оплату
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Подтвердить оплату</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="p-4 bg-muted rounded-lg">
-                              <p><strong>Проект:</strong> {sub.projects?.name}</p>
-                              <p><strong>Пользователь:</strong> {sub.user_profiles?.full_name}</p>
-                              <p><strong>План:</strong> {sub.subscription_plans?.name}</p>
-                              <p><strong>Сумма:</strong> {sub.final_price?.toFixed(2)} GEL</p>
-                              {sub.invoice_number && (
-                                <p><strong>Номер счета:</strong> {sub.invoice_number}</p>
-                              )}
-                            </div>
-                            
-                            {sub.invoice_url && (
-                              <div className="p-4 border rounded-lg">
-                                <p className="font-medium mb-2">Счет:</p>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => window.open(sub.invoice_url!, '_blank')}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Просмотр PDF
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => window.open(sub.invoice_url!, '_blank')}
-                                  >
-                                    <Download className="h-4 w-4 mr-1" />
-                                    Скачать
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                            
-                            <Alert>
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertDescription>
-                                Убедитесь, что оплата поступила на счет, прежде чем подтверждать активацию подписки.
-                              </AlertDescription>
-                            </Alert>
-                            
-                            <Button 
-                              onClick={() => handleActivateSubscription(sub.id)}
-                              disabled={isProcessing}
-                              className="w-full"
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(sub.invoice_url!, '_blank')}
                             >
-                              {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                              Подтвердить оплату и активировать
+                              <Eye className="h-4 w-4 mr-1" />
+                              Просмотр
                             </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(sub.invoice_url!, '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Скачать
+                            </Button>
+                          </>
+                        )}
+                        
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              disabled={!sub.invoice_url || isProcessing}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Подтвердить оплату
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Подтвердить оплату</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="p-4 bg-muted rounded-lg">
+                                <p><strong>Проект:</strong> {sub.projects?.name}</p>
+                                <p><strong>Пользователь:</strong> {sub.user_profiles?.full_name}</p>
+                                <p><strong>План:</strong> {sub.subscription_plans?.name}</p>
+                                <p><strong>Сумма:</strong> {sub.final_price?.toFixed(2)} GEL</p>
+                                {sub.invoice_number && (
+                                  <p><strong>Номер счета:</strong> {sub.invoice_number}</p>
+                                )}
+                              </div>
+                              
+                              {sub.invoice_url && (
+                                <div className="p-4 border rounded-lg">
+                                  <p className="font-medium mb-2">Счет:</p>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(sub.invoice_url!, '_blank')}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Просмотр PDF
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(sub.invoice_url!, '_blank')}
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Скачать
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                  Убедитесь, что оплата поступила на счет, прежде чем подтверждать активацию подписки.
+                                </AlertDescription>
+                              </Alert>
+                              
+                              <Button 
+                                onClick={() => handleActivateSubscription(sub.id)}
+                                disabled={isProcessing}
+                                className="w-full"
+                              >
+                                {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                Подтвердить оплату и активировать
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </Card>

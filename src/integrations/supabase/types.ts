@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -661,6 +666,180 @@ export type Database = {
           },
         ]
       }
+      partner_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          id: string
+          invitation_code: string
+          partner_id: string
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          invitation_code: string
+          partner_id: string
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          invitation_code?: string
+          partner_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_invitations_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_links: {
+        Row: {
+          accepted_at: string | null
+          client_id: string
+          created_at: string
+          id: string
+          partner_id: string
+          status: string
+          type: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          partner_id: string
+          status?: string
+          type: string
+        }
+        Update: {
+          accepted_at?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          partner_id?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_links_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_links_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          partner_id: string
+          payment_details: Json | null
+          payment_method: string | null
+          processed_at: string | null
+          requested_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          partner_id: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_payouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          partner_code: string
+          status: string
+          total_earned: number
+          total_withdrawn: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_code: string
+          status?: string
+          total_earned?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_code?: string
+          status?: string
+          total_earned?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_custom_fields: {
         Row: {
           created_at: string
@@ -856,7 +1035,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           project_id: string
           referrer: string | null
           user_agent: string | null
@@ -865,7 +1044,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           project_id: string
           referrer?: string | null
           user_agent?: string | null
@@ -874,7 +1053,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           project_id?: string
           referrer?: string | null
           user_agent?: string | null
@@ -1278,6 +1457,9 @@ export type Database = {
           invoice_url: string | null
           lemon_squeezy_customer_id: string | null
           lemon_squeezy_subscription_id: string | null
+          partner_commission_amount: number | null
+          partner_commission_paid: boolean | null
+          partner_id: string | null
           payment_method: string | null
           payment_purpose: string | null
           plan_id: string
@@ -1304,6 +1486,9 @@ export type Database = {
           invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
+          partner_commission_amount?: number | null
+          partner_commission_paid?: boolean | null
+          partner_id?: string | null
           payment_method?: string | null
           payment_purpose?: string | null
           plan_id: string
@@ -1330,6 +1515,9 @@ export type Database = {
           invoice_url?: string | null
           lemon_squeezy_customer_id?: string | null
           lemon_squeezy_subscription_id?: string | null
+          partner_commission_amount?: number | null
+          partner_commission_paid?: boolean | null
+          partner_id?: string | null
           payment_method?: string | null
           payment_purpose?: string | null
           plan_id?: string
@@ -1340,6 +1528,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_subscriptions_plan_id_fkey"
             columns: ["plan_id"]
@@ -1361,10 +1563,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_invitations: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      cleanup_expired_invitations: { Args: never; Returns: number }
       create_default_manager_permissions: {
         Args: { manager_account_id: string }
         Returns: undefined
@@ -1373,13 +1572,15 @@ export type Database = {
         Args: { base_slug: string; project_id?: string }
         Returns: string
       }
-      generate_invitation_token: {
-        Args: Record<PropertyKey, never>
+      generate_invitation_token: { Args: never; Returns: string }
+      generate_partner_code: {
+        Args: { user_id_param: string }
         Returns: string
       }
-      generate_slug: {
-        Args: { input_text: string }
-        Returns: string
+      generate_slug: { Args: { input_text: string }; Returns: string }
+      get_partner_commission_percentage: {
+        Args: { link_type: string }
+        Returns: number
       }
       has_role: {
         Args: {
@@ -1388,10 +1589,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_view_count: {
-        Args: { project_id: string }
-        Returns: undefined
-      }
+      increment_view_count: { Args: { project_id: string }; Returns: undefined }
       initialize_default_fields: {
         Args: { p_project_id: string }
         Returns: undefined
@@ -1406,14 +1604,8 @@ export type Database = {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
-      is_superadmin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      needs_token_refresh: {
-        Args: { settings_id: string }
-        Returns: boolean
-      }
+      is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      needs_token_refresh: { Args: { settings_id: string }; Returns: boolean }
     }
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking"
@@ -1557,4 +1749,3 @@ export const Constants = {
     },
   },
 } as const
-

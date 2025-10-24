@@ -100,7 +100,7 @@ export const ListView = ({
     try {
       const url = window.location.href;
       const title = `${t('apartment.apartment')} № ${apartment?.apartment_number}`;
-      const text = project.name ? project.name : '';
+      const text = project?.name ? project.name : '';
       if (navigator.share) {
         await navigator.share({ title, text, url });
       } else {
@@ -132,11 +132,18 @@ export const ListView = ({
       apartment_number: apartment.apartment_number,
       rooms: typeof apartment.rooms === 'number' ? apartment.rooms : Number(apartment.rooms),
       area: apartment.area,
-      price: typeof apartment.price === 'number' ? apartment.price : undefined,
+      price: typeof apartment.price === 'number' ? apartment.price : 0,
       status: apartment.status,
       floor_number: apartment.floor_number
     });
   };
+
+  const priceVisible = getVisibleFields().find(field => field.field_name === 'price')?.is_visible;
+  const areaVisible = getVisibleFields().find(field => field.field_name === 'area')?.is_visible;
+  const roomsVisible = getVisibleFields().find(field => field.field_name === 'rooms')?.is_visible;
+  const statusVisible = getVisibleFields().find(field => field.field_name === 'status')?.is_visible;
+  const floorVisible = getVisibleFields().find(field => field.field_name === 'floor')?.is_visible;
+  const numberVisible = getVisibleFields().find(field => field.field_name === 'number')?.is_visible;
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-8 grow">
@@ -358,21 +365,27 @@ export const ListView = ({
                               }}
                             >
                               {/* Room type */}
-                              <div className="flex-shrink-0 text-center min-w-[99px] transition-transform duration-200 hover:scale-105">
-                                <div className="text-[20px] font-medium text-black leading-[26px] hover:text-gray-700 transition-colors duration-200">
-                                  {apartment.type === 'apartment' ? apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
+                              {
+                                roomsVisible &&
+                                <div className="flex-shrink-0 text-center min-w-[99px] transition-transform duration-200 hover:scale-105">
+                                  <div className="text-[20px] font-medium text-black leading-[26px] hover:text-gray-700 transition-colors duration-200">
+                                    {apartment.type === 'apartment' ? apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
+                                  </div>
                                 </div>
-                              </div>
+                              }
 
                               {/* Area */}
-                              <div className="relative flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105 flex flex-col -translate-y-[5px]">
-                                <span className="text-[11px] text-gray-400  truncate">
-                                  {t('project.area')}
-                                </span>
-                                <div className="text-[20px] font-light text-black leading-[24px] hover:text-gray-700 transition-colors duration-200">
-                                  {apartment.area} м²
+                              {
+                                areaVisible &&
+                                <div className="relative flex-shrink-0 text-center min-w-[71px] transition-transform duration-200 hover:scale-105 flex flex-col -translate-y-[5px]">
+                                  <span className="text-[11px] text-gray-400  truncate">
+                                    {t('project.area')}
+                                  </span>
+                                  <div className="text-[20px] font-light text-black leading-[24px] hover:text-gray-700 transition-colors duration-200">
+                                    {apartment.area} м²
+                                  </div>
                                 </div>
-                              </div>
+                              }
 
                               {/* Custom fields - scrollable */}
                               {getVisibleFields().map((field) => {
@@ -431,16 +444,19 @@ export const ListView = ({
                           </div>
 
                           {/* Price Section */}
-                          <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
-                            <div className="text-[20px] font-extrabold text-black leading-[26px]">
-                              {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                            </div>
-                            {apartment.price && project?.installment_enabled && (
-                              <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
-                                {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                          {
+                            priceVisible && (
+                              <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
+                                <div className="text-[20px] font-extrabold text-black leading-[26px]">
+                                  {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                                </div>
+                                {apartment.price && project?.installment_enabled && (
+                                  <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
+                                    {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
+                                  </div>
+                                )}
                               </div>
                             )}
-                          </div>
 
                           {/* Action Buttons - Always visible */}
                           <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
@@ -508,9 +524,9 @@ export const ListView = ({
                           </div>
                           <div className="text-xs text-gray-600">{apartment.area} м²</div>
                           <div className="text-xs font-semibold text-gray-900">
-                            {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                            {apartment.price && priceVisible ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                           </div>
-                          {apartment.price && project?.installment_enabled && (
+                          {apartment.price && project?.installment_enabled && priceVisible && (
                             <div className="text-[10px] text-gray-500">
                               {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
                             </div>
@@ -551,14 +567,16 @@ export const ListView = ({
                               </Badge>
                             </div>
                             <div className="text-center space-y-1">
-                              <div className="text-sm font-medium text-gray-700">
-                                {!Number.isNaN(apartment.rooms) && <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>}
-                              </div>
-                              <div className="text-xs text-gray-600">{apartment.area} м²</div>
+                              {roomsVisible && (
+                                <div className="text-sm font-medium text-gray-700">
+                                  {!Number.isNaN(apartment.rooms) && <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-600">{apartment.area && areaVisible ? `${apartment.area} м²` : ''}</div>
                               <div className="text-xs font-semibold text-gray-900">
-                                {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                                {apartment.price && priceVisible ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                               </div>
-                              {apartment.price && project?.installment_enabled && (
+                              {apartment.price && project?.installment_enabled && priceVisible && (
                                 <div className="text-[10px] text-gray-500">{t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}</div>
                               )}
                             </div>

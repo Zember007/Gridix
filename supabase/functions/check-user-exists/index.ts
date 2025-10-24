@@ -37,23 +37,23 @@ serve(async (req) => {
     const userExists = !!existingUser
 
     // Если пользователь существует, проверяем его тип аккаунта
-    let accountType = null
+    let account:any = null
     if (existingUser) {
       const { data: userProfile } = await supabaseAdmin
         .from('user_profiles')
-        .select('account_type')
+        .select('*')
         .eq('id', existingUser.id)
         .single()
       
-      accountType = userProfile?.account_type || 'developer'
+      account = userProfile || 'developer'
     }
     
     console.log('User exists:', userExists)
 
     return createJsonResponse({
       success: true,
-      exists: userExists,
-      accountType: accountType
+      exists: account,
+      accountType: account?.account_type || 'developer'
     }, 200, origin);
 
   } catch (error) {

@@ -5,11 +5,10 @@ import { Ruler, Building2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Apartment } from '@/types/apartment';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { FieldSetting } from '@/hooks/useFields';
+import { Project } from '@/hooks/useProjectsManager';
 
-interface Project {
-  has_commercial?: boolean;
-  has_parking?: boolean;
-}
+
 
 interface LayoutPhoto {
   id: string;
@@ -33,6 +32,7 @@ interface LayoutGalleryProps {
   selectedCurrency: string;
   isMobile: boolean;
   themeColor?: string;
+  visibleFields?: FieldSetting[];
 }
 
 export const LayoutGallery = ({
@@ -48,14 +48,15 @@ export const LayoutGallery = ({
   formatPrice,
   selectedCurrency,
   isMobile,
-  themeColor = '#000000'
+  themeColor = '#000000',
+  visibleFields = []
 }: LayoutGalleryProps) => {
   const { t } = useLanguage();
 
-  const getButtonStyle = (isActive: boolean) => 
+  const getButtonStyle = (isActive: boolean) =>
     isActive ? { backgroundColor: themeColor, color: 'white' } : {};
 
-  const getButtonClass = (isActive: boolean) => 
+  const getButtonClass = (isActive: boolean) =>
     isActive ? 'text-white' : 'border-gray-300';
 
   return (
@@ -184,13 +185,15 @@ export const LayoutGallery = ({
               if (!layoutGroups[key]) {
                 layoutGroups[key] = [];
               }
-              layoutGroups[key].push(apt);
+              layoutGroups[key]?.push(apt);
             });
 
             return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
               const representativeApt = apartmentGroup[0];
               const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
               const totalCount = apartmentGroup.length;
+
+              if(!representativeApt) return null;
 
               const isCommercial = representativeApt.type === 'commercial';
               const isParking = representativeApt.type === 'parking';
@@ -200,23 +203,23 @@ export const LayoutGallery = ({
                   <div className="aspect-[4/3] bg-gray-100 relative">
                     {(() => {
                       let layoutKey: string;
-                      if (representativeApt.type === 'commercial') {
+                      if (representativeApt?.type === 'commercial') {
                         layoutKey = 'commercial';
-                      } else if (representativeApt.type === 'parking') {
+                      } else if (representativeApt?.type === 'parking') {
                         layoutKey = 'parking';
                       } else {
-                        layoutKey = representativeApt.rooms === 0 ? 'studio' : `${Number(representativeApt.rooms)}-room`;
+                        layoutKey = representativeApt?.rooms === 0 ? 'studio' : `${Number(representativeApt?.rooms ?? 0)}-room`;
                       }
-                      
+
                       const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                       const first = photos[0];
-                      
+
                       if (first) {
                         return (
-                          <img 
-                            src={first.image_url} 
+                          <img
+                            src={first.image_url}
                             alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover"
                           />
                         );
                       } else {
@@ -242,38 +245,43 @@ export const LayoutGallery = ({
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <h4 className="font-semibold text-lg">
-                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
+                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt?.rooms === 0 ? t('apartment.studio') : `${String(representativeApt?.rooms ?? 0)}-${t('apartment.rooms')}`)}
                       </h4>
 
-                      <div className="text-sm text-gray-600">
-                        <span className="flex items-center gap-1">
-                          <Ruler className="h-4 w-4" />
-                          {(() => {
-                            const areas = apartmentGroup.map(apt => apt.area);
-                            const minArea = Math.min(...areas);
-                            const maxArea = Math.max(...areas);
-                            return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
-                          })()}
-                        </span>
-                      </div>
+                      {
+                        visibleFields.find(field => field.field_name === 'area')?.is_visible &&
+                        <div className="text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Ruler className="h-4 w-4" />
+                            {(() => {
+                              const areas = apartmentGroup.map(apt => apt.area);
+                              const minArea = Math.min(...areas);
+                              const maxArea = Math.max(...areas);
+                              return minArea === maxArea ? `${minArea} м²` : `${minArea}-${maxArea} м²`;
+                            })()}
+                          </span>
+                        </div>
+                      }
 
                       {/* Price range */}
-                      {(() => {
-                        const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
-                        if (prices.length > 0) {
-                          const minPrice = Math.min(...prices);
-                          const maxPrice = Math.max(...prices);
-                          return (
-                            <div className="font-bold text-lg">
-                              {minPrice === maxPrice
-                                ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
-                                : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
-                              }
-                            </div>
-                          );
-                        }
-                        return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
-                      })()}
+                      {
+                        visibleFields.find(field => field.field_name === 'price')?.is_visible &&
+                        (() => {
+                          const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
+                          if (prices.length > 0 ) {
+                            const minPrice = Math.min(...prices as number[]);
+                            const maxPrice = Math.max(...prices as number[]);
+                            return (
+                              <div className="font-bold text-lg">
+                                {minPrice === maxPrice
+                                  ? `${formatPrice(minPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                  : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${getCurrencySymbolSafe(selectedCurrency)}`
+                                }
+                              </div>
+                            );
+                          }
+                          return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
+                        })()}
 
                       <Button
                         className="w-full text-white hover:opacity-90"
@@ -287,7 +295,7 @@ export const LayoutGallery = ({
                             setSelectedRooms('all');
                           } else {
                             setSelectedType('apartment');
-                            setSelectedRooms(Number(representativeApt.rooms) >= 4 ? '4+' : String(representativeApt.rooms));
+                            setSelectedRooms(Number(representativeApt?.rooms ?? 0) >= 4 ? '4+' : String(representativeApt?.rooms ?? 0));
                           }
                           setViewMode('list');
                         }}

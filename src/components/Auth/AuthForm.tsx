@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,18 +15,33 @@ import { AccountTypeSelector } from './AccountTypeSelector';
 interface AuthFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
+  defaultMode?: 'signin' | 'signup';
 }
 
-export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
+export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) => {
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode || 'signin');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
   const [showAccountTypeSelector, setShowAccountTypeSelector] = useState(false);
   const [selectedAccountType, setSelectedAccountType] = useState<'developer' | 'manager' | null>(null);
+  
+  // Реферальный код и партнер
+  const refCode = searchParams.get('ref');
+  const inviteCode = searchParams.get('invite');
+  const [partnerInfo, setPartnerInfo] = useState<{
+    id: string;
+    partner_code: string;
+    user_profiles: {
+      full_name: string | null;
+      email: string | null;
+    };
+  } | null>(null);
+  const [checkingPartner, setCheckingPartner] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -33,6 +50,45 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
     companyName: '',
     phone: ''
   });
+
+  // Проверяем партнера по реферальному коду
+  useEffect(() => {
+    const checkPartner = async () => {
+      if (!refCode) return;
+      
+      setCheckingPartner(true);
+      try {
+        const { data, error } = await supabase
+          .from('partner_profiles')
+          .select(`
+            id,
+            partner_code,
+            user_profiles (
+              full_name,
+              email
+            )
+          `)
+          .eq('partner_code', refCode)
+          .single();
+
+          console.log(data);
+
+        if (error || !data) {
+          toast.error(t('auth.invalidReferralCode'));
+          return;
+        }
+
+        setPartnerInfo(data);
+      } catch (error) {
+        console.error('Error checking partner:', error);
+        toast.error(t('auth.failedToCheckPartner'));
+      } finally {
+        setCheckingPartner(false);
+      }
+    };
+
+    checkPartner();
+  }, [refCode, t]);
 
   const handleAccountTypeSelect = (accountType: 'developer' | 'manager') => {
     setSelectedAccountType(accountType);
@@ -51,7 +107,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: authData, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -65,6 +121,55 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         });
 
         if (error) throw error;
+
+        if (authData.user) {
+          // Создаем профиль пользователя
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: authData.user.id,
+              email: formData.email,
+              full_name: formData.fullName,
+              account_type: selectedAccountType || 'developer'
+            });
+
+          if (profileError) {
+            console.error('Error creating user profile:', profileError);
+          }
+
+          // Если есть реферальный код, создаем связь с партнером
+          if (refCode && partnerInfo) {
+            const { error: linkError } = await supabase
+              .from('partner_links')
+              .insert({
+                partner_id: partnerInfo.id,
+                client_id: authData.user.id,
+                type: 'referral',
+                status: 'active',
+                accepted_at: new Date().toISOString()
+              });
+
+            if (linkError) {
+              console.error('Error creating partner link:', linkError);
+            }
+          }
+
+          // Если есть код приглашения, обновляем статус приглашения
+          if (inviteCode) {
+            const { error: inviteError } = await supabase
+              .from('partner_invitations')
+              .update({ 
+                status: 'accepted',
+                accepted_at: new Date().toISOString()
+              })
+              .eq('invitation_code', inviteCode)
+              .eq('email', formData.email);
+
+            if (inviteError) {
+              console.error('Error updating invitation:', inviteError);
+            }
+          }
+        }
 
         toast.success(t('auth.checkEmail'));
       } else {
@@ -151,6 +256,22 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
         </CardHeader>
         
         <CardContent>
+          {refCode && partnerInfo && (
+            <Alert className="mb-4">
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('auth.partnerInvitation')} {partnerInfo?.user_profiles?.full_name}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {checkingPartner && (
+            <div className="flex items-center justify-center py-4 mb-4">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              {t('auth.checkingPartner')}
+            </div>
+          )}
+
           <Tabs value={mode} onValueChange={(value) => setMode(value as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
@@ -277,7 +398,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </div>
               </TabsContent>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || checkingPartner}>
                 {loading 
                   ? t('auth.loading') 
                   : mode === 'signin' 
@@ -297,7 +418,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </div>
             </form>
 
-            <div className="mt-6">
+           {/*  <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -333,7 +454,7 @@ export const AuthForm = ({ onSuccess, redirectTo }: AuthFormProps) => {
                 </svg>
                 {t('auth.signInWithGoogle')}
               </Button>
-            </div>
+            </div> */}
           </Tabs>
         </CardContent>
       </Card>

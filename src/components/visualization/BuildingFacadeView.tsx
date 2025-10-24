@@ -51,7 +51,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     colors: { building: string };
     opacity: { normal: number; hover: number }; 
     hoverEffects: { glow: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
-    display: { showNumbers: boolean; showTooltip: boolean; showArea: boolean; showPrice: boolean };
+    display: { showNumbers: boolean; showTooltip: boolean; };
   } | null>(null);
 
   // Floor popup state
@@ -354,10 +354,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           settings={{
             showNumbers: facadeSettings?.display?.showNumbers ?? true,
             showTooltip: facadeSettings?.display?.showTooltip ?? false,
-            showArea: facadeSettings?.display?.showArea ?? false,
-            showPrice: facadeSettings?.display?.showPrice ?? false,
+            showArea: true,
+            showPrice: true,
           }}
-          project={project}
+          currency={project.currency || null}
         />
       );
     }

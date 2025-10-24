@@ -8,6 +8,8 @@ import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsMa
 import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
 import { Statistics } from '@/components/superadmin/Statistics';
 import { SystemSettings } from '@/components/superadmin/SystemSettings';
+import { PartnersManagement } from '@/components/superadmin/PartnersManagement';
+import { PartnerPayoutsManagement } from '@/components/superadmin/PartnerPayoutsManagement';
 import { Loader2 } from 'lucide-react';
 
 const SuperAdminPage = () => {
@@ -43,6 +45,10 @@ const SuperAdminPage = () => {
         return <ProjectsManagement />;
       case 'stats':
         return <Statistics />;
+      case 'partners':
+        return <PartnersManagement />;
+      case 'partner-payouts':
+        return <PartnerPayoutsManagement />;
       case 'settings':
         return <SystemSettings />;
       default:

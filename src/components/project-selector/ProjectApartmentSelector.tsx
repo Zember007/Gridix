@@ -568,7 +568,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   />
 
                   {/* Layout gallery below facade when not expanded - hide for project_type = object */}
-                  {(project as unknown as Record<string, unknown>)?.project_type !== 'object' && (
+                  {(project)?.project_type !== 'object' && (
                     <LayoutGallery
                       apartments={apartments}
                       selectedRooms={filters.selectedRooms}
@@ -583,6 +583,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                       selectedCurrency={filters.selectedCurrency}
                       isMobile={isMobile}
                       themeColor={getThemeColor()}
+                      visibleFields={fieldSettings.filter(field => field.is_visible)}
                     />
                   )}
                 </div>
@@ -600,6 +601,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         )}
                         onApartmentSelect={openApartmentDetails}
                         selectedFloorNumber={selectedFloorForPlan}
+                        visibleFields={fieldSettings.filter(field => field.is_visible)}
                       />
                     </div>
 

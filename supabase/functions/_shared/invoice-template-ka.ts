@@ -74,14 +74,22 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                 color: '#1f2937'
               },
               {
-                text: `ნომერი: ${data.invoiceNumber}`,
-                fontSize: 14,
-                margin: [0, 5, 0, 0]
+                text: splitTextByScript(`ნომერი: ${data.invoiceNumber}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 14,
+                  margin: [0, 5, 0, 0]
+                })),
+
               },
               {
-                text: `თარიღი: ${data.date}`,
-                fontSize: 12,
-                color: '#6b7280'
+                text: splitTextByScript(`თარიღი: ${data.date}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 12,
+                  color: '#6b7280'
+                })),
+
               }
             ]
           },
@@ -102,22 +110,30 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
           body: [
             [
               {
-                text: 'გადამხდელი (Payer)',
-                fontSize: 12,
-                bold: true,
-                color: '#374151'
+                text: splitTextByScript('გადამხდელი (Payer)').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 12,
+                  bold: true,
+                  color: '#374151',
+                })),
+
               },
               {
-                text: 'მიმღები (Payee)',
-                fontSize: 12,
-                bold: true,
-                color: '#374151'
+
+                text: splitTextByScript('მიმღები (Payee)').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 12,
+                  bold: true,
+                  color: '#374151',
+                }))
               }
             ],
             [
               {
                 stack: [
-                  { 
+                  {
                     text: splitTextByScript(data.companyName).map(segment => ({
                       text: segment.text,
                       font: segment.font,
@@ -125,28 +141,28 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                       bold: true
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`საიდენტიფიკაციო კოდი: ${data.companyTaxId}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
                       fontSize: 10
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(data.companyAddress).map(segment => ({
                       text: segment.text,
                       font: segment.font,
                       fontSize: 10
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`ტელ: ${data.companyPhone}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
                       fontSize: 10
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`ელ-ფოსტა: ${data.companyEmail}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
@@ -157,7 +173,7 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
               },
               {
                 stack: [
-                  { 
+                  {
                     text: splitTextByScript(data.gridixName).map(segment => ({
                       text: segment.text,
                       font: segment.font,
@@ -165,21 +181,21 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                       bold: true
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`საიდენტიფიკაციო კოდი: ${data.gridixTaxId}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
                       fontSize: 10
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`ბანკი: ${data.gridixBank}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
                       fontSize: 10
                     }))
                   },
-                  { 
+                  {
                     text: splitTextByScript(`IBAN: ${data.gridixIban}`).map(segment => ({
                       text: segment.text,
                       font: segment.font,
@@ -207,16 +223,24 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
           body: [
             [
               {
-                text: 'გადახდის მიზანი (Payment Purpose)',
-                fontSize: 12,
-                bold: true,
-                color: '#374151'
+                text: splitTextByScript('გადახდის მიზანი (Payment Purpose)').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 12,
+                  bold: true,
+                  color: '#374151'
+                }))
+
               },
               {
-                text: 'თანხა (Amount)',
-                fontSize: 12,
-                bold: true,
-                color: '#374151'
+                text: splitTextByScript('თანხა (Amount)').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 12,
+                  bold: true,
+                  color: '#374151'
+                })),
+              
               }
             ],
             [
@@ -230,6 +254,7 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
               {
                 text: `${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`,
                 fontSize: 14,
+                font: 'Roboto',
                 bold: true,
                 color: '#059669'
               }
@@ -258,28 +283,28 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
               { text: 'ჯამი', fontSize: 12, bold: true, color: '#374151' }
             ],
             [
-              { 
+              {
                 text: splitTextByScript(`${data.planName} - ${data.projectName}`).map(segment => ({
                   text: segment.text,
                   font: segment.font,
                   fontSize: 11
                 }))
               },
-              { 
+              {
                 text: splitTextByScript(`${data.durationMonths} თვე`).map(segment => ({
                   text: segment.text,
                   font: segment.font,
                   fontSize: 11
                 }))
               },
-              { 
+              {
                 text: splitTextByScript(`${data.monthlyPrice.toFixed(2)} ${data.gridixCurrency}`).map(segment => ({
                   text: segment.text,
                   font: segment.font,
                   fontSize: 11
                 }))
               },
-              { 
+              {
                 text: splitTextByScript(data.discountPercentage > 0 ? `${data.discountPercentage}%` : 'ფასდაკლება არ არის').map(segment => ({
                   text: segment.text,
                   font: segment.font,
@@ -287,7 +312,7 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                   color: data.discountPercentage > 0 ? '#059669' : '#6b7280'
                 }))
               },
-              { 
+              {
                 text: splitTextByScript(`${data.totalPrice.toFixed(2)} ${data.gridixCurrency}`).map(segment => ({
                   text: segment.text,
                   font: segment.font,
@@ -320,16 +345,25 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                 margin: [0, 0, 0, 5]
               },
               {
-                text: `ბანკი: ${data.gridixBank}`,
-                fontSize: 10
+                text: splitTextByScript(`ბანკი: ${data.gridixBank}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 10
+                })),
               },
               {
-                text: `IBAN: ${data.gridixIban}`,
-                fontSize: 10
+                text: splitTextByScript(`IBAN: ${data.gridixIban}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 10
+                })),
               },
               {
-                text: `ვალუტა: ${data.gridixCurrency}`,
-                fontSize: 10
+                text: splitTextByScript(`ვალუტა: ${data.gridixCurrency}`).map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 10
+                })),
               }
             ]
           },
@@ -342,10 +376,14 @@ export function createGeorgianInvoiceTemplate(data: InvoiceData) {
                 alignment: 'center'
               }] : []),
               {
-                text: 'ფინანსური განყოფილება GRIDIX',
-                fontSize: 10,
-                alignment: 'center',
-                margin: [0, 10, 0, 0]
+                text: splitTextByScript('ფინანსური განყოფილება GRIDIX').map(segment => ({
+                  text: segment.text,
+                  font: segment.font,
+                  fontSize: 10,
+                  alignment: 'center',
+                  margin: [0, 10, 0, 0]
+                })),
+              
               }
             ]
           }

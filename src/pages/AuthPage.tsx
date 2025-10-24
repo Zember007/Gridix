@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { AuthForm } from '@/components/Auth/AuthForm';
 import ResetPasswordForm from '@/components/Auth/ResetPasswordForm';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,12 +10,17 @@ import { supabase } from '@/integrations/supabase/client';
 const AuthPage = () => {
   const { navigate } = useLanguageNavigation();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { user, loading } = useAuth();
   const { userRole, loading: roleLoading } = useUserRole();
   
   const redirectTo = searchParams.get('redirect') || '/admin';
   const mode = searchParams.get('mode');
   const [isRecovery, setIsRecovery] = useState<boolean>(false);
+  
+  // Определяем режим на основе URL
+  const isSignup = location.pathname.includes('/signup');
+  const isSignin = location.pathname.includes('/signin');
 
   const hashIndicatesRecovery = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -77,6 +82,7 @@ const AuthPage = () => {
     ) : (
       <AuthForm 
         redirectTo={redirectTo}
+        defaultMode={isSignup ? 'signup' : isSignin ? 'signin' : undefined}
         onSuccess={() => {
           if (redirectTo.match(/^\/(ru|en|ka)\//)) {
             window.location.href = redirectTo;

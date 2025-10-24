@@ -13,8 +13,7 @@ interface ApartmentPopupProps {
     showPrice: boolean;
   };
   currency?:string | null;
-  onClose?: () => void;
-  selectedCurrency: string; 
+  selectedCurrency?: string; 
 }
 
 const ApartmentPopup: React.FC<ApartmentPopupProps> = ({

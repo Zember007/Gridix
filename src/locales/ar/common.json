@@ -18,5 +18,9 @@
   "unavailable": "غير متاح",
   "view": "عرض",
   "clear": "مسح",
-  "save": "حفظ"
+  "save": "حفظ",
+  "companySettingsNotFound": "لم يتم العثور على إعدادات الشركة. يرجى تكوين معلومات شركتك قبل إنشاء الفواتير.",
+  "companySettingsIncomplete": "يرجى ملء تفاصيل الدفع في إعدادات الشركة لإنشاء الفواتير.",
+  "invoiceGenerationFailed": "فشل في إنشاء الفاتورة",
+  "invoiceDownloadFailed": "فشل في تحميل الفاتورة"
 }

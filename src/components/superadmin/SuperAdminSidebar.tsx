@@ -1,4 +1,4 @@
-import { Users, CreditCard, FolderKanban, BarChart3, Settings } from 'lucide-react';
+import { Users, CreditCard, FolderKanban, BarChart3, Settings, Handshake, DollarSign } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -35,6 +35,16 @@ const menuItems = [
     title: 'Статистика',
     icon: BarChart3,
     value: 'stats',
+  },
+  {
+    title: 'Партнёры',
+    icon: Handshake,
+    value: 'partners',
+  },
+  {
+    title: 'Выплаты',
+    icon: DollarSign,
+    value: 'partner-payouts',
   },
   {
     title: 'Настройки',

@@ -6,6 +6,7 @@ import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import FloorPlanView from '@/components/visualization/FloorPlanView';
 import { Project } from '@/hooks/useProjectsManager';
+import { FieldSetting } from '@/hooks/useFields';
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -13,6 +14,7 @@ interface ApartmentFloorPlanProps {
   onApartmentSelect: (apartment: Apartment) => void;
   selectedFloorNumber?: number;
   project: Project;
+  visibleFields?: FieldSetting[];
 }
 
 interface BuildingFloor {
@@ -22,7 +24,7 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber, visibleFields = [] }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
@@ -55,7 +57,7 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
   }, [projectId]);
 
   // Определяем выбранный этаж: используем переданный prop или первый доступный этаж
-  const selectedFloor = typeof selectedFloorNumber  === 'number' ? selectedFloorNumber : (buildingFloors.length > 0 ? buildingFloors[0].floor_number : null);
+  const selectedFloor = typeof selectedFloorNumber  === 'number' ? selectedFloorNumber : (buildingFloors.length > 0 ? buildingFloors[0]?.floor_number ?? null : null);
   // Убрали тяжёлую загрузку полигонов этажей здесь — не требуется для FloorPlanView
 
   if (!buildingFloors.length || selectedFloor === null) {
@@ -77,6 +79,7 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
         floorNumber={selectedFloor}
         apartments={floorApartments}
         onApartmentSelect={onApartmentSelect}
+        visibleFields={visibleFields}
       />
   );
 };
