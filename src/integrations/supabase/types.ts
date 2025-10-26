@@ -671,28 +671,34 @@ export type Database = {
           accepted_at: string | null
           created_at: string | null
           email: string
+          expires_at: string | null
           id: string
           invitation_code: string
           partner_id: string
           status: string | null
+          type: string
         }
         Insert: {
           accepted_at?: string | null
           created_at?: string | null
           email: string
+          expires_at?: string | null
           id?: string
           invitation_code: string
           partner_id: string
           status?: string | null
+          type?: string
         }
         Update: {
           accepted_at?: string | null
           created_at?: string | null
           email?: string
+          expires_at?: string | null
           id?: string
           invitation_code?: string
           partner_id?: string
           status?: string | null
+          type?: string
         }
         Relationships: [
           {

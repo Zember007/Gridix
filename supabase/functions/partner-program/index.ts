@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 interface PartnerProgramRequest {
-  action: 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request'
+  action: 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
   partner_code?: string
   partner_id?: string
   client_id?: string
@@ -12,6 +12,9 @@ interface PartnerProgramRequest {
   payment_details?: any
   admin_action?: 'list' | 'update_percentage' | 'suspend' | 'activate'
   payout_percentage?: number
+  email?: string
+  invitation_type?: 'referral' | 'managed'
+  invitation_code?: string
 }
 
 serve(async (req) => {
@@ -53,11 +56,11 @@ serve(async (req) => {
       )
     }
 
-    const { action, partner_code, partner_id, client_id, amount, payment_method, payment_details, admin_action, payout_percentage }: PartnerProgramRequest = await req.json()
+    const { action, partner_code, partner_id, client_id, amount, payment_method, payment_details, admin_action, payout_percentage, email, invitation_type, invitation_code }: PartnerProgramRequest = await req.json()
 
     switch (action) {
       case 'track_referral':
-        return await handleTrackReferral(supabaseClient, user.id, partner_code, req.headers.get('origin'))
+        return await handleTrackReferral(supabaseClient, user.id, partner_code, invitation_code, invitation_type, req.headers.get('origin'))
       
       case 'get_stats':
         return await handleGetStats(supabaseClient, user.id, partner_id, req.headers.get('origin'))
@@ -70,6 +73,9 @@ serve(async (req) => {
       
       case 'payout_request':
         return await handlePayoutRequest(supabaseClient, user.id, amount, payment_method, payment_details, req.headers.get('origin'))
+      
+      case 'send_invitation':
+        return await handleSendInvitation(supabaseClient, user.id, email, invitation_type, req.headers.get('origin'))
       
       default:
         return createJsonResponse(
@@ -89,7 +95,7 @@ serve(async (req) => {
 })
 
 // Отслеживание реферала при регистрации
-async function handleTrackReferral(supabaseClient: any, userId: string, partnerCode?: string, origin?: string | null) {
+async function handleTrackReferral(supabaseClient: any, userId: string, partnerCode?: string, invitationCode?: string, invitationType?: string, origin?: string | null) {
   if (!partnerCode) {
     return createJsonResponse(
       { success: false, error: 'Partner code required' },
@@ -124,14 +130,86 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
       )
     }
 
+    let linkType = 'referral'
+    let linkStatus = 'active'
+
+    console.log('handleTrackReferral params:', { invitationCode, invitationType, partnerCode })
+
+    // Если это приглашение, проверяем код приглашения
+    if (invitationCode && invitationType === 'managed') {
+      console.log('Processing managed invitation with code:', invitationCode, 'for partner:', partner.id)
+      const { data: invitation, error: invitationError } = await supabaseClient
+        .from('partner_invitations')
+        .select('id, status, email, type')
+        .eq('invitation_code', invitationCode)
+        .eq('partner_id', partner.id)
+        .eq('status', 'pending')
+        .single()
+
+      if (invitationError || !invitation) {
+        console.error('Invitation not found or error:', invitationError)
+        return createJsonResponse(
+          { success: false, error: 'Invalid or expired invitation' },
+          400,
+          origin
+        )
+      }
+      
+      console.log('Found invitation:', invitation)
+
+      // Проверяем, что приглашение имеет правильный тип
+      if (invitation.type !== 'managed') {
+        console.log('Invitation type mismatch - expected managed, got:', invitation.type)
+        return createJsonResponse(
+          { success: false, error: 'Invalid invitation type' },
+          400,
+          origin
+        )
+      }
+
+      // Проверяем, что email совпадает (если указан)
+      const { data: userProfile } = await supabaseClient
+        .from('user_profiles')
+        .select('email')
+        .eq('id', userId)
+        .single()
+
+      console.log('User profile email:', userProfile?.email, 'Invitation email:', invitation.email)
+
+      if (userProfile && invitation.email && userProfile.email !== invitation.email) {
+        console.log('Email mismatch - user:', userProfile.email, 'invitation:', invitation.email)
+        return createJsonResponse(
+          { success: false, error: 'Email does not match invitation' },
+          400,
+          origin
+        )
+      }
+
+      // Обновляем статус приглашения
+      const { error: updateError } = await supabaseClient
+        .from('partner_invitations')
+        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+        .eq('id', invitation.id)
+
+      if (updateError) {
+        console.error('Error updating invitation status:', updateError)
+      } else {
+        console.log('Invitation status updated to accepted')
+      }
+
+      linkType = 'managed'
+      console.log('Set linkType to managed for invitation:', invitation.id)
+    }
+
     // Создаём партнёрскую связь
+    console.log('Creating partner link with type:', linkType)
     const { data: link, error: linkError } = await supabaseClient
       .from('partner_links')
       .insert({
         partner_id: partner.id,
         client_id: userId,
-        type: 'referral',
-        status: 'active',
+        type: linkType,
+        status: linkStatus,
         accepted_at: new Date().toISOString()
       })
       .select()
@@ -145,6 +223,8 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
         origin
       )
     }
+    
+    console.log('Partner link created successfully:', link)
 
     // Получаем имя партнёра
     const { data: partnerUser } = await supabaseClient
@@ -155,11 +235,13 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
 
     const partnerName = partnerUser ? `${partnerUser.first_name} ${partnerUser.last_name}`.trim() : 'Unknown'
 
+    console.log('Returning success response with link_type:', linkType)
     return createJsonResponse(
       { 
         success: true, 
         partner_name: partnerName,
-        link_id: link.id 
+        link_id: link.id,
+        link_type: linkType
       },
       200,
       origin
@@ -295,7 +377,6 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
   }
 }
 
-// Управление партнёрами (суперадмин)
 async function handleAdminManage(supabaseClient: any, userId: string, adminAction?: string, targetPartnerId?: string, payoutPercentage?: number, origin?: string | null) {
   try {
     // Проверяем права суперадмина
@@ -468,7 +549,7 @@ async function handleImpersonate(supabaseClient: any, userId: string, clientId?:
       type: 'magiclink',
       email: clientUser.user.email!,
       options: {
-        redirectTo: `${Deno.env.get('SITE_URL')}/dashboard`
+        redirectTo: `${Deno.env.get('SITE_URL')}admin`
       }
     })
 
@@ -574,6 +655,120 @@ async function handlePayoutRequest(supabaseClient: any, userId: string, amount?:
     )
   } catch (error) {
     console.error('Error in payout_request:', error)
+    return createJsonResponse(
+      { error: 'Internal server error' },
+      500,
+      origin
+    )
+  }
+}
+
+// Отправка приглашения клиенту
+async function handleSendInvitation(supabaseClient: any, userId: string, email?: string, invitationType?: string, origin?: string | null) {
+  if (!email) {
+    return createJsonResponse(
+      { error: 'Email required' },
+      400,
+      origin
+    )
+  }
+
+  try {
+    // Получаем профиль партнёра
+    const { data: partnerProfile, error: partnerError } = await supabaseClient
+      .from('partner_profiles')
+      .select('id, partner_code, status')
+      .eq('user_id', userId)
+      .single()
+
+    if (partnerError || !partnerProfile) {
+      return createJsonResponse(
+        { error: 'Partner profile not found' },
+        404,
+        origin
+      )
+    }
+
+    if (partnerProfile.status !== 'active') {
+      return createJsonResponse(
+        { error: 'Partner account is not active' },
+        403,
+        origin
+      )
+    }
+
+    // Проверяем, существует ли пользователь с таким email
+    const { data: existingUser } = await supabaseClient
+      .from('user_profiles')
+      .select('id')
+      .eq('email', email)
+      .single()
+
+    if (existingUser) {
+      return createJsonResponse(
+        { error: 'User with this email already exists' },
+        400,
+        origin
+      )
+    }
+
+    // Создаём приглашение
+    const invitationCode = `${partnerProfile.partner_code}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    console.log('Creating invitation with type:', invitationType || 'managed', 'for email:', email)
+    const { data: invitation, error: invitationError } = await supabaseClient
+      .from('partner_invitations')
+      .insert({
+        partner_id: partnerProfile.id,
+        email: email,
+        status: 'pending',
+        invitation_code: invitationCode,
+        type: invitationType || 'managed'
+      })
+      .select()
+      .single()
+
+    if (invitationError) {
+      console.error('Error creating invitation:', invitationError)
+      return createJsonResponse(
+        { error: 'Failed to create invitation' },
+        500,
+        origin
+      )
+    }
+    
+    console.log('Invitation created successfully:', invitation)
+
+    // Генерируем magic link для приглашения
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://gridix.live'
+    const invitationLink = `${siteUrl}invitation?ref=${partnerProfile.partner_code}&invite=${invitationCode}&type=${invitationType || 'managed'}`
+
+    const { data: inviteLinkData, error: magicLinkError } = await supabaseClient.auth.admin.inviteUserByEmail(email, {
+      redirectTo: invitationLink
+    });
+
+    console.log('Magic link data:', inviteLinkData)
+
+    if (magicLinkError) {
+      console.error('Error generating magic link:', magicLinkError)
+      return createJsonResponse(
+        { error: 'Failed to generate magic link' },
+        500,
+        origin
+      )
+    }
+
+    return createJsonResponse(
+      { 
+        success: true, 
+        invitation_id: invitation.id,
+        invitation_link: invitationLink,
+        invitation_code: invitationCode
+      },
+      200,
+      origin
+    )
+  } catch (error) {
+    console.error('Error in send_invitation:', error)
     return createJsonResponse(
       { error: 'Internal server error' },
       500,

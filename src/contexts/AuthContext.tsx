@@ -131,6 +131,56 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let timeoutId: NodeJS.Timeout | null = null;
   
     try {
+      // Обрабатываем реферальный код и приглашения сразу после авторизации
+      try {
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const partnerCode = urlParams.get('ref');
+        const invitationCode = urlParams.get('invite');
+        const invitationType = urlParams.get('type');
+        
+        console.log('Registration URL params:', { partnerCode, invitationCode, invitationType });
+        
+        if (partnerCode) {
+          if (invitationCode && invitationType === 'managed') {
+            console.log('Processing managed invitation...');
+            // Обрабатываем приглашение для управляемого клиента
+            const { data: invitationData, error: invitationError } = await supabase.functions.invoke('partner-program', {
+              body: {
+                action: 'track_referral',
+                partner_code: partnerCode,
+                invitation_code: invitationCode,
+                invitation_type: 'managed'
+              }
+            });
+
+            if (invitationError) {
+              console.error('Error processing invitation:', invitationError);
+            } else if (invitationData?.success) {
+              console.log('Invitation processed successfully:', invitationData.partner_name, 'Link type:', invitationData.link_type);
+            }
+          } else {
+            console.log('Processing regular referral...');
+            // Обычная реферальная связь
+            const { data: referralData, error: referralError } = await supabase.functions.invoke('partner-program', {
+              body: {
+                action: 'track_referral',
+                partner_code: partnerCode
+              }
+            });
+
+            if (referralError) {
+              console.error('Error tracking referral:', referralError);
+            } else if (referralData?.success) {
+              console.log('Referral tracked successfully:', referralData.partner_name, 'Link type:', referralData.link_type);
+            }
+          }
+        }
+      } catch (referralErr) {
+        console.error('Error processing referral/invitation:', referralErr);
+        // Не прерываем процесс регистрации из-за ошибки реферала
+      }
+
       const queryPromise = supabase
         .from('user_profiles')
         .select('*')
@@ -168,33 +218,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               .select()
               .single();
 
-            // Обрабатываем реферальный код после создания профиля
-            if (!createError && newProfile) {
-              try {
-                // Получаем реферальный код из URL параметров
-                const urlParams = new URLSearchParams(window.location.search);
-                const partnerCode = urlParams.get('ref');
-                
-                if (partnerCode) {
-                  // Вызываем функцию отслеживания реферала
-                  const { data: referralData, error: referralError } = await supabase.functions.invoke('partner-program', {
-                    body: {
-                      action: 'track_referral',
-                      partner_code: partnerCode
-                    }
-                  });
-
-                  if (referralError) {
-                    console.error('Error tracking referral:', referralError);
-                  } else if (referralData?.success) {
-                    console.log('Referral tracked successfully:', referralData.partner_name);
-                  }
-                }
-              } catch (referralErr) {
-                console.error('Error processing referral:', referralErr);
-                // Не прерываем процесс регистрации из-за ошибки реферала
-              }
-            }
+            // Профиль создан, логика обработки приглашений уже выполнена выше
   
             if (signal.aborted || currentSession !== session) return;
   

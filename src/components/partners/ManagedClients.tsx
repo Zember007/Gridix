@@ -63,60 +63,26 @@ export function ManagedClients() {
     try {
       setIsAdding(true);
       
-      // Проверяем, существует ли пользователь с таким email
-      const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-user-exists', {
-        body: { email: newClientEmail.trim() }
+      // Используем новую функцию для отправки приглашения
+      const { data: result, error } = await supabase.functions.invoke('partner-program', {
+        body: {
+          action: 'send_invitation',
+          email: newClientEmail.trim(),
+          invitation_type: 'managed'
+        }
       });
 
-      if (checkError) {
-        throw new Error('Ошибка проверки пользователя');
+      if (error) {
+        throw new Error(error.message || 'Ошибка отправки приглашения');
       }
 
-      if (checkResult.exists) {
-        throw new Error('Пользователь с таким email уже зарегистрирован. Партнерская программа предназначена для привлечения новых клиентов.');
+      if (!result.success) {
+        throw new Error(result.error || 'Не удалось отправить приглашение');
       }
-
-      // Отправляем приглашение новому пользователю
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Пользователь не авторизован');
-      }
-
-      // Получаем ID партнёра
-      const { data: partnerProfile, error: partnerError } = await supabase
-        .from('partner_profiles')
-        .select('id, partner_code')
-        .eq('user_id', user.id)
-        .single();
-
-      if (partnerError || !partnerProfile) {
-        throw new Error('Партнёрский профиль не найден');
-      }
-
-      // Создаём приглашение
-      const invitationCode = `${partnerProfile.partner_code}_${Date.now()}`;
-      const { error: invitationError } = await supabase
-        .from('partner_invitations')
-        .insert({
-          partner_id: partnerProfile.id,
-          email: newClientEmail.trim(),
-          status: 'pending',
-          invitation_code: invitationCode
-        })
-        .select()
-        .single();
-
-      if (invitationError) {
-        throw new Error('Не удалось создать приглашение');
-      }
-
-      // Отправляем email с приглашением (здесь можно добавить отправку email)
-      const invitationLink = `${window.location.origin}/auth/signup?ref=${partnerProfile.partner_code}&invite=${invitationCode}`;
       
       toast({
         title: "Приглашение отправлено",
-        description: `Приглашение отправлено на ${newClientEmail}. Ссылка: ${invitationLink}`,
+        description: `Приглашение отправлено на ${newClientEmail}. Ссылка: ${result.invitation_link}`,
       });
       
       setNewClientEmail('');

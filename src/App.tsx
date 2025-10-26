@@ -21,6 +21,7 @@ import WidgetPreviewPage from "./pages/WidgetPreviewPage";
 import PricingPage from "./pages/PricingPage";
 import ContactsPage from "./pages/ContactsPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
+import InvitationHandlerPage from "./pages/InvitationHandlerPage";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -70,6 +71,9 @@ function App() {
                      
               {/* Set password route - for users who need to set password */}
               <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
+              
+              {/* Invitation handler route - processes partner invitations */}
+              <Route path="/invitation" element={<EmbedProviders><InvitationHandlerPage /></EmbedProviders>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={
