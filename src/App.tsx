@@ -73,7 +73,7 @@ function App() {
               <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
               
               {/* Invitation handler route - processes partner invitations */}
-              <Route path="/invitation" element={<EmbedProviders><InvitationHandlerPage /></EmbedProviders>} />
+              <Route path="/:lang/invitation" element={<LanguageProviders><InvitationHandlerPage /></LanguageProviders>} />
               
               {/* Protected admin routes */}
               <Route path="/:lang/admin" element={

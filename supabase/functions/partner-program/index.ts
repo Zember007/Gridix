@@ -740,7 +740,7 @@ async function handleSendInvitation(supabaseClient: any, userId: string, email?:
 
     // Генерируем magic link для приглашения
     const siteUrl = Deno.env.get('SITE_URL') || 'https://gridix.live'
-    const invitationLink = `${siteUrl}invitation?ref=${partnerProfile.partner_code}&invite=${invitationCode}&type=${invitationType || 'managed'}`
+    const invitationLink = `${siteUrl}en/invitation?ref=${partnerProfile.partner_code}&invite=${invitationCode}&type=${invitationType || 'managed'}`
 
     const { data: inviteLinkData, error: magicLinkError } = await supabaseClient.auth.admin.inviteUserByEmail(email, {
       redirectTo: invitationLink
