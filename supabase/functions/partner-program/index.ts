@@ -226,6 +226,19 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
     
     console.log('Partner link created successfully:', link)
 
+    // Устанавливаем partner_id в профиле пользователя для всех будущих покупок
+    const { error: updateProfileError } = await supabaseClient
+      .from('user_profiles')
+      .update({ partner_id: partner.id })
+      .eq('id', userId)
+
+    if (updateProfileError) {
+      console.error('Error updating user profile with partner_id:', updateProfileError)
+      // Не прерываем процесс, так как основная связь уже создана
+    } else {
+      console.log('User profile updated with partner_id:', partner.id)
+    }
+
     // Получаем имя партнёра
     const { data: partnerUser } = await supabaseClient
       .from('user_profiles')

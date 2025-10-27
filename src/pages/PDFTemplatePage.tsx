@@ -460,7 +460,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                         <img
                             src={floorPlan.image_url}
                             alt={floorPlan.description}
-                            className="h-full max-h-[300px] w-auto mx-auto"
+                            className="h-full max-h-[350px] w-auto mx-auto"
                         />
 
                     </>

@@ -405,12 +405,39 @@ async function handleConfirmPayment(req: Request, body: any, corsHeaders: Record
       return createJsonResponse({ error: "Subscription not found" }, 404, origin);
     }
 
+    // Find partner for this client and set it in user profile if not already set
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('partner_id')
+      .eq('id', subscription.user_id)
+      .single();
+
+    let partnerId = userProfile?.partner_id;
+    if (!partnerId) {
+      const { data: partnerLink } = await supabase
+        .from('partner_links')
+        .select('partner_id')
+        .eq('client_id', subscription.user_id)
+        .eq('status', 'active')
+        .single();
+      
+      if (partnerLink) {
+        partnerId = partnerLink.partner_id;
+        
+        // Set partner_id in user profile for future purchases
+        await supabase
+          .from('user_profiles')
+          .update({ partner_id: partnerId })
+          .eq('id', subscription.user_id);
+      }
+    }
+
     // Calculate subscription period
     const startDate = new Date();
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + (subscription.duration_months || 1));
 
-    // Update subscription to active
+    // Update subscription to active (triggers commission calculation)
     const { error: updateError } = await supabase
       .from('user_subscriptions')
       .update({

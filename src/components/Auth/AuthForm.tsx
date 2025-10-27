@@ -63,7 +63,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
           .select(`
             id,
             partner_code,
-            user_profiles (
+            user_profiles!partner_profiles_user_id_fkey (
               full_name,
               email
             )
@@ -130,7 +130,8 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               id: authData.user.id,
               email: formData.email,
               full_name: formData.fullName,
-              account_type: selectedAccountType || 'developer'
+              account_type: 'developer',
+              partner_id: partnerInfo?.id || null
             });
 
           if (profileError) {
