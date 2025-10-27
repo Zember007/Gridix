@@ -1,6 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import { Apartment } from '@/types/apartment';
 
+
 interface PDFGenerationOptions {
   apartment: Apartment;
   projectCurrency: string | null;
@@ -53,10 +54,16 @@ const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
   if (!response.ok) {
     throw new Error(`Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`);
   }
+  // клонируем поток, чтобы можно было читать дважды
+  const clone = response.clone();
+  const blob = await clone.blob();
+  console.log('PDF MIME:', blob.type, 'Size:', blob.size);
+
+  // читаем основное тело
   return await response.arrayBuffer();
 };
 
-
+const isMainPdf = false;
 
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, pdfUrl, pdf_main } = options;
@@ -67,7 +74,8 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     const apiPdfDoc = await PDFDocument.load(apiPdfBytes, { ignoreEncryption: true });
 
     // Если есть основной PDF, объединяем их
-    if (pdf_main) {
+    if (pdf_main && isMainPdf) {
+      
       const mainPdfBytes = await loadPDFFile(pdf_main);
       const mainPdfDoc = await PDFDocument.load(mainPdfBytes, { ignoreEncryption: true });
 
