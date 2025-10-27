@@ -298,7 +298,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         <div className="min-h-screen bg-white">
 
             {/* PDF Template Content */}
-            <div className="max-w-4xl mx-auto p-8 flex flex-col gap-4">
+            <div className="max-w-4xl mx-auto p-8 flex flex-col gap-3">
                 {/* Header Section */}
                 <div className="flex justify-between items-center ">
                     <div className="flex items-center gap-3">
@@ -306,7 +306,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                     </div>
                     <div className="text-right flex items-center gap-8">
                         <h2 className="text-xl font-semibold text-gray-900">{project.name}</h2>
-                        <div className="bg-white w-20 aspect-square flex items-center justify-center">
+                        <div className="bg-white w-14 aspect-square flex items-center justify-center">
                             <img
                                 src={qrCodeUrl}
                                 alt="Telegram QR Code"
@@ -370,8 +370,8 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                 {/* Additional Information */}
                 {getVisibleFields().length > 0 && (
-                    <div className="">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                    <>
+                        <h3 className="text-xl font-semibold text-gray-900">
                             {(project as unknown as Record<string, unknown>)?.project_type === 'object'
                                 ? 'Object details'
                                 : t('apartment.details')
@@ -426,13 +426,13 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                                 );
                             })}
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {/* Photos Section */}
                 {photos.length > 0 && (
-                    <div className="">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('pdf.photos')}</h3>
+                    <>
+                        <h3 className="text-xl font-semibold text-gray-900">{t('pdf.photos')}</h3>
                         <div className="grid grid-cols-3 gap-6">
                             {photos.slice(0, 3).map((photo, index) => (
                                 <div key={photo.id} className="relative">
@@ -450,20 +450,20 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {/* Floor Plan Section */}
                 {floorPlan && (
-                    <div className="">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('pdf.floorPlan')}</h3>
+                    <>
+                        <h3 className="text-xl font-semibold text-gray-900 ">{t('pdf.floorPlan')}</h3>
                         <img
                             src={floorPlan.image_url}
                             alt={floorPlan.description}
-                            className="h-full max-h-[450px] w-auto mx-auto"
+                            className="h-full max-h-[300px] w-auto mx-auto"
                         />
 
-                    </div>
+                    </>
                 )}
 
 
