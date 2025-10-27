@@ -166,7 +166,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
     const getVisibleFields = () => {
         return fieldSettings
             .filter(field => field.is_visible)
-            .sort((a, b) => a.sort_order - b.sort_order);
+            .sort((a, b) => a.sort_order - b.sort_order).slice(0, 6);
     };
 
     const getCustomFieldValue = (apt: Apartment, fieldName: string) => {
