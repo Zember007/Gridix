@@ -28,7 +28,7 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
   }
 
   // Проверяем, требуется ли установка пароля
-  if (requireAuth && user && requiresPasswordSetup) {
+  if (requireAuth && user && (requiresPasswordSetup || localStorage.getItem('password_set_required') === 'true')) {
     const currentLanguage = getLanguageFromPath(location.pathname);
     const setPasswordPath = addLanguageToPath('/set-password', currentLanguage);
     return <Navigate to={`${setPasswordPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;

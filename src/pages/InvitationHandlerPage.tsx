@@ -42,9 +42,11 @@ export default function InvitationHandlerPage() {
 
         if (data.success) {
           setStatus('success')
-          // Перенаправляем на админку через небольшую задержку
+
+          localStorage.setItem('password_set_required', 'true')
+
           setTimeout(() => {
-            navigate('/en/admin')
+            navigate('/en/set-password')
           }, 1000)
         } else {
           setErrorMessage(data.error || 'Failed to process invitation')

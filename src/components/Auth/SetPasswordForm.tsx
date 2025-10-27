@@ -74,6 +74,8 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
 
       toast.success('Пароль успешно установлен!');
       
+      localStorage.setItem('password_set_required', 'false')
+      
       // Если есть redirect параметр, перенаправляем туда, иначе используем onSuccess или админ панель
       const redirectPath = searchParams.get('redirect');
       if (redirectPath) {
