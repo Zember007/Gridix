@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -392,7 +392,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       // Формируем URL для API
       const projectSlug = project.slug || `id/${project.id}`;
       const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;
-      
+
       // Генерируем PDF через API
       await generateApartmentPDF({
         apartment,
@@ -941,7 +941,14 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             disabled={isGeneratingPDF}
                             className={`px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                           >
-                            PDF
+                            {isGeneratingPDF ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>PDF</span>
+                              </div>
+                            ) : (
+                              'PDF'
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -1071,7 +1078,15 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                   disabled={isGeneratingPDF}
                   className={`px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                 >
-                  <FileDown className="h-5 w-5" />
+
+                  {isGeneratingPDF ? (
+
+                    <Loader2 className="h-4 w-4 animate-spin" />
+
+                  ) : (
+                    <FileDown className="h-5 w-5" />
+
+                  )}
                   <span className="hidden xs:block">PDF</span>
                 </Button>
 

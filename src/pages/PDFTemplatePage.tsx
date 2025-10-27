@@ -317,10 +317,10 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 </div>
 
                 {/* Main Apartment Info Card */}
-                <div className="bg-gray-50 rounded-[40px] p-4 px-8">
+                <div className="bg-gray-50 rounded-[40px] p-2 px-8">
                     <div className="flex justify-between gap-8 items-center">
                         <div className="flex-1">
-                            <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
                                 {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m²
                             </h3>
                             <p className="text-gray-600">
@@ -331,7 +331,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                             </p>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-semibold text-gray-900 mb-2">
+                            <div className="text-xl font-semibold text-gray-900 mb-2">
                                 {apartment.price && priceVisible
                                     ? formatPriceWithCurrency(
                                         convertPrice(apartment.price, project?.currency || null, selectedCurrency),
@@ -371,7 +371,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 {/* Additional Information */}
                 {getVisibleFields().length > 0 && (
                     <div className="">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">
                             {(project as unknown as Record<string, unknown>)?.project_type === 'object'
                                 ? 'Object details'
                                 : t('apartment.details')
@@ -432,14 +432,14 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 {/* Photos Section */}
                 {photos.length > 0 && (
                     <div className="">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-4">{t('pdf.photos')}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('pdf.photos')}</h3>
                         <div className="grid grid-cols-3 gap-6">
                             {photos.slice(0, 3).map((photo, index) => (
                                 <div key={photo.id} className="relative">
                                     <img
                                         src={photo.image_url}
                                         alt={`${photo.type === 'layout' ? t('pdf.layout') : t('pdf.apartmentPhoto')} ${index + 1}`}
-                                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
                                     />
                                     {photo.type === 'layout' &&
                                         <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
@@ -456,11 +456,11 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 {/* Floor Plan Section */}
                 {floorPlan && (
                     <div className="">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-4">{t('pdf.floorPlan')}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('pdf.floorPlan')}</h3>
                         <img
                             src={floorPlan.image_url}
                             alt={floorPlan.description}
-                            className="h-full max-h-[500px] w-auto mx-auto"
+                            className="h-full max-h-[450px] w-auto mx-auto"
                         />
 
                     </div>
