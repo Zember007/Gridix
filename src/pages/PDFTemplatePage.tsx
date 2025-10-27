@@ -59,6 +59,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
     } | null>(null);
     const [photosLoading, setPhotosLoading] = useState<boolean>(true);
     const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
+    const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
     // Initialize currency from project if available
     useEffect(() => {
@@ -66,6 +67,25 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
             setSelectedCurrency(project.currency);
         }
     }, [project?.currency]);
+
+    // Generate QR code when data is ready
+    useEffect(() => {
+        const updateQRCode = async () => {
+            if (!project || !apartment) return;
+            
+            try {
+                const baseDomain = await getBaseDomain();
+                const url = `${baseDomain}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+                setQrCodeUrl(qrUrl);
+            } catch (err) {
+                console.error('Error generating QR code:', err);
+                setQrCodeUrl('');
+            }
+        };
+
+        updateQRCode();
+    }, [project, apartment, language]);
 
     // Load photos (layout + apartment + floor plan)
     useEffect(() => {
@@ -190,11 +210,51 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         }
     };
 
+    const getBaseDomain = async () => {
+
+
+        if(!project && !projectId) return '';
+
+        // Получаем текущий домен
+        const currentHostname = window.location.hostname;
+
+        // Получаем домены проекта из project_domains
+        const { data: projectDomains } = await supabase
+            .from('project_domains')
+            .select('domain, is_primary, status')
+            .eq('project_id', project?.id || projectId || '')
+            .eq('status', 'active');
+
+        // Проверяем, есть ли текущий домен среди доменов проекта
+        const isProjectDomain = projectDomains?.some(
+            pd => pd.domain.toLowerCase() === currentHostname.toLowerCase()
+        );
+        // Определяем базовый домен
+        let baseDomain: string;
+        if (isProjectDomain) {
+            // Используем текущий домен
+            baseDomain = window.location.origin;
+        } else {
+
+            const primaryDomain = projectDomains?.find(pd => pd.is_primary)?.domain;
+            if (primaryDomain) {
+                baseDomain = 'https://' + primaryDomain;
+            } else {
+                baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+            }
+
+        }
+
+        return baseDomain;
+    };
+
     const priceVisible = fieldSettings.find(field => field.field_name === 'price')?.is_visible;
     const floorVisible = fieldSettings.find(field => field.field_name === 'floor')?.is_visible;
     const numberVisible = fieldSettings.find(field => field.field_name === 'number')?.is_visible;
 
     const loading = projectLoading || apartmentLoading || photosLoading;
+
+
 
     if (!project) return null;
 
@@ -244,8 +304,15 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                     <div className="flex items-center gap-3">
                         <span className="text-gray-700 font-semibold text-lg">S2 CAPITAL</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex items-center gap-8">
                         <h2 className="text-xl font-semibold text-gray-900">{project.name}</h2>
+                        <div className="bg-white w-20 aspect-square flex items-center justify-center">
+                            <img
+                                src={qrCodeUrl}
+                                alt="Telegram QR Code"
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -391,11 +458,11 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                     <div className="mb-8">
                         <h3 className="text-2xl font-semibold text-gray-900 mb-6">{t('pdf.floorPlan')}</h3>
                         <div className="flex justify-center">
-                            <div className="relative">
+                            <div className="relative max-h-[500px] w-full">
                                 <img
                                     src={floorPlan.image_url}
                                     alt={floorPlan.description}
-                                    className="w-full h-auto"
+                                    className="w-auto h-full"
                                 />
                             </div>
                         </div>

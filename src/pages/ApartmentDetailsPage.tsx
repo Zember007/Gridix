@@ -1,16 +1,16 @@
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/hooks/useProjects';
 import { useApartment } from '@/hooks/useApartment';
 import { useFields } from '@/hooks/useFields';
-import { formatPriceWithCurrency, convertPrice, getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { formatPriceWithCurrency, convertPrice } from '@/lib/currency-utils';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import { Language } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,7 +57,14 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   );
   const { fields: fieldSettings } = useFields(project?.id || '');
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { calculateMonthlyPayment } = useInstallment(project || undefined);
+  const { calculateMonthlyPayment } = useInstallment(
+    project?.installment_enabled && project ? {
+      ...project,
+      installment_enabled: project.installment_enabled,
+      min_down_payment_percent: project.min_down_payment_percent || 20,
+      max_installment_months: project.max_installment_months || 24
+    } : undefined
+  );
 
   // Логируем состояние проекта для диагностики
   useEffect(() => {
@@ -182,7 +189,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       apartment_number: apartment.apartment_number,
       rooms: typeof apartment.rooms === 'number' ? apartment.rooms : 0,
       area: apartment.area,
-      price: typeof apartment.price === 'number' ? apartment.price : undefined,
+      price: apartment.price || 0,
       status: apartment.status,
       floor_number: apartment.floor_number
     });
@@ -201,7 +208,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
 
   const getStatusColor = (status: string) => {
-    const colors = getProjectColors();
     switch (status) {
       case 'sold': return 'text-white';
       case 'reserved': return 'text-white';
@@ -344,7 +350,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             .order('order_index', { ascending: true })
             .limit(1);
           if (!aptPhotosError && aptPhotos && aptPhotos.length > 0) {
-            thumbnails[apt.id] = aptPhotos[0].image_url;
+            thumbnails[apt.id] = aptPhotos[0]!.image_url;
             continue;
           }
 
@@ -358,7 +364,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             .order('order_index', { ascending: true })
             .limit(1);
           if (!layoutError && layoutPhotos && layoutPhotos.length > 0) {
-            thumbnails[apt.id] = layoutPhotos[0].image_url;
+            thumbnails[apt.id] = layoutPhotos[0]!.image_url;
           } else {
             thumbnails[apt.id] = null;
           }
@@ -383,53 +389,15 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
     setIsGeneratingPDF(true);
     try {
-      // Получаем фотографии квартиры
-      const layoutType = apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room`;
-
-      // Загружаем планировки
-      const { data: layoutPhotos, error: layoutError } = await supabase
-        .from('layout_photos')
-        .select('*')
-        .eq('project_id', project.id)
-        .eq('layout_type', layoutType)
-        .order('order_index', { ascending: true });
-
-      if (layoutError) {
-        console.error('Error loading layout photos:', layoutError);
-      }
-
-      // Загружаем индивидуальные фотографии квартиры
-      const { data: apartmentPhotos, error: apartmentPhotosError } = await supabase
-        .from('apartment_photos')
-        .select('*')
-        .eq('apartment_id', apartment.id)
-        .order('order_index', { ascending: true });
-
-      if (apartmentPhotosError) {
-        console.error('Error loading apartment photos:', apartmentPhotosError);
-      }
-
-      // Объединяем фотографии
-      const allPhotos = [
-        ...(layoutPhotos || []).map(photo => ({
-          id: photo.id,
-          image_url: photo.image_url,
-          description: photo.description,
-          type: 'layout' as const
-        })),
-        ...(apartmentPhotos || []).map(photo => ({
-          id: photo.id,
-          image_url: photo.image_url,
-          description: photo.description,
-          type: 'apartment' as const
-        }))
-      ];
-
-      // Генерируем PDF
+      // Формируем URL для API
+      const projectSlug = project.slug || `id/${project.id}`;
+      const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;
+      
+      // Генерируем PDF через API
       await generateApartmentPDF({
         apartment,
         projectCurrency: project?.currency || null,
-        photos: allPhotos,
+        pdfUrl,
         pdf_main: project?.pdf_presentation_url || undefined,
         translations: {
           apartmentDetails: t('pdf.apartmentDetails'),
@@ -557,7 +525,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 <ApartmentPhotosViewer
                   apartmentId={apartment.id}
                   projectId={apartment.project_id}
-                  preloadedLayoutPhotos={photos}
+                  preloadedLayoutPhotos={photos.map(photo => ({
+                    ...photo,
+                    description: photo.description || ''
+                  }))}
                   fetchMode="preloaded-only"
                 />
               )}
@@ -764,7 +735,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     <ApartmentPhotosViewer
                       apartmentId={apartment.id}
                       projectId={apartment.project_id}
-                      preloadedLayoutPhotos={photos}
+                      preloadedLayoutPhotos={photos.map(photo => ({
+                        ...photo,
+                        description: photo.description || ''
+                      }))}
                       fetchMode="preloaded-only"
                     />
                   )}
@@ -991,7 +965,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                       <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
                         {recommendationThumbnails[recApartment.id] ? (
                           <img
-                            src={recommendationThumbnails[recApartment.id] as string}
+                            src={recommendationThumbnails[recApartment.id]!}
                             alt={`Apartment ${recApartment.apartment_number}`}
                             className="w-full h-full object-cover"
                           />
