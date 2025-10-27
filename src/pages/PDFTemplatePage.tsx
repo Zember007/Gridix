@@ -331,7 +331,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                             </p>
                         </div>
                         <div className="text-center">
-                            <div className="text-4xl font-semibold text-gray-900 mb-2">
+                            <div className="text-2xl font-semibold text-gray-900 mb-2">
                                 {apartment.price && priceVisible
                                     ? formatPriceWithCurrency(
                                         convertPrice(apartment.price, project?.currency || null, selectedCurrency),
