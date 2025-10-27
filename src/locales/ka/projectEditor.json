@@ -47,6 +47,8 @@
   "newProject": "ახალი პროექტი",
   "noEditRights": "ამ პროექტის რედაქტირების უფლება არ გაქვთ",
   "onlyPdfAllowed": "მხოლოდ PDF ფაილებია დაშვებული",
+  "compressingPdf": "PDF შეკუმშვა...",
+  "invalidPdf": "არასწორი PDF ფაილი",
   "pdfPresentation": "PDF პრეზენტაცია",
   "pdfPresentationDesc": "ატვირთეთ პროექტის PDF პრეზენტაცია",
   "pdfRemoveError": "PDF წაშლის შეცდომა",

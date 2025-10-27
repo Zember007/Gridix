@@ -72,7 +72,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
     useEffect(() => {
         const updateQRCode = async () => {
             if (!project || !apartment) return;
-            
+
             try {
                 const baseDomain = await getBaseDomain();
                 const url = `${baseDomain}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}`;
@@ -213,7 +213,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
     const getBaseDomain = async () => {
 
 
-        if(!project && !projectId) return '';
+        if (!project && !projectId) return '';
 
         // Получаем текущий домен
         const currentHostname = window.location.hostname;
@@ -298,9 +298,9 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         <div className="min-h-screen bg-white">
 
             {/* PDF Template Content */}
-            <div className="max-w-4xl mx-auto p-8">
+            <div className="max-w-4xl mx-auto p-8 flex flex-col gap-4">
                 {/* Header Section */}
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex justify-between items-center ">
                     <div className="flex items-center gap-3">
                         <span className="text-gray-700 font-semibold text-lg">S2 CAPITAL</span>
                     </div>
@@ -317,7 +317,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 </div>
 
                 {/* Main Apartment Info Card */}
-                <div className="bg-gray-50 rounded-[40px] p-4 px-8 mb-8">
+                <div className="bg-gray-50 rounded-[40px] p-4 px-8">
                     <div className="flex justify-between gap-8 items-center">
                         <div className="flex-1">
                             <h3 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -354,7 +354,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                             )}
 
                         </div>
-                        <div className="flex flex-col ">
+                        <div className="flex flex-col items-start">
                             <Badge className="mb-1 rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white">
                                 {t('installment.low')}
                             </Badge>
@@ -370,7 +370,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                 {/* Additional Information */}
                 {getVisibleFields().length > 0 && (
-                    <div className="mb-8">
+                    <div className="">
                         <h3 className="text-2xl font-semibold text-gray-900 mb-6">
                             {(project as unknown as Record<string, unknown>)?.project_type === 'object'
                                 ? 'Object details'
@@ -431,8 +431,8 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                 {/* Photos Section */}
                 {photos.length > 0 && (
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">{t('pdf.photos')}</h3>
+                    <div className="">
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-4">{t('pdf.photos')}</h3>
                         <div className="grid grid-cols-3 gap-6">
                             {photos.slice(0, 3).map((photo, index) => (
                                 <div key={photo.id} className="relative">
@@ -455,17 +455,14 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                 {/* Floor Plan Section */}
                 {floorPlan && (
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">{t('pdf.floorPlan')}</h3>
-                        <div className="flex justify-center">
-                            <div className="relative max-h-[500px] w-full">
-                                <img
-                                    src={floorPlan.image_url}
-                                    alt={floorPlan.description}
-                                    className="w-auto h-full"
-                                />
-                            </div>
-                        </div>
+                    <div className="">
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-4">{t('pdf.floorPlan')}</h3>
+                        <img
+                            src={floorPlan.image_url}
+                            alt={floorPlan.description}
+                            className="h-full max-h-[500px] w-auto mx-auto"
+                        />
+
                     </div>
                 )}
 

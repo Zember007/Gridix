@@ -47,6 +47,8 @@
   "newProject": "مشروع جديد",
   "noEditRights": "ليست لديك صلاحية لتعديل هذا المشروع",
   "onlyPdfAllowed": "يُسمح بملفات PDF فقط",
+  "compressingPdf": "ضغط ملف PDF...",
+  "invalidPdf": "ملف PDF غير صالح",
   "pdfPresentation": "عرض PDF",
   "pdfPresentationDesc": "قم بتحميل عرض المشروع بصيغة PDF",
   "pdfRemoveError": "خطأ في حذف PDF",

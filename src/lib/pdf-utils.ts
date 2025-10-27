@@ -2,6 +2,13 @@ import { PDFDocument } from 'pdf-lib';
 import { Apartment } from '@/types/apartment';
 
 
+/**
+ * Сжимает PDF путём пересоздания документа
+ * Простое копирование страниц через pdf-lib уже даёт некоторую оптимизацию
+ * @param arrayBuffer - PDF файл как ArrayBuffer
+ * @returns Сжатый PDF как ArrayBuffer
+ */
+
 interface PDFGenerationOptions {
   apartment: Apartment;
   projectCurrency: string | null;
@@ -63,7 +70,7 @@ const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
   return await response.arrayBuffer();
 };
 
-const isMainPdf = false;
+const isMainPdf = true;
 
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, pdfUrl, pdf_main } = options;

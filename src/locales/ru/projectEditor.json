@@ -47,6 +47,8 @@
   "newProject": "Новый проект",
   "noEditRights": "У вас нет прав на редактирование этого проекта",
   "onlyPdfAllowed": "Разрешены только PDF файлы",
+  "compressingPdf": "Сжатие PDF...",
+  "invalidPdf": "Неверный PDF файл",
   "pdfPresentation": "PDF презентация",
   "pdfPresentationDesc": "Загрузите PDF-презентацию проекта",
   "pdfRemoveError": "Ошибка удаления PDF",

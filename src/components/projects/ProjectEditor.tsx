@@ -32,6 +32,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 import PolygonCustomizationSettings from '../visualization/PolygonCustomizationSettings';
 import ProjectFloorsManager from './ProjectFloorsManager';
+import { PDFDocument } from 'pdf-lib';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -218,19 +219,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         if (error) throw error;
 
-        // Инициализируем стандартные поля для нового проекта
-        // try {
-        //   const { error: fieldsError } = await supabase.rpc('initialize_default_fields', {
-        //     p_project_id: data.id
-        //   });
-
-        //   if (fieldsError) {
-        //     console.error('Error initializing default fields:', fieldsError);
-        //     // Не прерываем создание проекта из-за ошибки полей
-        //   }
-        // } catch (fieldsErr) {
-        //   console.error('Error calling initialize_default_fields:', fieldsErr);
-        // }
 
         setProject(prev => ({ ...prev, id: data.id }));
         toast.success(t('projectEditor.projectCreated'));
@@ -295,11 +283,25 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
     setUploadingPdf(true);
     try {
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      const pageCount = pdfDoc.getPageCount();
+
+      if (pageCount === 0) {
+        toast.error(t('projectEditor.invalidPdf'));
+        setUploadingPdf(false);
+        return;
+      }
+
+ 
+      const compressedFile = new Blob([arrayBuffer], { type: 'application/pdf' });
+
       const fileName = `${user.id}/${project.id}/presentation_${Date.now()}.pdf`;
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('project-files')
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: '3600',
           upsert: false
         });

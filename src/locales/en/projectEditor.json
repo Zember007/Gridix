@@ -47,6 +47,8 @@
   "newProject": "New project",
   "noEditRights": "You do not have permission to edit this project",
   "onlyPdfAllowed": "Only PDF files are allowed",
+  "compressingPdf": "Compressing PDF...",
+  "invalidPdf": "Invalid PDF file",
   "pdfPresentation": "PDF presentation",
   "pdfPresentationDesc": "Upload project PDF presentation",
   "pdfRemoveError": "Error removing PDF",
