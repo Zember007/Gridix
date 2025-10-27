@@ -23,6 +23,13 @@ export default function InvitationHandlerPage() {
           return
         }
 
+        console.log('ref', ref)
+        console.log('invite', invite)
+        console.log('type', type)
+        console.log('user', user)
+
+        return
+
         // Если пользователь не авторизован, перенаправляем на страницу регистрации с параметрами
         if (!user) {
           const signupUrl = `/en/auth/signup?ref=${ref}&invite=${invite}&type=${type}`
