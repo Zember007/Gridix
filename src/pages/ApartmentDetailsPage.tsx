@@ -290,6 +290,13 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   };
 
+  const goToPDFTemplate = () => {
+    const pdfUrl = useId
+      ? `/${lang}/project/id/${projectId}/apartment/id/${apartmentId}/pdf`
+      : `/${lang}/project/${project?.slug || projectIdentifier}/apartment/${apartmentNumber}/pdf`;
+    window.location.href = pdfUrl;
+  };
+
   const goBackToProject = () => {
     if (onClose) {
       console.log('onClose', onClose);
@@ -963,11 +970,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
                           <Button
                             variant="outline"
-                            onClick={handleGeneratePDF}
-                            disabled={isGeneratingPDF}
+                            onClick={goToPDFTemplate}
                             className={`px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                           >
-                            PDF
+                            PDF Template
                           </Button>
                         </div>
                       </div>
@@ -1093,12 +1099,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
                 <Button
                   variant="outline"
-                  onClick={handleGeneratePDF}
-                  disabled={isGeneratingPDF}
+                  onClick={goToPDFTemplate}
                   className={`px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
                 >
                   <FileDown className="h-5 w-5" />
-                  <span className="hidden xs:block">PDF</span>
+                  <span className="hidden xs:block">PDF Template</span>
                 </Button>
 
               </div>

@@ -12,6 +12,7 @@ import EmbedProjectsPage from "./pages/EmbedProjectsPage";
 import AuthPage from "./pages/AuthPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
 import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
+import PDFTemplatePage from "./pages/PDFTemplatePage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
@@ -42,11 +43,13 @@ function App() {
             <Route path="/:lang/widget/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
             <Route path="/:lang/project/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
             <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProviders><ApartmentDetailsPage /></LanguageProviders>} />
+            <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber/pdf" element={<LanguageProviders><PDFTemplatePage /></LanguageProviders>} />
 
             {/* Backward compatibility routes - redirect old ID-based URLs to new slug-based ones */}
             <Route path="/:lang/widget/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
             <Route path="/:lang/project/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
             <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProviders><ApartmentDetailsPage useId /></LanguageProviders>} />
+            <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId/pdf" element={<LanguageProviders><PDFTemplatePage useId /></LanguageProviders>} />
 
             {/* Legal pages */}
             <Route path="/:lang/privacy-policy" element={<LanguageProviders><PrivacyPolicyPage /></LanguageProviders>} />
