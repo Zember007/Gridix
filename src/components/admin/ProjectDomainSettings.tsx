@@ -332,7 +332,7 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
                     </div>
                     <div>
                       <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
-                      <div className="bg-background p-2 rounded border">@</div>
+                      <div className="bg-background p-2 rounded border">{newDomain}</div>
                     </div>
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
@@ -360,7 +360,7 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
                     </div>
                     <div>
                       <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
-                      <div className="bg-background p-2 rounded border">www</div>
+                      <div className="bg-background p-2 rounded border">www.{newDomain}</div>
                     </div>
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">

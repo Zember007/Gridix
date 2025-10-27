@@ -57,21 +57,19 @@ const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
 };
 
 
-/**
- * Генерирует PDF с деталями квартиры через API и объединяет с основным PDF
- */
+
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, pdfUrl, pdf_main } = options;
 
   try {
     // Загружаем PDF из API
     const apiPdfBytes = await loadPDFFromAPI(pdfUrl);
-    const apiPdfDoc = await PDFDocument.load(apiPdfBytes);
+    const apiPdfDoc = await PDFDocument.load(apiPdfBytes, { ignoreEncryption: true });
 
     // Если есть основной PDF, объединяем их
     if (pdf_main) {
       const mainPdfBytes = await loadPDFFile(pdf_main);
-      const mainPdfDoc = await PDFDocument.load(mainPdfBytes);
+      const mainPdfDoc = await PDFDocument.load(mainPdfBytes, { ignoreEncryption: true });
 
       // Создаем новый документ для объединения
       const mergedPdfDoc = await PDFDocument.create();

@@ -295,7 +295,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
     }
 
     return (
-        <div className="min-h-screen bg-white font-poppins">
+        <div className="min-h-screen bg-white">
 
             {/* PDF Template Content */}
             <div className="max-w-4xl mx-auto p-8">
@@ -355,7 +355,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                         </div>
                         <div className="flex flex-col ">
-                            <Badge className="mb-1 rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
+                            <Badge className="mb-1 rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white">
                                 {t('installment.low')}
                             </Badge>
                             <div className="text-sm text-gray-600">
@@ -413,8 +413,8 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
 
                                 return (
                                     <div key={field.id} className="flex justify-between items-center py-1 border-b border-gray-100">
-                                        <span className="text-gray-600 font-poppins text-sm">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
-                                        <span className="font-medium text-gray-900 font-poppins text-sm">
+                                        <span className="text-gray-600 text-sm">{field.is_custom ? getFieldLabel(field) : t(`project.${field.field_name}`)}</span>
+                                        <span className="font-medium text-gray-900 text-sm">
                                             {field.field_name === 'price'
                                                 ? formatPriceWithCurrency(
                                                     convertPrice(value as number, project?.currency || null, selectedCurrency),
