@@ -4,5 +4,6 @@
   "apartmentPhoto": "Фото квартиры",
   "generatedOn": "Создано",
   "layout": "Планировка",
-  "photos": "Фотографии"
+  "photos": "Фотографии",
+  "floorPlan": "План этажа"
 }

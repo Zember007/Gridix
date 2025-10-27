@@ -5,15 +5,10 @@ import { useApartment } from '@/hooks/useApartment';
 import { useFields } from '@/hooks/useFields';
 import { formatPriceWithCurrency, convertPrice } from '@/lib/currency-utils';
 import { Language } from '@/lib/language-utils';
-import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { ArrowLeft, Download, Share2, Heart } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
-import { useFavorites } from '@/hooks/useFavorites';
-import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { Badge } from '@/components/ui/badge';
 
 interface PDFTemplatePageProps {
@@ -27,8 +22,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         projectSlug,
         projectId,
         apartmentNumber,
-        apartmentId,
-        lang
+        apartmentId
     } = useParams<{
         projectSlug?: string;
         projectId?: string;
@@ -49,9 +43,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         { useId }
     );
     const { fields: fieldSettings } = useFields(project?.id || '');
-    const { isFavorite, toggleFavorite } = useFavorites();
 
-    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [photos, setPhotos] = useState<Array<{
         id: string;
         image_url: string;
@@ -59,6 +51,12 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         order_index: number;
         type: 'layout' | 'apartment';
     }>>([]);
+    const [floorPlan, setFloorPlan] = useState<{
+        id: string;
+        image_url: string;
+        description: string;
+        floor_number: number;
+    } | null>(null);
     const [photosLoading, setPhotosLoading] = useState<boolean>(true);
     const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
 
@@ -69,7 +67,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         }
     }, [project?.currency]);
 
-    // Load photos (layout + apartment)
+    // Load photos (layout + apartment + floor plan)
     useEffect(() => {
         const loadPhotos = async () => {
             if (!apartment || !project?.id) return;
@@ -77,7 +75,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
             try {
                 const layoutType = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
 
-                const [layoutRes, aptRes] = await Promise.all([
+                const [layoutRes, aptRes, floorPlanRes] = await Promise.all([
                     supabase
                         .from('layout_photos')
                         .select('*')
@@ -88,7 +86,13 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                         .from('apartment_photos')
                         .select('*')
                         .eq('apartment_id', apartment.id)
-                        .order('order_index', { ascending: true })
+                        .order('order_index', { ascending: true }),
+                    supabase
+                        .from('floor_plans')
+                        .select('image_url')
+                        .eq('project_id', project.id)
+                        .eq('floor_number', apartment.floor_number)
+                        .maybeSingle()
                 ]);
 
                 const layoutPhotos = (layoutRes.data || []).map((photo) => ({
@@ -107,6 +111,18 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                     type: 'apartment' as const
                 }));
 
+                // Set floor plan separately if available
+                if (floorPlanRes.data?.image_url) {
+                    setFloorPlan({
+                        id: `floor-plan-${apartment.floor_number}`,
+                        image_url: floorPlanRes.data.image_url,
+                        description: `${t('pdf.floorPlan')} ${apartment.floor_number} ${t('project.floor').toLowerCase()}`,
+                        floor_number: apartment.floor_number
+                    });
+                } else {
+                    setFloorPlan(null);
+                }
+
                 const combined = [...layoutPhotos, ...apartmentPhotos];
                 setPhotos(combined);
             } catch (err) {
@@ -118,44 +134,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
         };
 
         loadPhotos();
-    }, [apartment, project?.id]);
-
-    const handleToggleFavorite = () => {
-        if (!apartment) return;
-
-        toggleFavorite({
-            id: apartment.id,
-            project_id: apartment.project_id,
-            apartment_number: apartment.apartment_number,
-            rooms: typeof apartment.rooms === 'number' ? apartment.rooms : 0,
-            area: apartment.area,
-            price: typeof apartment.price === 'number' ? apartment.price : 0,
-            status: apartment.status,
-            floor_number: apartment.floor_number
-        });
-    };
-
-    const handleShare = async () => {
-        try {
-            const url = window.location.href.replace('/pdf', '');
-            const title = `${apartment?.type === 'apartment' ? t('apartment.apartment') : apartment?.type} № ${apartment?.apartment_number}`;
-            const text = project?.name ? project.name : '';
-            if (navigator.share) {
-                await navigator.share({ title, text, url });
-            } else {
-                await navigator.clipboard.writeText(url);
-                toast.success(t('common.copied'));
-            }
-        } catch (error) {
-            try {
-                await navigator.clipboard.writeText(window.location.href.replace('/pdf', ''));
-                toast.success(t('common.copied'));
-            } catch (error) {
-                console.error('Error copying link to clipboard:', error);
-            }
-        }
-    };
-
+    }, [apartment, project?.id, t]);
 
     const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
         if (field.field_label_translations && field.field_label_translations[language]) {
@@ -395,16 +374,35 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                                         alt={`${photo.type === 'layout' ? t('pdf.layout') : t('pdf.apartmentPhoto')} ${index + 1}`}
                                         className="w-full h-48 object-cover rounded-lg border border-gray-200"
                                     />
-                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                                        {photo.type === 'layout' ? t('pdf.layout') : t('pdf.apartmentPhoto')}
-                                    </div>
+                                    {photo.type === 'layout' &&
+                                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+
+                                            {t('pdf.layout')}
+                                        </div>
+                                    }
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-              
+                {/* Floor Plan Section */}
+                {floorPlan && (
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">{t('pdf.floorPlan')}</h3>
+                        <div className="flex justify-center">
+                            <div className="relative">
+                                <img
+                                    src={floorPlan.image_url}
+                                    alt={floorPlan.description}
+                                    className="w-full h-auto"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
             </div>
         </div>
     );
