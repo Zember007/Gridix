@@ -11,6 +11,8 @@ export default function InvitationHandlerPage() {
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
+    if (!user) return
+
     const processInvitation = async () => {
       try {
         const ref = searchParams.get('ref')
@@ -23,21 +25,6 @@ export default function InvitationHandlerPage() {
           return
         }
 
-        console.log('ref', ref)
-        console.log('invite', invite)
-        console.log('type', type)
-        console.log('user', user)
-
-        return
-
-        // Если пользователь не авторизован, перенаправляем на страницу регистрации с параметрами
-        if (!user) {
-          const signupUrl = `/en/auth/signup?ref=${ref}&invite=${invite}&type=${type}`
-          navigate(signupUrl)
-          return
-        }
-
-        // Если пользователь авторизован, обрабатываем приглашение
         const { data, error } = await supabase.functions.invoke('partner-program', {
           body: {
             action: 'track_referral',
@@ -46,6 +33,8 @@ export default function InvitationHandlerPage() {
             invitation_type: type
           }
         })
+
+   
 
         if (error) {
           throw new Error(error.message)

@@ -70,7 +70,7 @@ function App() {
  
                      
               {/* Set password route - for users who need to set password */}
-              <Route path="/set-password" element={<EmbedProviders><SetPasswordPage /></EmbedProviders>} />
+              <Route path="/:lang/set-password" element={<LanguageProviders><SetPasswordPage /></LanguageProviders>} />
               
               {/* Invitation handler route - processes partner invitations */}
               <Route path="/:lang/invitation" element={<LanguageProviders><InvitationHandlerPage /></LanguageProviders>} />

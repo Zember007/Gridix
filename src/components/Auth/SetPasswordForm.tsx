@@ -3,17 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Lock, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface SetPasswordFormProps {
   onSuccess?: () => void;
-  userEmail?: string;
+  userEmail?: string | undefined;
 }
 
 export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) => {
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -69,7 +73,16 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
       if (error) throw error;
 
       toast.success('Пароль успешно установлен!');
-      onSuccess?.();
+      
+      // Если есть redirect параметр, перенаправляем туда, иначе используем onSuccess или админ панель
+      const redirectPath = searchParams.get('redirect');
+      if (redirectPath) {
+        navigate(redirectPath);
+      } else if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(`/${language}/admin`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Произошла ошибка';
       console.error('Set password error:', error);
@@ -92,12 +105,6 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
         </CardHeader>
         
         <CardContent>
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Вы вошли через magic link{userEmail && ` (${userEmail})`}. Пожалуйста, установите постоянный пароль для вашего аккаунта.
-            </AlertDescription>
-          </Alert>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

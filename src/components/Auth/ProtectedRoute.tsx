@@ -27,7 +27,12 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
     return <Navigate to={`${authPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
-
+  // Проверяем, требуется ли установка пароля
+  if (requireAuth && user && requiresPasswordSetup) {
+    const currentLanguage = getLanguageFromPath(location.pathname);
+    const setPasswordPath = addLanguageToPath('/set-password', currentLanguage);
+    return <Navigate to={`${setPasswordPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  }
 
   return <>{children}</>;
 }; 

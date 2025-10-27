@@ -15,7 +15,7 @@ import { AccountTypeSelector } from './AccountTypeSelector';
 interface AuthFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
-  defaultMode?: 'signin' | 'signup';
+  defaultMode?: 'signin' | 'signup' | undefined;
 }
 
 export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) => {

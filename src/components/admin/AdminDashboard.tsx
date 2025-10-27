@@ -26,6 +26,8 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  const { user, userProfile, signOut, loading } = useAuth();
+
   // Применяем CSS переменные темы
   useEffect(() => {
     const themeVariables = getAdminThemeVariables(ADMIN_THEME);
@@ -36,7 +38,6 @@ const AdminDashboard = () => {
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-  const { user, userProfile, signOut, loading } = useAuth();
   const { userRole, isManager, developerId } = useUserRole();
   const { isManagerMode, availableWorkspaces } = useWorkspace();
 
