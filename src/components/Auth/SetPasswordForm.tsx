@@ -15,7 +15,8 @@ interface SetPasswordFormProps {
 }
 
 export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) => {
-  const { language } = useLanguage();
+  // userEmail is available for future use (e.g., displaying user info)
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -26,16 +27,16 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Пароль должен содержать минимум 8 символов';
+      return t('auth.passwordMinLength');
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return 'Пароль должен содержать строчную букву';
+      return t('auth.passwordLowercase');
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return 'Пароль должен содержать заглавную букву';
+      return t('auth.passwordUppercase');
     }
     if (!/(?=.*\d)/.test(password)) {
-      return 'Пароль должен содержать цифру';
+      return t('auth.passwordNumber');
     }
     return null;
   };
@@ -44,7 +45,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
     e.preventDefault();
     
     if (!password || !confirmPassword) {
-      toast.error('Заполните все поля');
+      toast.error(t('auth.fillAllFields'));
       return;
     }
 
@@ -55,7 +56,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
     }
 
     if (password !== confirmPassword) {
-      toast.error('Пароли не совпадают');
+      toast.error(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -72,7 +73,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
 
       if (error) throw error;
 
-      toast.success('Пароль успешно установлен!');
+      toast.success(t('auth.passwordSetSuccess'));
       
       localStorage.setItem('password_set_required', 'false')
       
@@ -86,7 +87,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
         navigate(`/${language}/admin`);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Произошла ошибка';
+      const message = error instanceof Error ? error.message : t('auth.errorOccurred');
       console.error('Set password error:', error);
       toast.error(message);
     } finally {
@@ -99,10 +100,10 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">
-            Установите пароль
+            {t('auth.setPasswordTitle')}
           </CardTitle>
           <CardDescription className="text-center">
-            Для безопасности вашего аккаунта необходимо создать пароль
+            {t('auth.setPasswordDescription')}
           </CardDescription>
         </CardHeader>
         
@@ -110,7 +111,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Новый пароль</Label>
+              <Label htmlFor="password">{t('auth.newPassword')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -136,7 +137,7 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirmNewPassword')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -163,25 +164,25 @@ export const SetPasswordForm = ({ onSuccess, userEmail }: SetPasswordFormProps) 
 
             {/* Требования к паролю */}
             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              <p className="font-medium mb-2">Требования к паролю:</p>
+              <p className="font-medium mb-2">{t('auth.passwordRequirements')}</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li className={password.length >= 8 ? 'text-green-600' : ''}>
-                  Минимум 8 символов
+                  {t('auth.minimumCharacters')}
                 </li>
                 <li className={/(?=.*[a-z])/.test(password) ? 'text-green-600' : ''}>
-                  Строчные буквы (a-z)
+                  {t('auth.lowercaseLetters')}
                 </li>
                 <li className={/(?=.*[A-Z])/.test(password) ? 'text-green-600' : ''}>
-                  Заглавные буквы (A-Z)
+                  {t('auth.uppercaseLetters')}
                 </li>
                 <li className={/(?=.*\d)/.test(password) ? 'text-green-600' : ''}>
-                  Цифры (0-9)
+                  {t('auth.numbers')}
                 </li>
               </ul>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Установка пароля...' : 'Установить пароль'}
+              {loading ? t('auth.settingPassword') : t('auth.setPasswordButton')}
             </Button>
           </form>
         </CardContent>
