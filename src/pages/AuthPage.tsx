@@ -25,7 +25,7 @@ const AuthPage = () => {
   const hashIndicatesRecovery = useMemo(() => {
     if (typeof window === 'undefined') return false;
     const hash = window.location.hash || '';
-    return /type=recovery/.test(hash) || /access_token/.test(hash);
+    return /type=recovery/.test(hash);
   }, []);
 
   useEffect(() => {
@@ -35,12 +35,8 @@ const AuthPage = () => {
   }, [mode, hashIndicatesRecovery]);
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        setIsRecovery(true);
-      }
-      // Также проверяем, если пользователь уже в сессии восстановления
-      if (session?.user && window.location.hash.includes('type=recovery')) {
         setIsRecovery(true);
       }
     });
