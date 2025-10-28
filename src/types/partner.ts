@@ -40,7 +40,7 @@ export interface PartnerPayout {
   requested_at: string;
   processed_at?: string;
   payment_method?: string;
-  payment_details?: any;
+  contact_info?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -92,7 +92,7 @@ export interface PartnerProgramRequest {
   client_id?: string;
   amount?: number;
   payment_method?: string;
-  payment_details?: any;
+  contact_info?: string;
   admin_action?: 'list' | 'update_percentage' | 'suspend' | 'activate';
   payout_percentage?: number;
 }
@@ -111,6 +111,9 @@ export interface PartnerProgramResponse {
   total_earned?: number;
   total_withdrawn?: number;
   available_for_withdrawal?: number;
-  commissions?: Array<any>;
+  commissions?: Array<{
+    partner_commission_amount: number;
+    created_at: string;
+  }>;
   clients?: Array<PartnerClient>;
 }

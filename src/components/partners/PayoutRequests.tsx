@@ -4,27 +4,25 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { CreditCard, DollarSign, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { usePartnerStats } from '../../hooks/usePartnerStats';
-import { useToast } from '../../hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { supabase } from '../../integrations/supabase/client';
 import { PartnerPayout } from '../../types/partner';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function PayoutRequests() {
   const { stats, loading: statsLoading } = usePartnerStats();
-  const { toast } = useToast();
   const { t } = useLanguage();
   const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [paymentDetails, setPaymentDetails] = useState('');
+  const [contactInfo, setContactInfo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -71,22 +69,16 @@ export function PayoutRequests() {
     const amount = parseFloat(payoutAmount);
     
     if (!amount || amount <= 0) {
-      toast({
-        title: t('partners.error'),
-        description: t('partners.invalidAmount'),
-        variant: "destructive",
-      });
+      toast.error(t('partners.invalidAmount'));
       return;
     }
 
+
     if (amount > (stats?.available_for_withdrawal || 0)) {
-      toast({
-        title: t('partners.error'),
-        description: t('partners.insufficientFunds'),
-        variant: "destructive",
-      });
+      toast.error(t('partners.insufficientFunds'));
       return;
     }
+
 
     try {
       setIsSubmitting(true);
@@ -96,7 +88,7 @@ export function PayoutRequests() {
           action: 'payout_request',
           amount: amount,
           payment_method: paymentMethod,
-          payment_details: paymentDetails ? JSON.parse(paymentDetails) : undefined
+          contact_info: contactInfo
         }
       });
 
@@ -108,26 +100,19 @@ export function PayoutRequests() {
         throw new Error(data.error);
       }
 
-      toast({
-        title: t('partners.requestCreated'),
-        description: t('partners.requestCreatedDesc'),
-      });
+      toast.success(t('partners.requestCreated'));
 
       // Сбрасываем форму
       setPayoutAmount('');
       setPaymentMethod('');
-      setPaymentDetails('');
+      setContactInfo('');
       setIsDialogOpen(false);
       
       // Обновляем список
       await fetchPayouts();
     } catch (error) {
       console.error('Error creating payout request:', error);
-      toast({
-        title: t('partners.error'),
-        description: error instanceof Error ? error.message : t('partners.requestFailed'),
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : t('partners.requestFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -247,15 +232,16 @@ export function PayoutRequests() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment-details">{t('partners.paymentDetails')}</Label>
-                <Textarea
-                  id="payment-details"
-                  placeholder={t('partners.paymentDetailsPlaceholder')}
-                  value={paymentDetails}
-                  onChange={(e) => setPaymentDetails(e.target.value)}
+                <Label htmlFor="contact-info">{t('partners.contactInfo')}</Label>
+                <Input
+                  id="contact-info"
+                  type="text"
+                  placeholder={t('partners.contactInfoPlaceholder')}
+                  value={contactInfo}
+                  onChange={(e) => setContactInfo(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t('partners.paymentDetailsDesc')}
+                  {t('partners.contactInfoDesc')}
                 </p>
               </div>
 
@@ -329,6 +315,11 @@ export function PayoutRequests() {
                       {payout.payment_method && (
                         <p className="text-sm text-muted-foreground">
                           {t('partners.paymentMethod')}: {payout.payment_method}
+                        </p>
+                      )}
+                      {payout.contact_info && (
+                        <p className="text-sm text-muted-foreground">
+                          {t('partners.contactInfo')}: {payout.contact_info}
                         </p>
                       )}
                     </div>

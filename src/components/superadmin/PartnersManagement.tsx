@@ -22,8 +22,7 @@ interface PartnerWithUser {
   updated_at: string;
   user_profiles: {
     id: string;
-    first_name: string;
-    last_name: string;
+    full_name: string;
     email: string;
   };
 }
@@ -124,9 +123,13 @@ export function PartnersManagement() {
   };
 
   const filteredPartners = partners.filter(partner => {
+    console.log(partner.user_profiles.full_name);
+    console.log(partner.user_profiles.email);
+    console.log(partner.partner_code);
+    console.log(searchTerm);
+    console.log(statusFilter);
     const matchesSearch = 
-      partner.user_profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      partner.user_profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      partner.user_profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       partner.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       partner.partner_code.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -289,7 +292,7 @@ export function PartnersManagement() {
                   <TableCell>
                     <div>
                       <p className="font-medium">
-                        {partner.user_profiles.first_name} {partner.user_profiles.last_name}
+                        {partner.user_profiles.full_name}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {partner.user_profiles.email}
@@ -375,7 +378,7 @@ export function PartnersManagement() {
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">
-                  {selectedPartner.user_profiles.first_name} {selectedPartner.user_profiles.last_name}
+                  {selectedPartner.user_profiles.full_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {selectedPartner.user_profiles.email}

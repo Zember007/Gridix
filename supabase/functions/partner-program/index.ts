@@ -9,7 +9,7 @@ interface PartnerProgramRequest {
   client_id?: string
   amount?: number
   payment_method?: string
-  payment_details?: any
+  contact_info?: string
   admin_action?: 'list' | 'update_percentage' | 'suspend' | 'activate'
   payout_percentage?: number
   email?: string
@@ -56,7 +56,7 @@ serve(async (req) => {
       )
     }
 
-    const { action, partner_code, partner_id, client_id, amount, payment_method, payment_details, admin_action, payout_percentage, email, invitation_type, invitation_code }: PartnerProgramRequest = await req.json()
+    const { action, partner_code, partner_id, client_id, amount, payment_method, contact_info, admin_action, payout_percentage, email, invitation_type, invitation_code }: PartnerProgramRequest = await req.json()
 
     switch (action) {
       case 'track_referral':
@@ -72,7 +72,7 @@ serve(async (req) => {
         return await handleImpersonate(supabaseClient, user.id, client_id, req.headers.get('origin'))
       
       case 'payout_request':
-        return await handlePayoutRequest(supabaseClient, user.id, amount, payment_method, payment_details, req.headers.get('origin'))
+        return await handlePayoutRequest(supabaseClient, user.id, amount, payment_method, contact_info, req.headers.get('origin'))
       
       case 'send_invitation':
         return await handleSendInvitation(supabaseClient, user.id, email, invitation_type, req.headers.get('origin'))
@@ -406,8 +406,7 @@ async function handleAdminManage(supabaseClient: any, userId: string, adminActio
             *,
             user_profiles!partner_profiles_user_id_fkey (
               id,
-              first_name,
-              last_name,
+              full_name,
               email
             )
           `)
@@ -583,7 +582,7 @@ async function handleImpersonate(supabaseClient: any, userId: string, clientId?:
 }
 
 // Запрос на выплату
-async function handlePayoutRequest(supabaseClient: any, userId: string, amount?: number, paymentMethod?: string, paymentDetails?: any, origin?: string | null) {
+async function handlePayoutRequest(supabaseClient: any, userId: string, amount?: number, paymentMethod?: string, contactInfo?: string, origin?: string | null) {
   if (!amount || amount <= 0) {
     return createJsonResponse(
       { error: 'Valid amount required' },
@@ -634,7 +633,7 @@ async function handlePayoutRequest(supabaseClient: any, userId: string, amount?:
         amount: amount,
         status: 'pending',
         payment_method: paymentMethod,
-        payment_details: paymentDetails
+        contact_info: contactInfo
       })
       .select()
       .single()

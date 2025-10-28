@@ -129,7 +129,6 @@ const PartnersPage = () => {
             {t('partners.clients')}
           </TabsTrigger>
           <TabsTrigger
-          disabled={true}
           value="payouts" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t('partners.payouts')}
