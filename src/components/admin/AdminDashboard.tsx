@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown, Handshake } from 'lucide-react';
+import { Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown, HelpCircle } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                
+
                 {/* Mobile Navigation Drawer */}
                 <Sheet>
                   <SheetTrigger asChild>
@@ -101,22 +101,20 @@ const AdminDashboard = () => {
                       <nav className="space-y-2">
                         <button
                           onClick={() => setActiveTab('projects')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'projects' 
-                              ? 'bg-primary text-primary-foreground' 
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'projects'
+                              ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-muted'
-                          }`}
+                            }`}
                         >
                           <Building2 className="h-4 w-4" />
                           {t('admin.projects')}
                         </button>
                         <button
                           onClick={() => setActiveTab('leads')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'leads' 
-                              ? 'bg-primary text-primary-foreground' 
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'leads'
+                              ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-muted'
-                          }`}
+                            }`}
                         >
                           <UserCheck className="h-4 w-4" />
                           {t('admin.leads')}
@@ -130,7 +128,7 @@ const AdminDashboard = () => {
                             {t('admin.subscription')}
                           </button>
                         )}
-                      {/*   <button
+                        {/*   <button
                           onClick={() => setActiveTab('partners')}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
                             activeTab === 'partners' 
@@ -143,40 +141,37 @@ const AdminDashboard = () => {
                         </button> */}
                         <button
                           onClick={() => setActiveTab('widgets')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'widgets' 
-                              ? 'bg-primary text-primary-foreground' 
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'widgets'
+                              ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-muted'
-                          }`}
+                            }`}
                         >
                           <Code className="h-4 w-4" />
                           {t('admin.widgets')}
                         </button>
                         <button
                           onClick={() => setActiveTab('analytics')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'analytics' 
-                              ? 'bg-primary text-primary-foreground' 
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'analytics'
+                              ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-muted'
-                          }`}
+                            }`}
                         >
                           <BarChart3 className="h-4 w-4" />
                           {t('admin.analytics')}
                         </button>
                         <button
                           onClick={() => setActiveTab('settings')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'settings' 
-                              ? 'bg-primary text-primary-foreground' 
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'settings'
+                              ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-muted'
-                          }`}
+                            }`}
                         >
                           <Settings className="h-4 w-4" />
                           {t('admin.settings')}
                         </button>
                       </nav>
                     </div>
-                    
+
                     {/* User Info in Drawer */}
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="border-t pt-4">
@@ -199,9 +194,9 @@ const AdminDashboard = () => {
                           </div>
                         )}
                         <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={handleSignOut}
                             className="flex-1"
                           >
@@ -215,7 +210,7 @@ const AdminDashboard = () => {
                   </SheetContent>
                 </Sheet>
               </div>
-              
+
               <div>
                 <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
                 <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
@@ -226,10 +221,10 @@ const AdminDashboard = () => {
 
         <div className="container mx-auto px-4 py-8">
           {/* Show content based on activeTab without Tabs wrapper */}
-          
+
           {activeTab === 'projects' && (
             <div className="space-y-6">
-              <ProjectList 
+              <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
               />
@@ -278,9 +273,9 @@ const AdminDashboard = () => {
 
           {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
             <div className="space-y-6">
-              <AdminSettings 
-                userProfile={user!} 
-                loading={loading} 
+              <AdminSettings
+                userProfile={user!}
+                loading={loading}
                 developerId={developerId}
                 isManager={isManager}
                 {...(userRole.managerData && { managerData: userRole.managerData })}
@@ -295,6 +290,30 @@ const AdminDashboard = () => {
           onClose={handleCloseCreateModal}
           onManualCreate={handleManualCreate}
         />
+
+        {/* Support Button */}
+        <Button
+          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          style={{
+            backgroundColor: ADMIN_THEME.primary,
+            color: ADMIN_THEME.textOnPrimary,
+            borderColor: ADMIN_THEME.primary,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          onClick={() => {
+            // Здесь можно добавить логику для открытия поддержки
+            window.open('https://t.me/gridix_bot', '_blank');
+          }}
+        >
+          <HelpCircle className="h-10 w-10" />
+        </Button>
       </div>
     );
   }
@@ -302,13 +321,13 @@ const AdminDashboard = () => {
   // Desktop view with sidebar
   return (
     <div className="min-h-screen bg-background flex">
-      <AdminSidebar 
+      <AdminSidebar
         onNavigate={navigate}
         userEmail={userProfile?.email || user?.email || 'Unknown user'}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      
+
       <div className="flex-1 bg-background">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-4">
@@ -321,9 +340,9 @@ const AdminDashboard = () => {
               </div>
               <div className="flex items-center gap-4">
                 {/* Sign Out Button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleSignOut}
                   className="flex items-center gap-2"
                   style={{
@@ -341,7 +360,7 @@ const AdminDashboard = () => {
                   <LogOut className="h-4 w-4" />
                   {t('auth.signOut')}
                 </Button>
-                
+
                 <LanguageToggle />
               </div>
             </div>
@@ -352,7 +371,7 @@ const AdminDashboard = () => {
           {/* Remove Tabs wrapper and show content based on activeTab */}
           {activeTab === 'projects' && (
             <div className="space-y-6">
-              <ProjectList 
+              <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
               />
@@ -400,9 +419,9 @@ const AdminDashboard = () => {
           )}
           {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
             <div className="space-y-6">
-              <AdminSettings 
-                userProfile={user!} 
-                loading={loading} 
+              <AdminSettings
+                userProfile={user!}
+                loading={loading}
                 developerId={developerId}
                 isManager={isManager}
                 {...(userRole.managerData && { managerData: userRole.managerData })}
@@ -417,6 +436,31 @@ const AdminDashboard = () => {
           onClose={handleCloseCreateModal}
           onManualCreate={handleManualCreate}
         />
+
+        {/* Support Button */}
+        <Button
+          size={"icon"}
+          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          style={{
+            backgroundColor: ADMIN_THEME.primary,
+            color: ADMIN_THEME.textOnPrimary,
+            borderColor: ADMIN_THEME.primary,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          onClick={() => {
+            // Здесь можно добавить логику для открытия поддержки
+            window.open('https://t.me/gridix_bot', '_blank');
+          }}
+        >
+          <HelpCircle />
+        </Button>
       </div>
     </div>
   );
