@@ -382,7 +382,7 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
 
 async function handleAdminManage(supabaseClient: any, userId: string, adminAction?: string, targetPartnerId?: string, payoutPercentage?: number, origin?: string | null) {
   try {
-    // Проверяем права суперадмина
+    
     const { data: userRole } = await supabaseClient
       .from('user_roles')
       .select('role')

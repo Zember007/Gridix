@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { CreditCard, Search, Filter, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
-import { useToast } from '../../hooks/use-toast';
+import { Search, Filter, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 import { supabase } from '../../integrations/supabase/client';
 import { PartnerPayout } from '../../types/partner';
 
 interface PayoutWithPartner extends PartnerPayout {
+  contact_info?: string;
   partner_profiles: {
     id: string;
     user_id: string;
     partner_code: string;
     user_profiles: {
-      first_name: string;
-      last_name: string;
+      full_name: string;
       email: string;
     };
   };
 }
 
 export function PartnerPayoutsManagement() {
-  const { toast } = useToast();
   const [payouts, setPayouts] = useState<PayoutWithPartner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,8 +54,7 @@ export function PartnerPayoutsManagement() {
             user_id,
             partner_code,
             user_profiles!partner_profiles_user_id_fkey (
-              first_name,
-              last_name,
+              full_name,
               email
             )
           )
@@ -67,14 +65,10 @@ export function PartnerPayoutsManagement() {
         throw new Error(error.message);
       }
 
-      setPayouts(data || []);
+      setPayouts(data as PayoutWithPartner[] || [] );
     } catch (error) {
       console.error('Error fetching payouts:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить список выплат",
-        variant: "destructive",
-      });
+      toast.error("Не удалось загрузить список выплат");
     } finally {
       setLoading(false);
     }
@@ -99,6 +93,7 @@ export function PartnerPayoutsManagement() {
           throw new Error('Invalid action');
       }
 
+      // Обновляем статус выплаты
       const { error } = await supabase
         .from('partner_payouts')
         .update({
@@ -112,10 +107,36 @@ export function PartnerPayoutsManagement() {
         throw new Error(error.message);
       }
 
-      toast({
-        title: "Успешно",
-        description: `Выплата ${action === 'approve' ? 'одобрена' : action === 'reject' ? 'отклонена' : 'отмечена как выплаченная'}`,
-      });
+      // Если выплата отмечена как оплаченная, увеличиваем total_withdrawn у партнёра
+      if (action === 'mark_paid' && selectedPayout) {
+        // Сначала получаем текущее значение total_withdrawn
+        const { data: partnerData, error: fetchError } = await supabase
+          .from('partner_profiles')
+          .select('total_withdrawn')
+          .eq('id', selectedPayout.partner_id)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching partner data:', fetchError);
+        } else {
+          // Обновляем total_withdrawn, добавляя сумму выплаты
+          const newTotalWithdrawn = (partnerData.total_withdrawn || 0) + selectedPayout.amount;
+          
+          const { error: updateError } = await supabase
+            .from('partner_profiles')
+            .update({
+              total_withdrawn: newTotalWithdrawn
+            })
+            .eq('id', selectedPayout.partner_id);
+
+          if (updateError) {
+            console.error('Error updating partner total_withdrawn:', updateError);
+            // Не прерываем выполнение, так как основное действие уже выполнено
+          }
+        }
+      }
+
+      toast.success(`Выплата ${action === 'approve' ? 'одобрена' : action === 'reject' ? 'отклонена' : 'отмечена как выплаченная'}`);
 
       // Обновляем список
       await fetchPayouts();
@@ -124,11 +145,7 @@ export function PartnerPayoutsManagement() {
       setNotes('');
     } catch (error) {
       console.error('Error updating payout:', error);
-      toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось обновить статус выплаты",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Не удалось обновить статус выплаты");
     } finally {
       setIsProcessing(false);
     }
@@ -187,8 +204,7 @@ export function PartnerPayoutsManagement() {
 
   const filteredPayouts = payouts.filter(payout => {
     const matchesSearch = 
-      payout.partner_profiles.user_profiles.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payout.partner_profiles.user_profiles.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payout.partner_profiles.user_profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payout.partner_profiles.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payout.partner_profiles.partner_code.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -346,6 +362,7 @@ export function PartnerPayoutsManagement() {
                 <TableHead>Сумма</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>Способ выплаты</TableHead>
+                <TableHead>Контактная информация</TableHead>
                 <TableHead>Дата запроса</TableHead>
                 <TableHead>Действия</TableHead>
               </TableRow>
@@ -356,7 +373,7 @@ export function PartnerPayoutsManagement() {
                   <TableCell>
                     <div>
                       <p className="font-medium">
-                        {payout.partner_profiles.user_profiles.first_name} {payout.partner_profiles.user_profiles.last_name}
+                        {payout.partner_profiles.user_profiles.full_name} 
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {payout.partner_profiles.user_profiles.email}
@@ -381,6 +398,17 @@ export function PartnerPayoutsManagement() {
                   </TableCell>
                   <TableCell>
                     {payout.payment_method || 'Не указан'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-xs">
+                      {payout.contact_info ? (
+                        <div className="text-sm">
+                          <p className="break-words">{payout.contact_info}</p>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Не указана</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {new Date(payout.requested_at).toLocaleDateString('ru-RU', {
@@ -451,7 +479,7 @@ export function PartnerPayoutsManagement() {
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium">
-                  {selectedPayout.partner_profiles.user_profiles.first_name} {selectedPayout.partner_profiles.user_profiles.last_name}
+                  {selectedPayout.partner_profiles.user_profiles.full_name} 
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {selectedPayout.partner_profiles.user_profiles.email}
@@ -466,6 +494,12 @@ export function PartnerPayoutsManagement() {
                   <p className="text-sm">
                     Способ: {selectedPayout.payment_method}
                   </p>
+                )}
+                {selectedPayout.contact_info && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-400">
+                    <p className="text-sm font-medium text-blue-800">Контактная информация:</p>
+                    <p className="text-sm text-blue-700 break-words">{selectedPayout.contact_info}</p>
+                  </div>
                 )}
               </div>
               
