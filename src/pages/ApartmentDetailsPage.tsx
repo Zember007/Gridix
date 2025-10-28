@@ -912,7 +912,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
                         {/* Secondary buttons row */}
                         <div className="flex gap-3">
-                          {project?.installment_enabled && apartment.price && (
+                          {project?.installment_enabled && apartment.price && priceVisible && (
                             <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
                               <DialogTrigger asChild>
                                 <Button variant="outline" className="flex-1 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm">
@@ -939,7 +939,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             variant="outline"
                             onClick={handleGeneratePDF}
                             disabled={isGeneratingPDF}
-                            className={`px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
+                            className={`px-6 py-3 rounded-lg border border-gray-300 bg-white font-poppins text-sm ${project?.installment_enabled && apartment.price && priceVisible ? '' : 'w-full'}`}
                           >
                             {isGeneratingPDF ? (
                               <div className="flex items-center gap-2">
@@ -1004,7 +1004,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         <div className="text-sm text-gray-600 mb-2 font-poppins">
                           {recApartment.rooms === 0 ? t('apartment.studio') : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`} • {recApartment.area} m²
                         </div>
-                        {recApartment.price && (
+                        {recApartment.price && priceVisible && (
                           <div className="text-lg font-medium text-gray-900 font-poppins">
                             {formatPriceWithCurrency(
                               convertPrice(recApartment.price, project?.currency || null, selectedCurrency),
@@ -1048,7 +1048,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
               </Dialog>
 
               <div className="flex gap-3">
-                {project?.installment_enabled && apartment.price && (
+                {project?.installment_enabled && apartment.price && priceVisible && (
                   <Dialog open={isCalculatorDialogOpen} onOpenChange={setIsCalculatorDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="flex-1 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300">
@@ -1076,7 +1076,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                   variant="outline"
                   onClick={handleGeneratePDF}
                   disabled={isGeneratingPDF}
-                  className={`px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && apartment.price ? '' : 'w-full'}`}
+                  className={`px-4 py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && apartment.price && priceVisible ? '' : 'w-full'}`}
                 >
 
                   {isGeneratingPDF ? (
