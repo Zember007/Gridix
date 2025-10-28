@@ -138,7 +138,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   if (loading) {
     return (
       <Card
-        className='h-full grow'
+        className='h-full grow min-h-[400px]'
       >
         <CardContent className="flex items-center justify-center min-h-96 h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -150,7 +150,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   if (!floorPlan || !floorPlan.image_url) {
     return (
       <Card
-        className='h-full grow'
+        className='h-full grow min-h-[400px]'
       >
         <CardContent className="flex flex-col items-center justify-center min-h-96 h-full text-gray-500">
           <p>План {floorNumber} этажа не загружен</p>
@@ -170,7 +170,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
             <img
               src={floorPlan.image_url}
               alt={`План ${floorNumber} этажа`}
-              className="w-auto mx-auto h-auto max-h-[600px]"
+              className="w-auto mx-auto h-auto max-h-[600px] min-h-[400px]"
               onLoad={handleImageLoad}
             />
 

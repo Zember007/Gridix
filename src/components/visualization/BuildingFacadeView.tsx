@@ -67,13 +67,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       const newHeight = window.innerHeight - filtersHeight - margin;
 
       const minHeight = isMobile ? 300 : 400;
-      const maxHeight = isMobile ? 800 : 1200;
+      const maxHeight = isMobile ? imgDimensions.height : 1200;
 
       return Math.min(Math.max(newHeight, minHeight), maxHeight);
     } else {
       return isMobile ? 200 : COLLAPSED_HEIGHT;
     }
-  }, [isExpanded, filtersRef, isMobile]);
+  }, [isExpanded, filtersRef, isMobile, imgDimensions]);
 
 
   const updateImageDimensions = useCallback(() => {
@@ -90,7 +90,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       let width = containerWidth;
       let height = containerWidth / aspect;
 
-      if (height > containerHeight) {
+      if (height > containerHeight && !isMobile) {
         height = containerHeight;
         width = height * aspect;
       }
@@ -174,8 +174,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             display: {
               showNumbers: !!(s?.display as Record<string, unknown>)?.showNumbers,
               showTooltip: !!(s?.display as Record<string, unknown>)?.showTooltip,
-              showArea: !!(s?.display as Record<string, unknown>)?.showArea,
-              showPrice: !!(s?.display as Record<string, unknown>)?.showPrice,
             },
           });
         } else {
@@ -183,7 +181,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             colors: { building: '#3b82f6' },
             opacity: { normal: 0.4, hover: 0.7 }, 
             hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-            display: { showNumbers: true, showTooltip: false, showArea: false, showPrice: false }
+            display: { showNumbers: true, showTooltip: false}
           });
         }
       } catch (e) {
@@ -191,7 +189,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           colors: { building: '#3b82f6' },
           opacity: { normal: 0.4, hover: 0.7 }, 
           hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-          display: { showNumbers: true, showTooltip: false, showArea: false, showPrice: false }
+          display: { showNumbers: true, showTooltip: false}
         });
       }
     };
@@ -634,12 +632,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                     }
                   }}
                   onMouseEnter={(e) => {
-                    if (!isMobile && isExpanded) {
+                    if (isExpanded) {
                       handleSVGFloorHover(floor.floor_number, e);
                     }
                   }}
                   onMouseLeave={() => {
-                    if (!isMobile && isExpanded) {
+                    if (isExpanded) {
                       setHoveredFloor(null);
                       handleFloorLeave();
                     }
