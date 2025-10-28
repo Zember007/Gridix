@@ -10,10 +10,12 @@ import { Users, UserPlus, LogIn, Search } from 'lucide-react';
 import { usePartnerClients } from '../../hooks/usePartnerClients';
 import { useToast } from '../../hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function ManagedClients() {
   const { clients, loading, error } = usePartnerClients();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'referral' | 'managed'>('all');
   const [isAddingClient, setIsAddingClient] = useState(false);
@@ -43,8 +45,8 @@ export function ManagedClients() {
     } catch (error) {
       console.error('Error impersonating client:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось войти от лица клиента",
+        title: t('partners.error'),
+        description: t('partners.loginAsFailed'),
         variant: "destructive",
       });
     }
@@ -53,8 +55,8 @@ export function ManagedClients() {
   const handleAddManagedClient = async () => {
     if (!newClientEmail.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Введите email клиента",
+        title: t('partners.error'),
+        description: t('partners.clientEmail'),
         variant: "destructive",
       });
       return;
@@ -81,8 +83,8 @@ export function ManagedClients() {
       }
       
       toast({
-        title: "Приглашение отправлено",
-        description: `Приглашение отправлено на ${newClientEmail}. Ссылка: ${result.invitation_link}`,
+        title: t('partners.invitationSent'),
+        description: t('partners.invitationSentDesc', { email: newClientEmail, link: result.invitation_link }),
       });
       
       setNewClientEmail('');
@@ -90,8 +92,8 @@ export function ManagedClients() {
     } catch (error) {
       console.error('Error adding managed client:', error);
       toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось отправить приглашение",
+        title: t('partners.error'),
+        description: error instanceof Error ? error.message : t('partners.invitationFailed'),
         variant: "destructive",
       });
     } finally {
@@ -136,9 +138,9 @@ export function ManagedClients() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Клиенты</h2>
+          <h2 className="text-2xl font-bold">{t('partners.clients')}</h2>
           <p className="text-muted-foreground">
-            Управляйте клиентами на сопровождении
+            {t('partners.manageClients')}
           </p>
         </div>
         
@@ -146,23 +148,23 @@ export function ManagedClients() {
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              Добавить клиента
+              {t('partners.addClient')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Пригласить нового клиента</DialogTitle>
+              <DialogTitle>{t('partners.inviteNewClient')}</DialogTitle>
               <DialogDescription>
-                Введите email нового клиента для отправки приглашения. Партнерская программа предназначена для привлечения новых пользователей.
+                {t('partners.inviteNewClientDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="client-email">Email клиента</Label>
+                <Label htmlFor="client-email">{t('partners.clientEmail')}</Label>
                 <Input
                   id="client-email"
                   type="email"
-                  placeholder="client@example.com"
+                  placeholder={t('partners.clientEmailPlaceholder')}
                   value={newClientEmail}
                   onChange={(e) => setNewClientEmail(e.target.value)}
                 />
@@ -172,13 +174,13 @@ export function ManagedClients() {
                   variant="outline" 
                   onClick={() => setIsAddingClient(false)}
                 >
-                  Отмена
+                  {t('partners.cancel')}
                 </Button>
                 <Button 
                   onClick={handleAddManagedClient}
                   disabled={isAdding}
                 >
-                  {isAdding ? "Отправка..." : "Отправить приглашение"}
+                  {isAdding ? t('partners.sending') : t('partners.sendInvitation')}
                 </Button>
               </div>
             </div>
@@ -192,7 +194,7 @@ export function ManagedClients() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск по имени или email..."
+              placeholder={t('partners.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -204,9 +206,9 @@ export function ManagedClients() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все клиенты</SelectItem>
-            <SelectItem value="referral">Реферальные</SelectItem>
-            <SelectItem value="managed">На сопровождении</SelectItem>
+            <SelectItem value="all">{t('partners.allClients')}</SelectItem>
+            <SelectItem value="referral">{t('partners.referralClientsFilter')}</SelectItem>
+            <SelectItem value="managed">{t('partners.managedClientsFilter')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -218,17 +220,17 @@ export function ManagedClients() {
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Нет клиентов</h3>
+                <h3 className="text-lg font-medium mb-2">{t('partners.noClients')}</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm || filterType !== 'all' 
-                    ? 'Клиенты не найдены по заданным критериям'
-                    : 'Начните привлекать клиентов через реферальную программу'
+                    ? t('partners.noClientsFound')
+                    : t('partners.startAttracting')
                   }
                 </p>
                 {!searchTerm && filterType === 'all' && (
                   <Button onClick={() => setIsAddingClient(true)}>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Добавить первого клиента
+                    {t('partners.addFirstClient')}
                   </Button>
                 )}
               </div>
@@ -257,7 +259,7 @@ export function ManagedClients() {
                   
                   <div className="flex items-center gap-3">
                     <Badge variant={client.type === 'referral' ? 'default' : 'secondary'}>
-                      {client.type === 'referral' ? 'Реферал' : 'Сопровождение'}
+                      {client.type === 'referral' ? t('partners.referral') : t('partners.support')}
                     </Badge>
                     
                     <div className="text-sm text-muted-foreground">
@@ -271,7 +273,7 @@ export function ManagedClients() {
                         onClick={() => handleImpersonate(client.client_id)}
                       >
                         <LogIn className="h-4 w-4 mr-2" />
-                        Войти от лица
+                        {t('partners.loginAs')}
                       </Button>
                     )}
                   </div>

@@ -4,13 +4,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PartnersSection } from '@/components/partners/PartnersSection';
 import { ManagedClients } from '@/components/partners/ManagedClients';
-import { CommissionHistory } from '@/components/partners/CommissionHistory';
 import { PayoutRequests } from '@/components/partners/PayoutRequests';
-import { Loader2, Handshake, Users, DollarSign, CreditCard } from 'lucide-react';
+import { Loader2, Handshake, Users, CreditCard } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PartnersPage = () => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreatePartner = async () => {
@@ -18,13 +19,13 @@ const PartnersPage = () => {
       setIsCreating(true);
       await createPartnerProfile();
       toast({
-        title: "Партнёрский профиль создан",
-        description: "Теперь вы можете привлекать клиентов и получать комиссии",
+        title: t('partners.profileCreated'),
+        description: t('partners.profileCreatedDesc'),
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать партнёрский профиль",
+        title: t('partners.error'),
+        description: t('partners.profileCreationFailed'),
         variant: "destructive",
       });
     } finally {
@@ -46,10 +47,10 @@ const PartnersPage = () => {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Партнёрская программа
+              {t('partners.title')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Привлекайте клиентов и получайте комиссию с каждой подписки
+              {t('partners.subtitle')}
             </p>
           </div>
           <div className="mt-8 space-y-6">
@@ -57,10 +58,10 @@ const PartnersPage = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Стать партнёром
+                    {t('partners.becomePartner')}
                   </h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    Присоединяйтесь к нашей партнёрской программе и начните зарабатывать
+                    {t('partners.joinProgram')}
                   </p>
                 </div>
                 <div className="space-y-4">
@@ -71,8 +72,8 @@ const PartnersPage = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">Реферальная программа</h4>
-                      <p className="text-sm text-gray-600">Получайте 20% комиссии с подписок привлечённых клиентов</p>
+                      <h4 className="text-sm font-medium text-gray-900">{t('partners.referralProgram')}</h4>
+                      <p className="text-sm text-gray-600">{t('partners.referralProgramDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -82,8 +83,8 @@ const PartnersPage = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">Полное сопровождение</h4>
-                      <p className="text-sm text-gray-600">Ведите клиентов и получайте 20% комиссии с их подписок</p>
+                      <h4 className="text-sm font-medium text-gray-900">{t('partners.fullSupport')}</h4>
+                      <p className="text-sm text-gray-600">{t('partners.fullSupportDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -93,8 +94,8 @@ const PartnersPage = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">Автоматические выплаты</h4>
-                      <p className="text-sm text-gray-600">Запрашивайте выплаты заработанных средств</p>
+                      <h4 className="text-sm font-medium text-gray-900">{t('partners.automaticPayouts')}</h4>
+                      <p className="text-sm text-gray-600">{t('partners.automaticPayoutsDesc')}</p>
                     </div>
                   </div>
                 </div>
@@ -104,7 +105,7 @@ const PartnersPage = () => {
                     disabled={isCreating}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreating ? "Создание..." : "Стать партнёром"}
+                    {isCreating ? t('partners.creating') : t('partners.becomePartner')}
                   </button>
                 </div>
               </div>
@@ -118,22 +119,20 @@ const PartnersPage = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Handshake className="h-4 w-4" />
-            Обзор
+            {t('partners.overview')}
           </TabsTrigger>
           <TabsTrigger value="clients" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Клиенты
+            {t('partners.clients')}
           </TabsTrigger>
-          <TabsTrigger value="commissions" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Комиссии
-          </TabsTrigger>
-          <TabsTrigger value="payouts" className="flex items-center gap-2">
+          <TabsTrigger
+          disabled={true}
+          value="payouts" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Выплаты
+            {t('partners.payouts')}
           </TabsTrigger>
         </TabsList>
         
@@ -143,10 +142,6 @@ const PartnersPage = () => {
         
         <TabsContent value="clients" className="mt-6">
           <ManagedClients />
-        </TabsContent>
-        
-        <TabsContent value="commissions" className="mt-6">
-          <CommissionHistory />
         </TabsContent>
         
         <TabsContent value="payouts" className="mt-6">

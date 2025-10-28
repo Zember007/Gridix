@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -13,13 +13,14 @@ import { usePartnerStats } from '../../hooks/usePartnerStats';
 import { useToast } from '../../hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
 import { PartnerPayout } from '../../types/partner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function PayoutRequests() {
   const { stats, loading: statsLoading } = usePartnerStats();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [payouts, setPayouts] = useState<PartnerPayout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -58,7 +59,7 @@ export function PayoutRequests() {
         return;
       }
 
-      setPayouts(payoutsData || []);
+      setPayouts((payoutsData || []) as PartnerPayout[]);
     } catch (error) {
       console.error('Error fetching payouts:', error);
     } finally {
@@ -71,8 +72,8 @@ export function PayoutRequests() {
     
     if (!amount || amount <= 0) {
       toast({
-        title: "Ошибка",
-        description: "Введите корректную сумму",
+        title: t('partners.error'),
+        description: t('partners.invalidAmount'),
         variant: "destructive",
       });
       return;
@@ -80,8 +81,8 @@ export function PayoutRequests() {
 
     if (amount > (stats?.available_for_withdrawal || 0)) {
       toast({
-        title: "Ошибка",
-        description: "Недостаточно средств для вывода",
+        title: t('partners.error'),
+        description: t('partners.insufficientFunds'),
         variant: "destructive",
       });
       return;
@@ -108,8 +109,8 @@ export function PayoutRequests() {
       }
 
       toast({
-        title: "Запрос создан",
-        description: "Ваш запрос на выплату отправлен на рассмотрение",
+        title: t('partners.requestCreated'),
+        description: t('partners.requestCreatedDesc'),
       });
 
       // Сбрасываем форму
@@ -123,8 +124,8 @@ export function PayoutRequests() {
     } catch (error) {
       console.error('Error creating payout request:', error);
       toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось создать запрос на выплату",
+        title: t('partners.error'),
+        description: error instanceof Error ? error.message : t('partners.requestFailed'),
         variant: "destructive",
       });
     } finally {
@@ -150,15 +151,15 @@ export function PayoutRequests() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Ожидает рассмотрения';
+        return t('partners.status.pending');
       case 'approved':
-        return 'Одобрено';
+        return t('partners.status.approved');
       case 'paid':
-        return 'Выплачено';
+        return t('partners.status.paid');
       case 'rejected':
-        return 'Отклонено';
+        return t('partners.status.rejected');
       default:
-        return 'Неизвестно';
+        return t('partners.status.unknown');
     }
   };
 
@@ -194,9 +195,9 @@ export function PayoutRequests() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Запросы на выплату</h2>
+          <h2 className="text-2xl font-bold">{t('partners.payoutRequests')}</h2>
           <p className="text-muted-foreground">
-            Управляйте выводом заработанных средств
+            {t('partners.managePayouts')}
           </p>
         </div>
         
@@ -204,57 +205,57 @@ export function PayoutRequests() {
           <DialogTrigger asChild>
             <Button disabled={!stats?.available_for_withdrawal || stats.available_for_withdrawal <= 0}>
               <CreditCard className="h-4 w-4 mr-2" />
-              Запросить выплату
+              {t('partners.requestPayout')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Запрос на выплату</DialogTitle>
+              <DialogTitle>{t('partners.payoutRequest')}</DialogTitle>
               <DialogDescription>
-                Укажите сумму и способ получения выплаты
+                {t('partners.payoutRequestDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Сумма к выводу</Label>
+                <Label htmlFor="amount">{t('partners.amountToWithdraw')}</Label>
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="0.00"
+                  placeholder={t('partners.amountPlaceholder')}
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
                   max={stats?.available_for_withdrawal || 0}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Доступно: ${stats?.available_for_withdrawal?.toFixed(2) || '0'}
+                  {t('partners.available')}: ${stats?.available_for_withdrawal?.toFixed(2) || '0'}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment-method">Способ выплаты</Label>
+                <Label htmlFor="payment-method">{t('partners.paymentMethod')}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите способ выплаты" />
+                    <SelectValue placeholder={t('partners.selectPaymentMethod')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bank_transfer">Банковский перевод</SelectItem>
-                    <SelectItem value="paypal">PayPal</SelectItem>
-                    <SelectItem value="crypto">Криптовалюта</SelectItem>
-                    <SelectItem value="other">Другое</SelectItem>
+                    <SelectItem value="bank_transfer">{t('partners.bankTransfer')}</SelectItem>
+                    <SelectItem value="paypal">{t('partners.paypal')}</SelectItem>
+                    <SelectItem value="crypto">{t('partners.crypto')}</SelectItem>
+                    <SelectItem value="other">{t('partners.other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="payment-details">Детали выплаты (JSON)</Label>
+                <Label htmlFor="payment-details">{t('partners.paymentDetails')}</Label>
                 <Textarea
                   id="payment-details"
-                  placeholder='{"account": "1234567890", "bank": "Сбербанк"}'
+                  placeholder={t('partners.paymentDetailsPlaceholder')}
                   value={paymentDetails}
                   onChange={(e) => setPaymentDetails(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Укажите реквизиты для выплаты в формате JSON
+                  {t('partners.paymentDetailsDesc')}
                 </p>
               </div>
 
@@ -263,13 +264,13 @@ export function PayoutRequests() {
                   variant="outline" 
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  Отмена
+                  {t('partners.cancel')}
                 </Button>
                 <Button 
                   onClick={handleCreatePayout}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Создание..." : "Создать запрос"}
+                  {isSubmitting ? t('partners.creating') : t('partners.createRequest')}
                 </Button>
               </div>
             </div>
@@ -281,9 +282,9 @@ export function PayoutRequests() {
       <Alert>
         <DollarSign className="h-4 w-4" />
         <AlertDescription>
-          <strong>Доступно для вывода:</strong> ${stats?.available_for_withdrawal?.toFixed(2) || '0'} | 
-          <strong>Всего заработано:</strong> ${stats?.total_earned?.toFixed(2) || '0'} | 
-          <strong>Уже выведено:</strong> ${stats?.total_withdrawn?.toFixed(2) || '0'}
+          <strong>{t('partners.availableForWithdrawal')}:</strong> ${stats?.available_for_withdrawal?.toFixed(2) || '0'} | {' '}
+          <strong>{t('partners.totalEarned')}:</strong> ${stats?.total_earned?.toFixed(2) || '0'} | {' '}
+          <strong>{t('partners.totalWithdrawn')}:</strong> ${stats?.total_withdrawn?.toFixed(2) || '0'}
         </AlertDescription>
       </Alert>
 
@@ -294,13 +295,13 @@ export function PayoutRequests() {
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Нет запросов на выплату</h3>
+                <h3 className="text-lg font-medium mb-2">{t('partners.noPayoutRequests')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Создайте первый запрос на выплату заработанных средств
+                  {t('partners.createFirstRequest')}
                 </p>
                 <Button onClick={() => setIsDialogOpen(true)}>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Создать запрос
+                  {t('partners.createRequest')}
                 </Button>
               </div>
             </CardContent>
@@ -315,7 +316,7 @@ export function PayoutRequests() {
                       <CreditCard className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium">Запрос на выплату</p>
+                      <p className="font-medium">{t('partners.payoutRequestTitle')}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(payout.requested_at).toLocaleDateString('ru-RU', {
                           year: 'numeric',
@@ -327,7 +328,7 @@ export function PayoutRequests() {
                       </p>
                       {payout.payment_method && (
                         <p className="text-sm text-muted-foreground">
-                          Способ: {payout.payment_method}
+                          {t('partners.paymentMethod')}: {payout.payment_method}
                         </p>
                       )}
                     </div>
@@ -347,7 +348,7 @@ export function PayoutRequests() {
                       </p>
                       {payout.processed_at && (
                         <p className="text-sm text-muted-foreground">
-                          Обработано: {new Date(payout.processed_at).toLocaleDateString()}
+                          {t('partners.processedAt')}: {new Date(payout.processed_at).toLocaleDateString()}
                         </p>
                       )}
                     </div>
@@ -357,7 +358,7 @@ export function PayoutRequests() {
                 {payout.notes && (
                   <div className="mt-4 p-3 bg-muted rounded-lg">
                     <p className="text-sm">
-                      <strong>Примечание:</strong> {payout.notes}
+                      <strong>{t('partners.notes')}:</strong> {payout.notes}
                     </p>
                   </div>
                 )}

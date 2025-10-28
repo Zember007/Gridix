@@ -10,7 +10,6 @@ import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle, Loader2 } from 'l
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AccountTypeSelector } from './AccountTypeSelector';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -27,8 +26,6 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
   const [resetLoading, setResetLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
-  const [showAccountTypeSelector, setShowAccountTypeSelector] = useState(false);
-  const [selectedAccountType, setSelectedAccountType] = useState<'developer' | 'manager' | null>(null);
   
   // Реферальный код и партнер
   const refCode = searchParams.get('ref');
@@ -90,18 +87,11 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
     checkPartner();
   }, [refCode, t]);
 
-  const handleAccountTypeSelect = (accountType: 'developer' | 'manager') => {
-    setSelectedAccountType(accountType);
-    setShowAccountTypeSelector(false);
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (mode === 'signup' && !selectedAccountType) {
-      setShowAccountTypeSelector(true);
-      return;
-    }
+
     
     setLoading(true);
 
@@ -115,7 +105,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               full_name: formData.fullName,
               company_name: formData.companyName,
               phone: formData.phone,
-              account_type: selectedAccountType
+              account_type: 'developer'
             }
           }
         });
@@ -232,14 +222,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
     }
   };
 
-  if (showAccountTypeSelector) {
-    return (
-      <AccountTypeSelector
-        onSelect={handleAccountTypeSelect}
-        loading={loading}
-      />
-    );
-  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

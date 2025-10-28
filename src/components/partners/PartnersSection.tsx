@@ -14,20 +14,20 @@ export function PartnersSection() {
   const { stats, loading: statsLoading } = usePartnerStats();
   const { toast } = useToast();
   const [creating, setCreating] = useState(false);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const handleCreatePartner = async () => {
     try {
       setCreating(true);
       await createPartnerProfile();
       toast({
-        title: "Партнёрский профиль создан",
-        description: "Теперь вы можете привлекать клиентов и получать комиссии",
+        title: t('partners.profileCreated'),
+        description: t('partners.profileCreatedDesc'),
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать партнёрский профиль",
+        title: t('partners.error'),
+        description: t('partners.profileCreationFailed'),
         variant: "destructive",
       });
     } finally {
@@ -43,13 +43,13 @@ export function PartnersSection() {
     try {
       await navigator.clipboard.writeText(referralLink);
       toast({
-        title: "Ссылка скопирована",
-        description: "Реферальная ссылка скопирована в буфер обмена",
+        title: t('partners.linkCopied'),
+        description: t('partners.linkCopiedDesc'),
       });
     } catch (error) {
       toast({
-        title: "Ошибка",
-        description: "Не удалось скопировать ссылку",
+        title: t('partners.error'),
+        description: t('partners.copyFailed'),
         variant: "destructive",
       });
     }
@@ -82,25 +82,25 @@ export function PartnersSection() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Handshake className="h-5 w-5" />
-              Партнёрская программа
+              {t('partners.title')}
             </CardTitle>
             <CardDescription>
-              Привлекайте клиентов и получайте комиссию с каждой подписки
+              {t('partners.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium">Реферальная программа</h4>
+                  <h4 className="font-medium">{t('partners.referralProgram')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Получайте 20% комиссии с подписок привлечённых клиентов
+                    {t('partners.referralProgramDesc')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">Полное сопровождение</h4>
+                  <h4 className="font-medium">{t('partners.fullSupport')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Ведите клиентов и получайте 20% комиссии с их подписок
+                    {t('partners.fullSupportDesc')}
                   </p>
                 </div>
               </div>
@@ -109,7 +109,7 @@ export function PartnersSection() {
                 disabled={creating}
                 className="w-full"
               >
-                {creating ? "Создание..." : "Стать партнёром"}
+                {creating ? t('partners.creating') : t('partners.becomePartner')}
               </Button>
             </div>
           </CardContent>
@@ -126,33 +126,33 @@ export function PartnersSection() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего клиентов</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('partners.totalClients')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_clients || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.referral_clients || 0} реферальных, {stats?.managed_clients || 0} на сопровождении
+              {stats?.referral_clients || 0} {t('partners.referralClients')}, {stats?.managed_clients || 0} {t('partners.managedClients')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Заработано</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('partners.earned')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${stats?.total_earned || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Доступно для вывода: ${stats?.available_for_withdrawal || 0}
+              {t('partners.availableForWithdrawal')}: ${stats?.available_for_withdrawal || 0}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Партнёрский код</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('partners.partnerCode')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -171,9 +171,9 @@ export function PartnersSection() {
       {/* Реферальная ссылка */}
       <Card>
         <CardHeader>
-          <CardTitle>Реферальная ссылка</CardTitle>
+          <CardTitle>{t('partners.referralLink')}</CardTitle>
           <CardDescription>
-            Поделитесь этой ссылкой с потенциальными клиентами
+            {t('partners.shareLink')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -185,14 +185,14 @@ export function PartnersSection() {
             />
             <Button onClick={copyReferralLink} variant="outline">
               <Copy className="h-4 w-4 mr-2" />
-              Копировать
+              {t('partners.copy')}
             </Button>
             <Button 
               variant="outline" 
               onClick={() => window.open(referralLink, '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Открыть
+              {t('partners.open')}
             </Button>
           </div>
         </CardContent>
@@ -202,9 +202,9 @@ export function PartnersSection() {
       {stats?.clients && stats.clients.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Последние клиенты</CardTitle>
+            <CardTitle>{t('partners.recentClients')}</CardTitle>
             <CardDescription>
-              Клиенты, привлечённые через вашу реферальную программу
+              {t('partners.recentClientsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -228,7 +228,7 @@ export function PartnersSection() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={client.type === 'referral' ? 'default' : 'secondary'}>
-                      {client.type === 'referral' ? 'Реферал' : 'Сопровождение'}
+                      {client.type === 'referral' ? t('partners.referral') : t('partners.support')}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
                       {new Date(client.created_at).toLocaleDateString()}

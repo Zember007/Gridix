@@ -354,15 +354,6 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
     const referralClients = links?.filter(link => link.type === 'referral') || []
     const managedClients = links?.filter(link => link.type === 'managed') || []
 
-    // Получаем статистику по комиссиям
-    const { data: commissions } = await supabaseClient
-      .from('user_subscriptions')
-      .select('partner_commission_amount, created_at')
-      .eq('partner_id', partnerProfile.id)
-      .eq('partner_commission_paid', true)
-
-    const totalCommissions = commissions?.reduce((sum, comm) => sum + (comm.partner_commission_amount || 0), 0) || 0
-
     // Получаем доступный баланс для вывода
     const availableBalance = partnerProfile.total_earned - partnerProfile.total_withdrawn
 
@@ -374,7 +365,6 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
         total_earned: partnerProfile.total_earned,
         total_withdrawn: partnerProfile.total_withdrawn,
         available_for_withdrawal: availableBalance,
-        commissions: commissions || [],
         clients: links || []
       },
       200,
