@@ -208,7 +208,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
     setResetLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/en/set-password`,
       });
       if (error) throw error;
       toast.success(t('auth.resetEmailSent'));
