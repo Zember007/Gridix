@@ -439,7 +439,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                                     <img
                                         src={photo.image_url}
                                         alt={`${photo.type === 'layout' ? t('pdf.layout') : t('pdf.apartmentPhoto')} ${index + 1}`}
-                                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                                        className="w-full h-auto object-cover rounded-lg border border-gray-200"
                                     />
                                     {photo.type === 'layout' &&
                                         <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
