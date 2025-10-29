@@ -1,4 +1,6 @@
 {
+  "filters" : "Фильтры",
+  "filtersDescription": "Фильтры для поиска",
   "additionalInfo": "Дополнительная информация",
   "allFloors": "Все этажи",
   "allTypes": "Все типы",

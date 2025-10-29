@@ -36,7 +36,7 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: Favor
     switch (status) {
       case 'sold': return { backgroundColor: '#ef4444' };
       case 'reserved': return { backgroundColor: '#f59e0b' };
-      case 'available': return { backgroundColor: '#3b82f6' };
+      case 'available': return { backgroundColor: '#1f984def' };
       default: return { backgroundColor: '#6b7280' };
     }
   };

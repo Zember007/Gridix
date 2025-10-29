@@ -52,7 +52,7 @@ interface ListViewProps {
   getCustomFieldValue: (apartment: Apartment, fieldName: string) => unknown;
   formatFieldValue: (value: unknown, fieldType: string, fieldName: string) => string;
   getFieldLabel: (field: FieldSetting) => string;
-  groupApartmentsByFloor: () => { floor: number; apartments: Apartment[] }[];
+  groupApartmentsByFloor: { floor: number; apartments: Apartment[] }[];
   convertPrice: (price: number, fromCurrency: string | null | undefined, toCurrency: string) => number;
   formatPrice: (price: number) => string;
   project?: Project;
@@ -232,12 +232,15 @@ export const ListView = ({
                                 </Badge>
                               </div>
                               <div className="text-xs text-gray-600 space-y-1">
-                                <div>{apartment.area} м² {project?.project_type !== 'object' ? `• ${apartment.floor_number} ${t('project.floor').toLowerCase()}` : ''}</div>
+                                {
+                                  areaVisible &&
+                                  <div>{apartment.area} м² </div>
+                                }
                                 <div className="font-bold text-sm text-gray-900">
-                                  {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                                  {apartment.price && priceVisible ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                                 </div>
                                 {/* Installment pricing for mobile */}
-                                {apartment.price && project?.installment_enabled && (
+                                {apartment.price && project?.installment_enabled && priceVisible && (
                                   <div className="text-xs text-gray-500">
                                     {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))} {getCurrencySymbolSafe(selectedCurrency)}
                                   </div>
@@ -535,7 +538,7 @@ export const ListView = ({
                     ))}
                   </div>
                 ) : (
-                  groupApartmentsByFloor().map(({ floor, apartments: floorApartments }) => (
+                  groupApartmentsByFloor.map(({ floor, apartments: floorApartments }) => (
                     <div key={floor} className="space-y-4">
                       <div className="flex items-center gap-4">
                         <h3 className="text-xl font-semibold text-gray-800">

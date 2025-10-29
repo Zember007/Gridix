@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -39,7 +39,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(project?.id || null);
-  const { favoritesCount } = useFavorites(project?.id || null);
+  const { favoritesCount } = useFavorites(project?.id || undefined);
   const { user } = useAuth();
 
   // State
@@ -58,7 +58,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
 
   const filtersRef = useRef<HTMLDivElement>(null);
-  const loadedPolygonsForFloorsRef = useRef<Set<number>>(new Set());
+  const loadedPolygonsForFloorsRef = useRef<Map<number, Apartment[]>>(new Map());
+  const polygonsLoadingRef = useRef<Set<number>>(new Set());
+  const imageLoadRef = useRef<HTMLImageElement | null>(null);
 
   // Use filters hook
   const filters = useProjectFilters({ apartments, project });
@@ -144,52 +146,151 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(Math.round(price));
 
-  // Load apartments
-  const loadApartments = useCallback(async () => {
-    if (apartmentsLoaded || !project?.id) return;
+  // Load apartments and layout photos in parallel (optimized)
+  useEffect(() => {
+    if (!project?.id || apartmentsLoaded) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('apartments')
-        .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
-        .eq('project_id', project.id);
+    let isCancelled = false;
 
-      if (error) throw error;
+    const loadDataInParallel = async () => {
+      try {
+        // Load apartments
+        const apartmentsResult = await supabase
+          .from('apartments')
+          .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
+          .eq('project_id', project.id);
 
-      const normalizedApartments = (data || []).map(normalizeApartmentData);
-      setApartments(normalizedApartments);
-      setApartmentsLoaded(true);
-    } catch (error) {
-      console.error('Error loading apartments:', error);
-    }
+        if (isCancelled) return;
+
+        // Process apartments
+        const { data, error } = apartmentsResult;
+        if (error) throw error;
+
+        const normalizedApartments = (data || []).map(normalizeApartmentData);
+        if (!isCancelled) {
+          setApartments(normalizedApartments);
+          setApartmentsLoaded(true);
+
+          // Now load layout photos for visible apartments only (non-blocking)
+          // This happens after apartments are loaded, so UI can render
+          const uniqueLayouts = new Set<string>(
+            normalizedApartments.map(a => 
+              (a.type === 'apartment' ? Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room` : a.type)
+            )
+          );
+
+          if (uniqueLayouts.size > 0 && !isCancelled) {
+            // Load layout photos asynchronously without blocking
+            (async () => {
+              try {
+                const { data: layoutData, error: layoutError } = await supabase
+                  .from('layout_photos')
+                  .select('id, project_id, layout_type, image_url, description, order_index')
+                  .eq('project_id', project.id)
+                  .in('layout_type', Array.from(uniqueLayouts))
+                  .order('order_index', { ascending: true });
+
+                if (isCancelled) return;
+                if (layoutError) {
+                  console.error('Error loading layout photos:', layoutError);
+                  setPreloadLayoutLoaded(true);
+                  return;
+                }
+
+                const grouped: Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]> = {};
+                (layoutData || []).forEach(p => {
+                  const key = p.layout_type;
+                  if (!grouped[key]) grouped[key] = [];
+                  const item: { id: string; image_url: string; description?: string; order_index: number; type: 'layout' } = { 
+                    id: p.id, 
+                    image_url: p.image_url, 
+                    order_index: p.order_index, 
+                    type: 'layout' 
+                  };
+                  if (p.description) {
+                    item.description = p.description;
+                  }
+                  grouped[key].push(item);
+                });
+
+                if (!isCancelled) {
+                  console.log('Layout photos loaded:', Object.keys(grouped).length, 'types'); // Debug log
+                  setPreloadedLayoutPhotosByRooms(grouped);
+                  setPreloadLayoutLoaded(true);
+                }
+              } catch (e: unknown) {
+                if (!isCancelled) {
+                  console.error('Error preloading layout photos:', e);
+                  setPreloadLayoutLoaded(true);
+                }
+              }
+            })();
+          } else {
+            setPreloadLayoutLoaded(true);
+          }
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Error loading apartments:', error);
+          setApartmentsLoaded(true);
+          setPreloadLayoutLoaded(true);
+        }
+      }
+    };
+
+    loadDataInParallel();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [project?.id, apartmentsLoaded]);
 
+  // Lazy load building facade image (non-blocking)
   useEffect(() => {
-    if (project?.id) {
-      loadApartments();
+    // Cancel previous image load
+    if (imageLoadRef.current) {
+      imageLoadRef.current.onload = null;
+      imageLoadRef.current.onerror = null;
+      imageLoadRef.current.src = '';
     }
-  }, [project?.id, loadApartments]);
 
-  // Preload building facade image in parent
-  useEffect(() => {
     setBuildingImageLoaded(false);
     setBuildingImageNaturalSize({ width: 0, height: 0 });
     const imageUrl = project?.building_image_url;
-    if (!imageUrl) return;
+    
+    if (!imageUrl) {
+      // Allow UI to render even without image
+      setBuildingImageLoaded(true);
+      return;
+    }
 
+    // Load image asynchronously without blocking UI
     const img = new Image();
+    imageLoadRef.current = img;
+    
     img.onload = () => {
-      setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-      setBuildingImageLoaded(true);
+      if (img === imageLoadRef.current) {
+        setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+        setBuildingImageLoaded(true);
+      }
     };
+    
     img.onerror = () => {
-      // In case of error, still allow UI to proceed to avoid blocking
-      setBuildingImageLoaded(true);
+      // In case of error, still allow UI to proceed
+      if (img === imageLoadRef.current) {
+        setBuildingImageLoaded(true);
+      }
     };
+    
+    // Start loading (non-blocking)
     img.src = imageUrl;
 
     return () => {
-      // No special cleanup required
+      if (imageLoadRef.current === img) {
+        imageLoadRef.current.onload = null;
+        imageLoadRef.current.onerror = null;
+        imageLoadRef.current = null;
+      }
     };
   }, [project?.building_image_url]);
 
@@ -197,61 +298,37 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   useEffect(() => {
     if (apartments.length > 0 && selectedFloorForPlan === null) {
       const uniqueFloors = filters.getUniqueFloors();
-      if (uniqueFloors.length > 0) {
+      if (uniqueFloors.length > 0 && uniqueFloors[0] !== undefined) {
         setSelectedFloorForPlan(uniqueFloors[0]);
       }
     }
   }, [apartments, filters, selectedFloorForPlan]);
 
-  // Preload layout photos
-  useEffect(() => {
-    const preloadLayoutPhotos = async () => {
 
 
-      if (!project?.id || apartments.length === 0) return;
-
-      const uniqueLayouts = new Set<string>(
-        apartments.map(a => (a.type === 'apartment' ? Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room` : a.type))
-      );
-
-      if (uniqueLayouts.size === 0) {
-        setPreloadLayoutLoaded(true);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('layout_photos')
-          .select('id, project_id, layout_type, image_url, description, order_index')
-          .eq('project_id', project.id)
-          .in('layout_type', Array.from(uniqueLayouts))
-          .order('order_index', { ascending: true });
-
-        if (error) throw error;
-
-        const grouped: Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]> = {};
-        (data || []).forEach(p => {
-          const key = p.layout_type;
-          if (!grouped[key]) grouped[key] = [];
-          grouped[key].push({ id: p.id, image_url: p.image_url, description: p.description || undefined, order_index: p.order_index, type: 'layout' });
-        });
-
-        setPreloadedLayoutPhotosByRooms(grouped);
-        setPreloadLayoutLoaded(true);
-      } catch (e) {
-        console.error('Error preloading layout photos:', e);
-      }
-    };
-
-    preloadLayoutPhotos();
-  }, [project?.id, apartments]);
-
-
-
-  // Load polygons for floor plan view
+  // Load polygons for floor plan view (optimized with caching)
   useEffect(() => {
     const loadPolygonsForFloor = async (floor: number) => {
-      if (!project?.id) return;
+      if (!project?.id || polygonsLoadingRef.current.has(floor)) return;
+
+      // Check if already cached
+      if (loadedPolygonsForFloorsRef.current.has(floor)) {
+        const cached = loadedPolygonsForFloorsRef.current.get(floor);
+        if (cached && cached.length > 0) {
+          // Update apartments with cached polygons
+          setApartments(prev => prev.map(apt => {
+            const found = cached.find(d => d.id === apt.id);
+            if (!found || apt.floor_number !== floor) return apt;
+            return {
+              ...apt,
+              polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : apt.polygon
+            };
+          }));
+          return;
+        }
+      }
+
+      polygonsLoadingRef.current.add(floor);
 
       try {
         const { data, error } = await supabase
@@ -262,28 +339,30 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
         if (error) throw error;
 
-        if (!data) return;
+        if (data && data.length > 0) {
+          // Cache the polygons - store raw data, not Apartment objects
+          loadedPolygonsForFloorsRef.current.set(floor, data as unknown as Apartment[]);
 
-        setApartments(prev => prev.map(apt => {
-          const found = data.find(d => d.id === apt.id);
-          if (!found) return apt;
-          return {
-            ...apt,
-            polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : []
-          };
-        }));
-
-        loadedPolygonsForFloorsRef.current.add(floor);
+          // Update apartments efficiently - only update those on this floor
+          setApartments(prev => prev.map(apt => {
+            if (apt.floor_number !== floor) return apt;
+            const found = data.find(d => d.id === apt.id);
+            if (!found) return apt;
+            return {
+              ...apt,
+              polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : []
+            };
+          }));
+        }
       } catch (e) {
         console.error('Error loading polygons for floor:', e);
+      } finally {
+        polygonsLoadingRef.current.delete(floor);
       }
     };
 
     if (viewMode === 'floor-plan' && selectedFloorForPlan !== null) {
-      const floor = selectedFloorForPlan;
-      if (!loadedPolygonsForFloorsRef.current.has(floor)) {
-        loadPolygonsForFloor(floor);
-      }
+      loadPolygonsForFloor(selectedFloorForPlan);
     }
   }, [viewMode, selectedFloorForPlan, project?.id]);
 
@@ -335,8 +414,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     }
   }, [filters, project?.currency, t]);
 
-  // Group apartments by floor for grid mode
-  const groupApartmentsByFloor = useCallback(() => {
+  // Group apartments by floor for grid mode (memoized for performance)
+  const groupApartmentsByFloor = useMemo(() => {
     const grouped = filters.filteredApartments.reduce((acc, apartment) => {
       const floor = apartment.floor_number;
       if (!acc[floor]) {
@@ -352,26 +431,20 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
     return sortedFloors.map(floor => ({
       floor,
-      apartments: grouped[floor].sort((a, b) => {
+      apartments: (grouped[floor] || []).sort((a, b) => {
         if (a.apartment_number && b.apartment_number) {
           return a.apartment_number.localeCompare(b.apartment_number);
         }
         return a.id.localeCompare(b.id);
       })
     }));
-  }, [filters]);
+  }, [filters.filteredApartments]);
 
   if (!project) return null;
 
-  if (!apartmentsLoaded || !preloadLayoutLoaded || (viewMode === 'facade' && !buildingImageLoaded)) {
-    return (
-      <div className="min-h-screen fixed inset-0 bg-white flex items-center justify-center">
-        <Loader
-          color={getThemeColor()}
-          size="lg" className="mx-auto" />
-      </div>
-    );
-  }
+  // Show incremental loading - don't block UI completely
+  const isInitialLoading = !apartmentsLoaded;
+  const showContent = apartmentsLoaded; // Show content as soon as apartments are loaded
 
   // Check subscription status
   const isSubscriptionExpired = project.subscription_expires_at &&
@@ -393,6 +466,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Loading indicator - only show during initial load */}
+      {isInitialLoading && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <Loader
+            color={getThemeColor()}
+            size="lg" className="mx-auto" />
+        </div>
+      )}
       {/* Subscription Warning Banner */}
       {isSubscriptionInactive && (
         <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
@@ -508,169 +589,173 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
         </div>
       </div>
 
-      {/* Content based on view mode */}
-      {viewMode === 'list' ? (
-        <ListView
-          filteredApartments={filters.filteredApartments}
-          listViewMode={listViewMode}
-          setListViewMode={setListViewMode}
-          selectedType={filters.selectedType}
-          setSelectedType={filters.setSelectedType}
-          openApartmentDetails={openApartmentDetails}
-          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-          getVisibleFields={getVisibleFields}
-          getCustomFieldValue={getCustomFieldValue}
-          formatFieldValue={formatFieldValue}
-          getFieldLabel={getFieldLabel}
-          groupApartmentsByFloor={groupApartmentsByFloor}
-          convertPrice={filters.convertPrice}
-          formatPrice={formatPrice}
-          project={project}
-          selectedCurrency={filters.selectedCurrency}
-          isMobile={isMobile}
-          themeColor={getThemeColor()}
-        />
-      ) : viewMode === 'map' ? (
-        <InteractiveProjectsMap
-          project={project ? { ...project, min_price: null } : undefined}
-          onProjectSelect={() => {
-            setViewMode('list');
-          }}
-        />
-      ) : viewMode === 'favorites' ? (
-        <div className="container mx-auto px-4 md:px-6 py-8 grow">
-          <FavoritesTab
-          handleViewApartment={openApartmentDetails}
-          projectId={project.id} projectCurrency={project?.currency} />
-        </div>
-      ) : (
-        // Facade and Floor Plan views with hero section
+      {/* Content based on view mode - show content as soon as apartments are loaded */}
+      {showContent ? (
         <>
-          {/* Main visualization area */}
-          <div className="relative grow flex">
-            {/* Hero section with building visualization */}
-            <div className="relative w-full">
-              {viewMode === 'facade' ? (
-                // Building facade view with interactive floor polygons
-                <div className="w-full bg-white">
-                  <BuildingFacadeView
-                    projectId={project.id}
-                    project={project}
-                    apartments={filters.filteredApartments}
-                    onFloorSelect={(floor) => {
-                      setSelectedFloorForPlan(floor);
-                      setViewMode('floor-plan');
-                    }}
-                    onApartmentSelect={openApartmentDetails}
-                    filtersRef={filtersRef}
-                    externalImageLoaded={buildingImageLoaded}
-                    externalImageNaturalSize={buildingImageNaturalSize}
-                  />
-
-                  {/* Layout gallery below facade when not expanded - hide for project_type = object */}
-                  {(project)?.project_type !== 'object' && (
-                    <LayoutGallery
-                      apartments={apartments}
-                      selectedRooms={filters.selectedRooms}
-                      selectedType={filters.selectedType}
-                      setSelectedRooms={filters.setSelectedRooms}
-                      setSelectedType={filters.setSelectedType}
-                      setViewMode={setViewMode}
-                      getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                      preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                      project={project}
-                      formatPrice={formatPrice}
-                      selectedCurrency={filters.selectedCurrency}
-                      isMobile={isMobile}
-                      themeColor={getThemeColor()}
-                      visibleFields={fieldSettings.filter(field => field.is_visible)}
-                    />
-                  )}
-                </div>
-              ) : (
-                // Floor plan view for specific floor with sidebar
-                <div className="w-full bg-white min-h-[600px] h-full">
-                  <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
-                    {/* Main floor plan area */}
-                    <div className="flex-1 relative">
-                      <ApartmentFloorPlan
-                        project={project}
+          {viewMode === 'list' ? (
+            <ListView
+              filteredApartments={filters.filteredApartments}
+              listViewMode={listViewMode}
+              setListViewMode={setListViewMode}
+              selectedType={filters.selectedType}
+              setSelectedType={filters.setSelectedType}
+              openApartmentDetails={openApartmentDetails}
+              preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+              getVisibleFields={getVisibleFields}
+              getCustomFieldValue={getCustomFieldValue}
+              formatFieldValue={formatFieldValue}
+              getFieldLabel={getFieldLabel}
+              groupApartmentsByFloor={groupApartmentsByFloor}
+              convertPrice={filters.convertPrice}
+              formatPrice={formatPrice}
+              project={project}
+              selectedCurrency={filters.selectedCurrency}
+              isMobile={isMobile}
+              themeColor={getThemeColor()}
+            />
+          ) : viewMode === 'map' ? (
+            <InteractiveProjectsMap
+              project={project ? { ...project, min_price: null } : undefined}
+              onProjectSelect={() => {
+                setViewMode('list');
+              }}
+            />
+          ) : viewMode === 'favorites' ? (
+            <div className="container mx-auto px-4 md:px-6 py-8 grow">
+              <FavoritesTab
+              handleViewApartment={openApartmentDetails}
+              projectId={project.id} projectCurrency={project?.currency} />
+            </div>
+          ) : (
+            // Facade and Floor Plan views with hero section
+            <>
+              {/* Main visualization area */}
+              <div className="relative grow flex">
+                {/* Hero section with building visualization */}
+                <div className="relative w-full">
+                  {viewMode === 'facade' ? (
+                    // Building facade view with interactive floor polygons
+                    <div className="w-full bg-white">
+                      <BuildingFacadeView
                         projectId={project.id}
-                        apartments={filters.filteredApartments.filter(apt =>
-                          selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
-                        )}
+                        project={project}
+                        apartments={filters.filteredApartments}
+                        onFloorSelect={(floor) => {
+                          setSelectedFloorForPlan(floor);
+                          setViewMode('floor-plan');
+                        }}
                         onApartmentSelect={openApartmentDetails}
-                        selectedFloorNumber={selectedFloorForPlan}
-                        visibleFields={fieldSettings.filter(field => field.is_visible)}
+                        filtersRef={filtersRef}
+                        externalImageLoaded={buildingImageLoaded}
+                        externalImageNaturalSize={buildingImageNaturalSize}
                       />
+
+                      {/* Layout gallery below facade when not expanded - hide for project_type = object */}
+                      {(project)?.project_type !== 'object' && (
+                        <LayoutGallery
+                          apartments={apartments}
+                          selectedRooms={filters.selectedRooms}
+                          selectedType={filters.selectedType}
+                          setSelectedRooms={filters.setSelectedRooms}
+                          setSelectedType={filters.setSelectedType}
+                          setViewMode={setViewMode}
+                          getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                          project={project}
+                          formatPrice={formatPrice}
+                          selectedCurrency={filters.selectedCurrency}
+                          isMobile={isMobile}
+                          themeColor={getThemeColor()}
+                          visibleFields={fieldSettings.filter(field => field.is_visible)}
+                        />
+                      )}
                     </div>
-
-                    {/* Floor selector sidebar */}
-                    <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
-                      <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
-
-
-                        {/* Floor Carousel */}
-                        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
-                          <div className={`${isMobile ? ' w-full max-w-[200px]' : 'w-10 h-full'} relative`}>
-                            <Carousel
-                              className="w-full h-full "
-                              orientation={isMobile ? "horizontal" : "vertical"}
-                              opts={{
-                                align: "center",
-                                loop: filters.getUniqueFloors().length > 3,
-                              }}
-                            >
-                              <div className={`${isMobile ? ' w-full' : 'w-10 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm flex flex-col justify-center`}>
-                                <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
-                                  {filters.getUniqueFloors().map((floor, index) => (
-                                    <CarouselItem key={floor} className={`${isMobile ? 'basis-1/2' : 'basis-1/3'} flex items-center justify-center`}>
-                                      <button
-                                        className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
-                                          ? 'text-white'
-                                          : 'hover:bg-gray-100 text-gray-700'
-                                          }`}
-                                        style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
-                                        onClick={() => setSelectedFloorForPlan(floor)}
-                                      >
-                                        {floor}
-                                      </button>
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                              </div>
-
-                              {/* Navigation buttons */}
-                              {filters.getUniqueFloors().length > 3 && (
-                                <>
-                                  {isMobile ? (
-                                    <>
-                                      <CarouselPrevious className="-left-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                      <CarouselNext className="-right-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CarouselPrevious className="-top-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                      <CarouselNext className="-bottom-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                    </>
-                                  )}
-                                </>
-                              )}
-                            </Carousel>
-                          </div>
+                  ) : (
+                    // Floor plan view for specific floor with sidebar
+                    <div className="w-full bg-white min-h-[600px] h-full">
+                      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
+                        {/* Main floor plan area */}
+                        <div className="flex-1 relative">
+                          <ApartmentFloorPlan
+                            project={project}
+                            projectId={project.id}
+                            apartments={filters.filteredApartments.filter(apt =>
+                              selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
+                            )}
+                            onApartmentSelect={openApartmentDetails}
+                            selectedFloorNumber={selectedFloorForPlan ?? undefined}
+                            visibleFields={fieldSettings.filter(field => field.is_visible)}
+                          />
                         </div>
 
+                        {/* Floor selector sidebar */}
+                        <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
+                          <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
 
+
+                            {/* Floor Carousel */}
+                            <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
+                              <div className={`${isMobile ? ' w-full max-w-[200px]' : 'w-10 h-full'} relative`}>
+                                <Carousel
+                                  className="w-full h-full "
+                                  orientation={isMobile ? "horizontal" : "vertical"}
+                                  opts={{
+                                    align: "center",
+                                    loop: filters.getUniqueFloors().length > 3,
+                                  }}
+                                >
+                                  <div className={`${isMobile ? ' w-full' : 'w-10 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm flex flex-col justify-center`}>
+                                    <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
+                                      {filters.getUniqueFloors().map((floor, index) => (
+                                        <CarouselItem key={floor} className={`${isMobile ? 'basis-1/2' : 'basis-1/3'} flex items-center justify-center`}>
+                                          <button
+                                            className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
+                                              ? 'text-white'
+                                              : 'hover:bg-gray-100 text-gray-700'
+                                              }`}
+                                            style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
+                                            onClick={() => setSelectedFloorForPlan(floor)}
+                                          >
+                                            {floor}
+                                          </button>
+                                        </CarouselItem>
+                                      ))}
+                                    </CarouselContent>
+                                  </div>
+
+                                  {/* Navigation buttons */}
+                                  {filters.getUniqueFloors().length > 3 && (
+                                    <>
+                                      {isMobile ? (
+                                        <>
+                                          <CarouselPrevious className="-left-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                          <CarouselNext className="-right-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CarouselPrevious className="-top-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                          <CarouselNext className="-bottom-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                                        </>
+                                      )}
+                                    </>
+                                  )}
+                                </Carousel>
+                              </div>
+                            </div>
+
+
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-          </div>
+              </div>
+            </>
+          )}
         </>
-      )}
+      ) : null}
     </div>
   );
 };

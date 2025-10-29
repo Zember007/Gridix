@@ -1,4 +1,6 @@
 {
+  "filters" : "التصفيات",
+  "filtersDescription": "التصفيات للبحث",
   "additionalInfo": "معلومات إضافية",
   "allFloors": "جميع الطوابق",
   "allTypes": "جميع الأنواع",

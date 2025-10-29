@@ -1,4 +1,6 @@
 {
+  "filters" : "Filters",
+  "filtersDescription": "Filters for search",
   "additionalInfo": "Additional Information",
   "allFloors": "All floors",
   "allTypes": "All types",

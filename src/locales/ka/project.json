@@ -1,4 +1,6 @@
 {
+  "filters" : "ფილტრები",
+  "filtersDescription": "ფილტრების გამოყენება",
   "additionalInfo": "დამატებითი ინფორმაცია",
   "allFloors": "ყველა სართული",
   "allTypes": "ყველა ტიპი",

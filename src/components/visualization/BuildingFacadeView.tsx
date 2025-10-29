@@ -73,42 +73,68 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     } else {
       return isMobile ? 200 : COLLAPSED_HEIGHT;
     }
-  }, [isExpanded, filtersRef, isMobile, imgDimensions]);
+  }, [isExpanded, filtersRef, isMobile, imgDimensions.height]); // Убрали imgDimensions из зависимостей, оставили только height
 
-
+  // Используем useRef для хранения функции обновления, чтобы избежать бесконечных циклов
+  const updateImageDimensionsRef = useRef<() => void>();
+  
   const updateImageDimensions = useCallback(() => {
     const imgEl = imgRef.current;
     const containerEl = containerRef.current;
     if (!imgEl || !containerEl || !imageLoaded || imageNaturalSize.width === 0) return;
 
-    const containerHeight = getContainerHeight();
-    const containerWidth = containerEl.clientWidth;
-    const aspect = imageNaturalSize.width / imageNaturalSize.height;
-
-    if (isExpanded) {
-      // В развернутом режиме - object-contain поведение
-      let width = containerWidth;
-      let height = containerWidth / aspect;
-
-      if (height > containerHeight && !isMobile) {
-        height = containerHeight;
-        width = height * aspect;
+    // Вычисляем containerHeight внутри функции, без зависимости от getContainerHeight
+    // Используем текущее значение imgDimensions через ref или state
+    setImgDimensions(prev => {
+      let containerHeight: number;
+      if (isExpanded && filtersRef?.current) {
+        const filtersHeight = filtersRef.current.offsetHeight;
+        const margin = isMobile ? 10 : 20;
+        const newHeight = window.innerHeight - filtersHeight - margin;
+        const minHeight = isMobile ? 300 : 400;
+        const maxHeight = isMobile ? prev.height : 1200;
+        containerHeight = Math.min(Math.max(newHeight, minHeight), maxHeight);
+      } else {
+        containerHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
       }
 
-      setImgDimensions({ width: Math.round(width), height: Math.round(height) });
-    } else {
-      // В свернутом режиме - object-cover поведение
-      let width = containerWidth;
-      let height = containerWidth / aspect;
+      const containerWidth = containerEl.clientWidth;
+      const aspect = imageNaturalSize.width / imageNaturalSize.height;
 
-      if (height < containerHeight) {
-        height = containerHeight;
-        width = height * aspect;
+      let width: number;
+      let height: number;
+
+      if (isExpanded) {
+        // В развернутом режиме - object-contain поведение
+        width = containerWidth;
+        height = containerWidth / aspect;
+
+        if (height > containerHeight && !isMobile) {
+          height = containerHeight;
+          width = height * aspect;
+        }
+      } else {
+        // В свернутом режиме - object-cover поведение
+        width = containerWidth;
+        height = containerWidth / aspect;
+
+        if (height < containerHeight) {
+          height = containerHeight;
+          width = height * aspect;
+        }
       }
 
-      setImgDimensions({ width: Math.round(width), height: Math.round(height) });
-    }
-  }, [imgRef, containerRef, imageLoaded, imageNaturalSize, isExpanded, getContainerHeight]);
+      const newDims = { width: Math.round(width), height: Math.round(height) };
+      // Предотвращаем бесконечный цикл - обновляем только если размеры действительно изменились
+      if (prev.width === newDims.width && prev.height === newDims.height) {
+        return prev;
+      }
+      return newDims;
+    });
+  }, [imageLoaded, imageNaturalSize.width, imageNaturalSize.height, isExpanded, isMobile]); // Убрали все изменяемые зависимости
+  
+  // Сохраняем актуальную функцию в ref
+  updateImageDimensionsRef.current = updateImageDimensions;
 
 
   const loadBuildingFloors = useCallback(async () => {
@@ -197,22 +223,23 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [projectId]);
 
   useEffect(() => {
+    if (!imageLoaded) return;
     const handleResize = () => {
-      updateImageDimensions();
+      updateImageDimensionsRef.current?.();
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateImageDimensions]);
+  }, [imageLoaded]);
 
   // Пересчет размеров при изменении размеров контейнера
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !imageLoaded) return;
     let frame: number | null = null;
     const observer = new ResizeObserver(() => {
       if (!imageLoaded) return;
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        updateImageDimensions();
+        updateImageDimensionsRef.current?.();
       });
     });
     observer.observe(containerRef.current);
@@ -220,17 +247,17 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [imageLoaded, updateImageDimensions]);
+  }, [imageLoaded]);
 
   // Пересчет при изменении высоты блока фильтров, влияющего на доступную высоту контейнера
   useEffect(() => {
-    if (!filtersRef?.current) return;
+    if (!filtersRef?.current || !imageLoaded) return;
     let frame: number | null = null;
     const observer = new ResizeObserver(() => {
       if (!imageLoaded) return;
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        updateImageDimensions();
+        updateImageDimensionsRef.current?.();
       });
     });
     observer.observe(filtersRef.current);
@@ -238,13 +265,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [filtersRef, imageLoaded, updateImageDimensions]);
+  }, [filtersRef, imageLoaded]);
 
   useEffect(() => {
     if (imageLoaded && buildingFloors.length > 0) {
-        updateImageDimensions();
+        updateImageDimensionsRef.current?.();
     }
-  }, [isExpanded, updateImageDimensions, imageLoaded, buildingFloors]);
+  }, [isExpanded, imageLoaded, buildingFloors.length]);
 
 
 
@@ -260,11 +287,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       // Немедленный пересчет после синхронизации размеров изображения (двойной rAF, чтобы дождаться layout)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          updateImageDimensions();
+          updateImageDimensionsRef.current?.();
         });
       });
     }
-  }, [externalImageLoaded, externalImageNaturalSize, updateImageDimensions]);
+  }, [externalImageLoaded, externalImageNaturalSize?.width, externalImageNaturalSize?.height]);
 
   // Handle escape key to close popup
   useEffect(() => {
@@ -569,7 +596,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   // Двойной rAF для гарантии, что контейнер и изображение уже имеют корректные размеры
                   requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                      updateImageDimensions();
+                      updateImageDimensionsRef.current?.();
                     });
                   });
                 }}
