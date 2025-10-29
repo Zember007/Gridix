@@ -370,12 +370,13 @@ async function init(options: InitOptions = {}) {
   const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
   const validDelay = parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0 ? parsedDelay : undefined;
 
-  const delayValue = options.delay ?? validDelay;
+  // const delayValue = options.delay ?? validDelay;
   //  const lazyValue = options.lazy ?? (qp.get('lazy') === 'true');
   //  const loadOnInteractionValue = options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true');
-
+  
+  const delayValue = 1000;
   const lazyValue = true;
-  const loadOnInteractionValue = true;
+  const loadOnInteractionValue = false;
 
   const intersectionRootMargin = options.intersectionRootMargin ?? qp.get('intersectionRootMargin') ?? '100px';
 
