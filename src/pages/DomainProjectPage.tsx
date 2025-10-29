@@ -58,7 +58,7 @@ export default function DomainProjectPage() {
 
   // If project found via custom domain, render the project directly
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-screen bg-background">
       <div className="flex justify-end p-4">
         <LanguageToggle />
       </div>

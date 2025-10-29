@@ -72,6 +72,7 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
 
   const floorApartments = apartments.filter(apt => apt.floor_number === selectedFloor);
 
+
   return (
       <FloorPlanView
         currency={project?.currency}

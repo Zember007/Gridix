@@ -165,12 +165,12 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
       <CardContent className="p-4 flex flex-col h-full">
 
 
-        <div className="relative bg-gray-50 rounded-lg  flex-1">
+        <div className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center">
           <div className="relative">
             <img
               src={floorPlan.image_url}
               alt={`План ${floorNumber} этажа`}
-              className="w-auto mx-auto h-auto max-h-[600px] min-h-[400px]"
+              className="w-auto mx-auto h-auto max-h-[600px] md:min-h-[400px]"
               onLoad={handleImageLoad}
             />
 

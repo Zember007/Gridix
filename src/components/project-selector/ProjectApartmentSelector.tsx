@@ -392,7 +392,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   }
 
   return (
-    <div className="min-h-full bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Subscription Warning Banner */}
       {isSubscriptionInactive && (
         <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
@@ -547,9 +547,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
         // Facade and Floor Plan views with hero section
         <>
           {/* Main visualization area */}
-          <div className="relative grow flex flex-col">
+          <div className="relative grow flex">
             {/* Hero section with building visualization */}
-            <div className="relative ">
+            <div className="relative w-full">
               {viewMode === 'facade' ? (
                 // Building facade view with interactive floor polygons
                 <div className="w-full bg-white">
@@ -589,7 +589,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 </div>
               ) : (
                 // Floor plan view for specific floor with sidebar
-                <div className="w-full bg-white min-h-[600px]">
+                <div className="w-full bg-white min-h-[600px] h-full">
                   <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
                     {/* Main floor plan area */}
                     <div className="flex-1 relative">

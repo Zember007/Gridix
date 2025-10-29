@@ -41,7 +41,7 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
 
   if (!projectIdentifier) {
     return (
-      <div className="min-h-full bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold text-foreground mb-2">{t('project.notFound')}</h1>
           <p className="text-muted-foreground">{t('project.invalidId')}</p>
@@ -56,7 +56,7 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
 
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-screen bg-background">
       {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
         null
         : <LanguageToggle  
