@@ -195,7 +195,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           <img
             src={photos[currentPhotoIndex].image_url}
             alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
-            className="w-full h-72 lg:h-auto lg:aspect-[16/9] object-cover rounded-lg cursor-pointer"
+            className="w-full h-72 lg:h-auto lg:aspect-[16/9] object-cover lg:rounded-lg cursor-pointer"
             onClick={openLightbox}
           />
           

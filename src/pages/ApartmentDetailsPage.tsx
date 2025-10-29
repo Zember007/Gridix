@@ -303,14 +303,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       return;
     }
 
-    window.close();
-
-    setTimeout(() => {
-      const projectUrl = useId
-        ? `/${lang}/project/id/${projectId}`
-        : `/${lang}/project/${project?.slug || projectIdentifier}`;
-      window.location.href = projectUrl;
-    }, 100);
+    const projectUrl = useId
+      ? `/${lang}/project/id/${projectId}`
+      : `/${lang}/project/${project?.slug || projectIdentifier}`;
+    window.location.href = projectUrl;
   };
 
   const openApartmentDetails = (apartment: Apartment) => {
@@ -516,7 +512,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             )}
 
             {/* Main apartment image */}
-            <div className="h-70  relative overflow-hidden rounded-t-3xl">
+            <div className="h-70  relative overflow-hidden ">
               {photosLoading ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <Loader size="lg" />
@@ -536,7 +532,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           </div>
 
           {/* Content */}
-          <div className="p-6 pb-32 rounded-t-3xl bg-white -mt-6 relative z-10 border">
+          <div className="p-6 pb-32 bg-white -mt-6 relative z-10 border">
             {/* Title and floor */}
             <div className="mb-4">
 

@@ -131,14 +131,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       const url = `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
 
       // Открываем в новой вкладке
-      window.open(url, '_blank');
+      window.open(url, '_self');
     } catch (error) {
       console.error('Error opening apartment details:', error);
       // В случае ошибки используем запасной вариант
       const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
       const url = `${fallbackDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-      window.open(url, '_blank');
+      window.open(url, '_self');
     }
   };
 
