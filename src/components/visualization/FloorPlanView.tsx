@@ -6,6 +6,7 @@ import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { FieldSetting } from '@/hooks/useFields';
+import polylabel from 'polylabel';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -29,7 +30,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   type FloorSettings = {
     colors?: { available: string; reserved: string; sold: string };
     opacity?: { normal: number; hover: number };
-    display?: { showNumbers?: boolean; showTooltip?: boolean;};
+    display?: { showNumbers?: boolean; showTooltip?: boolean; showArea?: boolean; showPrice?: boolean };
     hoverEffects?: { glow?: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
   };
   const [floorSettings, setFloorSettings] = useState<FloorSettings | null>(null);
@@ -99,6 +100,103 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setImageSize({ width: img.clientWidth, height: img.clientHeight });
+  };
+
+  // Geometry helpers for better label placement
+  type PointXY = { x: number; y: number };
+
+  const pointInPolygon = (point: PointXY, polygon: PointXY[]) => {
+    if (polygon.length < 3) return false;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i]!.x, yi = polygon[i]!.y;
+      const xj = polygon[j]!.x, yj = polygon[j]!.y;
+      const intersect = ((yi > point.y) !== (yj > point.y)) &&
+        (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 1e-7) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+
+  const distanceToSegment = (p: PointXY, a: PointXY, b: PointXY) => {
+    const vx = b.x - a.x;
+    const vy = b.y - a.y;
+    const wx = p.x - a.x;
+    const wy = p.y - a.y;
+    const c1 = vx * wx + vy * wy;
+    if (c1 <= 0) return Math.hypot(p.x - a.x, p.y - a.y);
+    const c2 = vx * vx + vy * vy;
+    if (c2 <= c1) return Math.hypot(p.x - b.x, p.y - b.y);
+    const t = c1 / c2;
+    const proj = { x: a.x + t * vx, y: a.y + t * vy };
+    return Math.hypot(p.x - proj.x, p.y - proj.y);
+  };
+
+  const distanceToPolygonEdge = (p: PointXY, polygon: PointXY[]) => {
+    if (polygon.length < 2) return Infinity;
+    let minD = Infinity;
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i]!;
+      const b = polygon[(i + 1) % polygon.length]!;
+      const d = distanceToSegment(p, a, b);
+      if (d < minD) minD = d;
+    }
+    return minD;
+  };
+
+  // Approximate pole of inaccessibility (visual center) using iterative grid search
+  const computeVisualCenter = (polygon: PointXY[]): PointXY => {
+
+    const visualCenter = polylabel([polygon.map(p => [p.x, p.y])], 0.5);
+    return { x: visualCenter?.[0] ?? 0, y: visualCenter?.[1] ?? 0 };
+
+  };
+
+  // Intersections helpers to estimate available width/height at center
+  const intersectionsAtY = (polygon: PointXY[], y: number): number[] => {
+    if (polygon.length < 2) return [];
+    const xs: number[] = [];
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i]!;
+      const b = polygon[(i + 1) % polygon.length]!;
+      if ((a.y <= y && b.y <= y) || (a.y >= y && b.y >= y) || a.y === b.y) continue;
+      const t = (y - a.y) / (b.y - a.y);
+      const x = a.x + t * (b.x - a.x);
+      xs.push(x);
+    }
+    return xs.sort((m, n) => m - n);
+  };
+
+  const intersectionsAtX = (polygon: PointXY[], x: number): number[] => {
+    if (polygon.length < 2) return [];
+    const ys: number[] = [];
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i]!;
+      const b = polygon[(i + 1) % polygon.length]!;
+      if ((a.x <= x && b.x <= x) || (a.x >= x && b.x >= x) || a.x === b.x) continue;
+      const t = (x - a.x) / (b.x - a.x);
+      const y = a.y + t * (b.y - a.y);
+      ys.push(y);
+    }
+    return ys.sort((m, n) => m - n);
+  };
+
+  const segmentSpanContaining = (sorted: number[], coord: number): number => {
+    for (let i = 0; i + 1 < sorted.length; i += 2) {
+      const left = sorted[i];
+      const right = sorted[i + 1];
+      if (left === undefined || right === undefined) continue;
+      if (coord >= left && coord <= right) return Math.max(0, right - left);
+    }
+    return 0;
+  };
+
+  const estimateTextSize = (text: string): { w: number; h: number } => {
+    // Approximate font size: 12px base, 14px on md screens
+    const isMd = typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+    const fontSize = isMd ? 14 : 12;
+    const charWidth = fontSize * 0.6;
+    return { w: text.length * charWidth, h: fontSize };
   };
 
   const getApartmentColor = (apartment: Apartment) => {
@@ -195,8 +293,18 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                     .map(point => `${point.x},${point.y}`)
                     .join(' ');
 
-                  const centerX = convertedPolygon.reduce((sum, p) => sum + p.x, 0) / convertedPolygon.length;
-                  const centerY = convertedPolygon.reduce((sum, p) => sum + p.y, 0) / convertedPolygon.length;
+                  const visualCenter = computeVisualCenter(convertedPolygon);
+                  const centerX = visualCenter.x;
+                  const centerY = visualCenter.y;
+
+                  // Determine if text fits horizontally; if not and vertical fits, rotate 90deg
+                  const { w: textW, h: textH } = estimateTextSize(String(apartment.apartment_number ?? ''));
+                  const horizSpans = intersectionsAtY(convertedPolygon, centerY);
+                  const availW = segmentSpanContaining(horizSpans, centerX);
+                  const vertSpans = intersectionsAtX(convertedPolygon, centerX);
+                  const availH = segmentSpanContaining(vertSpans, centerY);
+                  const padding = 10; // px padding from edges
+                  const rotate = (textW + padding > availW) && (textH + padding <= availH);
 
                   const isHovered = hoveredApartment?.id === apartment.id;
                   const baseColor = getApartmentColor(apartment);
@@ -212,7 +320,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                         fillOpacity={isHovered ? (floorSettings?.opacity?.hover ?? 0.5) : (floorSettings?.opacity?.normal ?? 0.3)}
                         stroke={isHovered ? hoverColor : baseColor}
                         strokeWidth={isHovered ? 3 : 2}
-                        className="cursor-pointer transition-all duration-200"
+                        className={`cursor-pointer transition-all duration-200`}
                         style={{
                           filter: isHovered && floorSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.3))' : undefined,
                           transform: isHovered && floorSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
@@ -228,8 +336,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                           y={centerY}
                           textAnchor="middle"
                           dominantBaseline="middle"
-                          className="fill-white font-bold text-sm pointer-events-none"
+                          className="fill-white font-bold md:text-sm sm:text-xs text-[8px] text-center max-w-[100%] pointer-events-none"
                           style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
+                          transform={rotate ? `rotate(90 ${centerX} ${centerY})` : undefined}
                         >
                           {apartment.apartment_number}
                         </text>
