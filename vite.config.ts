@@ -53,39 +53,18 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Vendor chunks for better caching
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              if (id.includes('@radix-ui')) {
-                return 'vendor-ui';
-              }
-              if (id.includes('recharts')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('leaflet') || id.includes('react-leaflet')) {
-                return 'vendor-maps';
-              }
-              if (id.includes('jspdf') || id.includes('pdf-lib') || id.includes('html2canvas')) {
-                return 'vendor-pdf';
-              }
-              if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
-                return 'vendor-forms';
-              }
-              if (id.includes('@supabase')) {
-                return 'vendor-supabase';
-              }
-              if (id.includes('framer-motion')) {
-                return 'vendor-animation';
-              }
-              if (id.includes('xlsx') || id.includes('browser-image-compression')) {
-                return 'vendor-utils';
-              }
-              // All other node_modules in vendor chunk
-              return 'vendor';
-            }
+          // Use explicit mappings for known heavy libraries only.
+          // Let Rollup handle the rest to avoid incorrect dependency ordering.
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-tooltip', '@radix-ui/react-toast'],
+            'vendor-charts': ['recharts'],
+            'vendor-maps': ['leaflet', 'react-leaflet'],
+            'vendor-pdf': ['jspdf', 'pdf-lib', 'html2canvas'],
+            'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-animation': ['framer-motion'],
+            'vendor-utils': ['xlsx', 'browser-image-compression']
           }
         }
       },
