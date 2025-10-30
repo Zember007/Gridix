@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, Clock, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import InteractiveProjectsMap from '@/components/visualization/InteractiveProjectsMap';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
+
+// Lazy load heavy map component
+const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'));
 
 interface Project {
   id: string;
@@ -255,9 +256,11 @@ const EmbedProjectsPage = ({
       {/* Content */}
       <div className={`flex-1 ${isWidget ? 'overflow-auto' : ''}`} style={{ maxHeight: maxHeight ? `calc(${maxHeight} - ${showHeader ? '120px' : '0px'})` : undefined }}>
         {viewMode === 'map' ? (
-          <InteractiveProjectsMap
-            userId={userId}
-          />
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div></div>}>
+            <InteractiveProjectsMap
+              userId={userId}
+            />
+          </Suspense>
         ) : (
           <div className={`${isWidget ? 'px-4 py-4' : 'container mx-auto px-6 py-8'}`}>
             {/* Grid view */}

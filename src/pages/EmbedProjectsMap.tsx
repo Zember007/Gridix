@@ -1,8 +1,10 @@
-
+import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import InteractiveProjectsMap from '@/components/visualization/InteractiveProjectsMap';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Lazy load heavy map component
+const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'));
 
 const EmbedProjectsMap = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -14,10 +16,12 @@ const EmbedProjectsMap = () => {
         <LanguageToggle />
       </div>
       
-      <InteractiveProjectsMap
-        userId={userId}
-        
-      />
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div></div>}>
+        <InteractiveProjectsMap
+          userId={userId}
+          
+        />
+      </Suspense>
     </div>
   );
 };

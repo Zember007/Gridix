@@ -20,7 +20,6 @@ import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer'
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { useFavorites } from '@/hooks/useFavorites';
 
 export default function DomainApartmentPage() {
@@ -112,6 +111,9 @@ export default function DomainApartmentPage() {
     
     setIsGeneratingPDF(true);
     try {
+      // Динамически загружаем модуль PDF только когда нужен
+      const { generateApartmentPDF } = await import('@/lib/pdf-utils');
+      
       await generateApartmentPDF({
         apartment,
         projectCurrency: project.currency || 'USD',

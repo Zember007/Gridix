@@ -19,7 +19,6 @@ import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer'
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
 import { useInstallment } from '@/hooks/useInstallment';
-import { generateApartmentPDF } from '@/lib/pdf-utils';
 import { useFavorites } from '@/hooks/useFavorites';
 
 interface ApartmentDetailsPageProps {
@@ -385,6 +384,9 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
     setIsGeneratingPDF(true);
     try {
+      // Динамически загружаем модуль PDF только когда нужен
+      const { generateApartmentPDF } = await import('@/lib/pdf-utils');
+      
       // Формируем URL для API
       const projectSlug = project.slug || `id/${project.id}`;
       const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;

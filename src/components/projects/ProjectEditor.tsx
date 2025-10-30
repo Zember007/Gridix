@@ -32,7 +32,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 import PolygonCustomizationSettings from '../visualization/PolygonCustomizationSettings';
 import ProjectFloorsManager from './ProjectFloorsManager';
-import { PDFDocument } from 'pdf-lib';
 
 interface ProjectEditorProps {
   projectId: string;
@@ -283,6 +282,8 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
     setUploadingPdf(true);
     try {
+      // Динамически загружаем pdf-lib только когда нужен
+      const { PDFDocument } = await import('pdf-lib');
 
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getLanguageFromPath, DEFAULT_LANGUAGE, getLanguagePrefix, hasLanguagePrefix } from '@/lib/language-utils';
+import { DEFAULT_LANGUAGE, getLanguagePrefix, hasLanguagePrefix } from '@/lib/language-utils';
 
 interface LanguageWrapperProps {
   children: ReactNode;

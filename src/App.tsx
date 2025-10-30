@@ -1,39 +1,49 @@
-
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from "@/components/providers";
-import Index from "./pages/Index";
-import ProjectWidgetPage from "./pages/ProjectWidgetPage";
-import AdminPage from "./pages/AdminPage";
-import ProjectEditorPage from "./pages/ProjectEditorPage";
-import EmbedProjectsPage from "./pages/EmbedProjectsPage";
-import AuthPage from "./pages/AuthPage";
-import SetPasswordPage from "./pages/SetPasswordPage";
-import ApartmentDetailsPage from "./pages/ApartmentDetailsPage";
-import PDFTemplatePage from "./pages/PDFTemplatePage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfServicePage from "./pages/TermsOfServicePage";
-import RefundPolicyPage from "./pages/RefundPolicyPage";
-import DomainProjectPage from "./pages/DomainProjectPage";
-import DomainApartmentPage from "./pages/DomainApartmentPage";
-import WidgetPreviewPage from "./pages/WidgetPreviewPage";
-import PricingPage from "./pages/PricingPage";
-import ContactsPage from "./pages/ContactsPage";
-import SuperAdminPage from "./pages/SuperAdminPage";
-import InvitationHandlerPage from "./pages/InvitationHandlerPage";
-import NotFound from "./pages/NotFound";
-import PartnersPage from "./pages/PartnersPage";
+
+// Lazy load all pages for optimal code splitting
+const Index = lazy(() => import("./pages/Index"));
+const ProjectWidgetPage = lazy(() => import("./pages/ProjectWidgetPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const ProjectEditorPage = lazy(() => import("./pages/ProjectEditorPage"));
+const EmbedProjectsPage = lazy(() => import("./pages/EmbedProjectsPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const SetPasswordPage = lazy(() => import("./pages/SetPasswordPage"));
+const ApartmentDetailsPage = lazy(() => import("./pages/ApartmentDetailsPage"));
+const PDFTemplatePage = lazy(() => import("./pages/PDFTemplatePage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
+const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
+const DomainProjectPage = lazy(() => import("./pages/DomainProjectPage"));
+const DomainApartmentPage = lazy(() => import("./pages/DomainApartmentPage"));
+const WidgetPreviewPage = lazy(() => import("./pages/WidgetPreviewPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const ContactsPage = lazy(() => import("./pages/ContactsPage"));
+const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
+const InvitationHandlerPage = lazy(() => import("./pages/InvitationHandlerPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PartnersPage = lazy(() => import("./pages/PartnersPage"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
+);
 
 function App() {
   return (
     <BaseProviders>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Default route - check for custom domain or redirect to default language */}
-            <Route path="/" element={<EmbedProviders><DomainProjectPage /></EmbedProviders>} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Default route - check for custom domain or redirect to default language */}
+              <Route path="/" element={<EmbedProviders><DomainProjectPage /></EmbedProviders>} />
 
             {/* Custom domain apartment route */}
             <Route path="/apartment/:apartmentId" element={<EmbedProviders><DomainApartmentPage /></EmbedProviders>} />
@@ -133,6 +143,7 @@ function App() {
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </BaseProviders>
