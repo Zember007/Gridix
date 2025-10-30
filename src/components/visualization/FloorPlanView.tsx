@@ -38,6 +38,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
+    setImageSize({ width: 0, height: 0 });
     loadFloorPlan();
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
