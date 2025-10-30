@@ -4,16 +4,16 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from "@/components/providers";
+import Index from "@/pages/Index";
+import ProjectWidgetPage from "@/pages/ProjectWidgetPage";
+import EmbedProjectsPage from "@/pages/EmbedProjectsPage";
+import ApartmentDetailsPage from "@/pages/ApartmentDetailsPage";
 
 // Lazy load all pages for optimal code splitting
-const Index = lazy(() => import("./pages/Index"));
-const ProjectWidgetPage = lazy(() => import("./pages/ProjectWidgetPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const ProjectEditorPage = lazy(() => import("./pages/ProjectEditorPage"));
-const EmbedProjectsPage = lazy(() => import("./pages/EmbedProjectsPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const SetPasswordPage = lazy(() => import("./pages/SetPasswordPage"));
-const ApartmentDetailsPage = lazy(() => import("./pages/ApartmentDetailsPage"));
 const PDFTemplatePage = lazy(() => import("./pages/PDFTemplatePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
