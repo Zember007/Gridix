@@ -28,6 +28,7 @@ import { ExpandedFilters } from './filters/ExpandedFilters';
 import { MobileFilters } from './filters/MobileFilters';
 import { LayoutGallery } from './layouts/LayoutGallery';
 import { ListView } from './views/ListView';
+import { FloorSelector } from './FloorSelector';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -686,63 +687,12 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         </div>
 
                         {/* Floor selector sidebar */}
-                        <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
-                          <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
-
-
-                            {/* Floor Carousel */}
-                            <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
-                              <div className={`${isMobile ? ' w-full max-w-[200px]' : 'w-10 h-full'} relative`}>
-                                <Carousel
-                                  className="w-full h-full "
-                                  orientation={isMobile ? "horizontal" : "vertical"}
-                                  opts={{
-                                    align: "center",
-                                    loop: filters.getUniqueFloors().length > 3,
-                                  }}
-                                >
-                                  <div className={`${isMobile ? ' w-full' : 'w-10 h-full'} shadow-xl border-2 border-white rounded-2xl bg-white backdrop-blur-sm flex flex-col justify-center`}>
-                                    <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
-                                      {filters.getUniqueFloors().map((floor, index) => (
-                                        <CarouselItem key={floor} className={`${isMobile ? 'basis-1/2' : 'basis-1/3'} flex items-center justify-center`}>
-                                          <button
-                                            className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
-                                              ? 'text-white'
-                                              : 'hover:bg-gray-100 text-gray-700'
-                                              }`}
-                                            style={selectedFloorForPlan === floor ? { backgroundColor: getThemeColor() } : {}}
-                                            onClick={() => setSelectedFloorForPlan(floor)}
-                                          >
-                                            {floor}
-                                          </button>
-                                        </CarouselItem>
-                                      ))}
-                                    </CarouselContent>
-                                  </div>
-
-                                  {/* Navigation buttons */}
-                                  {filters.getUniqueFloors().length > 3 && (
-                                    <>
-                                      {isMobile ? (
-                                        <>
-                                          <CarouselPrevious className="-left-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                          <CarouselNext className="-right-12 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CarouselPrevious className="-top-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                          <CarouselNext className="-bottom-12 left-1/2 -translate-x-1/2 h-8 w-8 shadow-lg border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                                        </>
-                                      )}
-                                    </>
-                                  )}
-                                </Carousel>
-                              </div>
-                            </div>
-
-
-                          </div>
-                        </div>
+                        <FloorSelector
+                          selectedFloorForPlan={selectedFloorForPlan}
+                          setSelectedFloorForPlan={setSelectedFloorForPlan}
+                          getUniqueFloors={filters.getUniqueFloors}
+                          themeColor={getThemeColor()}
+                        />
                       </div>
                     </div>
                   )}

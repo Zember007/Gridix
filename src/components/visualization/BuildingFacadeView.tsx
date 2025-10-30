@@ -403,7 +403,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
     return (
       <div
-        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:w-[100px] md:h-[100px] w-[70px] h-[70px]"
+        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:w-[100px] md:h-[100px] min-w-[80px] h-[80px]"
         style={{
           left: adjustedX,
           top: adjustedY,
@@ -416,7 +416,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           </div>
         )}
 
-        <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
+        <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
           <div className="md:text-[32px] text-[20px] leading-[1.1]">{stats.available}</div>
           {tSafe('project.available')}
         </div>
