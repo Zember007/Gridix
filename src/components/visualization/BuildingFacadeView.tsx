@@ -515,6 +515,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     setTouchOrigin(origin);
     setIsTouchZooming(true);
     if (typeof floorNumber === 'number') handleSVGFloorHover(floorNumber);
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
     document.body.style.overflow = 'hidden';
     e.preventDefault();
     e.stopPropagation();
@@ -535,7 +540,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       const ds = (el as Element).getAttribute('data-floor');
       const floorNum = ds ? parseInt(ds, 10) : undefined;
       if (typeof floorNum === 'number' && !Number.isNaN(floorNum)) {
-        
+
         handleSVGFloorHover(floorNum)
       }
     }
@@ -547,7 +552,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     if (!isMobile) return;
     const active = hoveredFloor;
     setIsTouchZooming(false);
+
+    const scrollY = document.body.style.top;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
     document.body.style.overflow = '';
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
     // Open the active floor
     if (typeof active === 'number') {
       handleFloorClick(active);
