@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,17 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const currentElement = document.getElementById('gridix-widget-root');
+    if (currentElement?.shadowRoot) {
+      const container = currentElement.shadowRoot.getElementById('gridix-portal-container');
+      if (container) {
+        setPortalContainer(container as HTMLElement);
+      }
+    }
+  }, []);
 
   const getLayoutType = (rooms: number): string => {
     return rooms === 0 ? 'studio' : `${rooms}-room`;
@@ -244,19 +256,38 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
         )}
       </CardContent>
       
-      <Lightbox
-        open={isLightboxOpen}
-        close={closeLightbox}
-        index={currentPhotoIndex}
-        slides={photos.map((photo) => ({
-          src: photo.image_url,
-          alt: photo.description || 'Фото квартиры',
-          title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
-        }))}
-        on={{
-          view: ({ index }) => setCurrentPhotoIndex(index)
-        }}
-      />
+      {portalContainer
+        ? createPortal(
+            <Lightbox
+              open={isLightboxOpen}
+              close={closeLightbox}
+              index={currentPhotoIndex}
+              slides={photos.map((photo) => ({
+                src: photo.image_url,
+                alt: photo.description || 'Фото квартиры',
+                title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
+              }))}
+              on={{
+                view: ({ index }) => setCurrentPhotoIndex(index)
+              }}
+            />,
+            portalContainer
+          )
+        : (
+            <Lightbox
+              open={isLightboxOpen}
+              close={closeLightbox}
+              index={currentPhotoIndex}
+              slides={photos.map((photo) => ({
+                src: photo.image_url,
+                alt: photo.description || 'Фото квартиры',
+                title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
+              }))}
+              on={{
+                view: ({ index }) => setCurrentPhotoIndex(index)
+              }}
+            />
+          )}
     </Card>
   );
 };
