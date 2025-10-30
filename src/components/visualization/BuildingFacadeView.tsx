@@ -6,6 +6,7 @@ import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
+import { useLockBodyScroll } from '@/hooks/use-lockscroll';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -45,6 +46,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
+
   const [facadeSettings, setFacadeSettings] = useState<{
     colors: { building: string };
     opacity: { normal: number; hover: number };
@@ -60,6 +62,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [isTouchZooming, setIsTouchZooming] = useState(false);
   const [touchOrigin, setTouchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useLockBodyScroll(isTouchZooming);
 
   const getContainerHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
@@ -515,12 +519,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     setTouchOrigin(origin);
     setIsTouchZooming(true);
     if (typeof floorNumber === 'number') handleSVGFloorHover(floorNumber);
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.overflow = 'hidden';
+   
     e.preventDefault();
     e.stopPropagation();
   };
