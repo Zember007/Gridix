@@ -198,7 +198,13 @@ export const ListView = ({
                   // Mobile card layout
                   <div className="space-y-4">
                     {filteredApartments.map((apartment) => (
-                      <Card key={apartment.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => openApartmentDetails(apartment)}>
+                      <Card key={apartment.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative" onClick={() => {
+                        if (apartment.status === 'available') {
+                          openApartmentDetails(apartment);
+                        } else {
+                          toast.error(t('apartment.sold'));
+                        }
+                      }}>
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-4">
                             <div className="flex-shrink-0">

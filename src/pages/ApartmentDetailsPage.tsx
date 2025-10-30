@@ -589,15 +589,21 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
             {/* Price */}
             <div className="mb-6">
-              <div className="text-3xl font-bold text-gray-900">
-                {apartment.price && priceVisible
-                  ? formatPriceWithCurrency(
-                    convertPrice(apartment.price, project?.currency || null, selectedCurrency),
-                    selectedCurrency
-                  )
-                  : t('common.priceOnRequest')
-                }
-              </div>
+              {apartment.status === 'available' ?
+                <div className="text-3xl font-bold text-gray-900">
+                  {apartment.price && priceVisible
+                    ? formatPriceWithCurrency(
+                      convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                      selectedCurrency
+                    )
+                    : t('common.priceOnRequest')
+                  }
+                </div>
+                :
+                <div className="text-3xl leading-[1] font-bold text-[red] mb-1 font-poppins text-shadow">
+                  {t('apartment.sold')}
+                </div>
+              }
             </div>
 
 
@@ -823,58 +829,66 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         </div>
                       </div>
                       <div className="flex justify-between gap-[15px]">
+                        {apartment.status === 'available' ?
+                          <>
 
-                        <div className="flex flex-col items-start gap-4 whitespace-nowrap">
-                          <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
-                            {apartment.price && priceVisible
-                              ? formatPriceWithCurrency(
-                                convertPrice(apartment.price, project?.currency || null, selectedCurrency),
-                                selectedCurrency
-                              )
-                              : t('common.priceOnRequest')
-                            }
-                          </div>
+                            <div className="flex flex-col items-start gap-4 whitespace-nowrap">
+                              <div className="text-4xl leading-[1] font-medium text-gray-900 mb-1 font-poppins">
+                                {apartment.price && priceVisible
+                                  ? formatPriceWithCurrency(
+                                    convertPrice(apartment.price, project?.currency || null, selectedCurrency),
+                                    selectedCurrency
+                                  )
+                                  : t('common.priceOnRequest')
+                                }
+                              </div>
 
-                          {project?.installment_enabled && apartment.price && (
-                            <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
-                              {t('project.from')} {formatPriceWithCurrency(
-                                convertPrice(
-                                  calculateMonthlyPayment(apartment.price),
-                                  project?.currency || null,
-                                  selectedCurrency
-                                ),
-                                selectedCurrency
-                              )} / {t('installment.perMonth')}
-                            </div>
-                          )}
-
-                          <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
-                            {t('installment.low')}
-                          </Badge>
-                        </div>
-                        {priceVisible &&
-                          <div className="flex-col gap-[10px] flex">
-                            <div className="flex ">
-                              <CurrencyToggle
-                                selectedCurrency={selectedCurrency}
-                                onChange={(c) => setSelectedCurrency(c)}
-                                projectCurrency={project?.currency}
-                                themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
-                              />
-                            </div>
-                            <div>
-                              {project?.installment_enabled && project?.max_installment_months && priceVisible && (
-                                <>
-                                  <div className="text-[14px] font-light text-gray-700 font-poppins">
-                                    {t('installment.period')} {project.max_installment_months} {t('installment.months')}
-                                  </div>
-                                  <div className="text-[14px] font-light text-gray-700 font-poppins">
-                                    {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
-                                  </div>
-                                </>
+                              {project?.installment_enabled && apartment.price && (
+                                <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
+                                  {t('project.from')} {formatPriceWithCurrency(
+                                    convertPrice(
+                                      calculateMonthlyPayment(apartment.price),
+                                      project?.currency || null,
+                                      selectedCurrency
+                                    ),
+                                    selectedCurrency
+                                  )} / {t('installment.perMonth')}
+                                </div>
                               )}
 
+                              <Badge className=" rounded-[10px] px-[16px] text-sm font-medium bg-green-500 hover:bg-green-600 text-white font-poppins">
+                                {t('installment.low')}
+                              </Badge>
                             </div>
+                            {priceVisible &&
+                              <div className="flex-col gap-[10px] flex">
+                                <div className="flex ">
+                                  <CurrencyToggle
+                                    selectedCurrency={selectedCurrency}
+                                    onChange={(c) => setSelectedCurrency(c)}
+                                    projectCurrency={project?.currency}
+                                    themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                                  />
+                                </div>
+                                <div>
+                                  {project?.installment_enabled && project?.max_installment_months && priceVisible && (
+                                    <>
+                                      <div className="text-[14px] font-light text-gray-700 font-poppins">
+                                        {t('installment.period')} {project.max_installment_months} {t('installment.months')}
+                                      </div>
+                                      <div className="text-[14px] font-light text-gray-700 font-poppins">
+                                        {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
+                                      </div>
+                                    </>
+                                  )}
+
+                                </div>
+                              </div>
+                            }
+                          </>
+                          :
+                          <div className="text-4xl leading-[1] font-bold text-[red] mb-1 font-poppins text-shadow">
+                            {t('apartment.sold')}
                           </div>
                         }
                       </div>
