@@ -780,7 +780,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
       </div>
       {
-        isMobile && isExpanded && buildingFloors.length > 0 && (
+        isMobile && isExpanded && buildingFloors.length > 0  && (
           <div className="flex justify-center">
             <div
               className="flex items-center  gap-3 bg-white/90 backdrop-blur rounded-full shadow-lg px-3 py-2 mt-4 mx-auto"
@@ -790,7 +790,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (buildingFloors.length === 0) return;
-                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number);
+                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3 );
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const prevIdx = idx > 0 ? idx - 1 : sorted.length - 1;
                   const newFloor = sorted[prevIdx]?.floor_number;

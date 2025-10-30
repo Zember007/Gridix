@@ -57,7 +57,7 @@ export const ExpandedFilters = ({
       <div className="space-y-2">
         <Label>{t('project.area')}: {areaRange[0]} - {areaRange[1]} м²</Label>
         <Slider
-          defaultValue={areaRange}
+          value={areaRange}
           onValueChange={setAreaRange}
           max={maxArea}
           min={minArea}

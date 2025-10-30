@@ -5,13 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Project {
-  has_commercial?: boolean;
-  has_parking?: boolean;
-  currency?: string;
-  project_type?: 'building' | 'object' | null;
-}
+type Project = Tables<'projects'>;
 
 interface CompactFiltersProps {
   selectedRooms: string;
@@ -121,9 +117,9 @@ export const CompactFilters = ({
 
       {/* Currency filter */}
       <CurrencyToggle
+        projectCurrency={project?.currency || null}
         selectedCurrency={selectedCurrency}
         onChange={(c) => setSelectedCurrency(c)}
-        projectCurrency={project?.currency}
         themeColor={themeColor}
       />
 

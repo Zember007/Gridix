@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { SlidersHorizontal, AlertTriangle } from 'lucide-react';
+import { SlidersHorizontal, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -16,7 +16,6 @@ import BuildingFacadeView from '../visualization/BuildingFacadeView';
 import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
 import FavoritesTab from '../FavoritesTab';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -51,6 +50,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
+  const [stagedPriceRange, setStagedPriceRange] = useState<number[] | null>(null);
+  const [stagedAreaRange, setStagedAreaRange] = useState<number[] | null>(null);
   const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
   const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
   const [preloadLayoutLoaded, setPreloadLayoutLoaded] = useState(false);
@@ -64,7 +65,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   const imageLoadRef = useRef<HTMLImageElement | null>(null);
 
   // Use filters hook
-  const filters = useProjectFilters({ apartments, project });
+  const filters = useProjectFilters(
+    project
+      ? {
+          apartments,
+          project: project as unknown as { currency?: string; has_commercial?: boolean; has_parking?: boolean },
+        }
+      : { apartments }
+  );
 
   // Helper functions
   const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
@@ -543,9 +551,10 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                     <div className="mt-6 overflow-y-auto py-4 max-h-[80%]">
                       <MobileFilters
                         {...filters}
+                        priceRange={[filters.minPrice, filters.maxPrice]}
                         getUniqueRoomCounts={filters.getUniqueRoomCounts}
                         getUniqueFloors={filters.getUniqueFloors}
-                        project={project}
+                        project={project }
                         viewMode={viewMode}
                         formatPrice={formatPrice}
                         themeColor={getThemeColor()}
@@ -570,16 +579,61 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   viewMode={viewMode}
                   themeColor={getThemeColor()}
                 />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (!isDesktopFiltersExpanded) {
+                      setStagedPriceRange([...filters.priceRange]);
+                      setStagedAreaRange([...filters.areaRange]);
+                    }
+                    setIsDesktopFiltersExpanded(prev => !prev);
+                  }}
+                  className="ml-2"
+                >
+                  {isDesktopFiltersExpanded ? (
+                    <>
+                      {language === 'ru' ? 'Скрыть расширенные фильтры' : 'Hide advanced filters'}
+                      <ChevronUp className="h-4 w-4 ml-2" />
+                    </>
+                  ) : (
+                    <>
+                      {language === 'ru' ? 'Расширенные фильтры' : 'Advanced filters'}
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Expanded filters - animated */}
               <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pt-4 border-t border-gray-200">
                   <ExpandedFilters
-                    {...filters}
+                    priceRange={stagedPriceRange ?? filters.priceRange}
+                    setPriceRange={(v) => setStagedPriceRange(v)}
+                    areaRange={stagedAreaRange ?? filters.areaRange}
+                    setAreaRange={(v) => setStagedAreaRange(v)}
+                    selectedCurrency={filters.selectedCurrency}
+                    minPrice={filters.minPrice}
+                    maxPrice={filters.maxPrice}
+                    minArea={filters.minArea}
+                    maxArea={filters.maxArea}
                     formatPrice={formatPrice}
                     themeColor={getThemeColor()}
                   />
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (stagedPriceRange) filters.setPriceRange(stagedPriceRange);
+                        if (stagedAreaRange) filters.setAreaRange(stagedAreaRange);
+                        setIsDesktopFiltersExpanded(false);
+                      }}
+                      style={{ backgroundColor: getThemeColor(), color: '#fff' }}
+                    >
+                      {language === 'ru' ? 'Применить' : 'Apply'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

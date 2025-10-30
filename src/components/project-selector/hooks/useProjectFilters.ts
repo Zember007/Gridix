@@ -54,9 +54,8 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
 
   // Get unique room counts
   const getUniqueRoomCounts = useCallback(() => {
-    return [...new Set(apartments.map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms))].sort((a, b) => a - b);
+    return [...new Set(apartments.map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms).filter(rooms => !isNaN(rooms)))].sort((a, b) => a - b);
   }, [apartments]);
-
   // Calculate price and area ranges
   const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
     if (apartments.length === 0) {

@@ -7,13 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
-
-interface Project {
-  has_commercial?: boolean;
-  has_parking?: boolean;
-  currency?: string;
-  project_type?: 'building' | 'object' | null;
-}
+import { Tables } from '@/integrations/supabase/types';
+type Project = Tables<'projects'>;
 
 interface MobileFiltersProps {
   selectedRooms: string;
@@ -26,7 +21,7 @@ interface MobileFiltersProps {
   setSearchQuery: (value: string) => void;
   selectedCurrency: string;
   setSelectedCurrency: (value: string) => void;
-  priceRange: number[];
+  priceRange: [number, number];
   setPriceRange: (value: number[]) => void;
   areaRange: number[];
   setAreaRange: (value: number[]) => void;
