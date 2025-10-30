@@ -386,7 +386,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     try {
       // Динамически загружаем модуль PDF только когда нужен
       const { generateApartmentPDF } = await import('@/lib/pdf-utils');
-      
+
       // Формируем URL для API
       const projectSlug = project.slug || `id/${project.id}`;
       const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;
@@ -852,26 +852,31 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             {t('installment.low')}
                           </Badge>
                         </div>
-                        <div className="flex-col gap-[10px] flex">
-                          <div className="flex ">
-                            <CurrencyToggle
-                              selectedCurrency={selectedCurrency}
-                              onChange={(c) => setSelectedCurrency(c)}
-                              projectCurrency={project?.currency}
-                              themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
-                            />
-                          </div>
-                          <div>
-                            {project?.installment_enabled && project?.max_installment_months && (
-                              <div className="text-[14px] font-light text-gray-700 font-poppins">
-                                {t('installment.period')} {project.max_installment_months} {t('installment.months')}
-                              </div>
-                            )}
-                            <div className="text-[14px] font-light text-gray-700 font-poppins">
-                              {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
+                        {priceVisible &&
+                          <div className="flex-col gap-[10px] flex">
+                            <div className="flex ">
+                              <CurrencyToggle
+                                selectedCurrency={selectedCurrency}
+                                onChange={(c) => setSelectedCurrency(c)}
+                                projectCurrency={project?.currency}
+                                themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                              />
+                            </div>
+                            <div>
+                              {project?.installment_enabled && project?.max_installment_months && priceVisible && (
+                                <>
+                                  <div className="text-[14px] font-light text-gray-700 font-poppins">
+                                    {t('installment.period')} {project.max_installment_months} {t('installment.months')}
+                                  </div>
+                                  <div className="text-[14px] font-light text-gray-700 font-poppins">
+                                    {t('installment.downPaymentFrom')} {project?.min_down_payment_percent ?? 20}%
+                                  </div>
+                                </>
+                              )}
+
                             </div>
                           </div>
-                        </div>
+                        }
                       </div>
                     </div>
 
