@@ -778,7 +778,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
       </div>
       {
-        isMobile && buildingFloors.length > 0 && (
+        isMobile && isExpanded && buildingFloors.length > 0 && (
           <div className="flex justify-center">
             <div
               className="flex items-center  gap-3 bg-white/90 backdrop-blur rounded-full shadow-lg px-3 py-2 mt-4 mx-auto"
