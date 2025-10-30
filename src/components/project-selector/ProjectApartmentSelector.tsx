@@ -541,14 +541,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                       <SlidersHorizontal className="h-3 w-3" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="top" className="h-[700px]">
+                  <SheetContent side="top" className="h-[80vh] px-2">
                     <SheetHeader>
                       <SheetTitle>{t('project.filters')}</SheetTitle>
                       <SheetDescription>
                         {t('project.filtersDescription')}
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="mt-6 overflow-y-auto py-4 max-h-[80%]">
+                    <div className="mt-6 overflow-y-auto p-4 max-h-[80%]">
                       <MobileFilters
                         {...filters}
                         priceRange={[filters.minPrice, filters.maxPrice]}
