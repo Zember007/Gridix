@@ -219,11 +219,16 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
     }));
   };
 
-  const handleApartmentHover = (apartment: Apartment, event: React.MouseEvent) => {
+  const handleApartmentHover = (apartment: Apartment, event: React.MouseEvent | React.TouchEvent) => {
     if (!floorSettings?.display?.showTooltip) return;
 
     setHoveredApartment(apartment);
-    setPopupPosition({ x: event.clientX, y: event.clientY });
+    const e: any = event;
+    if ('clientX' in e && 'clientY' in e) {
+      setPopupPosition({ x: e.clientX, y: e.clientY });
+    } else if ('touches' in e && e.touches?.[0]) {
+      setPopupPosition({ x: e.touches[0]?.clientX ?? 0, y: e.touches[0]?.clientY ?? 0 });
+    }
     setShowPopup(true);
   };
 
@@ -329,6 +334,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                         onClick={() => onApartmentSelect(apartment)}
                         onMouseEnter={(e) => handleApartmentHover(apartment, e)}
                         onMouseLeave={handleApartmentLeave}
+                        onTouchStart={(e) => handleApartmentHover(apartment, e)}
+                        onTouchEnd={handleApartmentLeave}
+                        
                       />
                       {floorSettings?.display?.showNumbers !== false && (
                         <text
@@ -386,6 +394,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
             currency={currency || null}
           />
         )}
+        
       </CardContent>
     </Card>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { convertPrice, formatPrice, formatPriceWithCurrency } from '@/lib/currency-utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ApartmentPopupProps {
   apartment: Apartment;
@@ -25,9 +26,11 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  const isMobile = useIsMobile();
+
   if (!settings.showTooltip) return null;
 
-  const popupWidth = 250;
+  const popupWidth = isMobile ? 200 : 250;
   const popupHeight = 120;
   const margin = 20;
 
@@ -48,7 +51,7 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
 
   return (
     <div
-      className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-w-xs"
+      className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs"
       style={{
         left: adjustedX,
         top: adjustedY,
@@ -58,10 +61,10 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
 
-      <div className="space-y-2">
+      <div className="space-y-1 md:space-y-2">
         {/* Apartment number */}
         {settings.showNumbers && (
-          <div className="text-lg font-bold text-gray-900">
+          <div className="md:text-lg text-sm font-bold text-gray-900">
             {t('project.apartmentNumber')}: {apartment.apartment_number}
           </div>
         )}
