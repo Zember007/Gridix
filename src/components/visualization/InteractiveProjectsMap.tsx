@@ -1,25 +1,12 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { useProjectsWithPrices, ProjectWithMinPrice } from '@/hooks/useProjectsWithPrices';
 
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
-  building_image_url: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  currency: string | null;
-  min_price: number | null;
-}
+type Project = ProjectWithMinPrice
 
 interface InteractiveProjectsMapProps {
   onProjectSelect?: (projectId: string) => void;
@@ -72,7 +59,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
     project.latitude !== null && project.longitude !== null
   );
 
-  const handleViewProject = (project: any) => {
+  const handleViewProject = (project: Project) => {
     if (onProjectSelect) {
       onProjectSelect(project.id);
     } else {

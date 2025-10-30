@@ -11,15 +11,16 @@ interface ViewModeButtonsProps {
   isMobile: boolean;
   projectType?: 'building' | 'object' | null;
   themeColor?: string;
+  mapVisible?: boolean
 }
 
-export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000' }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
 
-  const buttonClass = (mode: ViewMode) => 
+  const buttonClass = (mode: ViewMode) =>
     `${viewMode === mode ? 'text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`;
 
-  const buttonStyle = (mode: ViewMode) => 
+  const buttonStyle = (mode: ViewMode) =>
     viewMode === mode ? { backgroundColor: themeColor } : {};
 
   return (
@@ -34,7 +35,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
         {!isMobile && t('project.facade')}
       </Button>
-      
+
       {projectType !== 'object' && (
         <Button
           variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
@@ -47,7 +48,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
           {!isMobile && t('project.floorPlan')}
         </Button>
       )}
-      
+
       <Button
         variant={viewMode === 'list' ? 'default' : 'outline'}
         size="sm"
@@ -58,18 +59,18 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
         <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
         {!isMobile && t('project.listView')}
       </Button>
-
-      <Button
-        variant={viewMode === 'map' ? 'default' : 'outline'}
-        size="sm"
-        className={buttonClass('map')}
-        style={buttonStyle('map')}
-        onClick={() => setViewMode('map')}
-      >
-        <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-        {!isMobile && t('embed.onMap')}
-      </Button>
-      
+      {mapVisible && (
+        <Button
+          variant={viewMode === 'map' ? 'default' : 'outline'}
+          size="sm"
+          className={buttonClass('map')}
+          style={buttonStyle('map')}
+          onClick={() => setViewMode('map')}
+        >
+          <MapPin className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+          {!isMobile && t('embed.onMap')}
+        </Button>
+      )}
       <Button
         variant={viewMode === 'favorites' ? 'default' : 'outline'}
         size="sm"

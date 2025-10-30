@@ -1,18 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
-interface ProjectWithMinPrice {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
-  building_image_url: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  currency: string | null;
-  min_price: number | null;
-  slug?: string;
-}
+export type ProjectWithMinPrice = Pick<
+  Tables<'projects'>,
+  | 'id'
+  | 'name'
+  | 'description'
+  | 'address'
+  | 'building_image_url'
+  | 'latitude'
+  | 'longitude'
+  | 'currency'
+  | 'slug'
+> & { min_price: number | null };
 
 /**
  * Оптимизированный хук для получения проектов пользователя с минимальными ценами

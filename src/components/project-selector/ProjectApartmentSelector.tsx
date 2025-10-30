@@ -529,6 +529,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
                 isMobile={isMobile}
+                mapVisible={project.latitude && project.longitude}
                 projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
                 themeColor={getThemeColor()}
               />
@@ -667,7 +668,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
             />
           ) : viewMode === 'map' ? (
             <InteractiveProjectsMap
-              project={project ? { ...project, min_price: null } : undefined}
+              project={project}
               onProjectSelect={() => {
                 setViewMode('list');
               }}
