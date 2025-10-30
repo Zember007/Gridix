@@ -396,7 +396,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
         apartment,
         pdfUrl,
         pdf_main: project?.pdf_presentation_url || undefined,
-      
+
       });
 
     } catch (error) {

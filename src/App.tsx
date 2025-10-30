@@ -7,10 +7,10 @@ import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from
 import Index from "@/pages/Index";
 import ProjectWidgetPage from "@/pages/ProjectWidgetPage";
 import EmbedProjectsPage from "@/pages/EmbedProjectsPage";
-import ApartmentDetailsPage from "@/pages/ApartmentDetailsPage";
 
 // Lazy load all pages for optimal code splitting
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const ApartmentDetailsPage = lazy(() => import("./pages/ApartmentDetailsPage"));
 const ProjectEditorPage = lazy(() => import("./pages/ProjectEditorPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const SetPasswordPage = lazy(() => import("./pages/SetPasswordPage"));

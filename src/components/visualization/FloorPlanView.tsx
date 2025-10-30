@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { FieldSetting } from '@/hooks/useFields';
 import polylabel from 'polylabel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -37,7 +38,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
-
+  const isMobile = useIsMobile();
   useEffect(() => {
     setImageSize({ width: 0, height: 0 });
     loadFloorPlan();
@@ -105,44 +106,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   // Geometry helpers for better label placement
   type PointXY = { x: number; y: number };
 
-  const pointInPolygon = (point: PointXY, polygon: PointXY[]) => {
-    if (polygon.length < 3) return false;
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const xi = polygon[i]!.x, yi = polygon[i]!.y;
-      const xj = polygon[j]!.x, yj = polygon[j]!.y;
-      const intersect = ((yi > point.y) !== (yj > point.y)) &&
-        (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 1e-7) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };
 
-  const distanceToSegment = (p: PointXY, a: PointXY, b: PointXY) => {
-    const vx = b.x - a.x;
-    const vy = b.y - a.y;
-    const wx = p.x - a.x;
-    const wy = p.y - a.y;
-    const c1 = vx * wx + vy * wy;
-    if (c1 <= 0) return Math.hypot(p.x - a.x, p.y - a.y);
-    const c2 = vx * vx + vy * vy;
-    if (c2 <= c1) return Math.hypot(p.x - b.x, p.y - b.y);
-    const t = c1 / c2;
-    const proj = { x: a.x + t * vx, y: a.y + t * vy };
-    return Math.hypot(p.x - proj.x, p.y - proj.y);
-  };
 
-  const distanceToPolygonEdge = (p: PointXY, polygon: PointXY[]) => {
-    if (polygon.length < 2) return Infinity;
-    let minD = Infinity;
-    for (let i = 0; i < polygon.length; i++) {
-      const a = polygon[i]!;
-      const b = polygon[(i + 1) % polygon.length]!;
-      const d = distanceToSegment(p, a, b);
-      if (d < minD) minD = d;
-    }
-    return minD;
-  };
+
 
   // Approximate pole of inaccessibility (visual center) using iterative grid search
   const computeVisualCenter = (polygon: PointXY[]): PointXY => {
@@ -332,10 +298,13 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                           transformOrigin: 'center'
                         }}
                         onClick={() => onApartmentSelect(apartment)}
-                        onMouseEnter={(e) => handleApartmentHover(apartment, e)}
-                        onMouseLeave={handleApartmentLeave}
-                        onTouchStart={(e) => handleApartmentHover(apartment, e)}
-                        onTouchEnd={handleApartmentLeave}
+                        onMouseEnter={(e) => {
+                            if(isMobile) return;
+                            handleApartmentHover(apartment, e)
+                          }}
+                        onMouseLeave={() => {if(isMobile) return; handleApartmentLeave()}}
+                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
+                        onTouchEnd={() => {if(isMobile) handleApartmentLeave()}}
                         
                       />
                       {floorSettings?.display?.showNumbers !== false && (

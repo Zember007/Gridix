@@ -13,8 +13,6 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,

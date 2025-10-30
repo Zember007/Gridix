@@ -61,7 +61,7 @@ const saveWorkspaceToStorage = (workspaceId: string | null) => {
 };
 
 export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
-  const { userRole, isManager, isDeveloper, developerIds } = useUserRole();
+  const { userRole, isManager } = useUserRole();
   const { t } = useLanguage();
   const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(loadWorkspaceFromStorage);
   const [availableWorkspaces, setAvailableWorkspaces] = useState<WorkspaceOption[]>([]);

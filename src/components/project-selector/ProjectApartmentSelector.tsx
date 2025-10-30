@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -11,10 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
 import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from '../apartment/ApartmentFloorPlan';
-import ApartmentDetailsPage from '@/pages/ApartmentDetailsPage';
 import BuildingFacadeView from '../visualization/BuildingFacadeView';
-import InteractiveProjectsMap from '../visualization/InteractiveProjectsMap';
-import FavoritesTab from '../FavoritesTab';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,8 +23,6 @@ import { CompactFilters } from './filters/CompactFilters';
 import { ExpandedFilters } from './filters/ExpandedFilters';
 import { MobileFilters } from './filters/MobileFilters';
 import { LayoutGallery } from './layouts/LayoutGallery';
-import { ListView } from './views/ListView';
-import { FloorSelector } from './FloorSelector';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -35,12 +30,23 @@ interface ProjectApartmentSelectorProps {
 }
 
 const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartmentSelectorProps) => {
+
+
+  const ApartmentDetailsPage = lazy(() => import('@/pages/ApartmentDetailsPage'))
+
+
+  const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'))
+  const FavoritesTab = lazy(() => import('../FavoritesTab'))
+  const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
+  const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
+
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);
   const { fields: fieldSettings } = useFields(project?.id || null);
   const { favoritesCount } = useFavorites(project?.id || undefined);
   const { user } = useAuth();
+
 
   // State
   const [apartments, setApartments] = useState<Apartment[]>([]);
@@ -529,7 +535,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
                 isMobile={isMobile}
-                mapVisible={project.latitude && project.longitude}
+                mapVisible={(!!project.latitude && !!project.longitude)}
                 projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
                 themeColor={getThemeColor()}
               />
