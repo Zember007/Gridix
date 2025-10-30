@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ interface ApartmentPhoto {
   id: string;
   apartment_id: string;
   image_url: string;
-  description?: string;
+  description?: string | null;
   order_index: number;
 }
 
@@ -22,14 +21,14 @@ interface LayoutPhoto {
   project_id: string;
   layout_type: string;
   image_url: string;
-  description?: string;
+  description?: string | null;
   order_index: number;
 }
 
 interface CombinedPhoto {
   id: string;
   image_url: string;
-  description?: string;
+  description?: string | null;
   order_index: number;
   type: 'layout' | 'apartment';
 }
@@ -204,12 +203,13 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
     <Card className='border-none'>
       <CardContent className="p-0">
         <div className="relative">
+          {(() => { const currentPhoto = photos[currentPhotoIndex]!; return (
           <img
-            src={photos[currentPhotoIndex].image_url}
-            alt={photos[currentPhotoIndex].description || 'Фото квартиры'}
+            src={currentPhoto.image_url}
+            alt={currentPhoto?.description || 'Фото квартиры'}
             className="w-full h-72 lg:h-auto lg:aspect-[16/9] object-cover lg:rounded-lg cursor-pointer"
             onClick={openLightbox}
-          />
+          />); })()}
           
      
           <Button
@@ -249,45 +249,27 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           )}
         </div>
         
-        {photos[currentPhotoIndex].description && (
+        {photos[currentPhotoIndex]?.description && (
           <p className="mt-2 text-sm text-muted-foreground">
-            {photos[currentPhotoIndex].description}
+            {photos[currentPhotoIndex]?.description || ''}
           </p>
         )}
       </CardContent>
       
-      {portalContainer
-        ? createPortal(
-            <Lightbox
-              open={isLightboxOpen}
-              close={closeLightbox}
-              index={currentPhotoIndex}
-              slides={photos.map((photo) => ({
-                src: photo.image_url,
-                alt: photo.description || 'Фото квартиры',
-                title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
-              }))}
-              on={{
-                view: ({ index }) => setCurrentPhotoIndex(index)
-              }}
-            />,
-            portalContainer
-          )
-        : (
-            <Lightbox
-              open={isLightboxOpen}
-              close={closeLightbox}
-              index={currentPhotoIndex}
-              slides={photos.map((photo) => ({
-                src: photo.image_url,
-                alt: photo.description || 'Фото квартиры',
-                title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
-              }))}
-              on={{
-                view: ({ index }) => setCurrentPhotoIndex(index)
-              }}
-            />
-          )}
+      <Lightbox
+        open={isLightboxOpen}
+        close={closeLightbox}
+        index={currentPhotoIndex}
+        slides={photos.map((photo) => ({
+          src: photo.image_url,
+          alt: photo.description || 'Фото квартиры',
+          title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
+        }))}
+        on={{
+          view: ({ index }) => setCurrentPhotoIndex(index)
+        }}
+        portal={{ root: portalContainer ?? undefined }}
+      />
     </Card>
   );
 };
