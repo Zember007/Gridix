@@ -120,14 +120,14 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
         ...(layoutPhotos || []).map((photo: LayoutPhoto) => ({
           id: photo.id,
           image_url: photo.image_url,
-          description: photo.description,
+          description: photo.description ?? null,
           order_index: photo.order_index,
           type: 'layout' as const
         })),
         ...(apartmentPhotos || []).map((photo: ApartmentPhoto) => ({
           id: photo.id,
           image_url: photo.image_url,
-          description: photo.description,
+          description: photo.description ?? null,
           order_index: photo.order_index,
           type: 'apartment' as const
         }))
@@ -268,7 +268,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
         on={{
           view: ({ index }) => setCurrentPhotoIndex(index)
         }}
-        portal={{ root: portalContainer ?? undefined }}
+        portal={{ root: portalContainer ?? null }}
       />
     </Card>
   );
