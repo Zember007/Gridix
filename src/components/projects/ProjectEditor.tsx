@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Building2, Image, Settings, Camera, Zap, FileText, Upload, X, Globe, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
@@ -20,7 +19,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/lib/currency-utils';
-import { useProject, useProjectCRUD } from '@/hooks/useProjects';
+import { useProject } from '@/hooks/useProjects';
 import ProjectApartmentsManager from './ProjectApartmentsManager';
 import BuildingImageEditor from '@/components/visualization/BuildingImageEditor';
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
@@ -30,7 +29,6 @@ import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
-import PolygonCustomizationSettings from '../visualization/PolygonCustomizationSettings';
 import ProjectFloorsManager from './ProjectFloorsManager';
 
 interface ProjectEditorProps {
@@ -134,7 +132,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         // Менеджер может редактировать, если проект принадлежит застройщику активного workspace
         (isManagerMode && activeWorkspaceId && cachedProject.user_id === activeWorkspaceId) ||
         // Или если менеджер имеет доступ к этому застройщику
-        (isManager && developerIds.includes(cachedProject.user_id))
+        (isManager && developerIds.includes(cachedProject.user_id ?? ''))
       );
 
       if (!canEdit) {
@@ -256,7 +254,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
     if (parts.length === 2) {
       const [parsedLat, parsedLon] = parts
-      setProject(prev => ({ ...prev, latitude: parseFloat(parsedLat), longitude: parseFloat(parsedLon) }))
+      setProject(prev => ({ ...prev, latitude: parseFloat(parsedLat ?? '0'), longitude: parseFloat(parsedLon ?? '0') }))
       e.preventDefault() // предотвращаем вставку в одно поле
     }
   }
@@ -282,7 +280,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
     setUploadingPdf(true);
     try {
-      // Динамически загружаем pdf-lib только когда нужен
       const { PDFDocument } = await import('pdf-lib');
 
       const arrayBuffer = await file.arrayBuffer();
@@ -295,7 +292,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         return;
       }
 
- 
+
       const compressedFile = new Blob([arrayBuffer], { type: 'application/pdf' });
 
       const fileName = `${user.id}/${project.id}/presentation_${Date.now()}.pdf`;
@@ -910,12 +907,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           )}
 
           {activeTab === 'floors' && project.project_type !== 'object' && (
-           <ProjectFloorsManager projectId={project.id} />
+            <ProjectFloorsManager projectId={project.id} />
           )}
 
           {activeTab === 'apartments' && (
             <div className="space-y-4">
-              <ProjectApartmentsManager projectId={project.id} projectType={project.project_type} />
+              <ProjectApartmentsManager
+                projectId={project.id} projectType={project.project_type ?? 'building'} />
             </div>
           )}
 
@@ -944,9 +942,9 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     <div className="min-h-screen bg-background flex">
       <ProjectEditorSidebar
         onSectionChange={handleSidebarSectionChange}
-        activeTab={getSidebarSection(activeTab)}
+        activeTab={getSidebarSection(activeTab ?? 'basic')}
         userEmail={userProfile?.email || user?.email || 'Unknown user'}
-        projectType={project.project_type}
+        projectType={project.project_type ?? 'building'}
       />
 
       <div className="flex-1 bg-background">
@@ -1354,7 +1352,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
           {activeTab === 'apartments' && (
             <div className="space-y-4">
-              <ProjectApartmentsManager projectId={project.id} projectType={project.project_type} />
+              <ProjectApartmentsManager projectId={project.id} projectType={project.project_type ?? 'building'} />
             </div>
           )}
 

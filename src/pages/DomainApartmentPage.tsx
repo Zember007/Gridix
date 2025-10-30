@@ -26,9 +26,7 @@ export default function DomainApartmentPage() {
   const { apartmentId } = useParams<{ apartmentId: string }>();
   const { project: domainProject, loading: domainLoading, error: domainError, isDomainProject } = useProjectByDomain();
   const { t, language } = useLanguage();
-  const isMobile = useIsMobile();
   const { project, loading: projectLoading, error: projectError } = useProject(domainProject?.id || '');
-  const { fields: fieldSettings } = useFields(domainProject?.id || '');
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const [apartment, setApartment] = useState<Apartment | null>(null);
@@ -41,7 +39,7 @@ export default function DomainApartmentPage() {
   useEffect(() => {
     const fetchApartment = async () => {
       if (!apartmentId || !domainProject?.id) return;
-      
+
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -94,7 +92,7 @@ export default function DomainApartmentPage() {
     try {
       const url = window.location.href;
       const title = `${t('apartment.apartment')} № ${apartment?.apartment_number}`;
-      
+
       if (navigator.share) {
         await navigator.share({ title, url });
       } else {
@@ -108,33 +106,19 @@ export default function DomainApartmentPage() {
 
   const handleGeneratePDF = async () => {
     if (!apartment || !project) return;
-    
+
     setIsGeneratingPDF(true);
     try {
       // Динамически загружаем модуль PDF только когда нужен
       const { generateApartmentPDF } = await import('@/lib/pdf-utils');
-      
+
+      const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}/pdf`;
+
+
       await generateApartmentPDF({
         apartment,
-        projectCurrency: project.currency || 'USD',
-        photos: [],
-        translations: {
-          apartmentDetails: t('apartment.details'),
-          apartmentNumber: t('apartment.number'),
-          floor: t('apartment.floor'),
-          rooms: t('apartment.rooms'),
-          area: t('apartment.area'),
-          price: t('apartment.price'),
-          status: t('apartment.status'),
-          photos: t('apartment.photos'),
-          layout: t('apartment.layout'),
-          apartmentPhoto: t('apartment.photo'),
-          studio: t('apartment.studio'),
-          available: t('apartment.available'),
-          reserved: t('apartment.reserved'),
-          sold: t('apartment.sold'),
-          generatedOn: t('apartment.generatedOn')
-        }
+        pdfUrl,
+        pdf_main: project?.pdf_presentation_url || undefined,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -202,7 +186,7 @@ export default function DomainApartmentPage() {
                 apartment_number: apartment.apartment_number,
                 rooms: typeof apartment.rooms === 'number' ? apartment.rooms : parseInt(apartment.rooms.toString()),
                 area: apartment.area,
-                price: apartment.price,
+                price: apartment.price || 0,
                 status: apartment.status,
                 floor_number: apartment.floor_number
               })}
@@ -216,7 +200,7 @@ export default function DomainApartmentPage() {
           <div>
             <ApartmentPhotosViewer apartmentId={apartmentId} projectId={domainProject.id} />
           </div>
-          
+
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -278,9 +262,9 @@ export default function DomainApartmentPage() {
                     <DialogHeader>
                       <DialogTitle>{t('apartment.installmentCalculator')}</DialogTitle>
                     </DialogHeader>
-                    <InstallmentCalculator 
-                      applyInstallment={() => {setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true);}}
-                      apartmentPrice={apartment.price} 
+                    <InstallmentCalculator
+                      applyInstallment={() => { setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true); }}
+                      apartmentPrice={apartment.price}
                       currency={project?.currency || 'USD'}
                       minDownPaymentPercent={20}
                       maxInstallmentMonths={60}

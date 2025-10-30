@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -6,7 +6,7 @@ import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { UsersManagement } from '@/components/superadmin/UsersManagement';
 import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';
 import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
-import { Statistics } from '@/components/superadmin/Statistics';
+const Statistics = lazy(() => import('@/components/superadmin/Statistics').then(m => ({ default: m.Statistics })));
 import { SystemSettings } from '@/components/superadmin/SystemSettings';
 import { PartnersManagement } from '@/components/superadmin/PartnersManagement';
 import { PartnerPayoutsManagement } from '@/components/superadmin/PartnerPayoutsManagement';
@@ -44,7 +44,11 @@ const SuperAdminPage = () => {
       case 'projects':
         return <ProjectsManagement />;
       case 'stats':
-        return <Statistics />;
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center p-6">Загрузка статистики...</div>}>
+            <Statistics />
+          </Suspense>
+        );
       case 'partners':
         return <PartnersManagement />;
       case 'partner-payouts':

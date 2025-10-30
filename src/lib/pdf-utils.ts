@@ -11,28 +11,8 @@ import { Apartment } from '@/types/apartment';
 
 interface PDFGenerationOptions {
   apartment: Apartment;
-  projectCurrency: string | null;
   pdfUrl: string;
   pdf_main?: string | ArrayBuffer | Uint8Array | undefined;
-  translations: {
-    apartmentDetails: string;
-    apartmentNumber: string;
-    floor: string;
-    rooms: string;
-    area: string;
-    price: string;
-    status: string;
-    photos: string;
-    layout: string;
-    apartmentPhoto: string;
-    studio: string;
-    available: string;
-    reserved: string;
-    sold: string;
-    generatedOn: string;
-    facilities: string;
-    apartmentForSale: string;
-  };
 }
 
 // Функция для загрузки PDF файла

@@ -394,28 +394,9 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       // Генерируем PDF через API
       await generateApartmentPDF({
         apartment,
-        projectCurrency: project?.currency || null,
         pdfUrl,
         pdf_main: project?.pdf_presentation_url || undefined,
-        translations: {
-          apartmentDetails: t('pdf.apartmentDetails'),
-          apartmentNumber: t('pdf.apartmentNumber'),
-          floor: t('apartment.floor'),
-          rooms: t('apartment.rooms'),
-          area: t('apartment.area'),
-          price: t('apartment.price'),
-          status: t('apartment.status'),
-          photos: t('pdf.photos'),
-          layout: t('pdf.layout'),
-          apartmentPhoto: t('pdf.apartmentPhoto'),
-          studio: t('apartment.studio'),
-          available: t('apartment.available'),
-          reserved: t('apartment.reserved'),
-          sold: t('apartment.sold'),
-          generatedOn: t('pdf.generatedOn'),
-          facilities: t('pdf.facilities'),
-          apartmentForSale: t('pdf.apartmentForSale')
-        }
+      
       });
 
     } catch (error) {

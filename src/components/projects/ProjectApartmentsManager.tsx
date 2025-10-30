@@ -528,7 +528,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         <div>
           <Label htmlFor="status">{t('apartmentsManager.status')}</Label>
           <Select
-            value={apartment.status}
+            value={apartment.status ?? 'available'}
             onValueChange={(value: string) => {
               const validStatus = (['available', 'sold', 'reserved'].includes(value))
                 ? value as 'available' | 'sold' | 'reserved'
@@ -555,7 +555,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       {currentType !== 'parking' && (
         <ApartmentCustomFields
           projectId={projectId}
-          apartmentId={apartment.id}
+          apartmentId={apartment.id ?? ''}
           customFieldsData={customFieldsData}
           onCustomFieldsChange={setCustomFieldsData}
         />
