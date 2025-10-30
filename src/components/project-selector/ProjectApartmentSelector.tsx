@@ -174,10 +174,11 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           // Now load layout photos for visible apartments only (non-blocking)
           // This happens after apartments are loaded, so UI can render
           const uniqueLayouts = new Set<string>(
-            normalizedApartments.map(a => 
+            normalizedApartments.map(a =>
               (a.type === 'apartment' ? Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room` : a.type)
             )
           );
+
 
           if (uniqueLayouts.size > 0 && !isCancelled) {
             // Load layout photos asynchronously without blocking
@@ -189,8 +190,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   .eq('project_id', project.id)
                   .in('layout_type', Array.from(uniqueLayouts))
                   .order('order_index', { ascending: true });
-
-                if (isCancelled) return;
+                  
                 if (layoutError) {
                   console.error('Error loading layout photos:', layoutError);
                   setPreloadLayoutLoaded(true);
@@ -198,14 +198,15 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 }
 
                 const grouped: Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]> = {};
+
                 (layoutData || []).forEach(p => {
                   const key = p.layout_type;
                   if (!grouped[key]) grouped[key] = [];
-                  const item: { id: string; image_url: string; description?: string; order_index: number; type: 'layout' } = { 
-                    id: p.id, 
-                    image_url: p.image_url, 
-                    order_index: p.order_index, 
-                    type: 'layout' 
+                  const item: { id: string; image_url: string; description?: string; order_index: number; type: 'layout' } = {
+                    id: p.id,
+                    image_url: p.image_url,
+                    order_index: p.order_index,
+                    type: 'layout'
                   };
                   if (p.description) {
                     item.description = p.description;
@@ -213,16 +214,12 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   grouped[key].push(item);
                 });
 
-                if (!isCancelled) {
-                  console.log('Layout photos loaded:', Object.keys(grouped).length, 'types'); // Debug log
-                  setPreloadedLayoutPhotosByRooms(grouped);
-                  setPreloadLayoutLoaded(true);
-                }
+                console.log('Layout photos loaded:', Object.keys(grouped).length, 'types'); // Debug log
+                setPreloadedLayoutPhotosByRooms(grouped);
+                setPreloadLayoutLoaded(true);
               } catch (e: unknown) {
-                if (!isCancelled) {
-                  console.error('Error preloading layout photos:', e);
-                  setPreloadLayoutLoaded(true);
-                }
+                console.error('Error preloading layout photos:', e);
+                setPreloadLayoutLoaded(true);
               }
             })();
           } else {
@@ -257,7 +254,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     setBuildingImageLoaded(false);
     setBuildingImageNaturalSize({ width: 0, height: 0 });
     const imageUrl = project?.building_image_url;
-    
+
     if (!imageUrl) {
       // Allow UI to render even without image
       setBuildingImageLoaded(true);
@@ -267,21 +264,21 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     // Load image asynchronously without blocking UI
     const img = new Image();
     imageLoadRef.current = img;
-    
+
     img.onload = () => {
       if (img === imageLoadRef.current) {
         setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
         setBuildingImageLoaded(true);
       }
     };
-    
+
     img.onerror = () => {
       // In case of error, still allow UI to proceed
       if (img === imageLoadRef.current) {
         setBuildingImageLoaded(true);
       }
     };
-    
+
     // Start loading (non-blocking)
     img.src = imageUrl;
 
@@ -623,8 +620,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           ) : viewMode === 'favorites' ? (
             <div className="container mx-auto px-4 md:px-6 py-8 grow">
               <FavoritesTab
-              handleViewApartment={openApartmentDetails}
-              projectId={project.id} projectCurrency={project?.currency} />
+                handleViewApartment={openApartmentDetails}
+                projectId={project.id} projectCurrency={project?.currency} />
             </div>
           ) : (
             // Facade and Floor Plan views with hero section

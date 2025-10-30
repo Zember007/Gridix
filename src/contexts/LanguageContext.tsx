@@ -1,23 +1,19 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Language,
-  getLanguageFromUrlParam,
   getLanguageFromPath,
   addLanguageToPath,
   removeLanguageFromPath,
-  getLanguageParam,
   DEFAULT_LANGUAGE,
   LANGUAGE_CONFIG
 } from '@/lib/language-utils';
 
 
-// Auto-load all JSON translation files under src/locales/{lang}/*.json
-// This replaces manual imports of individual JSON files
+// Register all JSON translation files under src/locales/{lang}/*.json (lazy)
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  '@/locales/*/*.json',
-  { eager: true }
+  '@/locales/*/*.json'
 );
 
 interface Translations {
@@ -44,45 +40,56 @@ function flattenTranslations(obj: Record<string, unknown>, prefix = ''): Record<
   return flattened;
 }
 
-
-
-
-// Build a per-language flat map by loading and flattening every JSON file
-const perLanguageFlat: Record<Language, Record<string, string>> = {
+// Cache for loaded, flattened translations per language (process-wide)
+const languageCache: Record<Language, Record<string, string>> = {
   ru: {},
   en: {},
   ka: {},
   ar: {},
 };
 
-Object.entries(localeModules).forEach(([path, mod]) => {
-  const match = path.match(/\/locales\/(ru|en|ka|ar)\/(.+)\.json$/);
-  if (!match) return;
-  const lang = match[1] as Language;
-  const fileBase = match[2];
-  const data = mod.default;
-  if (!data || typeof data !== 'object') return;
-  const flat = flattenTranslations(data as Record<string, unknown>, fileBase);
-  Object.assign(perLanguageFlat[lang], flat);
-});
+const loadedLanguages = new Set<Language>();
 
-// Merge keys across all languages into the shape Translations expects
-const jsonTranslations: Translations = {};
-const allKeys = new Set<string>();
-(['ru', 'en', 'ka', 'ar'] as Language[]).forEach(lang => {
-  Object.keys(perLanguageFlat[lang]).forEach(key => allKeys.add(key));
-});
+async function loadLanguageIntoCache(lang: Language) {
+  if (loadedLanguages.has(lang)) return;
+  const entries = Object.entries(localeModules).filter(([path]) =>
+    path.includes(`/locales/${lang}/`)
+  );
+  const modules = await Promise.all(entries.map(([, loader]) => loader()));
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (!entry) continue;
+    const path = entry[0];
+    const mod = modules[i];
+    if (!mod) continue;
+    const m = path.match(/\/locales\/(ru|en|ka|ar)\/(.+)\.json$/);
+    const fileBase = m ? m[2] : '';
+    const data = mod.default ?? {};
+    if (data && typeof data === 'object') {
+      const flat = flattenTranslations(data as Record<string, unknown>, fileBase);
+      Object.assign(languageCache[lang], flat);
+    }
+  }
+  loadedLanguages.add(lang);
+}
 
-allKeys.forEach(key => {
-  jsonTranslations[key] = {
-    ru: perLanguageFlat.ru[key],
-    en: perLanguageFlat.en[key],
-    ka: perLanguageFlat.ka[key],
-    ar: perLanguageFlat.ar[key],
-  };
-});
-
-const translations: Translations = jsonTranslations;
+function buildTranslationsFromCache(): Translations {
+  const result: Translations = {};
+  const langs = Array.from(loadedLanguages) as Language[];
+  const allKeys = new Set<string>();
+  langs.forEach(l => {
+    Object.keys(languageCache[l]).forEach(k => allKeys.add(k));
+  });
+  allKeys.forEach(key => {
+    const entry: Partial<Record<Language, string>> = {};
+    langs.forEach(l => {
+      const v = languageCache[l][key];
+      if (v !== undefined) entry[l] = v;
+    });
+    result[key] = entry;
+  });
+  return result;
+}
 
 
 
@@ -116,6 +123,23 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const [language, setLanguageState] = useState<Language>(() => {
     return getLanguageFromPath(location.pathname);
   });
+
+  const [translations, setTranslations] = useState<Translations>({});
+
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      await loadLanguageIntoCache(language);
+      if (language !== 'en') {
+        // Background load for fallback
+        loadLanguageIntoCache('en').then(() => {
+          if (!isCancelled) setTranslations(buildTranslationsFromCache());
+        });
+      }
+      if (!isCancelled) setTranslations(buildTranslationsFromCache());
+    })();
+    return () => { isCancelled = true; };
+  }, [language]);
 
   // Update language when URL changes
   useEffect(() => {
@@ -189,6 +213,22 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
       localStorage.setItem('embed-language', initialLanguage);
     }
   }, [initialLanguage, language]);
+
+  const [translations, setTranslations] = useState<Translations>({});
+
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      await loadLanguageIntoCache(language);
+      if (language !== 'en') {
+        loadLanguageIntoCache('en').then(() => {
+          if (!isCancelled) setTranslations(buildTranslationsFromCache());
+        });
+      }
+      if (!isCancelled) setTranslations(buildTranslationsFromCache());
+    })();
+    return () => { isCancelled = true; };
+  }, [language]);
 
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;

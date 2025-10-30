@@ -211,6 +211,7 @@ export const LayoutGallery = ({
                         layoutKey = representativeApt?.rooms === 0 ? 'studio' : `${Number(representativeApt?.rooms ?? 0)}-room`;
                       }
 
+
                       const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                       const first = photos[0];
 
