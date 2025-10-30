@@ -279,7 +279,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   useEffect(() => {
     if (imageLoaded && buildingFloors.length > 0) {
       updateImageDimensionsRef.current?.();
-      setHoveredFloor(buildingFloors[0]?.floor_number ?? null);
+      if(isExpanded && isMobile) {
+        setHoveredFloor(buildingFloors[0]?.floor_number ?? null);
+      }
     }
   }, [isExpanded, imageLoaded, buildingFloors.length]);
 
