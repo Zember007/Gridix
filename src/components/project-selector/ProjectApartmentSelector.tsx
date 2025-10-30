@@ -534,7 +534,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
               />
 
               {/* Mobile filters button */}
-              {isMobile && (
+              {isMobile && viewMode === 'list' && (
                 <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="text-xs px-2">
@@ -567,7 +567,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           </div>
 
           {/* Desktop Filters */}
-          {!isMobile && (
+          {!isMobile && viewMode === 'list' && (
             <div className="space-y-4">
               {/* Compact filters row */}
               <div className="flex items-center justify-between">
@@ -675,6 +675,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           ) : viewMode === 'favorites' ? (
             <div className="container mx-auto px-4 md:px-6 py-8 grow">
               <FavoritesTab
+                fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
                 handleViewApartment={openApartmentDetails}
                 projectId={project.id} projectCurrency={project?.currency} />
             </div>

@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useInstallment } from '@/hooks/useInstallment';
@@ -291,7 +291,7 @@ export const ListView = ({
                                 })}
                               </div>
                             </div>
-                            <div className="flex flex-col gap-2 ml-2">
+                            {apartment.status === 'available' && <div className="flex flex-col gap-2 ml-2">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -308,7 +308,7 @@ export const ListView = ({
                               >
                                 <Heart className={`h-4 w-4 ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                               </Button>
-                            </div>
+                            </div>}
                           </div>
                         </CardContent>
                       </Card>
@@ -460,7 +460,7 @@ export const ListView = ({
                               )}
 
                             {/* Action Buttons - Always visible */}
-                            <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
+                            {apartment.status === 'available' && <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -477,7 +477,7 @@ export const ListView = ({
                               >
                                 <Heart className={`h-6 w-6 text-black ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                               </Button>
-                            </div>
+                            </div>}
                           </div>
                         </CardContent>
                       </Card>
@@ -500,14 +500,14 @@ export const ListView = ({
                           }`}
                         onClick={() => openApartmentDetails(apartment)}
                       >
-                        <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+                        {apartment.status === 'available' && <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                           <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleShare(e, apartment)}>
                             <Share2 className="h-3 w-3 text-black" />
                           </Button>
                           <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleFavoriteToggle(e, apartment)}>
                             <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
                           </Button>
-                        </div>
+                        </div>}
                         <CardContent className="p-3 h-full flex flex-col justify-between">
                           <div className="text-center flex flex-col items-center gap-[5px]">
                             <div className="text-sm font-bold text-gray-900 ">
@@ -552,14 +552,7 @@ export const ListView = ({
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                         {floorApartments.map((apartment) => (
                           <Card key={apartment.id} className={`aspect-square overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 relative ${apartment.status === 'available' ? 'border-green-200 hover:border-green-400 bg-green-50 hover:bg-green-100' : 'border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'}`} onClick={() => openApartmentDetails(apartment)}>
-                            <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                              <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleShare(e, apartment)}>
-                                <Share2 className="h-3 w-3 text-black" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="p-1 h-6 w-6 bg-white/80 hover:bg-white/90 backdrop-blur-sm" onClick={(e) => handleFavoriteToggle(e, apartment)}>
-                                <Heart className={`h-3 w-3  ${isFavorite(apartment.id) ? 'fill-current text-red-500' : 'text-black'}`} />
-                              </Button>
-                            </div>
+
                             <CardContent className="p-3 h-full flex flex-col justify-between">
                               <div className="text-center flex flex-col items-center gap-[5px]">
                                 <div className="text-sm font-bold text-gray-900 ">{apartment.apartment_number || `#${apartment.id.slice(-4)}`}</div>

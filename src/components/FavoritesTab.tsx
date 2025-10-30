@@ -12,9 +12,10 @@ interface FavoritesTabProps {
   projectId: string;
   projectCurrency?: string | null;
   handleViewApartment: (apartment: Apartment) => void
+  fieldVisible: string[]
 }
 
-const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: FavoritesTabProps) => {
+const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVisible }: FavoritesTabProps) => {
   const { t } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
 
@@ -112,9 +113,9 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: Favor
                   <h4 className="font-semibold text-gray-900">
                     {t('apartment.apartment')} № {apartment.apartment_number}
                   </h4>
-                  <p className="text-sm text-gray-500">
+                 {fieldVisible.includes('floor_number') && <p className="text-sm text-gray-500">
                     {apartment.floor_number} {t('apartment.floor')}
-                  </p>
+                  </p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
@@ -135,6 +136,7 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: Favor
               </div>
 
               <div className="space-y-2 mb-3">
+              {fieldVisible.includes('rooms') &&
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Home className="h-4 w-4" />
                   <span>
@@ -144,19 +146,22 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment }: Favor
                     }
                   </span>
                 </div>
+                }
+              {fieldVisible.includes('area') &&
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Square className="h-4 w-4" />
                   <span>{apartment.area} м²</span>
                 </div>
+                }
               </div>
 
-              {apartment.price && (
+              
                 <div className="mb-3">
                   <div className="text-lg font-bold text-gray-900">
-                    {formatPriceWithCurrency(apartment.price, projectCurrency || null)}
+                    {apartment.price && fieldVisible.includes('price') ? formatPriceWithCurrency(apartment.price, projectCurrency || null) : t('common.priceOnRequest')}
                   </div>
                 </div>
-              )}
+            
 
               <Button 
                 variant="outline" 
