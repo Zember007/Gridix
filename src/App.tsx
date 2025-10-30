@@ -40,60 +40,61 @@ function App() {
     <BaseProviders>
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Default route - check for custom domain or redirect to default language */}
-              <Route path="/" element={<EmbedProviders><DomainProjectPage /></EmbedProviders>} />
+          <Routes>
+            {/* Default route - check for custom domain or redirect to default language */}
+            <Route path="/" element={<EmbedProviders><Suspense fallback={<PageLoader />}><DomainProjectPage /></Suspense></EmbedProviders>} />
 
             {/* Custom domain apartment route */}
-            <Route path="/apartment/:apartmentId" element={<EmbedProviders><DomainApartmentPage /></EmbedProviders>} />
+            <Route path="/apartment/:apartmentId" element={<EmbedProviders><Suspense fallback={<PageLoader />}><DomainApartmentPage /></Suspense></EmbedProviders>} />
 
             {/* Language-specific routes with :lang parameter */}
-            <Route path="/:lang" element={<LanguageProviders><Index /></LanguageProviders>} />
-            <Route path="/:lang/widget/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
-            <Route path="/:lang/project/:projectSlug" element={<LanguageProviders><ProjectWidgetPage /></LanguageProviders>} />
-            <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProviders><ApartmentDetailsPage /></LanguageProviders>} />
-            <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber/pdf" element={<LanguageProviders><PDFTemplatePage /></LanguageProviders>} />
+            <Route path="/:lang" element={<LanguageProviders><Suspense fallback={<PageLoader />}><Index /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/widget/:projectSlug" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/:projectSlug" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ApartmentDetailsPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/:projectSlug/apartment/:apartmentNumber/pdf" element={<LanguageProviders><Suspense fallback={<PageLoader />}><PDFTemplatePage /></Suspense></LanguageProviders>} />
 
             {/* Backward compatibility routes - redirect old ID-based URLs to new slug-based ones */}
-            <Route path="/:lang/widget/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
-            <Route path="/:lang/project/id/:projectId" element={<LanguageProviders><ProjectWidgetPage useId /></LanguageProviders>} />
-            <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProviders><ApartmentDetailsPage useId /></LanguageProviders>} />
-            <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId/pdf" element={<LanguageProviders><PDFTemplatePage useId /></LanguageProviders>} />
+            <Route path="/:lang/widget/id/:projectId" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage useId /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/id/:projectId" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage useId /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ApartmentDetailsPage useId /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/project/id/:projectId/apartment/id/:apartmentId/pdf" element={<LanguageProviders><Suspense fallback={<PageLoader />}><PDFTemplatePage useId /></Suspense></LanguageProviders>} />
 
             {/* Legal pages */}
-            <Route path="/:lang/privacy-policy" element={<LanguageProviders><PrivacyPolicyPage /></LanguageProviders>} />
-            <Route path="/:lang/terms-of-service" element={<LanguageProviders><TermsOfServicePage /></LanguageProviders>} />
-            <Route path="/:lang/refund-policy" element={<LanguageProviders><RefundPolicyPage /></LanguageProviders>} />
+            <Route path="/:lang/privacy-policy" element={<LanguageProviders><Suspense fallback={<PageLoader />}><PrivacyPolicyPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/terms-of-service" element={<LanguageProviders><Suspense fallback={<PageLoader />}><TermsOfServicePage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/refund-policy" element={<LanguageProviders><Suspense fallback={<PageLoader />}><RefundPolicyPage /></Suspense></LanguageProviders>} />
 
             {/* Contacts Page */}
-            <Route path="/:lang/contacts" element={<LanguageProviders><ContactsPage /></LanguageProviders>} />
+            <Route path="/:lang/contacts" element={<LanguageProviders><Suspense fallback={<PageLoader />}><ContactsPage /></Suspense></LanguageProviders>} />
             <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
 
             {/* Public Pricing Page */}
-            <Route path="/:lang/pricing" element={<LanguageProviders><PricingPage /></LanguageProviders>} />
-            <Route path="/:lang/price" element={<LanguageProviders><PricingPage /></LanguageProviders>} />
+            <Route path="/:lang/pricing" element={<LanguageProviders><Suspense fallback={<PageLoader />}><PricingPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/price" element={<LanguageProviders><Suspense fallback={<PageLoader />}><PricingPage /></Suspense></LanguageProviders>} />
             {/* Redirect bare pricing routes to default language */}
             <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
             <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
 
             {/* Auth routes */}
-            <Route path="/:lang/auth" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
-            <Route path="/:lang/auth/signin" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
-            <Route path="/:lang/auth/signup" element={<LanguageProviders><AuthPage /></LanguageProviders>} />
+            <Route path="/:lang/auth" element={<LanguageProviders><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/auth/signin" element={<LanguageProviders><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></LanguageProviders>} />
+            <Route path="/:lang/auth/signup" element={<LanguageProviders><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></LanguageProviders>} />
 
 
 
-            <Route path="/:lang/set-password" element={<LanguageProviders><SetPasswordPage /></LanguageProviders>} />
+            <Route path="/:lang/set-password" element={<LanguageProviders><Suspense fallback={<PageLoader />}><SetPasswordPage /></Suspense></LanguageProviders>} />
 
             {/* Invitation handler route - processes partner invitations */}
-            <Route path="/:lang/invitation" element={<LanguageProviders><InvitationHandlerPage /></LanguageProviders>} />
+            <Route path="/:lang/invitation" element={<LanguageProviders><Suspense fallback={<PageLoader />}><InvitationHandlerPage /></Suspense></LanguageProviders>} />
 
             {/* Protected admin routes */}
             <Route path="/:lang/admin" element={
               <AdminProviders>
                 <ProtectedRoute>
-                  <AdminPage />
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminPage />
+                  </Suspense>
                 </ProtectedRoute>
               </AdminProviders>
             } />
@@ -101,7 +102,9 @@ function App() {
             <Route path="/:lang/partners" element={
               <AdminProviders>
                 <ProtectedRoute>
-                  <PartnersPage />
+                  <Suspense fallback={<PageLoader />}>
+                    <PartnersPage />
+                  </Suspense>
                 </ProtectedRoute>
               </AdminProviders>
             } />
@@ -109,7 +112,9 @@ function App() {
             <Route path="/:lang/admin/project/:projectSlug" element={
               <AdminProviders>
                 <ProtectedRoute>
-                  <ProjectEditorPage />
+                  <Suspense fallback={<PageLoader />}>
+                    <ProjectEditorPage />
+                  </Suspense>
                 </ProtectedRoute>
               </AdminProviders>
             } />
@@ -117,7 +122,9 @@ function App() {
             <Route path="/:lang/admin/project/id/:projectId" element={
               <AdminProviders>
                 <ProtectedRoute>
-                  <ProjectEditorPage useId />
+                  <Suspense fallback={<PageLoader />}>
+                    <ProjectEditorPage useId />
+                  </Suspense>
                 </ProtectedRoute>
               </AdminProviders>
             } />
@@ -125,25 +132,26 @@ function App() {
             <Route path="/:lang/superadmin" element={
               <LanguageProviders>
                 <ProtectedRoute>
-                  <SuperAdminPage />
+                  <Suspense fallback={<PageLoader />}>
+                    <SuperAdminPage />
+                  </Suspense>
                 </ProtectedRoute>
               </LanguageProviders>
             } />
 
 
             {/* Embed routes without language prefix but with EmbedLanguageProvider */}
-            <Route path="/embed/projects/:userId" element={<EmbedProviders><EmbedProjectsPage /></EmbedProviders>} />
-            <Route path="/embed/project/:projectSlug" element={<EmbedProviders><ProjectWidgetPage /></EmbedProviders>} />
+            <Route path="/embed/projects/:userId" element={<EmbedProviders><Suspense fallback={<PageLoader />}><EmbedProjectsPage /></Suspense></EmbedProviders>} />
+            <Route path="/embed/project/:projectSlug" element={<EmbedProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage /></Suspense></EmbedProviders>} />
             {/* Backward compatibility for embed */}
-            <Route path="/embed/project/id/:projectId" element={<EmbedProviders><ProjectWidgetPage useId /></EmbedProviders>} />
+            <Route path="/embed/project/id/:projectId" element={<EmbedProviders><Suspense fallback={<PageLoader />}><ProjectWidgetPage useId /></Suspense></EmbedProviders>} />
 
             {/* Widget preview routes */}
-            <Route path="/widget/preview" element={<EmbedProviders><WidgetPreviewPage /></EmbedProviders>} />
+            <Route path="/widget/preview" element={<EmbedProviders><Suspense fallback={<PageLoader />}><WidgetPreviewPage /></Suspense></EmbedProviders>} />
 
             {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Routes>
-          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </BaseProviders>
