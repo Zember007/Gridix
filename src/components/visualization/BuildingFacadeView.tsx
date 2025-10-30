@@ -44,12 +44,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-  const initializedRef = useRef(false);
 
-  // Project-level facade polygon settings
-  const [facadeSettings, setFacadeSettings] = useState<{ 
+  const [facadeSettings, setFacadeSettings] = useState<{
     colors: { building: string };
-    opacity: { normal: number; hover: number }; 
+    opacity: { normal: number; hover: number };
     hoverEffects: { glow: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
     display: { showNumbers: boolean; showTooltip: boolean; };
   } | null>(null);
@@ -59,6 +57,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
+  const [isTouchZooming, setIsTouchZooming] = useState(false);
+  const [touchOrigin, setTouchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const getContainerHeight = useCallback(() => {
     if (isExpanded && filtersRef?.current) {
@@ -77,7 +78,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   // Используем useRef для хранения функции обновления, чтобы избежать бесконечных циклов
   const updateImageDimensionsRef = useRef<() => void>();
-  
+
   const updateImageDimensions = useCallback(() => {
     const imgEl = imgRef.current;
     const containerEl = containerRef.current;
@@ -132,7 +133,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       return newDims;
     });
   }, [imageLoaded, imageNaturalSize.width, imageNaturalSize.height, isExpanded, isMobile]); // Убрали все изменяемые зависимости
-  
+
   // Сохраняем актуальную функцию в ref
   updateImageDimensionsRef.current = updateImageDimensions;
 
@@ -203,19 +204,19 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             },
           });
         } else {
-          setFacadeSettings({ 
+          setFacadeSettings({
             colors: { building: '#3b82f6' },
-            opacity: { normal: 0.4, hover: 0.7 }, 
+            opacity: { normal: 0.4, hover: 0.7 },
             hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-            display: { showNumbers: true, showTooltip: false}
+            display: { showNumbers: true, showTooltip: false }
           });
         }
       } catch (e) {
-        setFacadeSettings({ 
+        setFacadeSettings({
           colors: { building: '#3b82f6' },
-          opacity: { normal: 0.4, hover: 0.7 }, 
+          opacity: { normal: 0.4, hover: 0.7 },
           hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-          display: { showNumbers: true, showTooltip: false}
+          display: { showNumbers: true, showTooltip: false }
         });
       }
     };
@@ -269,7 +270,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   useEffect(() => {
     if (imageLoaded && buildingFloors.length > 0) {
-        updateImageDimensionsRef.current?.();
+      updateImageDimensionsRef.current?.();
     }
   }, [isExpanded, imageLoaded, buildingFloors.length]);
 
@@ -337,6 +338,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   // Floor Popup Component
   const FloorPopup = ({ Number, position }: { Number: number; position: { x: number; y: number } }) => {
     const { t } = useLanguage();
+    const tSafe = t || ((key: string) => key);
 
     // Position popup to the left of the polygon
     const popupWidth = 256; // min-w-64 = 16rem = 256px
@@ -366,11 +368,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     // For project_type = object, Number is apartment number, not floor number
     if (project.project_type === 'object') {
       const apartment = apartments.find(apt => apt.apartment_number === Number.toString());
-      
+
       if (!apartment) {
         return null;
       }
-      
+
       // Use ApartmentPopup for objects
       return (
         <ApartmentPopup
@@ -401,13 +403,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       >
         {facadeSettings?.display?.showNumbers && (
           <div className="text-center flex items-center justify-center gap-[7px]">
-            {t('project.floor')} <span className='font-bold'>{Number}</span>
+            {tSafe('project.floor')} <span className='font-bold'>{Number}</span>
           </div>
         )}
 
         <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47]">
           <div className="text-[32px] leading-[1.1]">{stats.available}</div>
-          {t('project.available')}
+          {tSafe('project.available')}
         </div>
       </div>
     );
@@ -428,13 +430,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     } else {
       const floorApartments = getFloorApartments(floorNumber);
       if (floorApartments.length > 0) {
-        onApartmentSelect(floorApartments[0]);
+        onApartmentSelect(floorApartments[0]!);
       }
     }
   };
 
-  const handleFloorHover = (floorNumber: number, event: React.MouseEvent) => {
-    if (isMobile || !isExpanded) return; // Показываем только в расширенном режиме на десктопе
+  const handleFloorHover = (floorNumber: number) => {
+    if (!isExpanded) return;
 
     if (!containerRef.current) return;
 
@@ -477,7 +479,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   };
 
   const handleFloorLeave = () => {
-    if (isMobile || !isExpanded) return;
+    if (!isExpanded) return;
     setHoveredFloor(null);
     setShowPopup(false);
   };
@@ -489,26 +491,69 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     handleFloorClick(floorNumber);
   };
 
-  const handleSVGFloorHover = (floorNumber: number, event: React.MouseEvent<SVGPolygonElement>) => {
-    if (isMobile || !isExpanded) return;
+  const handleSVGFloorHover = (floorNumber: number) => {
+    if (!isExpanded) return;
 
     setHoveredFloor(floorNumber);
-    handleFloorHover(floorNumber, event);
+    handleFloorHover(floorNumber);
   };
 
-  const handleFloorTouch = (floorNumber: number, event?: React.TouchEvent) => {
-    // For mobile devices, show hover state on touch and then navigate
-    if (isMobile) {
-      setHoveredFloor(floorNumber);
-      // Clear hover state after a delay
-      setTimeout(() => {
-        setHoveredFloor(null);
-      }, 1500);
+
+  const getPointRelativeToWrapper = (clientX: number, clientY: number) => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return { x: 0, y: 0 };
+    const rect = wrapper.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const mobileTouchStart = (e: React.TouchEvent, floorNumber?: number) => {
+    if (!isMobile) return;
+    if (e.touches.length === 0) return;
+    const touch = e.touches.item(0);
+    if (!touch) return;
+    const origin = getPointRelativeToWrapper(touch.clientX, touch.clientY);
+    setTouchOrigin(origin);
+    setIsTouchZooming(true);
+    if (typeof floorNumber === 'number') handleSVGFloorHover(floorNumber);
+    
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const mobileTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    if (e.touches.length === 0) return;
+    const touch = e.touches.item(0);
+    if (!touch) return;
+    // Update origin so zoomed area follows the finger
+    const origin = getPointRelativeToWrapper(touch.clientX, touch.clientY);
+    setTouchOrigin(origin);
+
+    // Detect polygon under finger
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el && el instanceof SVGPolygonElement) {
+      const ds = (el as Element).getAttribute('data-floor');
+      const floorNum = ds ? parseInt(ds, 10) : undefined;
+      if (typeof floorNum === 'number' && !Number.isNaN(floorNum)) {
+        
+        handleSVGFloorHover(floorNum)
+      }
     }
-    handleFloorClick(floorNumber);
+    e.preventDefault();
+    e.stopPropagation();
   };
 
-  // Close popup when clicking outside
+  const mobileTouchEnd = () => {
+    if (!isMobile) return;
+    const active = hoveredFloor;
+    setIsTouchZooming(false);
+    // Open the active floor
+    if (typeof active === 'number') {
+      handleFloorClick(active);
+    }
+    // Clear hover shortly after to allow click transition
+    setTimeout(() => setHoveredFloor(null), 150);
+  };
 
 
 
@@ -568,17 +613,90 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
       {/* Показываем изображение только после загрузки для предотвращения скачков */}
       {imageLoaded ? (
-        <img
-          ref={imgRef}
-          src={project.building_image_url}
-          alt={project.name}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 z-10"
+        <div
+          ref={wrapperRef}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
           style={{
             width: imgDimensions.width || 'auto',
             height: imgDimensions.height || 'auto',
+            touchAction: isTouchZooming ? 'none' : 'manipulation'
           }}
-          draggable={false}
-        />
+          onTouchStart={(e) => mobileTouchStart(e)}
+          onTouchMove={(e) => mobileTouchMove(e)}
+          onTouchEnd={() => mobileTouchEnd()}
+        >
+          <div
+            style={{
+              transform: isTouchZooming ? `scale(2)` : 'scale(1)',
+              transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
+              touchAction: isTouchZooming ? 'none' : 'manipulation'
+            }}
+            className="w-full h-full">
+            <img
+              ref={imgRef}
+              src={project.building_image_url}
+              alt={project.name}
+              className="block w-full h-full transition-all duration-500"
+              draggable={false}
+            />
+            {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
+              <svg
+                className="absolute inset-0 z-20"
+                style={{ width: '100%', height: '100%' }}
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <rect x="0" y="0" width="100" height="100" fill="none" />
+                {buildingFloors.map((floor) => {
+                  if (!floor.polygon || floor.polygon.length < 3) return null;
+                  const points = floor.polygon
+                    .map(point => `${point.x},${point.y}`)
+                    .join(' ');
+                  const baseColor = getFloorFillColor(floor);
+                  const isHovered = hoveredFloor === floor.floor_number;
+                  const hoverColor = facadeSettings?.hoverEffects?.colorChange ?
+                    (baseColor === '#3b82f6' ? '#10b981' : baseColor) : baseColor;
+                  return (
+                    <g key={floor.id}>
+                      <polygon
+                        points={points}
+                        fill={isHovered ? hoverColor : baseColor}
+                        fillOpacity={isHovered ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
+                        stroke={isHovered ? hoverColor : baseColor}
+                        strokeWidth={isHovered ? (isMobile ? 0.6 : 0.5) : (isMobile ? 0.3 : 0.2)}
+                        className="cursor-pointer transition-all duration-200"
+                        data-floor={floor.floor_number}
+                        onClick={() => handleSVGFloorClick(floor.floor_number)}
+                        onTouchStart={(e) => {
+                          mobileTouchStart(e, floor.floor_number);
+
+                        }}
+                        onMouseEnter={(e) => {
+                          if (isExpanded) {
+                            handleSVGFloorHover(floor.floor_number);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (isExpanded) {
+                            setHoveredFloor(null);
+                            handleFloorLeave();
+                          }
+                        }}
+                        style={{
+                          pointerEvents: 'auto',
+                          touchAction: 'none',
+                          filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
+                          transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
+                          transformOrigin: 'center'
+                        }}
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
+          </div>
+        </div>
       ) : (
         <>
           {/* Если родитель не предоставил состояние загрузки, используем локальную подгрузку */}
@@ -610,88 +728,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         </>
       )}
 
-      {/* SVG полигоны - точно поверх отображаемого изображения */}
-      {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
-        <svg
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
-          style={{
-            width: imgDimensions.width,
-            height: imgDimensions.height,
-
-          }}
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          {/* Debug rectangle to see SVG bounds */}
-          <rect x="0" y="0" width="100" height="100" fill="none" />
-          {buildingFloors.map((floor) => {
-            if (!floor.polygon || floor.polygon.length < 3) return null;
-
-            // Используем исходные координаты полигонов (они уже в процентах 0-100)
-            const points = floor.polygon
-              .map(point => `${point.x},${point.y}`)
-              .join(' ');
-
-            const baseColor = getFloorFillColor(floor);
-            const isHovered = hoveredFloor === floor.floor_number;
-            const hoverColor = facadeSettings?.hoverEffects?.colorChange ? 
-              (baseColor === '#3b82f6' ? '#10b981' : baseColor) : baseColor;
-
-            return (
-              <g key={floor.id}>
-                <polygon
-                  points={points}
-                  fill={isHovered ? hoverColor : baseColor}
-                  fillOpacity={isHovered ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
-                  stroke={isHovered ? hoverColor : baseColor}
-                  strokeWidth={isHovered ? (isMobile ? 0.6 : 0.5) : (isMobile ? 0.3 : 0.2)}
-                  className="cursor-pointer transition-all duration-200"
-                  onClick={(e) => handleSVGFloorClick(floor.floor_number)}
-                  onTouchStart={(e) => {
-                    if (isMobile) {
-                      setHoveredFloor(floor.floor_number);
-                      handleFloorTouch(floor.floor_number, e);
-                    }
-                  }}
-                  onTouchEnd={() => {
-                    if (isMobile) {
-                      setTimeout(() => setHoveredFloor(null), 1500);
-                    }
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isExpanded) {
-                      handleSVGFloorHover(floor.floor_number, e);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (isExpanded) {
-                      setHoveredFloor(null);
-                      handleFloorLeave();
-                    }
-                  }}
-                  style={{
-                    pointerEvents: 'auto',
-                    touchAction: 'manipulation',
-                    filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
-                    transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
-                    transformOrigin: 'center'
-                  }}
-                />
-
-              </g>
-            );
-          })}
-        </svg>
-      )}
-
       {!isExpanded && (
         <button
-          className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full md:flex hidden items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+          className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
             }`}
           onClick={() => setIsExpanded(true)}
           style={{ touchAction: 'manipulation' }}
         >
-          <Maximize2 className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-7 w-7'}`} />
+          <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
         </button>
       )}
       {isExpanded && (
@@ -701,7 +745,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           onClick={() => setIsExpanded(false)}
           style={{ touchAction: 'manipulation' }}
         >
-          <X className={`text-gray-900 ${isMobile ? 'h-6 w-6' : 'h-6 w-6'}`} />
+          <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
         </button>
       )}
       {showPopup && selectedFloor !== null && popupPosition && (
