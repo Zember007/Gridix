@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X } from 'lucide-react';
+import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -372,7 +372,7 @@ export function SystemSettings() {
   };
 
   if (loading) {
-    return <div className="p-6">Загрузка настроек...</div>;
+    return <div className="p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>;
   }
 
   return (

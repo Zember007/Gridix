@@ -235,7 +235,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   // Filter floors based on showOnlyAvailable: only show floors with at least one available apartment
   const visibleFloors = useMemo(() => {
-    if (!showOnlyAvailable) {
+    if (!showOnlyAvailable || project.project_type === 'object') {
       return buildingFloors;
     }
     

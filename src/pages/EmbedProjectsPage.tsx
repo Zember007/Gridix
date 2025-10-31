@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { formatPriceWithCurrency } from '@/lib/currency-utils';
 import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
+import Loader from '@/components/ui/loader';
 
 // Lazy load heavy map component
 const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'));
@@ -34,9 +35,9 @@ interface EmbedProjectsPageProps {
   maxHeight?: string;
 }
 
-const EmbedProjectsPage = ({ 
-  UserId, 
-  isWidget = false, 
+const EmbedProjectsPage = ({
+  UserId,
+  isWidget = false,
   compactMode = false,
   showHeader = true,
   showFilters = true,
@@ -46,7 +47,7 @@ const EmbedProjectsPage = ({
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [showFiltersPanel, setShowFiltersPanel] = useState(!compactMode);
   const { t } = useLanguage();
-  
+
   // Пытаемся получить userId из URL параметров или query string для совместимости с iframe
   const userId = UserId || routeUserId;
 
@@ -60,29 +61,26 @@ const EmbedProjectsPage = ({
       }
     }
   }, [isWidget, userId]);
-  
 
-  
+
+
   // Используем объединенный оптимизированный хук
   const { projects, loading, error, userExists } = useProjectsWithPrices(userId);
-  
+
   // Состояние для отображения
   const userNotFound = userExists === false;
 
   const handleViewProject = (project: Project) => {
-    const url = project.slug 
-      ? `/embed/project/${project.slug}` 
+    const url = project.slug
+      ? `/embed/project/${project.slug}`
       : `/embed/project/id/${project.id}`;
     window.open(url, '_blank');
   };
 
   if (loading) {
     return (
-      <div className={`${isWidget ? 'h-full' : 'min-h-screen'} bg-white flex items-center justify-center`} style={{ maxHeight }}>
-        <div className="flex items-center gap-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E1E1E]"></div>
-          {!compactMode && <span className="text-sm text-gray-600">{t('common.loading') || 'Loading...'}</span>}
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader size="lg" className="mx-auto mb-4"  />
       </div>
     );
   }
@@ -98,11 +96,11 @@ const EmbedProjectsPage = ({
           {/* Отладочная информация для разработки */}
           {process.env.NODE_ENV === 'development' && !isWidget && (
             <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
-              <strong>Debug Info:</strong><br/>
-              Route userId: {routeUserId || 'undefined'}<br/>
-              Query userId: {new URLSearchParams(window.location.search).get('userId') || 'undefined'}<br/>
-              Final userId: {userId || 'undefined'}<br/>
-              Current URL: {window.location.href}<br/>
+              <strong>Debug Info:</strong><br />
+              Route userId: {routeUserId || 'undefined'}<br />
+              Query userId: {new URLSearchParams(window.location.search).get('userId') || 'undefined'}<br />
+              Final userId: {userId || 'undefined'}<br />
+              Current URL: {window.location.href}<br />
               User exists: {userExists?.toString() || 'null'}
             </div>
           )}
@@ -112,11 +110,11 @@ const EmbedProjectsPage = ({
   }
 
   // Если выбран режим карты, отображаем InteractiveProjectsMap
-  
+
 
   return (
-    <div 
-      className={`${isWidget ? 'h-full' : 'min-h-screen'} bg-white overflow-hidden`} 
+    <div
+      className={`${isWidget ? 'h-full' : 'min-h-screen'} bg-white overflow-hidden`}
       style={{ maxHeight }}
     >
       {/* Header with filters */}
@@ -129,8 +127,8 @@ const EmbedProjectsPage = ({
               </h1>
               <div className="flex items-center gap-2">
                 {!compactMode && <LanguageToggle />}
-                <Button 
-                  variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size={compactMode ? 'sm' : 'sm'}
                   className={viewMode === 'grid' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                   onClick={() => setViewMode('grid')}
@@ -138,8 +136,8 @@ const EmbedProjectsPage = ({
                   <Grid className="h-4 w-4 mr-1" />
                   {compactMode ? '' : t('embed.listView')}
                 </Button>
-                <Button 
-                  variant={(viewMode as string) === 'map' ? 'default' : 'outline'} 
+                <Button
+                  variant={(viewMode as string) === 'map' ? 'default' : 'outline'}
                   size={compactMode ? 'sm' : 'sm'}
                   className={(viewMode as string) === 'map' ? 'bg-[#1E1E1E] text-white' : 'border-gray-300'}
                   onClick={() => setViewMode('map')}
@@ -169,7 +167,7 @@ const EmbedProjectsPage = ({
                     </span>
                   </div>
                 )}
-                
+
                 {(!compactMode || showFiltersPanel) && (
                   <div className={`flex flex-wrap items-center gap-2 ${compactMode ? 'mt-3' : ''}`}>
                     {/* Parameters filter */}
@@ -269,11 +267,10 @@ const EmbedProjectsPage = ({
                 <p className="text-gray-500">{t('embed.noProjects')}</p>
               </div>
             ) : (
-              <div className={`grid ${
-                compactMode 
-                  ? 'grid-cols-1 md:grid-cols-2 gap-4' 
+              <div className={`grid ${compactMode
+                  ? 'grid-cols-1 md:grid-cols-2 gap-4'
                   : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-              }`}>
+                }`}>
                 {projects.map((project) => (
                   <Card key={project.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white rounded-2xl">
                     <CardContent className="p-0">
@@ -288,9 +285,9 @@ const EmbedProjectsPage = ({
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600" />
                         )}
-                        
+
                         {/* Badges - hide in compact mode */}
-                        {!compactMode && (
+                        {/*   {!compactMode && (
                           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                             <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-gray-700">
                               {t('gallery.installment0')}
@@ -307,7 +304,7 @@ const EmbedProjectsPage = ({
                               <div className="text-xs opacity-80">{t('gallery.salesStart')}</div>
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
 
                       {/* Project info */}
@@ -315,14 +312,14 @@ const EmbedProjectsPage = ({
                         <h3 className={`${compactMode ? 'text-lg' : 'text-xl'} font-bold text-gray-900 mb-2 group-hover:text-[#1E1E1E] transition-colors`}>
                           {project.name}
                         </h3>
-                        
+
                         <div className="text-gray-600 text-sm mb-4">
                           {project.min_price !== null ? (
                             <>
                               {t('gallery.from')} {formatPriceWithCurrency(project.min_price, project.currency)}
                             </>
                           ) : (
-                            <span className="text-gray-400">{t('gallery.priceOnRequest')}</span>
+                            <span className="text-gray-400">{t('common.priceOnRequest')}</span>
                           )}
                         </div>
 
@@ -335,9 +332,8 @@ const EmbedProjectsPage = ({
 
                         <Button
                           onClick={() => handleViewProject(project)}
-                          className={`w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ${
-                            compactMode ? 'py-2 text-sm' : 'py-3'
-                          } rounded-lg font-medium`}
+                          className={`w-full bg-[#1E1E1E] hover:bg-[#1E1E1E]/90 text-white ${compactMode ? 'py-2 text-sm' : 'py-3'
+                            } rounded-lg font-medium`}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           {t('embed.viewApartments')}
