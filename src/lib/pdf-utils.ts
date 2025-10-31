@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+
 import { Apartment } from '@/types/apartment';
 
 
@@ -54,6 +54,8 @@ const isMainPdf = true;
 
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
   const { apartment, pdfUrl, pdf_main } = options;
+
+  const { PDFDocument } = await import('pdf-lib');
 
   try {
     // Загружаем PDF из API

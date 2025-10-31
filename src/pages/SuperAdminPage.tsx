@@ -6,7 +6,7 @@ import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { UsersManagement } from '@/components/superadmin/UsersManagement';
 import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';
 import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
-const Statistics = lazy(() => import('@/components/superadmin/Statistics').then(m => ({ default: m.Statistics })));
+
 import { SystemSettings } from '@/components/superadmin/SystemSettings';
 import { PartnersManagement } from '@/components/superadmin/PartnersManagement';
 import { PartnerPayoutsManagement } from '@/components/superadmin/PartnerPayoutsManagement';
@@ -43,12 +43,6 @@ const SuperAdminPage = () => {
         return <SubscriptionsManagement />;
       case 'projects':
         return <ProjectsManagement />;
-      case 'stats':
-        return (
-          <Suspense fallback={<div className="flex items-center justify-center p-6">Загрузка статистики...</div>}>
-            <Statistics />
-          </Suspense>
-        );
       case 'partners':
         return <PartnersManagement />;
       case 'partner-payouts':
