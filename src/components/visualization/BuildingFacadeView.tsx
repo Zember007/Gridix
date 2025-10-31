@@ -445,7 +445,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         <Button
         onClick={() => {handleFloorClick(Number);}}
         variant="outline"  className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
-          Show
+          {t('customFields.show')}
         </Button>
       </div>
     );
