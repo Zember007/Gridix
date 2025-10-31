@@ -120,7 +120,7 @@ export default defineConfig(({ mode }) => {
               "@radix-ui/react-toast",
             ],
             "vendor-maps": ["leaflet", "react-leaflet"],
-            "vendor-pdf": ["jspdf", "pdf-lib", "html2canvas"],
+            "vendor-pdf": ["pdf-lib"],
             "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
             "vendor-supabase": ["@supabase/supabase-js"],
             "vendor-animation": ["framer-motion"],
