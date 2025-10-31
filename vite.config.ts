@@ -31,19 +31,19 @@ export default defineConfig(({ mode }) => {
       mode === "development" && componentTagger(),
       ...(mode === "production"
         ? [
-            viteCompression({
-              algorithm: "gzip",
-              ext: ".gz",
-              threshold: 10240,
-              deleteOriginFile: false,
-            }),
-            viteCompression({
-              algorithm: "brotliCompress",
-              ext: ".br",
-              threshold: 10240,
-              deleteOriginFile: false,
-            }),
-          ]
+          viteCompression({
+            algorithm: "gzip",
+            ext: ".gz",
+            threshold: 10240,
+            deleteOriginFile: false,
+          }),
+          viteCompression({
+            algorithm: "brotliCompress",
+            ext: ".br",
+            threshold: 10240,
+            deleteOriginFile: false,
+          }),
+        ]
         : []),
     ].filter(Boolean),
     resolve: {
@@ -110,21 +110,17 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       rollupOptions: {
         output: {
-          manualChunks: {
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
-            "vendor-ui": [
-              "@radix-ui/react-dialog",
-              "@radix-ui/react-dropdown-menu",
-              "@radix-ui/react-select",
-              "@radix-ui/react-tooltip",
-              "@radix-ui/react-toast",
-            ],
-            "vendor-maps": ["leaflet", "react-leaflet"],
-            "vendor-pdf": ["pdf-lib"],
-            "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-            "vendor-supabase": ["@supabase/supabase-js"],
-            "vendor-animation": ["framer-motion"],
-            "vendor-utils": ["xlsx", "browser-image-compression"],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react')) return 'vendor-react';
+              if (id.includes('jspdf') || id.includes('pdf-lib') || id.includes('html2canvas')) return 'vendor-pdf';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('@radix-ui')) return 'vendor-ui';
+              if (id.includes('framer-motion')) return 'vendor-animation';
+              if (id.includes('xlsx') || id.includes('browser-image-compression')) return 'vendor-utils';
+              if (id.includes('react-hook-form') || id.includes('zod')) return 'vendor-forms';
+              if (id.includes('@supabase')) return 'vendor-supabase';
+            }
           },
         },
       },
