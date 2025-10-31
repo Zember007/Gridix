@@ -19,8 +19,8 @@ interface Project {
 }
 
 const AdminWidgets = () => {
-  const [selectedProject, setSelectedProject] = useState<string>('all');
-  const [defaultLanguage, setDefaultLanguage] = useState<Language>('ru');
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [defaultLanguage, setDefaultLanguage] = useState<Language>('en');
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -33,13 +33,19 @@ const AdminWidgets = () => {
   const { t } = useLanguage();
   const { projects, loading, error } = useUserProjects(user?.id);
 
+  useEffect(() => {
+    if (projects.length > 0) {
+      setSelectedProject(projects?.[0]?.id || '');
+    }
+  }, [projects]);
+
   const generateEmbedCode = () => {
     const origin = window.location.origin;
     const scriptUrl = `${origin}/widget.js`;
 
     const params: Record<string, string> = { lang: defaultLanguage } as Record<string, string>;
     if (selectedProject !== 'all') params.projectId = selectedProject;
-    if (selectedProject === 'all' && user?.id) params.userId = user.id;
+/*     if (selectedProject === 'all' && user?.id) params.userId = user.id; */
 
     const attrs = Object.entries(params)
       .map(([k, v]) => `${k}: "${v}"`)
@@ -102,10 +108,11 @@ const AdminWidgets = () => {
               <Label htmlFor="project-select">{t('adminWidgets.selectProject')}</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder={'-'} />
                 </SelectTrigger>
+                
                 <SelectContent>
-                  <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem>
+                  {/* <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem> */}
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -202,7 +209,7 @@ const AdminWidgets = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="space-y-2">
+         {/*    <div className="space-y-2">
               <Label>{t('adminWidgets.allProjects')}</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -218,7 +225,7 @@ const AdminWidgets = () => {
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </div> */}
 
           {selectedProject !== 'all' && (
             <div className="space-y-2">
