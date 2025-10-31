@@ -116,12 +116,7 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (id.includes('node_modules')) {
               if (id.includes('react')) return 'vendor-react';
-              if (id.includes('jspdf') || id.includes('pdf-lib') || id.includes('html2canvas')) return 'vendor-pdf';
-              if (id.includes('recharts')) return 'vendor-charts';
               if (id.includes('@radix-ui')) return 'vendor-ui';
-              if (id.includes('framer-motion')) return 'vendor-animation';
-              if (id.includes('xlsx') || id.includes('browser-image-compression')) return 'vendor-utils';
-              if (id.includes('react-hook-form') || id.includes('zod')) return 'vendor-forms';
               if (id.includes('@supabase')) return 'vendor-supabase';
             }
           },
