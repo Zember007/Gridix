@@ -62,7 +62,7 @@ export const LayoutGallery = ({
   return (
     <div className="container mx-auto px-4 md:px-6 py-8">
       <div className="space-y-6">
-        <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h3>
+        <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>{t('project.layouts')}</h2>
 
         {/* Layout type filters */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">

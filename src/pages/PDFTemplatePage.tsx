@@ -320,9 +320,9 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                 <div className="bg-gray-50 rounded-[40px] p-2 px-8">
                     <div className="flex justify-between gap-8 items-center">
                         <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
                                 {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m²
-                            </h3>
+                            </h2>
                             <p className="text-gray-600">
                                 {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
                                     ? `Object ${numberVisible ? `№ ${apartment.apartment_number}` : ''}`

@@ -8,7 +8,6 @@ import { PublicRoutes, AdminRoutes, EmbedRoutes, DomainRoutes } from "@/routes";
 
 // Lazy load pages
 const NotFound = lazy(() => import("./pages/NotFound"));
-const WidgetPreviewPage = lazy(() => import("./pages/WidgetPreviewPage"));
 const PartnersPage = lazy(() => import("./pages/PartnersPage"));
 const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
 
@@ -30,17 +29,7 @@ function App() {
             <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
             <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
 
-            {/* Widget preview route */}
-            <Route 
-              path="/widget/preview" 
-              element={
-                <EmbedProviders>
-                  <Suspense fallback={<PageLoader />}>
-                    <WidgetPreviewPage />
-                  </Suspense>
-                </EmbedProviders>
-              } 
-            />
+       
 
             {/* Embed роуты */}
             <Route

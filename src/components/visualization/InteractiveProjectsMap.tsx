@@ -125,7 +125,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
             >
               <Popup>
                 <div className="p-2 min-w-[200px]">
-                  <h3 className="font-bold text-lg mb-2">{project.name}</h3>
+                  <h2 className="font-bold text-lg mb-2">{project.name}</h2>
 
                   {project.building_image_url && (
                     <img

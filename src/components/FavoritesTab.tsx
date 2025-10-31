@@ -82,9 +82,9 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Heart className="h-16 w-16 text-gray-300 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
           {t('favorites.empty.title')}
-        </h3>
+        </h2>
         <p className="text-gray-500 max-w-sm">
           {t('favorites.empty.description')}
         </p>
@@ -95,9 +95,9 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-gray-900">
           {t('favorites.title') || 'Избранные квартиры'} ({projectFavorites.length})
-        </h3>
+        </h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
