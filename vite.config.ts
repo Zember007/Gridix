@@ -119,7 +119,6 @@ export default defineConfig(({ mode }) => {
               "@radix-ui/react-tooltip",
               "@radix-ui/react-toast",
             ],
-            "vendor-charts": ["recharts"],
             "vendor-maps": ["leaflet", "react-leaflet"],
             "vendor-pdf": ["jspdf", "pdf-lib", "html2canvas"],
             "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
