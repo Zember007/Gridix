@@ -110,18 +110,7 @@ export default defineConfig(({ mode }) => {
           pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
         },
       },
-      sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('react')) return 'vendor-react';
-              if (id.includes('@radix-ui')) return 'vendor-ui';
-              if (id.includes('@supabase')) return 'vendor-supabase';
-            }
-          },
-        },
-      },
+      sourcemap: false
     },
   };
 });
