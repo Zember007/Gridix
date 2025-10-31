@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { useLockBodyScroll } from '@/hooks/use-lockscroll';
 import { FieldSetting } from '@/hooks/useFields';
+import { Button } from '../ui/button';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -424,7 +425,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
     return (
       <div
-        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:min-w-[100px] md:h-[100px] min-w-[80px] h-[80px]"
+        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:min-w-[100px] md:h-[100px] min-w-[80px] h-[110px]"
         style={{
           left: adjustedX,
           top: adjustedY,
@@ -432,15 +433,20 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         onClick={(e) => e.stopPropagation()}
       >
         {facadeSettings?.display?.showNumbers && (
-          <div className="text-center flex items-center justify-center gap-[7px]">
+          <div className="text-center flex items-center justify-center gap-[7px] md:p-0 p-1">
             {tSafe('project.floor')} <span className='font-bold'>{Number}</span>
           </div>
         )}
 
-        <div className="flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
+        <div className= "md:mx-0 mx-1 flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
           <div className="md:text-[32px] text-[20px] leading-[1.1]">{stats.available}</div>
           {tSafe('project.available')}
         </div>
+        <Button
+        onClick={() => {handleFloorClick(Number);}}
+        variant="outline"  className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
+          Show
+        </Button>
       </div>
     );
   };
