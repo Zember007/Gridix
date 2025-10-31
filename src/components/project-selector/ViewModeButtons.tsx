@@ -16,9 +16,10 @@ interface ViewModeButtonsProps {
   projectType?: 'building' | 'object' | null;
   themeColor?: string;
   mapVisible?: boolean
+  isWidget?: boolean;
 }
 
-export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
 
   const buttonClass = (mode: ViewMode) =>
@@ -29,6 +30,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
 
   const urlParams = new URLSearchParams(window.location.search);
   const langParam = urlParams.get('lang');
+
 
   return (
     <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
@@ -93,7 +95,7 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
           </span>
         )}
       </Button>
-      {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
+      {isWidget ?
         null
         : <LanguageToggle />}
     </div>

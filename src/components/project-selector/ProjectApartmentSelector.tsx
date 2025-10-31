@@ -530,6 +530,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
             <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
             <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
               <ViewModeButtons
+                isWidget={isWidget}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
