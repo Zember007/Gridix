@@ -13,8 +13,8 @@
   "minimum": "მინიმუმი",
   "month": "თვე",
   "monthlyPayment": "ყოველთვიური გადახდა",
-  "months": "თვე",
-  "period": "და",
+  "months": "თვეები",
+  "period": "ვადით",
   "perMonth": "თვე",
-  "remainingAmount": "დასარჩენი თანხა"
+  "remainingAmount": "დარჩენილი თანხა"
 }
