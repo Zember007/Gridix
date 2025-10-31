@@ -1,23 +1,58 @@
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '../ui/carousel';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { Apartment } from '@/types/apartment';
 
 interface FloorSelectorProps {
   selectedFloorForPlan: number | null;
   setSelectedFloorForPlan: (floor: number) => void;
   getUniqueFloors: () => number[];
   themeColor: string;
+  apartments: Apartment[];
+  showOnlyAvailable: boolean;
+  filteredApartments: Apartment[];
 }
 
 export const FloorSelector = ({
   selectedFloorForPlan,
   setSelectedFloorForPlan,
   getUniqueFloors,
-  themeColor
+  themeColor,
+  apartments,
+  showOnlyAvailable,
+  filteredApartments
 }: FloorSelectorProps) => {
   const isMobile = useIsMobile();
 
-  const floors = getUniqueFloors();
+  // Filter floors based on:
+  // 1. If showOnlyAvailable is true, only show floors with at least one available apartment (from filteredApartments)
+  // 2. Always show only floors with at least one apartment that has a polygon
+  const floors = useMemo(() => {
+    const allFloors = getUniqueFloors();
+    
+    return allFloors.filter(floor => {
+      // Check if there's at least one apartment with polygon on this floor (from all apartments)
+      const hasPolygon = apartments.some(apt => 
+        apt.floor_number === floor && 
+        apt.polygon && 
+        Array.isArray(apt.polygon) && 
+        apt.polygon.length > 0
+      );
+      
+      if (!hasPolygon) return false;
+      
+      // If showOnlyAvailable is true, check if there's at least one available apartment on this floor (from filtered apartments)
+      if (showOnlyAvailable) {
+        const hasAvailable = filteredApartments.some(apt => 
+          apt.floor_number === floor && 
+          apt.status === 'available'
+        );
+        return hasAvailable;
+      }
+      
+      return true;
+    });
+  }, [getUniqueFloors, apartments, showOnlyAvailable, filteredApartments]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 

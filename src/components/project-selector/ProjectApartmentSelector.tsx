@@ -696,6 +696,8 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         filtersRef={filtersRef}
                         externalImageLoaded={buildingImageLoaded}
                         externalImageNaturalSize={buildingImageNaturalSize}
+                        showOnlyAvailable={filters.showOnlyAvailable}
+                        visibleFields={fieldSettings.filter(field => field.is_visible)}
                       />
 
                       {/* Layout gallery below facade when not expanded - hide for project_type = object */}
@@ -743,6 +745,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                             setSelectedFloorForPlan={setSelectedFloorForPlan}
                             getUniqueFloors={filters.getUniqueFloors}
                             themeColor={getThemeColor()}
+                            apartments={apartments}
+                            showOnlyAvailable={filters.showOnlyAvailable}
+                            filteredApartments={filters.filteredApartments}
                           />
                         </Suspense>
                       </div>

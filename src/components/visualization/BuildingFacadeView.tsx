@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { useLockBodyScroll } from '@/hooks/use-lockscroll';
+import { FieldSetting } from '@/hooks/useFields';
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -24,6 +25,8 @@ interface BuildingFacadeViewProps {
   filtersRef?: React.RefObject<HTMLDivElement>;
   externalImageLoaded?: boolean;
   externalImageNaturalSize?: { width: number; height: number };
+  showOnlyAvailable?: boolean;
+  visibleFields: FieldSetting[];
 }
 
 interface BuildingFloor {
@@ -35,7 +38,7 @@ interface BuildingFloor {
 
 const COLLAPSED_HEIGHT = 288;
 
-const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef, externalImageLoaded, externalImageNaturalSize }: BuildingFacadeViewProps) => {
+const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef, externalImageLoaded, externalImageNaturalSize, showOnlyAvailable = false, visibleFields }: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,6 +232,23 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     loadSettings();
   }, [projectId]);
 
+  // Filter floors based on showOnlyAvailable: only show floors with at least one available apartment
+  const visibleFloors = useMemo(() => {
+    if (!showOnlyAvailable) {
+      return buildingFloors;
+    }
+    
+    // Get unique floor numbers that have at least one available apartment
+    const floorsWithAvailable = new Set(
+      apartments
+        .filter(apt => apt.status === 'available')
+        .map(apt => apt.floor_number)
+    );
+    
+    // Filter buildingFloors to only include floors with available apartments
+    return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
+  }, [buildingFloors, apartments, showOnlyAvailable]);
+
   useEffect(() => {
     if (!imageLoaded) return;
     const handleResize = () => {
@@ -277,13 +297,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [filtersRef, imageLoaded]);
 
   useEffect(() => {
-    if (imageLoaded && buildingFloors.length > 0) {
+    if (imageLoaded && visibleFloors.length > 0) {
       updateImageDimensionsRef.current?.();
       if (isExpanded && isMobile) {
-        setHoveredFloor(buildingFloors[0]?.floor_number ?? null);
+        setHoveredFloor(visibleFloors[0]?.floor_number ?? null);
       }
     }
-  }, [isExpanded, imageLoaded, buildingFloors.length]);
+  }, [isExpanded, imageLoaded, visibleFloors, isMobile]);
 
 
 
@@ -384,7 +404,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         return null;
       }
 
-      // Use ApartmentPopup for objects
       return (
         <ApartmentPopup
           apartment={apartment}
@@ -392,8 +411,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           settings={{
             showNumbers: facadeSettings?.display?.showNumbers ?? true,
             showTooltip: facadeSettings?.display?.showTooltip ?? false,
-            showArea: true,
-            showPrice: true,
+            showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+            showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
           }}
           currency={project.currency || null}
         />
@@ -659,7 +678,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 className="block w-full h-full transition-all duration-500"
                 draggable={false}
               />
-              {isExpanded && buildingFloors.length > 0 && imgDimensions.width > 0 && (
+              {isExpanded && visibleFloors.length > 0 && imgDimensions.width > 0 && (
                 <svg
                   className="absolute inset-0 z-20"
                   style={{ width: '100%', height: '100%' }}
@@ -667,7 +686,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   preserveAspectRatio="none"
                 >
                   <rect x="0" y="0" width="100" height="100" fill="none" />
-                  {buildingFloors.map((floor) => {
+                  {visibleFloors.map((floor) => {
                     if (!floor.polygon || floor.polygon.length < 3) return null;
                     const points = floor.polygon
                       .map(point => `${point.x},${point.y}`)
@@ -775,7 +794,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
       </div>
       {
-        isMobile && isExpanded && buildingFloors.length > 0 && (
+        isMobile && isExpanded && visibleFloors.length > 0 && (
           <div className="flex justify-center">
             <div
               className="flex items-center  gap-3 bg-white/90 backdrop-blur rounded-full shadow-lg px-3 py-2 mt-4 mx-auto"
@@ -784,8 +803,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               <button
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
-                  if (buildingFloors.length === 0) return;
-                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3);
+                  if (visibleFloors.length === 0) return;
+                  const sorted = [...visibleFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3);
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const prevIdx = idx > 0 ? idx - 1 : sorted.length - 1;
                   const newFloor = sorted[prevIdx]?.floor_number;
@@ -802,8 +821,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               <button
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
-                  if (buildingFloors.length === 0) return;
-                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number);
+                  if (visibleFloors.length === 0) return;
+                  const sorted = [...visibleFloors].sort((a, b) => a.floor_number - b.floor_number);
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const nextIdx = idx >= 0 && idx < sorted.length - 1 ? idx + 1 : 0;
                   const newFloor = sorted[nextIdx]?.floor_number;
