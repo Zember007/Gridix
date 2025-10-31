@@ -328,7 +328,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-6 text-sm">
+        <div className="mt-4 flex items-center gap-6 md:text-sm text-[10px] flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-60"
               style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
