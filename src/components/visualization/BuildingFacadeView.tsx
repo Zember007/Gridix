@@ -618,16 +618,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
         {imageLoaded && project.building_image_url && (
           <>
-            <div
-              className="absolute inset-0 w-full h-full"
-              style={{
-                backgroundImage: `url(${project.building_image_url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                filter: 'blur(8px)',
-                transform: 'scale(1.1)', // Небольшое увеличение для избежания белых краев
-              }}
+  
+            <img
+              src={project.building_image_url}
+              alt="Building"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
+              fetchPriority="high"
             />
             {/* Затемнение для лучшей читаемости */}
             <div className="absolute inset-0 bg-black/20" />
