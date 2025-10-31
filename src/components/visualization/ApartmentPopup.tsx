@@ -13,8 +13,8 @@ interface ApartmentPopupProps {
     showArea: boolean;
     showPrice: boolean;
   };
-  currency?:string | null;
-  selectedCurrency?: string; 
+  currency?: string | null;
+  selectedCurrency?: string;
 }
 
 const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
@@ -30,12 +30,12 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
 
   if (!settings.showTooltip) return null;
 
-  const popupWidth = isMobile ? 200 : 250;
+  const popupWidth = 150;
   const popupHeight = 120;
   const margin = 20;
 
   // Calculate position to avoid screen edges
-  let adjustedX = position.x +  10;
+  let adjustedX = position.x + 10;
   let adjustedY = position.y - popupHeight / 2 - 30;
 
   // Adjust if popup goes off screen
@@ -61,11 +61,11 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
 
-      <div className="space-y-1 md:space-y-2">
+      <div className="space-y-1">
         {/* Apartment number */}
         {settings.showNumbers && (
           <div className="md:text-lg text-sm font-bold text-gray-900">
-            {t('project.apartmentNumber')}: {apartment.apartment_number}
+            № {apartment.apartment_number}
           </div>
         )}
 
@@ -91,11 +91,10 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
         {/* Status */}
         <div className="text-sm">
           <span className="font-medium">{t('project.status')}: </span>
-          <span className={`px-2 py-1 rounded text-xs ${
-            apartment.status === 'available' ? 'bg-green-100 text-green-800' :
-            apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
-          }`}>
+          <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
+              apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+            }`}>
             {t(`project.${apartment.status}`)}
           </span>
         </div>

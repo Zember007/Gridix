@@ -1,9 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
 import { useEffect } from "react";
 
 interface ProjectWidgetPageProps {
@@ -50,18 +48,12 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
     );
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const langParam = urlParams.get('lang');
+ 
 
 
 
   return (
     <div className="min-h-screen bg-background">
-      {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
-        null
-        : <LanguageToggle  
-          classNameButton="fixed top-4 right-4 z-50"
-        />}
       <ProjectApartmentSelector projectId={projectIdentifier} />
     </div>
   );

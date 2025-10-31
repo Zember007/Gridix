@@ -1,6 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Building2, Grid, List, MapPin, Heart } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
+import { LanguageToggle } from "@/components/LanguageToggle";
+
+
 
 type ViewMode = 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites';
 
@@ -22,6 +26,9 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
 
   const buttonStyle = (mode: ViewMode) =>
     viewMode === mode ? { backgroundColor: themeColor } : {};
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const langParam = urlParams.get('lang');
 
   return (
     <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
@@ -86,6 +93,9 @@ export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobil
           </span>
         )}
       </Button>
+      {(langParam && (langParam as Language) in LANGUAGE_CONFIG) ?
+        null
+        : <LanguageToggle />}
     </div>
   );
 };

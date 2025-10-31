@@ -3,7 +3,6 @@ import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { useProjectByDomain } from "@/hooks/useProjectByDomain";
 import { Loader2, AlertTriangle } from "lucide-react";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -59,9 +58,6 @@ export default function DomainProjectPage() {
   // If project found via custom domain, render the project directly
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex justify-end p-4">
-        <LanguageToggle />
-      </div>
       <ProjectApartmentSelector projectId={project.id} />
     </div>
   );
