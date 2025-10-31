@@ -477,10 +477,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Loading indicator - only show during initial load */}
+    <div className="min-h-screen bg-white flex flex-col relative">
       {isInitialLoading && (
-        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="absolute z-50 inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
           <Loader
             color={getThemeColor()}
             size="lg" className="mx-auto" />
