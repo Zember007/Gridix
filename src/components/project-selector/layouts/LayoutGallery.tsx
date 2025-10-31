@@ -193,7 +193,7 @@ export const LayoutGallery = ({
               const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
               const totalCount = apartmentGroup.length;
 
-              if(!representativeApt) return null;
+              if (!representativeApt) return null;
 
               const isCommercial = representativeApt.type === 'commercial';
               const isParking = representativeApt.type === 'parking';
@@ -218,6 +218,7 @@ export const LayoutGallery = ({
                       if (first) {
                         return (
                           <img
+                            loading="lazy"
                             src={first.image_url}
                             alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
                             className="w-full h-full object-cover"
@@ -269,7 +270,7 @@ export const LayoutGallery = ({
                         visibleFields.find(field => field.field_name === 'price')?.is_visible &&
                         (() => {
                           const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
-                          if (prices.length > 0 ) {
+                          if (prices.length > 0) {
                             const minPrice = Math.min(...prices as number[]);
                             const maxPrice = Math.max(...prices as number[]);
                             return (
