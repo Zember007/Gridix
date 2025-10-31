@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -29,16 +29,14 @@ interface ProjectApartmentSelectorProps {
   isWidget?: boolean;
 }
 
+// Lazy load components at module level (outside component)
+const ApartmentDetailsPage = lazy(() => import('@/pages/ApartmentDetailsPage'))
+const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'))
+const FavoritesTab = lazy(() => import('../FavoritesTab'))
+const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
+const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
+
 const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartmentSelectorProps) => {
-
-
-  const ApartmentDetailsPage = lazy(() => import('@/pages/ApartmentDetailsPage'))
-
-
-  const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'))
-  const FavoritesTab = lazy(() => import('../FavoritesTab'))
-  const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
-  const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
 
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -467,12 +465,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   // If widget mode and apartment is selected, show apartment details
   if (isWidget && isApartmentModalOpen && selectedApartment) {
     return (
-      <ApartmentDetailsPage
-        onClose={() => {
-          setIsApartmentModalOpen(false);
-          setSelectedApartment(null);
-        }}
-        useId={true} apartmentIdProp={selectedApartment.id} projectIdProp={projectId} />
+      <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+        <ApartmentDetailsPage
+          onClose={() => {
+            setIsApartmentModalOpen(false);
+            setSelectedApartment(null);
+          }}
+          useId={true} apartmentIdProp={selectedApartment.id} projectIdProp={projectId} />
+      </Suspense>
     );
   }
 
@@ -652,39 +652,45 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       {showContent ? (
         <>
           {viewMode === 'list' ? (
-            <ListView
-              filteredApartments={filters.filteredApartments}
-              listViewMode={listViewMode}
-              setListViewMode={setListViewMode}
-              selectedType={filters.selectedType}
-              setSelectedType={filters.setSelectedType}
-              openApartmentDetails={openApartmentDetails}
-              preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-              getVisibleFields={getVisibleFields}
-              getCustomFieldValue={getCustomFieldValue}
-              formatFieldValue={formatFieldValue}
-              getFieldLabel={getFieldLabel}
-              groupApartmentsByFloor={groupApartmentsByFloor}
-              convertPrice={filters.convertPrice}
-              formatPrice={formatPrice}
-              project={project}
-              selectedCurrency={filters.selectedCurrency}
-              isMobile={isMobile}
-              themeColor={getThemeColor()}
-            />
+            <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+              <ListView
+                filteredApartments={filters.filteredApartments}
+                listViewMode={listViewMode}
+                setListViewMode={setListViewMode}
+                selectedType={filters.selectedType}
+                setSelectedType={filters.setSelectedType}
+                openApartmentDetails={openApartmentDetails}
+                preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                getVisibleFields={getVisibleFields}
+                getCustomFieldValue={getCustomFieldValue}
+                formatFieldValue={formatFieldValue}
+                getFieldLabel={getFieldLabel}
+                groupApartmentsByFloor={groupApartmentsByFloor}
+                convertPrice={filters.convertPrice}
+                formatPrice={formatPrice}
+                project={project}
+                selectedCurrency={filters.selectedCurrency}
+                isMobile={isMobile}
+                themeColor={getThemeColor()}
+              />
+            </Suspense>
           ) : viewMode === 'map' ? (
-            <InteractiveProjectsMap
-              project={project}
-              onProjectSelect={() => {
-                setViewMode('list');
-              }}
-            />
+            <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+              <InteractiveProjectsMap
+                project={project}
+                onProjectSelect={() => {
+                  setViewMode('list');
+                }}
+              />
+            </Suspense>
           ) : viewMode === 'favorites' ? (
             <div className="container mx-auto px-4 md:px-6 py-8 grow">
-              <FavoritesTab
-                fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
-                handleViewApartment={openApartmentDetails}
-                projectId={project.id} projectCurrency={project?.currency} />
+              <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                <FavoritesTab
+                  fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
+                  handleViewApartment={openApartmentDetails}
+                  projectId={project.id} projectCurrency={project?.currency} />
+              </Suspense>
             </div>
           ) : (
             // Facade and Floor Plan views with hero section
@@ -749,12 +755,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         </div>
 
                         {/* Floor selector sidebar */}
-                        <FloorSelector
-                          selectedFloorForPlan={selectedFloorForPlan}
-                          setSelectedFloorForPlan={setSelectedFloorForPlan}
-                          getUniqueFloors={filters.getUniqueFloors}
-                          themeColor={getThemeColor()}
-                        />
+                        <Suspense fallback={<Loader color={getThemeColor()} size="sm" className="mx-auto" />}>
+                          <FloorSelector
+                            selectedFloorForPlan={selectedFloorForPlan}
+                            setSelectedFloorForPlan={setSelectedFloorForPlan}
+                            getUniqueFloors={filters.getUniqueFloors}
+                            themeColor={getThemeColor()}
+                          />
+                        </Suspense>
                       </div>
                     </div>
                   )}
