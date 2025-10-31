@@ -279,7 +279,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   useEffect(() => {
     if (imageLoaded && buildingFloors.length > 0) {
       updateImageDimensionsRef.current?.();
-      if(isExpanded && isMobile) {
+      if (isExpanded && isMobile) {
         setHoveredFloor(buildingFloors[0]?.floor_number ?? null);
       }
     }
@@ -588,7 +588,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   if (loading) {
     return (
-      <div       
+      <div
         className="w-full h-full flex items-center justify-center min-h-[200px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
       </div>
@@ -766,6 +766,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
           <button
             className={`absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-3 hover:scale-105'
               }`}
+            aria-label={'Close'}
             onClick={() => setIsExpanded(false)}
             style={{ touchAction: 'manipulation' }}
           >
@@ -777,7 +778,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
       </div>
       {
-        isMobile && isExpanded && buildingFloors.length > 0  && (
+        isMobile && isExpanded && buildingFloors.length > 0 && (
           <div className="flex justify-center">
             <div
               className="flex items-center  gap-3 bg-white/90 backdrop-blur rounded-full shadow-lg px-3 py-2 mt-4 mx-auto"
@@ -787,7 +788,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (buildingFloors.length === 0) return;
-                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3 );
+                  const sorted = [...buildingFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3);
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const prevIdx = idx > 0 ? idx - 1 : sorted.length - 1;
                   const newFloor = sorted[prevIdx]?.floor_number;
