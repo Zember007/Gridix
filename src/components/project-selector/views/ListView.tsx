@@ -329,7 +329,7 @@ export const ListView = ({
                           <div className="flex items-center h-[89px]">
                             {/* Apartment Image */}
                             <div className="flex-shrink-0 ml-[57px]">
-                              <div className="w-[31px] h-[64px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                              <div className="w-[60px] h-[64px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                 {(() => {
                                   const layoutKey = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
                                   const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];

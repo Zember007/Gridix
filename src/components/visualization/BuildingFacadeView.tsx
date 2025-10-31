@@ -588,11 +588,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
   if (loading) {
     return (
-      <div
-        style={{
-          height: containerHeight,
-        }}
-        className="w-full h-full flex items-center justify-center">
+      <div       
+        className="w-full h-full flex items-center justify-center min-h-[200px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
       </div>
     );
@@ -610,7 +607,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     <>
       <div
         ref={containerRef}
-        className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden rounded-lg ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+        className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden rounded-lg min-h-[200px] ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
         style={{
           height: containerHeight,
           width: isExpanded ? '100%' : '100%',
