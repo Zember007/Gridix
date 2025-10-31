@@ -374,9 +374,9 @@ async function init(options: InitOptions = {}) {
   //  const lazyValue = options.lazy ?? (qp.get('lazy') === 'true');
   //  const loadOnInteractionValue = options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true');
   
-  const delayValue = undefined;
-  const lazyValue = false;
-  const loadOnInteractionValue = true;
+  const delayValue = 500;
+  const lazyValue = true;
+  const loadOnInteractionValue = false;
 
   const intersectionRootMargin = options.intersectionRootMargin ?? qp.get('intersectionRootMargin') ?? '100px';
 
