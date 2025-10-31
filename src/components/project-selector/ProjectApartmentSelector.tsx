@@ -575,8 +575,6 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           {/* Desktop Filters */}
           {!isMobile && viewMode === 'list' && (
             <div className="space-y-4">
-              {/* Compact filters row */}
-              <div className="flex items-center justify-between">
                 <CompactFilters
                   {...filters}
                   getUniqueRoomCounts={filters.getUniqueRoomCounts}
@@ -584,32 +582,17 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   project={project}
                   viewMode={viewMode}
                   themeColor={getThemeColor()}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
+                  isDesktopFiltersExpanded={isDesktopFiltersExpanded}
+                  setIsDesktopFiltersExpanded={() => {
                     if (!isDesktopFiltersExpanded) {
                       setStagedPriceRange([...filters.priceRange]);
                       setStagedAreaRange([...filters.areaRange]);
                     }
                     setIsDesktopFiltersExpanded(prev => !prev);
                   }}
-                  className="ml-2"
-                >
-                  {isDesktopFiltersExpanded ? (
-                    <>
-                      {language === 'ru' ? 'Скрыть расширенные фильтры' : 'Hide advanced filters'}
-                      <ChevronUp className="h-4 w-4 ml-2" />
-                    </>
-                  ) : (
-                    <>
-                      {language === 'ru' ? 'Расширенные фильтры' : 'Advanced filters'}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-              </div>
+                />
+               
+           
 
               {/* Expanded filters - animated */}
               <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
