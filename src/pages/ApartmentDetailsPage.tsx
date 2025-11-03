@@ -495,7 +495,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             )}
 
             {/* Main apartment image */}
-            <div className="h-70  relative overflow-hidden ">
+            <div className="min-h-70  relative overflow-hidden ">
               {photosLoading ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <Loader size="lg" />
