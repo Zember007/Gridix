@@ -166,7 +166,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           type: 'apartment' as const
         }));
 
-        const combined: CombinedPhoto[] = [...layoutPhotos, ...apartmentPhotos];
+        const combined: CombinedPhoto[] = [...apartmentPhotos, ...layoutPhotos];
         setPhotos(combined);
       } catch (err) {
         console.error('Error loading photos in parent:', err);
@@ -824,7 +824,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                                 }
                               </div>
 
-                              {project?.installment_enabled && apartment.price && (
+                              {project?.installment_enabled && apartment.price && priceVisible && (
                                 <div className="text-xl font-light text-gray-700 mb-2 font-poppins">
                                   {t('project.from')} {formatPriceWithCurrency(
                                     convertPrice(
