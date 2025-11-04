@@ -14,10 +14,10 @@ const HeroHeader = () => {
     const [isScrolled, setIsScrolled] = React.useState(false)
     
     const menuItems = [
-        { name: t('nav.features'), href: '#features' },
+        { name: t('nav.features'), href: `/${language}/#features` },
         { name: t('nav.pricing'), href: `/${language}/pricing` },
         { name: t('nav.partnerProgram'), href: `/${language}/partner-program` },
-        { name: t('nav.demo'), href: '#demo' },
+        { name: t('nav.demo'), href: `/${language}/#demo` },
         { name: t('nav.contacts'), href: `/${language}/contacts` }
     ]
 
@@ -29,7 +29,6 @@ const HeroHeader = () => {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
-    const isMobile = useIsMobile()
     return (
         <header>
             <nav

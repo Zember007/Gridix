@@ -101,6 +101,13 @@ const Index = () => {
       }
     };
 
+   setTimeout(() => {
+    const elementId = window.location.hash.substring(1);
+    if (elementId) {
+      smoothScrollTo(elementId);
+    }
+   }, 100);
+
     document.addEventListener('click', handleAnchorClick);
     return () => {
       document.removeEventListener('click', handleAnchorClick);
