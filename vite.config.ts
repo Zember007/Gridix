@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
   if (isWidgetBuild) console.log(`📦 Build version: ${buildVersion}`);
 
   const baseConfig = {
+    base: '/', // Ensure assets load from root domain, not relative to current path
     server: {
       host: "::",
       port: 8080,
