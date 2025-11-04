@@ -11,6 +11,9 @@ import Footer from '@/components/index/footer';
 import { HeroSection } from '@/components/blocks/hero-section';
 import { Timeline } from '@/components/ui/timeline';
 // import { WorldMap } from '@/components/ui/map';
+import widgetVideo from '@/assets/video/widget.mp4';
+import importVideo from '@/assets/video/import.mp4';
+import crmVideo from '@/assets/video/crm.mp4';
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
@@ -69,9 +72,12 @@ const Index = () => {
             {t('landing.widgetsDesc')}
           </p>
           <video
-            src=""
-            controls
-            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+            src={widgetVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
       ),
@@ -84,9 +90,12 @@ const Index = () => {
             {t('landing.dataImportDesc')}
           </p>
           <video
-            src=""
-            controls
-            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+            src={importVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
       ),
@@ -99,9 +108,12 @@ const Index = () => {
             {t('landing.crmIntegrationDesc')}
           </p>
           <video
-            src=""
-            controls
-            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full bg-neutral-200 dark:bg-neutral-800 shadow"
+            src={crmVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
       ),
