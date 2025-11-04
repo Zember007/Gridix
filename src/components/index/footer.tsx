@@ -51,7 +51,7 @@ const Footer = () => {
             </p>
             <div className="text-sm text-gray-400">
               <p><strong>{t('landing.company')}:</strong> Gridix</p>
-              <p><strong>{t('landing.address')}:</strong> Грузия, Батуми, ул. Леселидзе 3</p>
+              <p><strong>{t('landing.address')}:</strong> {t('privacy.companyInfo.addressValue')}</p>
               <p><strong>{t('landing.email')}:</strong> inbox@gridix.live</p>
             </div>
           </div>
