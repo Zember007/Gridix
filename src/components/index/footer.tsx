@@ -42,7 +42,7 @@ const Footer = () => {
       <div className="container mx-auto">
         <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'md:grid-cols-4 gap-8'} mb-8`}>
           {/* Company Info */}
-          <div className="col-span-2">
+          <div className={`${isMobile ? 'col-span-1' : 'col-span-2'}`}>
             <Logo 
               invert={true}
             />

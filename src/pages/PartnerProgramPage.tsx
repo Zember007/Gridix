@@ -120,9 +120,9 @@ export default function PartnerProgramPage() {
                 {t('partnerProgram.hero.badge')}
               </span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="relative z-10 inline-block animate-appear bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-4xl font-semibold leading-tight text-transparent drop-shadow-2xl sm:text-6xl md:text-8xl ">
               {t('partnerProgram.hero.title')}
-              <div className="text-5xl md:text-5xl font-bold">
+              <div className="text-2xl md:text-5xl font-bold">
                 {t('partnerProgram.hero.subtitle')}
               </div>
             </h1>
