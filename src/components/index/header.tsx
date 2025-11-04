@@ -13,11 +13,13 @@ const HeroHeader = () => {
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
     
+    const prefix = window.location.pathname.split('/')[2] ? `/${language}/` : ''
+
     const menuItems = [
-        { name: t('nav.features'), href: `/${language}/#features` },
+        { name: t('nav.features'), href: `${prefix}#features` },
         { name: t('nav.pricing'), href: `/${language}/pricing` },
         { name: t('nav.partnerProgram'), href: `/${language}/partner-program` },
-        { name: t('nav.demo'), href: `/${language}/#demo` },
+        { name: t('nav.demo'), href: `${prefix}#demo` },
         { name: t('nav.contacts'), href: `/${language}/contacts` }
     ]
 
