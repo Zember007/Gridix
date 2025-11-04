@@ -4,7 +4,7 @@ import { CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import HeroHeader from '@/components/index/header';
 import Footer from '@/components/index/footer';
@@ -14,6 +14,50 @@ import { Timeline } from '@/components/ui/timeline';
 import widgetVideo from '@/assets/video/widget.mp4';
 import importVideo from '@/assets/video/import.mp4';
 import crmVideo from '@/assets/video/crm.mp4';
+
+// Компонент для видео с автовоспроизведением при попадании в зону видимости
+const VideoPlayer = ({ src, className }: { src: string; className?: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch((error) => {
+              console.log('Video play failed:', error);
+            });
+          } else {
+            video.pause();
+          }
+        });
+      },
+      {
+        threshold: 0.5, // Видео начинает играть, когда 50% его видно
+      }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      loop
+      playsInline
+      className={className}
+    />
+  );
+};
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
@@ -71,12 +115,8 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.widgetsDesc')}
           </p>
-          <video
+          <VideoPlayer
             src={widgetVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
             className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
@@ -89,12 +129,8 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.dataImportDesc')}
           </p>
-          <video
+          <VideoPlayer
             src={importVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
             className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
@@ -107,12 +143,8 @@ const Index = () => {
           <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
             {t('landing.crmIntegrationDesc')}
           </p>
-          <video
+          <VideoPlayer
             src={crmVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
             className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
           />
         </div>
