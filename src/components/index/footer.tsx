@@ -33,6 +33,10 @@ const Footer = () => {
     navigate('/contacts');
   };
 
+  const goToPartnerProgram = () => {
+    navigate('/partner-program');
+  };
+
   return (
     <footer className={`bg-black ${isMobile ? 'py-12' : 'py-16'}`}>
       <div className="container mx-auto">
@@ -58,6 +62,7 @@ const Footer = () => {
             <ul className="space-y-2 text-gray-400">
               <li><button onClick={goToAdmin} className="hover:text-blue-400 transition-colors">{t('landing.adminPanel')}</button></li>
               <li><button onClick={goToPricing} className="hover:text-blue-400 transition-colors">{t('landing.pricing')}</button></li>
+              <li><button onClick={goToPartnerProgram} className="hover:text-blue-400 transition-colors">{t('nav.partnerProgram')}</button></li>
               <li><button onClick={goToContacts} className="hover:text-blue-400 transition-colors">{t('landing.contacts')}</button></li>
             </ul>
           </div>

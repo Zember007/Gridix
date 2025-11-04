@@ -16,6 +16,7 @@ const HeroHeader = () => {
     const menuItems = [
         { name: t('nav.features'), href: '#features' },
         { name: t('nav.pricing'), href: `/${language}/pricing` },
+        { name: t('nav.partnerProgram'), href: `/${language}/partner-program` },
         { name: t('nav.demo'), href: '#demo' },
         { name: t('nav.contacts'), href: `/${language}/contacts` }
     ]

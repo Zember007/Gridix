@@ -1,0 +1,200 @@
+{
+  "hero": {
+    "badge": "💰 Earn up to 50% commission",
+    "title": "Become a GRIDIX Partner",
+    "subtitle": "and earn together with us",
+    "description": "Help developers sell faster, more transparently, and more modernly. Receive a commission for each client you bring in — from 20% to 50% depending on your level.",
+    "ctaPrimary": "Become a Partner",
+    "ctaSecondary": "Calculate your profit"
+  },
+  "whyEasyToSell": {
+    "title": "Why Gridix is Easy to Sell",
+    "description": "Gridix solves key challenges for developers, agencies, and investors — that's why demand is growing",
+    "item1": {
+      "title": "Solves real pain points",
+      "desc": "Eliminates chaos, errors, and delays. Shows how to quickly launch online sales."
+    },
+    "item2": {
+      "title": "Sells through results",
+      "desc": "Sales growth, customer trust, transparency for investors — time savings"
+    },
+    "item3": {
+      "title": "Understandable to everyone",
+      "desc": "Simple visualization, ready interface, minimal training. Everyone immediately sees the value."
+    },
+    "item4": {
+      "title": "Easy to show clients",
+      "desc": "Share a link to an interactive floor plan with one click"
+    },
+    "item5": {
+      "title": "Creates a 'wow' effect",
+      "desc": "Developers see a real working tool, and customers trust more"
+    },
+    "item6": {
+      "title": "Market is growing",
+      "desc": "Hundreds of developers worldwide need innovative solutions to boost sales and optimize time."
+    }
+  },
+  "valueProposition": {
+    "title": "What each ecosystem participant gets",
+    "builders": {
+      "title": "Developers",
+      "item1": "Launch interactive floor plan in 1 day",
+      "item2": "Increase sales and buyer trust",
+      "item3": "CRM integrations and lead automation",
+      "item4": "Website widget with multi-language support"
+    },
+    "managers": {
+      "title": "Sales Managers",
+      "item1": "Simple interface, no training needed",
+      "item2": "Instant updates on properties",
+      "item3": "Less manual routine work",
+      "item4": "Analytics and sales transparency"
+    },
+    "clients": {
+      "title": "Buyers",
+      "item1": "Convenient online apartment selection",
+      "item2": "Transparency and trust",
+      "item3": "PDF apartment presentations",
+      "item4": "One-click booking capability"
+    }
+  },
+  "partnerTypes": {
+    "title": "Two Types of Partners",
+    "description": "Choose the format that suits your business. Start simple and grow with us",
+    "basic": {
+      "commission": "20% commission",
+      "title": "Basic Partner",
+      "subtitle": "Marketers, agents, consultants",
+      "item1": "Share your partner link",
+      "item2": "20% from each paid project",
+      "item3": "Access to statistics and payouts",
+      "item4": "No involvement in implementation",
+      "note": "💡 Can start in 5 minutes — no technical knowledge required and you can earn profit while projects are active",
+      "cta": "Start as Partner"
+    },
+    "integrator": {
+      "recommended": "⭐ Recommended",
+      "commission": "40–50% commission",
+      "title": "Integrator Partner",
+      "subtitle": "Digital agencies, CRM integrators, freelancers",
+      "item1": "Create accounts for clients and provide support",
+      "item2": "40% for up to 10 clients, 50% for 10+",
+      "item3": "Recommended Gridix status",
+      "item4": "Independently top up account minus your commission and pay client subscriptions",
+      "note": "🚀 Turn implementation into stable income",
+      "cta": "Become an Integrator"
+    }
+  },
+  "calculator": {
+    "badge": "Income Calculator",
+    "title": "Calculate your potential income",
+    "description": "Find out how much you can earn by choosing the number of projects per year",
+    "projectsLabel": "Number of projects per year",
+    "statusLabel": "Your status:",
+    "statusPartner": "Partner",
+    "statusAmbassador": "Ambassador",
+    "commissionLabel": "Commission rate:",
+    "yearlyIncome": "Your annual income",
+    "fromProjects": "from {count} {projects}",
+    "projectSingular": "project",
+    "projectPluralFew": "projects",
+    "projectPluralMany": "projects",
+    "tierBasic": "Basic",
+    "tierIntegrator": "Integrator",
+    "tierAmbassador": "Ambassador",
+    "commission20": "20% commission",
+    "youAreHere": "YOU ARE HERE",
+    "integratorDesc": "up to 10 projects • 40% commission",
+    "ambassadorDesc": "10+ projects • 50% commission",
+    "infoNote": "💡 All calculations are based on the average annual Gridix subscription cost — $ {price}. Your income grows with each active client.",
+    "ctaButton": "Become a partner and earn"
+  },
+  "caseStudies": {
+    "title": "Gridix Implementation Cases",
+    "description": "Real examples of sales growth after implementation",
+    "problemLabel": "Problem:",
+    "solutionLabel": "Solution:",
+    "resultLabel": "Result",
+    "batumi": {
+      "title": "Batumi",
+      "company": "Metropol Development",
+      "type": "Developer",
+      "problem": "Excel tables are often outdated, clients get lost in floor plans and ask many repeated questions.",
+      "solution": "Interactive floor plan with filters, layouts, and CRM integration, available in three languages.",
+      "result1": "Sales department saves up to 40% of time",
+      "result2": "Clients submit more applications through the website",
+      "result3": "Increased investor trust and transparency"
+    },
+    "izmir": {
+      "title": "Izmir",
+      "company": "Turkiye Residence Group",
+      "type": "Developer",
+      "problem": "Managers spend hours daily answering requests like 'send the floor plan' and 'send PDF'.",
+      "solution": "Online floor plan with auto-generated PDF and real-time status updates.",
+      "result1": "+30% conversion of applications to bookings",
+      "result2": "Save up to 4 hours per day",
+      "result3": "Increased trust thanks to up-to-date data"
+    },
+    "dubai": {
+      "title": "Dubai",
+      "company": "Emaar Premium Developments",
+      "type": "Developer",
+      "problem": "Premium developers lose trust using static PDFs and manual updates.",
+      "solution": "Online catalog with filtering, statuses, auto-PDF, and CRM notifications.",
+      "result1": "Clients spend 3× more time on the website",
+      "result2": "Managers work only with 'hot' leads",
+      "result3": "Building an innovative brand image"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "becomePartner": {
+      "question": "How do I become a partner?",
+      "answer": "Click 'Become a Partner', register — the link is available immediately. Choose a format: simple referral (20%) or full implementation (40-50%)."
+    },
+    "firstPayout": {
+      "question": "When will I receive my first payout?",
+      "answer": "After the client pays. Minimum withdrawal is $100, processing time up to 7 days. You can see all data in your account in real-time."
+    },
+    "integratorRequirements": {
+      "question": "What do I need to become an integrator?",
+      "answer": "Actively implement and manage clients. After 5–10 projects, you move to the 40–50% commission level with full team support."
+    },
+    "shareLink": {
+      "question": "Can I just share a link?",
+      "answer": "Yes, this is the basic partnership format with 20% commission. Perfect for marketers and consultants who have contacts with developers."
+    },
+    "support": {
+      "question": "Is there support?",
+      "answer": "Yes, Telegram chat and materials are available 24/7. You get access to presentations, templates, webinars, and demo accounts."
+    },
+    "salesIncrease": {
+      "question": "How much can sales increase?",
+      "answer": "Results depend on the project, but on average our clients see 20-40% growth. Manager time savings amount to 2-4 hours per day thanks to automation."
+    },
+    "setupTime": {
+      "question": "How much time is needed for setup?",
+      "answer": "Basic floor plan is set up in 1 day. For full implementation with CRM integrations, it may take 3-5 days depending on project complexity."
+    },
+    "languages": {
+      "question": "Does Gridix support other languages?",
+      "answer": "Yes, the platform supports English, Russian, Georgian, Turkish, and Arabic. You can set up a multilingual widget for international projects."
+    },
+    "crmIntegration": {
+      "question": "Which CRMs integrate with Gridix?",
+      "answer": "We integrate with popular CRM systems and support Webhooks for custom integrations. You can see the full list of integrations in your account."
+    },
+    "profitExample": {
+      "question": "Give an example of partner income?",
+      "answer": "If you as a basic partner brought in 5 clients with an average deal of $500/month, your income is $500 (20% × 5 × $500). Integrators with 10+ clients can earn $2500+ per month."
+    }
+  },
+  "finalCta": {
+    "title": "Ready to start earning?",
+    "description": "Join the growing network of Gridix partners. Your first income could be this month.",
+    "ctaPrimary": "Become a Gridix Partner",
+    "ctaSecondary": "Contact Support"
+  }
+}
+

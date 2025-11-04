@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import {  CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-react';
+import { CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -10,7 +10,7 @@ import HeroHeader from '@/components/index/header';
 import Footer from '@/components/index/footer';
 import { HeroSection } from '@/components/blocks/hero-section';
 import { Timeline } from '@/components/ui/timeline';
-import { WorldMap } from '@/components/ui/map';
+// import { WorldMap } from '@/components/ui/map';
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
@@ -20,22 +20,6 @@ const Index = () => {
 
   const goToAdmin = () => {
     navigate('/admin');
-  };
-
-  const goToPrivacyPolicy = () => {
-    navigate('/privacy-policy');
-  };
-
-  const goToTermsOfService = () => {
-    navigate('/terms-of-service');
-  };
-
-  const goToRefundPolicy = () => {
-    navigate('/refund-policy');
-  };
-
-  const goToPricing = () => {
-    navigate('/pricing');
   };
 
   // Функция для плавной прокрутки к элементу
@@ -195,7 +179,7 @@ const Index = () => {
 
       </ContainerScroll>
 
-      <section className="flex items-center justify-center flex-col gap-20">
+    {/*   <section className="flex items-center justify-center flex-col gap-20">
         <h2 className="text-xl sm:text-4xl max-w-5xl font-semibold text-black dark:text-white text-center">
           {t('landing.workWithoutBorders')}   <br />
           <span className="text-3xl sm:text-5xl md:text-7xl   font-bold mt-1 leading-none">
@@ -212,26 +196,12 @@ const Index = () => {
               start: { lat: 39.9334, lng: 32.8597, label: t('country.turkey') },
               end: { lat: 25.2048, lng: 55.2708, label: t('country.uae') }
             },
-            // 2. ОАЭ -> Мексика
+            // 2. ОАЭ -> Испания
             {
               start: { lat: 25.2048, lng: 55.2708, label: t('country.uae') },
-              end: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') }
-            },
-            // 3. Мексика -> Доминиканская Республика
-            {
-              start: { lat: 23.6345, lng: -102.5528, label: t('country.mexico') },
-              end: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') }
-            },
-            // 4. Доминиканская Республика -> Индонезия
-            {
-              start: { lat: 18.7357, lng: -70.1627, label: t('country.dominicanRepublic') },
-              end: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') }
-            },
-            // 5. Индонезия -> Испания
-            {
-              start: { lat: -0.7893, lng: 113.9213, label: t('country.indonesia') },
               end: { lat: 40.4637, lng: -3.7492, label: t('country.spain') }
             },
+
             // 6. Испания -> Грузия
             {
               start: { lat: 40.4637, lng: -3.7492, label: t('country.spain') },
@@ -252,19 +222,10 @@ const Index = () => {
               start: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') },
               end: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') }
             },
-            // 10. Таиланд -> Коста-Рика
+
+            // 12. Таиланд -> Греция
             {
               start: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') },
-              end: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') }
-            },
-            // 11. Коста-Рика -> Панама
-            {
-              start: { lat: 9.7489, lng: -83.7534, label: t('country.costaRica') },
-              end: { lat: 8.5380, lng: -80.7821, label: t('country.panama') }
-            },
-            // 12. Панама -> Греция
-            {
-              start: { lat: 8.5380, lng: -80.7821, label: t('country.panama') },
               end: { lat: 39.0742, lng: 21.8243, label: t('country.greece') }
             }
           ]}
@@ -272,7 +233,7 @@ const Index = () => {
           animationDuration={3}
           loop={true}
         />
-      </section>
+      </section> */}
 
 
 

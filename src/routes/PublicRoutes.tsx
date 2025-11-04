@@ -15,6 +15,7 @@ const RefundPolicyPage = lazy(() => import("../pages/RefundPolicyPage"));
 const PricingPage = lazy(() => import("../pages/PricingPage"));
 const ContactsPage = lazy(() => import("../pages/ContactsPage"));
 const InvitationHandlerPage = lazy(() => import("../pages/InvitationHandlerPage"));
+const PartnerProgramPage = lazy(() => import("../pages/PartnerProgramPage"));
 
 export function PublicRoutes() {
   return (
@@ -45,6 +46,9 @@ export function PublicRoutes() {
       {/* Public Pricing Page */}
       <Route path="pricing" element={<PricingPage />} />
       <Route path="price" element={<PricingPage />} />
+
+      {/* Partner Program Page */}
+      <Route path="partner-program" element={<PartnerProgramPage />} />
 
       {/* Auth routes */}
       <Route path="auth" element={<AuthPage />} />
