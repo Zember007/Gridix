@@ -40,13 +40,13 @@ const Footer = () => {
   return (
     <footer className={`bg-black ${isMobile ? 'py-12' : 'py-16'}`}>
       <div className="container mx-auto">
-        <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'md:grid-cols-4 gap-8'} mb-8`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-8' : 'flex-row justify-between gap-8 items-end'} mb-8`}>
           {/* Company Info */}
-          <div className={`${isMobile ? 'col-span-1' : 'col-span-2'}`}>
-            <Logo 
+          <div>
+            <Logo
               invert={true}
             />
-            <p className="text-gray-400 mb-4 max-w-md">
+            <p className="text-gray-400 text-xs mb-4 max-w-md">
               {t('landing.companyDescription')}
             </p>
             <div className="text-sm text-gray-400">
@@ -66,23 +66,18 @@ const Footer = () => {
               <li><button onClick={goToContacts} className="hover:text-blue-400 transition-colors">{t('landing.contacts')}</button></li>
             </ul>
           </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4 text-white">{t('landing.legalInfo')}</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">{t('landing.privacyPolicy')}</button></li>
-              <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">{t('landing.termsOfService')}</button></li>
-              <li><button onClick={goToRefundPolicy} className="hover:text-blue-400 transition-colors">{t('landing.refundPolicy')}</button></li>
-            </ul>
-          </div>
         </div>
 
         <div className="border-t border-gray-800 pt-8">
           <div className={`flex ${isMobile ? 'flex-col gap-4 text-center' : 'justify-between items-center'}`}>
             <p className="text-gray-400">
-              {t('landing.copyright')}
+              © {new Date().getFullYear()} {t('landing.copyright')}
             </p>
+            <ul className="flex xs:gap-10 gap-2 text-gray-400 text-xs xs:justify-center xs:justify-start flex-col text-left">
+              <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">{t('landing.privacyPolicy')}</button></li>
+              <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">{t('landing.termsOfService')}</button></li>
+              <li><button onClick={goToRefundPolicy} className="hover:text-blue-400 transition-colors">{t('landing.refundPolicy')}</button></li>
+            </ul>
           </div>
         </div>
       </div>

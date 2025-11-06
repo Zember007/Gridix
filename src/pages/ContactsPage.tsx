@@ -72,7 +72,7 @@ const ContactsPage = () => {
                 {/* QR Code - Real */}
                 <div className="bg-white rounded-2xl p-4 w-full aspect-square flex items-center justify-center">
                   <img 
-                    src={generateQRCode(telegramLink)} 
+                    src={'/QR_support.jpeg'} 
                     alt="Telegram QR Code"
                     className="w-full h-full object-contain"
                   />
