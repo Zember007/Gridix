@@ -1,0 +1,752 @@
+import { useState, useEffect, useCallback } from 'react';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import {
+  Eye,
+  Users,
+  Home,
+  TrendingUp,
+  AlertCircle,
+  Clock,
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
+
+interface AnalyticsData {
+  projectViews: Array<{ date: string; views: number }>;
+  leads: Array<{ date: string; leads: number }>;
+  topProjects: Array<{ name: string; views: number; leads: number }>;
+  topApartments: Array<{ apartment_number: string; project_name: string; views: number }>;
+  apartmentStats: {
+    available: number;
+    sold: number;
+    reserved: number;
+    total: number;
+  };
+  conversionRate: number;
+  totalViews: number;
+  totalLeads: number;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+export const AdminAnalytics = () => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const { userRole } = useUserRole();
+  const { activeWorkspaceId, isManagerMode } = useWorkspace();
+  const { projects: workspaceProjects } = useWorkspaceProjects();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  
+  const [dateRange, setDateRange] = useState<'7' | '30' | '90' | 'all'>('30');
+  const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+
+  // Получение доступных project_ids для фильтрации
+  const getAvailableProjectIds = useCallback(async (): Promise<string[]> => {
+    if (!user || userRole.type === 'loading') return [];
+
+    try {
+      if (isManagerMode && activeWorkspaceId) {
+        const { data: managerAccount } = await supabase
+          .from('manager_accounts')
+          .select('id')
+          .eq('manager_id', user.id)
+          .eq('developer_id', activeWorkspaceId)
+          .eq('status', 'active')
+          .single();
+
+        if (!managerAccount) return [];
+
+        const { data: accessRules } = await supabase
+          .from('manager_project_access')
+          .select('project_id')
+          .eq('manager_account_id', managerAccount.id);
+
+        if (accessRules && accessRules.length > 0) {
+          return accessRules.map(r => r.project_id);
+        }
+        // Если нет access rules - доступ ко всем проектам
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('user_id', activeWorkspaceId);
+        return projects?.map(p => p.id) || [];
+      } else {
+        // Собственный workspace
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('user_id', user.id);
+        return projects?.map(p => p.id) || [];
+      }
+    } catch (err) {
+      console.error('Error getting project IDs:', err);
+      return [];
+    }
+  }, [user, userRole.type, isManagerMode, activeWorkspaceId]);
+
+  // Загрузка данных аналитики
+  const loadAnalytics = useCallback(async () => {
+    if (!user || userRole.type === 'loading') return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const projectIds = await getAvailableProjectIds();
+      if (projectIds.length === 0) {
+        setAnalyticsData({
+          projectViews: [],
+          leads: [],
+          topProjects: [],
+          topApartments: [],
+          apartmentStats: { available: 0, sold: 0, reserved: 0, total: 0 },
+          conversionRate: 0,
+          totalViews: 0,
+          totalLeads: 0,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Определяем диапазон дат
+      let startDate: Date | null = null;
+      let endDate: Date = endOfDay(new Date());
+
+      if (dateFrom && dateTo) {
+        startDate = startOfDay(new Date(dateFrom));
+        endDate = endOfDay(new Date(dateTo));
+      } else if (dateRange !== 'all') {
+        startDate = startOfDay(subDays(new Date(), parseInt(dateRange)));
+      }
+
+      // Фильтр по проекту
+      const filteredProjectIds = selectedProject !== 'all' 
+        ? [selectedProject] 
+        : projectIds;
+
+      // Загрузка просмотров проектов
+      let viewsQuery = supabase
+        .from('project_views')
+        .select('project_id, created_at, projects!inner(name)')
+        .in('project_id', filteredProjectIds);
+
+      if (startDate) {
+        viewsQuery = viewsQuery.gte('created_at', startDate.toISOString());
+      }
+      viewsQuery = viewsQuery.lte('created_at', endDate.toISOString());
+
+      const { data: viewsData, error: viewsError } = await viewsQuery;
+
+      if (viewsError) throw viewsError;
+
+      // Загрузка лидов
+      let leadsQuery = supabase
+        .from('leads')
+        .select('project_id, created_at, projects!inner(name)')
+        .in('project_id', filteredProjectIds);
+
+      if (startDate) {
+        leadsQuery = leadsQuery.gte('created_at', startDate.toISOString());
+      }
+      leadsQuery = leadsQuery.lte('created_at', endDate.toISOString());
+
+      const { data: leadsData, error: leadsError } = await leadsQuery;
+
+      if (leadsError) throw leadsError;
+
+      // Загрузка квартир
+      const { data: apartmentsData, error: apartmentsError } = await supabase
+        .from('apartments')
+        .select('id, project_id, apartment_number, status, projects!inner(name)')
+        .in('project_id', filteredProjectIds);
+
+      if (apartmentsError) throw apartmentsError;
+
+      // Загрузка просмотров квартир
+      // Сначала получаем apartment_ids для отфильтрованных проектов
+      const { data: apartmentIdsData } = await supabase
+        .from('apartments')
+        .select('id')
+        .in('project_id', filteredProjectIds);
+
+      const apartmentIds = apartmentIdsData?.map(a => a.id) || [];
+
+      // apartment_views table not yet in generated types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let apartmentViewsQuery = (supabase as any).from('apartment_views')
+        .select('apartment_id, created_at, apartments!inner(apartment_number, project_id, projects!inner(name))');
+
+      if (apartmentIds.length > 0) {
+        apartmentViewsQuery = apartmentViewsQuery.in('apartment_id', apartmentIds);
+      } else {
+        // Если нет квартир, возвращаем пустой результат через несуществующий ID
+        const emptyId = '00000000-0000-0000-0000-000000000000';
+        apartmentViewsQuery = apartmentViewsQuery.eq('apartment_id', emptyId);
+      }
+
+      if (startDate) {
+        apartmentViewsQuery = apartmentViewsQuery.gte('created_at', startDate.toISOString());
+      }
+      apartmentViewsQuery = apartmentViewsQuery.lte('created_at', endDate.toISOString());
+
+      const { data: apartmentViewsData, error: apartmentViewsError } = await apartmentViewsQuery;
+
+      if (apartmentViewsError) throw apartmentViewsError;
+
+      // Обработка данных для графиков
+      const viewsByDate = new Map<string, number>();
+      const leadsByDate = new Map<string, number>();
+      
+      (viewsData || []).forEach((view: { created_at: string }) => {
+        const date = format(new Date(view.created_at), 'yyyy-MM-dd');
+        viewsByDate.set(date, (viewsByDate.get(date) || 0) + 1);
+      });
+
+      (leadsData || []).forEach((lead: { created_at: string }) => {
+        const date = format(new Date(lead.created_at), 'yyyy-MM-dd');
+        leadsByDate.set(date, (leadsByDate.get(date) || 0) + 1);
+      });
+
+      // Формирование данных для графиков
+      const allDates = new Set([
+        ...Array.from(viewsByDate.keys()),
+        ...Array.from(leadsByDate.keys()),
+      ]);
+      const sortedDates = Array.from(allDates).sort();
+
+      const projectViewsChart = sortedDates.map(date => ({
+        date: format(new Date(date), 'dd.MM', { locale: ru }),
+        views: viewsByDate.get(date) || 0,
+      }));
+
+      const leadsChart = sortedDates.map(date => ({
+        date: format(new Date(date), 'dd.MM', { locale: ru }),
+        leads: leadsByDate.get(date) || 0,
+      }));
+
+      // Топ проектов по просмотрам
+      const projectViewsCount = new Map<string, { views: number; leads: number; name: string }>();
+      (viewsData || []).forEach((view: { project_id: string; projects?: { name?: string } }) => {
+        const projectId = view.project_id;
+        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: view.projects?.name || 'Unknown' };
+        current.views += 1;
+        projectViewsCount.set(projectId, current);
+      });
+
+      (leadsData || []).forEach((lead: { project_id: string; projects?: { name?: string } }) => {
+        const projectId = lead.project_id;
+        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: lead.projects?.name || 'Unknown' };
+        current.leads += 1;
+        projectViewsCount.set(projectId, current);
+      });
+
+      const topProjects = Array.from(projectViewsCount.entries())
+        .map(([, data]) => ({
+          name: data.name.length > 20 ? data.name.substring(0, 20) + '...' : data.name,
+          views: data.views,
+          leads: data.leads,
+        }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10);
+
+      // Статистика квартир
+      const apartmentStats = {
+        available: (apartmentsData || []).filter((a: { status: string }) => a.status === 'available').length,
+        sold: (apartmentsData || []).filter((a: { status: string }) => a.status === 'sold').length,
+        reserved: (apartmentsData || []).filter((a: { status: string }) => a.status === 'reserved').length,
+        total: (apartmentsData || []).length,
+      };
+
+      // Расчет конверсии
+      const totalViews = (viewsData || []).length;
+      const totalLeads = (leadsData || []).length;
+      const conversionRate = totalViews > 0 ? (totalLeads / totalViews) * 100 : 0;
+
+      // Топ квартир по просмотрам
+      const apartmentViewsCount = new Map<string, { views: number; apartment_number: string; project_name: string }>();
+      (apartmentViewsData || []).forEach((view: unknown) => {
+        const viewData = view as { 
+          apartment_id: string; 
+          apartments?: { 
+            apartment_number?: string; 
+            projects?: { name?: string } 
+          } 
+        };
+        const apartmentId = viewData.apartment_id;
+        const apartment = viewData.apartments;
+        if (apartment) {
+          const current = apartmentViewsCount.get(apartmentId) || {
+            views: 0,
+            apartment_number: apartment.apartment_number || 'Unknown',
+            project_name: apartment.projects?.name || 'Unknown',
+          };
+          current.views += 1;
+          apartmentViewsCount.set(apartmentId, current);
+        }
+      });
+
+      const topApartments = Array.from(apartmentViewsCount.entries())
+        .map(([, data]) => ({
+          apartment_number: data.apartment_number,
+          project_name: data.project_name.length > 20 ? data.project_name.substring(0, 20) + '...' : data.project_name,
+          views: data.views,
+        }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10);
+
+      setAnalyticsData({
+        projectViews: projectViewsChart,
+        leads: leadsChart,
+        topProjects,
+        topApartments,
+        apartmentStats,
+        conversionRate,
+        totalViews,
+        totalLeads,
+      });
+    } catch (err) {
+      console.error('Error loading analytics:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки аналитики');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, userRole.type, dateRange, selectedProject, dateFrom, dateTo, getAvailableProjectIds]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Clock className="w-6 h-6 animate-spin mr-2" />
+              <span>{t('admin.analytics.loading') || 'Загрузка аналитики...'}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-red-600 flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              {error}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!analyticsData) {
+    return null;
+  }
+
+  const apartmentStatsChart = [
+    { name: t('admin.analytics.apartments.available') || 'Доступные', value: analyticsData.apartmentStats.available },
+    { name: t('admin.analytics.apartments.sold') || 'Проданные', value: analyticsData.apartmentStats.sold },
+    { name: t('admin.analytics.apartments.reserved') || 'Зарезервированные', value: analyticsData.apartmentStats.reserved },
+  ].filter(item => item.value > 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Фильтры */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('admin.analytics.filters') || 'Фильтры'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin.analytics.period') || 'Период'}
+              </label>
+              <Select value={dateRange} onValueChange={(value: '7' | '30' | '90' | 'all') => setDateRange(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">{t('admin.analytics.periods.7days') || '7 дней'}</SelectItem>
+                  <SelectItem value="30">{t('admin.analytics.periods.30days') || '30 дней'}</SelectItem>
+                  <SelectItem value="90">{t('admin.analytics.periods.90days') || '90 дней'}</SelectItem>
+                  <SelectItem value="all">{t('admin.analytics.periods.all') || 'Все время'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin.analytics.dateFrom') || 'Дата от'}
+              </label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin.analytics.dateTo') || 'Дата до'}
+              </label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin.analytics.project') || 'Проект'}
+              </label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('admin.analytics.allProjects') || 'Все проекты'}</SelectItem>
+                  {workspaceProjects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ключевые метрики */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.totalViews') || 'Всего просмотров'}
+                </p>
+                <p className="text-2xl font-bold">{analyticsData.totalViews}</p>
+              </div>
+              <Eye className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.totalLeads') || 'Всего лидов'}
+                </p>
+                <p className="text-2xl font-bold">{analyticsData.totalLeads}</p>
+              </div>
+              <Users className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.conversionRate') || 'Конверсия'}
+                </p>
+                <p className="text-2xl font-bold">{analyticsData.conversionRate.toFixed(2)}%</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.totalApartments') || 'Всего квартир'}
+                </p>
+                <p className="text-2xl font-bold">{analyticsData.apartmentStats.total}</p>
+              </div>
+              <Home className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Графики */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* График просмотров */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('admin.analytics.projectViews') || 'Просмотры проектов'}</CardTitle>
+            <CardDescription>
+              {t('admin.analytics.projectViewsDescription') || 'Динамика просмотров по дням'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analyticsData.projectViews}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="views" stroke="#0088FE" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* График лидов */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('admin.analytics.leads') || 'Лиды'}</CardTitle>
+            <CardDescription>
+              {t('admin.analytics.leadsDescription') || 'Динамика лидов по дням'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analyticsData.leads}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="leads" stroke="#00C49F" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Топ проектов */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('admin.analytics.topProjects') || 'Топ проектов'}</CardTitle>
+          <CardDescription>
+            {t('admin.analytics.topProjectsDescription') || 'Топ 10 проектов по просмотрам'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={analyticsData.topProjects}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="views" fill="#0088FE" name={t('admin.analytics.views') || 'Просмотры'} />
+              <Bar dataKey="leads" fill="#00C49F" name={t('admin.analytics.leads') || 'Лиды'} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Топ квартир по просмотрам */}
+      {analyticsData.topApartments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('admin.analytics.topApartments') || 'Топ квартир по просмотрам'}</CardTitle>
+            <CardDescription>
+              {t('admin.analytics.topApartmentsDescription') || 'Топ 10 квартир по количеству просмотров'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={analyticsData.topApartments}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="apartment_number" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                  label={{ value: t('admin.analytics.apartment') || 'Квартира', position: 'insideBottom', offset: -5 }}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number) => [value, t('admin.analytics.views') || 'Просмотры']}
+                  labelFormatter={(label) => `${t('admin.analytics.apartment') || 'Квартира'} №${label}`}
+                />
+                <Legend />
+                <Bar dataKey="views" fill="#FF8042" name={t('admin.analytics.views') || 'Просмотры'} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('admin.analytics.apartment') || 'Квартира'}</TableHead>
+                    <TableHead>{t('admin.analytics.project') || 'Проект'}</TableHead>
+                    <TableHead>{t('admin.analytics.views') || 'Просмотры'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {analyticsData.topApartments.map((apartment, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">№{apartment.apartment_number}</TableCell>
+                      <TableCell>{apartment.project_name}</TableCell>
+                      <TableCell>{apartment.views}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Статистика квартир */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('admin.analytics.apartmentsStats') || 'Статистика квартир'}</CardTitle>
+            <CardDescription>
+              {t('admin.analytics.apartmentsStatsDescription') || 'Распределение квартир по статусам'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{analyticsData.apartmentStats.available}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.apartments.available') || 'Доступные'}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-600">{analyticsData.apartmentStats.sold}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.apartments.sold') || 'Проданные'}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-yellow-600">{analyticsData.apartmentStats.reserved}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.analytics.apartments.reserved') || 'Зарезервированные'}
+                </p>
+              </div>
+            </div>
+            {apartmentStatsChart.length > 0 && (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={apartmentStatsChart}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {apartmentStatsChart.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Детальная таблица по проектам */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('admin.analytics.projectsTable') || 'Детальная статистика по проектам'}</CardTitle>
+            <CardDescription>
+              {t('admin.analytics.projectsTableDescription') || 'Подробная информация по каждому проекту'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('admin.analytics.project') || 'Проект'}</TableHead>
+                  <TableHead>{t('admin.analytics.views') || 'Просмотры'}</TableHead>
+                  <TableHead>{t('admin.analytics.leads') || 'Лиды'}</TableHead>
+                  <TableHead>{t('admin.analytics.conversion') || 'Конверсия'}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analyticsData.topProjects.map((project, index) => {
+                  const conversion = project.views > 0 ? (project.leads / project.views * 100).toFixed(2) : '0.00';
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell>{project.views}</TableCell>
+                      <TableCell>{project.leads}</TableCell>
+                      <TableCell>{conversion}%</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {analyticsData.topProjects.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      {t('admin.analytics.noData') || 'Нет данных'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+

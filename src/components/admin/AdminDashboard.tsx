@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown, HelpCircle } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
@@ -12,6 +11,7 @@ import { LeadsManager } from './LeadsManager';
 import SubscriptionTab from './SubscriptionTab';
 import PartnersPage from '../../pages/PartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
+import { AdminAnalytics } from './AdminAnalytics';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
@@ -251,17 +251,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'analytics' && (
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('admin.analytics')}</CardTitle>
-                  <CardDescription>
-                    {t('admin.analyticsDescription')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
-                </CardContent>
-              </Card>
+              <AdminAnalytics />
             </div>
           )}
 
@@ -404,17 +394,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'analytics' && (
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('admin.analytics')}</CardTitle>
-                  <CardDescription>
-                    {t('admin.analyticsDescription')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t('admin.analyticsComingSoon')}</p>
-                </CardContent>
-              </Card>
+              <AdminAnalytics />
             </div>
           )}
           {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (

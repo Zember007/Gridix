@@ -34,6 +34,7 @@ export default function DomainApartmentPage() {
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [viewTracked, setViewTracked] = useState(false);
 
   // Fetch apartment data
   useEffect(() => {
@@ -63,6 +64,33 @@ export default function DomainApartmentPage() {
 
     fetchApartment();
   }, [apartmentId, domainProject?.id, t]);
+
+  // Трекинг просмотра квартиры
+  useEffect(() => {
+    const trackApartmentView = async () => {
+      if (!apartment || !domainProject?.id || viewTracked) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        await supabase.from('apartment_views').insert({
+          apartment_id: apartment.id,
+          project_id: domainProject.id,
+          user_id: user?.id || null,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null,
+        });
+
+        setViewTracked(true);
+      } catch (error) {
+        console.error('Error tracking apartment view:', error);
+      }
+    };
+
+    if (apartment && domainProject && !loading) {
+      trackApartmentView();
+    }
+  }, [apartment, domainProject, loading, viewTracked]);
 
   // Show loading spinner while determining the domain
   if (domainLoading) {

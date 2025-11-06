@@ -185,16 +185,46 @@ async function handleGetSubscription(req, body, corsHeaders) {
         headers: corsHeaders
       });
     }
-    // Check if trial has expired
+    // Check if subscription has expired
     const now = new Date();
+    
+    // Check if trial has expired
     const trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
     const isTrialExpired = trialEndsAt && now > trialEndsAt;
+    
+    // Check if active subscription period has expired
+    const currentPeriodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+    const isPeriodExpired = currentPeriodEnd && now > currentPeriodEnd;
+    
     // Update status if trial expired
     if (subscription && subscription.status === 'trialing' && isTrialExpired) {
       await supabase.from("user_subscriptions").update({
         status: 'trial_expired'
       }).eq("id", subscription.id);
       subscription.status = 'trial_expired';
+    }
+    
+    // Update status if active subscription period has expired
+    if (subscription && subscription.status === 'active' && isPeriodExpired) {
+      await supabase.from("user_subscriptions").update({
+        status: 'expired',
+        updated_at: new Date().toISOString()
+      }).eq("id", subscription.id);
+      
+      // Log expiration in subscription_history
+      await supabase.from("subscription_history").insert({
+        user_id: subscription.user_id,
+        subscription_id: subscription.id,
+        action: 'subscription_expired',
+        old_status: 'active',
+        new_status: 'expired',
+        metadata: {
+          expired_at: new Date().toISOString(),
+          period_end: subscription.current_period_end
+        }
+      });
+      
+      subscription.status = 'expired';
     }
     return new Response(JSON.stringify({
       subscription,
@@ -333,7 +363,7 @@ async function handleGetPlans(req, corsHeaders) {
   }
 }
 
-async function handleGenerateInvoice(req: Request, body: any, corsHeaders: Record<string, string>) {
+async function handleGenerateInvoice(req: Request, body: any) {
   const origin = req.headers.get('Origin');
   
   try {
@@ -373,7 +403,7 @@ async function handleGenerateInvoice(req: Request, body: any, corsHeaders: Recor
   }
 }
 
-async function handleConfirmPayment(req: Request, body: any, corsHeaders: Record<string, string>) {
+async function handleConfirmPayment(req: Request, body: any) {
   const origin = req.headers.get('Origin');
   
   try {
@@ -486,9 +516,9 @@ Deno.serve(async (req) => {
       case "get-project-subscriptions":
         return await handleGetProjectSubscriptions(req, corsHeaders);
       case "generate-invoice":
-        return await handleGenerateInvoice(req, body, corsHeaders);
+        return await handleGenerateInvoice(req, body);
       case "confirm-payment":
-        return await handleConfirmPayment(req, body, corsHeaders);
+        return await handleConfirmPayment(req, body);
       default:
         // Default action is get subscription for a specific project
         return await handleGetSubscription(req, body, corsHeaders);

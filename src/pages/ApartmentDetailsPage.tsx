@@ -65,6 +65,33 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     } : undefined
   );
 
+  // Трекинг просмотра квартиры
+  useEffect(() => {
+    const trackApartmentView = async () => {
+      if (!apartment || !project?.id || viewTracked) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        await supabase.from('apartment_views').insert({
+          apartment_id: apartment.id,
+          project_id: project.id,
+          user_id: user?.id || null,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null,
+        });
+
+        setViewTracked(true);
+      } catch (error) {
+        console.error('Error tracking apartment view:', error);
+      }
+    };
+
+    if (apartment && project && !apartmentLoading && !projectLoading) {
+      trackApartmentView();
+    }
+  }, [apartment, project, apartmentLoading, projectLoading, viewTracked]);
+
   // Логируем состояние проекта для диагностики
   useEffect(() => {
     console.log('Project and apartment state:', {
@@ -85,6 +112,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   const [recommendedApartments, setRecommendedApartments] = useState<Apartment[]>([]);
   const [recommendationThumbnails, setRecommendationThumbnails] = useState<Record<string, string | null>>({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
+  const [viewTracked, setViewTracked] = useState(false);
 
   // Photos preloading moved to parent component
   interface CombinedPhoto {
