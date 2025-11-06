@@ -183,8 +183,8 @@ const Index = () => {
 
         ]}
         image={{
-          light: "/AdminScreen.jpeg",
-          dark: "/AdminScreen.jpeg",
+          light: "/AdminScreen.png",
+          dark: "/AdminScreen.png",
           alt: "UI Components Preview",
         }}
       />
