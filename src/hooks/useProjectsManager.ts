@@ -1,5 +1,5 @@
 // useProjectsManager.ts - Исправленная версия
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -131,6 +131,31 @@ export const useProjectsManager = () => {
     return loadingPromise;
   }, []); // Убираем зависимости, чтобы избежать пересоздания функции
 
+  // Обновление счетчика просмотров
+  const incrementViewCount = useCallback(async (projectId: string) => {
+    try {
+      // Записываем просмотр в таблицу аналитики
+      await supabase.from('project_views').insert({
+        project_id: projectId,
+        user_id: user?.id || null,
+        ip_address: null,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null
+      });
+
+      // Увеличиваем счетчик в проекте
+      const { error } = await supabase.rpc('increment_view_count', {
+        project_id: projectId
+      });
+
+      if (error) {
+        console.error('Error incrementing view count:', error);
+      }
+    } catch (err) {
+      console.error('Error tracking view:', err);
+    }
+  }, [user]);
+
   // Мемоизированная функция для загрузки одного проекта
   const loadProject = useCallback(async (identifier: string): Promise<Project | null> => {
     if (!identifier) return null;
@@ -193,6 +218,15 @@ export const useProjectsManager = () => {
           timestamp: Date.now()
         });
 
+        // Записываем просмотр проекта
+        // Просмотр записывается для всех, кто имеет доступ к проекту (публичные проекты или владельцы)
+        // Записываем просмотр асинхронно, не блокируя загрузку проекта
+        if (project) {
+          incrementViewCount(project.id).catch(err => {
+            console.error('Error tracking project view:', err);
+          });
+        }
+
         return project;
 
       } catch (err) {
@@ -207,7 +241,7 @@ export const useProjectsManager = () => {
     loadingStates.set(`project-${identifier}`, loadingPromise);
     
     return loadingPromise;
-  }, [user]); // Только user в зависимостях
+  }, [user, incrementViewCount]); // user и incrementViewCount в зависимостях
 
   // Создание проекта
   const createProject = useCallback(async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'view_count' | 'user_id'>) => {
@@ -332,31 +366,6 @@ export const useProjectsManager = () => {
   const clearSingleProjectCache = useCallback((projectId: string) => {
     singleProjectCache.delete(projectId);
   }, []);
-
-  // Обновление счетчика просмотров
-  const incrementViewCount = useCallback(async (projectId: string) => {
-    try {
-      // Записываем просмотр в таблицу аналитики
-      await supabase.from('project_views').insert({
-        project_id: projectId,
-        user_id: user?.id || null,
-        ip_address: null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null
-      });
-
-      // Увеличиваем счетчик в проекте
-      const { error } = await supabase.rpc('increment_view_count', {
-        project_id: projectId
-      });
-
-      if (error) {
-        console.error('Error incrementing view count:', error);
-      }
-    } catch (err) {
-      console.error('Error tracking view:', err);
-    }
-  }, [user]);
 
   return {
     // Состояние

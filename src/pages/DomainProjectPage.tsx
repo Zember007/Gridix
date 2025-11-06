@@ -5,6 +5,8 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DomainProjectPage() {
   const { project, loading, error, isDomainProject } = useProjectByDomain();
@@ -54,6 +56,8 @@ export default function DomainProjectPage() {
       </div>
     );
   }
+
+
 
   // If project found via custom domain, render the project directly
   return (

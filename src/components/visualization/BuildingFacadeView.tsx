@@ -649,7 +649,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               alt="Building"
               className="absolute inset-0 w-full h-full object-cover"
               style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
-              fetchPriority="high"
+              {...({ fetchpriority: 'high' } as React.ImgHTMLAttributes<HTMLImageElement> & { fetchpriority?: string })}
             />
             {/* Затемнение для лучшей читаемости */}
             <div className="absolute inset-0 bg-black/20" />

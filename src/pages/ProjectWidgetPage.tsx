@@ -20,8 +20,6 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
     function sendHeight() {
       const height = document.body.scrollHeight
 
-      console.log('Height:', height,
-        document.documentElement.scrollHeight);
 
       window.parent.postMessage(
         { type: "IFRAME_HEIGHT", height },

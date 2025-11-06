@@ -354,11 +354,11 @@ export const AdminAnalytics = () => {
       });
     } catch (err) {
       console.error('Error loading analytics:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки аналитики');
+      setError(err instanceof Error ? err.message : (t('admin.analytics.loading') || 'Error loading analytics'));
     } finally {
       setLoading(false);
     }
-  }, [user, userRole.type, dateRange, selectedProject, dateFrom, dateTo, getAvailableProjectIds]);
+  }, [user, userRole.type, dateRange, selectedProject, dateFrom, dateTo, getAvailableProjectIds, t]);
 
   useEffect(() => {
     loadAnalytics();
@@ -371,7 +371,7 @@ export const AdminAnalytics = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
               <Clock className="w-6 h-6 animate-spin mr-2" />
-              <span>{t('admin.analytics.loading') || 'Загрузка аналитики...'}</span>
+              <span>{t('admin.analytics.loading')}</span>
             </div>
           </CardContent>
         </Card>
@@ -399,9 +399,9 @@ export const AdminAnalytics = () => {
   }
 
   const apartmentStatsChart = [
-    { name: t('admin.analytics.apartments.available') || 'Доступные', value: analyticsData.apartmentStats.available },
-    { name: t('admin.analytics.apartments.sold') || 'Проданные', value: analyticsData.apartmentStats.sold },
-    { name: t('admin.analytics.apartments.reserved') || 'Зарезервированные', value: analyticsData.apartmentStats.reserved },
+    { name: t('admin.analytics.apartments.available'), value: analyticsData.apartmentStats.available },
+    { name: t('admin.analytics.apartments.sold'), value: analyticsData.apartmentStats.sold },
+    { name: t('admin.analytics.apartments.reserved'), value: analyticsData.apartmentStats.reserved },
   ].filter(item => item.value > 0);
 
   return (
@@ -409,29 +409,29 @@ export const AdminAnalytics = () => {
       {/* Фильтры */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('admin.analytics.filters') || 'Фильтры'}</CardTitle>
+          <CardTitle>{t('admin.analytics.filters')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
-                {t('admin.analytics.period') || 'Период'}
+                {t('admin.analytics.period')}
               </label>
               <Select value={dateRange} onValueChange={(value: '7' | '30' | '90' | 'all') => setDateRange(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7">{t('admin.analytics.periods.7days') || '7 дней'}</SelectItem>
-                  <SelectItem value="30">{t('admin.analytics.periods.30days') || '30 дней'}</SelectItem>
-                  <SelectItem value="90">{t('admin.analytics.periods.90days') || '90 дней'}</SelectItem>
-                  <SelectItem value="all">{t('admin.analytics.periods.all') || 'Все время'}</SelectItem>
+                  <SelectItem value="7">{t('admin.analytics.periods.7days')}</SelectItem>
+                  <SelectItem value="30">{t('admin.analytics.periods.30days')}</SelectItem>
+                  <SelectItem value="90">{t('admin.analytics.periods.90days')}</SelectItem>
+                  <SelectItem value="all">{t('admin.analytics.periods.all')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
-                {t('admin.analytics.dateFrom') || 'Дата от'}
+                {t('admin.analytics.dateFrom')}
               </label>
               <Input
                 type="date"
@@ -441,7 +441,7 @@ export const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
-                {t('admin.analytics.dateTo') || 'Дата до'}
+                {t('admin.analytics.dateTo')}
               </label>
               <Input
                 type="date"
@@ -451,14 +451,14 @@ export const AdminAnalytics = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
-                {t('admin.analytics.project') || 'Проект'}
+                {t('admin.analytics.project')}
               </label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('admin.analytics.allProjects') || 'Все проекты'}</SelectItem>
+                  <SelectItem value="all">{t('admin.analytics.allProjects')}</SelectItem>
                   {workspaceProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -478,7 +478,7 @@ export const AdminAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalViews') || 'Всего просмотров'}
+                  {t('admin.analytics.totalViews')}
                 </p>
                 <p className="text-2xl font-bold">{analyticsData.totalViews}</p>
               </div>
@@ -491,7 +491,7 @@ export const AdminAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalLeads') || 'Всего лидов'}
+                  {t('admin.analytics.totalLeads')}
                 </p>
                 <p className="text-2xl font-bold">{analyticsData.totalLeads}</p>
               </div>
@@ -504,7 +504,7 @@ export const AdminAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.conversionRate') || 'Конверсия'}
+                  {t('admin.analytics.conversionRate')}
                 </p>
                 <p className="text-2xl font-bold">{analyticsData.conversionRate.toFixed(2)}%</p>
               </div>
@@ -517,7 +517,7 @@ export const AdminAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalApartments') || 'Всего квартир'}
+                  {t('admin.analytics.totalApartments')}
                 </p>
                 <p className="text-2xl font-bold">{analyticsData.apartmentStats.total}</p>
               </div>
@@ -532,9 +532,9 @@ export const AdminAnalytics = () => {
         {/* График просмотров */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin.analytics.projectViews') || 'Просмотры проектов'}</CardTitle>
+            <CardTitle>{t('admin.analytics.projectViews')}</CardTitle>
             <CardDescription>
-              {t('admin.analytics.projectViewsDescription') || 'Динамика просмотров по дням'}
+              {t('admin.analytics.projectViewsDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -554,9 +554,9 @@ export const AdminAnalytics = () => {
         {/* График лидов */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin.analytics.leads') || 'Лиды'}</CardTitle>
+            <CardTitle>{t('admin.analytics.leads')}</CardTitle>
             <CardDescription>
-              {t('admin.analytics.leadsDescription') || 'Динамика лидов по дням'}
+              {t('admin.analytics.leadsDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -577,9 +577,9 @@ export const AdminAnalytics = () => {
       {/* Топ проектов */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('admin.analytics.topProjects') || 'Топ проектов'}</CardTitle>
+          <CardTitle>{t('admin.analytics.topProjects')}</CardTitle>
           <CardDescription>
-            {t('admin.analytics.topProjectsDescription') || 'Топ 10 проектов по просмотрам'}
+            {t('admin.analytics.topProjectsDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -590,8 +590,8 @@ export const AdminAnalytics = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="views" fill="#0088FE" name={t('admin.analytics.views') || 'Просмотры'} />
-              <Bar dataKey="leads" fill="#00C49F" name={t('admin.analytics.leads') || 'Лиды'} />
+              <Bar dataKey="views" fill="#0088FE" name={t('admin.analytics.views')} />
+              <Bar dataKey="leads" fill="#00C49F" name={t('admin.analytics.leads')} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -601,9 +601,9 @@ export const AdminAnalytics = () => {
       {analyticsData.topApartments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin.analytics.topApartments') || 'Топ квартир по просмотрам'}</CardTitle>
+            <CardTitle>{t('admin.analytics.topApartments')}</CardTitle>
             <CardDescription>
-              {t('admin.analytics.topApartmentsDescription') || 'Топ 10 квартир по количеству просмотров'}
+              {t('admin.analytics.topApartmentsDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -615,24 +615,24 @@ export const AdminAnalytics = () => {
                   angle={-45} 
                   textAnchor="end" 
                   height={100}
-                  label={{ value: t('admin.analytics.apartment') || 'Квартира', position: 'insideBottom', offset: -5 }}
+                  label={{ value: t('admin.analytics.apartment'), position: 'insideBottom', offset: -5 }}
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value: number) => [value, t('admin.analytics.views') || 'Просмотры']}
-                  labelFormatter={(label) => `${t('admin.analytics.apartment') || 'Квартира'} №${label}`}
+                  formatter={(value: number) => [value, t('admin.analytics.views')]}
+                  labelFormatter={(label) => `${t('admin.analytics.apartment')} №${label}`}
                 />
                 <Legend />
-                <Bar dataKey="views" fill="#FF8042" name={t('admin.analytics.views') || 'Просмотры'} />
+                <Bar dataKey="views" fill="#FF8042" name={t('admin.analytics.views')} />
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-4">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('admin.analytics.apartment') || 'Квартира'}</TableHead>
-                    <TableHead>{t('admin.analytics.project') || 'Проект'}</TableHead>
-                    <TableHead>{t('admin.analytics.views') || 'Просмотры'}</TableHead>
+                    <TableHead>{t('admin.analytics.apartment')}</TableHead>
+                    <TableHead>{t('admin.analytics.project')}</TableHead>
+                    <TableHead>{t('admin.analytics.views')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -654,9 +654,9 @@ export const AdminAnalytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin.analytics.apartmentsStats') || 'Статистика квартир'}</CardTitle>
+            <CardTitle>{t('admin.analytics.apartmentsStats')}</CardTitle>
             <CardDescription>
-              {t('admin.analytics.apartmentsStatsDescription') || 'Распределение квартир по статусам'}
+              {t('admin.analytics.apartmentsStatsDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -664,19 +664,19 @@ export const AdminAnalytics = () => {
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">{analyticsData.apartmentStats.available}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.apartments.available') || 'Доступные'}
+                  {t('admin.analytics.apartments.available')}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-red-600">{analyticsData.apartmentStats.sold}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.apartments.sold') || 'Проданные'}
+                  {t('admin.analytics.apartments.sold')}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-yellow-600">{analyticsData.apartmentStats.reserved}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.apartments.reserved') || 'Зарезервированные'}
+                  {t('admin.analytics.apartments.reserved')}
                 </p>
               </div>
             </div>
@@ -707,19 +707,19 @@ export const AdminAnalytics = () => {
         {/* Детальная таблица по проектам */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin.analytics.projectsTable') || 'Детальная статистика по проектам'}</CardTitle>
+            <CardTitle>{t('admin.analytics.projectsTable')}</CardTitle>
             <CardDescription>
-              {t('admin.analytics.projectsTableDescription') || 'Подробная информация по каждому проекту'}
+              {t('admin.analytics.projectsTableDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('admin.analytics.project') || 'Проект'}</TableHead>
-                  <TableHead>{t('admin.analytics.views') || 'Просмотры'}</TableHead>
-                  <TableHead>{t('admin.analytics.leads') || 'Лиды'}</TableHead>
-                  <TableHead>{t('admin.analytics.conversion') || 'Конверсия'}</TableHead>
+                  <TableHead>{t('admin.analytics.project')}</TableHead>
+                  <TableHead>{t('admin.analytics.views')}</TableHead>
+                  <TableHead>{t('admin.analytics.leads')}</TableHead>
+                  <TableHead>{t('admin.analytics.conversion')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -737,7 +737,7 @@ export const AdminAnalytics = () => {
                 {analyticsData.topProjects.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      {t('admin.analytics.noData') || 'Нет данных'}
+                      {t('admin.analytics.noData')}
                     </TableCell>
                   </TableRow>
                 )}
