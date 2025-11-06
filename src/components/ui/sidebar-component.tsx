@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import {
   Search as SearchIcon,
@@ -51,6 +52,7 @@ import {
   Building,
   ChevronDown,
   Book,
+  Menu,
 } from "lucide-react";
 import {
   Select,
@@ -61,6 +63,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "./button";
 import { SidebarButton } from "./sidebar-button";
+import { Sheet, SheetContent, SheetTrigger } from "./sheet";
 
 
 
@@ -115,6 +118,8 @@ function SimplifiedSidebar({
   onToggleCollapse,
   title = "Admin Panel",
   showWorkspaceSwitcher = false,
+  isMobile = false,
+  onMobileClose,
 }: {
   navItems: Array<{ id: string; icon: React.ReactNode; label: string }>;
   activeSection: string;
@@ -124,6 +129,8 @@ function SimplifiedSidebar({
   onToggleCollapse: () => void;
   title?: string;
   showWorkspaceSwitcher?: boolean;
+  isMobile?: boolean;
+  onMobileClose?: () => void;
 }) {
   const { t, language } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
@@ -136,15 +143,15 @@ function SimplifiedSidebar({
     });
   }, []);
 
-  return (
-    <aside
-      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
-        }`}
-      style={{
-        backgroundColor: ADMIN_THEME.sidebarBackground,
-        borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
-      }}
-    >
+  const handleSectionChange = (section: string) => {
+    onSectionChange(section);
+    if (isMobile && onMobileClose) {
+      onMobileClose();
+    }
+  };
+
+  const sidebarContent = (
+    <>
       {/* Header */}
       <div
         className="p-4"
@@ -165,25 +172,27 @@ function SimplifiedSidebar({
               </span>
             </div>
           )}
-          <button
-            onClick={onToggleCollapse}
-            className="p-1 rounded-md transition-colors"
-            style={{
-              color: ADMIN_THEME.sidebarText,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            title={isCollapsed ? t('common.more') : t('common.hide')}
-          >
-            <ChevronDownIcon
-              className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
-                }`}
-            />
-          </button>
+          {!isMobile && (
+            <button
+              onClick={onToggleCollapse}
+              className="p-1 rounded-md transition-colors"
+              style={{
+                color: ADMIN_THEME.sidebarText,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              title={isCollapsed ? t('common.more') : t('common.hide')}
+            >
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
+                  }`}
+              />
+            </button>
+          )}
         </div>
       </div>
 
@@ -241,7 +250,7 @@ function SimplifiedSidebar({
               label={item.label}
               isActive={activeSection === item.id}
               isCollapsed={isCollapsed}
-              onClick={() => onSectionChange(item.id)}
+              onClick={() => handleSectionChange(item.id)}
             />
           ))}
         </nav>
@@ -294,6 +303,34 @@ function SimplifiedSidebar({
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <aside
+          className="flex flex-col h-full overflow-hidden"
+          style={{
+            backgroundColor: ADMIN_THEME.sidebarBackground,
+          }}
+        >
+          {sidebarContent}
+        </aside>
+      </>
+    );
+  }
+
+  return (
+    <aside
+      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
+        }`}
+      style={{
+        backgroundColor: ADMIN_THEME.sidebarBackground,
+        borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
+      }}
+    >
+      {sidebarContent}
     </aside>
   );
 }
@@ -306,26 +343,34 @@ export function AdminSidebar({
   onNavigate,
   userEmail,
   activeTab,
-  onTabChange
+  onTabChange,
+  isMobileOpen,
+  setIsMobileOpen,
 }: {
   onNavigate?: (path: string) => void;
   userEmail?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  isMobileOpen?: boolean;
+  setIsMobileOpen?: (open: boolean) => void;
 }) {
   const { t } = useLanguage();
   const { userRole } = useUserRole();
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
-  const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     onTabChange?.(section);
+    if (isMobile && setIsMobileOpen) {
+      setIsMobileOpen(false);
+    }
   };
 
   const navItems = getAdminNavItems(t, userRole.type === 'manager', onNavigate);
 
-  return (
+  const sidebar = (
     <SimplifiedSidebar
       navItems={navItems}
       activeSection={activeSection}
@@ -335,7 +380,52 @@ export function AdminSidebar({
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('adminSidebar.title')}
       showWorkspaceSwitcher={userRole.type === 'manager'}
+      isMobile={isMobile}
+      onMobileClose={() => {
+        if (setIsMobileOpen) {
+          setIsMobileOpen(false);
+        }
+      }}
     />
+  );
+
+  if (isMobile && isMobileOpen !== undefined && setIsMobileOpen) {
+    return (
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetContent side="left" className="w-80 p-0">
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return sidebar;
+}
+
+// Export mobile menu button component
+export function AdminSidebarMenuButton({
+  setIsMobileOpen,
+}: {
+  setIsMobileOpen?: (open: boolean) => void;
+}) {
+  const isMobile = useIsMobile();
+
+  if (!isMobile || !setIsMobileOpen) {
+    return null;
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="lg:hidden"
+      style={{
+        color: ADMIN_THEME.sidebarText,
+      }}
+      onClick={() => setIsMobileOpen(true)}
+    >
+      <Menu className="h-5 w-5" />
+    </Button>
   );
 }
 
@@ -343,25 +433,33 @@ export function ProjectEditorSidebar({
   onSectionChange,
   activeTab,
   userEmail,
-  projectType
+  projectType,
+  isMobileOpen,
+  setIsMobileOpen,
 }: {
   onSectionChange?: (section: string) => void;
   activeTab?: string;
   userEmail?: string;
   projectType?: 'building' | 'object' | null;
+  isMobileOpen?: boolean;
+  setIsMobileOpen?: (open: boolean) => void;
 }) {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState(activeTab || "general");
-  const [isCollapsed, setIsCollapsed] = useState(false); // Collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     onSectionChange?.(section);
+    if (isMobile && setIsMobileOpen) {
+      setIsMobileOpen(false);
+    }
   };
 
   const navItems = getProjectEditorNavItems(t, projectType);
 
-  return (
+  const sidebar = (
     <SimplifiedSidebar
       navItems={navItems}
       activeSection={activeSection}
@@ -370,7 +468,52 @@ export function ProjectEditorSidebar({
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('projectEditorSidebar.title')}
+      isMobile={isMobile}
+      onMobileClose={() => {
+        if (setIsMobileOpen) {
+          setIsMobileOpen(false);
+        }
+      }}
     />
+  );
+
+  if (isMobile && isMobileOpen !== undefined && setIsMobileOpen) {
+    return (
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetContent side="left" className="w-80 p-0">
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return sidebar;
+}
+
+// Export mobile menu button component for ProjectEditor
+export function ProjectEditorSidebarMenuButton({
+  setIsMobileOpen,
+}: {
+  setIsMobileOpen?: (open: boolean) => void;
+}) {
+  const isMobile = useIsMobile();
+
+  if (!isMobile || !setIsMobileOpen) {
+    return null;
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="lg:hidden"
+      style={{
+        color: ADMIN_THEME.sidebarText,
+      }}
+      onClick={() => setIsMobileOpen(true)}
+    >
+      <Menu className="h-5 w-5" />
+    </Button>
   );
 }
 

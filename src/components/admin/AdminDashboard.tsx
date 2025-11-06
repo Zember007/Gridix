@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Building2, Settings, Code, BarChart3, LogOut, User, Shield, UserCheck, Menu, Crown, HelpCircle } from 'lucide-react';
+import { LogOut, HelpCircle } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
@@ -15,11 +14,10 @@ import { AdminAnalytics } from './AdminAnalytics';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { AdminSidebar } from '@/components/ui/sidebar-component';
+import { AdminSidebar, AdminSidebarMenuButton } from '@/components/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 
 const AdminDashboard = () => {
@@ -37,9 +35,11 @@ const AdminDashboard = () => {
   }, []);
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
   const { userRole, isManager, developerId } = useUserRole();
-  const { isManagerMode, availableWorkspaces } = useWorkspace();
+  const { availableWorkspaces } = useWorkspace();
+
+  // Mobile menu state (shared between AdminSidebar and AdminSidebarMenuButton)
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleCreateNew = () => {
     setShowCreateModal(true);
@@ -76,239 +76,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Mobile view - keep original layout
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-
-                {/* Mobile Navigation Drawer */}
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Menu className="h-4 w-4 mr-2" />
-                      {t('common.menu')}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80">
-                    <SheetHeader>
-                      <SheetTitle>{t('admin.dashboard')}</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <nav className="space-y-2">
-                        <button
-                          onClick={() => setActiveTab('projects')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'projects'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Building2 className="h-4 w-4" />
-                          {t('admin.projects')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('leads')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'leads'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
-                            }`}
-                        >
-                          <UserCheck className="h-4 w-4" />
-                          {t('admin.leads')}
-                        </button>
-                        {!isManagerMode && (
-                          <button
-                            onClick={() => navigate('/subscription')}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 hover:bg-muted"
-                          >
-                            <Crown className="h-4 w-4" />
-                            {t('admin.subscription')}
-                          </button>
-                        )}
-                        {/*   <button
-                          onClick={() => setActiveTab('partners')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
-                            activeTab === 'partners' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'hover:bg-muted'
-                          }`}
-                        >
-                          <Handshake className="h-4 w-4" />
-                          Партнёры
-                        </button> */}
-                        <button
-                          onClick={() => setActiveTab('widgets')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'widgets'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Code className="h-4 w-4" />
-                          {t('admin.widgets')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('analytics')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'analytics'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
-                            }`}
-                        >
-                          <BarChart3 className="h-4 w-4" />
-                          {t('admin.analytics')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('settings')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'settings'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Settings className="h-4 w-4" />
-                          {t('admin.settings')}
-                        </button>
-                      </nav>
-                    </div>
-
-                    {/* User Info in Drawer */}
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="border-t pt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground truncate">
-                            {userProfile?.email || user?.email || 'Unknown user'}
-                          </span>
-                        </div>
-                        {isManager && userRole.managerData && (
-                          <div className="mb-3">
-                            {userRole.managerData.map((data) => (
-                              <div key={data.id} className="flex items-center gap-2">
-                                <Shield className="h-3 w-3 text-blue-600" />
-                                <span className="text-xs text-blue-600 truncate">
-                                  Менеджер: {data.developer_profile?.company_name}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleSignOut}
-                            className="flex-1"
-                          >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            {t('auth.signOut')}
-                          </Button>
-                          <LanguageToggle />
-                        </div>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-
-              <div>
-                <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
-                <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-8">
-          {/* Show content based on activeTab without Tabs wrapper */}
-
-          {activeTab === 'projects' && (
-            <div className="space-y-6">
-              <ProjectList
-                onCreateNew={handleCreateNew}
-                onEditProject={handleEditProject}
-              />
-            </div>
-          )}
-
-          {activeTab === 'leads' && (
-            <div className="space-y-6">
-              <LeadsManager showProjectColumn={!isManager} />
-            </div>
-          )}
-
-          {activeTab === 'partners' && (
-            <div className="space-y-6">
-              <PartnersPage />
-            </div>
-          )}
-
-          {activeTab === 'widgets' && (
-            <div className="space-y-6">
-              <AdminWidgets />
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <AdminAnalytics />
-            </div>
-          )}
-
-          {activeTab === 'subscription' && !isManagerMode && (
-            <div className="space-y-6">
-              <SubscriptionTab />
-            </div>
-          )}
-
-          {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
-            <div className="space-y-6">
-              <AdminSettings
-                userProfile={user!}
-                loading={loading}
-                developerId={developerId}
-                isManager={isManager}
-                {...(userRole.managerData && { managerData: userRole.managerData })}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Project Creation Modal */}
-        <ProjectCreationModal
-          open={showCreateModal}
-          onClose={handleCloseCreateModal}
-          onManualCreate={handleManualCreate}
-        />
-
-        {/* Support Button */}
-        <Button
-          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
-          style={{
-            backgroundColor: ADMIN_THEME.primary,
-            color: ADMIN_THEME.textOnPrimary,
-            borderColor: ADMIN_THEME.primary,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onClick={() => {
-            // Здесь можно добавить логику для открытия поддержки
-            window.open('https://t.me/gridix_bot', '_blank');
-          }}
-        >
-          <HelpCircle className="h-10 w-10" />
-        </Button>
-      </div>
-    );
-  }
-
-  // Desktop view with sidebar
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar
@@ -316,19 +83,29 @@ const AdminDashboard = () => {
         userEmail={userProfile?.email || user?.email || 'Unknown user'}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
       />
 
-      <div className="flex-1 bg-background">
+      <div className="flex-1 bg-background flex flex-col">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div>
+                {/* Mobile menu button */}
+                <AdminSidebarMenuButton
+                  setIsMobileOpen={setIsMobileOpen}
+                />
+                <div className="hidden lg:block">
                   <h1 className="text-2xl font-bold">{t('admin.dashboard')}</h1>
                   <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
                 </div>
+                <div className="lg:hidden">
+                  <h1 className="text-xl font-bold">{t('admin.dashboard')}</h1>
+                  <p className="text-muted-foreground text-sm">{t('admin.dashboardDescription')}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 lg:gap-4">
                 {/* Sign Out Button */}
                 <Button
                   variant="outline"
@@ -348,7 +125,7 @@ const AdminDashboard = () => {
                   }}
                 >
                   <LogOut className="h-4 w-4" />
-                  {t('auth.signOut')}
+                  <span className="hidden sm:inline">{t('auth.signOut')}</span>
                 </Button>
 
                 <LanguageToggle />
@@ -357,8 +134,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          {/* Remove Tabs wrapper and show content based on activeTab */}
+        <div className="flex-1 container mx-auto px-4 py-4 lg:py-8 overflow-auto">
           {activeTab === 'projects' && (
             <div className="space-y-6">
               <ProjectList
@@ -397,6 +173,7 @@ const AdminDashboard = () => {
               <AdminAnalytics />
             </div>
           )}
+
           {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
             <div className="space-y-6">
               <AdminSettings
@@ -420,7 +197,7 @@ const AdminDashboard = () => {
         {/* Support Button */}
         <Button
           size={"icon"}
-          className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="fixed bottom-4 right-4 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
           style={{
             backgroundColor: ADMIN_THEME.primary,
             color: ADMIN_THEME.textOnPrimary,
@@ -435,11 +212,10 @@ const AdminDashboard = () => {
             e.currentTarget.style.transform = 'scale(1)';
           }}
           onClick={() => {
-            // Здесь можно добавить логику для открытия поддержки
             window.open('https://t.me/gridix_bot', '_blank');
           }}
         >
-          <HelpCircle />
+          <HelpCircle className="h-5 w-5 lg:h-6 lg:w-6" />
         </Button>
       </div>
     </div>

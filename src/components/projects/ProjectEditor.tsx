@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Save, Building2, Image, Settings, Camera, Zap, FileText, Upload, X, Globe, Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ArrowLeft, Save, Building2, Image, Settings, Camera, Zap, FileText, Upload, X, Globe } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,8 +25,7 @@ import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
 import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
 import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
-import { ProjectEditorSidebar } from '@/components/ui/sidebar-component';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/components/ui/sidebar-component';
 import { useSearchParams } from 'react-router-dom';
 import ProjectFloorsManager from './ProjectFloorsManager';
 
@@ -93,8 +91,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { project: cachedProject } = useProject(projectId);
-  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
+  
+  // Mobile menu state
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -419,137 +419,49 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
-  // Mobile view with navigation drawer
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background flex">
+      <ProjectEditorSidebar
+        onSectionChange={handleSidebarSectionChange}
+        activeTab={getSidebarSection(activeTab ?? 'basic')}
+        userEmail={userProfile?.email || user?.email || 'Unknown user'}
+        projectType={project.project_type ?? 'building'}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
+      />
+
+      <div className="flex-1 bg-background flex flex-col">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={onBack}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  {t('projectEditor.back')}
+                  <span className="hidden sm:inline">{t('projectEditor.back')}</span>
                 </Button>
-
-                {/* Mobile Navigation Drawer */}
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Menu className="h-4 w-4 mr-2" />
-                      {t('common.menu')}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80">
-                    <SheetHeader>
-                      <SheetTitle>{t('projectEditor.title')}</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <nav className="space-y-2">
-                        <button
-                          onClick={() => setActiveTab('basic')}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'basic'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Building2 className="h-4 w-4" />
-                          {t('projectEditor.basicInfo')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('building')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'building'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Image className="h-4 w-4" />
-                          {project.project_type === 'object' ? t('projectEditor.objectImage') : t('projectEditor.buildingImage')}
-                        </button>
-                        {project.project_type !== 'object' && (
-                          <button
-                            onClick={() => setActiveTab('floors')}
-                            disabled={isNew}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'floors'
-                              ? 'bg-primary text-primary-foreground'
-                              : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                              }`}
-                          >
-                            <Settings className="h-4 w-4" />
-                            {t('projectEditor.floors')}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setActiveTab('apartments')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'apartments'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Settings className="h-4 w-4" />
-                          {project.project_type === 'object' ? t('projectEditor.objects') : t('projectList.apartments')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('fields')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'fields'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Settings className="h-4 w-4" />
-                          {t('projectEditor.fields')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('photos')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'photos'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Camera className="h-4 w-4" />
-                          {t('projectEditor.photos')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('domains')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'domains'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Globe className="h-4 w-4" />
-                          {t('projectEditor.domains')}
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('integrations')}
-                          disabled={isNew}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${activeTab === 'integrations'
-                            ? 'bg-primary text-primary-foreground'
-                            : isNew ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted'
-                            }`}
-                        >
-                          <Zap className="h-4 w-4" />
-                          Integrations
-                        </button>
-                      </nav>
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                
+                {/* Mobile menu button */}
+                <ProjectEditorSidebarMenuButton
+                  setIsMobileOpen={setIsMobileOpen}
+                />
+                
+                <div className="hidden lg:block">
+                  <h1 className="text-2xl font-bold">
+                    {isNew ? t('projectEditor.newProject') : project.name}
+                  </h1>
+                  <p className="text-muted-foreground text-sm">
+                    {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
+                  </p>
+                </div>
+                <div className="lg:hidden">
+                  <h1 className="text-lg font-bold">
+                    {isNew ? t('projectEditor.newProject') : project.name}
+                  </h1>
+                  <p className="text-muted-foreground text-xs">
+                    {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
+                  </p>
+                </div>
               </div>
-
-              <div className="flex-1 text-center">
-                <h1 className="text-lg font-bold">
-                  {isNew ? t('projectEditor.newProject') : project.name}
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
-                </p>
-              </div>
-
               <div className="flex items-center gap-2">
                 <LanguageToggle />
                 <Button
@@ -572,434 +484,23 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   }}
                 >
                   <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">
+                    {saving ? t('projectEditor.saving') : t('projectEditor.save')}
+                  </span>
                 </Button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="flex-1 container mx-auto px-4 py-4 lg:py-8 overflow-auto">
           {/* Show content based on activeTab without Tabs wrapper */}
 
-          {activeTab === 'basic' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('projectEditor.basicInfo')}</CardTitle>
-                <CardDescription>{t('projectEditor.basicInfo')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">{t('projectEditor.projectName')} *</Label>
-                  <Input
-                    id="name"
-                    value={project.name}
-                    onChange={(e) => setProject(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder={t('projectEditor.projectName')}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">{t('projectEditor.description')}</Label>
-                  <Textarea
-                    id="description"
-                    value={project.description}
-                    onChange={(e) => setProject(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder={t('projectEditor.description')}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="address">{t('projectEditor.address')}</Label>
-                  <Input
-                    id="address"
-                    value={project.address}
-                    onChange={(e) => setProject(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder={t('projectEditor.address')}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="project-type">{t('projectEditor.projectType')}</Label>
-                    <Select value={project.project_type || 'building'} onValueChange={(v: 'building' | 'object') => setProject(prev => ({ ...prev, project_type: v }))}>
-                      <SelectTrigger id="project-type">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="building">{t('projectEditor.typeBuilding')}</SelectItem>
-                        <SelectItem value="object">{t('projectEditor.typeObject')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {project.project_type !== 'object' && (
-                    <div>
-                      <Label htmlFor="floors">{t('projectEditor.floors')} *</Label>
-                      <Input
-                        id="floors"
-                        type="number"
-                        min="1"
-                        value={project.floors}
-                        onChange={(e) => setProject(prev => ({ ...prev, floors: parseInt(e.target.value) || 1 }))}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Дополнительные типы помещений */}
-                <div className="space-y-4 ">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="has-parking"
-                      checked={project.has_parking}
-                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_parking: checked }))}
-                    />
-                    <Label htmlFor="has-parking">{t('projectEditor.hasParking')}</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="has-commercial"
-                      checked={project.has_commercial}
-                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, has_commercial: checked }))}
-                    />
-                    <Label htmlFor="has-commercial">{t('projectEditor.hasCommercial')}</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="facade-open-mobile"
-                      checked={project.facade_open}
-                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, facade_open: checked }))}
-                    />
-                    <Label htmlFor="facade-open-mobile">{t('projectEditor.facadeOpen')}</Label>
-                  </div>
-                  <p className="text-xs text-gray-500">{t('projectEditor.facadeOpenDesc')}</p>
-                </div>
-                <div>
-                  <Label htmlFor="latitude">{t('projectEditor.latitude')}</Label>
-                  <Input
-                    id="latitude"
-                    type="number"
-                    step="0.000001"
-                    value={project.latitude ?? ''}
-                    onPaste={handlePaste}
-                    onChange={(e) => setProject(prev => ({ ...prev, latitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder={t('projectEditor.latitudePlaceholder')}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.latitudeExample')}</p>
-                </div>
-                <div>
-                  <Label htmlFor="longitude">{t('projectEditor.longitude')}</Label>
-                  <Input
-                    id="longitude"
-                    type="number"
-                    step="0.000001"
-                    value={project.longitude ?? ''}
-                    onPaste={handlePaste}
-                    onChange={(e) => setProject(prev => ({ ...prev, longitude: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder={t('projectEditor.longitudePlaceholder')}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.longitudeExample')}</p>
-                </div>
-                <div>
-                  <Label htmlFor="currency">{t('projectEditor.currency')}</Label>
-                  <Select value={project.currency} onValueChange={(value: CurrencyType) => setProject(prev => ({ ...prev, currency: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('projectEditor.currency')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CURRENCIES).map(([code, info]) => (
-                        <SelectItem key={code} value={code}>
-                          {t(info.translationKey)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.currencyDesc')}</p>
-                </div>
-                <div>
-                  <Label htmlFor="theme-color-mobile">{t('projectEditor.themeColor')}</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4">
-                      <Input
-                        id="theme-color-mobile"
-                        type="color"
-                        value={project.theme_color}
-                        onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
-                        className="w-20 h-10 p-1 border rounded cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={project.theme_color}
-                        onChange={(e) => setProject(prev => ({ ...prev, theme_color: e.target.value }))}
-                        placeholder="#000000"
-                        className="flex-1"
-                      />
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {['#000000', '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'].map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          className="w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors"
-                          style={{ backgroundColor: color }}
-                          onClick={() => setProject(prev => ({ ...prev, theme_color: color }))}
-                          title={color}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">{t('projectEditor.themeColorDesc')}</p>
-                </div>
-
-                {/* PDF Presentation Upload */}
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    {t('projectEditor.pdfPresentation')}
-                  </h4>
-
-                  {project.pdf_presentation_url ? (
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-red-600" />
-                        <span className="text-sm">{t('projectEditor.pdfUploaded')}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(project.pdf_presentation_url!, '_blank')}
-                        >
-                          {t('projectEditor.view')}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={handleRemovePdf}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                      <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t('projectEditor.pdfPresentationDesc')}
-                      </p>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handlePdfUpload(file);
-                        }}
-                        className="hidden"
-                        id="pdf-upload-mobile"
-                        disabled={isNew || uploadingPdf}
-                      />
-                      <label htmlFor="pdf-upload-mobile">
-                        <Button
-                          variant="outline"
-                          disabled={isNew || uploadingPdf}
-                          asChild
-                        >
-                          <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploadingPdf ? t('projectEditor.uploading') : t('projectEditor.uploadPdf')}
-                          </span>
-                        </Button>
-                      </label>
-                      {isNew && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {t('projectEditor.saveProjectFirstNote')}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Настройки рассрочки */}
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="font-medium text-sm">{t('projectEditor.installmentSettings')}</h4>
-
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="installment-enabled"
-                      checked={project.installment_enabled}
-                      onCheckedChange={(checked) => setProject(prev => ({ ...prev, installment_enabled: checked }))}
-                    />
-                    <Label htmlFor="installment-enabled">{t('projectEditor.enableInstallment')}</Label>
-                  </div>
-
-                  {project.installment_enabled && (
-                    <>
-                      <div>
-                        <Label htmlFor="min-down-payment">{t('projectEditor.minDownPaymentPercent')}</Label>
-                        <Input
-                          id="min-down-payment"
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={project.min_down_payment_percent}
-                          onChange={(e) => setProject(prev => ({
-                            ...prev,
-                            min_down_payment_percent: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
-                          }))}
-                          placeholder="20"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">{t('projectEditor.minDownPaymentDesc')}</p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="max-installment-months">{t('projectEditor.maxInstallmentMonths')}</Label>
-                        <Input
-                          id="max-installment-months"
-                          type="number"
-                          min="1"
-                          max="120"
-                          value={project.max_installment_months}
-                          onChange={(e) => setProject(prev => ({
-                            ...prev,
-                            max_installment_months: Math.min(120, Math.max(1, parseInt(e.target.value) || 1))
-                          }))}
-                          placeholder="24"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">{t('projectEditor.maxInstallmentMonthsDesc')}</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {isNew && (
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="w-full"
-                    style={{
-                      backgroundColor: ADMIN_THEME.primary,
-                      color: ADMIN_THEME.textOnPrimary,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                      }
-                    }}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {saving ? t('projectEditor.saving') : t('projectEditor.save&continue')}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === 'building' && (
-            <BuildingImageEditor
-              projectId={project.id}
-              currentImageUrl={project.building_image_url}
-              onImageUpdate={(imageUrl) => setProject(prev => ({ ...prev, building_image_url: imageUrl }))}
-            />
-          )}
-
-          {activeTab === 'floors' && project.project_type !== 'object' && (
-            <ProjectFloorsManager projectId={project.id} />
-          )}
-
-          {activeTab === 'apartments' && (
-            <div className="space-y-4">
-              <ProjectApartmentsManager
-                projectId={project.id} projectType={project.project_type ?? 'building'} />
-            </div>
-          )}
-
-          {activeTab === 'fields' && (
-            <AllFieldsManager projectId={project.id} />
-          )}
-
-          {activeTab === 'photos' && (
-            <ApartmentPhotosManager projectId={project.id} />
-          )}
-
-          {activeTab === 'domains' && (
-            <ProjectDomainSettings projectId={project.id} projectName={project.name} />
-          )}
-
-          {activeTab === 'integrations' && (
-            <AmoCRMSettings projectId={project.id} />
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop view with sidebar
-  return (
-    <div className="min-h-screen bg-background flex">
-      <ProjectEditorSidebar
-        onSectionChange={handleSidebarSectionChange}
-        activeTab={getSidebarSection(activeTab ?? 'basic')}
-        userEmail={userProfile?.email || user?.email || 'Unknown user'}
-        projectType={project.project_type ?? 'building'}
-      />
-
-      <div className="flex-1 bg-background">
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={onBack}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  {t('projectEditor.back')}
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold">
-                    {isNew ? t('projectEditor.newProject') : project.name}
-                  </h1>
-                  <p className="text-muted-foreground">
-                    {isNew ? t('projectEditor.createNewProject') : t('projectEditor.editProject')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <LanguageToggle />
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                    }
-                  }}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? t('projectEditor.saving') : t('projectEditor.save')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 py-8">
-          {/* Show content based on activeTab without Tabs wrapper */}
 
           {(activeTab === 'basic' || activeTab === 'building') && (
             <div className="space-y-6">
-              {/* Sub-navigation for basic/building sections */}
-              <div className="flex gap-2 mb-6">
+              {/* Sub-navigation for basic/building sections - only on desktop */}
+              <div className="hidden lg:flex gap-2 mb-6">
                 <Button
                   variant={activeTab === 'basic' ? 'default' : 'outline'}
                   onClick={() => setActiveTab('basic')}
