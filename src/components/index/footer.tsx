@@ -40,7 +40,7 @@ const Footer = () => {
   return (
     <footer className={`bg-black ${isMobile ? 'py-12' : 'py-16'}`}>
       <div className="container mx-auto">
-        <div className={`flex ${isMobile ? 'flex-col gap-8' : 'flex-row justify-between gap-8 items-end'} mb-8`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-8' : 'flex-row justify-between gap-8 items-center'} mb-8`}>
           {/* Company Info */}
           <div>
             <Logo
@@ -49,11 +49,13 @@ const Footer = () => {
             <p className="text-gray-400 text-xs mb-4 max-w-md">
               {t('landing.companyDescription')}
             </p>
-            <div className="text-sm text-gray-400">
-              <p><strong>{t('landing.company')}:</strong> Gridix</p>
-              <p><strong>{t('landing.address')}:</strong> {t('privacy.companyInfo.addressValue')}</p>
-              <p><strong>{t('landing.email')}:</strong> inbox@gridix.live</p>
-            </div>
+
+          </div>
+
+          <div className="text-sm text-gray-400">
+            <p><strong>{t('landing.company')}:</strong> Gridix</p>
+            <p><strong>{t('landing.address')}:</strong> {t('privacy.companyInfo.addressValue')}</p>
+            <p><strong>{t('landing.email')}:</strong> inbox@gridix.live</p>
           </div>
 
           {/* Quick Links */}
