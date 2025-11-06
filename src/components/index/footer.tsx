@@ -73,7 +73,7 @@ const Footer = () => {
             <p className="text-gray-400">
               © {new Date().getFullYear()} {t('landing.copyright')}
             </p>
-            <ul className="flex sm:gap-10 gap-2 text-gray-400 text-xs sm:justify-center sm:justify-start flex-col text-left">
+            <ul className="flex sm:gap-10 gap-2 text-gray-400 text-xs sm:justify-center sm:flex-row flex-col text-left">
               <li><button onClick={goToPrivacyPolicy} className="hover:text-blue-400 transition-colors">{t('landing.privacyPolicy')}</button></li>
               <li><button onClick={goToTermsOfService} className="hover:text-blue-400 transition-colors">{t('landing.termsOfService')}</button></li>
               <li><button onClick={goToRefundPolicy} className="hover:text-blue-400 transition-colors">{t('landing.refundPolicy')}</button></li>
