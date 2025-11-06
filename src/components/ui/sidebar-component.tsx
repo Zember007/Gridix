@@ -50,6 +50,7 @@ import {
   Handshake,
   Building,
   ChevronDown,
+  Book,
 } from "lucide-react";
 import {
   Select,
@@ -58,6 +59,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "./button";
+import { SidebarButton } from "./sidebar-button";
 
 
 
@@ -122,7 +125,7 @@ function SimplifiedSidebar({
   title?: string;
   showWorkspaceSwitcher?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
 
   // Применяем CSS переменные темы
@@ -134,28 +137,27 @@ function SimplifiedSidebar({
   }, []);
 
   return (
-    <aside 
-      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
+    <aside
+      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
+        }`}
       style={{
         backgroundColor: ADMIN_THEME.sidebarBackground,
         borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
       }}
     >
       {/* Header */}
-      <div 
+      <div
         className="p-4"
         style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
       >
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center gap-2">
-              <Building2 
-                className="h-6 w-6" 
+              <Building2
+                className="h-6 w-6"
                 style={{ color: ADMIN_THEME.sidebarText }}
               />
-              <span 
+              <span
                 className="font-semibold whitespace-nowrap"
                 style={{ color: ADMIN_THEME.sidebarText }}
               >
@@ -177,10 +179,9 @@ function SimplifiedSidebar({
             }}
             title={isCollapsed ? t('common.more') : t('common.hide')}
           >
-            <ChevronDownIcon 
-              className={`h-4 w-4 transition-transform duration-300 ${
-                isCollapsed ? "rotate-90" : "-rotate-90"
-              }`} 
+            <ChevronDownIcon
+              className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
+                }`}
             />
           </button>
         </div>
@@ -188,7 +189,7 @@ function SimplifiedSidebar({
 
       {/* Workspace Switcher */}
       {showWorkspaceSwitcher && availableWorkspaces.length > 0 && !isCollapsed && (
-        <div 
+        <div
           className="px-4 py-3"
           style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
         >
@@ -196,7 +197,7 @@ function SimplifiedSidebar({
             value={activeWorkspaceId || 'own'}
             onValueChange={(value) => setActiveWorkspaceId(value === 'own' ? null : value)}
           >
-            <SelectTrigger 
+            <SelectTrigger
               className="w-full"
               style={{
                 borderColor: ADMIN_THEME.sidebarBorder,
@@ -211,8 +212,8 @@ function SimplifiedSidebar({
             </SelectTrigger>
             <SelectContent>
               {availableWorkspaces.map((workspace) => (
-                <SelectItem 
-                  key={workspace.id || 'own'} 
+                <SelectItem
+                  key={workspace.id || 'own'}
                   value={workspace.id || 'own'}
                 >
                   <div className="flex items-center gap-2">
@@ -231,77 +232,65 @@ function SimplifiedSidebar({
       )}
 
       {/* Navigation */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-y-auto">
         <nav className="space-y-2">
           {navItems.map((item) => (
-            <button
+            <SidebarButton
               key={item.id}
+              icon={item.icon}
+              label={item.label}
+              isActive={activeSection === item.id}
+              isCollapsed={isCollapsed}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${isCollapsed ? "justify-center px-2" : ""}`}
-              style={{
-                backgroundColor: activeSection === item.id ? ADMIN_THEME.sidebarActiveBackground : 'transparent',
-                border: activeSection === item.id ? `1px solid ${ADMIN_THEME.sidebarActiveBorder}` : '1px solid transparent',
-                color: activeSection === item.id ? ADMIN_THEME.sidebarActiveText : ADMIN_THEME.sidebarText,
-              }}
-              onMouseEnter={(e) => {
-                if (activeSection !== item.id) {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-                  e.currentTarget.style.color = ADMIN_THEME.sidebarTextHover;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeSection !== item.id) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = ADMIN_THEME.sidebarText;
-                }
-              }}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <div className="flex-shrink-0">
-                {item.icon}
-              </div>
-              {!isCollapsed && (
-                <span className="font-medium whitespace-nowrap">{item.label}</span>
-              )}
-            </button>
+            />
           ))}
         </nav>
       </div>
 
       {/* Footer */}
       {userEmail && (
-        <div 
-          className="p-4"
-          style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
-        >
-          <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
-            <div className="flex-shrink-0">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: ADMIN_THEME.primaryActive }}
-              >
-                <UserIcon 
-                  className="h-4 w-4" 
-                  style={{ color: ADMIN_THEME.textOnPrimary }}
-                />
+        <div>
+          <div className="flex gap-2 p-4">
+            <SidebarButton
+              icon={<Book size={20} />}
+              label={t('admin.documentation')}
+              isCollapsed={isCollapsed}
+              href={`https://docs.gridix.live/${language === 'ru' ? 'ru' : 'en'}`}
+            />
+          </div>
+          <div
+            className="p-4"
+            style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+          >
+            <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
+              <div className="flex-shrink-0">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+                >
+                  <UserIcon
+                    className="h-4 w-4"
+                    style={{ color: ADMIN_THEME.textOnPrimary }}
+                  />
+                </div>
               </div>
+              {!isCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-sm font-medium truncate"
+                    style={{ color: ADMIN_THEME.sidebarText }}
+                  >
+                    {userEmail.split('@')[0]}
+                  </p>
+                  <p
+                    className="text-xs truncate"
+                    style={{ color: ADMIN_THEME.textMuted }}
+                  >
+                    {userEmail}
+                  </p>
+                </div>
+              )}
             </div>
-            {!isCollapsed && (
-              <div className="min-w-0 flex-1">
-                <p 
-                  className="text-sm font-medium truncate"
-                  style={{ color: ADMIN_THEME.sidebarText }}
-                >
-                  {userEmail.split('@')[0]}
-                </p>
-                <p 
-                  className="text-xs truncate"
-                  style={{ color: ADMIN_THEME.textMuted }}
-                >
-                  {userEmail}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -313,13 +302,13 @@ function SimplifiedSidebar({
 
 /* --------------------------------- Layout -------------------------------- */
 
-export function AdminSidebar({ 
-  onNavigate, 
+export function AdminSidebar({
+  onNavigate,
   userEmail,
   activeTab,
   onTabChange
-}: { 
-  onNavigate?: (path: string) => void; 
+}: {
+  onNavigate?: (path: string) => void;
   userEmail?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -341,7 +330,7 @@ export function AdminSidebar({
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
-      userEmail={userEmail}
+      userEmail={userEmail || ''}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('adminSidebar.title')}
@@ -350,13 +339,13 @@ export function AdminSidebar({
   );
 }
 
-export function ProjectEditorSidebar({ 
-  onSectionChange, 
+export function ProjectEditorSidebar({
+  onSectionChange,
   activeTab,
   userEmail,
   projectType
-}: { 
-  onSectionChange?: (section: string) => void; 
+}: {
+  onSectionChange?: (section: string) => void;
   activeTab?: string;
   userEmail?: string;
   projectType?: 'building' | 'object' | null;
@@ -377,7 +366,7 @@ export function ProjectEditorSidebar({
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
-      userEmail={userEmail}
+      userEmail={userEmail || ''}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('projectEditorSidebar.title')}
