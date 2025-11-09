@@ -28,6 +28,10 @@ const Index = () => {
     navigate('/admin');
   };
 
+  const goToPricing = () => {
+    navigate('/pricing');
+  };
+
   const openDemoModal = () => {
     setIsDemoModalOpen(true);
   };
@@ -113,7 +117,7 @@ const Index = () => {
         </iframe>
       </ContainerScroll>
 
-      <GetStarted onGoToAdmin={goToAdmin} onScrollToPricing={() => smoothScrollTo('pricing')} />
+      <GetStarted onGoToAdmin={goToAdmin} onScrollToPricing={goToPricing} />
 
       <CaseStudy />
 

@@ -1,30 +1,85 @@
 {
-  "title": "Pricing Plans",
-  "subtitle": "Choose the perfect plan for your business needs",
-  "benefits": "Why Choose Our Platform",
-  "benefit1Title": "Professional Tools",
-  "benefit1Text": "Create stunning floor plans with our advanced editor and templates",
-  "benefit2Title": "CRM Integration",
-  "benefit2Text": "Connect with your favorite CRM systems seamlessly",
-  "benefit3Title": "Custom Domains",
-  "benefit3Text": "Use your own domain for a professional brand presence",
-  "benefit4Title": "Scalable Solution",
-  "benefit4Text": "Grow your business with unlimited projects and apartments",
-  "benefit5Title": "Secure & Reliable",
-  "benefit5Text": "99.9% uptime guarantee with enterprise-grade security",
-  "benefit6Title": "Priority Support",
-  "benefit6Text": "Get help when you need it with our dedicated support team",
-  "faqTitle": "Frequently Asked Questions",
-  "faq1Q": "What payment methods do you accept?",
-  "faq1A": "We accept all major credit cards, PayPal, and bank transfers for annual plans.",
-  "faq2Q": "Can I switch plans later?",
-  "faq2A": "Yes! You can upgrade or downgrade your plan at any time. Changes are prorated.",
-  "faq3Q": "Is there a free trial?",
-  "faq3A": "Yes, new users get a 14-day free trial of the Pro plan with no credit card required.",
-  "faq4Q": "What happens if I cancel?",
-  "faq4A": "You retain access until the end of your billing period, then your account moves to the free tier.",
-  "faq5Q": "Do you offer refunds?",
-  "faq5A": "Yes, we offer a 30-day money-back guarantee on all plans.",
-  "faq6Q": "Can I get a custom plan for my enterprise?",
-  "faq6A": "Absolutely! Contact our sales team for custom enterprise solutions."
+  "title": "Pricing & Subscriptions",
+  "subtitle": "Price is per 1 project",
+  "pricePeriod": "/ month per project",
+  "loadingError": "Failed to load pricing plans",
+  "included": "Included:",
+  "limitationsLabel": "Limitations:",
+  "allFromBasic": "Everything from BASIC, plus:",
+  "cta": {
+    "basic": "Start with Basic",
+    "pro": "Choose Pro"
+  },
+  "suitability": {
+    "basic": "Perfect for demo, pilot, and small residential complexes, settlements, and apartment projects.",
+    "pro": "Perfect for active developers, agencies, and property management companies with multiple projects."
+  },
+  "features": {
+    "interactive_floor_plan": "Interactive floor plan builder",
+    "apartment_management": "Management (apartments, houses, parking, and commercial spaces) — unified structure for any type of property",
+    "lead_management": "Leads (mini CRM) — receiving and processing customer inquiries",
+    "pdf_presentations": "PDF presentations of apartments or houses",
+    "public_link": "Public project link — for showcasing to clients and partners",
+    "widget_embedding": "Website widget — embed floor plan on any website",
+    "analytics": "Analytics and reports — views, leads, popular properties, availability, and other data",
+    "project_types": "Various project types — residential complexes, townhouses, cottages, apartments",
+    "bulk_import": "Bulk import — Google Sheets / Excel in one click",
+    "gridix_label": "\"Made with GRIDIX\" label",
+    "support": "Technical support",
+    "team_management": "Add manager team — for managing floor plans and updating data",
+    "crm_integration": "CRM integration (AmoCRM, Bitrix24, and others) — lead synchronization",
+    "custom_domain": "Custom domain connection — www.yourcompany.com",
+    "branding": "Design customization to match brand style — colors, logo, brand elements",
+    "api_access": "API access — for integrations with internal systems",
+    "white_label": "White Label — without GRIDIX mention",
+    "priority_support": "Priority support"
+  },
+  "limitations": {
+    "no_crm": "No CRM and API integration",
+    "no_custom_domain": "No custom domain connection",
+    "no_branding": "No design customization for branding",
+    "no_team": "No ability to add manager team"
+  },
+  "duration": {
+    "1": "1 month",
+    "3": "3 months",
+    "6": "6 months",
+    "12": "1 year",
+    "24": "2 years",
+    "36": "3 years",
+    "months": "months"
+  },
+  "infoCards": {
+    "discounts": {
+      "title": "Discount System",
+      "description": "Save with long-term subscription:",
+      "paymentNote": "Pay monthly or for the selected period. Auto-renewal can be disabled in your account."
+    },
+    "trial": {
+      "title": "Free Trial Period",
+      "item1": "14 days Pro free",
+      "item2": "No card required",
+      "item3": "Full access to all features"
+    },
+    "payment": {
+      "title": "Payment Methods",
+      "item1": "Bank cards — Visa, Mastercard, Apple Pay, Google Pay",
+      "item2": "Invoices for legal entities",
+      "item3": "Secure data transmission (PCI DSS certified)"
+    }
+  },
+  "dialog": {
+    "title": "Request Invoice",
+    "description": "Select a project for this subscription",
+    "selectProject": "Select project",
+    "selectProjectPlaceholder": "Select project",
+    "selectedProject": "Selected project:",
+    "selectedProjectDefault": "Selected project",
+    "requestButton": "Request Invoice"
+  },
+  "toast": {
+    "selectProjectAndPlan": "Please select a project and plan",
+    "invoiceRequestSuccess": "Invoice request sent successfully!",
+    "invoiceRequestError": "Failed to request invoice"
+  }
 }
