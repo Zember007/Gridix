@@ -14,7 +14,7 @@ export default function PricingPage() {
       {/* Header */}
       <HeroHeader />
 
-      <div className="container mx-auto px-4 py-20 md:py-32 space-y-16">
+      <div className="container mx-auto py-20 md:py-32 space-y-16">
       {/* Hero Section */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <h1 className="text-5xl font-bold tracking-tight">

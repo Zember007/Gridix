@@ -20,7 +20,7 @@ const ContactsPage = () => {
       <HeroHeader />
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-20 md:py-32">
+      <main className="flex-1 container mx-auto py-20 md:py-32">
         <div className="max-w-7xl mx-auto">
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-12 md:mb-20">

@@ -1,72 +1,35 @@
 
-import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, Zap, Shield, Globe, Smartphone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import HeroHeader from '@/components/index/header';
 import Footer from '@/components/index/footer';
 import { HeroSection } from '@/components/blocks/hero-section';
-import { Timeline } from '@/components/ui/timeline';
-// import { WorldMap } from '@/components/ui/map';
-import widgetVideo from '@/assets/video/widget.mp4';
-import importVideo from '@/assets/video/import.mp4';
-import crmVideo from '@/assets/video/crm.mp4';
+import { KeyMetrics } from '@/components/index/key-metrics';
+import { Problems } from '@/components/index/problems';
+import { Solution } from '@/components/index/solution';
+import { WhyGridix } from '@/components/index/why-gridix';
+import { ExpandedDemo } from '@/components/index/expanded-demo';
+import { GetStarted } from '@/components/index/get-started';
+import { CaseStudy } from '@/components/index/case-study';
+import { Testimonials } from '@/components/index/testimonials';
+import { CostComparison } from '@/components/index/cost-comparison';
+import { FAQ } from '@/components/index/faq';
+import { DemoModal } from '@/components/index/demo-modal';
 
-// Компонент для видео с автовоспроизведением при попадании в зону видимости
-const VideoPlayer = ({ src, className }: { src: string; className?: string }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            video.play().catch((error) => {
-              console.log('Video play failed:', error);
-            });
-          } else {
-            video.pause();
-          }
-        });
-      },
-      {
-        threshold: 0.5, // Видео начинает играть, когда 50% его видно
-      }
-    );
-
-    observer.observe(video);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  return (
-    <video
-      ref={videoRef}
-      src={src}
-      muted
-      loop
-      playsInline
-      className={className}
-    />
-  );
-};
 
 const Index = () => {
   const { navigate } = useLanguageNavigation();
-  const { t, language } = useLanguage();
-  const isMobile = useIsMobile();
-  const [currentFeature, setCurrentFeature] = useState(0);
+  const { language, t } = useLanguage();
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   const goToAdmin = () => {
     navigate('/admin');
+  };
+
+  const openDemoModal = () => {
+    setIsDemoModalOpen(true);
   };
 
   // Функция для плавной прокрутки к элементу
@@ -80,13 +43,6 @@ const Index = () => {
     }
   };
 
-  // Автоматическое переключение слайдов для интерактивности
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentFeature((prev) => (prev + 1) % 6);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Обработчик для плавной прокрутки по якорным ссылкам
   useEffect(() => {
@@ -101,12 +57,12 @@ const Index = () => {
       }
     };
 
-   setTimeout(() => {
-    const elementId = window.location.hash.substring(1);
-    if (elementId) {
-      smoothScrollTo(elementId);
-    }
-   }, 100);
+    setTimeout(() => {
+      const elementId = window.location.hash.substring(1);
+      if (elementId) {
+        smoothScrollTo(elementId);
+      }
+    }, 100);
 
     document.addEventListener('click', handleAnchorClick);
     return () => {
@@ -114,107 +70,37 @@ const Index = () => {
     };
   }, []);
 
-  const data = [
-    {
-      title: t('landing.widgetsTitle'),
-      content: (
-        <div>
-          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            {t('landing.widgetsDesc')}
-          </p>
-          <VideoPlayer
-            src={widgetVideo}
-            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('landing.dataImportTitle'),
-      content: (
-        <div>
-          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            {t('landing.dataImportDesc')}
-          </p>
-          <VideoPlayer
-            src={importVideo}
-            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('landing.crmIntegrationTitle'),
-      content: (
-        <div>
-          <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-            {t('landing.crmIntegrationDesc')}
-          </p>
-          <VideoPlayer
-            src={crmVideo}
-            className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
-          />
-        </div>
-      ),
-    },
-  ];
-
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+    <div className="min-h-screen">
 
       {/* Header */}
       <HeroHeader />
+
       <HeroSection
-        title={t('landing.interactivePlansTitle')}
-        description={t('landing.interactivePlansDesc')}
-        actions={[
-          {
-            text: "Get Started",
-            href: `/${language}/admin`,
-            variant: "default",
-          },
-          {
-            text: "View Demo",
-            href: "#demo",
-            variant: "default",
-          },
-
-        ]}
-        image={{
-          light: "/AdminScreen.png",
-          dark: "/AdminScreen.png",
-          alt: "UI Components Preview",
-        }}
+        title={t('landing.hero.title')}
+        description={t('landing.hero.description')}
+        onDemoClick={openDemoModal}
       />
 
+      <DemoModal open={isDemoModalOpen} onOpenChange={setIsDemoModalOpen} />
+      <KeyMetrics />
+      <Problems />
+      <Solution />
+      <WhyGridix />
 
-      <Timeline
-        title={
-          <>
-            <h2 className="text-xl sm:text-4xl font-semibold text-black dark:text-white">
-              {t('landing.whatWeGiveClients')} <br />
-              <span className="text-3xl sm:text-5xl md:text-7xl   font-bold mt-1 leading-none">
-                {t('landing.ourAdvantages')}
-              </span>
-            </h2>
-          </>
-        }
-        data={data}
-      />
-
-
+      
+      <ExpandedDemo />
 
       <ContainerScroll
         titleComponent={
           <>
-            <h2 className="text-xl sm:text-4xl font-semibold text-black dark:text-white">
-              {t('landing.howItLooks')} <br />
-              <span className="text-3xl sm:text-5xl md:text-7xl  font-bold mt-1 leading-none">
-                {t('landing.interactiveDemo')}
-              </span>
-            </h2>
+       
+            <h2 className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-6">{t('landing.howItLooks.title')}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed ">
+            {t('landing.howItLooks.subtitle')}
+            </p>
           </>
         }
       >
@@ -225,128 +111,17 @@ const Index = () => {
           height="100%"
         >
         </iframe>
-
-
-
       </ContainerScroll>
 
-    {/*   <section className="flex items-center justify-center flex-col gap-20">
-        <h2 className="text-xl sm:text-4xl max-w-5xl font-semibold text-black dark:text-white text-center">
-          {t('landing.workWithoutBorders')}   <br />
-          <span className="text-3xl sm:text-5xl md:text-7xl   font-bold mt-1 leading-none">
-            {t('landing.sellFromAnywhere')}
-          </span>
+      <GetStarted onGoToAdmin={goToAdmin} onScrollToPricing={() => smoothScrollTo('pricing')} />
 
+      <CaseStudy />
 
-        </h2>
-        <WorldMap
-          labelClassName="text-[7px]"
-          dots={[
-            // 1. Турция -> ОАЭ
-            {
-              start: { lat: 39.9334, lng: 32.8597, label: t('country.turkey') },
-              end: { lat: 25.2048, lng: 55.2708, label: t('country.uae') }
-            },
-            // 2. ОАЭ -> Испания
-            {
-              start: { lat: 25.2048, lng: 55.2708, label: t('country.uae') },
-              end: { lat: 40.4637, lng: -3.7492, label: t('country.spain') }
-            },
+      <Testimonials />
+      
+      <CostComparison onGoToAdmin={goToAdmin} />
 
-            // 6. Испания -> Грузия
-            {
-              start: { lat: 40.4637, lng: -3.7492, label: t('country.spain') },
-              end: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') }
-            },
-            // 7. Грузия -> Кипр
-            {
-              start: { lat: 42.3154, lng: 43.3569, label: t('country.georgia') },
-              end: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') }
-            },
-            // 8. Кипр -> Черногория
-            {
-              start: { lat: 35.1264, lng: 33.4299, label: t('country.cyprus') },
-              end: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') }
-            },
-            // 9. Черногория -> Таиланд
-            {
-              start: { lat: 42.7087, lng: 19.3744, label: t('country.montenegro') },
-              end: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') }
-            },
-
-            // 12. Таиланд -> Греция
-            {
-              start: { lat: 15.8700, lng: 100.9925, label: t('country.thailand') },
-              end: { lat: 39.0742, lng: 21.8243, label: t('country.greece') }
-            }
-          ]}
-          lineColor="#000"
-          animationDuration={3}
-          loop={true}
-        />
-      </section> */}
-
-
-
-
-      {/* CTA Section */}
-      <section className={`${isMobile ? 'py-16' : 'py-24'} text-gray-100 relative overflow-hidden`}>
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/5 to-blue-500/5 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="container mx-auto px-4 text-center relative z-10">
-
-
-          {/* Title */}
-          <h3 className={`${isMobile ? 'text-4xl' : 'text-6xl'} font-semibold mb-6 animate-appear opacity-0 delay-100`}>
-            <span className="bg-black to-gray-300 bg-clip-text text-transparent">
-              {t('landing.readyToStart')}
-            </span>
-          </h3>
-
-          {/* Description */}
-          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed animate-appear opacity-0 delay-200`}>
-            {t('landing.readyToStartDesc')}
-          </p>
-
-          {/* Actions */}
-          <div className="flex flex-col items-center gap-6 animate-appear opacity-0 delay-300">
-            <div className="relative group">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
-
-              <Button
-                size="lg"
-                className={`relative bg-white text-gray-900 hover:bg-gray-100 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 ${isMobile ? 'text-lg px-8 py-4' : 'text-xl px-12 py-6'} font-semibold`}
-                onClick={goToAdmin}
-              >
-                {t('landing.enterAdmin')}
-                <ArrowRight className="w-6 h-6 ml-3" />
-              </Button>
-            </div>
-
-            {/* Features list */}
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 max-w-lg">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-400" />
-                <span>{t('landing.freeTrial')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-green-400" />
-                <span>{t('landing.noObligations')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-green-400" />
-                <span>{t('landing.setupIn5Minutes')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FAQ />
 
       {/* Footer */}
       <Footer />

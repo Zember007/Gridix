@@ -89,7 +89,7 @@ const AdminDashboard = () => {
 
       <div className="flex-1 bg-background flex flex-col">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto  py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Mobile menu button */}
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="flex-1 container mx-auto px-4 py-4 lg:py-8 overflow-auto">
+        <div className="flex-1 container mx-auto  py-4 lg:py-8 overflow-auto">
           {activeTab === 'projects' && (
             <div className="space-y-6">
               <ProjectList

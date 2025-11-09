@@ -120,7 +120,7 @@ const EmbedProjectsPage = ({
       {/* Header with filters */}
       {showHeader && (
         <div className="bg-white border-b">
-          <div className={`${isWidget ? 'px-4 py-3' : 'container mx-auto px-6 py-6'}`}>
+          <div className={`${isWidget ? 'px-4 py-3' : 'container mx-auto py-6'}`}>
             <div className={`flex items-center justify-between ${compactMode ? 'mb-3' : 'mb-6'}`}>
               <h1 className={`${compactMode ? 'text-xl' : 'text-3xl'} font-bold text-gray-900`}>
                 {t('embed.title')}
@@ -260,7 +260,7 @@ const EmbedProjectsPage = ({
             />
           </Suspense>
         ) : (
-          <div className={`${isWidget ? 'px-4 py-4' : 'container mx-auto px-6 py-8'}`}>
+          <div className={`${isWidget ? 'px-4 py-4' : 'container mx-auto py-8'}`}>
             {/* Grid view */}
             {projects.length === 0 ? (
               <div className={`text-center ${compactMode ? 'py-8' : 'py-16'}`}>

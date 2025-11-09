@@ -6,9 +6,9 @@ const glowVariants = cva("absolute w-full", {
   variants: {
     variant: {
       top: "top-0",
-      above: "-top-[128px]",
+      above: "-top-[300px]",
       bottom: "bottom-0",
-      below: "-bottom-[128px]",
+      below: "-bottom-[200px]",
       center: "top-[50%]",
     },
   },

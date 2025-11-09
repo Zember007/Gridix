@@ -113,7 +113,7 @@ export default function PartnerProgramPage() {
           <div className="absolute w-96 h-96 rounded-full bg-primary/10 blur-3xl -top-20 -right-20"></div>
           <div className="absolute w-96 h-96 rounded-full bg-accent/10 blur-3xl -bottom-20 -left-20"></div>
         </div>
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto  relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-block mb-4 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
               <span className="text-sm font-medium text-primary">
@@ -150,7 +150,7 @@ export default function PartnerProgramPage() {
 
       {/* Why Gridix is Easy to Sell */}
       <section className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-center">
               {t('partnerProgram.whyEasyToSell.title')}
@@ -180,7 +180,7 @@ export default function PartnerProgramPage() {
 
       {/* Value Proposition Section */}
       <section className="py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto ">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
               {t('partnerProgram.valueProposition.title')}
@@ -303,7 +303,7 @@ export default function PartnerProgramPage() {
 
       {/* Partner Types Section */}
       <section id="types" className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {t('partnerProgram.partnerTypes.title')}
@@ -433,7 +433,7 @@ export default function PartnerProgramPage() {
 
       {/* Case Studies Section */}
       <section className="py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {t('partnerProgram.caseStudies.title')}
@@ -599,7 +599,7 @@ export default function PartnerProgramPage() {
 
       {/* FAQ Section */}
       <section className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
               {t('partnerProgram.faq.title')}
@@ -644,7 +644,7 @@ export default function PartnerProgramPage() {
           <div className="absolute w-96 h-96 rounded-full bg-primary/5 blur-3xl -top-20 -right-20"></div>
           <div className="absolute w-96 h-96 rounded-full bg-accent/5 blur-3xl -bottom-20 -left-20"></div>
         </div>
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto relative z-10">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
               {t('partnerProgram.finalCta.title')}

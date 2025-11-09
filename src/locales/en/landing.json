@@ -91,5 +91,376 @@
   "whatWeGiveClients": "what we give clients",
   "widgetsDesc": "Embeddable interactive plans with one line of code. Works on any CMS (WordPress, Tilda, 1C-Bitrix).",
   "widgetsTitle": "Ready-made widgets for any website",
-  "workWithoutBorders": "work without borders"
+  "workWithoutBorders": "work without borders",
+  "hero": {
+    "title": "Interactive platform for real estate sales",
+    "description": "Showcase your floor plan modernly and increase conversion by an average of 40%. Collect leads in CRM and make decisions based on real analytics. Launch your project in 1 day, no programmers needed.",
+    "demoButton": "Book a demo",
+    "freeTrialText": "7 days free trial"
+  },
+  "heroStats": {
+    "projectsLaunched": "Over 150 projects launched",
+    "conversionGrowth": "Average conversion growth +40%",
+    "countries": "Working with developers in 12 countries"
+  },
+  "keyMetrics": {
+    "title": "Increase your key metrics with GRIDIX",
+    "description": "Specific results that developers get after implementing GRIDIX",
+    "leadCost": {
+      "title": "Lead cost",
+      "reduction": "-35%",
+      "reductionText": "cost reduction",
+      "reason": "Due to conversion growth"
+    },
+    "conversion": {
+      "title": "Website conversion",
+      "old": "2-3%",
+      "new": "4-5%",
+      "increase": "40% increase in leads"
+    },
+    "processingSpeed": {
+      "title": "Processing speed",
+      "savings": "40%",
+      "savingsText": "time savings for managers",
+      "reason": "Client chooses INDEPENDENTLY"
+    }
+  },
+  "problems": {
+    "title": "What problems do developers face?",
+    "description": "Developers lose up to 40% of potential clients due to inefficient business processes, lack of analytics, and managers being overloaded with routine tasks",
+    "before": "Before",
+    "after": "After with GRIDIX",
+    "beforeItems": {
+      "item1": "Clients don't understand floor plans and call asking \"what's available?\"",
+      "item2": "Managers spend 40% of time on availability consultations",
+      "item3": "Cold leads take longer to process due to manager workload",
+      "item4": "Website to lead conversion: 2-3%"
+    },
+    "afterItems": {
+      "item1": "Interactive map — client INDEPENDENTLY chooses apartment online",
+      "item2": "Manager closes deals immediately instead of consulting",
+      "item3": "All leads automatically in CRM with selection data",
+      "item4": "Dashboard with analytics on object popularity and manager activity",
+      "item5": "Export reports to Excel/PDF for decision making",
+      "item6": "Dynamic prices update automatically on floor plan and widget",
+      "item7": "Website to lead conversion: 4-5% (+40%)"
+    },
+    "departments": {
+      "sales": {
+        "title": "Sales Department",
+        "item1": "Static floor plans don't engage clients",
+        "item2": "Long manual lead processing",
+        "item3": "Difficult to visually explain apartment advantages"
+      },
+      "marketing": {
+        "title": "Marketing",
+        "item1": "Difficult to showcase project online attractively",
+        "item2": "High lead cost due to low conversion",
+        "item3": "No analytics on client interests"
+      },
+      "management": {
+        "title": "Management",
+        "item1": "No single source of data for all apartments",
+        "item2": "Difficult to understand which apartments interest clients",
+        "item3": "Data from different systems don't match",
+        "item4": "Reports require additional analysis"
+      },
+      "client": {
+        "title": "For clients",
+        "item1": "Inconvenient to choose apartment without interactive floor plan",
+        "item2": "Difficult to understand location and layout of property",
+        "item3": "Outdated website reduces trust in developer"
+      }
+    }
+  },
+  "solution": {
+    "title": "How GRIDIX solves these problems",
+    "description": "Everything you need for modern real estate sales — in one platform",
+    "features": {
+      "interactivePlans": {
+        "title": "Interactive floor plans",
+        "content": "Clickable objects on plan with visual statuses (available, reserved, sold). Client INDEPENDENTLY chooses apartment, sees all characteristics online and submits application in 1 click.",
+        "category": "Visualization"
+      },
+      "automation": {
+        "title": "Sales automation",
+        "content": "Automatic lead collection 24/7 with integration to AmoCRM, Bitrix24 and other CRMs. Leads immediately in CRM with selection data, auto-assignment to managers. Works even at night and on weekends.",
+        "category": "Integrations"
+      },
+      "dataImport": {
+        "title": "Data import",
+        "content": "Load data from Excel or Google Sheets in a few clicks — no programmers needed. Automatic price updates and status synchronization.",
+        "category": "Data"
+      },
+      "teamManagement": {
+        "title": "Team management",
+        "content": "Invite managers, set access levels and control team work. Roles and access rights, activity tracking, secure permission separation.",
+        "category": "Management"
+      },
+      "customDomain": {
+        "title": "Custom domain",
+        "content": "Connect your company domain for each project. Your domain (e.g., flats.company.com), SSL certificate automatically, full branding.",
+        "category": "Infrastructure"
+      },
+      "customization": {
+        "title": "Customization",
+        "content": "Customize platform to your brand: colors, fields, languages, White Label. Custom fields and characteristics, brand color scheme, multilingual interface.",
+        "category": "Branding"
+      }
+    }
+  },
+  "whyGridix": {
+    "title": "Why choose GRIDIX",
+    "description": "We created a platform that truly delivers results",
+    "quickLaunch": {
+      "title": "Quick launch",
+      "item1": "Launch project in 1 day",
+      "item2": "Intuitive interface without training",
+      "item3": "Documentation and video tutorials",
+      "item4": "Support at every stage"
+    },
+    "automation": {
+      "title": "Maximum automation",
+      "item1": "Automatic lead collection 24/7",
+      "item2": "Integrations with CRM and website",
+      "item3": "Dynamic prices and statuses",
+      "item4": "Automatic data synchronization"
+    },
+    "flexibility": {
+      "title": "Flexibility and scale",
+      "item1": "From one building to project portfolio",
+      "item2": "All property types (residential, offices, commercial)",
+      "item3": "Full customization to your brand",
+      "item4": "White Label solutions"
+    },
+    "technology": {
+      "title": "Future technologies",
+      "item1": "GDPR and data security",
+      "item2": "Regular updates and improvements",
+      "item3": "99.9% uptime",
+      "item4": "Trending technologies"
+    }
+  },
+  "expandedDemo": {
+    "title": "How it works?",
+    "subtitle": "Key features",
+    "widget": {
+      "title": "Website widget",
+      "description": "Embeds on any website in 1 minute — Tilda, WordPress, Bitrix, Wix"
+    },
+    "excelImport": {
+      "title": "Excel import",
+      "description": "Load 100+ objects in 2 minutes — automatic structure recognition"
+    },
+    "crmIntegration": {
+      "title": "CRM integration",
+      "description": "Leads automatically in AmoCRM/Bitrix24 with client selection data"
+    },
+    "dataUpdate": {
+      "title": "Data and status updates",
+      "description": "Update apartment statuses and dynamic prices in real-time — all changes instantly appear on floor plan and widget"
+    },
+    "analytics": {
+      "title": "Analytics and reports",
+      "description": "Track popular layouts, floors and client behavior in real-time. All data updates automatically, helping understand demand and make decisions faster"
+    },
+    "teamManagement": {
+      "title": "Team management",
+      "description": "Configure roles and access rights for managers, marketers and executives. Each sees only their projects and functions"
+    }
+  },
+  "howItLooks": {
+    "title": "How it looks?",
+    "subtitle": "Interactive demo"
+  },
+  "getStarted": {
+    "title": "Start using GRIDIX today",
+    "freeTrial": "7 days Pro free",
+    "noCard": "No card required",
+    "oneDayLaunch": "Launch in 1 day",
+    "steps": {
+      "registration": {
+        "title": "Registration",
+        "description": "Create account in 1 minute"
+      },
+      "projectCreation": {
+        "title": "Project creation",
+        "description": "Upload data and configure visualization"
+      },
+      "leads": {
+        "title": "Get leads",
+        "description": "Place widget on website and start selling"
+      }
+    },
+    "tryFree": "Try 7 days free",
+    "choosePlan": "Choose plan"
+  },
+  "caseStudy": {
+    "badge": "Real case study",
+    "title": "Client case study",
+    "description": "Real results from GRIDIX implementation",
+    "mainTitle": "How a developer increased sales by {percent} with the same advertising budget",
+    "problem": {
+      "label": "Problem",
+      "text": "Buyers didn't understand apartment locations, managers spent time explaining and manually processing leads."
+    },
+    "solution": {
+      "label": "Solution",
+      "item1": "Loaded 380 apartments in 1 day",
+      "item2": "Placed interactive widget on website",
+      "item3": "Connected AmoCRM for automation"
+    },
+    "results": {
+      "label": "Results (1 month)",
+      "conversion": "+43% conversion to leads",
+      "selfSelection": "78% of clients chose independently",
+      "timeSavings": "–35% time on lead processing",
+      "costReduction": "–28% customer acquisition cost",
+      "convenience": "⭐ 9.2/10 selection convenience",
+      "marketing": "Marketing started optimizing advertising based on GRIDIX analytics"
+    },
+    "testimonial": {
+      "quote": "GRIDIX completely changed the sales process. Now it's convenient for clients to choose apartments online, and managers work with prepared buyers. This accelerated deals and increased brand trust. Especially valuable is that GRIDIX analytics helped our marketing optimize ad campaigns — we started understanding which properties interest clients and directed budget where conversion is higher.",
+      "author": "Developer",
+      "company": "1380 apartments"
+    }
+  },
+  "testimonials": {
+    "title": "What our clients say",
+    "subtitle": "Real reviews from developers already using GRIDIX",
+    "badge": "Trusted by professionals",
+    "items": {
+      "marketing": {
+        "name": "Marketing team",
+        "role": "Developer",
+        "company": "Developer",
+        "content": "GRIDIX became part of our business process: we use it at booking stage, presentation and analytics. Clients note convenience, sales department — work speed."
+      },
+      "salesManager": {
+        "name": "Sales Manager",
+        "role": "Developer",
+        "company": "Developer",
+        "content": "This is not just a floor plan — it's a tool that helps both client and team. Deals became more transparent and faster. I recommend to all developers!"
+      },
+      "commercialDirector": {
+        "name": "Commercial Director",
+        "role": "Developer",
+        "company": "Developer",
+        "content": "GRIDIX provides control and automation, and for buyers — clear and comfortable choice. System is stable and delivers results. Very satisfied!"
+      }
+    }
+  },
+  "costComparison": {
+    "title": "Custom development vs GRIDIX",
+    "description": "Cost of developing custom floor plan for website can reach thousands of dollars and take 1 to 6 months of development. With GRIDIX you can launch project in 1 day starting from $129 per month!",
+    "customDevelopment": {
+      "label": "Custom development",
+      "price": "$5,000 - $15,000",
+      "priceNote": "One-time cost",
+      "item1": "Development from 1 to 6 months",
+      "item2": "Technical team required",
+      "item3": "Additional support costs",
+      "item4": "Risk of technical errors",
+      "item5": "No ready CRM integrations",
+      "item6": "Difficult scaling to new projects"
+    },
+    "gridix": {
+      "label": "GRIDIX",
+      "price": "from $129/month",
+      "priceNote": "Subscription with 7 days free",
+      "item1": "Launch in 1 day",
+      "item2": "No technical team required",
+      "item3": "Support and updates included",
+      "item4": "Stable operation without errors",
+      "item5": "Ready integrations with AmoCRM, Bitrix24",
+      "item6": "Easily scales to any number of projects",
+      "tryFree": "Try for free"
+    }
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Frequently asked questions",
+    "general": {
+      "title": "General questions",
+      "q1": {
+        "question": "Do I need technical knowledge to work with GRIDIX?",
+        "answer": "No. The interface is intuitive. To embed widget on website, just copy one line of code."
+      },
+      "q2": {
+        "question": "Can I try before buying?",
+        "answer": "Yes! We provide 7 days free access to PRO plan. No card required, full access to all features. After trial period, your project will pause for 30 days, then be deleted. Project will be unavailable to clients."
+      },
+      "q3": {
+        "question": "How quickly can I launch a project?",
+        "answer": "Project creation takes from 1 hour provided you have prepared floor plan table and all visualization, including: 3D building render, floor plans, apartment layouts (2D and 3D), additional renovation visualization and other sales renders. Quality visualization significantly increases conversion and visual perception."
+      },
+      "q4": {
+        "question": "Are there limits on number of objects?",
+        "answer": "No limits on number of apartments, floors or sections in project. You can create projects of any scale."
+      }
+    },
+    "technical": {
+      "title": "Technical questions",
+      "q1": {
+        "question": "What image formats are supported?",
+        "answer": "JPG, JPEG, PNG formats are supported. Recommended resolution: 1920×1080 px. Maximum file size: 10 MB."
+      },
+      "q2": {
+        "question": "Can I work from phone or tablet?",
+        "answer": "Yes, admin panel is adapted for mobile devices. You can manage projects from any device."
+      },
+      "q3": {
+        "question": "How securely is data stored?",
+        "answer": "We use Supabase (PostgreSQL) with data encryption, GDPR compliant. Backups are created automatically every day."
+      },
+      "q4": {
+        "question": "Is there API for integrations?",
+        "answer": "Yes, PRO plan includes REST API for integration with your systems. Documentation is available in personal account."
+      }
+    },
+    "payment": {
+      "title": "Payment and subscription",
+      "q1": {
+        "question": "Can I pay from legal entity?",
+        "answer": "Yes, you can choose \"Invoice\" payment method, and system will generate invoice. After invoice payment confirmation, subscription activates. Important: for correct invoice, configure your details in account. We also provide closing documents (act, invoice)."
+      },
+      "q2": {
+        "question": "What happens after trial period ends?",
+        "answer": "After 7 days trial period, you can choose plan and pay subscription. If you don't pay, project will pause for 30 days, then be deleted."
+      },
+      "q3": {
+        "question": "Can I change plan during work?",
+        "answer": "Yes, you can switch from BASIC to PRO or vice versa at any time. Changes take effect from next billing period."
+      },
+      "q4": {
+        "question": "Is there refund?",
+        "answer": "We refund within 7 days after payment if you're not satisfied with service. No questions asked."
+      },
+      "q5": {
+        "question": "How many projects can I create?",
+        "answer": "Unlimited number. Plan is paid separately for each active project."
+      }
+    },
+    "supportLink": "Didn't find answer to your question? Contact {link}support{/link}"
+  },
+  "demoModal": {
+    "badge": "📅 Book a demo",
+    "title": "See GRIDIX in action",
+    "description": "Choose a convenient time for you, and manager will contact you to coordinate demo and answer all your questions.",
+    "benefits": {
+      "personalDemo": {
+        "title": "Personal demo",
+        "description": "We'll show features for your tasks"
+      },
+      "answers": {
+        "title": "Answer questions",
+        "description": "We'll discuss integrations and capabilities"
+      },
+      "help": {
+        "title": "Launch help",
+        "description": "We'll help set up your first project"
+      }
+    },
+    "calendarTitle": "Book a demo"
+  }
 }

@@ -143,7 +143,7 @@ export const ListView = ({
   const roomsVisible = getVisibleFields().find(field => field.field_name === 'rooms')?.is_visible;
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-8 grow flex">
+    <div className="container mx-auto md:px-6 py-8 grow flex">
       <div className={`${(project?.has_commercial || project?.has_parking) ? "space-y-6" : "space-y-1"} flex flex-col w-full`}>
         <div className="flex gap-[20px] justify-between">
           <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>{
