@@ -186,11 +186,17 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
           // Now load layout photos for visible apartments only (non-blocking)
           // This happens after apartments are loaded, so UI can render
-          const uniqueLayouts = new Set<string>(
-            normalizedApartments.map(a =>
-              (a.type === 'apartment' ? Number(a.rooms) === 0 ? 'studio' : `${Number(a.rooms)}-room` : a.type)
-            )
-          );
+            const uniqueLayouts = new Set<string>(
+              normalizedApartments.map(a =>
+                (a.type === 'apartment' 
+                  ? a.rooms === 0 
+                    ? 'studio' 
+                    : a.rooms === 'free_layout'
+                      ? 'free_layout'
+                      : `${Number(a.rooms)}-room` 
+                  : a.type)
+              )
+            );
 
 
           if (uniqueLayouts.size > 0 && !isCancelled) {
@@ -561,6 +567,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         priceRange={[filters.minPrice, filters.maxPrice]}
                         getUniqueRoomCounts={filters.getUniqueRoomCounts}
                         getUniqueFloors={filters.getUniqueFloors}
+                        hasFreeLayout={filters.hasFreeLayout}
                         project={project }
                         viewMode={viewMode}
                         formatPrice={formatPrice}
@@ -580,6 +587,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   {...filters}
                   getUniqueRoomCounts={filters.getUniqueRoomCounts}
                   getUniqueFloors={filters.getUniqueFloors}
+                  hasFreeLayout={filters.hasFreeLayout}
                   project={project}
                   viewMode={viewMode}
                   themeColor={getThemeColor()}
@@ -711,6 +719,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                           setSelectedType={filters.setSelectedType}
                           setViewMode={setViewMode}
                           getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                          hasFreeLayout={filters.hasFreeLayout}
                           preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
                           project={project}
                           formatPrice={formatPrice}

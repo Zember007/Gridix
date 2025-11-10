@@ -29,6 +29,7 @@ interface MobileFiltersProps {
   setShowOnlyAvailable: (value: boolean) => void;
   getUniqueRoomCounts: () => number[];
   getUniqueFloors: () => number[];
+  hasFreeLayout?: () => boolean;
   project?: Project;
   viewMode: string;
   minPrice: number;
@@ -58,6 +59,7 @@ export const MobileFilters = ({
   setShowOnlyAvailable,
   getUniqueRoomCounts,
   getUniqueFloors,
+  hasFreeLayout,
   project,
   viewMode,
   minPrice,
@@ -91,6 +93,9 @@ export const MobileFilters = ({
                   {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
                 </SelectItem>
               ))}
+              {hasFreeLayout && hasFreeLayout() && (
+                <SelectItem value="free_layout">{t('apartment.freeLayout')}</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

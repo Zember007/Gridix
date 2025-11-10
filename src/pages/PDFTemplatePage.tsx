@@ -93,7 +93,13 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
             if (!apartment || !project?.id) return;
             setPhotosLoading(true);
             try {
-                const layoutType = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
+                const layoutType = apartment.type === 'apartment' 
+                  ? apartment.rooms === 0 
+                    ? 'studio' 
+                    : apartment.rooms === 'free_layout'
+                      ? 'free_layout'
+                      : `${apartment.rooms}-room` 
+                  : apartment.type;
 
                 const [layoutRes, aptRes, floorPlanRes] = await Promise.all([
                     supabase

@@ -54,7 +54,16 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
 
   // Get unique room counts
   const getUniqueRoomCounts = useCallback(() => {
-    return [...new Set(apartments.map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms).filter(rooms => !isNaN(rooms)))].sort((a, b) => a - b);
+    const numericRooms = apartments
+      .filter(apt => apt.type === 'apartment' && apt.rooms !== 'free_layout')
+      .map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms)
+      .filter(rooms => !isNaN(rooms));
+    return [...new Set(numericRooms)].sort((a, b) => a - b);
+  }, [apartments]);
+
+  // Check if free_layout exists
+  const hasFreeLayout = useCallback(() => {
+    return apartments.some(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
   }, [apartments]);
   // Calculate price and area ranges
   const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
@@ -90,9 +99,15 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
 
     if (selectedRooms !== 'all') {
       if (selectedRooms === '4+') {
-        filtered = filtered.filter(apt => Number(apt.rooms) >= 4);
+        filtered = filtered.filter(apt => 
+          apt.type === 'apartment' && (
+            Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'
+          )
+        );
+      } else if (selectedRooms === 'free_layout') {
+        filtered = filtered.filter(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
       } else {
-        filtered = filtered.filter(apt => Number(apt.rooms) === parseInt(selectedRooms));
+        filtered = filtered.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === parseInt(selectedRooms));
       }
     }
 
@@ -151,6 +166,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     filteredApartments,
     getUniqueFloors,
     getUniqueRoomCounts,
+    hasFreeLayout,
     getAvailableCount,
     convertPrice,
     minPrice,

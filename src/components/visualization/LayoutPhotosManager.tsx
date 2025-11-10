@@ -57,18 +57,42 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
       normalizedApartments.forEach(apt => {
         const key = `${apt.rooms}-${apt.type}`;
         if (!roomTypeMap.has(key)) {
-          roomTypeMap.set(key, {rooms: Number(apt.rooms), type: apt.type});
+          const roomsValue = apt.rooms === 'free_layout' ? -1 : Number(apt.rooms);
+          roomTypeMap.set(key, {rooms: roomsValue, type: apt.type, isFreeLayout: apt.rooms === 'free_layout'});
         }
       });
       
       const uniqueRoomCounts = Array.from(roomTypeMap.values());
-      const types: LayoutType[] = uniqueRoomCounts.map(data => ({
-        key: data.type === 'apartment' ? data.rooms === 0 ? 'studio' : `${data.rooms}-room` : data.type,
-        label: data.type === 'apartment' ? data.rooms === 0 ? 'Студия' : `${data.rooms}-комнатная` : 
-               data.type === 'commercial' ? 'Коммерческие помещения' : 
-               data.type === 'parking' ? 'Паркинги' : data.type,
-        rooms: data.rooms
-      }));
+      const types: LayoutType[] = uniqueRoomCounts.map(data => {
+        if (data.type === 'apartment') {
+          if ((data as any).isFreeLayout) {
+            return {
+              key: 'free_layout',
+              label: 'Свободная планировка',
+              rooms: -1
+            };
+          } else if (data.rooms === 0) {
+            return {
+              key: 'studio',
+              label: 'Студия',
+              rooms: 0
+            };
+          } else {
+            return {
+              key: `${data.rooms}-room`,
+              label: `${data.rooms}-комнатная`,
+              rooms: data.rooms
+            };
+          }
+        } else {
+          return {
+            key: data.type,
+            label: data.type === 'commercial' ? 'Коммерческие помещения' : 
+                   data.type === 'parking' ? 'Паркинги' : data.type,
+            rooms: data.rooms
+          };
+        }
+      });
       
       setLayoutTypes(types);
       
@@ -193,6 +217,11 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
     // Для коммерческих помещений и паркингов ищем по типу
     if (layoutKey === 'commercial' || layoutKey === 'parking') {
       return apartments.filter(apt => apt.type === layoutKey).length;
+    }
+    
+    // Для свободной планировки
+    if (layoutKey === 'free_layout') {
+      return apartments.filter(apt => apt.type === 'apartment' && apt.rooms === 'free_layout').length;
     }
     
     // Для квартир ищем по количеству комнат

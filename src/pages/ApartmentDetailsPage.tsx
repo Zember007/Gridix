@@ -164,7 +164,13 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       if (!apartment || !project?.id) return;
       setPhotosLoading(true);
       try {
-        const layoutType = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
+        const layoutType = apartment.type === 'apartment' 
+          ? apartment.rooms === 0 
+            ? 'studio' 
+            : apartment.rooms === 'free_layout'
+              ? 'free_layout'
+              : `${apartment.rooms}-room` 
+          : apartment.type;
 
         const [layoutRes, aptRes] = await Promise.all([
           supabase
@@ -380,7 +386,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           }
 
           // Если у квартиры нет фото — берём первую планировку по типу комнат
-          const layoutType = apt.rooms === 0 ? 'studio' : `${apt.rooms}-room`;
+          const layoutType = apt.rooms === 0 
+            ? 'studio' 
+            : apt.rooms === 'free_layout'
+              ? 'free_layout'
+              : `${apt.rooms}-room`;
           const { data: layoutPhotos, error: layoutError } = await supabase
             .from('layout_photos')
             .select('image_url, order_index')
@@ -833,7 +843,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     <div className="space-y-[24px]">
                       <div className="flex items-center justify-between">
                         <div className="text-xl font-medium text-gray-900  font-poppins">
-                          {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m2
+                          {apartment.rooms === 0 
+                            ? t('apartment.studio') 
+                            : apartment.rooms === 'free_layout'
+                              ? t('apartment.freeLayout')
+                              : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m2
                         </div>
                         <div className="text-xl font-light text-gray-500  font-poppins">
                           {apartment.floor_number} floor

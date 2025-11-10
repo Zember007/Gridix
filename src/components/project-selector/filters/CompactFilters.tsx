@@ -25,6 +25,7 @@ interface CompactFiltersProps {
   setShowOnlyAvailable: (value: boolean) => void;
   getUniqueRoomCounts: () => number[];
   getUniqueFloors: () => number[];
+  hasFreeLayout?: () => boolean;
   project?: Project;
   viewMode: string;
   themeColor?: string;
@@ -47,6 +48,7 @@ export const CompactFilters = ({
   setShowOnlyAvailable,
   getUniqueRoomCounts,
   getUniqueFloors,
+  hasFreeLayout,
   project,
   viewMode,
   themeColor = '#000000',
@@ -71,6 +73,9 @@ export const CompactFilters = ({
                   {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
                 </SelectItem>
               ))}
+              {hasFreeLayout && hasFreeLayout() && (
+                <SelectItem value="free_layout">{t('apartment.freeLayout')}</SelectItem>
+              )}
             </SelectContent>
           </Select>
         )}

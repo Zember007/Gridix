@@ -27,7 +27,7 @@ export function normalizeApartmentData(data: any): Apartment {
     polygon: Array.isArray(data.polygon) ? data.polygon as { x: number; y: number }[] : [],
     price: data.price ? Number(data.price) : null,
     area: Number(data.area),
-    rooms: data.type === 'apartment' ? Number(data.rooms) : data.type,
+    rooms: data.type === 'apartment' ? (data.rooms) : data.type,
     floor_number: Number(data.floor_number)
   };
 }

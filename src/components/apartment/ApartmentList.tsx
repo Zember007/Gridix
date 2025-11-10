@@ -95,7 +95,11 @@ const ApartmentList = ({ apartments, onApartmentSelect, projectId }: ApartmentLi
                   <div className="flex items-center gap-1">
                     <Home className="h-3 w-3" />
                     <span>
-                      {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.room')}`}
+                      {apartment.rooms === 0 
+                        ? t('apartment.studio') 
+                        : apartment.rooms === 'free_layout'
+                          ? t('apartment.freeLayout')
+                          : `${apartment.rooms} ${t('apartment.room')}`}
                     </span>
                   </div>
                 </div>

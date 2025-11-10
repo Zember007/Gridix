@@ -127,7 +127,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         floor_number: apartmentData.floor_number,
         rooms: currentType === 'apartment' ? String(apartmentData.rooms || 0) : currentType,
         area: apartmentData.area || 0,
-        price: apartmentData.price,
+        price: apartmentData.price ?? null,
         status: apartmentData.status || 'available',
         polygon: convertPolygonToDb(apartmentData.polygon || []),
         custom_fields: customFieldsData as Json,
@@ -136,12 +136,15 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         type: currentType
       };
 
+
       if (isNew) {
         const { data, error } = await supabase
           .from('apartments')
           .insert(saveData)
           .select()
           .single();
+
+        
 
         if (error) throw error;
 
@@ -167,6 +170,8 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
           .eq('id', editingApartment.id)
           .select()
           .single();
+
+        
 
         if (error) throw error;
 
@@ -460,7 +465,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
             <Select
               value={apartment.rooms?.toString() || '0'}
               onValueChange={(value) => {
-                const roomsValue = parseInt(value) || 0;
+                const roomsValue = value|| 0;
                 if (isNew) {
                   setNewApartment(prev => ({ ...prev, rooms: roomsValue }));
                 } else {
@@ -481,7 +486,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                   </SelectItem>
                 ))}
                 <SelectItem value="free_layout">
-                  Свободная планировка
+                  {t('apartment.freeLayout')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -700,7 +705,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                           <p className="text-sm text-gray-600">
                             {t('apartmentsManager.floor', { floor: apartment.floor_number })} •
                             {apartment.type === 'apartment'
-                              ? (apartment.rooms === 0 ? t('apartment.studio') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
+                              ? (apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms === 'free_layout' ? t('apartment.freeLayout') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
                               : apartment.type === 'commercial'
                                 ? t('apartmentsManager.typeCommercial')
                                 : t('apartmentsManager.typeParking')

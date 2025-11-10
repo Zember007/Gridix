@@ -26,6 +26,7 @@ interface LayoutGalleryProps {
   setSelectedType: (value: 'all' | 'apartment' | 'commercial' | 'parking') => void;
   setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites') => void;
   getUniqueRoomCounts: () => number[];
+  hasFreeLayout?: () => boolean;
   preloadedLayoutPhotosByRooms: Record<string, LayoutPhoto[]>;
   project?: Project;
   formatPrice: (price: number) => string;
@@ -43,6 +44,7 @@ export const LayoutGallery = ({
   setSelectedType,
   setViewMode,
   getUniqueRoomCounts,
+  hasFreeLayout,
   preloadedLayoutPhotosByRooms,
   project,
   formatPrice,
@@ -105,14 +107,32 @@ export const LayoutGallery = ({
               {rooms}
             </Button>
           ))}
+          {hasFreeLayout && hasFreeLayout() && (
+            <Button
+              variant={selectedRooms === 'free_layout' ? 'default' : 'outline'}
+              size="sm"
+              className={getButtonClass(selectedRooms === 'free_layout')}
+              style={getButtonStyle(selectedRooms === 'free_layout')}
+              onClick={() => {
+                setSelectedType('all');
+                setSelectedRooms('free_layout');
+              }}
+            >
+              {t('apartment.freeLayout')}
+            </Button>
+          )}
           <Button
             variant={selectedRooms === '4+' ? 'default' : 'outline'}
             size="sm"
             className={getButtonClass(selectedRooms === '4+')}
             style={getButtonStyle(selectedRooms === '4+')}
             onClick={() => {
-              // Handle 4+ rooms filter
-              const fourPlusApartments = apartments.filter(apt => Number(apt.rooms) >= 4 && apt.type === 'apartment');
+              // Handle 4+ rooms filter - includes free_layout
+              const fourPlusApartments = apartments.filter(apt => 
+                apt.type === 'apartment' && (
+                  Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'
+                )
+              );
               if (fourPlusApartments.length > 0) {
                 setSelectedRooms('4+');
                 setSelectedType('apartment');
@@ -167,7 +187,13 @@ export const LayoutGallery = ({
             // Rooms filter applies only to residential apartments
             if (selectedRooms !== 'all') {
               if (selectedRooms === '4+') {
-                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) >= 4);
+                apartmentsToShow = apartmentsToShow.filter(apt => 
+                  apt.type === 'apartment' && (
+                    Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'
+                  )
+                );
+              } else if (selectedRooms === 'free_layout') {
+                apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
               } else {
                 apartmentsToShow = apartmentsToShow.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === parseInt(selectedRooms));
               }
@@ -179,6 +205,8 @@ export const LayoutGallery = ({
                 key = 'commercial';
               } else if (apt.type === 'parking') {
                 key = 'parking';
+              } else if (apt.rooms === 'free_layout') {
+                key = 'free_layout';
               } else {
                 key = `${Number(apt.rooms)}-rooms`;
               }
@@ -188,7 +216,37 @@ export const LayoutGallery = ({
               layoutGroups[key]?.push(apt);
             });
 
-            return Object.entries(layoutGroups).map(([key, apartmentGroup]) => {
+            // Sort layout groups: numeric rooms ascending, then free_layout, then parking, then commercial
+            const sortedEntries = Object.entries(layoutGroups).sort(([keyA], [keyB]) => {
+              // Get sort order: 0 = numeric rooms, 1 = free_layout, 2 = parking, 3 = commercial
+              const getSortOrder = (key: string): number => {
+                if (key === 'commercial') return 3;
+                if (key === 'parking') return 2;
+                if (key === 'free_layout') return 1;
+                return 0; // numeric rooms
+              };
+              
+              const orderA = getSortOrder(keyA);
+              const orderB = getSortOrder(keyB);
+              
+              // If different categories, sort by category order
+              if (orderA !== orderB) {
+                return orderA - orderB;
+              }
+              
+              // Both are numeric rooms - compare numbers
+              if (orderA === 0) {
+                const numA = parseInt(keyA.replace('-rooms', ''));
+                const numB = parseInt(keyB.replace('-rooms', ''));
+                if (!isNaN(numA) && !isNaN(numB)) {
+                  return numA - numB;
+                }
+              }
+              
+              return 0;
+            });
+
+            return sortedEntries.map(([key, apartmentGroup]) => {
               const representativeApt = apartmentGroup[0];
               const availableCount = apartmentGroup.filter(apt => apt.status === 'available').length;
               const totalCount = apartmentGroup.length;
@@ -197,6 +255,7 @@ export const LayoutGallery = ({
 
               const isCommercial = representativeApt.type === 'commercial';
               const isParking = representativeApt.type === 'parking';
+              const isFreeLayout = representativeApt.type === 'apartment' && representativeApt.rooms === 'free_layout';
 
               return (
                 <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -207,6 +266,8 @@ export const LayoutGallery = ({
                         layoutKey = 'commercial';
                       } else if (representativeApt?.type === 'parking') {
                         layoutKey = 'parking';
+                      } else if (representativeApt?.rooms === 'free_layout') {
+                        layoutKey = 'free_layout';
                       } else {
                         layoutKey = representativeApt?.rooms === 0 ? 'studio' : `${Number(representativeApt?.rooms ?? 0)}-room`;
                       }
@@ -220,14 +281,14 @@ export const LayoutGallery = ({
                           <img
                             loading="lazy"
                             src={first.image_url}
-                            alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
+                            alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
                             className="w-full h-full object-cover"
                           />
                         );
                       } else {
                         return (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : t('project.layoutPreview')}
+                            {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : t('project.layoutPreview')}
                           </div>
                         );
                       }
@@ -247,7 +308,7 @@ export const LayoutGallery = ({
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <h4 className="font-semibold text-lg">
-                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : (representativeApt?.rooms === 0 ? t('apartment.studio') : `${String(representativeApt?.rooms ?? 0)}-${t('apartment.rooms')}`)}
+                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt?.rooms === 0 ? t('apartment.studio') : `${String(representativeApt?.rooms ?? 0)}-${t('apartment.rooms')}`)}
                       </h4>
 
                       {
@@ -295,6 +356,9 @@ export const LayoutGallery = ({
                           } else if (isParking) {
                             setSelectedType('parking');
                             setSelectedRooms('all');
+                          } else if (isFreeLayout) {
+                            setSelectedType('apartment');
+                            setSelectedRooms('free_layout');
                           } else {
                             setSelectedType('apartment');
                             setSelectedRooms(Number(representativeApt?.rooms ?? 0) >= 4 ? '4+' : String(representativeApt?.rooms ?? 0));

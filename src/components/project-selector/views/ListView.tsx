@@ -210,13 +210,23 @@ export const ListView = ({
                             <div className="flex-shrink-0">
                               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                 {(() => {
-                                  const layoutKey = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
+                                  const layoutKey = apartment.type === 'apartment' 
+                                    ? apartment.rooms === 0 
+                                      ? 'studio' 
+                                      : apartment.rooms === 'free_layout'
+                                        ? 'free_layout'
+                                        : `${apartment.rooms}-room` 
+                                    : apartment.type;
                                   const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                                   const first = photos[0];
                                   return first ? (
                                     <img
                                       src={first.image_url}
-                                      alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                      alt={apartment.rooms === 0 
+                                        ? t('apartment.studio') 
+                                        : apartment.rooms === 'free_layout'
+                                          ? t('apartment.freeLayout')
+                                          : `${apartment.rooms}-${t('apartment.rooms')}`}
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
@@ -331,13 +341,23 @@ export const ListView = ({
                             <div className="flex-shrink-0 ml-[57px]">
                               <div className="w-[60px] h-[64px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                 {(() => {
-                                  const layoutKey = apartment.type === 'apartment' ? apartment.rooms === 0 ? 'studio' : `${apartment.rooms}-room` : apartment.type;
+                                  const layoutKey = apartment.type === 'apartment' 
+                                    ? apartment.rooms === 0 
+                                      ? 'studio' 
+                                      : apartment.rooms === 'free_layout'
+                                        ? 'free_layout'
+                                        : `${apartment.rooms}-room` 
+                                    : apartment.type;
                                   const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
                                   const first = photos[0];
                                   return first ? (
                                     <img
                                       src={first.image_url}
-                                      alt={apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms}-${t('apartment.rooms')}`}
+                                      alt={apartment.rooms === 0 
+                                        ? t('apartment.studio') 
+                                        : apartment.rooms === 'free_layout'
+                                          ? t('apartment.freeLayout')
+                                          : `${apartment.rooms}-${t('apartment.rooms')}`}
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
@@ -376,7 +396,13 @@ export const ListView = ({
                                   roomsVisible &&
                                   <div className="flex-shrink-0 text-center min-w-[99px] transition-transform duration-200 hover:scale-105">
                                     <div className="text-[20px] font-medium text-black leading-[26px] hover:text-gray-700 transition-colors duration-200">
-                                      {apartment.type === 'apartment' ? apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
+                                      {apartment.type === 'apartment' 
+                                        ? apartment.rooms === 0 
+                                          ? t('apartment.studio') 
+                                          : apartment.rooms === 'free_layout'
+                                            ? t('apartment.freeLayout')
+                                            : `${apartment.rooms} ${t('apartment.rooms')}` 
+                                        : apartment.type}
                                     </div>
                                   </div>
                                 }

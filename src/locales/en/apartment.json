@@ -21,6 +21,7 @@
   "sqm": "m²",
   "status": "Status",
   "studio": "Studio",
+  "freeLayout": "Free layout",
   "yes": "Yes",
   "sendRequest": "Send request",
   "requestSent": "Request sent successfully! We will contact you soon."
