@@ -109,13 +109,13 @@ export const FAQ = () => {
               <Accordion
                 type="single"
                 collapsible
-                className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0">
+                className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0 text-left">
                 {group.items.map((item) => (
                   <AccordionItem
                     key={item.id}
                     value={item.id}
                     className="border-dashed">
-                    <AccordionTrigger className="cursor-pointer text-base hover:no-underline">
+                    <AccordionTrigger className="cursor-pointer text-base hover:no-underline text-left">
                       {item.question}
                     </AccordionTrigger>
                     <AccordionContent>

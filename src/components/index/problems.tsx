@@ -1,10 +1,11 @@
 import { X, Check, Settings, ShoppingCart, BarChart3, UserCheck } from 'lucide-react';
 import { Compare } from "@/components/ui/compare";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const Problems = () => {
   const { t } = useLanguage();
-  
+  const isMobile = useIsMobile();
   return (
     <section id="problems" className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto">
@@ -20,81 +21,83 @@ export const Problems = () => {
         <div className="flex gap-8 ">
 
 
-          <Compare
-            initialSliderPercentage={4.5}
-            className="w-full h-[600px] md:h-[500px]"
-            secondElement={
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border-2 border-red-100 dark:border-red-900 relative h-full w-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                    <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+          {typeof isMobile !== 'undefined' &&
+            <Compare
+              initialSliderPercentage={isMobile ? 15 : 4.5}
+              className="w-full h-[700px] md:h-[500px]"
+              secondElement={
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border-2 border-red-100 dark:border-red-900 relative h-full w-full">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                      <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    </div>
+                    <h3 className="md:text-2xl text-xl font-bold text-gray-900 dark:text-white">{t('landing.problems.before')}</h3>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{t('landing.problems.before')}</h3>
+                  <ul className="space-y-4">
+                    <li className="flex items-center gap-3">
+                      <X className="w-5 h-5 text-red-500 dark:text-red-400" />
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item1')}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <X className="w-5 h-5 text-red-500 dark:text-red-400" />
+
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item2')}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <X className="w-5 h-5 text-red-500 dark:text-red-400" />
+
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item3')}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <X className="w-5 h-5 text-red-500 dark:text-red-400" />
+
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item4')}</span>
+                    </li>
+                  </ul>
                 </div>
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3">
-                    <X className="w-5 h-5 text-red-500 dark:text-red-400" />
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item1')}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <X className="w-5 h-5 text-red-500 dark:text-red-400" />
-
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item2')}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <X className="w-5 h-5 text-red-500 dark:text-red-400" />
-
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item3')}</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <X className="w-5 h-5 text-red-500 dark:text-red-400" />
-
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.beforeItems.item4')}</span>
-                  </li>
-                </ul>
-              </div>
-            }
-            firstElement={
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-8 shadow-lg border-2 border-blue-200 dark:border-blue-800 h-full w-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                    <Check className="w-6 h-6 text-white" />
+              }
+              firstElement={
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-8 shadow-lg border-2 border-blue-200 dark:border-blue-800 h-full w-full">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                      <Check className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="md:text-2xl text-xl font-bold text-gray-900 dark:text-white">{t('landing.problems.after')}</h3>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{t('landing.problems.after')}</h3>
+                  <ul className="space-y-4">
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item1')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item2')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item3')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item4')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item5')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item6')}</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="text-green-400 ">✓</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-semibold">{t('landing.problems.afterItems.item7')}</span>
+                    </li>
+                  </ul>
                 </div>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item1')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item2')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item3')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item4')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item5')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300">{t('landing.problems.afterItems.item6')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-green-400 ">✓</span>
-                    <span className="text-gray-700 dark:text-gray-300 font-semibold">{t('landing.problems.afterItems.item7')}</span>
-                  </li>
-                </ul>
-              </div>
-            }
-          />
+              }
+            />
+          }
 
 
         </div>

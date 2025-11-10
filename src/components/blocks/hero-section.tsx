@@ -70,7 +70,7 @@ export function HeroSection({
           )}
 
         </div>
-        <div className="md:w-1/3 flex justify-center items-center md:mt-0 pt-[200px]">
+        <div className="md:w-1/3 flex justify-center items-center md:mt-0 pt-[120px]">
           <div className="scale-150">
             <BoxAnimation />
           </div>

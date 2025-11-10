@@ -153,12 +153,12 @@ export function AnimatedTestimonials({
                       ))}
                   </div>
 
-                  <div className="relative mb-6 flex-1">
+                  <div className="relative md:mb-6  flex-1">
                     <Quote className="absolute -top-2 -left-2 h-8 w-8 text-primary/20 rotate-180" />
-                    <p className="relative z-10 text-lg font-medium leading-relaxed">"{testimonial.content}"</p>
+                    <p className="relative z-10 text-[14px] md:text-lg font-medium leading-relaxed">"{testimonial.content}"</p>
                   </div>
 
-                  <Separator className="my-4" />
+                  <Separator className="md:my-4 my-2" />
 
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 border">
