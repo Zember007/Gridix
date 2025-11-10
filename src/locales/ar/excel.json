@@ -3,11 +3,6 @@
     "actions": {
       "createProject": "إنشاء مشروع بالبيانات"
     },
-    "columns": {
-      "description": "حدد الأعمدة من ملف Excel التي تتوافق مع حقول الشقق",
-      "title": "ربط أعمدة Excel",
-      "selectColumn": "اختر العمود"
-    },
     "preview": {
       "description": "كيفية استيراد بياناتك ({count} سجل)",
       "title": "معاينة البيانات",
@@ -32,12 +27,45 @@
     "validation": {
       "description": "ربط قيم Excel بالتنسيقات القياسية",
       "rooms": {
-        "title": "تكوين عدد الغرف"
+        "title": "تكوين عدد الغرف",
+        "distribution": "توزيع الغرف في البيانات:",
+        "unknown": "غير معروف",
+        "addMapping": "إضافة تعيين جديد للغرف:",
+        "warning": "تحذير بخصوص الغرف!",
+        "warningMessage": "تم العثور على قيم غرف غير معروفة: {rooms}. سيتم استيراد الشقق بقيم غير معروفة بغرفة واحدة."
       },
       "status": {
-        "title": "تكوين حالات الشقق"
+        "title": "تكوين حالات الشقق",
+        "distribution": "توزيع الحالات في البيانات:",
+        "addMapping": "إضافة تعيين حالة جديد:",
+        "warning": "تحذير بخصوص الحالات!",
+        "warningMessage": "تم العثور على حالات غير معروفة: {statuses}. سيتم استيراد الشقق بحالات غير معروفة بحالة \"متاحة\"."
       },
-      "title": "التحقق من البيانات"
+      "title": "التحقق من البيانات",
+      "unknown": "غير معروف",
+      "validValues": "قيم صالحة",
+      "invalidValues": "قيم غير معروفة",
+      "uniqueValues": "قيم فريدة",
+      "hideDetails": "إخفاء التفاصيل",
+      "showDetails": "إظهار التفاصيل",
+      "count": " عنصر",
+      "unknownValue": "غير معروف",
+      "ignore": "تجاهل",
+      "valueFromExcel": "قيمة من Excel"
+    },
+    "noData": "لا توجد بيانات",
+    "required": "مطلوب",
+    "errors": {
+      "fillRequiredFields": "يرجى ملء جميع الحقول المطلوبة",
+      "configureUnknownStatuses": " وتكوين جميع الحالات غير المعروفة",
+      "configureUnknownRooms": " وتكوين جميع قيم الغرف غير المعروفة",
+      "duplicateApartmentNumbers": "تم العثور على أرقام شقق مكررة في البيانات. يرجى التحقق من ملف Excel للحصول على أرقام شقق فريدة."
+    },
+    "columns": {
+      "description": "حدد الأعمدة من ملف Excel التي تتوافق مع حقول الشقق",
+      "title": "ربط أعمدة Excel",
+      "selectColumn": "اختر العمود",
+      "selectColumnPlaceholder": "-- اختر العمود --"
     }
   },
   "url": {

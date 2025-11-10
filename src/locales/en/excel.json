@@ -3,11 +3,6 @@
     "actions": {
       "createProject": "Create project with data"
     },
-    "columns": {
-      "description": "Specify which columns from your Excel file correspond to apartment fields",
-      "title": "Map Excel columns",
-      "selectColumn": "Select column"
-    },
     "preview": {
       "description": "How your data will be imported ({count} records)",
       "title": "Data preview",
@@ -32,12 +27,45 @@
     "validation": {
       "description": "Map Excel values to standard formats",
       "rooms": {
-        "title": "Configure number of rooms"
+        "title": "Configure number of rooms",
+        "distribution": "Rooms distribution in data:",
+        "unknown": "Unknown",
+        "addMapping": "Add new rooms mapping:",
+        "warning": "Warning about rooms!",
+        "warningMessage": "Unknown room values found: {rooms}. Apartments with unknown values will be imported with 1 room."
       },
       "status": {
-        "title": "Configure apartment statuses"
+        "title": "Configure apartment statuses",
+        "distribution": "Status distribution in data:",
+        "addMapping": "Add new status mapping:",
+        "warning": "Warning about statuses!",
+        "warningMessage": "Unknown statuses found: {statuses}. Apartments with unknown statuses will be imported with \"Available\" status."
       },
-      "title": "Data validation"
+      "title": "Data validation",
+      "unknown": "unknown",
+      "validValues": "Valid values",
+      "invalidValues": "Unknown values",
+      "uniqueValues": "Unique values",
+      "hideDetails": "Hide details",
+      "showDetails": "Show details",
+      "count": " items",
+      "unknownValue": "Unknown",
+      "ignore": "Ignore",
+      "valueFromExcel": "Value from Excel"
+    },
+    "noData": "No data",
+    "required": "Required",
+    "errors": {
+      "fillRequiredFields": "Please fill in all required fields",
+      "configureUnknownStatuses": " and configure all unknown statuses",
+      "configureUnknownRooms": " and configure all unknown room values",
+      "duplicateApartmentNumbers": "Duplicate apartment numbers found in data. Please check the Excel file for unique apartment numbers."
+    },
+    "columns": {
+      "description": "Specify which columns from your Excel file correspond to apartment fields",
+      "title": "Map Excel columns",
+      "selectColumn": "Select column",
+      "selectColumnPlaceholder": "-- Select column --"
     }
   },
   "url": {

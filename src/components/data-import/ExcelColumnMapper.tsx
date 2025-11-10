@@ -356,10 +356,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
   const getPreviewValue = useCallback((field: keyof ColumnMapping) => {
     const columnName = columnMapping[field];
-    if (!columnName || columnName === '__none__' || !importedData.length) return 'Нет данных';
+    if (!columnName || columnName === '__none__' || !importedData.length) return t('excel.mapper.noData') || 'Нет данных';
     const value = importedData[0]?.[columnName];
-    return value !== null && value !== undefined && value !== '' ? value : 'Нет данных';
-  }, [columnMapping, importedData]);
+    return value !== null && value !== undefined && value !== '' ? value : t('excel.mapper.noData') || 'Нет данных';
+  }, [columnMapping, importedData, t]);
 
   const allRequiredFields = useMemo(() => {
     return [...requiredFields, ...customFields.filter(f => f.is_required).map(f => f.field_name)];
@@ -377,14 +377,14 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
   const createProjectWithData = useCallback(async () => {
     if (!isValidWithCustom || !projectData.name.trim()) {
-      let errorMessage = 'Пожалуйста, заполните все обязательные поля';
+      let errorMessage = t('excel.mapper.errors.fillRequiredFields') || 'Пожалуйста, заполните все обязательные поля';
       
       if (statusValidation && statusValidation.invalidCount > 0) {
-        errorMessage += ' и настройте все неизвестные статусы';
+        errorMessage += t('excel.mapper.errors.configureUnknownStatuses') || ' и настройте все неизвестные статусы';
       }
       
       if (projectData.type === 'building' && roomsValidation && roomsValidation.invalidCount > 0) {
-        errorMessage += ' и настройте все неизвестные значения комнат';
+        errorMessage += t('excel.mapper.errors.configureUnknownRooms') || ' и настройте все неизвестные значения комнат';
       }
       
       toast.error(errorMessage);
@@ -588,7 +588,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       if (apartmentError) {
         console.error('Ошибка при создании квартир:', apartmentError);
         if (apartmentError.code === '23505' && apartmentError.message.includes('apartments_project_id_apartment_number_key')) {
-          throw new Error('Найдены дублирующиеся номера квартир в данных. Проверьте Excel файл на уникальность номеров квартир.');
+          throw new Error(t('excel.mapper.errors.duplicateApartmentNumbers') || 'Найдены дублирующиеся номера квартир в данных. Проверьте Excel файл на уникальность номеров квартир.');
         }
         throw apartmentError;
       }
@@ -730,7 +730,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 <div key={field} className="space-y-2">
                   <Label className="flex items-center gap-2">
                     {label}
-                    {isRequired && <Badge variant="destructive" className="text-xs">Обязательно</Badge>}
+                    {isRequired && <Badge variant="destructive" className="text-xs">{t('excel.mapper.required') || 'Обязательно'}</Badge>}
                   </Label>
                   <Select
                     value={currentValue || ''}
@@ -740,7 +740,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                       <SelectValue placeholder={t('excel.mapper.columns.selectColumn') || 'Выберите столбец'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">-- Выберите столбец --</SelectItem>
+                      <SelectItem value="__none__">{t('excel.mapper.columns.selectColumnPlaceholder') || '-- Выберите столбец --'}</SelectItem>
                       {excelColumns.map((column) => (
                         <SelectItem key={column} value={column}>
                           {column}
@@ -773,7 +773,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 (projectData.type === 'building' && roomsValidation && roomsValidation.invalidCount > 0)) && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  {(statusValidation?.invalidCount || 0) + (projectData.type === 'building' ? (roomsValidation?.invalidCount || 0) : 0)} неизвестных
+                  {(statusValidation?.invalidCount || 0) + (projectData.type === 'building' ? (roomsValidation?.invalidCount || 0) : 0)} {t('excel.mapper.validation.unknown') || 'неизвестных'}
                 </Badge>
               )}
             </CardTitle>
@@ -788,20 +788,20 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                 <div className="text-2xl font-bold text-green-600">
                   {(statusValidation?.validCount || 0) + (projectData.type === 'building' ? (roomsValidation?.validCount || 0) : 0)}
                 </div>
-                <div className="text-sm text-gray-600">Валидных значений</div>
+                <div className="text-sm text-gray-600">{t('excel.mapper.validation.validValues') || 'Валидных значений'}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
                   {(statusValidation?.invalidCount || 0) + (projectData.type === 'building' ? (roomsValidation?.invalidCount || 0) : 0)}
                 </div>
-                <div className="text-sm text-gray-600">Неизвестных значений</div>
+                <div className="text-sm text-gray-600">{t('excel.mapper.validation.invalidValues') || 'Неизвестных значений'}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
                   {(statusValidation ? Object.keys(statusValidation.statusDistribution).length : 0) + 
                    (projectData.type === 'building' && roomsValidation ? Object.keys(roomsValidation.roomsDistribution).length : 0)}
                 </div>
-                <div className="text-sm text-gray-600">Уникальных значений</div>
+                <div className="text-sm text-gray-600">{t('excel.mapper.validation.uniqueValues') || 'Уникальных значений'}</div>
               </div>
               <div className="text-center">
                 <Button
@@ -809,7 +809,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   size="sm"
                   onClick={() => setShowValidation(!showValidation)}
                 >
-                  {showValidation ? 'Скрыть детали' : 'Показать детали'}
+                  {showValidation ? (t('excel.mapper.validation.hideDetails') || 'Скрыть детали') : (t('excel.mapper.validation.showDetails') || 'Показать детали')}
                 </Button>
               </div>
             </div>
@@ -821,7 +821,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   <div className="space-y-4">
                     <Label className="text-lg font-semibold">{t('excel.mapper.validation.status.title') || 'Настройка статусов квартир'}</Label>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Распределение статусов в данных:</Label>
+                      <Label className="text-sm font-medium">{t('excel.mapper.validation.status.distribution') || 'Распределение статусов в данных:'}</Label>
                       {Object.entries(statusValidation.statusDistribution).map(([value, count]) => {
                         const currentMapping = statusMapping[value.toLowerCase()];
                         const isInvalid = !currentMapping || currentMapping === 'invalid';
@@ -832,11 +832,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                             <div className="flex items-center gap-2">
                               <span className="font-medium">"{value}"</span>
                               <Badge variant="outline" className="text-xs">
-                                {count} шт.
+                                {count}{t('excel.mapper.validation.count') || ' шт.'}
                               </Badge>
                               {isInvalid && (
                                 <Badge variant="destructive" className="text-xs">
-                                  Неизвестный
+                                  {t('excel.mapper.validation.unknownValue') || 'Неизвестный'}
                                 </Badge>
                               )}
                             </div>
@@ -874,7 +874,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                                 <SelectItem value="invalid">
                                   <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-gray-500 rounded"></div>
-                                    Игнорировать
+                                    {t('excel.mapper.validation.ignore') || 'Игнорировать'}
                                   </div>
                                 </SelectItem>
                               </SelectContent>
@@ -885,10 +885,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                       })}
 
                       <div className="border-t pt-4">
-                        <Label className="text-sm font-medium">Добавить новый мапинг статуса:</Label>
+                        <Label className="text-sm font-medium">{t('excel.mapper.validation.status.addMapping') || 'Добавить новый мапинг статуса:'}</Label>
                         <div className="flex gap-2 mt-2">
                           <Input
-                            placeholder="Значение из Excel"
+                            placeholder={t('excel.mapper.validation.valueFromExcel') || 'Значение из Excel'}
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
                                 addCustomStatusMapping(e.currentTarget.value);
@@ -919,7 +919,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   <div className="space-y-4">
                     <Label className="text-lg font-semibold">{t('excel.mapper.validation.rooms.title') || 'Настройка количества комнат'}</Label>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Распределение комнат в данных:</Label>
+                      <Label className="text-sm font-medium">{t('excel.mapper.validation.rooms.distribution') || 'Распределение комнат в данных:'}</Label>
                       {Object.entries(roomsValidation.roomsDistribution).map(([value, count]) => {
                         const currentMapping = roomsMapping[value.toLowerCase()];
                         const isInvalid = currentMapping === undefined || currentMapping === 'invalid';
@@ -930,11 +930,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">"{value}"</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {count} шт.
+                                  {count}{t('excel.mapper.validation.count') || ' шт.'}
                                 </Badge>
                                 {isInvalid && (
                                   <Badge variant="destructive" className="text-xs">
-                                    Неизвестное
+                                    {t('excel.mapper.validation.rooms.unknown') || 'Неизвестное'}
                                   </Badge>
                                 )}
                               </div>
@@ -994,7 +994,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                                   <SelectItem value="invalid">
                                     <div className="flex items-center gap-2">
                                       <div className="w-3 h-3 bg-gray-500 rounded"></div>
-                                      Игнорировать
+                                      {t('excel.mapper.validation.ignore') || 'Игнорировать'}
                                     </div>
                                   </SelectItem>
                                 </SelectContent>
@@ -1005,10 +1005,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                       })}
 
                       <div className="border-t pt-4">
-                        <Label className="text-sm font-medium">Добавить новый мапинг комнат:</Label>
+                        <Label className="text-sm font-medium">{t('excel.mapper.validation.rooms.addMapping') || 'Добавить новый мапинг комнат:'}</Label>
                         <div className="flex gap-2 mt-2">
                           <Input
-                            placeholder="Значение из Excel"
+                            placeholder={t('excel.mapper.validation.valueFromExcel') || 'Значение из Excel'}
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
                                 addCustomRoomsMapping(e.currentTarget.value);
@@ -1039,11 +1039,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center gap-2 text-yellow-800">
                       <AlertTriangle className="h-4 w-4" />
-                      <span className="font-medium">Внимание по статусам!</span>
+                      <span className="font-medium">{t('excel.mapper.validation.status.warning') || 'Внимание по статусам!'}</span>
                     </div>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Обнаружены неизвестные статусы: {statusValidation.invalidStatuses.join(', ')}. 
-                      Квартиры с неизвестными статусами будут импортированы со статусом "Свободна".
+                      {t('excel.mapper.validation.status.warningMessage', { statuses: statusValidation.invalidStatuses.join(', ') }) || 
+                        `Обнаружены неизвестные статусы: ${statusValidation.invalidStatuses.join(', ')}. Квартиры с неизвестными статусами будут импортированы со статусом "Свободна".`}
                     </p>
                   </div>
                 )}
@@ -1052,11 +1052,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center gap-2 text-yellow-800">
                       <AlertTriangle className="h-4 w-4" />
-                      <span className="font-medium">Внимание по комнатам!</span>
+                      <span className="font-medium">{t('excel.mapper.validation.rooms.warning') || 'Внимание по комнатам!'}</span>
                     </div>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Обнаружены неизвестные значения комнат: {roomsValidation.invalidRooms.join(', ')}. 
-                      Квартиры с неизвестными значениями будут импортированы с 1 комнатой.
+                      {t('excel.mapper.validation.rooms.warningMessage', { rooms: roomsValidation.invalidRooms.join(', ') }) || 
+                        `Обнаружены неизвестные значения комнат: ${roomsValidation.invalidRooms.join(', ')}. Квартиры с неизвестными значениями будут импортированы с 1 комнатой.`}
                     </p>
                   </div>
                 )}
@@ -1071,7 +1071,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         <CardHeader>
           <CardTitle>{t('excel.mapper.preview.title') || 'Предварительный просмотр данных'}</CardTitle>
           <CardDescription>
-            {(t('excel.mapper.preview.description') || 'Как будут импортированы ваши данные ({{count}} записей)').replace('{{count}}', String(importedData.length))}  
+            {t('excel.mapper.preview.description', { count: importedData.length }) || `Как будут импортированы ваши данные (${importedData.length} записей)`}  
           </CardDescription>
         </CardHeader>
         <CardContent>
