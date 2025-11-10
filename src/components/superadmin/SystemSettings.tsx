@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X, Loader2 } from 'lucide-react';
+import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X, Loader2, Percent, Plus, Trash2, Edit } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -59,6 +59,17 @@ interface InvoiceConfig {
   finance_email: string;
 }
 
+interface CommissionTier {
+  id: string;
+  min_projects: number;
+  max_projects: number | null;
+  commission_percentage: number;
+  link_type: 'referral' | 'managed' | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function SystemSettings() {
   const [settings, setSettings] = useState<SystemSettings>({
     maintenanceMode: false,
@@ -98,9 +109,21 @@ export function SystemSettings() {
   const [uploadingStamp, setUploadingStamp] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const stampInputRef = useRef<HTMLInputElement>(null);
+  const [commissionTiers, setCommissionTiers] = useState<CommissionTier[]>([]);
+  const [loadingTiers, setLoadingTiers] = useState(false);
+  const [editingTier, setEditingTier] = useState<CommissionTier | null>(null);
+  const [isTierDialogOpen, setIsTierDialogOpen] = useState(false);
+  const [newTier, setNewTier] = useState<Partial<CommissionTier>>({
+    min_projects: 0,
+    max_projects: null,
+    commission_percentage: 20,
+    link_type: 'referral',
+    is_active: true,
+  });
 
   useEffect(() => {
     loadSettings();
+    loadCommissionTiers();
   }, []);
 
   const loadSettings = async () => {
@@ -371,6 +394,138 @@ export function SystemSettings() {
     }
   };
 
+  const loadCommissionTiers = async () => {
+    setLoadingTiers(true);
+    try {
+      const { data, error } = await supabase
+        .from('commission_tiers')
+        .select('*')
+        .order('link_type', { ascending: true })
+        .order('min_projects', { ascending: true });
+
+      if (error) throw error;
+      setCommissionTiers(data || []);
+    } catch (error) {
+      console.error('Error loading commission tiers:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить настройки комиссий',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingTiers(false);
+    }
+  };
+
+  const handleSaveTier = async (tier: Partial<CommissionTier>) => {
+    try {
+      if (editingTier) {
+        // Обновление существующего tier
+        const { error } = await supabase
+          .from('commission_tiers')
+          .update({
+            min_projects: tier.min_projects,
+            max_projects: tier.max_projects === undefined ? null : tier.max_projects,
+            commission_percentage: tier.commission_percentage,
+            link_type: tier.link_type || null,
+            is_active: tier.is_active ?? true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingTier.id);
+
+        if (error) throw error;
+        toast({
+          title: 'Успешно',
+          description: 'Настройка комиссии обновлена',
+        });
+      } else {
+        // Создание нового tier
+        const { error } = await supabase
+          .from('commission_tiers')
+          .insert({
+            min_projects: tier.min_projects || 0,
+            max_projects: tier.max_projects === undefined ? null : tier.max_projects,
+            commission_percentage: tier.commission_percentage || 20,
+            link_type: tier.link_type || null,
+            is_active: tier.is_active ?? true,
+          });
+
+        if (error) throw error;
+        toast({
+          title: 'Успешно',
+          description: 'Новая настройка комиссии добавлена',
+        });
+      }
+
+      setEditingTier(null);
+      setIsTierDialogOpen(false);
+      setNewTier({
+        min_projects: 0,
+        max_projects: null,
+        commission_percentage: 20,
+        link_type: 'referral',
+        is_active: true,
+      });
+      await loadCommissionTiers();
+    } catch (error) {
+      console.error('Error saving tier:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить настройку комиссии',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteTier = async (id: string) => {
+    if (!confirm('Вы уверены, что хотите удалить эту настройку комиссии?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('commission_tiers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast({
+        title: 'Успешно',
+        description: 'Настройка комиссии удалена',
+      });
+      await loadCommissionTiers();
+    } catch (error) {
+      console.error('Error deleting tier:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить настройку комиссии',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleTierActive = async (tier: CommissionTier) => {
+    try {
+      const { error } = await supabase
+        .from('commission_tiers')
+        .update({
+          is_active: !tier.is_active,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', tier.id);
+
+      if (error) throw error;
+      await loadCommissionTiers();
+    } catch (error) {
+      console.error('Error toggling tier:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось изменить статус настройки',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return <div className="p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>;
   }
@@ -419,6 +574,10 @@ export function SystemSettings() {
           <TabsTrigger value="invoices">
             <FileText className="h-4 w-4 mr-2" />
             Счета
+          </TabsTrigger>
+          <TabsTrigger value="commissions">
+            <Percent className="h-4 w-4 mr-2" />
+            Комиссии
           </TabsTrigger>
         </TabsList>
 
@@ -1028,6 +1187,302 @@ export function SystemSettings() {
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Commission Settings */}
+        <TabsContent value="commissions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройки комиссий партнеров</CardTitle>
+              <CardDescription>
+                Управление процентами комиссии в зависимости от количества проектов
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingTiers ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Текущие настройки</h3>
+                      <Button
+                        onClick={() => {
+                          setEditingTier(null);
+                          setNewTier({
+                            min_projects: 0,
+                            max_projects: null,
+                            commission_percentage: 20,
+                            link_type: 'referral',
+                            is_active: true,
+                          });
+                          setIsTierDialogOpen(true);
+                        }}
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Добавить
+                      </Button>
+                    </div>
+
+                    {/* Referral Tiers */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm text-muted-foreground">Реферальные комиссии</h4>
+                      <div className="space-y-2">
+                        {commissionTiers
+                          .filter(tier => tier.link_type === 'referral')
+                          .map((tier) => (
+                            <div
+                              key={tier.id}
+                              className="flex items-center justify-between p-3 border rounded-lg"
+                            >
+                              <div className="flex-1 grid grid-cols-4 gap-4 items-center">
+                                <div>
+                                  <span className="text-sm font-medium">
+                                    {tier.min_projects} - {tier.max_projects === null ? '∞' : tier.max_projects}
+                                  </span>
+                                  <p className="text-xs text-muted-foreground">проектов</p>
+                                </div>
+                                <div>
+                                  <span className="text-sm font-medium">{tier.commission_percentage}%</span>
+                                  <p className="text-xs text-muted-foreground">комиссия</p>
+                                </div>
+                                <div>
+                                  <Switch
+                                    checked={tier.is_active}
+                                    onCheckedChange={() => handleToggleTierActive(tier)}
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {tier.is_active ? 'Активна' : 'Неактивна'}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingTier(tier);
+                                      setIsTierDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteTier(tier.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Managed Tiers */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm text-muted-foreground">Комиссии управляемых клиентов</h4>
+                      <div className="space-y-2">
+                        {commissionTiers
+                          .filter(tier => tier.link_type === 'managed')
+                          .map((tier) => (
+                            <div
+                              key={tier.id}
+                              className="flex items-center justify-between p-3 border rounded-lg"
+                            >
+                              <div className="flex-1 grid grid-cols-4 gap-4 items-center">
+                                <div>
+                                  <span className="text-sm font-medium">
+                                    {tier.min_projects} - {tier.max_projects === null ? '∞' : tier.max_projects}
+                                  </span>
+                                  <p className="text-xs text-muted-foreground">проектов</p>
+                                </div>
+                                <div>
+                                  <span className="text-sm font-medium">{tier.commission_percentage}%</span>
+                                  <p className="text-xs text-muted-foreground">комиссия</p>
+                                </div>
+                                <div>
+                                  <Switch
+                                    checked={tier.is_active}
+                                    onCheckedChange={() => handleToggleTierActive(tier)}
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {tier.is_active ? 'Активна' : 'Неактивна'}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingTier(tier);
+                                      setIsTierDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteTier(tier.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Add/Edit Tier Dialog */}
+                  <Dialog open={isTierDialogOpen} onOpenChange={setIsTierDialogOpen}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingTier ? 'Редактировать настройку' : 'Добавить настройку комиссии'}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Укажите диапазон проектов и процент комиссии
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="tier_link_type">Тип связи</Label>
+                          <Select
+                            value={editingTier?.link_type || newTier.link_type || 'referral'}
+                            onValueChange={(value) => {
+                              if (editingTier) {
+                                setEditingTier({ ...editingTier, link_type: value as 'referral' | 'managed' | null });
+                              } else {
+                                setNewTier({ ...newTier, link_type: value as 'referral' | 'managed' | null });
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="referral">Реферальная</SelectItem>
+                              <SelectItem value="managed">Управляемая</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="tier_min_projects">Мин. проектов</Label>
+                            <Input
+                              id="tier_min_projects"
+                              type="number"
+                              min="0"
+                              value={editingTier?.min_projects ?? newTier.min_projects ?? 0}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 0;
+                                if (editingTier) {
+                                  setEditingTier({ ...editingTier, min_projects: value });
+                                } else {
+                                  setNewTier({ ...newTier, min_projects: value });
+                                }
+                              }}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="tier_max_projects">Макс. проектов (оставьте пустым для ∞)</Label>
+                            <Input
+                              id="tier_max_projects"
+                              type="number"
+                              min="0"
+                              placeholder="∞"
+                              value={editingTier?.max_projects ?? newTier.max_projects ?? ''}
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? null : (parseInt(e.target.value) || null);
+                                if (editingTier) {
+                                  setEditingTier({ ...editingTier, max_projects: value });
+                                } else {
+                                  setNewTier({ ...newTier, max_projects: value });
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="tier_percentage">Процент комиссии (%)</Label>
+                          <Input
+                            id="tier_percentage"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value={editingTier?.commission_percentage ?? newTier.commission_percentage ?? 20}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              if (editingTier) {
+                                setEditingTier({ ...editingTier, commission_percentage: value });
+                              } else {
+                                setNewTier({ ...newTier, commission_percentage: value });
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="tier_active">Активна</Label>
+                          <Switch
+                            id="tier_active"
+                            checked={editingTier?.is_active ?? newTier.is_active ?? true}
+                            onCheckedChange={(checked) => {
+                              if (editingTier) {
+                                setEditingTier({ ...editingTier, is_active: checked });
+                              } else {
+                                setNewTier({ ...newTier, is_active: checked });
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setEditingTier(null);
+                              setIsTierDialogOpen(false);
+                              setNewTier({
+                                min_projects: 0,
+                                max_projects: null,
+                                commission_percentage: 20,
+                                link_type: 'referral',
+                                is_active: true,
+                              });
+                            }}
+                          >
+                            Отмена
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const tierToSave = editingTier || newTier;
+                              if (tierToSave.min_projects !== undefined && tierToSave.commission_percentage !== undefined) {
+                                handleSaveTier(tierToSave);
+                              }
+                            }}
+                          >
+                            Сохранить
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
