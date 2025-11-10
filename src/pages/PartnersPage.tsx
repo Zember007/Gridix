@@ -124,10 +124,10 @@ const PartnersPage = () => {
             <Handshake className="h-4 w-4" />
             {t('partners.overview')}
           </TabsTrigger>
-      {/*     <TabsTrigger value="clients" className="flex items-center gap-2">
+          <TabsTrigger value="clients" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             {t('partners.clients')}
-          </TabsTrigger> */}
+          </TabsTrigger>
           <TabsTrigger
           value="payouts" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
@@ -139,9 +139,9 @@ const PartnersPage = () => {
           <PartnersSection />
         </TabsContent>
         
-      {/*   <TabsContent value="clients" className="mt-6">
+        <TabsContent value="clients" className="mt-6">
           <ManagedClients />
-        </TabsContent> */}
+        </TabsContent>
         
         <TabsContent value="payouts" className="mt-6">
           <PayoutRequests />
