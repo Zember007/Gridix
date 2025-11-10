@@ -125,18 +125,23 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   });
 
   const [translations, setTranslations] = useState<Translations>({});
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     let isCancelled = false;
+    setIsLoaded(false);
     (async () => {
       await loadLanguageIntoCache(language);
+      if (!isCancelled) {
+        setTranslations(buildTranslationsFromCache());
+        setIsLoaded(true);
+      }
       if (language !== 'en') {
         // Background load for fallback
         loadLanguageIntoCache('en').then(() => {
           if (!isCancelled) setTranslations(buildTranslationsFromCache());
         });
       }
-      if (!isCancelled) setTranslations(buildTranslationsFromCache());
     })();
     return () => { isCancelled = true; };
   }, [language]);
@@ -177,7 +182,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
+      {isLoaded ? children : null}
     </LanguageContext.Provider>
   );
 };
@@ -215,17 +220,22 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
   }, [initialLanguage, language]);
 
   const [translations, setTranslations] = useState<Translations>({});
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     let isCancelled = false;
+    setIsLoaded(false);
     (async () => {
       await loadLanguageIntoCache(language);
+      if (!isCancelled) {
+        setTranslations(buildTranslationsFromCache());
+        setIsLoaded(true);
+      }
       if (language !== 'en') {
         loadLanguageIntoCache('en').then(() => {
           if (!isCancelled) setTranslations(buildTranslationsFromCache());
         });
       }
-      if (!isCancelled) setTranslations(buildTranslationsFromCache());
     })();
     return () => { isCancelled = true; };
   }, [language]);
@@ -252,7 +262,7 @@ export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ childre
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
+      {isLoaded ? children : null}
     </LanguageContext.Provider>
   );
 };
