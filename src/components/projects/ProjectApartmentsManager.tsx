@@ -44,6 +44,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, unknown>>({});
   const [currentType, setCurrentType] = useState<'apartment' | 'commercial' | 'parking'>('apartment');
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
@@ -97,17 +98,25 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
   }, [currentType]);
 
   useEffect(() => {
-    // Filter apartments based on search term and type
+    // Filter apartments based on search term, type, and floor
     const filtered = apartments.filter(apartment => {
       const matchesType = apartment.type === currentType;
+      
+      // Filter by floor if selected
+      const matchesFloor = selectedFloor === null || apartment.floor_number === selectedFloor;
+      
+      // Search by apartment number, status, area, and price
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = apartment.apartment_number.toLowerCase().includes(searchLower) ||
-        apartment.status.toLowerCase().includes(searchLower);
+      const matchesSearch = searchTerm === '' || 
+        apartment.apartment_number.toLowerCase().includes(searchLower) ||
+        apartment.status.toLowerCase().includes(searchLower) ||
+        apartment.area.toString().includes(searchTerm) ||
+        (apartment.price !== null && apartment.price.toString().includes(searchTerm));
 
-      return matchesType && matchesSearch;
+      return matchesType && matchesFloor && matchesSearch;
     });
     setFilteredApartments(filtered);
-  }, [apartments, searchTerm, currentType]);
+  }, [apartments, searchTerm, currentType, selectedFloor]);
 
   const handleSaveApartment = async (apartmentData: Partial<Apartment>, isNew: boolean = false) => {
     if (!apartmentData.apartment_number?.trim()) {
@@ -641,15 +650,35 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Search field */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder={t('apartmentsManager.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search field and floor filter */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder={t('apartmentsManager.searchByNameAreaPrice')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {projectType !== 'object' && (
+            <Select
+              value={selectedFloor === null ? 'all' : selectedFloor.toString()}
+              onValueChange={(value) => setSelectedFloor(value === 'all' ? null : parseInt(value))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={t('apartmentsManager.filterByFloor')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('project.allFloors')}</SelectItem>
+                {getUniqueFloors().map((floor) => (
+                  <SelectItem key={floor} value={floor.toString()}>
+                    {t('apartmentsManager.floor', { floor })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Type selector tabs */}
@@ -678,97 +707,146 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
         )}
 
         {/* Список существующих квартир */}
-        <div className="space-y-2">
-          {filteredApartments.map((apartment) => (
-            <Card key={apartment.id} className="relative">
-              {editingApartment?.id === apartment.id ? (
-                <CardContent className="p-4">
-                  {renderApartmentForm(editingApartment)}
-                </CardContent>
-              ) : (
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">
-                              {
-                                projectType === 'object' ? t('buildingImage.object.objectNumber', { number: apartment.apartment_number }) :
-                                  currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number
-                              }
-                            </h3>
-                            <Badge className={getStatusColor(apartment.status)}>
-                              {getStatusLabel(apartment.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {t('apartmentsManager.floor', { floor: apartment.floor_number })} •
-                            {apartment.type === 'apartment'
-                              ? (apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms === 'free_layout' ? t('apartment.freeLayout') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
-                              : apartment.type === 'commercial'
-                                ? t('apartmentsManager.typeCommercial')
-                                : t('apartmentsManager.typeParking')
-                            }
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <div className="text-sm">
-                            <span className="text-gray-600">{t('apartmentsManager.area')}: </span>
-                            <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
-                          </div>
-                          {apartment.price && (
-                            <div className="text-sm">
-                              <span className="text-gray-600">{t('apartmentsManager.price')}: </span>
-                              <span>{t('apartmentsManager.priceValue', { price: apartment.price.toLocaleString() })}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDuplicateApartment(apartment)}
-                            title="Дублировать квартиру"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openSyncDialog(apartment)}
-                            title="Синхронизировать данные с квартирами той же площади и планировки"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingApartment(apartment);
-                              // Загружаем кастомные поля для редактирования
-                              if (apartment.custom_fields && typeof apartment.custom_fields === 'object') {
-                                setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
-                              }
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteApartment(apartment.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+        <div className="space-y-4">
+          {(() => {
+            // Group apartments by floor
+            const groupedByFloor = filteredApartments.reduce((acc, apartment) => {
+              const floor = apartment.floor_number;
+              if (!acc[floor]) {
+                acc[floor] = [];
+              }
+              acc[floor].push(apartment);
+              return acc;
+            }, {} as Record<number, Apartment[]>);
+
+            // Sort floors in descending order (highest first)
+            const sortedFloors = Object.keys(groupedByFloor)
+              .map(Number)
+              .sort((a, b) => b - a);
+
+            if (sortedFloors.length === 0) {
+              return null;
+            }
+
+            return sortedFloors.map((floorNumber) => {
+              const floorApartments = groupedByFloor[floorNumber];
+              if (!floorApartments || floorApartments.length === 0) {
+                return null;
+              }
+              
+              return (
+                <div key={floorNumber} className="space-y-2">
+                  {/* Floor header */}
+                  {projectType !== 'object' && (
+                    <div className="flex items-center gap-3 py-2 ">
+                      <div className="flex-1 border-t border-gray-300"></div>
+                      <div className="px-4">
+                        <span className="font-semibold text-lg text-gray-700">
+                          {t('apartmentsManager.floor', { floor: floorNumber })}
+                        </span>
                       </div>
+                      <div className="flex-1 border-t border-gray-300"></div>
                     </div>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
+                  )}
+                  {/* Apartments on this floor */}
+                  {floorApartments.map((apartment) => (
+                  <Card key={apartment.id} className="relative">
+                    {editingApartment?.id === apartment.id ? (
+                      <CardContent className="p-4">
+                        {renderApartmentForm(editingApartment)}
+                      </CardContent>
+                    ) : (
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-lg">
+                                    {
+                                      projectType === 'object' ? t('buildingImage.object.objectNumber', { number: apartment.apartment_number }) :
+                                        currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number
+                                    }
+                                  </h3>
+                                  <Badge className={getStatusColor(apartment.status)}>
+                                    {getStatusLabel(apartment.status)}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  {projectType !== 'object' && (
+                                    <>
+                                      {t('apartmentsManager.floor', { floor: apartment.floor_number })} •
+                                    </>
+                                  )}
+                                  {apartment.type === 'apartment'
+                                    ? (apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms === 'free_layout' ? t('apartment.freeLayout') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
+                                    : apartment.type === 'commercial'
+                                      ? t('apartmentsManager.typeCommercial')
+                                      : t('apartmentsManager.typeParking')
+                                  }
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <div className="text-sm">
+                                  <span className="text-gray-600">{t('apartmentsManager.area')}: </span>
+                                  <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
+                                </div>
+                                {apartment.price && (
+                                  <div className="text-sm">
+                                    <span className="text-gray-600">{t('apartmentsManager.price')}: </span>
+                                    <span>{t('apartmentsManager.priceValue', { price: apartment.price.toLocaleString() })}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDuplicateApartment(apartment)}
+                                  title="Дублировать квартиру"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openSyncDialog(apartment)}
+                                  title="Синхронизировать данные с квартирами той же площади и планировки"
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingApartment(apartment);
+                                    // Загружаем кастомные поля для редактирования
+                                    if (apartment.custom_fields && typeof apartment.custom_fields === 'object') {
+                                      setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
+                                    }
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteApartment(apartment.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                  ))}
+                </div>
+              );
+            });
+          })()}
         </div>
 
         {filteredApartments.length === 0 && (

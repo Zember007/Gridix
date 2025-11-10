@@ -29,7 +29,7 @@
   "save": "Save",
   "saveError": "Error saving apartment",
   "saveSuccess": "Apartment added",
-  "searchPlaceholder": "Search by apartment number or status",
+  "searchByNameAreaPrice": "Search by name, area or price",
   "sold": "Sold",
   "status": "Status",
   "title": "Project Apartments",

@@ -4,6 +4,7 @@
   "name": "الاسم",
   "newApartment": "شقة جديدة",
   "searchPlaceholder": "ابحث برقم الشقة أو الحالة",
+  "searchByNameAreaPrice": "البحث بالاسم أو المساحة أو السعر",
   "title": "شقق المشروع",
   "syncError": "لا يوجد شقق بنفس المساحة وعدد الغرف للمزامنة",
   "noSearchResults": "لا يوجد نتائج"

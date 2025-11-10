@@ -119,7 +119,7 @@ const PartnersPage = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Handshake className="h-4 w-4" />
             {t('partners.overview')}

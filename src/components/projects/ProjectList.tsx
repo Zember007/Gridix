@@ -71,20 +71,6 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       : `/${language}/embed/project/id/${project.id}`;
   };
 
-  const copyWidgetCode = (project: Project) => {
-    const widgetCode = `<iframe 
-  src="${getWidgetUrl(project)}"
-  width="100%"
-  height="600px"
-  frameborder="0"
-  style="border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"
-  allowfullscreen>
-</iframe>`;
-    
-    navigator.clipboard.writeText(widgetCode);
-    toast.success(t('projectList.widgetCodeCopied'));
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -259,24 +245,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                     >
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => copyWidgetCode(project)}
-                      style={{
-                        borderColor: ADMIN_THEME.primary,
-                        color: ADMIN_THEME.primary,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
+                 
                     
                     {/* Кнопка удаления скрыта для менеджеров */}
                     {!isManagerMode && (
