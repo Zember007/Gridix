@@ -34,13 +34,13 @@ export const Timeline = ({ data, title }: { data: TimelineEntry[], title?: strin
   return (
     <section
     id="features"
-      className="w-full py-20 font-sans container"
+      className="w-full py-20 container mx-auto"
       ref={containerRef}
     >
-      <div className=" mx-auto text-center">{title}</div>
+      <div className="  text-center">{title}</div>
       
 
-      <div ref={ref} className="relative max-w-7xl mx-auto pb-20">
+      <div ref={ref} className="relative">
         {data.map((item, index) => (
           <div
             key={index}

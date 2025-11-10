@@ -189,7 +189,7 @@ export const ListView = ({
           </Tabs>
         )}
 
-        <div className="grow max-h-[calc(100vh-400px)]">
+        <div className="grow max-h-[calc(100vh-400px)] min-h-[600px]">
           <div className="space-y-4 overflow-y-auto max-h-full">
             {listViewMode === 'list' ? (
               // Desktop table layout

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, User, Building, CreditCard } from 'lucide-react';
+import { Save, User, Building, CreditCard, KeyRound } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +62,11 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
     updated_at: null,
   });
   const [saving, setSaving] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -179,7 +184,75 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
     }
   }, [userProfile]);
 
+  const handleUpdateEmail = async () => {
+    if (!newEmail) {
+      toast.error(t('adminSettings.errorUpdatingEmail'));
+      return;
+    }
 
+    setUpdatingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+
+      if (error) {
+        console.error('Error updating email:', error);
+        if (error.message?.includes('same') || error.code === 'same_email') {
+          toast.error(t('adminSettings.sameEmail'));
+        } else if (error.message?.includes('already') || error.code === 'email_exists') {
+          toast.error(t('adminSettings.emailExists'));
+        } else {
+          toast.error(t('adminSettings.errorUpdatingEmail'));
+        }
+      } else {
+        toast.success(t('adminSettings.emailUpdated'));
+        setNewEmail('');
+      }
+    } catch (error) {
+      console.error('Error updating email:', error);
+      toast.error(t('adminSettings.errorUpdatingEmail'));
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error(t('adminSettings.errorUpdatingPassword'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error(t('adminSettings.passwordsDoNotMatch'));
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('Error updating password:', error);
+        if (error.code === 'same_password') {
+          toast.error(t('adminSettings.samePassword'));
+        } else {
+          toast.error(t('adminSettings.errorUpdatingPassword'));
+        }
+      } else {
+        toast.success(t('adminSettings.passwordUpdated'));
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast.error(t('adminSettings.errorUpdatingPassword'));
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!userProfile) {
@@ -327,6 +400,10 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
             <CreditCard className="h-4 w-4" />
             {t('adminSettings.billing')}
           </TabsTrigger>
+          <TabsTrigger value="account" className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4" />
+            {t('adminSettings.account')}
+          </TabsTrigger>
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             {t('adminSettings.contacts')}
@@ -469,6 +546,112 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="account">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('adminSettings.changeEmail')}</CardTitle>
+                <CardDescription>
+                  {t('adminSettings.accountInfoDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="current_email">{t('adminSettings.currentEmail')}</Label>
+                  <Input
+                    id="current_email"
+                    type="email"
+                    value={userProfile?.email || ''}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_email">{t('adminSettings.newEmail')}</Label>
+                  <Input
+                    id="new_email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder={t('adminSettings.newEmailPlaceholder')}
+                  />
+                </div>
+                <Button 
+                  onClick={handleUpdateEmail}
+                  disabled={updatingEmail || !newEmail}
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!updatingEmail && newEmail) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!updatingEmail && newEmail) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                    }
+                  }}
+                >
+                  {updatingEmail ? t('adminSettings.saving') : t('adminSettings.updateEmail')}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('adminSettings.changePassword')}</CardTitle>
+                <CardDescription>
+                  {t('adminSettings.accountInfoDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="new_password">{t('adminSettings.newPassword')}</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder={t('adminSettings.newPasswordPlaceholder')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirm_password">{t('adminSettings.confirmNewPassword')}</Label>
+                  <Input
+                    id="confirm_password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder={t('adminSettings.confirmPasswordPlaceholder')}
+                  />
+                </div>
+                <Button 
+                  onClick={handleUpdatePassword}
+                  disabled={updatingPassword || !newPassword || !confirmPassword}
+                  style={{
+                    backgroundColor: ADMIN_THEME.primary,
+                    color: ADMIN_THEME.textOnPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!updatingPassword && newPassword && confirmPassword) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!updatingPassword && newPassword && confirmPassword) {
+                      e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                    }
+                  }}
+                >
+                  {updatingPassword ? t('adminSettings.saving') : t('adminSettings.updatePassword')}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="contacts">
