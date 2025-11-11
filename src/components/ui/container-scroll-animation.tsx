@@ -47,7 +47,7 @@ export const ContainerScroll = ({
         }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
-        <Card rotate={rotate} translate={translate} scale={scale as MotionValue<number>}>
+        <Card  rotate={rotate} translate={translate} scale={scale as MotionValue<number>}>
           {children}
         </Card>
       </div>
@@ -69,6 +69,7 @@ export const Header = ({ translate, titleComponent }: { translate: MotionValue<n
 };
 
 export const Card = ({
+  onClick,
   rotate,
   scale,
   children,
@@ -77,9 +78,11 @@ export const Card = ({
   scale: MotionValue<number>;
   translate: MotionValue<number>;
   children: React.ReactNode;
+  onClick?: () => void;
 }) => {
   return (
     <motion.div
+      onClick={onClick}
       style={{
         rotateX: rotate,
         scale,

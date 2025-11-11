@@ -103,7 +103,7 @@ export const FAQ = () => {
         <div className="space-y-12">
           {faqGroups.map((group, groupIndex) => (
             <div key={groupIndex}>
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+              <h3 className="md:text-left text-center text-2xl font-bold mb-6 text-gray-900 dark:text-white">
                 {group.title}
               </h3>
               <Accordion

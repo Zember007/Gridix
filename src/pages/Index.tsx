@@ -94,27 +94,40 @@ const Index = () => {
       <Solution />
       <WhyGridix />
 
-      
+
       <ExpandedDemo />
 
       <ContainerScroll
+
         titleComponent={
           <>
-       
+
             <h2 className="text-4xl md:text-5xl font-light text-gray-900 dark:text-white mb-6">{t('landing.howItLooks.title')}</h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed ">
-            {t('landing.howItLooks.subtitle')}
+              {t('landing.howItLooks.subtitle')}
             </p>
           </>
         }
       >
-        <iframe
-          id="gridix-widget"
-          src={`https://gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
-          width="100%"
-          height="100%"
-        >
-        </iframe>
+        <>
+          <div className="absolute inset-0"
+            onClick={() => {
+              window.open(`https://gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`, '_blank');
+            }}
+          >
+
+          </div>
+
+          <iframe
+
+            id="gridix-widget"
+            src={`https://gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
+            width="100%"
+            height="100%"
+          >
+          </iframe>
+        </>
+
       </ContainerScroll>
 
       <GetStarted onGoToAdmin={goToAdmin} onScrollToPricing={goToPricing} />
@@ -122,7 +135,7 @@ const Index = () => {
       <CaseStudy />
 
       <Testimonials />
-      
+
       <CostComparison onGoToAdmin={goToAdmin} />
 
       <FAQ />
