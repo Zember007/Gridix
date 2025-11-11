@@ -2,6 +2,9 @@ import { VideoPlayer } from './video-player';
 import widgetVideo from '@/assets/video/widget.mp4';
 import importVideo from '@/assets/video/import.mp4';
 import crmVideo from '@/assets/video/crm.mp4';
+import dateUpdateVideo from '@/assets/video/change_status.mp4';
+import analyticsVideo from '@/assets/video/analytics.mp4';
+import teamManagementVideo from '@/assets/video/managers.mp4';
 import { Timeline } from '../ui/timeline';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -69,7 +72,7 @@ export const ExpandedDemo = () => {
                   {t('landing.expandedDemo.dataUpdate.description')}
                 </p>
                 <VideoPlayer
-                  src={''}
+                  src={dateUpdateVideo}
                   className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
                 />
               </div>
@@ -83,7 +86,7 @@ export const ExpandedDemo = () => {
                   {t('landing.expandedDemo.analytics.description')}
                 </p>
                 <VideoPlayer
-                  src={''}
+                  src={analyticsVideo}
                   className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
                 />
               </div>
@@ -97,7 +100,7 @@ export const ExpandedDemo = () => {
                   {t('landing.expandedDemo.teamManagement.description')}
                 </p>
                 <VideoPlayer
-                  src={''}
+                  src={teamManagementVideo}
                   className="rounded-lg object-cover h-auto w-full bg-neutral-200 dark:bg-neutral-800 shadow"
                 />
               </div>
