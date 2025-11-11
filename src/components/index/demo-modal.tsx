@@ -12,7 +12,7 @@ interface DemoModalProps {
 
 export const DemoModal = ({ open, onOpenChange }: DemoModalProps) => {
   const { t } = useLanguage();
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-hidden p-0 gap-0">
@@ -64,7 +64,7 @@ export const DemoModal = ({ open, onOpenChange }: DemoModalProps) => {
           </div>
 
           {/* Right Side - Cal.com Widget */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-8 md:p-12 relative">
+          <div className="bg-gray-50 dark:bg-gray-800 relative">
             {/* Close Button */}
             <button
               onClick={() => onOpenChange(false)}
@@ -75,14 +75,7 @@ export const DemoModal = ({ open, onOpenChange }: DemoModalProps) => {
 
             {/* Cal.com Embed */}
             <div className="h-full min-h-[500px]">
-              <iframe
-                src="https://cal.com/gridix/demo?embed=true&theme=light"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                className="rounded-xl"
-                title={t('landing.demoModal.calendarTitle')}
-              />
+              <iframe style={{ width: '100%', height: '100%', overflow: 'scroll' }} id="my-cal-inline-gridix-15min-demo" src="https://cal.com/klaster-digital/gridix-15min-demo?overlayCalendar=true"></iframe>
             </div>
           </div>
         </div>
