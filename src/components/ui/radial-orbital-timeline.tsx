@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { ArrowRight, Link, Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 interface TimelineItem {
   id: number;
@@ -169,9 +168,21 @@ export default function RadialOrbitalTimeline({
     if (containerSize.width === 0 || containerSize.height === 0) {
       return 300; // Значение по умолчанию
     }
-    // Используем 45% от меньшей стороны контейнера, но не меньше 250px
-    return Math.max(250, Math.min(containerSize.width, containerSize.height) * 0.45);
+    // На мобильных устройствах используем меньший процент и минимальный радиус
+    const isMobile = containerSize.width < 768;
+    const percentage = isMobile ? 0.3 : 0.45;
+    const minRadius = isMobile ? 110 : 250;
+    // Ограничиваем радиус, чтобы он не превышал половину ширины контейнера (с небольшим запасом)
+    const calculatedRadius = Math.min(containerSize.width, containerSize.height) * percentage;
+    const cap = containerSize.width / 2 - 8;
+    return Math.max(minRadius, Math.min(calculatedRadius, cap));
   }, [containerSize]);
+
+  // Эффективный диаметр орбиты с учётом фактической ширины контейнера
+  const orbitDiameter = useMemo(() => {
+    if (containerSize.width === 0) return radius * 2;
+    return Math.min(radius * 2, Math.max(0, containerSize.width - 8));
+  }, [radius, containerSize.width]);
 
   const centerViewOnNode = useCallback((nodeId: number) => {
     if (viewMode !== "orbital" || !nodeRefs.current[nodeId]) return;
@@ -207,24 +218,12 @@ export default function RadialOrbitalTimeline({
     return currentItem ? currentItem.relatedIds : [];
   };
 
-  const getStatusStyles = (status: TimelineItem["status"]): string => {
-    switch (status) {
-      case "completed":
-        return "text-white bg-black border-white";
-      case "in-progress":
-        return "text-black bg-white border-black";
-      case "pending":
-        return "text-white bg-black/40 border-white/50";
-      default:
-        return "text-white bg-black/40 border-white/50";
-    }
-  };
-
   return (
     <div
-      className="w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden"
+      className="w-full max-w-full h-[100vw] md:h-[80vh] flex flex-col items-center justify-center "
       ref={containerRef}
       onClick={handleContainerClick}
+      style={{ maxWidth: '100vw'}}
     >
       <div className="relative w-full h-full flex items-center justify-center">
         <div
@@ -234,6 +233,7 @@ export default function RadialOrbitalTimeline({
             perspective: "1000px",
             transform: `translate(${centerOffset.x}px, ${centerOffset.y}px)`,
             willChange: "transform",
+            maxWidth: '100%',
           }}
         >
           <div className="absolute w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-teal-500 flex items-center justify-center z-10">
@@ -248,13 +248,14 @@ export default function RadialOrbitalTimeline({
           <div 
             className="absolute rounded-full border border-white/10"
             style={{
-              width: `${radius * 2}px`,
-              height: `${radius * 2}px`,
+              width: `${orbitDiameter}px`,
+              height: `${orbitDiameter}px`,
             }}
           ></div>
 
           {timelineData.map((item, index) => {
-            const position = calculateNodePosition(index, timelineData.length, radius);
+            const effectiveRadius = Math.min(radius, (containerSize.width - 8) / 2);
+            const position = calculateNodePosition(index, timelineData.length, effectiveRadius);
             const isExpanded = expandedItems[item.id];
             const isPulsing = pulseEffect[item.id];
             const Icon = item.icon;
@@ -315,7 +316,7 @@ export default function RadialOrbitalTimeline({
                 <div
                   className={`
                   absolute top-15 left-1/2 -translate-x-1/2 text-center whitespace-nowrap
-                  text-xs font-semibold tracking-wider
+                  md:text-xs text-[10px] font-semibold tracking-wider
                   transition-all duration-300
                   ${isExpanded ? "text-black scale-125" : "text-black/70"}
                 `}
@@ -324,7 +325,7 @@ export default function RadialOrbitalTimeline({
                 </div>
 
                 {isExpanded && (
-                  <Card className="absolute top-20 left-1/2 -translate-x-1/2 w-64 bg-black/90 backdrop-blur-lg border-white/30 shadow-xl shadow-white/10 overflow-visible">
+                  <Card className="absolute top-20 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-2rem)] sm:max-w-none bg-black/90 backdrop-blur-lg border-white/30 shadow-xl shadow-white/10 overflow-visible">
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-white/50"></div>
                     <CardHeader className="pb-2">
                     

@@ -87,7 +87,7 @@ export const Solution = () => {
 
         </div>
 
-        <div className="w-full" style={{ minHeight: '600px' }}>
+        <div className="w-full">
           <RadialOrbitalTimeline timelineData={timelineData} />
         </div>
       </div>
