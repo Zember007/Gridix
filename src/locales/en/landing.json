@@ -312,11 +312,11 @@
     },
     "results": {
       "label": "Results (1 month)",
-      "conversion": "+43% conversion to leads",
-      "selfSelection": "78% of clients chose independently",
-      "timeSavings": "–35% time on lead processing",
-      "costReduction": "–28% customer acquisition cost",
-      "convenience": "⭐ 9.2/10 selection convenience",
+      "conversion": "  conversion to leads",
+      "selfSelection": " of clients chose independently",
+      "timeSavings": " time on lead processing",
+      "costReduction": " customer acquisition cost",
+      "convenience": " selection convenience",
       "marketing": "Marketing started optimizing advertising based on GRIDIX analytics"
     },
     "testimonial": {
