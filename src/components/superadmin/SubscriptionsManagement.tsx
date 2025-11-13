@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, X, Check, Loader2, Upload, ExternalLink, FileText, Download, Eye, AlertCircle, Infinity } from 'lucide-react';
+import { Plus, X, Check, Loader2, ExternalLink, FileText, Download, Eye, AlertCircle, Edit } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -30,13 +30,16 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Subscription {
   id: string;
   user_id: string;
   project_id: string;
+  plan_id: string;
   status: string;
   current_period_end: string;
+  current_period_start: string | null;
   invoice_number: string | null;
   invoice_url: string | null;
   invoice_requested_at: string | null;
@@ -67,6 +70,7 @@ export function SubscriptionsManagement() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Form states for creating subscription
@@ -79,10 +83,14 @@ export function SubscriptionsManagement() {
     invoiceUrl: '',
   });
   
-  // Form states for updating invoice
-  const [invoiceForm, setInvoiceForm] = useState({
-    invoiceNumber: '',
-    invoiceUrl: '',
+
+  // Form states for editing subscription
+  const [editForm, setEditForm] = useState({
+    planId: '',
+    status: 'active',
+    durationMonths: 1,
+    isInfinite: false,
+    customEndDate: '',
   });
 
   useEffect(() => {
@@ -296,7 +304,6 @@ export function SubscriptionsManagement() {
         description: 'Оплата подтверждена, подписка активирована',
       });
 
-      setInvoiceForm({ invoiceNumber: '', invoiceUrl: '' });
       setSelectedSubscription(null);
       fetchSubscriptions();
     } catch (error) {
@@ -342,34 +349,103 @@ export function SubscriptionsManagement() {
     }
   };
 
-  const handleSetInfiniteSubscription = async (subscriptionId: string) => {
+  const handleEditSubscription = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    // Заполняем форму текущими значениями
+    const currentEndDate = subscription.current_period_end 
+      ? new Date(subscription.current_period_end).toISOString().split('T')[0]
+      : '';
+    
+    // Проверяем, является ли подписка "бесконечной" (дата после 2090 года)
+    const isInfinite = subscription.current_period_end 
+      ? new Date(subscription.current_period_end) > new Date('2090-01-01')
+      : false;
+
+    // Вычисляем длительность в месяцах, если есть даты
+    let durationMonths = 1;
+    if (subscription.current_period_start && subscription.current_period_end && !isInfinite) {
+      const start = new Date(subscription.current_period_start);
+      const end = new Date(subscription.current_period_end);
+      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      durationMonths = Math.max(1, months);
+    }
+
+    // Получаем plan_id из данных подписки
+    const planId = ('plan_id' in subscription ? subscription.plan_id : '') || '';
+    
+    setEditForm({
+      planId,
+      status: subscription.status ?? 'active',
+      durationMonths,
+      isInfinite,
+      customEndDate: isInfinite ? '' : (currentEndDate || ''),
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveSubscription = async () => {
+    if (!selectedSubscription) return;
+
     setIsProcessing(true);
     try {
-      // Устанавливаем дату окончания на 31 декабря 2099 года (практически бесконечная подписка)
-      const infiniteDate = new Date('2099-12-31T23:59:59.999Z');
+      let endDate: string;
       
+      if (editForm.isInfinite) {
+        // Бесконечная подписка - устанавливаем дату на 2099 год
+        endDate = new Date('2099-12-31T23:59:59.999Z').toISOString();
+      } else if (editForm.customEndDate) {
+        // Используем указанную дату
+        endDate = new Date(editForm.customEndDate + 'T23:59:59.999Z').toISOString();
+      } else {
+        // Вычисляем дату окончания на основе длительности
+        const startDate = selectedSubscription.current_period_start 
+          ? new Date(selectedSubscription.current_period_start)
+          : new Date();
+        const calculatedEndDate = new Date(startDate);
+        calculatedEndDate.setMonth(calculatedEndDate.getMonth() + editForm.durationMonths);
+        endDate = calculatedEndDate.toISOString();
+      }
+
+      const updateData: {
+        plan_id: string;
+        status: string;
+        current_period_end: string;
+        duration_months: number;
+        updated_at: string;
+        current_period_start?: string;
+      } = {
+        plan_id: editForm.planId,
+        status: editForm.status,
+        current_period_end: endDate,
+        duration_months: editForm.durationMonths,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Если устанавливаем статус active, обновляем current_period_start
+      if (editForm.status === 'active' && !selectedSubscription.current_period_start) {
+        updateData.current_period_start = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('user_subscriptions')
-        .update({
-          status: 'active',
-          current_period_end: infiniteDate.toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', subscriptionId);
+        .update(updateData)
+        .eq('id', selectedSubscription.id);
 
       if (error) throw error;
 
       toast({
         title: 'Успешно',
-        description: 'Подписка установлена как бесконечная',
+        description: 'Подписка обновлена',
       });
 
+      setIsEditDialogOpen(false);
+      setSelectedSubscription(null);
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error setting infinite subscription:', error);
+      console.error('Error updating subscription:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось установить бесконечную подписку',
+        description: 'Не удалось обновить подписку',
         variant: 'destructive',
       });
     } finally {
@@ -507,6 +583,141 @@ export function SubscriptionsManagement() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Subscription Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Редактировать подписку</DialogTitle>
+          </DialogHeader>
+          {selectedSubscription && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <p><strong>Пользователь:</strong> {selectedSubscription.user_profiles?.full_name} ({selectedSubscription.user_profiles?.email})</p>
+                <p><strong>Проект:</strong> {selectedSubscription.projects?.name}</p>
+                <p><strong>Текущий план:</strong> {selectedSubscription.subscription_plans?.name}</p>
+                <p><strong>Текущий статус:</strong> {selectedSubscription.status}</p>
+                {selectedSubscription.current_period_end && (
+                  <p><strong>Окончание:</strong> {new Date(selectedSubscription.current_period_end).toLocaleDateString()}</p>
+                )}
+              </div>
+
+              <div>
+                <Label>Тариф (план) *</Label>
+                <Select 
+                  value={editForm.planId}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, planId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите план" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} - ${plan.base_price}/месяц
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Статус *</Label>
+                <Select 
+                  value={editForm.status}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="trialing">Trialing</SelectItem>
+                    <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="trial_expired">Trial Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isInfinite"
+                  checked={editForm.isInfinite}
+                  onCheckedChange={(checked) => {
+                    setEditForm(prev => ({ 
+                      ...prev, 
+                      isInfinite: checked as boolean,
+                      customEndDate: checked ? '' : prev.customEndDate
+                    }));
+                  }}
+                />
+                <Label htmlFor="isInfinite" className="cursor-pointer">
+                  Бесконечная подписка (до 2099 года)
+                </Label>
+              </div>
+
+              {!editForm.isInfinite && (
+                <>
+                  <div>
+                    <Label>Длительность (месяцев)</Label>
+                    <Input 
+                      type="number" 
+                      placeholder="1" 
+                      min="1" 
+                      value={editForm.durationMonths}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || 1 }))}
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Дата окончания будет вычислена автоматически от текущей даты начала
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>Или укажите дату окончания вручную</Label>
+                    <Input 
+                      type="date" 
+                      value={editForm.customEndDate}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, customEndDate: e.target.value }))}
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Если указана дата, она будет использована вместо вычисления по длительности
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Изменения вступят в силу немедленно. Будьте осторожны при изменении статуса и даты окончания.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedSubscription(null);
+                  }}
+                  disabled={isProcessing}
+                >
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={handleSaveSubscription}
+                  disabled={isProcessing || !editForm.planId}
+                >
+                  {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Сохранить изменения
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Pending Requests */}
       {pendingSubscriptions.length > 0 && (
@@ -704,28 +915,26 @@ export function SubscriptionsManagement() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditSubscription(sub)}
+                      disabled={isProcessing}
+                      title="Редактировать подписку"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Редактировать
+                    </Button>
                     {sub.status === 'active' && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSetInfiniteSubscription(sub.id)}
-                          disabled={isProcessing}
-                          title="Установить бесконечную подписку"
-                        >
-                          <Infinity className="h-4 w-4 mr-1" />
-                          Бесконечная
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCancelSubscription(sub.id)}
-                          disabled={isProcessing}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Отменить
-                        </Button>
-                      </>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCancelSubscription(sub.id)}
+                        disabled={isProcessing}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Отменить
+                      </Button>
                     )}
                   </div>
                 </TableCell>
