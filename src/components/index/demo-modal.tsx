@@ -4,14 +4,35 @@ import {
 } from '@/components/ui/dialog';
 import { X, Check } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useEffect } from 'react';
 
 interface DemoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+declare global {
+  interface Window {
+    Cal: any;
+  }
+}
+
 export const DemoModal = ({ open, onOpenChange }: DemoModalProps) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (open) {
+      window.Cal("init", "gridix-15min-demo", { origin: "https://app.cal.com" });
+
+      window.Cal.ns["gridix-15min-demo"]("inline", {
+        elementOrSelector: "#my-cal-inline-gridix-15min-demo",
+        config: { "layout": "month_view" },
+        calLink: "klaster-digital/gridix-15min-demo",
+      });
+
+      window.Cal.ns["gridix-15min-demo"]("ui", { "hideEventTypeDetails": false, "layout": "month_view" });
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +96,7 @@ export const DemoModal = ({ open, onOpenChange }: DemoModalProps) => {
 
             {/* Cal.com Embed */}
             <div className="h-full min-h-[500px]">
-              <iframe style={{ width: '100%', height: '100%', overflow: 'scroll' }} id="my-cal-inline-gridix-15min-demo" src="https://cal.com/klaster-digital/gridix-15min-demo?overlayCalendar=true"></iframe>
+              <div style={{ width: '100%', height: '100%', overflow: 'scroll' }} id="my-cal-inline-gridix-15min-demo" ></div>
             </div>
           </div>
         </div>

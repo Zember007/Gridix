@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, X, Check, Loader2, Upload, ExternalLink, FileText, Download, Eye, AlertCircle } from 'lucide-react';
+import { Plus, X, Check, Loader2, Upload, ExternalLink, FileText, Download, Eye, AlertCircle, Infinity } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -335,6 +335,41 @@ export function SubscriptionsManagement() {
       toast({
         title: 'Ошибка',
         description: 'Не удалось отменить подписку',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSetInfiniteSubscription = async (subscriptionId: string) => {
+    setIsProcessing(true);
+    try {
+      // Устанавливаем дату окончания на 31 декабря 2099 года (практически бесконечная подписка)
+      const infiniteDate = new Date('2099-12-31T23:59:59.999Z');
+      
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          status: 'active',
+          current_period_end: infiniteDate.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Успешно',
+        description: 'Подписка установлена как бесконечная',
+      });
+
+      fetchSubscriptions();
+    } catch (error) {
+      console.error('Error setting infinite subscription:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось установить бесконечную подписку',
         variant: 'destructive',
       });
     } finally {
@@ -668,17 +703,31 @@ export function SubscriptionsManagement() {
                   )}
                 </TableCell>
                 <TableCell>
-                  {sub.status === 'active' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCancelSubscription(sub.id)}
-                      disabled={isProcessing}
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Отменить
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {sub.status === 'active' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSetInfiniteSubscription(sub.id)}
+                          disabled={isProcessing}
+                          title="Установить бесконечную подписку"
+                        >
+                          <Infinity className="h-4 w-4 mr-1" />
+                          Бесконечная
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelSubscription(sub.id)}
+                          disabled={isProcessing}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Отменить
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
