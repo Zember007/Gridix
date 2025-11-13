@@ -361,7 +361,6 @@ export function SubscriptionsManagement() {
       ? new Date(subscription.current_period_end) > new Date('2090-01-01')
       : false;
 
-    // Вычисляем длительность в месяцах, если есть даты
     let durationMonths = 1;
     if (subscription.current_period_start && subscription.current_period_end && !isInfinite) {
       const start = new Date(subscription.current_period_start);

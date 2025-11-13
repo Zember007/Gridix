@@ -9,7 +9,7 @@ export function IncomeCalculator() {
   const { navigate } = useLanguageNavigation();
 
   // Average annual subscription price
-  const ANNUAL_PRICE = 1240;
+  const ANNUAL_PRICE = 1815;
 
   // Calculate income for all tiers
   const basicIncome = projectCount * ANNUAL_PRICE * 0.2;
