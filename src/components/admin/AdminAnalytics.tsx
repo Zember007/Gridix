@@ -172,74 +172,100 @@ export const AdminAnalytics = () => {
         ? [selectedProject] 
         : projectIds;
 
-      // Загрузка просмотров проектов
-      let viewsQuery = supabase
-        .from('project_views')
-        .select('project_id, created_at, projects!inner(name)')
-        .in('project_id', filteredProjectIds);
+      // Подготовка базовых запросов
+      const startDateISO = startDate?.toISOString();
+      const endDateISO = endDate.toISOString();
 
-      if (startDate) {
-        viewsQuery = viewsQuery.gte('created_at', startDate.toISOString());
-      }
-      viewsQuery = viewsQuery.lte('created_at', endDate.toISOString());
-
-      const { data: viewsData, error: viewsError } = await viewsQuery;
+      // Загрузка всех данных параллельно для ускорения
+      const [
+        { data: viewsData, error: viewsError },
+        { data: leadsData, error: leadsError },
+        { data: apartmentsData, error: apartmentsError },
+      ] = await Promise.all([
+        // Загрузка просмотров проектов с join к projects для получения названий
+        (() => {
+          let query = supabase
+            .from('project_views')
+            .select('project_id, created_at, projects!inner(id, name)')
+            .in('project_id', filteredProjectIds);
+          if (startDateISO) query = query.gte('created_at', startDateISO);
+          return query.lte('created_at', endDateISO);
+        })(),
+        // Загрузка лидов (без join для скорости)
+        (() => {
+          let query = supabase
+            .from('leads')
+            .select('project_id, created_at')
+            .in('project_id', filteredProjectIds);
+          if (startDateISO) query = query.gte('created_at', startDateISO);
+          return query.lte('created_at', endDateISO);
+        })(),
+        // Загрузка квартир (нужны для фильтрации apartment_views)
+        supabase
+          .from('apartments')
+          .select('id, project_id, apartment_number, status')
+          .in('project_id', filteredProjectIds),
+      ]);
 
       if (viewsError) throw viewsError;
-
-      // Загрузка лидов
-      let leadsQuery = supabase
-        .from('leads')
-        .select('project_id, created_at, projects!inner(name)')
-        .in('project_id', filteredProjectIds);
-
-      if (startDate) {
-        leadsQuery = leadsQuery.gte('created_at', startDate.toISOString());
-      }
-      leadsQuery = leadsQuery.lte('created_at', endDate.toISOString());
-
-      const { data: leadsData, error: leadsError } = await leadsQuery;
-
       if (leadsError) throw leadsError;
-
-      // Загрузка квартир
-      const { data: apartmentsData, error: apartmentsError } = await supabase
-        .from('apartments')
-        .select('id, project_id, apartment_number, status, projects!inner(name)')
-        .in('project_id', filteredProjectIds);
-
       if (apartmentsError) throw apartmentsError;
 
-      // Загрузка просмотров квартир
-      // Сначала получаем apartment_ids для отфильтрованных проектов
-      const { data: apartmentIdsData } = await supabase
-        .from('apartments')
-        .select('id')
-        .in('project_id', filteredProjectIds);
+      // Получаем названия проектов для leads (так как leads не имеет join)
+      const leadsProjectIds = new Set(
+        (leadsData || []).map((l: { project_id: string }) => l.project_id)
+      );
+      const apartmentsProjectIds = new Set(
+        (apartmentsData || []).map((a: { project_id: string }) => a.project_id)
+      );
+      const allProjectIds = Array.from(new Set([...leadsProjectIds, ...apartmentsProjectIds]));
 
-      const apartmentIds = apartmentIdsData?.map(a => a.id) || [];
+      let projectsMap = new Map<string, string>();
+      if (allProjectIds.length > 0) {
+        const { data: projectsData } = await supabase
+          .from('projects')
+          .select('id, name')
+          .in('id', allProjectIds);
 
-      // apartment_views table not yet in generated types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let apartmentViewsQuery = (supabase as any).from('apartment_views')
-        .select('apartment_id, created_at, apartments!inner(apartment_number, project_id, projects!inner(name))');
+        projectsMap = new Map(
+          (projectsData || []).map((p: { id: string; name: string }) => [p.id, p.name])
+        );
+      }
 
+      // Загрузка просмотров квартир с join к apartments для получения данных квартир
+      const apartmentIds = (apartmentsData || []).map((a: { id: string }) => a.id);
+      
+      let apartmentViewsData: Array<{
+        apartment_id: string;
+        created_at: string;
+        apartments?: {
+          apartment_number: string;
+          project_id: string;
+        };
+      }> = [];
       if (apartmentIds.length > 0) {
-        apartmentViewsQuery = apartmentViewsQuery.in('apartment_id', apartmentIds);
-      } else {
-        // Если нет квартир, возвращаем пустой результат через несуществующий ID
-        const emptyId = '00000000-0000-0000-0000-000000000000';
-        apartmentViewsQuery = apartmentViewsQuery.eq('apartment_id', emptyId);
+        // apartment_views table not yet in generated types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let apartmentViewsQuery = (supabase as any).from('apartment_views')
+          .select('apartment_id, created_at, apartments!inner(apartment_number, project_id)')
+          .in('apartment_id', apartmentIds);
+
+        if (startDateISO) {
+          apartmentViewsQuery = apartmentViewsQuery.gte('created_at', startDateISO);
+        }
+        apartmentViewsQuery = apartmentViewsQuery.lte('created_at', endDateISO);
+
+        const { data, error: apartmentViewsError } = await apartmentViewsQuery;
+        if (apartmentViewsError) throw apartmentViewsError;
+        apartmentViewsData = (data || []) as Array<{
+          apartment_id: string;
+          created_at: string;
+          apartments?: {
+            apartment_number: string;
+            project_id: string;
+          };
+        }>;
       }
-
-      if (startDate) {
-        apartmentViewsQuery = apartmentViewsQuery.gte('created_at', startDate.toISOString());
-      }
-      apartmentViewsQuery = apartmentViewsQuery.lte('created_at', endDate.toISOString());
-
-      const { data: apartmentViewsData, error: apartmentViewsError } = await apartmentViewsQuery;
-
-      if (apartmentViewsError) throw apartmentViewsError;
 
       // Обработка данных для графиков
       const viewsByDate = new Map<string, number>();
@@ -274,16 +300,21 @@ export const AdminAnalytics = () => {
 
       // Топ проектов по просмотрам
       const projectViewsCount = new Map<string, { views: number; leads: number; name: string }>();
-      (viewsData || []).forEach((view: { project_id: string; projects?: { name?: string } }) => {
+      (viewsData || []).forEach((view: { 
+        project_id: string; 
+        projects?: { id?: string; name?: string } 
+      }) => {
         const projectId = view.project_id;
-        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: view.projects?.name || 'Unknown' };
+        const projectName = view.projects?.name || projectsMap.get(projectId) || 'Unknown';
+        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: projectName };
         current.views += 1;
         projectViewsCount.set(projectId, current);
       });
 
-      (leadsData || []).forEach((lead: { project_id: string; projects?: { name?: string } }) => {
+      (leadsData || []).forEach((lead: { project_id: string }) => {
         const projectId = lead.project_id;
-        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: lead.projects?.name || 'Unknown' };
+        const projectName = projectsMap.get(projectId) || 'Unknown';
+        const current = projectViewsCount.get(projectId) || { views: 0, leads: 0, name: projectName };
         current.leads += 1;
         projectViewsCount.set(projectId, current);
       });
@@ -312,21 +343,15 @@ export const AdminAnalytics = () => {
 
       // Топ квартир по просмотрам
       const apartmentViewsCount = new Map<string, { views: number; apartment_number: string; project_name: string }>();
-      (apartmentViewsData || []).forEach((view: unknown) => {
-        const viewData = view as { 
-          apartment_id: string; 
-          apartments?: { 
-            apartment_number?: string; 
-            projects?: { name?: string } 
-          } 
-        };
-        const apartmentId = viewData.apartment_id;
-        const apartment = viewData.apartments;
+      apartmentViewsData.forEach((view) => {
+        const apartmentId = view.apartment_id;
+        const apartment = view.apartments;
         if (apartment) {
+          const projectName = projectsMap.get(apartment.project_id) || 'Unknown';
           const current = apartmentViewsCount.get(apartmentId) || {
             views: 0,
-            apartment_number: apartment.apartment_number || 'Unknown',
-            project_name: apartment.projects?.name || 'Unknown',
+            apartment_number: apartment.apartment_number,
+            project_name: projectName,
           };
           current.views += 1;
           apartmentViewsCount.set(apartmentId, current);
