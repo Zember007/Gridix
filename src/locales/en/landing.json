@@ -299,7 +299,7 @@
     "badge": "Real case study",
     "title": "Client case study",
     "description": "Real results from GRIDIX implementation",
-    "mainTitle": "How a developer increased sales by {percent} with the same advertising budget",
+    "mainTitle": "How a developer increased sales by :percent with the same advertising budget",
     "problem": {
       "label": "Problem",
       "text": "Buyers didn't understand apartment locations, managers spent time explaining and manually processing leads."

@@ -233,11 +233,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     loadSettings();
   }, [projectId]);
 
-  // Filter floors based on showOnlyAvailable: only show floors with at least one available apartment
   const visibleFloors = useMemo(() => {
-    if (!showOnlyAvailable || project.project_type === 'object') {
-      return buildingFloors;
-    }
     
     // Get unique floor numbers that have at least one available apartment
     const floorsWithAvailable = new Set(
@@ -248,7 +244,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     
     // Filter buildingFloors to only include floors with available apartments
     return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
-  }, [buildingFloors, apartments, showOnlyAvailable]);
+  }, [buildingFloors, apartments]);
 
   useEffect(() => {
     if (!imageLoaded) return;
@@ -377,24 +373,69 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     const popupHeight = 160; // estimated height
     const margin = 20;
 
-    // Позиционируем слева от полигона с отступом
-    let adjustedX = position.x - popupWidth - 20;
-    let adjustedY = position.y;
+    // Получаем размеры родительского контейнера
+    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
 
-    // Проверяем границы экрана и корректируем при необходимости
-    if (adjustedX < margin) {
-      // Если слева не помещается, показываем справа от полигона
-      adjustedX = position.x + 20;
+    let adjustedX = position.x;
+    let adjustedY = position.y;
+    let positionType: 'left' | 'right' | 'top' | 'bottom' = 'left';
+
+    // Пытаемся позиционировать слева от полигона
+    const leftX = position.x - popupWidth - 20;
+    const rightX = position.x + 20;
+    const topY = position.y - popupHeight - 20;
+    const bottomY = position.y + 20;
+
+    // Проверяем, помещается ли слева
+    const fitsLeft = leftX >= margin;
+    // Проверяем, помещается ли справа
+    const fitsRight = rightX + popupWidth <= containerWidth - margin;
+    // Проверяем, помещается ли сверху
+    const fitsTop = topY >= margin;
+    // Проверяем, помещается ли снизу
+    const fitsBottom = bottomY + popupHeight <= containerHeight - margin;
+
+    // Приоритет: слева -> справа -> сверху -> снизу
+    if (fitsLeft) {
+      adjustedX = leftX;
+      adjustedY = position.y - popupHeight / 2;
+      positionType = 'left';
+    } else if (fitsRight) {
+      adjustedX = rightX;
+      adjustedY = position.y - popupHeight / 2;
+      positionType = 'right';
+    } else if (fitsTop) {
+      adjustedX = position.x - popupWidth / 2;
+      adjustedY = topY;
+      positionType = 'top';
+    } else if (fitsBottom) {
+      adjustedX = position.x - popupWidth / 2;
+      adjustedY = bottomY;
+      positionType = 'bottom';
+    } else {
+      // Если не помещается нигде, показываем справа и обрезаем по границам
+      adjustedX = Math.max(margin, Math.min(rightX, containerWidth - popupWidth - margin));
+      adjustedY = position.y - popupHeight / 2;
+      positionType = 'right';
     }
 
-    // Центрируем всплывающее окно по вертикали относительно позиции полигона
-    adjustedY = position.y - popupHeight / 2;
+    // Финальная проверка вертикальных границ для левой/правой позиции
+    if (positionType === 'left' || positionType === 'right') {
+      if (adjustedY < margin) {
+        adjustedY = margin;
+      } else if (adjustedY + popupHeight > containerHeight - margin) {
+        adjustedY = containerHeight - popupHeight - margin;
+      }
+    }
 
-    // Проверяем вертикальные границы
-    if (adjustedY < margin) {
-      adjustedY = margin;
-    } else if (adjustedY + popupHeight > window.innerHeight - margin) {
-      adjustedY = window.innerHeight - popupHeight - margin;
+    // Финальная проверка горизонтальных границ для верхней/нижней позиции
+    if (positionType === 'top' || positionType === 'bottom') {
+      if (adjustedX < margin) {
+        adjustedX = margin;
+      } else if (adjustedX + popupWidth > containerWidth - margin) {
+        adjustedX = containerWidth - popupWidth - margin;
+      }
     }
 
     // For project_type = object, Number is apartment number, not floor number
@@ -810,7 +851,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (visibleFloors.length === 0) return;
-                  const sorted = [...visibleFloors].sort((a, b) => a.floor_number - b.floor_number).filter(f => f.polygon && f.polygon.length >= 3);
+                  const sorted = [...visibleFloors].filter(f => f.polygon && f.polygon.length >= 3).sort((a, b) => a.floor_number - b.floor_number);
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const prevIdx = idx > 0 ? idx - 1 : sorted.length - 1;
                   const newFloor = sorted[prevIdx]?.floor_number;
@@ -828,7 +869,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (visibleFloors.length === 0) return;
-                  const sorted = [...visibleFloors].sort((a, b) => a.floor_number - b.floor_number);
+                  console.log(visibleFloors);
+                  const sorted = [...visibleFloors].filter(f => f.polygon && f.polygon.length >= 3).sort((a, b) => a.floor_number - b.floor_number);
                   const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
                   const nextIdx = idx >= 0 && idx < sorted.length - 1 ? idx + 1 : 0;
                   const newFloor = sorted[nextIdx]?.floor_number;

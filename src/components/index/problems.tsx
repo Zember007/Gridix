@@ -1,11 +1,8 @@
 import { X, Check, Settings, ShoppingCart, BarChart3, UserCheck } from 'lucide-react';
-import { Compare } from "@/components/ui/compare";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export const Problems = () => {
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
   return (
     <section id="problems" className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto">
