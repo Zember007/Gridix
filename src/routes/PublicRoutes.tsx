@@ -1,6 +1,5 @@
 import { lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
+import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 
 // Lazy load pages
@@ -9,13 +8,7 @@ const ProjectWidgetPage = lazy(() => import("../pages/ProjectWidgetPage"));
 const AuthPage = lazy(() => import("../pages/AuthPage"));
 const SetPasswordPage = lazy(() => import("../pages/SetPasswordPage"));
 const PDFTemplatePage = lazy(() => import("../pages/PDFTemplatePage"));
-const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicyPage"));
-const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
-const RefundPolicyPage = lazy(() => import("../pages/RefundPolicyPage"));
-const PricingPage = lazy(() => import("../pages/PricingPage"));
-const ContactsPage = lazy(() => import("../pages/ContactsPage"));
 const InvitationHandlerPage = lazy(() => import("../pages/InvitationHandlerPage"));
-const PartnerProgramPage = lazy(() => import("../pages/PartnerProgramPage"));
 
 export function PublicRoutes() {
   return (

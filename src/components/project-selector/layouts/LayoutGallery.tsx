@@ -308,7 +308,7 @@ export const LayoutGallery = ({
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <h4 className="font-semibold text-lg">
-                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt?.rooms === 0 ? t('apartment.studio') : `${String(representativeApt?.rooms ?? 0)}-${t('apartment.rooms')}`)}
+                        {isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt?.rooms == 0 ? t('apartment.studio') : `${String(representativeApt?.rooms ?? 0)}-${t('apartment.rooms')}`)}
                       </h4>
 
                       {

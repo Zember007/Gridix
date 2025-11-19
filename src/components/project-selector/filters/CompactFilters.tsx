@@ -151,7 +151,6 @@ export const CompactFilters = ({
           variant="ghost"
           size="sm"
           onClick={setIsDesktopFiltersExpanded}
-          className="ml-auto"
         >
           {isDesktopFiltersExpanded ? (
             <>
