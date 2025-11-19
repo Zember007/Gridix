@@ -73,7 +73,7 @@ function App() {
 
             {/* Админские роуты */}
             <Route
-              path="/:lang/*"
+              path="/:lang/admin/*"
               element={
                 <AdminProviders>
                   <Suspense fallback={<PageLoader />}>
@@ -84,7 +84,7 @@ function App() {
             />
 
             {/* Публичные роуты с языковым префиксом */}
-       {/*      <Route
+            <Route
               path="/:lang/*"
               element={
                 <LanguageProviders>
@@ -93,7 +93,7 @@ function App() {
                   </Suspense>
                 </LanguageProviders>
               }
-            /> */}
+            />
 
             {/* Custom domain routes - для сайтов с кастомным доменом (обрабатываются последними) */}
             <Route 

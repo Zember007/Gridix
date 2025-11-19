@@ -20,7 +20,6 @@ const PartnerProgramPage = lazy(() => import("../pages/PartnerProgramPage"));
 export function PublicRoutes() {
   return (
     <Routes>
-      {/* Main page */}
       <Route index element={<Index />} />
 
       {/* Widget routes */}
@@ -34,21 +33,6 @@ export function PublicRoutes() {
       <Route path="project/id/:projectId" element={<ProjectWidgetPage useId />} />
       <Route path="project/id/:projectId/apartment/id/:apartmentId" element={<ApartmentDetailsPage useId />} />
       <Route path="project/id/:projectId/apartment/id/:apartmentId/pdf" element={<PDFTemplatePage useId />} />
-
-      {/* Legal pages */}
-      <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="terms-of-service" element={<TermsOfServicePage />} />
-      <Route path="refund-policy" element={<RefundPolicyPage />} />
-
-      {/* Contacts Page */}
-      <Route path="contacts" element={<ContactsPage />} />
-
-      {/* Public Pricing Page */}
-      <Route path="pricing" element={<PricingPage />} />
-      <Route path="price" element={<PricingPage />} />
-
-      {/* Partner Program Page */}
-      <Route path="partner-program" element={<PartnerProgramPage />} />
 
       {/* Auth routes */}
       <Route path="auth" element={<AuthPage />} />
