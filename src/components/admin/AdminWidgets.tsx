@@ -40,7 +40,7 @@ const AdminWidgets = () => {
   }, [projects]);
 
   const generateEmbedCode = () => {
-    const origin = window.location.origin;
+    const origin = import.meta.env.VITE_WIDGET_DOMAIN;
     const scriptUrl = `${origin}/widget.js`;
 
     const params: Record<string, string> = { lang: defaultLanguage } as Record<string, string>;

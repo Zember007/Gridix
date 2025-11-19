@@ -246,7 +246,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
             if (primaryDomain) {
                 baseDomain = 'https://' + primaryDomain;
             } else {
-                baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+                baseDomain = 'https://' + import.meta.env.VITE_SERVER_DOMAIN || 'https://app.gridix.live';
             }
 
         }
