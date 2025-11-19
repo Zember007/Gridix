@@ -41,7 +41,7 @@ const AdminWidgets = () => {
 
   const generateEmbedCode = () => {
     const origin = import.meta.env.VITE_WIDGET_DOMAIN;
-    const scriptUrl = `${origin}/widget.js`;
+    const scriptUrl = `https://${origin}/widget.js`;
 
     const params: Record<string, string> = { lang: defaultLanguage } as Record<string, string>;
     if (selectedProject !== 'all') params.projectId = selectedProject;
