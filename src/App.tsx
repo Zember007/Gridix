@@ -25,9 +25,9 @@ function App() {
         <AuthProvider>
           <Routes>
             {/* Роуты без языкового префикса для редиректов */}
-            <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
+{/*             <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
             <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
-            <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
+            <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} /> */}
 
        
 
@@ -44,7 +44,7 @@ function App() {
             />
 
             {/* Partners page - отдельный защищенный роут */}
-            <Route
+      {/*       <Route
               path="/:lang/partners"
               element={
                 <AdminProviders>
@@ -55,7 +55,7 @@ function App() {
                   </ProtectedRoute>
                 </AdminProviders>
               }
-            />
+            /> */}
 
             {/* Super admin page - отдельный защищенный роут */}
             <Route
@@ -73,7 +73,7 @@ function App() {
 
             {/* Админские роуты */}
             <Route
-              path="/:lang/admin/*"
+              path="/:lang/*"
               element={
                 <AdminProviders>
                   <Suspense fallback={<PageLoader />}>
@@ -84,7 +84,7 @@ function App() {
             />
 
             {/* Публичные роуты с языковым префиксом */}
-            <Route
+       {/*      <Route
               path="/:lang/*"
               element={
                 <LanguageProviders>
@@ -93,7 +93,7 @@ function App() {
                   </Suspense>
                 </LanguageProviders>
               }
-            />
+            /> */}
 
             {/* Custom domain routes - для сайтов с кастомным доменом (обрабатываются последними) */}
             <Route 
