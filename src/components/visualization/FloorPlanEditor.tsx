@@ -42,24 +42,24 @@ interface Apartment {
 }
 
 interface PolygonSettings {
-  colors: {
+  colors?: {
     available: string;
     sold: string;
     reserved: string;
   };
-  hoverEffects: {
+  hoverEffects?: {
     scale: boolean;
     colorChange: boolean;
     opacityChange: boolean;
     glow: boolean;
   };
-  display: {
+  display?: {
     showNumbers: boolean;
     showTooltip: boolean;
     showArea: boolean;
     showPrice: boolean;
   };
-  opacity: {
+  opacity?: {
     normal: number;
     hover: number;
   };

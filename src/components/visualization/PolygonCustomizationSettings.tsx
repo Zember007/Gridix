@@ -66,6 +66,56 @@ const defaultSettings: PolygonSettings = {
   }
 };
 
+// Функция для валидации и дополнения настроек дефолтными значениями
+const validateAndMergeSettings = (loadedSettings: unknown, type: 'building' | 'floor'): PolygonSettings => {
+  const merged = { ...defaultSettings };
+  
+  if (!loadedSettings || typeof loadedSettings !== 'object') {
+    return merged;
+  }
+
+  const settings = loadedSettings as Partial<PolygonSettings>;
+
+  // Валидация и слияние colors
+  if (settings.colors && typeof settings.colors === 'object') {
+    merged.colors = {
+      ...defaultSettings.colors,
+      ...settings.colors
+    };
+  }
+
+  // Валидация и слияние hoverEffects
+  if (settings.hoverEffects && typeof settings.hoverEffects === 'object') {
+    merged.hoverEffects = {
+      ...defaultSettings.hoverEffects,
+      ...settings.hoverEffects
+    };
+  }
+
+  // Валидация и слияние display
+  if (settings.display && typeof settings.display === 'object') {
+    merged.display = {
+      ...defaultSettings.display,
+      ...settings.display
+    };
+  }
+
+  // Валидация и слияние opacity
+  if (settings.opacity && typeof settings.opacity === 'object') {
+    merged.opacity = {
+      ...defaultSettings.opacity,
+      ...settings.opacity
+    };
+  }
+
+  // Для типа building убеждаемся, что есть building цвет
+  if (type === 'building' && !merged.colors.building) {
+    merged.colors.building = '#3b82f6';
+  }
+
+  return merged;
+};
+
 const PolygonCustomizationSettings = ({
   projectId,
   type,
@@ -88,11 +138,8 @@ const PolygonCustomizationSettings = ({
 
         if ((data)?.polygon_settings_facade) {
           const loadedSettings = (data).polygon_settings_facade as unknown as PolygonSettings;
-          // Ensure building color is set
-          if (!loadedSettings.colors.building) {
-            loadedSettings.colors.building = '#3b82f6';
-          }
-          setSettings(loadedSettings);
+          const validatedSettings = validateAndMergeSettings(loadedSettings, 'building');
+          setSettings(validatedSettings);
         }
       } else {
         const { data, error } = await supabase
@@ -104,7 +151,9 @@ const PolygonCustomizationSettings = ({
         if (error) throw error;
 
         if ((data)?.polygon_settings_floor) {
-          setSettings((data).polygon_settings_floor as unknown as PolygonSettings);
+          const loadedSettings = (data).polygon_settings_floor as unknown as PolygonSettings;
+          const validatedSettings = validateAndMergeSettings(loadedSettings, 'floor');
+          setSettings(validatedSettings);
         }
       }
     } catch (error) {
