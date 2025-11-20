@@ -450,57 +450,78 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
           // Получаем существующие апартаменты на целевом этаже
           const { data: existingApartments } = await supabase
             .from('apartments')
-            .select('id, apartment_number, area')
+            .select('id, apartment_number, area, rooms')
             .eq('project_id', project?.id || projectId)
-            .eq('floor_number', targetFloor);
+            .eq('floor_number', targetFloor)
+            .order('apartment_number');
 
-          // Создаем Map для быстрого поиска по площади квартиры
-          // Используем площадь как ключ, но храним массив квартир с одинаковой площадью
-          const existingApartmentsByArea = new Map<number, Array<{id: string, apartment_number: string}>>();
-          
-          existingApartments?.forEach(apt => {
-            const area = Math.round(apt.area * 100) / 100; // Округляем до 2 знаков после запятой
-            if (!existingApartmentsByArea.has(area)) {
-              existingApartmentsByArea.set(area, []);
+          // Группируем исходные квартиры по площади и количеству комнат
+          const sourceApartmentsByKey = new Map<string, Apartment[]>();
+          apartments.forEach(apt => {
+            const area = Math.round(apt.area * 100) / 100;
+            const key = `${area}_${apt.rooms}`;
+            if (!sourceApartmentsByKey.has(key)) {
+              sourceApartmentsByKey.set(key, []);
             }
-            existingApartmentsByArea.get(area)!.push({
+            sourceApartmentsByKey.get(key)!.push(apt);
+          });
+
+          // Группируем целевые квартиры по площади и количеству комнат
+          const targetApartmentsByKey = new Map<string, Array<{id: string, apartment_number: string}>>();
+          existingApartments?.forEach(apt => {
+            const area = Math.round(apt.area * 100) / 100;
+            const key = `${area}_${apt.rooms}`;
+            if (!targetApartmentsByKey.has(key)) {
+              targetApartmentsByKey.set(key, []);
+            }
+            targetApartmentsByKey.get(key)!.push({
               id: apt.id,
               apartment_number: apt.apartment_number
             });
           });
 
-          for (const apt of apartments) {
-            const sourceArea = Math.round(apt.area * 100) / 100; // Округляем до 2 знаков после запятой
+          // Обрабатываем каждую группу
+          for (const [key, sourceApts] of sourceApartmentsByKey.entries()) {
+            const targetApts = targetApartmentsByKey.get(key);
             
-            // Ищем квартиры с такой же площадью на целевом этаже
-            const apartmentsWithSameArea = existingApartmentsByArea.get(sourceArea);
+            if (!targetApts || targetApts.length === 0) {
+              const [area, rooms] = key.split('_');
+              console.log(`No apartments found with area ${area}m² and ${rooms} rooms on floor ${targetFloor}`);
+              continue;
+            }
+
+            // Сопоставляем 1-к-1 по индексу
+            const minLength = Math.min(sourceApts.length, targetApts.length);
             
-            if (apartmentsWithSameArea && apartmentsWithSameArea.length > 0) {
-              // Берем первую найденную квартиру с такой же площадью
-              const targetApartment = apartmentsWithSameArea[0];
+            for (let i = 0; i < minLength; i++) {
+              const sourceApt = sourceApts[i];
+              const targetApt = targetApts[i];
               
-              if (targetApartment) {
-                // Обновляем только polygon существующего апартамента
-                try {
-                  await supabase
-                    .from('apartments')
-                    .update({
-                      polygon: apt.polygon as { x: number; y: number }[]
-                    })
-                    .eq('id', targetApartment.id);
-                  
-                  console.log(`Updated polygon for apartment ${targetApartment.apartment_number} (area: ${sourceArea}m²) on floor ${targetFloor}`);
-                } catch (error) {
-                  console.error('Error updating apartment polygon:', error, {
-                    apartmentId: targetApartment.id,
-                    apartmentNumber: targetApartment.apartment_number,
-                    sourceArea,
-                    targetFloor
-                  });
-                }
+              if (!sourceApt || !targetApt) continue;
+              
+              try {
+                await supabase
+                  .from('apartments')
+                  .update({
+                    polygon: sourceApt.polygon as { x: number; y: number }[]
+                  })
+                  .eq('id', targetApt.id);
+                
+                console.log(`Updated polygon for apartment ${targetApt.apartment_number} (${key}) on floor ${targetFloor} from source ${sourceApt.apartment_number}`);
+              } catch (error) {
+                console.error('Error updating apartment polygon:', error, {
+                  apartmentId: targetApt.id,
+                  apartmentNumber: targetApt.apartment_number,
+                  sourceApartmentNumber: sourceApt.apartment_number,
+                  key,
+                  targetFloor
+                });
               }
-            } else {
-              console.log(`No apartment found with area ${sourceArea}m² on floor ${targetFloor} for source apartment ${apt.apartment_number}`);
+            }
+
+            // Предупреждение если количество не совпадает
+            if (sourceApts.length !== targetApts.length) {
+              console.warn(`Mismatch in apartment count for ${key} on floor ${targetFloor}: source has ${sourceApts.length}, target has ${targetApts.length}`);
             }
           }
         }
@@ -1032,7 +1053,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                 </div>
 
                 <ApartmentCustomFields
-                  apartmentId={editingApartment === 'new' ? undefined : editingApartment}
+                  {...(editingApartment !== 'new' && editingApartment ? { apartmentId: editingApartment } : {})}
+                  projectId={projectId}
                   customFieldsData={customFieldsData}
                   onCustomFieldsChange={setCustomFieldsData}
                 />

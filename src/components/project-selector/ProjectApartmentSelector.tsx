@@ -739,7 +739,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                           <ApartmentFloorPlan
                             project={project}
                             projectId={project.id}
-                            apartments={filters.filteredApartments.filter(apt =>
+                            apartments={apartments.filter(apt =>
                               selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
                             )}
                             onApartmentSelect={openApartmentDetails}
