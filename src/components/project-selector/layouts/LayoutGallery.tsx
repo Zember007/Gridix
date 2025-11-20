@@ -269,7 +269,7 @@ export const LayoutGallery = ({
                       } else if (representativeApt?.rooms === 'free_layout') {
                         layoutKey = 'free_layout';
                       } else {
-                        layoutKey = representativeApt?.rooms === 0 ? 'studio' : `${Number(representativeApt?.rooms ?? 0)}-room`;
+                        layoutKey = representativeApt?.rooms == 0 ? 'studio' : `${Number(representativeApt?.rooms ?? 0)}-room`;
                       }
 
 
@@ -281,7 +281,7 @@ export const LayoutGallery = ({
                           <img
                             loading="lazy"
                             src={first.image_url}
-                            alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt.rooms === 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
+                            alt={isCommercial ? t('apartmentsManager.typeCommercial') : isParking ? t('apartmentsManager.typeParking') : isFreeLayout ? t('apartment.freeLayout') : (representativeApt.rooms == 0 ? t('apartment.studio') : `${String(representativeApt.rooms)}-${t('apartment.rooms')}`)}
                             className="w-full h-full object-cover"
                           />
                         );

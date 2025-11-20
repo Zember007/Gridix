@@ -71,7 +71,7 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
               label: 'Свободная планировка',
               rooms: -1
             };
-          } else if (data.rooms === 0) {
+          } else if (data.rooms == 0) {
             return {
               key: 'studio',
               label: 'Студия',

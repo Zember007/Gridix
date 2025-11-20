@@ -165,7 +165,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       setPhotosLoading(true);
       try {
         const layoutType = apartment.type === 'apartment' 
-          ? apartment.rooms === 0 
+          ? apartment.rooms == 0 
             ? 'studio' 
             : apartment.rooms === 'free_layout'
               ? 'free_layout'
@@ -222,7 +222,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       id: apartment.id,
       project_id: apartment.project_id,
       apartment_number: apartment.apartment_number,
-      rooms: typeof apartment.rooms === 'number' ? apartment.rooms : 0,
+      rooms: !isNaN(Number(apartment.rooms)) ? Number(apartment.rooms) : 0,
       area: apartment.area,
       price: apartment.price || 0,
       status: apartment.status,
@@ -386,7 +386,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           }
 
           // Если у квартиры нет фото — берём первую планировку по типу комнат
-          const layoutType = apt.rooms === 0 
+          const layoutType = apt.rooms == 0 
             ? 'studio' 
             : apt.rooms === 'free_layout'
               ? 'free_layout'
@@ -596,7 +596,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 <div className="flex items-center gap-2">
                   <Home className="h-5 w-5 text-gray-400" />
                   <span className="text-gray-700">
-                    {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`}
+                    {apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${ !isNaN(Number(apartment.rooms)) ? t('apartment.rooms') : ''}`}
                   </span>
                 </div>
               )}
@@ -646,7 +646,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     } else {
                       switch (field.field_name) {
                         case 'rooms':
-                          if (typeof apartment.rooms === 'number') {
+                          if (!isNaN(Number(apartment.rooms))) {
                             value = apartment.rooms;
                           }
                           break;
@@ -795,7 +795,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         } else {
                           switch (field.field_name) {
                             case 'rooms':
-                              if (typeof apartment.rooms === 'number') {
+                              if (!isNaN(Number(apartment.rooms))) {
                                 value = apartment.rooms;
                               }
                               break;
@@ -843,11 +843,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     <div className="space-y-[24px]">
                       <div className="flex items-center justify-between">
                         <div className="text-xl font-medium text-gray-900  font-poppins">
-                          {apartment.rooms === 0 
+                          {apartment.rooms == 0 
                             ? t('apartment.studio') 
                             : apartment.rooms === 'free_layout'
                               ? t('apartment.freeLayout')
-                              : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m2
+                              : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t('apartment.rooms') : ''}`} {apartment.area} m2
                         </div>
                         <div className="text-xl font-light text-gray-500  font-poppins">
                           {apartment.floor_number} floor
@@ -1044,7 +1044,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 mb-2 font-poppins">
-                          {recApartment.rooms === 0 ? t('apartment.studio') : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`} • {recApartment.area} m²
+                          {recApartment.rooms == 0 ? t('apartment.studio') : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`} • {recApartment.area} m²
                         </div>
                         {recApartment.price && priceVisible && (
                           <div className="text-lg font-medium text-gray-900 font-poppins">

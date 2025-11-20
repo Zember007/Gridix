@@ -779,7 +779,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                                     </>
                                   )}
                                   {apartment.type === 'apartment'
-                                    ? (apartment.rooms === 0 ? t('apartment.studio') : apartment.rooms === 'free_layout' ? t('apartment.freeLayout') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
+                                    ? (apartment.rooms == 0 ? t('apartment.studio') : apartment.rooms === 'free_layout' ? t('apartment.freeLayout') : t('apartmentsManager.roomsShort', { rooms: apartment.rooms }))
                                     : apartment.type === 'commercial'
                                       ? t('apartmentsManager.typeCommercial')
                                       : t('apartmentsManager.typeParking')

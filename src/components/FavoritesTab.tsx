@@ -140,7 +140,7 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Home className="h-4 w-4" />
                   <span>
-                    {apartment.rooms === 0 
+                    {apartment.rooms == 0 
                       ? t('apartment.studio') 
                       : `${apartment.rooms} ${t('apartment.rooms')}`
                     }

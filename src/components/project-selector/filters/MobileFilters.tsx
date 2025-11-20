@@ -90,7 +90,7 @@ export const MobileFilters = ({
               <SelectItem value="all">{t('project.allTypes')}</SelectItem>
               {getUniqueRoomCounts().map(rooms => (
                 <SelectItem key={rooms} value={rooms.toString()}>
-                  {rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
+                  {rooms == 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`}
                 </SelectItem>
               ))}
               {hasFreeLayout && hasFreeLayout() && (

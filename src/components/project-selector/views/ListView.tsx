@@ -211,7 +211,7 @@ export const ListView = ({
                               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                 {(() => {
                                   const layoutKey = apartment.type === 'apartment' 
-                                    ? apartment.rooms === 0 
+                                    ? apartment.rooms == 0 
                                       ? 'studio' 
                                       : apartment.rooms === 'free_layout'
                                         ? 'free_layout'
@@ -222,7 +222,7 @@ export const ListView = ({
                                   return first ? (
                                     <img
                                       src={first.image_url}
-                                      alt={apartment.rooms === 0 
+                                      alt={apartment.rooms == 0 
                                         ? t('apartment.studio') 
                                         : apartment.rooms === 'free_layout'
                                           ? t('apartment.freeLayout')
@@ -238,7 +238,7 @@ export const ListView = ({
                             <div className="flex-grow space-y-1">
                               <div className="flex items-center justify-between">
                                 <span className="font-medium text-sm">
-                                  {apartment.type === 'apartment' ? apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
+                                  {apartment.type === 'apartment' ? apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
                                 </span>
                                 <Badge
                                   variant={apartment.status === 'available' ? 'default' : 'secondary'}
@@ -342,7 +342,7 @@ export const ListView = ({
                               <div className="w-[60px] h-[64px] bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                 {(() => {
                                   const layoutKey = apartment.type === 'apartment' 
-                                    ? apartment.rooms === 0 
+                                    ? apartment.rooms == 0 
                                       ? 'studio' 
                                       : apartment.rooms === 'free_layout'
                                         ? 'free_layout'
@@ -353,7 +353,7 @@ export const ListView = ({
                                   return first ? (
                                     <img
                                       src={first.image_url}
-                                      alt={apartment.rooms === 0 
+                                      alt={apartment.rooms == 0 
                                         ? t('apartment.studio') 
                                         : apartment.rooms === 'free_layout'
                                           ? t('apartment.freeLayout')
@@ -397,7 +397,7 @@ export const ListView = ({
                                   <div className="flex-shrink-0 text-center min-w-[99px] transition-transform duration-200 hover:scale-105">
                                     <div className="text-[20px] font-medium text-black leading-[26px] hover:text-gray-700 transition-colors duration-200">
                                       {apartment.type === 'apartment' 
-                                        ? apartment.rooms === 0 
+                                        ? apartment.rooms == 0 
                                           ? t('apartment.studio') 
                                           : apartment.rooms === 'free_layout'
                                             ? t('apartment.freeLayout')
@@ -433,7 +433,7 @@ export const ListView = ({
                                     switch (field.field_name) {
                                       case 'rooms':
 
-                                        value = apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`;
+                                        value = apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`;
                                         break;
                                       case 'area':
                                         value = `${apartment.area} м²`;
@@ -552,7 +552,7 @@ export const ListView = ({
                           <div className="text-center space-y-1">
                             <div className="text-sm font-medium text-gray-700">
                               {!Number.isNaN(apartment.rooms) && (
-                                <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
+                                <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
                               )}
                             </div>
                             <div className="text-xs text-gray-600">{apartment.area} м²</div>
@@ -595,7 +595,7 @@ export const ListView = ({
                               <div className="text-center space-y-1">
                                 {roomsVisible && (
                                   <div className="text-sm font-medium text-gray-700">
-                                    {!Number.isNaN(apartment.rooms) && <>{apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>}
+                                    {!Number.isNaN(apartment.rooms) && <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>}
                                   </div>
                                 )}
                                 <div className="text-xs text-gray-600">{apartment.area && areaVisible ? `${apartment.area} м²` : ''}</div>

@@ -59,7 +59,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   }, []);
 
   const getLayoutType = (rooms: number): string => {
-    return rooms === 0 ? 'studio' : `${rooms}-room`;
+    return rooms == 0 ? 'studio' : `${rooms}-room`;
   };
 
   const loadPhotos = useCallback(async () => {

@@ -94,7 +94,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
             setPhotosLoading(true);
             try {
                 const layoutType = apartment.type === 'apartment' 
-                  ? apartment.rooms === 0 
+                  ? apartment.rooms == 0 
                     ? 'studio' 
                     : apartment.rooms === 'free_layout'
                       ? 'free_layout'
@@ -327,7 +327,7 @@ const PDFTemplatePage = ({ useId = false, apartmentIdProp = '', projectIdProp = 
                     <div className="flex justify-between gap-8 items-center">
                         <div className="flex-1">
                             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                                {apartment.rooms === 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m²
+                                {apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${typeof apartment.rooms === 'number' ? t('apartment.rooms') : ''}`} {apartment.area} m²
                             </h2>
                             <p className="text-gray-600">
                                 {apartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'

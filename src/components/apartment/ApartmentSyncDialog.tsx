@@ -136,7 +136,7 @@ const ApartmentSyncDialog = ({
             <div className="text-sm space-y-1">
               <p><strong>Номер:</strong> {sourceApartment.apartment_number}</p>
               <p><strong>Этаж:</strong> {sourceApartment.floor_number}</p>
-              <p><strong>Комнаты:</strong> {sourceApartment.rooms === 0 ? 'Студия' : sourceApartment.rooms}</p>
+              <p><strong>Комнаты:</strong> {sourceApartment.rooms == 0 ? 'Студия' : sourceApartment.rooms}</p>
               <p><strong>Площадь:</strong> {sourceApartment.area} м²</p>
               <p><strong>Цена:</strong> {sourceApartment.price ? sourceApartment.price.toLocaleString() + ' ₽' : 'Не указана'}</p>
               <p><strong>Статус:</strong> <Badge className={getStatusColor(sourceApartment.status)}>{getStatusLabel(sourceApartment.status)}</Badge></p>

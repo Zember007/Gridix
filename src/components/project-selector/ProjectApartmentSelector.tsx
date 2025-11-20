@@ -189,7 +189,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
             const uniqueLayouts = new Set<string>(
               normalizedApartments.map(a =>
                 (a.type === 'apartment' 
-                  ? a.rooms === 0 
+                  ? a.rooms == 0 
                     ? 'studio' 
                     : a.rooms === 'free_layout'
                       ? 'free_layout'
