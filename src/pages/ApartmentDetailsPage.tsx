@@ -164,21 +164,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       if (!apartment || !project?.id) return;
       setPhotosLoading(true);
       try {
-        const layoutType = apartment.type === 'apartment' 
-          ? apartment.rooms == 0 
-            ? 'studio' 
-            : apartment.rooms === 'free_layout'
-              ? 'free_layout'
-              : `${apartment.rooms}-room` 
-          : apartment.type;
 
-        const [layoutRes, aptRes] = await Promise.all([
-          supabase
-            .from('layout_photos')
-            .select('*')
-            .eq('project_id', project.id)
-            .eq('layout_type', layoutType)
-            .order('order_index', { ascending: true }),
+        const [aptRes] = await Promise.all([
           supabase
             .from('apartment_photos')
             .select('*')
@@ -186,13 +173,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             .order('order_index', { ascending: true })
         ]);
 
-        const layoutPhotos = (layoutRes.data || []).map((photo) => ({
-          id: photo.id as string,
-          image_url: photo.image_url as string,
-          description: (photo as { description?: string | null }).description ?? null,
-          order_index: (photo as { order_index: number }).order_index,
-          type: 'layout' as const
-        }));
 
         const apartmentPhotos = (aptRes.data || []).map((photo) => ({
           id: photo.id as string,
@@ -202,8 +182,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           type: 'apartment' as const
         }));
 
-        const combined: CombinedPhoto[] = [...apartmentPhotos, ...layoutPhotos];
-        setPhotos(combined);
+        setPhotos(apartmentPhotos);
       } catch (err) {
         console.error('Error loading photos in parent:', err);
         setPhotos([]);
