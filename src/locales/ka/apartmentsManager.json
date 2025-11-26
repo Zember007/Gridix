@@ -23,7 +23,7 @@
   "numberRequired": "ბინის ნომერი საჭიროა",
   "price": "ფასი",
   "priceValue": "{price}",
-  "reserved": "დაჯავშნული",
+  "reserved": "დაჯავშნილი",
   "rooms": "ოთახები*",
   "roomsShort": "{rooms} ოთახი",
   "save": "შენახვა",

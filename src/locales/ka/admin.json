@@ -33,7 +33,7 @@
     "apartments": {
       "available": "ხელმისაწვდომი",
       "sold": "გაყიდული",
-      "reserved": "დაჯავშნული"
+      "reserved": "დაჯავშნილი"
     },
     "projectsTable": "დეტალური სტატისტიკა პროექტების მიხედვით",
     "projectsTableDescription": "დეტალური ინფორმაცია თითოეული პროექტის შესახებ",
