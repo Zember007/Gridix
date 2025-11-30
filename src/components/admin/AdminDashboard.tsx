@@ -32,6 +32,13 @@ const AdminDashboard = () => {
     Object.entries(themeVariables).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value);
     });
+
+    const queryParams = new URLSearchParams(window.location.search);
+    const tab = queryParams.get('page');
+
+    if (tab) {
+      setActiveTab(tab);
+    }
   }, []);
   const { navigate } = useLanguageNavigation();
   const { t } = useLanguage();

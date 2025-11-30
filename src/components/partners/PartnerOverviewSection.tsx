@@ -54,6 +54,55 @@ export const PartnerOverviewSection: React.FC = () => {
     [],
   );
 
+  const trafficStats = useMemo(() => {
+    const clients = stats?.clients || [];
+    if (!clients.length) return [];
+
+    const counts: Record<string, number> = {};
+    let total = 0;
+
+    for (const client of clients) {
+      const rawSource = (client.utm_source || '').trim().toLowerCase(;
+      const source = rawSource || 'direct';
+      counts[source] = (counts[source] || 0) + 1;
+      total += 1;
+    }
+
+    if (!total) return [];
+
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    const colors = ['bg-red-500', 'bg-blue-500', 'bg-gray-800', 'bg-purple-500'];
+
+    return entries.map(([source, count], index) => {
+      let label = source;
+      if (source === 'direct') {
+        label = 'Direct (Прямые)';
+      } else if (source === 'youtube') {
+        label = 'YouTube';
+      } else if (source === 'telegram') {
+        label = 'Telegram';
+      } else if (source === 'instagram') {
+        label = 'Instagram';
+      } else if (source === 'facebook') {
+        label = 'Facebook';
+      } else if (source === 'blog') {
+        label = 'Blog';
+      } else if (source === 'email_newsletter') {
+        label = 'Email newsletter';
+      } else {
+        label = source.charAt(0).toUpperCase() + source.slice(1);
+      }
+
+      const percent = Math.round((count / total) * 100);
+
+      return {
+        label,
+        percent,
+        color: colors[index] || 'bg-gray-500',
+      };
+    });
+  }, [stats?.clients]);
+
   if (!isPartner) {
     return null;
   }
@@ -62,8 +111,9 @@ export const PartnerOverviewSection: React.FC = () => {
   const referralClients = stats?.referral_clients ?? 0;
   const managedClients =
     stats?.managed_clients ?? Math.max(totalClients - referralClients, 0);
-  const earned = stats?.total_earned ?? 709.35;
+  const earned = stats?.total_earned ?? 0;
   const available = stats?.available_for_withdrawal ?? earned;
+  const totalClicks = stats?.total_clicks ?? 0;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -171,12 +221,14 @@ export const PartnerOverviewSection: React.FC = () => {
                     Переходы по ссылке
                   </div>
                   <div className="text-xs text-gray-500">
-                    Уникальные клики (пример)
+                  Уникальные клики по реферальной ссылке
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">142</div>
+              <div className="text-lg font-bold text-gray-900">
+                {totalClicks}
+              </div>
                 <div className="text-xs text-green-600 font-medium flex items-center justify-end gap-1">
                   <ArrowUpRight size={12} /> +12%
                 </div>
@@ -230,16 +282,22 @@ export const PartnerOverviewSection: React.FC = () => {
             <PieChart size={20} className="text-gray-400" />
             Источники трафика
           </h3>
-          <div className="space-y-4">
-            <TrafficRow label="YouTube" percent={45} color="bg-red-500" />
-            <TrafficRow label="Telegram" percent={32} color="bg-blue-500" />
-            <TrafficRow label="Direct (Прямые)" percent={15} color="bg-gray-800" />
-            <TrafficRow
-              label="Instagram"
-              percent={8}
-              color="bg-purple-500"
-            />
-          </div>
+          {trafficStats.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              Статистика источников появится после первых рефералов с UTM-метками.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {trafficStats.map((row) => (
+                <TrafficRow
+                  key={row.label}
+                  label={row.label}
+                  percent={row.percent}
+                  color={row.color}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -293,14 +351,14 @@ export const PartnerOverviewSection: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center">
                     <span className="text-sm font-medium">
-                      {client.user_profiles.first_name?.[0]}
-                      {client.user_profiles.last_name?.[0]}
+                      {client.user_profiles.full_name?.[0] ||
+                        client.user_profiles.email?.[0]}
                     </span>
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {client.user_profiles.first_name}{' '}
-                      {client.user_profiles.last_name}
+                      {client.user_profiles.full_name ||
+                        client.user_profiles.email}
                     </div>
                     <div className="text-xs text-gray-400 sm:hidden mt-1">
                       {new Date(client.created_at).toLocaleDateString()}

@@ -53,6 +53,7 @@ export interface PartnerStats {
   total_earned: number;
   total_withdrawn: number;
   available_for_withdrawal: number;
+  total_clicks: number;
   commissions: Array<{
     partner_commission_amount: number;
     created_at: string;
@@ -63,10 +64,14 @@ export interface PartnerStats {
     status: string;
     created_at: string;
     client_id: string;
+    utm_source?: string | null;
+    utm_medium?: string | null;
+    utm_campaign?: string | null;
+    subscription_status?: string | null;
+    subscription_expires_at?: string | null;
     user_profiles: {
       id: string;
-      first_name: string;
-      last_name: string;
+      full_name: string | null;
       email: string;
     };
   }>;
@@ -78,15 +83,20 @@ export interface PartnerClient {
   status: string;
   created_at: string;
   client_id: string;
+  subscription_status?: string | null;
+  subscription_expires_at?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
   user_profiles: {
     id: string;
-    full_name: string;
+    full_name: string | null;
     email: string;
   };
 }
 
 export interface PartnerProgramRequest {
-  action: 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request';
+  action: 'track_click' | 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request';
   partner_code?: string;
   partner_id?: string;
   client_id?: string;
@@ -95,6 +105,9 @@ export interface PartnerProgramRequest {
   contact_info?: string;
   admin_action?: 'list' | 'update_percentage' | 'suspend' | 'activate';
   payout_percentage?: number;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
 }
 
 export interface PartnerProgramResponse {
@@ -108,6 +121,7 @@ export interface PartnerProgramResponse {
   total_clients?: number;
   referral_clients?: number;
   managed_clients?: number;
+  total_clicks?: number;
   total_earned?: number;
   total_withdrawn?: number;
   available_for_withdrawal?: number;

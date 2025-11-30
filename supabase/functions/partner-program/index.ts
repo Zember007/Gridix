@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 interface PartnerProgramRequest {
-  action: 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
+  action: 'track_click' | 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
   partner_code?: string
   partner_id?: string
   client_id?: string
@@ -15,6 +15,9 @@ interface PartnerProgramRequest {
   email?: string
   invitation_type?: 'referral' | 'managed'
   invitation_code?: string
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
 }
 
 serve(async (req) => {
@@ -36,7 +39,37 @@ serve(async (req) => {
       }
     )
 
-    // Создаем клиент с пользовательским токеном для проверки авторизации
+    const {
+      action,
+      partner_code,
+      partner_id,
+      client_id,
+      amount,
+      payment_method,
+      contact_info,
+      admin_action,
+      payout_percentage,
+      email,
+      invitation_type,
+      invitation_code,
+      utm_source,
+      utm_medium,
+      utm_campaign
+    }: PartnerProgramRequest = await req.json()
+
+    // Для отслеживания кликов авторизация пользователя не требуется
+    if (action === 'track_click') {
+      return await handleTrackClick(
+        supabaseClient,
+        partner_code,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        req.headers.get('origin')
+      )
+    }
+
+    // Для всех остальных действий требуется авторизованный пользователь
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -56,11 +89,19 @@ serve(async (req) => {
       )
     }
 
-    const { action, partner_code, partner_id, client_id, amount, payment_method, contact_info, admin_action, payout_percentage, email, invitation_type, invitation_code }: PartnerProgramRequest = await req.json()
-
     switch (action) {
       case 'track_referral':
-        return await handleTrackReferral(supabaseClient, user.id, partner_code, invitation_code, invitation_type, req.headers.get('origin'))
+        return await handleTrackReferral(
+          supabaseClient,
+          user.id,
+          partner_code,
+          invitation_code,
+          invitation_type,
+          req.headers.get('origin'),
+          utm_source,
+          utm_medium,
+          utm_campaign
+        )
       
       case 'get_stats':
         return await handleGetStats(supabaseClient, user.id, partner_id, req.headers.get('origin'))
@@ -95,7 +136,17 @@ serve(async (req) => {
 })
 
 // Отслеживание реферала при регистрации
-async function handleTrackReferral(supabaseClient: any, userId: string, partnerCode?: string, invitationCode?: string, invitationType?: string, origin?: string | null) {
+async function handleTrackReferral(
+  supabaseClient: any,
+  userId: string,
+  partnerCode?: string,
+  invitationCode?: string,
+  invitationType?: string,
+  origin?: string | null,
+  utmSource?: string | null,
+  utmMedium?: string | null,
+  utmCampaign?: string | null
+) {
   if (!partnerCode) {
     return createJsonResponse(
       { success: false, error: 'Partner code required' },
@@ -210,7 +261,10 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
         client_id: userId,
         type: linkType,
         status: linkStatus,
-        accepted_at: new Date().toISOString()
+        accepted_at: new Date().toISOString(),
+        utm_source: utmSource || null,
+        utm_medium: utmMedium || null,
+        utm_campaign: utmCampaign || null
       })
       .select()
       .single()
@@ -261,6 +315,73 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
     )
   } catch (error) {
     console.error('Error in track_referral:', error)
+    return createJsonResponse(
+      { success: false, error: 'Internal server error' },
+      500,
+      origin
+    )
+  }
+}
+
+// Отслеживание кликов по реферальной ссылке (без авторизации пользователя)
+async function handleTrackClick(
+  supabaseClient: any,
+  partnerCode?: string,
+  utmSource?: string | null,
+  utmMedium?: string | null,
+  utmCampaign?: string | null,
+  origin?: string | null
+) {
+  if (!partnerCode) {
+    return createJsonResponse(
+      { success: false, error: 'Partner code required' },
+      400,
+      origin
+    )
+  }
+
+  try {
+    // Находим партнёра по коду
+    const { data: partner, error: partnerError } = await supabaseClient
+      .from('partner_profiles')
+      .select('id, status')
+      .eq('partner_code', partnerCode)
+      .eq('status', 'active')
+      .single()
+
+    if (partnerError || !partner) {
+      return createJsonResponse(
+        { success: false, error: 'Invalid partner code' },
+        400,
+        origin
+      )
+    }
+
+    const { error: clickError } = await supabaseClient
+      .from('partner_clicks')
+      .insert({
+        partner_id: partner.id,
+        utm_source: utmSource || null,
+        utm_medium: utmMedium || null,
+        utm_campaign: utmCampaign || null
+      })
+
+    if (clickError) {
+      console.error('Error logging partner click:', clickError)
+      return createJsonResponse(
+        { success: false, error: 'Failed to log click' },
+        500,
+        origin
+      )
+    }
+
+    return createJsonResponse(
+      { success: true },
+      200,
+      origin
+    )
+  } catch (error) {
+    console.error('Error in track_click:', error)
     return createJsonResponse(
       { success: false, error: 'Internal server error' },
       500,
@@ -326,6 +447,9 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
       .from('partner_links')
       .select(`
         id,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         type,
         status,
         created_at,
@@ -349,23 +473,93 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
 
     console.log('Found partner links:', links?.length || 0)
 
-      
+    // Получаем информацию о подписках клиентов по их проектам
+    const clientIds = (links || []).map(link => link.client_id).filter(Boolean)
+    let enrichedLinks = links || []
 
-    const referralClients = links?.filter(link => link.type === 'referral') || []
-    const managedClients = links?.filter(link => link.type === 'managed') || []
+    if (clientIds.length > 0) {
+      const { data: projects, error: projectsError } = await supabaseClient
+        .from('projects')
+        .select('id, user_id, subscription_status, subscription_expires_at')
+        .in('user_id', clientIds)
+
+      if (projectsError) {
+        console.error('Error fetching client projects:', projectsError)
+      } else if (projects) {
+        const projectsByClient: Record<string, any[]> = {}
+
+        for (const project of projects) {
+          if (!projectsByClient[project.user_id]) {
+            projectsByClient[project.user_id] = []
+          }
+          projectsByClient[project.user_id].push(project)
+        }
+
+        enrichedLinks = enrichedLinks.map(link => {
+          const clientProjects = projectsByClient[link.client_id] || []
+          if (!clientProjects.length) {
+            return link
+          }
+
+          let aggregatedStatus = 'none'
+          let aggregatedExpiresAt: string | null = null
+
+          // Определяем статус подписки: приоритет active > trialing > expired/trial_expired > остальные
+          if (clientProjects.some(p => p.subscription_status === 'active')) {
+            aggregatedStatus = 'active'
+          } else if (clientProjects.some(p => p.subscription_status === 'trialing')) {
+            aggregatedStatus = 'trialing'
+          } else if (clientProjects.some(p => p.subscription_status === 'expired' || p.subscription_status === 'trial_expired')) {
+            aggregatedStatus = 'expired'
+          } else if (clientProjects[0]?.subscription_status) {
+            aggregatedStatus = clientProjects[0].subscription_status
+          }
+
+          for (const project of clientProjects) {
+            if (project.subscription_expires_at) {
+              if (!aggregatedExpiresAt || project.subscription_expires_at > aggregatedExpiresAt) {
+                aggregatedExpiresAt = project.subscription_expires_at
+              }
+            }
+          }
+
+          return {
+            ...link,
+            subscription_status: aggregatedStatus,
+            subscription_expires_at: aggregatedExpiresAt
+          }
+        })
+      }
+    }
+
+    const referralClients = enrichedLinks.filter(link => link.type === 'referral') || []
+    const managedClients = enrichedLinks.filter(link => link.type === 'managed') || []
+
+    // Считаем количество кликов по реферальным ссылкам
+    const { data: clicks, error: clicksError } = await supabaseClient
+      .from('partner_clicks')
+      .select('id')
+      .eq('partner_id', partnerProfile.id)
+
+    if (clicksError) {
+      console.error('Error fetching partner clicks:', clicksError)
+    }
+
+    const totalClicks = clicks?.length || 0
 
     // Получаем доступный баланс для вывода
     const availableBalance = partnerProfile.total_earned - partnerProfile.total_withdrawn
 
     return createJsonResponse(
       {
-        total_clients: links?.length || 0,
+        total_clients: enrichedLinks.length || 0,
         referral_clients: referralClients.length,
         managed_clients: managedClients.length,
         total_earned: partnerProfile.total_earned,
         total_withdrawn: partnerProfile.total_withdrawn,
         available_for_withdrawal: availableBalance,
-        clients: links || []
+        total_clicks: totalClicks,
+        clients: enrichedLinks || []
       },
       200,
       origin

@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { usePartner } from '@/hooks/usePartner';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PartnersSection } from '@/components/partners/PartnersSection';
-import { ManagedClients } from '@/components/partners/ManagedClients';
-import { PayoutRequests } from '@/components/partners/PayoutRequests';
-import { Loader2, Handshake, Users, CreditCard } from 'lucide-react';
+import { Loader2, Wallet } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PartnerAccountSection } from '@/components/partners/PartnerAccountSection';
+import { PartnerInstructionsSection } from '@/components/partners/PartnerInstructionsSection';
+import { PartnerOverviewSection } from '@/components/partners/PartnerOverviewSection';
+import { PartnerReferralsSection } from '@/components/partners/PartnerReferralsSection';
+import { PartnerClientsSection } from '@/components/partners/PartnerClientsSection';
 
 const PartnersPage = () => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    'account' | 'overview' | 'referrals' | 'clients' | 'instructions'
+  >('overview');
 
   const handleCreatePartner = async () => {
     try {
@@ -68,34 +72,52 @@ const PartnersPage = () => {
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 text-sm font-medium">1</span>
+                        <span className="text-green-600 text-sm font-medium">
+                          1
+                        </span>
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">{t('partners.referralProgram')}</h4>
-                      <p className="text-sm text-gray-600">{t('partners.referralProgramDesc')}</p>
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {t('partners.referralProgram')}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {t('partners.referralProgramDesc')}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 text-sm font-medium">2</span>
+                        <span className="text-green-600 text-sm font-medium">
+                          2
+                        </span>
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">{t('partners.fullSupport')}</h4>
-                      <p className="text-sm text-gray-600">{t('partners.fullSupportDesc')}</p>
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {t('partners.fullSupport')}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {t('partners.fullSupportDesc')}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 text-sm font-medium">3</span>
+                        <span className="text-green-600 text-sm font-medium">
+                          3
+                        </span>
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">{t('partners.automaticPayouts')}</h4>
-                      <p className="text-sm text-gray-600">{t('partners.automaticPayoutsDesc')}</p>
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {t('partners.automaticPayouts')}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {t('partners.automaticPayoutsDesc')}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -105,7 +127,9 @@ const PartnersPage = () => {
                     disabled={isCreating}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreating ? t('partners.creating') : t('partners.becomePartner')}
+                    {isCreating
+                      ? t('partners.creating')
+                      : t('partners.becomePartner')}
                   </button>
                 </div>
               </div>
@@ -118,36 +142,121 @@ const PartnersPage = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Handshake className="h-4 w-4" />
-            {t('partners.overview')}
-          </TabsTrigger>
-          <TabsTrigger value="clients" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            {t('partners.clients')}
-          </TabsTrigger>
-          <TabsTrigger
-          value="payouts" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            {t('partners.payouts')}
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="mt-6">
-          <PartnersSection />
-        </TabsContent>
-        
-        <TabsContent value="clients" className="mt-6">
-          <ManagedClients />
-        </TabsContent>
-        
-        <TabsContent value="payouts" className="mt-6">
-          <PayoutRequests />
-        </TabsContent>
-      </Tabs>
+      {/* Верхний блок как в новом дашборде: заголовок + кнопка «Ваш счёт» */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight truncate">
+            {t('partners.title')}
+          </h1>
+          <p className="text-xs md:text-sm text-slate-500 font-medium truncate">
+            {t('partners.subtitle')}
+          </p>
+        </div>
+        <button
+          onClick={() => setActiveTab('account')}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all border ${
+            activeTab === 'account'
+              ? 'bg-slate-900 text-white border-slate-900'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span
+            className={`p-1 rounded-full ${
+              activeTab === 'account'
+                ? 'bg-slate-700 text-white'
+                : 'bg-green-100 text-green-600'
+            }`}
+          >
+            <Wallet size={14} />
+          </span>
+          <span>{t('partners.account')}</span>
+        </button>
+      </div>
+
+      {/* Сабнавигация партнёрского раздела (Обзор / Рефералы / Клиенты / Инструкции) */}
+      <>
+        {/* Десктоп */}
+        <div className="hidden lg:flex items-center border-b border-slate-200 pb-2">
+          <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+            <TabButton
+              label="Обзор"
+              isActive={activeTab === 'overview'}
+              onClick={() => setActiveTab('overview')}
+            />
+            <TabButton
+              label="Рефералы"
+              isActive={activeTab === 'referrals'}
+              onClick={() => setActiveTab('referrals')}
+            />
+            <TabButton
+              label="Клиенты"
+              isActive={activeTab === 'clients'}
+              onClick={() => setActiveTab('clients')}
+            />
+            <TabButton
+              label="Инструкции"
+              isActive={activeTab === 'instructions'}
+              onClick={() => setActiveTab('instructions')}
+            />
+          </div>
+        </div>
+
+        {/* Мобильные переключатели */}
+        <div className="lg:hidden">
+          <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex overflow-x-auto no-scrollbar">
+            <TabButton
+              label="Обзор"
+              isActive={activeTab === 'overview'}
+              onClick={() => setActiveTab('overview')}
+            />
+            <TabButton
+              label="Рефералы"
+              isActive={activeTab === 'referrals'}
+              onClick={() => setActiveTab('referrals')}
+            />
+            <TabButton
+              label="Клиенты"
+              isActive={activeTab === 'clients'}
+              onClick={() => setActiveTab('clients')}
+            />
+            <TabButton
+              label="Инструкции"
+              isActive={activeTab === 'instructions'}
+              onClick={() => setActiveTab('instructions')}
+            />
+          </div>
+        </div>
+      </>
+
+      <div className="mt-4">
+        {activeTab === 'account' && <PartnerAccountSection />}
+        {activeTab === 'overview' && <PartnerOverviewSection />}
+        {activeTab === 'referrals' && <PartnerReferralsSection />}
+        {activeTab === 'clients' && <PartnerClientsSection />}
+        {activeTab === 'instructions' && (
+          <PartnerInstructionsSection />
+        )}
+      </div>
     </div>
+  );
+};
+
+const TabButton: React.FC<{
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-none py-1.5 px-4 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${
+        isActive
+          ? 'bg-white text-slate-900 shadow-sm'
+          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+      }`}
+    >
+      {label}
+    </button>
   );
 };
 

@@ -58,13 +58,18 @@ export function SidebarButton({
     return (
       <a
         href={href}
-        target="_blank"
         rel="noopener noreferrer"
         className={className}
         style={buttonStyles(isActive)}
         onMouseEnter={(e) => handleMouseEnter(e, isActive)}
         onMouseLeave={(e) => handleMouseLeave(e, isActive)}
         title={displayTitle}
+        onClick={(e) => {
+         if (href === window.location.href) {
+          e.preventDefault();
+         }
+          onClick?.();
+        }}
       >
         {content}
       </a>

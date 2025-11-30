@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Copy, ExternalLink, Users, DollarSign, TrendingUp, Handshake } from 'lucide-react';
+import { Copy, Users, DollarSign, TrendingUp, Handshake } from 'lucide-react';
 import { usePartner } from '../../hooks/usePartner';
 import { usePartnerStats } from '../../hooks/usePartnerStats';
 import { useToast } from '../../hooks/use-toast';
@@ -118,8 +117,6 @@ export function PartnersSection() {
     );
   }
 
-  const referralLink = `${window.location.origin}/${language}/auth/signup?ref=${partnerProfile?.partner_code}`;
-
   return (
     <div className="space-y-6">
       {/* Статистика */}
@@ -168,78 +165,8 @@ export function PartnersSection() {
         </Card>
       </div>
 
-      {/* Реферальная ссылка */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('partners.referralLink')}</CardTitle>
-          <CardDescription>
-            {t('partners.shareLink')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Input 
-              value={referralLink} 
-              readOnly 
-              className="font-mono text-sm"
-            />
-            <Button onClick={copyReferralLink} variant="outline">
-              <Copy className="h-4 w-4 mr-2" />
-              {t('partners.copy')}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => window.open(referralLink, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              {t('partners.open')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Последние клиенты */}
-      {stats?.clients && stats.clients.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('partners.recentClients')}</CardTitle>
-            <CardDescription>
-              {t('partners.recentClientsDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.clients.slice(0, 5).map((client) => (
-                <div key={client.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {client.user_profiles.first_name?.[0]}{client.user_profiles.last_name?.[0]}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {client.user_profiles.first_name} {client.user_profiles.last_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {client.user_profiles.email}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={client.type === 'referral' ? 'default' : 'secondary'}>
-                      {client.type === 'referral' ? t('partners.referral') : t('partners.support')}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(client.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+   
+      {/* Блок последних клиентов перенесен во вкладку рефералов */}
     </div>
   );
 }
