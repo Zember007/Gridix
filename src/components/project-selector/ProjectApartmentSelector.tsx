@@ -157,6 +157,21 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     }
   };
 
+  const openFullProjectPage = async () => {
+    try {
+      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : '';
+      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+      const url = `${baseDomain}/${language}/project/${projectPath}`;
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error opening full project page:', error);
+      const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+      const url = `${fallbackDomain}/${language}/project/${projectPath}`;
+      window.open(url, '_blank');
+    }
+  };
+
   const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(Math.round(price));
 
   // Load apartments and layout photos in parallel (optimized)
@@ -770,6 +785,19 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           )}
         </>
       ) : null}
+
+      {/* Widget mode: button to open full project chessboard page */}
+      {isWidget && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button
+            onClick={openFullProjectPage}
+            style={{ backgroundColor: getThemeColor(), color: '#fff' }}
+            className="shadow-lg rounded-full px-4 py-2 text-sm"
+          >
+            {language === 'ru' ? 'Открыть шахматку' : 'Open full plan'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
