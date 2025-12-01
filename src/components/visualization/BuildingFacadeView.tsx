@@ -63,9 +63,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
+  const [isTouchZooming, setIsTouchZooming] = useState(false);
+  const [touchOrigin, setTouchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [mobileSwitcherPosition, setMobileSwitcherPosition] = useState<{ top: number; left: number } | null>(null);
 
+  useLockBodyScroll(isTouchZooming);
 
 
 
@@ -558,7 +561,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   };
 
 
-
+  const getPointRelativeToWrapper = (clientX: number, clientY: number) => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return { x: 0, y: 0 };
+    const rect = wrapper.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
 
   // Автоматическое позиционирование мобильного переключателя этажей так,
   // чтобы он по возможности не перекрывал полигоны.
@@ -746,17 +754,22 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
             style={{
               width: imgDimensions.width || 'auto',
               height: imgDimensions.height || 'auto',
+              touchAction: isTouchZooming ? 'none' : 'manipulation'
             }}
     
           >
             <div
-             
+              style={{
+                transform: isTouchZooming ? `scale(2)` : 'scale(1)',
+                transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
+                touchAction: isTouchZooming ? 'none' : 'manipulation'
+              }}
               className="w-full h-full">
               <img
                 ref={imgRef}
                 src={project.building_image_url}
                 alt={project.name}
-                className="block w-full h-full transition-all duration-500 relative"
+                className="block w-full h-full transition-all duration-500"
                 draggable={false}
               />
               {isExpanded && visibleFloors.length > 0 && imgDimensions.width > 0 && (
@@ -788,7 +801,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                           className="cursor-pointer transition-all duration-200"
                           data-floor={floor.floor_number}
                           onClick={() => handleSVGFloorClick(floor.floor_number)}
-                       
+                        
                           onMouseEnter={() => {
                             if (isExpanded) {
                               handleSVGFloorHover(floor.floor_number);
