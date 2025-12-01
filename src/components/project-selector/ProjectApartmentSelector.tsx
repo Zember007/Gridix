@@ -739,7 +739,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                           project={project}
                           formatPrice={formatPrice}
                           selectedCurrency={filters.selectedCurrency}
-                          isMobile={isMobile}
+                          isMobile={isMobile ?? false}
                           themeColor={getThemeColor()}
                           visibleFields={fieldSettings.filter(field => field.is_visible)}
                         />
@@ -787,12 +787,12 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       ) : null}
 
       {/* Widget mode: button to open full project chessboard page */}
-      {isWidget && (
-        <div className="fixed bottom-4 right-4 z-50">
+      {!isWidget && (
+        <div className="fixed bottom-4 left-4 z-50">
           <Button
             onClick={openFullProjectPage}
-            style={{ backgroundColor: getThemeColor(), color: '#fff' }}
-            className="shadow-lg rounded-full px-4 py-2 text-sm"
+            style={{ backgroundColor: getThemeColor() }}
+            className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm"
           >
             {language === 'ru' ? 'Открыть шахматку' : 'Open full plan'}
           </Button>
