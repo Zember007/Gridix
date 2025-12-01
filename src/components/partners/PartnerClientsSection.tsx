@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {
+import { 
   Search,
   UserPlus,
-  Calendar,
   LogIn,
   CreditCard,
   CheckCircle2,
@@ -28,6 +27,9 @@ export const PartnerClientsSection: React.FC = () => {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [activeNoteClient, setActiveNoteClient] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [isAddingClient, setIsAddingClient] = useState(false);
 
   // Преобразуем реальных клиентов: показываем только на сопровождении (managed)
   const managedClients = clients.filter((c) => c.type === 'managed');
@@ -153,6 +155,69 @@ export const PartnerClientsSection: React.FC = () => {
     }
   };
 
+  const handleAddManagedClient = async () => {
+    if (!newClientEmail.trim()) {
+      toast({
+        title: t('partners.error'),
+        description: t('partners.clientEmail'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsAddingClient(true);
+
+      const {
+        data: result,
+        error,
+      }: {
+        data: { success: boolean; error?: string; invitation_link?: string } | null;
+        error: { message?: string } | null;
+      } = await supabase.functions.invoke(
+        'partner-program',
+        {
+          body: {
+            action: 'send_invitation',
+            email: newClientEmail.trim(),
+            invitation_type: 'managed',
+          },
+        },
+      );
+
+      if (error) {
+        throw new Error(error.message || 'Ошибка отправки приглашения');
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.error || 'Не удалось отправить приглашение');
+      }
+
+      toast({
+        title: t('partners.invitationSent'),
+        description: t('partners.invitationSentDesc', {
+          email: newClientEmail.trim(),
+          link: result.invitation_link ?? '',
+        }),
+      });
+
+      setNewClientEmail('');
+      setIsAddClientModalOpen(false);
+    } catch (error) {
+      console.error('Error adding managed client:', error);
+      toast({
+        title: t('partners.error'),
+        description:
+          error instanceof Error
+            ? error.message
+            : t('partners.invitationFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingClient(false);
+    }
+  };
+
   const openNoteModal = (clientId: string) => {
     setActiveNoteClient(clientId);
     setNoteText(notes[clientId] || '');
@@ -240,6 +305,63 @@ export const PartnerClientsSection: React.FC = () => {
         </div>
       )}
 
+      {/* Модалка добавления клиента */}
+      {isAddClientModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-slate-900">
+                {t('partners.inviteNewClient')}
+              </h3>
+              <button
+                onClick={() => setIsAddClientModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500 mb-4">
+              {t('partners.inviteNewClientDesc')}
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <label
+                htmlFor="partner-client-email"
+                className="text-xs font-medium text-slate-600 uppercase tracking-wide"
+              >
+                {t('partners.clientEmail')}
+              </label>
+              <input
+                id="partner-client-email"
+                type="email"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                placeholder={t('partners.clientEmailPlaceholder')}
+                value={newClientEmail}
+                onChange={(e) => setNewClientEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsAddClientModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg"
+                disabled={isAddingClient}
+              >
+                {t('partners.cancel')}
+              </button>
+              <button
+                onClick={handleAddManagedClient}
+                disabled={isAddingClient}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg flex items-center gap-2"
+              >
+                {isAddingClient ? t('partners.sending') : t('partners.sendInvitation')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Шапка секции */}
       <div className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -249,7 +371,10 @@ export const PartnerClientsSection: React.FC = () => {
               Управляйте клиентами на сопровождении (Интегратор)
             </p>
           </div>
-          <button className="bg-[#1a1a1a] hover:bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg hover:shadow-xl">
+          <button
+            className="bg-[#1a1a1a] hover:bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg hover:shadow-xl"
+            onClick={() => setIsAddClientModalOpen(true)}
+          >
             <UserPlus size={18} />
             Добавить клиента
           </button>
