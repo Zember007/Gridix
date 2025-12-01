@@ -62,7 +62,7 @@ export const PartnerOverviewSection: React.FC = () => {
     let total = 0;
 
     for (const client of clients) {
-      const rawSource = (client.utm_source || '').trim().toLowerCase(;
+      const rawSource = (client.utm_source || '').trim().toLowerCase();
       const source = rawSource || 'direct';
       counts[source] = (counts[source] || 0) + 1;
       total += 1;
