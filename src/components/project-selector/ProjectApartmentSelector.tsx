@@ -486,7 +486,11 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   // If widget mode and apartment is selected, show apartment details
   if (isWidget && isApartmentModalOpen && selectedApartment) {
     return (
-      <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader color={getThemeColor()} size="lg" className="mx-auto" />
+        </div>
+      }>
         <ApartmentDetailsPage
           onClose={() => {
             setIsApartmentModalOpen(false);

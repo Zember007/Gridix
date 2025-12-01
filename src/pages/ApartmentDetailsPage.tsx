@@ -89,32 +89,32 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewTracked, setViewTracked] = useState(false);
 
-    // Трекинг просмотра квартиры
-    useEffect(() => {
-      const trackApartmentView = async () => {
-        if (!apartment || !project?.id || viewTracked) return;
-  
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          await supabase.from('apartment_views').insert({
-            apartment_id: apartment.id,
-            project_id: project.id,
-            user_id: user?.id || null,
-            user_agent: navigator.userAgent,
-            referrer: document.referrer || null,
-          });
-  
-          setViewTracked(true);
-        } catch (error) {
-          console.error('Error tracking apartment view:', error);
-        }
-      };
-  
-      if (apartment && project && !apartmentLoading && !projectLoading) {
-        trackApartmentView();
+  // Трекинг просмотра квартиры
+  useEffect(() => {
+    const trackApartmentView = async () => {
+      if (!apartment || !project?.id || viewTracked) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        await supabase.from('apartment_views').insert({
+          apartment_id: apartment.id,
+          project_id: project.id,
+          user_id: user?.id || null,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null,
+        });
+
+        setViewTracked(true);
+      } catch (error) {
+        console.error('Error tracking apartment view:', error);
       }
-    }, [apartment, project, apartmentLoading, projectLoading, viewTracked]);
+    };
+
+    if (apartment && project && !apartmentLoading && !projectLoading) {
+      trackApartmentView();
+    }
+  }, [apartment, project, apartmentLoading, projectLoading, viewTracked]);
 
   // Photos preloading moved to parent component
   interface CombinedPhoto {
@@ -365,8 +365,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           }
 
           // Если у квартиры нет фото — берём первую планировку по типу комнат
-          const layoutType = apt.rooms == 0 
-            ? 'studio' 
+          const layoutType = apt.rooms == 0
+            ? 'studio'
             : apt.rooms === 'free_layout'
               ? 'free_layout'
               : `${apt.rooms}-room`;
@@ -436,7 +436,9 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const loading = projectLoading || apartmentLoading || photosLoading;
 
-  if (!project) return null;
+  if (!project) return <div className="min-h-screen bg-background flex items-center justify-center">
+    <Loader size="lg" className="mx-auto mb-4" />
+  </div>;
 
   // Показываем загрузку, если данные еще загружаются
   if (loading) {
@@ -481,7 +483,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   // Если данные еще не загружены, не рендерим основной контент
   if (!apartment || !project) {
-    return null;
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader size="lg" className="mx-auto mb-4"
+        color={project?.theme_color || '#000000'}
+      />
+    </div>
   }
 
   return (
@@ -575,7 +581,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 <div className="flex items-center gap-2">
                   <Home className="h-5 w-5 text-gray-400" />
                   <span className="text-gray-700">
-                    {apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${ !isNaN(Number(apartment.rooms)) ? t('apartment.rooms') : ''}`}
+                    {apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t('apartment.rooms') : ''}`}
                   </span>
                 </div>
               )}
@@ -822,8 +828,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                     <div className="space-y-[24px]">
                       <div className="flex items-center justify-between">
                         <div className="text-xl font-medium text-gray-900  font-poppins">
-                          {apartment.rooms == 0 
-                            ? t('apartment.studio') 
+                          {apartment.rooms == 0
+                            ? t('apartment.studio')
                             : apartment.rooms === 'free_layout'
                               ? t('apartment.freeLayout')
                               : `${apartment.rooms} ${!isNaN(Number(apartment.rooms)) ? t('apartment.rooms') : ''}`} {apartment.area} m2
