@@ -3,10 +3,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Image as ImageIcon, Layout, Expand } from 'lucide-react';
+import { Image as ImageIcon, Expand } from 'lucide-react';
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 interface ApartmentPhoto {
   id: string;
@@ -46,7 +53,9 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [minPhotoHeight, setMinPhotoHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const currentElement = document.getElementById('gridix-widget-root');
@@ -158,13 +167,28 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
     loadPhotos();
   }, [apartmentId, projectId, roomsHint, preloadedLayoutPhotos, fetchMode, loadPhotos]);
 
-  const nextPhoto = () => {
-    setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
-  };
+  // Синхронизируем индекс активного слайда с Embla-каруселью
+  useEffect(() => {
+    if (!carouselApi) return;
 
-  const prevPhoto = () => {
-    setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
-  };
+    const handleSelect = () => {
+      const index = carouselApi.selectedScrollSnap();
+      setCurrentPhotoIndex(index);
+    };
+
+    handleSelect();
+    carouselApi.on("select", handleSelect);
+
+    return () => {
+      carouselApi.off("select", handleSelect);
+    };
+  }, [carouselApi]);
+
+  // При смене текущего индекса (например, из лайтбокса) прокручиваем карусель
+  useEffect(() => {
+    if (!carouselApi) return;
+    carouselApi.scrollTo(currentPhotoIndex, true);
+  }, [carouselApi, currentPhotoIndex]);
 
   const openLightbox = () => {
     setIsLightboxOpen(true);
@@ -202,16 +226,54 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
   return (
     <Card className='border-none'>
       <CardContent className="p-0">
-        <div className="relative">
-          {(() => { const currentPhoto = photos[currentPhotoIndex]!; return (
-          <img
-            src={currentPhoto.image_url}
-            alt={currentPhoto?.description || 'Фото квартиры'}
-            className="w-full  h-auto object-cover lg:rounded-lg cursor-pointer"
-            onClick={openLightbox}
-          />); })()}
-          
-     
+        <div
+          className="relative"
+        >
+          <Carousel
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: photos.length > 1,
+            }}
+            setApi={setCarouselApi}
+          >
+            <CarouselContent>
+              {photos.map((photo, index) => (
+                <CarouselItem key={photo.id}>
+                  <img
+                    src={photo.image_url}
+                    alt={photo.description || 'Apartment photo'}
+                    className="w-full h-auto object-cover lg:rounded-lg cursor-pointer"
+                    style={{ height: minPhotoHeight != null ? minPhotoHeight : 'auto' }}
+                    onClick={() => {
+                      setCurrentPhotoIndex(index);
+                      openLightbox();
+                    }}
+                    onLoad={(e) => {
+                      const height = e.currentTarget.clientHeight;
+                      if (!height) return;
+                      setMinPhotoHeight((prev) =>
+                        prev == null ? height : Math.min(prev, height)
+                      );
+                    }}
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            {photos.length > 1 && (
+              <>
+                <CarouselPrevious className="bg-white/80 hover:bg-white shadow-md left-4 md:flex hidden" />
+                <CarouselNext className="bg-white/80 hover:bg-white shadow-md right-4 md:flex hidden" />
+
+                <div className="absolute lg:bottom-2 bottom-10 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                  {currentPhotoIndex + 1} / {photos.length}
+                </div>
+              </>
+            )}
+          </Carousel>
+
           <Button
             variant="outline"
             size="sm"
@@ -220,33 +282,6 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
           >
             <Expand className="h-4 w-4" />
           </Button>
-          
-          
-          {photos.length > 1 && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
-                onClick={prevPhoto}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
-                onClick={nextPhoto}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              
-              <div className="absolute lg:bottom-2 bottom-10 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
-                {currentPhotoIndex + 1} / {photos.length}
-              </div>
-            </>
-          )}
         </div>
         
         {photos[currentPhotoIndex]?.description && (
