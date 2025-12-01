@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { SlidersHorizontal, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { SlidersHorizontal, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -72,9 +72,9 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
   const filters = useProjectFilters(
     project
       ? {
-          apartments,
-          project: project as unknown as { currency?: string; has_commercial?: boolean; has_parking?: boolean },
-        }
+        apartments,
+        project: project as unknown as { currency?: string; has_commercial?: boolean; has_parking?: boolean },
+      }
       : { apartments }
   );
 
@@ -201,17 +201,17 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
 
           // Now load layout photos for visible apartments only (non-blocking)
           // This happens after apartments are loaded, so UI can render
-            const uniqueLayouts = new Set<string>(
-              normalizedApartments.map(a =>
-                (a.type === 'apartment' 
-                  ? a.rooms == 0 
-                    ? 'studio' 
-                    : a.rooms === 'free_layout'
-                      ? 'free_layout'
-                      : `${Number(a.rooms)}-room` 
-                  : a.type)
-              )
-            );
+          const uniqueLayouts = new Set<string>(
+            normalizedApartments.map(a =>
+            (a.type === 'apartment'
+              ? a.rooms == 0
+                ? 'studio'
+                : a.rooms === 'free_layout'
+                  ? 'free_layout'
+                  : `${Number(a.rooms)}-room`
+              : a.type)
+            )
+          );
 
 
           if (uniqueLayouts.size > 0 && !isCancelled) {
@@ -224,7 +224,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                   .eq('project_id', project.id)
                   .in('layout_type', Array.from(uniqueLayouts))
                   .order('order_index', { ascending: true });
-                  
+
                 if (layoutError) {
                   console.error('Error loading layout photos:', layoutError);
                   setPreloadLayoutLoaded(true);
@@ -583,7 +583,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                         getUniqueRoomCounts={filters.getUniqueRoomCounts}
                         getUniqueFloors={filters.getUniqueFloors}
                         hasFreeLayout={filters.hasFreeLayout}
-                        project={project }
+                        project={project}
                         viewMode={viewMode}
                         formatPrice={formatPrice}
                         themeColor={getThemeColor()}
@@ -598,25 +598,25 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
           {/* Desktop Filters */}
           {!isMobile && viewMode === 'list' && (
             <div className="space-y-4">
-                <CompactFilters
-                  {...filters}
-                  getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                  getUniqueFloors={filters.getUniqueFloors}
-                  hasFreeLayout={filters.hasFreeLayout}
-                  project={project}
-                  viewMode={viewMode}
-                  themeColor={getThemeColor()}
-                  isDesktopFiltersExpanded={isDesktopFiltersExpanded}
-                  setIsDesktopFiltersExpanded={() => {
-                    if (!isDesktopFiltersExpanded) {
-                      setStagedPriceRange([...filters.priceRange]);
-                      setStagedAreaRange([...filters.areaRange]);
-                    }
-                    setIsDesktopFiltersExpanded(prev => !prev);
-                  }}
-                />
-               
-           
+              <CompactFilters
+                {...filters}
+                getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                getUniqueFloors={filters.getUniqueFloors}
+                hasFreeLayout={filters.hasFreeLayout}
+                project={project}
+                viewMode={viewMode}
+                themeColor={getThemeColor()}
+                isDesktopFiltersExpanded={isDesktopFiltersExpanded}
+                setIsDesktopFiltersExpanded={() => {
+                  if (!isDesktopFiltersExpanded) {
+                    setStagedPriceRange([...filters.priceRange]);
+                    setStagedAreaRange([...filters.areaRange]);
+                  }
+                  setIsDesktopFiltersExpanded(prev => !prev);
+                }}
+              />
+
+
 
               {/* Expanded filters - animated */}
               <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -787,14 +787,15 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       ) : null}
 
       {/* Widget mode: button to open full project chessboard page */}
-      {!isWidget && (
-        <div className="fixed bottom-4 left-4 z-50">
+      {isWidget && (
+        <div className="fixed bottom-10 left-8 md:left-20 md:bottom-20 z-50">
           <Button
+            size="icon-lg"
             onClick={openFullProjectPage}
             style={{ backgroundColor: getThemeColor() }}
             className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm"
           >
-            {language === 'ru' ? 'Открыть шахматку' : 'Open full plan'}
+            <ExternalLink />
           </Button>
         </div>
       )}
