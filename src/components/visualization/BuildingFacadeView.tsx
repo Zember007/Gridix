@@ -66,23 +66,11 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const [isTouchZooming, setIsTouchZooming] = useState(false);
   const [touchOrigin, setTouchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [mobileSwitcherPosition, setMobileSwitcherPosition] = useState<{ top: number; left: number } | null>(null);
 
   useLockBodyScroll(isTouchZooming);
 
-  const getContainerHeight = useCallback(() => {
-    if (isExpanded && filtersRef?.current) {
-      const filtersHeight = filtersRef.current.offsetHeight;
-      const margin = isMobile ? 10 : 20;
-      const newHeight = window.innerHeight - filtersHeight - margin;
 
-      const minHeight = isMobile ? 300 : 400;
-      const maxHeight = isMobile ? imgDimensions.height : 1200;
-
-      return Math.min(Math.max(newHeight, minHeight), maxHeight);
-    } else {
-      return isMobile ? 200 : COLLAPSED_HEIGHT;
-    }
-  }, [isExpanded, filtersRef, isMobile, imgDimensions.height]); // Убрали imgDimensions из зависимостей, оставили только height
 
   // Используем useRef для хранения функции обновления, чтобы избежать бесконечных циклов
   const updateImageDimensionsRef = useRef<() => void>();
@@ -92,8 +80,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     const containerEl = containerRef.current;
     if (!imgEl || !containerEl || !imageLoaded || imageNaturalSize.width === 0) return;
 
-    // Вычисляем containerHeight внутри функции, без зависимости от getContainerHeight
-    // Используем текущее значение imgDimensions через ref или state
     setImgDimensions(prev => {
       let containerHeight: number;
       if (isExpanded && filtersRef?.current) {
@@ -101,8 +87,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         const margin = isMobile ? 10 : 20;
         const newHeight = window.innerHeight - filtersHeight - margin;
         const minHeight = isMobile ? 300 : 400;
-        const maxHeight = isMobile ? prev.height : 1200;
-        containerHeight = Math.min(Math.max(newHeight, minHeight), maxHeight);
+        containerHeight = Math.max(newHeight, minHeight);
       } else {
         containerHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
       }
@@ -583,75 +568,140 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
-  const mobileTouchStart = (e: React.TouchEvent, floorNumber?: number) => {
-    if (!isMobile) return;
-    if (e.touches.length === 0) return;
-    const touch = e.touches.item(0);
-    if (!touch) return;
-    const origin = getPointRelativeToWrapper(touch.clientX, touch.clientY);
-    setTouchOrigin(origin);
-    setIsTouchZooming(true);
-    if (typeof floorNumber === 'number') handleSVGFloorHover(floorNumber);
+  // Автоматическое позиционирование мобильного переключателя этажей так,
+  // чтобы он по возможности не перекрывал полигоны.
+  // Приоритет: сверху слева → сверху справа → другие доступные места.
+  useEffect(() => {
+    if (!isMobile || !isExpanded || visibleFloors.length === 0 || !containerRef.current) {
+      setMobileSwitcherPosition(null);
+      return;
+    }
 
-    e.preventDefault();
-    e.stopPropagation();
-  };
+    if (imgDimensions.width === 0 || imgDimensions.height === 0) {
+      setMobileSwitcherPosition(null);
+      return;
+    }
 
-  const mobileTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile) return;
-    if (e.touches.length === 0) return;
-    const touch = e.touches.item(0);
-    if (!touch) return;
-    // Update origin so zoomed area follows the finger
-    const origin = getPointRelativeToWrapper(touch.clientX, touch.clientY);
-    setTouchOrigin(origin);
+    const containerEl = containerRef.current;
+    const containerWidth = containerEl.clientWidth;
+    const containerHeight = containerEl.clientHeight;
 
-    // Detect polygon under finger
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (el && el instanceof SVGPolygonElement) {
-      const ds = (el as Element).getAttribute('data-floor');
-      const floorNum = ds ? parseInt(ds, 10) : undefined;
-      if (typeof floorNum === 'number' && !Number.isNaN(floorNum)) {
-        handleSVGFloorHover(floorNum)
-      } else {
-        setHoveredFloor(null);
-        handleFloorLeave();
+    // Берём только этажи с валидными полигонами
+    const floorsWithPolygons = visibleFloors.filter(
+      (f) => f.polygon && f.polygon.length >= 3
+    );
+
+    // Если полигонов нет, просто ставим переключатель внизу по центру
+    if (floorsWithPolygons.length === 0) {
+      setMobileSwitcherPosition({
+        top: containerHeight - 56,
+        left: containerWidth / 2,
+      });
+      return;
+    }
+
+    // Границы всех видимых полигонов в процентах SVG (0–100)
+    let minX = 100;
+    let maxX = 0;
+    let minY = 100;
+    let maxY = 0;
+
+    floorsWithPolygons.forEach((floor) => {
+      floor.polygon.forEach((p) => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      });
+    });
+
+    // Переводим проценты в пиксели относительно контейнера,
+    // учитывая, что изображение центрируется внутри него
+    const svgWidth = imgDimensions.width;
+    const svgHeight = imgDimensions.height;
+    const svgLeft = (containerWidth - svgWidth) / 2;
+    const svgTop = (containerHeight - svgHeight) / 2;
+
+    const bboxLeft = svgLeft + (minX / 100) * svgWidth;
+    const bboxRight = svgLeft + (maxX / 100) * svgWidth;
+    const bboxTop = svgTop + (minY / 100) * svgHeight;
+    const bboxBottom = svgTop + (maxY / 100) * svgHeight;
+
+    const margin = 12;           // отступ от краёв контейнера
+    const gapFromPolygons = 8;   // минимальный зазор от полигонов
+    // Реальный размер переключателя (min-w-[90px] и примерно 40px по высоте)
+    const estimatedWidth = Math.min(90, containerWidth - margin * 2);
+    const estimatedHeight = Math.min(40, containerHeight - margin * 2);
+
+    type Candidate = { cx: number; cy: number };
+    const candidates: Candidate[] = [];
+
+    const halfW = estimatedWidth / 2;
+    const halfH = estimatedHeight / 2;
+
+    // Вспомогательная функция добавления кандидата, если он помещается в контейнер
+    const addCandidate = (cx: number, cy: number) => {
+      const left = cx - halfW;
+      const right = cx + halfW;
+      const top = cy - halfH;
+      const bottom = cy + halfH;
+      if (
+        left >= margin &&
+        right <= containerWidth - margin &&
+        top >= margin &&
+        bottom <= containerHeight - margin
+      ) {
+        candidates.push({ cx, cy });
       }
-    } else {
-      setHoveredFloor(null);
-      handleFloorLeave();
+    };
+
+    // 1. Приоритет: сверху слева
+    addCandidate(margin + halfW, margin + halfH);
+    // 2. Если справа — то снизу: правый нижний угол
+    addCandidate(containerWidth - margin - halfW, containerHeight - margin - halfH);
+
+    // 3. Слева по центру относительно полигонов
+    addCandidate(margin + halfW, (bboxTop + bboxBottom) / 2);
+    // 4. Снизу по центру
+    addCandidate(containerWidth / 2, containerHeight - margin - halfH);
+
+    // Проверка пересечения кандидата с bounding box полигонов
+    const intersectsPolygons = (c: Candidate) => {
+      const left = c.cx - halfW;
+      const right = c.cx + halfW;
+      const top = c.cy - halfH;
+      const bottom = c.cy + halfH;
+
+      const noOverlap =
+        right < bboxLeft - gapFromPolygons ||
+        left > bboxRight + gapFromPolygons ||
+        bottom < bboxTop - gapFromPolygons ||
+        top > bboxBottom + gapFromPolygons;
+
+      return !noOverlap;
+    };
+
+    // Сначала ищем первый кандидат, который НЕ пересекает полигоны
+    let chosen = candidates.find((c) => !intersectsPolygons(c));
+
+    // Если все кандидаты пересекают полигоны, берём первый доступный (хотя бы влезает в контейнер)
+    if (!chosen && candidates.length > 0) {
+      chosen = candidates[0];
     }
-    e.preventDefault();
-    e.stopPropagation();
-  };
 
-  const mobileTouchEnd = () => {
-    if (!isMobile) return;
-    const active = hoveredFloor;
-    setIsTouchZooming(false);
-
-    const scrollY = document.body.style.top;
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.overflow = '';
-    window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    // Open the active floor
-    if (typeof active === 'number') {
-      handleFloorClick(active);
+    // Если кандидатов нет (контейнер очень маленький), ставим внизу по центру без сложных вычислений
+    if (!chosen) {
+      setMobileSwitcherPosition({
+        top: containerHeight - estimatedHeight,
+        left: containerWidth / 2,
+      });
+      return;
     }
 
-    // Clear hover shortly after to allow click transition
-    setTimeout(() => setHoveredFloor(null), 150);
-  };
+    setMobileSwitcherPosition({ top: chosen.cy, left: chosen.cx });
+  }, [isMobile, isExpanded, visibleFloors, imgDimensions.width, imgDimensions.height]);
 
-
-
-  // Находим границы всех полигонов для масштабирования
-
-  const containerHeight = getContainerHeight();
-
+  
   if (loading) {
     return (
       <div
@@ -673,9 +723,9 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     <>
       <div
         ref={containerRef}
-        className={`relative w-full transition-all duration-500 bg-gray-50 overflow-hidden rounded-lg min-h-[200px] ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+        className={`relative w-full bg-gray-50 overflow-hidden rounded-lg min-h-[200px] flex items-center justify-center ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
         style={{
-          height: containerHeight,
+          height: isExpanded ? 'auto' : '200px',
           width: isExpanded ? '100%' : '100%',
           maxWidth: isExpanded ? '100%' : undefined,
           boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
@@ -701,15 +751,12 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         {imageLoaded ? (
           <div
             ref={wrapperRef}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
             style={{
               width: imgDimensions.width || 'auto',
               height: imgDimensions.height || 'auto',
               touchAction: isTouchZooming ? 'none' : 'manipulation'
             }}
-            onTouchStart={(e) => mobileTouchStart(e)}
-            onTouchMove={(e) => mobileTouchMove(e)}
-            onTouchEnd={() => mobileTouchEnd()}
+    
           >
             <div
               style={{
@@ -827,7 +874,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
         {isExpanded && (
           <button
-            className={`absolute top-4 right-4 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-3 hover:scale-105'
+            className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
               }`}
             aria-label={'Close'}
             onClick={() => setIsExpanded(false)}
@@ -839,20 +886,25 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         {showPopup && selectedFloor !== null && popupPosition && (
           <FloorPopup Number={selectedFloor} position={popupPosition} />
         )}
-      </div>
-      {
-        isMobile && isExpanded && visibleFloors.length > 0 && (
-          <div className="flex justify-center">
-            <div
-              className="flex items-center  gap-3 bg-white/90 backdrop-blur rounded-full shadow-lg px-3 py-2 mt-4 mx-auto"
-              style={{ touchAction: 'manipulation' }}
-            >
+        {isMobile && isExpanded && visibleFloors.length > 0 && mobileSwitcherPosition && (
+          <div
+            className="absolute z-30"
+            style={{
+              top: mobileSwitcherPosition.top,
+              left: mobileSwitcherPosition.left,
+              transform: 'translate(-50%, -50%)',
+              touchAction: 'manipulation',
+            }}
+          >
+            <div className="flex items-center min-w-[90px] justify-between bg-white/90 backdrop-blur rounded-full shadow-lg">
               <button
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (visibleFloors.length === 0) return;
-                  const sorted = [...visibleFloors].filter(f => f.polygon && f.polygon.length >= 3).sort((a, b) => a.floor_number - b.floor_number);
-                  const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
+                  const sorted = [...visibleFloors]
+                    .filter((f) => f.polygon && f.polygon.length >= 3)
+                    .sort((a, b) => a.floor_number - b.floor_number);
+                  const idx = sorted.findIndex((f) => f.floor_number === hoveredFloor);
                   const prevIdx = idx > 0 ? idx - 1 : sorted.length - 1;
                   const newFloor = sorted[prevIdx]?.floor_number;
                   if (typeof newFloor === 'number') {
@@ -863,15 +915,17 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                 <ChevronLeft className={isMobile ? 'h-5 w-5' : 'h-6 w-6'} />
               </button>
               <div className="text-sm font-medium uppercase">
-                {project.project_type === 'object' ? '№' : ''}{hoveredFloor ?? '-'}
+                {project.project_type === 'object' ? '№' : ''}
+                {hoveredFloor ?? '-'}
               </div>
               <button
                 className="p-2 rounded-full hover:bg-white active:scale-95 transition"
                 onClick={() => {
                   if (visibleFloors.length === 0) return;
-                  console.log(visibleFloors);
-                  const sorted = [...visibleFloors].filter(f => f.polygon && f.polygon.length >= 3).sort((a, b) => a.floor_number - b.floor_number);
-                  const idx = sorted.findIndex(f => f.floor_number === hoveredFloor);
+                  const sorted = [...visibleFloors]
+                    .filter((f) => f.polygon && f.polygon.length >= 3)
+                    .sort((a, b) => a.floor_number - b.floor_number);
+                  const idx = sorted.findIndex((f) => f.floor_number === hoveredFloor);
                   const nextIdx = idx >= 0 && idx < sorted.length - 1 ? idx + 1 : 0;
                   const newFloor = sorted[nextIdx]?.floor_number;
                   if (typeof newFloor === 'number') {
@@ -883,8 +937,8 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
               </button>
             </div>
           </div>
-        )
-      }
+        )}
+      </div>
     </>
   );
 };

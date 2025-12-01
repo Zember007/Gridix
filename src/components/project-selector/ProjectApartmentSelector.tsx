@@ -532,7 +532,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
       <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
         <div className="container mx-auto  md:px-6 py-4">
           {/* View mode buttons */}
-          <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'items-center justify-between'} mb-4`}>
+          <div className={`flex items-center justify-between gap-3 mb-4`}>
             <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
             <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
               <ViewModeButtons
@@ -540,7 +540,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 favoritesCount={favoritesCount}
-                isMobile={isMobile}
+                isMobile={isMobile ?? false}
                 mapVisible={(!!project.latitude && !!project.longitude)}
                 projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
                 themeColor={getThemeColor()}

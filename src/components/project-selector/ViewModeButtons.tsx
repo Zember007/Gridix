@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Building2, Grid, List, MapPin, Heart } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Building2, Grid, List, MapPin, Heart, Menu, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
 import { LanguageToggle } from "@/components/LanguageToggle";
 
 
@@ -21,6 +22,7 @@ interface ViewModeButtonsProps {
 
 export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const buttonClass = (mode: ViewMode) =>
     `${viewMode === mode ? 'text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`;
@@ -28,12 +30,100 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   const buttonStyle = (mode: ViewMode) =>
     viewMode === mode ? { backgroundColor: themeColor } : {};
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const langParam = urlParams.get('lang');
+  const getModeLabel = (mode: ViewMode) => {
+    switch (mode) {
+      case 'facade':
+        return t('project.facade');
+      case 'floor-plan':
+        return t('project.floorPlan');
+      case 'list':
+        return t('project.listView');
+      case 'map':
+        return t('embed.onMap');
+      case 'favorites':
+        return t('favorites.title');
+      default:
+        return '';
+    }
+  };
 
+  // Mobile: burger menu with icons and labels
+  if (isMobile) {
+    return (
+      <nav
+      className="flex items-center justify-between gap-2">
+        <DropdownMenu
+        open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DropdownMenuTrigger className='!border-none' asChild>
+            <button
+              aria-label={isMenuOpen ? 'Close Menu' : 'Open Menu'}
+              className="relative z-20 block cursor-pointer p-2.5 lg:hidden focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0">
+              <Menu className={`${isMenuOpen ? 'rotate-180 scale-0 opacity-0' : ''}   m-auto size-6 duration-200`} />
+              <X className={`${isMenuOpen ? '!rotate-0 !scale-100 !opacity-100' : ''} absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200`} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[10rem]">
+            <DropdownMenuItem
+              onClick={() => setViewMode('facade')}
+              className={viewMode === 'facade' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              <span>{getModeLabel('facade')}</span>
+            </DropdownMenuItem>
+
+            {projectType !== 'object' && (
+              <DropdownMenuItem
+                onClick={() => setViewMode('floor-plan')}
+                className={viewMode === 'floor-plan' ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Grid className="mr-2 h-4 w-4" />
+                <span>{getModeLabel('floor-plan')}</span>
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuItem
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <List className="mr-2 h-4 w-4" />
+              <span>{getModeLabel('list')}</span>
+            </DropdownMenuItem>
+
+            {mapVisible && (
+              <DropdownMenuItem
+                onClick={() => setViewMode('map')}
+                className={viewMode === 'map' ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                <span>{getModeLabel('map')}</span>
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuItem
+              onClick={() => setViewMode('favorites')}
+              className={viewMode === 'favorites' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>{getModeLabel('favorites')}</span>
+                </div>
+                {favoritesCount > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 min-w-[1.25rem] px-1 flex items-center justify-center">
+                    {favoritesCount > 99 ? '99+' : favoritesCount}
+                  </span>
+                )}
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {isWidget ? null : <LanguageToggle />}
+      </nav>
+    );
+  }
 
   return (
-    <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2`}>
+    <div className="flex justify-center md:items-center gap-1 md:gap-2">
       <Button
         variant={viewMode === 'facade' ? 'default' : 'outline'}
         size="sm"
