@@ -105,7 +105,7 @@ export const FloatingProjectButton = ({
         >
           <House />
           <span className="text-[8px] leading-[1] whitespace-normal text-center">
-            Choose apartment
+            {t('project.chooseApartment')}
           </span>
         </Button>
       </div>
