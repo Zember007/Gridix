@@ -219,6 +219,10 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [projectId]);
 
   const visibleFloors = useMemo(() => {
+
+    if(project.project_type === 'object') {
+      return buildingFloors;
+    }
     
     // Get unique floor numbers that have at least one available apartment
     const floorsWithAvailable = new Set(
@@ -279,6 +283,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   }, [filtersRef, imageLoaded]);
 
   useEffect(() => {
+    console.log('visibleFloors', visibleFloors);
     if (imageLoaded && visibleFloors.length > 0) {
       updateImageDimensionsRef.current?.();
       if (isExpanded && isMobile) {
@@ -558,14 +563,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
 
     setHoveredFloor(floorNumber);
     handleFloorHover(floorNumber);
-  };
-
-
-  const getPointRelativeToWrapper = (clientX: number, clientY: number) => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return { x: 0, y: 0 };
-    const rect = wrapper.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
   // Автоматическое позиционирование мобильного переключателя этажей так,
