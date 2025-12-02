@@ -69,7 +69,7 @@ export const FloatingProjectButton = ({
         ? project.slug
         : `id/${project?.id || projectId}`;
       const url = `${baseDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_blank');
+      window.open(url, '_self');
     } catch (error) {
       console.error('Error opening full project page:', error);
       const fallbackDomain =
@@ -78,7 +78,7 @@ export const FloatingProjectButton = ({
         ? project.slug
         : `id/${project?.id || projectId}`;
       const url = `${fallbackDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_blank');
+      window.open(url, '_self');
     }
   };
 
