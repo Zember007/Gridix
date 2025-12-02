@@ -105,7 +105,7 @@ export const FloatingProjectButton = ({
           className="relative shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-1"
         >
           <House />
-          <span className="text-[8px] leading-[1] whitespace-normal text-center">
+          <span className="text-[8px] leading-[1] whitespace-normal text-center px-[6px]">
             {t('project.chooseApartment')}
           </span>
         </Button>
