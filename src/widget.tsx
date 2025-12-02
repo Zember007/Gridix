@@ -416,7 +416,7 @@ async function init(options: InitOptions = {}) {
   // const lazyValue = options.lazy ?? (qp.get('lazy') === 'true');
   // const loadOnInteractionValue = options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true');
 
-  const delayValue = 500;
+  const delayValue = 0;
   const lazyValue = true;
   const loadOnInteractionValue = false;
 
