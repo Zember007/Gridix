@@ -16,6 +16,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 export const PartnerAccountSection: React.FC = () => {
   const { t } = useLanguage();
   const {
+    loading,
+    error,
     isTopUpOpen,
     setIsTopUpOpen,
     isWithdrawalOpen,
@@ -35,6 +37,41 @@ export const PartnerAccountSection: React.FC = () => {
     hasFilters,
   } = usePartnerAccountData();
 
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 lg:gap-12 w-full lg:w-auto">
+              <div>
+                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-8 w-40 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-px w-full sm:h-12 sm:w-px bg-gray-100 sm:bg-gray-200" />
+              <div>
+                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="h-10 w-full bg-gray-100 rounded mb-3 animate-pulse" />
+          <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-6 space-y-3">
+            <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
+            <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+            <div className="h-4 w-5/6 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <PartnerTopUpModal
@@ -45,6 +82,12 @@ export const PartnerAccountSection: React.FC = () => {
         isOpen={isWithdrawalOpen}
         onClose={() => setIsWithdrawalOpen(false)}
       />
+
+      {error && (
+        <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg px-4 py-3">
+          {t('partners.error')}: {error}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">

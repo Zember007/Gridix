@@ -20,6 +20,13 @@ interface PartnerProgramRequest {
   utm_campaign?: string | null
 }
 
+function formatDateRu(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}.${month}.${year}`
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -547,6 +554,128 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
 
     const totalClicks = clicks?.length || 0
 
+    // Воронка конверсии
+    const registrationsCount = enrichedLinks.length || 0
+    const payingClientsCount = enrichedLinks.filter(link => link.subscription_status === 'active').length
+
+    // История комиссий и дохода
+    const commissionClientIds = enrichedLinks.map(link => link.client_id).filter(Boolean)
+    let commissions: { partner_commission_amount: number; created_at: string | null }[] = []
+
+    if (commissionClientIds.length > 0) {
+      const { data: commissionRows, error: commissionsError } = await supabaseClient
+        .from('user_subscriptions')
+        .select('partner_commission_amount, invoice_paid_at, created_at, user_id')
+        .in('user_id', commissionClientIds)
+        .not('partner_commission_amount', 'is', null)
+        .order('created_at', { ascending: true })
+
+      if (commissionsError) {
+        console.error('Error fetching partner commissions:', commissionsError)
+      } else if (commissionRows) {
+        commissions = commissionRows.map((row: any) => ({
+          partner_commission_amount: row.partner_commission_amount || 0,
+          created_at: row.invoice_paid_at || row.created_at
+        }))
+      }
+    }
+
+    // Собираем историю дохода по дням (последние 30 дней)
+    const incomeByDate: Record<string, number> = {}
+    for (const c of commissions) {
+      if (!c.created_at) continue
+      const d = new Date(c.created_at)
+      if (isNaN(d.getTime())) continue
+      const key = d.toISOString().slice(0, 10)
+      incomeByDate[key] = (incomeByDate[key] || 0) + (c.partner_commission_amount || 0)
+    }
+
+    const days = 30
+    const incomeHistory: { date: string; amount: number }[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      incomeHistory.push({
+        date: key,
+        amount: incomeByDate[key] || 0
+      })
+    }
+
+    // История операций по счету (комиссии и выводы)
+    const { data: payoutRows, error: payoutsError } = await supabaseClient
+      .from('partner_payouts')
+      .select('amount, status, created_at, requested_at, processed_at, payment_method')
+      .eq('partner_id', partnerProfile.id)
+      .order('created_at', { ascending: true })
+
+    if (payoutsError) {
+      console.error('Error fetching partner payouts:', payoutsError)
+    }
+
+    type LedgerEvent = {
+      sortDate: string
+      date: string
+      sum: number
+      comment: string
+    }
+
+    const ledgerEvents: LedgerEvent[] = []
+
+    for (const c of commissions) {
+      if (!c.created_at) continue
+      const d = new Date(c.created_at)
+      if (isNaN(d.getTime())) continue
+
+      ledgerEvents.push({
+        sortDate: d.toISOString(),
+        date: formatDateRu(d),
+        sum: c.partner_commission_amount || 0,
+        comment: 'Начисление комиссии партнёра'
+      })
+    }
+
+    for (const payout of payoutRows || []) {
+      const baseDate = payout.processed_at || payout.requested_at || payout.created_at
+      if (!baseDate) continue
+      const d = new Date(baseDate)
+      if (isNaN(d.getTime())) continue
+
+      const statusLabel =
+        payout.status === 'paid'
+          ? 'Выплата завершена'
+          : payout.status === 'approved'
+          ? 'Выплата подтверждена'
+          : payout.status === 'rejected'
+          ? 'Выплата отклонена'
+          : 'Запрос на вывод'
+
+      const methodLabel = payout.payment_method ? ` (${payout.payment_method})` : ''
+
+      ledgerEvents.push({
+        sortDate: d.toISOString(),
+        date: formatDateRu(d),
+        sum: -Math.abs(payout.amount || 0),
+        comment: `${statusLabel}${methodLabel}`
+      })
+    }
+
+    ledgerEvents.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
+
+    let runningBalance = 0
+    const transactions = ledgerEvents.map(event => {
+      runningBalance += event.sum
+      return {
+        date: event.date,
+        sum: event.sum,
+        balance: runningBalance,
+        comment: event.comment
+      }
+    })
+
     // Получаем доступный баланс для вывода
     const availableBalance = partnerProfile.total_earned - partnerProfile.total_withdrawn
 
@@ -559,7 +688,12 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
         total_withdrawn: partnerProfile.total_withdrawn,
         available_for_withdrawal: availableBalance,
         total_clicks: totalClicks,
-        clients: enrichedLinks || []
+        clients: enrichedLinks || [],
+        commissions,
+        income_history: incomeHistory,
+        transactions,
+        funnel_registrations: registrationsCount,
+        funnel_paying_clients: payingClientsCount
       },
       200,
       origin

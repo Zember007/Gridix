@@ -9,7 +9,6 @@ import {
   MousePointerClick,
   UserCheck,
   PieChart,
-  ArrowUpRight,
 } from 'lucide-react';
 import { IncomeChart } from './IncomeChart';
 import { usePartner } from '@/hooks/usePartner';
@@ -46,13 +45,8 @@ export const PartnerOverviewSection: React.FC = () => {
     }
   };
 
-  const chartData = useMemo(
-    () => [
-      35, 42, 38, 45, 60, 55, 65, 70, 68, 75, 60, 50, 45, 55, 70, 85, 90, 80,
-      75, 95, 110, 105, 115, 120, 110, 130, 145, 140, 155, 160,
-    ],
-    [],
-  );
+  const incomeHistory = stats?.income_history ?? [];
+  const chartData = incomeHistory.map((point) => point.amount);
 
   const trafficStats = useMemo(() => {
     const clients = stats?.clients || [];
@@ -114,6 +108,69 @@ export const PartnerOverviewSection: React.FC = () => {
   const earned = stats?.total_earned ?? 0;
   const available = stats?.available_for_withdrawal ?? earned;
   const totalClicks = stats?.total_clicks ?? 0;
+  const registrations = stats?.funnel_registrations ?? stats?.total_clients ?? 0;
+  const payingClients = stats?.funnel_paying_clients ?? 0;
+  const registrationsConversion =
+    totalClicks > 0 ? Math.round((registrations / totalClicks) * 1000) / 10 : 0;
+  const paymentsConversion =
+    registrations > 0
+      ? Math.round((payingClients / registrations) * 1000) / 10
+      : 0;
+
+  const totalIncome30d = incomeHistory.reduce(
+    (sum, point) => sum + point.amount,
+    0,
+  );
+
+  if (loading && !stats) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {[0, 1, 2].map((idx) => (
+            <div
+              key={idx}
+              className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm"
+            >
+              <div className="h-4 w-24 bg-gray-200 rounded mb-3 animate-pulse" />
+              <div className="h-8 w-20 bg-gray-200 rounded mb-2 animate-pulse" />
+              <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="h-5 w-40 bg-gray-200 rounded mb-2 animate-pulse" />
+          <div className="h-4 w-64 bg-gray-100 rounded mb-4 animate-pulse" />
+          <div className="h-40 w-full bg-gray-100 rounded animate-pulse" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="h-5 w-40 bg-gray-200 rounded mb-4 animate-pulse" />
+            <div className="space-y-4">
+              {[0, 1, 2].map((idx) => (
+                <div
+                  key={idx}
+                  className="h-10 w-full bg-gray-100 rounded animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="h-5 w-40 bg-gray-200 rounded mb-4 animate-pulse" />
+            <div className="space-y-3">
+              {[0, 1, 2, 3].map((idx) => (
+                <div
+                  key={idx}
+                  className="h-4 w-full bg-gray-100 rounded animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -192,7 +249,7 @@ export const PartnerOverviewSection: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-green-100">
             <TrendingUp size={16} />
-            +24.5% к прошлому месяцу
+            Доход за 30 дней: ${totalIncome30d.toFixed(2)}
           </div>
         </div>
 
@@ -226,11 +283,8 @@ export const PartnerOverviewSection: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-              <div className="text-lg font-bold text-gray-900">
-                {totalClicks}
-              </div>
-                <div className="text-xs text-green-600 font-medium flex items-center justify-end gap-1">
-                  <ArrowUpRight size={12} /> +12%
+                <div className="text-lg font-bold text-gray-900">
+                  {totalClicks}
                 </div>
               </div>
             </div>
@@ -244,13 +298,16 @@ export const PartnerOverviewSection: React.FC = () => {
                   <div className="text-sm font-semibold text-gray-900">
                     Регистрации
                   </div>
-                  <div className="text-xs text-gray-500">Конверсия 8.4%</div>
+                  <div className="text-xs text-gray-500">
+                    {totalClicks > 0
+                      ? `Конверсия из переходов ${registrationsConversion}%`
+                      : 'Конверсия появится после первых переходов'}
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">12</div>
-                <div className="text-xs text-green-600 font-medium flex items-center justify-end gap-1">
-                  <ArrowUpRight size={12} /> +5%
+                <div className="text-lg font-bold text-gray-900">
+                  {registrations}
                 </div>
               </div>
             </div>
@@ -265,13 +322,16 @@ export const PartnerOverviewSection: React.FC = () => {
                     Оплаты
                   </div>
                   <div className="text-xs text-gray-500">
-                    Конверсия из рег. 8.3%
+                    {registrations > 0
+                      ? `Конверсия из регистраций ${paymentsConversion}%`
+                      : 'Конверсия появится после первых регистраций'}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">1</div>
-                <div className="text-xs text-gray-400 font-medium">0%</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {payingClients}
+                </div>
               </div>
             </div>
           </div>

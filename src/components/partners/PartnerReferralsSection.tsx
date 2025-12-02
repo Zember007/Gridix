@@ -31,7 +31,7 @@ export const PartnerReferralsSection: React.FC = () => {
   const { toast } = useToast();
   const { language, t } = useLanguage();
   const { partnerProfile } = usePartner();
-  const { stats } = usePartnerStats();
+  const { stats, loading } = usePartnerStats();
 
   const [copied, setCopied] = useState(false);
   const [showUtmBuilder, setShowUtmBuilder] = useState(false);
@@ -119,6 +119,65 @@ export const PartnerReferralsSection: React.FC = () => {
       ),
     [stats?.clients],
   );
+
+  const totalClicks = stats?.total_clicks ?? 0;
+  const registrations =
+    stats?.funnel_registrations ?? referralClients.length ?? 0;
+  const payingClients =
+    stats?.funnel_paying_clients ??
+    referralClients.filter((c) => c.subscription_status === 'active').length;
+
+  const registrationsConversion =
+    totalClicks > 0 ? Math.round((registrations / totalClicks) * 1000) / 10 : 0;
+  const paymentsConversion =
+    registrations > 0
+      ? Math.round((payingClients / registrations) * 1000) / 10
+      : 0;
+
+  if (loading && !stats) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-5 md:p-6 border-b border-gray-100">
+            <div className="h-5 w-48 bg-gray-200 rounded mb-2 animate-pulse" />
+            <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
+          </div>
+          <div className="p-5 space-y-3">
+            <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+            <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[0, 1, 2].map((idx) => (
+            <div
+              key={idx}
+              className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm"
+            >
+              <div className="h-4 w-24 bg-gray-200 rounded mb-3 animate-pulse" />
+              <div className="h-7 w-16 bg-gray-200 rounded mb-2 animate-pulse" />
+              <div className="h-3 w-28 bg-gray-100 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <div className="h-5 w-40 bg-gray-200 rounded mb-2 animate-pulse" />
+            <div className="h-4 w-72 bg-gray-100 rounded animate-pulse" />
+          </div>
+          <div className="p-6 space-y-3">
+            {[0, 1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="h-4 w-full bg-gray-100 rounded animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -319,10 +378,10 @@ export const PartnerReferralsSection: React.FC = () => {
             <p className="text-sm font-medium text-gray-500">Переходы</p>
             <div className="flex items-end gap-2 mt-1">
               <p className="text-2xl font-bold text-gray-900 leading-none">
-                {stats?.total_clicks ?? 0}
+                {totalClicks}
               </p>
               <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 mb-0.5">
-                <ArrowUpRight size={10} /> 12%
+                <ArrowUpRight size={10} /> {registrationsConversion}%
               </span>
             </div>
             <p className="text-[10px] text-gray-400 mt-1">Кликов за 30 дней</p>
@@ -336,12 +395,18 @@ export const PartnerReferralsSection: React.FC = () => {
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-500">Регистрации</p>
             <div className="flex items-end gap-2 mt-1">
-              <p className="text-2xl font-bold text-gray-900 leading-none">12</p>
+              <p className="text-2xl font-bold text-gray-900 leading-none">
+                {registrations}
+              </p>
               <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 mb-0.5">
-                <ArrowUpRight size={10} /> 2
+                <ArrowUpRight size={10} /> {paymentsConversion}%
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">8.4% Конверсия</p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {totalClicks > 0
+                ? `Конверсия из кликов ${registrationsConversion}%`
+                : 'Конверсия появится после первых переходов'}
+            </p>
           </div>
         </div>
 
@@ -352,12 +417,18 @@ export const PartnerReferralsSection: React.FC = () => {
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-500">Активные</p>
             <div className="flex items-end gap-2 mt-1">
-              <p className="text-2xl font-bold text-gray-900 leading-none">5</p>
+              <p className="text-2xl font-bold text-gray-900 leading-none">
+                {payingClients}
+              </p>
               <span className="text-xs font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 mb-0.5">
                 —
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Оплатившие клиенты</p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {registrations > 0
+                ? `Конверсия из регистраций ${paymentsConversion}%`
+                : 'Конверсия появится после первых регистраций'}
+            </p>
           </div>
         </div>
       </div>

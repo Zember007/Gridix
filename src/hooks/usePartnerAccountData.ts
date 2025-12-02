@@ -1,74 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-
-const TRANSACTIONS = [
-  {
-    date: '12.11.2025',
-    sum: 363,
-    balance: 709.35,
-    comment:
-      'Начисление комиссии (20%). Клиент: STROYGOOD, Тариф: PRO (1 год)',
-  },
-  {
-    date: '11.11.2025',
-    sum: -151.25,
-    balance: 346.35,
-    comment:
-      'Оплата подписки клиента. Клиент: STROYGOOD, Тариф: PRO (1 месяц)',
-  },
-  {
-    date: '11.11.2025',
-    sum: 151.25,
-    balance: 497.6,
-    comment: 'Пополнение счета через Stripe',
-  },
-  {
-    date: '10.11.2025',
-    sum: 25,
-    balance: 346.35,
-    comment: 'Бонус за регистрацию реферала: artem.dev@mail.ru',
-  },
-  {
-    date: '08.11.2025',
-    sum: -450,
-    balance: 321.35,
-    comment:
-      'Оплата подписки клиента. Клиент: Dubai Estate Group, Тариф: BASIC (3 месяца)',
-  },
-  {
-    date: '08.11.2025',
-    sum: 500,
-    balance: 771.35,
-    comment: 'Пополнение счета (Банковский перевод)',
-  },
-  {
-    date: '05.11.2025',
-    sum: 72.6,
-    balance: 271.35,
-    comment:
-      'Начисление комиссии (20%). Клиент: Batumi View, Тариф: PRO (1 месяц)',
-  },
-  {
-    date: '01.11.2025',
-    sum: -151.25,
-    balance: 198.75,
-    comment:
-      'Оплата подписки клиента. Клиент: Next Group, Тариф: PRO (1 месяц)',
-  },
-  {
-    date: '30.10.2025',
-    sum: 50,
-    balance: 350.0,
-    comment: 'Начисление комиссии (20%). Клиент: Orbi Group',
-  },
-  {
-    date: '28.10.2025',
-    sum: 300,
-    balance: 300.0,
-    comment: 'Пополнение счета через Stripe',
-  },
-];
+import { usePartnerStats } from './usePartnerStats';
 
 export function usePartnerAccountData() {
+  const { stats, loading, error } = usePartnerStats();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
 
@@ -102,19 +36,29 @@ export function usePartnerAccountData() {
   };
 
   const parseDate = (dateStr: string) => {
-    const [day, month, year] = dateStr.split('.').map(Number);
+    const [dayStr, monthStr, yearStr] = dateStr.split('.');
+    const day = Number(dayStr);
+    const month = Number(monthStr);
+    const year = Number(yearStr);
+    if (!year || !month || !day) return new Date(NaN);
     return new Date(year, month - 1, day);
   };
 
   const parseInputDate = (dateStr: string) => {
     if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-').map(Number);
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    if (!year || !month || !day) return null;
     return new Date(year, month - 1, day);
   };
 
+  const baseTransactions = stats?.transactions ?? [];
+
   const filteredTransactions = useMemo(
     () =>
-      TRANSACTIONS.filter((tx) => {
+      baseTransactions.filter((tx) => {
         if (filterType === 'expense' && tx.sum >= 0) return false;
         if (
           filterType === 'income' &&
@@ -142,7 +86,7 @@ export function usePartnerAccountData() {
         }
         return true;
       }),
-    [filterType, startDate, endDate],
+    [baseTransactions, filterType, startDate, endDate],
   );
 
   const resetFilters = () => {
@@ -154,6 +98,8 @@ export function usePartnerAccountData() {
   const hasFilters = filterType !== 'all' || startDate !== '' || endDate !== '';
 
   return {
+    loading,
+    error,
     isTopUpOpen,
     setIsTopUpOpen,
     isWithdrawalOpen,

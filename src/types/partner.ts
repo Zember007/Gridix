@@ -46,6 +46,18 @@ export interface PartnerPayout {
   updated_at: string;
 }
 
+export interface PartnerIncomePoint {
+  date: string; // ISO date string (YYYY-MM-DD)
+  amount: number;
+}
+
+export interface PartnerTransaction {
+  date: string; // formatted date DD.MM.YYYY
+  sum: number;
+  balance: number;
+  comment: string;
+}
+
 export interface PartnerStats {
   total_clients: number;
   referral_clients: number;
@@ -58,6 +70,10 @@ export interface PartnerStats {
     partner_commission_amount: number;
     created_at: string;
   }>;
+  income_history?: PartnerIncomePoint[];
+  transactions?: PartnerTransaction[];
+  funnel_registrations?: number;
+  funnel_paying_clients?: number;
   clients: Array<{
     id: string;
     type: 'referral' | 'managed';
@@ -129,5 +145,9 @@ export interface PartnerProgramResponse {
     partner_commission_amount: number;
     created_at: string;
   }>;
+  income_history?: PartnerIncomePoint[];
+  transactions?: PartnerTransaction[];
+  funnel_registrations?: number;
+  funnel_paying_clients?: number;
   clients?: Array<PartnerClient>;
 }

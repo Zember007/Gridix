@@ -5,6 +5,13 @@ interface IncomeChartProps {
 }
 
 export const IncomeChart: React.FC<IncomeChartProps> = ({ data }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+        Нет данных для отображения
+      </div>
+    );
+  }
   const height = 250;
   const width = 800; // viewBox width
   const padding = 20;
