@@ -6,6 +6,7 @@ import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
 import EmbedProjectsPage from '@/pages/EmbedProjectsPage';
 import { createContext } from 'react';
 import '@/index.css';
+import { FloatingProjectButton, FloatingProjectButtonProps } from '@/components/widget/FloatingProjectButton';
 
 // Type declaration for build-time injected version
 declare const __WIDGET_VERSION__: string;
@@ -50,6 +51,91 @@ type InitOptions = {
 };
 
 const DEFAULT_CONTAINER_ID = 'gridix-widget-root';
+
+function buildInitOptions(options: InitOptions = {}): InitOptions {
+  // Check if cache should be cleared due to version change
+  const needsCacheClear = shouldClearCache();
+
+  // For development/testing: always clear cache if no explicit forceReload is set
+  const isDevelopment =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+  const shouldForceReload = isDevelopment && !options.forceReload;
+
+  const url = new URL(window.location.href);
+  const qp = url.searchParams;
+
+  // Parse delay from URL params if needed
+  const delayParam = qp.get('delay');
+  const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
+  const validDelay =
+    parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0
+      ? parsedDelay
+      : undefined;
+
+  // Floating button & layout params from URL
+  const showFloatingButtonParam = qp.get('showFloatingButton');
+  const showFullProjectParam = qp.get('showFullProject');
+  const floatingButtonSideParam = qp.get('floatingButtonSide');
+  const floatingButtonBottomOffsetParam = qp.get('floatingButtonBottomOffset');
+  const floatingButtonSideOffsetParam = qp.get('floatingButtonSideOffset');
+
+  const parsedFloatingBottom = floatingButtonBottomOffsetParam
+    ? parseInt(floatingButtonBottomOffsetParam, 10)
+    : undefined;
+  const parsedFloatingSide = floatingButtonSideOffsetParam
+    ? parseInt(floatingButtonSideOffsetParam, 10)
+    : undefined;
+
+  const opts: InitOptions = {
+    projectId: options.projectId ?? qp.get('projectId') ?? undefined,
+    userId: options.userId ?? qp.get('userId') ?? undefined,
+    lang: options.lang ?? qp.get('lang') ?? undefined,
+    containerId: options.containerId ?? undefined,
+    theme:
+      options.theme ??
+      ((qp.get('theme') as 'light' | 'dark' | 'auto') ?? 'light'),
+    width: options.width ?? qp.get('width') ?? '100%',
+    height: options.height ?? qp.get('height') ?? '600px',
+    cssUrl: options.cssUrl ?? qp.get('cssUrl') ?? undefined,
+    inlineStyles: options.inlineStyles ?? undefined,
+    compactMode: options.compactMode ?? qp.get('compactMode') === 'true',
+    showHeader: options.showHeader ?? qp.get('showHeader') !== 'false',
+    showFilters: options.showFilters ?? qp.get('showFilters') !== 'false',
+    forceReload:
+      options.forceReload ??
+      (qp.get('forceReload') === 'true' || needsCacheClear || shouldForceReload),
+    cacheBust: options.cacheBust ?? qp.get('cacheBust') ?? undefined,
+    delay: options.delay ?? validDelay,
+    lazy: options.lazy ?? qp.get('lazy') === 'true',
+    loadOnInteraction:
+      options.loadOnInteraction ?? qp.get('loadOnInteraction') === 'true',
+    intersectionRootMargin:
+      options.intersectionRootMargin ??
+      qp.get('intersectionRootMargin') ??
+      '100px',
+    showFloatingButton:
+      options.showFloatingButton ??
+      (showFloatingButtonParam ? showFloatingButtonParam !== 'false' : true),
+    showFullProject:
+      options.showFullProject ??
+      (showFullProjectParam ? showFullProjectParam !== 'false' : true),
+    floatingButtonSide:
+      options.floatingButtonSide ??
+      (floatingButtonSideParam === 'left' ? 'left' : 'right'),
+    floatingButtonBottomOffset:
+      options.floatingButtonBottomOffset ?? parsedFloatingBottom ?? 40,
+    floatingButtonSideOffset:
+      options.floatingButtonSideOffset ?? parsedFloatingSide ?? 32,
+  } as InitOptions;
+
+  // Safety: ensure at least one of full project or floating button is enabled
+  if (opts.showFullProject === false && opts.showFloatingButton === false) {
+    opts.showFullProject = true;
+  }
+
+  return opts;
+}
 
 function ensureContainer(containerId?: string, forceReload?: boolean): HTMLElement {
   const id = containerId || DEFAULT_CONTAINER_ID;
@@ -240,10 +326,6 @@ function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
     height,
     theme = 'light',
     portalContainer,
-    showFloatingButton = true,
-    floatingButtonSide = 'right',
-    floatingButtonBottomOffset = 40,
-    floatingButtonSideOffset = 32,
     showFullProject = true,
   } = props;
 
@@ -256,10 +338,6 @@ function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
         projectId={projectId}
         isWidget={true}
         showFullProjectInWidget={showFullProject}
-        showFloatingButtonInWidget={showFloatingButton}
-        floatingButtonSide={floatingButtonSide}
-        floatingButtonBottomOffset={floatingButtonBottomOffset}
-        floatingButtonSideOffset={floatingButtonSideOffset}
       />
     )
     : userId ? (
@@ -288,68 +366,59 @@ function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
   );
 }
 
-// Internal initialization function (contains the actual logic)
+// Fast path: mount only floating button (no lazy/delay)
+async function initFloatingButton(options: InitOptions = {}) {
+  try {
+    const opts = buildInitOptions(options);
+
+    if (!opts.projectId || opts.showFloatingButton === false) {
+      return;
+    }
+
+    // Create container and shadow DOM
+    const container = ensureContainer(opts.containerId, opts.forceReload);
+    applyContainerStyles(container, opts);
+
+    const shadowRoot = createShadowRoot(container);
+
+    // Ensure CSS is loaded into shadow DOM before rendering button
+    await ensureStylesInShadow(shadowRoot, opts);
+
+    // Create a mount point for floating button inside shadow DOM
+    let buttonMount = shadowRoot.getElementById('gridix-floating-button-root');
+    if (!buttonMount) {
+      buttonMount = document.createElement('div');
+      buttonMount.id = 'gridix-floating-button-root';
+      shadowRoot.appendChild(buttonMount);
+    }
+
+    const root = createRoot(buttonMount);
+    const initialLang: Language | undefined =
+      opts.lang && opts.lang in LANGUAGE_CONFIG ? (opts.lang as Language) : undefined;
+    const languageProviderProps =
+      initialLang !== undefined ? { initialLanguage: initialLang } : {};
+
+    root.render(
+      <AuthProvider>
+        <EmbedLanguageProvider {...languageProviderProps}>
+          <FloatingProjectButton
+            projectId={opts.projectId as string}
+            side={opts.floatingButtonSide as FloatingProjectButtonProps['side']}
+            bottomOffset={opts.floatingButtonBottomOffset}
+            sideOffset={opts.floatingButtonSideOffset}
+          />
+        </EmbedLanguageProvider>
+      </AuthProvider>
+    );
+  } catch (err) {
+    console.error('GridixWidget floating button init error:', err);
+  }
+}
+
+// Internal initialization function (contains the actual logic for full widget)
 async function initInternal(options: InitOptions = {}) {
   try {
-    // Check if cache should be cleared due to version change
-    const needsCacheClear = shouldClearCache();
-    if (needsCacheClear) {
-      console.log('GridixWidget: Cache will be cleared due to version/data changes');
-    }
-
-    // For development/testing: always clear cache if no explicit forceReload is set
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const shouldForceReload = isDevelopment && !options.forceReload;
-
-    // Allow URL params to override or provide defaults if not passed explicitly
-    const url = new URL(window.location.href);
-    const qp = url.searchParams;
-
-    // Parse delay from URL params if needed
-    const delayParam = qp.get('delay');
-    const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
-    const validDelay = parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0 ? parsedDelay : undefined;
-
-    // Floating button & layout params from URL
-    const showFloatingButtonParam = qp.get('showFloatingButton');
-    const showFullProjectParam = qp.get('showFullProject');
-    const floatingButtonSideParam = qp.get('floatingButtonSide');
-    const floatingButtonBottomOffsetParam = qp.get('floatingButtonBottomOffset');
-    const floatingButtonSideOffsetParam = qp.get('floatingButtonSideOffset');
-
-    const parsedFloatingBottom = floatingButtonBottomOffsetParam ? parseInt(floatingButtonBottomOffsetParam, 10) : undefined;
-    const parsedFloatingSide = floatingButtonSideOffsetParam ? parseInt(floatingButtonSideOffsetParam, 10) : undefined;
-
-    const opts: InitOptions = {
-      projectId: options.projectId ?? qp.get('projectId') ?? undefined,
-      userId: options.userId ?? qp.get('userId') ?? undefined,
-      lang: options.lang ?? qp.get('lang') ?? undefined,
-      containerId: options.containerId ?? undefined,
-      theme: options.theme ?? (qp.get('theme') as 'light' | 'dark' | 'auto') ?? 'light',
-      width: options.width ?? qp.get('width') ?? '100%',
-      height: options.height ?? qp.get('height') ?? '600px',
-      cssUrl: options.cssUrl ?? qp.get('cssUrl') ?? undefined,
-      inlineStyles: options.inlineStyles ?? undefined,
-      compactMode: options.compactMode ?? (qp.get('compactMode') === 'true'),
-      showHeader: options.showHeader ?? (qp.get('showHeader') !== 'false'),
-      showFilters: options.showFilters ?? (qp.get('showFilters') !== 'false'),
-      forceReload: options.forceReload ?? ((qp.get('forceReload') === 'true') || needsCacheClear || shouldForceReload),
-      cacheBust: options.cacheBust ?? qp.get('cacheBust') ?? undefined,
-      delay: options.delay ?? validDelay,
-      lazy: options.lazy ?? (qp.get('lazy') === 'true'),
-      loadOnInteraction: options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true'),
-      intersectionRootMargin: options.intersectionRootMargin ?? qp.get('intersectionRootMargin') ?? '100px',
-      showFloatingButton: options.showFloatingButton ?? (showFloatingButtonParam ? showFloatingButtonParam !== 'false' : true),
-      showFullProject: options.showFullProject ?? (showFullProjectParam ? showFullProjectParam !== 'false' : true),
-      floatingButtonSide: options.floatingButtonSide ?? (floatingButtonSideParam === 'left' ? 'left' : 'right'),
-      floatingButtonBottomOffset: options.floatingButtonBottomOffset ?? (parsedFloatingBottom ?? 40),
-      floatingButtonSideOffset: options.floatingButtonSideOffset ?? (parsedFloatingSide ?? 32),
-    } as InitOptions;
-
-    // Safety: ensure at least one of full project or floating button is enabled
-    if (opts.showFullProject === false && opts.showFloatingButton === false) {
-      opts.showFullProject = true;
-    }
+    const opts = buildInitOptions(options);
 
     // Create container and shadow DOM
     const container = ensureContainer(opts.containerId, opts.forceReload);
@@ -406,6 +475,9 @@ async function init(options: InitOptions = {}) {
   // Allow URL params to provide lazy loading options if not passed explicitly
   const url = new URL(window.location.href);
   const qp = url.searchParams;
+
+  // Инициируем парящую кнопку сразу, без отложенной загрузки
+  void initFloatingButton(options);
 
   // Parse options from URL params if not provided (disabled for now in favour of fixed defaults)
   // const delayParam = qp.get('delay');

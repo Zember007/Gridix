@@ -4,7 +4,7 @@ import { useProject } from '@/hooks/useProjects';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { SlidersHorizontal, AlertTriangle, ExternalLink } from 'lucide-react';
+import { SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { Apartment, normalizeApartmentData } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -28,10 +28,6 @@ interface ProjectApartmentSelectorProps {
   projectId: string;
   isWidget?: boolean;
   showFullProjectInWidget?: boolean;
-  showFloatingButtonInWidget?: boolean;
-  floatingButtonSide?: 'left' | 'right';
-  floatingButtonBottomOffset?: number;
-  floatingButtonSideOffset?: number;
 }
 
 // Lazy load components at module level (outside component)
@@ -45,10 +41,6 @@ const ProjectApartmentSelector = ({
   projectId,
   isWidget = false,
   showFullProjectInWidget = true,
-  showFloatingButtonInWidget = true,
-  floatingButtonSide = 'right',
-  floatingButtonBottomOffset = 40,
-  floatingButtonSideOffset = 32,
 }: ProjectApartmentSelectorProps) => {
 
   const { t, language } = useLanguage();
@@ -170,20 +162,7 @@ const ProjectApartmentSelector = ({
     }
   };
 
-  const openFullProjectPage = async () => {
-    try {
-      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : '';
-      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-      const url = `${baseDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_blank');
-    } catch (error) {
-      console.error('Error opening full project page:', error);
-      const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
-      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-      const url = `${fallbackDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_blank');
-    }
-  };
+  // Full project page is now handled by separate FloatingProjectButton in widget context
 
   const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(Math.round(price));
 
@@ -804,26 +783,6 @@ const ProjectApartmentSelector = ({
             </>
           ) : null}
         </>
-      )}
-
-      {/* Widget mode: button to open full project chessboard page */}
-      {isWidget && showFloatingButtonInWidget && (
-        <div
-          className="fixed z-50"
-          style={{
-            bottom: floatingButtonBottomOffset,
-            [floatingButtonSide]: floatingButtonSideOffset,
-          }}
-        >
-          <Button
-            size="icon-lg"
-            onClick={openFullProjectPage}
-            style={{ backgroundColor: getThemeColor() }}
-            className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm"
-          >
-            <ExternalLink />
-          </Button>
-        </div>
       )}
     </div>
   );
