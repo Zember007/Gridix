@@ -18,7 +18,7 @@ export const FloatingProjectButton = ({
   bottomOffset = 40,
   sideOffset = 32,
 }: FloatingProjectButtonProps) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { project } = useProject(projectId);
   const [themeColor, setThemeColor] = useState<string>('#000000');
 
@@ -94,7 +94,8 @@ export const FloatingProjectButton = ({
     >
       <div className="relative">
         <span
-          className="absolute inset-0 rounded-full border-2 border-white/70 animate-ping"
+          className="absolute top-[10%] left-[10%] right-[10%] bottom-[10%] rounded-full border-2  animate-ping"
+          style={{ borderColor: themeColor }}
           aria-hidden="true"
         />
         <Button
