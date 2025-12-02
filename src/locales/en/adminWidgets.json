@@ -22,5 +22,20 @@
   "title": "Widgets",
   "widgetScript": "Widget script",
   "widgetScriptDesc": "Main JavaScript file for the widget",
-  "width": "Width"
+  "width": "Width",
+  "widgetDisplay": "Widget display",
+  "showAdvanced": "Advanced settings",
+  "hideAdvanced": "Hide advanced",
+  "showFullProject": "Show full project",
+  "showFullProjectDesc": "Show full apartment chessboard with filters inside the widget block.",
+  "showFloatingButton": "Show floating button",
+  "showFloatingButtonDesc": "Show a round button in the corner with a link to the project page.",
+  "floatingButtonPosition": "Floating button position",
+  "floatingButtonSide": "Side",
+  "floatingButtonSideLeft": "Left",
+  "floatingButtonSideRight": "Right",
+  "floatingButtonBottomOffset": "Bottom offset (px)",
+  "floatingButtonSideOffset": "Side offset (px)",
+  "floatingButtonPositionDesc": "Position settings are applied only if the floating button is enabled.",
+  "atLeastOneOptionRequired": "You must enable at least one option: show project or floating button."
 }

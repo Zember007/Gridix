@@ -22,5 +22,20 @@
   "title": "Виджеты",
   "widgetScript": "Скрипт виджета",
   "widgetScriptDesc": "Основной JavaScript файл для виджета",
-  "width": "Ширина"
+  "width": "Ширина",
+  "widgetDisplay": "Отображение виджета",
+  "showAdvanced": "Расширенные настройки",
+  "hideAdvanced": "Скрыть расширенные",
+  "showFullProject": "Показывать весь проект",
+  "showFullProjectDesc": "Показать полностью шахматку с фильтрами внутри блока виджета.",
+  "showFloatingButton": "Показывать парящую кнопку",
+  "showFloatingButtonDesc": "Показать круглую кнопку в углу с переходом на страницу проекта.",
+  "floatingButtonPosition": "Позиция парящей кнопки",
+  "floatingButtonSide": "Сторона",
+  "floatingButtonSideLeft": "Слева",
+  "floatingButtonSideRight": "Справа",
+  "floatingButtonBottomOffset": "Отступ снизу (px)",
+  "floatingButtonSideOffset": "Отступ от края (px)",
+  "floatingButtonPositionDesc": "Настройки позиции применяются только если включена парящая кнопка.",
+  "atLeastOneOptionRequired": "Нужно включить хотя бы одну опцию: показать проект или парящую кнопку."
 }

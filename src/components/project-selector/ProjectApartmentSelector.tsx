@@ -27,6 +27,11 @@ import { LayoutGallery } from './layouts/LayoutGallery';
 interface ProjectApartmentSelectorProps {
   projectId: string;
   isWidget?: boolean;
+  showFullProjectInWidget?: boolean;
+  showFloatingButtonInWidget?: boolean;
+  floatingButtonSide?: 'left' | 'right';
+  floatingButtonBottomOffset?: number;
+  floatingButtonSideOffset?: number;
 }
 
 // Lazy load components at module level (outside component)
@@ -36,7 +41,15 @@ const FavoritesTab = lazy(() => import('../FavoritesTab'))
 const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
 const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
 
-const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartmentSelectorProps) => {
+const ProjectApartmentSelector = ({
+  projectId,
+  isWidget = false,
+  showFullProjectInWidget = true,
+  showFloatingButtonInWidget = true,
+  floatingButtonSide = 'right',
+  floatingButtonBottomOffset = 40,
+  floatingButtonSideOffset = 32,
+}: ProjectApartmentSelectorProps) => {
 
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -501,13 +514,17 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
     );
   }
 
+  const shouldShowMainContent = !isWidget || showFullProjectInWidget;
+
   return (
     <div className="min-h-screen bg-white flex flex-col relative">
       {isInitialLoading && (
         <div className="absolute z-50 inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
           <Loader
             color={getThemeColor()}
-            size="lg" className="mx-auto" />
+            size="lg"
+            className="mx-auto"
+          />
         </div>
       )}
       {/* Subscription Warning Banner */}
@@ -521,8 +538,7 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 : 'Project Subscription Expired'
               : language === 'ru'
                 ? 'Этот проект временно недоступен'
-                : 'This project is temporarily unavailable'
-            }
+                : 'This project is temporarily unavailable'}
           </AlertTitle>
           <AlertDescription className="text-yellow-700 dark:text-yellow-300">
             {isOwner
@@ -531,15 +547,14 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
                 : 'To continue working with this project, please renew your subscription. Go to the "Subscription" section in the admin panel.'
               : language === 'ru'
                 ? 'Владелец проекта приостановил доступ к проекту. Пожалуйста, свяжитесь с ним для получения дополнительной информации.'
-                : 'The project owner has suspended access to this project. Please contact them for more information.'
-            }
+                : 'The project owner has suspended access to this project. Please contact them for more information.'}
           </AlertDescription>
           {isOwner && (
             <Button
               variant="outline"
               size="sm"
               className="mt-2 border-yellow-600 text-yellow-800 hover:bg-yellow-100"
-              onClick={() => window.location.href = `/${language}/admin#subscription`}
+              onClick={() => (window.location.href = `/${language}/admin#subscription`)}
             >
               {language === 'ru' ? 'Перейти к подпискам' : 'Go to Subscriptions'}
             </Button>
@@ -547,252 +562,259 @@ const ProjectApartmentSelector = ({ projectId, isWidget = false }: ProjectApartm
         </Alert>
       )}
 
-      {/* Top header bar - always visible */}
-      <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
-        <div className="container mx-auto  md:px-6 py-4">
-          {/* View mode buttons */}
-          <div className={`flex items-center justify-between gap-3 mb-4`}>
-            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
-            <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
-              <ViewModeButtons
-                isWidget={isWidget}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                favoritesCount={favoritesCount}
-                isMobile={isMobile ?? false}
-                mapVisible={(!!project.latitude && !!project.longitude)}
-                projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
-                themeColor={getThemeColor()}
-              />
+      {shouldShowMainContent && (
+        <>
+          {/* Top header bar - always visible */}
+          <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
+            <div className="container mx-auto  md:px-6 py-4">
+              {/* View mode buttons */}
+              <div className={`flex items-center justify-between gap-3 mb-4`}>
+                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
+                <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
+                  <ViewModeButtons
+                    isWidget={isWidget}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    favoritesCount={favoritesCount}
+                    isMobile={isMobile ?? false}
+                    mapVisible={!!project.latitude && !!project.longitude}
+                    projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
+                    themeColor={getThemeColor()}
+                  />
 
-              {/* Mobile filters button */}
-              {isMobile && viewMode === 'list' && (
-                <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-xs px-2">
-                      <SlidersHorizontal className="h-3 w-3" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="top" className="h-[80vh] px-2">
-                    <SheetHeader>
-                      <SheetTitle>{t('project.filters')}</SheetTitle>
-                      <SheetDescription>
-                        {t('project.filtersDescription')}
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="mt-6 overflow-y-auto p-4 max-h-[80%]">
-                      <MobileFilters
-                        {...filters}
-                        priceRange={[filters.minPrice, filters.maxPrice]}
-                        getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                        getUniqueFloors={filters.getUniqueFloors}
-                        hasFreeLayout={filters.hasFreeLayout}
-                        project={project}
-                        viewMode={viewMode}
+                  {/* Mobile filters button */}
+                  {isMobile && viewMode === 'list' && (
+                    <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-xs px-2">
+                          <SlidersHorizontal className="h-3 w-3" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="top" className="h-[80vh] px-2">
+                        <SheetHeader>
+                          <SheetTitle>{t('project.filters')}</SheetTitle>
+                          <SheetDescription>{t('project.filtersDescription')}</SheetDescription>
+                        </SheetHeader>
+                        <div className="mt-6 overflow-y-auto p-4 max-h-[80%]">
+                          <MobileFilters
+                            {...filters}
+                            priceRange={[filters.minPrice, filters.maxPrice]}
+                            getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                            getUniqueFloors={filters.getUniqueFloors}
+                            hasFreeLayout={filters.hasFreeLayout}
+                            project={project}
+                            viewMode={viewMode}
+                            formatPrice={formatPrice}
+                            themeColor={getThemeColor()}
+                          />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop Filters */}
+              {!isMobile && viewMode === 'list' && (
+                <div className="space-y-4">
+                  <CompactFilters
+                    {...filters}
+                    getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                    getUniqueFloors={filters.getUniqueFloors}
+                    hasFreeLayout={filters.hasFreeLayout}
+                    project={project}
+                    viewMode={viewMode}
+                    themeColor={getThemeColor()}
+                    isDesktopFiltersExpanded={isDesktopFiltersExpanded}
+                    setIsDesktopFiltersExpanded={() => {
+                      if (!isDesktopFiltersExpanded) {
+                        setStagedPriceRange([...filters.priceRange]);
+                        setStagedAreaRange([...filters.areaRange]);
+                      }
+                      setIsDesktopFiltersExpanded(prev => !prev);
+                    }}
+                  />
+
+                  {/* Expanded filters - animated */}
+                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="pt-4 border-t border-gray-200">
+                      <ExpandedFilters
+                        priceRange={stagedPriceRange ?? filters.priceRange}
+                        setPriceRange={v => setStagedPriceRange(v)}
+                        areaRange={stagedAreaRange ?? filters.areaRange}
+                        setAreaRange={v => setStagedAreaRange(v)}
+                        selectedCurrency={filters.selectedCurrency}
+                        minPrice={filters.minPrice}
+                        maxPrice={filters.maxPrice}
+                        minArea={filters.minArea}
+                        maxArea={filters.maxArea}
                         formatPrice={formatPrice}
                         themeColor={getThemeColor()}
                       />
+                      <div className="flex justify-end mt-4">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (stagedPriceRange) filters.setPriceRange(stagedPriceRange);
+                            if (stagedAreaRange) filters.setAreaRange(stagedAreaRange);
+                            setIsDesktopFiltersExpanded(false);
+                          }}
+                          style={{ backgroundColor: getThemeColor(), color: '#fff' }}
+                        >
+                          {language === 'ru' ? 'Применить' : 'Apply'}
+                        </Button>
+                      </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Desktop Filters */}
-          {!isMobile && viewMode === 'list' && (
-            <div className="space-y-4">
-              <CompactFilters
-                {...filters}
-                getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                getUniqueFloors={filters.getUniqueFloors}
-                hasFreeLayout={filters.hasFreeLayout}
-                project={project}
-                viewMode={viewMode}
-                themeColor={getThemeColor()}
-                isDesktopFiltersExpanded={isDesktopFiltersExpanded}
-                setIsDesktopFiltersExpanded={() => {
-                  if (!isDesktopFiltersExpanded) {
-                    setStagedPriceRange([...filters.priceRange]);
-                    setStagedAreaRange([...filters.areaRange]);
-                  }
-                  setIsDesktopFiltersExpanded(prev => !prev);
-                }}
-              />
-
-
-
-              {/* Expanded filters - animated */}
-              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="pt-4 border-t border-gray-200">
-                  <ExpandedFilters
-                    priceRange={stagedPriceRange ?? filters.priceRange}
-                    setPriceRange={(v) => setStagedPriceRange(v)}
-                    areaRange={stagedAreaRange ?? filters.areaRange}
-                    setAreaRange={(v) => setStagedAreaRange(v)}
-                    selectedCurrency={filters.selectedCurrency}
-                    minPrice={filters.minPrice}
-                    maxPrice={filters.maxPrice}
-                    minArea={filters.minArea}
-                    maxArea={filters.maxArea}
+          {/* Content based on view mode - show content as soon as apartments are loaded */}
+          {showContent ? (
+            <>
+              {viewMode === 'list' ? (
+                <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                  <ListView
+                    filteredApartments={filters.filteredApartments}
+                    listViewMode={listViewMode}
+                    setListViewMode={setListViewMode}
+                    selectedType={filters.selectedType}
+                    setSelectedType={filters.setSelectedType}
+                    openApartmentDetails={openApartmentDetails}
+                    preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                    getVisibleFields={getVisibleFields}
+                    getCustomFieldValue={getCustomFieldValue}
+                    formatFieldValue={formatFieldValue}
+                    getFieldLabel={getFieldLabel}
+                    groupApartmentsByFloor={groupApartmentsByFloor}
+                    convertPrice={filters.convertPrice}
                     formatPrice={formatPrice}
+                    project={project}
+                    selectedCurrency={filters.selectedCurrency}
+                    isMobile={isMobile}
                     themeColor={getThemeColor()}
                   />
-                  <div className="flex justify-end mt-4">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        if (stagedPriceRange) filters.setPriceRange(stagedPriceRange);
-                        if (stagedAreaRange) filters.setAreaRange(stagedAreaRange);
-                        setIsDesktopFiltersExpanded(false);
-                      }}
-                      style={{ backgroundColor: getThemeColor(), color: '#fff' }}
-                    >
-                      {language === 'ru' ? 'Применить' : 'Apply'}
-                    </Button>
-                  </div>
+                </Suspense>
+              ) : viewMode === 'map' ? (
+                <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                  <InteractiveProjectsMap
+                    project={project}
+                    onProjectSelect={() => {
+                      setViewMode('list');
+                    }}
+                  />
+                </Suspense>
+              ) : viewMode === 'favorites' ? (
+                <div className="container mx-auto py-8 grow">
+                  <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                    <FavoritesTab
+                      fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
+                      handleViewApartment={openApartmentDetails}
+                      projectId={project.id}
+                      projectCurrency={project?.currency}
+                    />
+                  </Suspense>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content based on view mode - show content as soon as apartments are loaded */}
-      {showContent ? (
-        <>
-          {viewMode === 'list' ? (
-            <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-              <ListView
-                filteredApartments={filters.filteredApartments}
-                listViewMode={listViewMode}
-                setListViewMode={setListViewMode}
-                selectedType={filters.selectedType}
-                setSelectedType={filters.setSelectedType}
-                openApartmentDetails={openApartmentDetails}
-                preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                getVisibleFields={getVisibleFields}
-                getCustomFieldValue={getCustomFieldValue}
-                formatFieldValue={formatFieldValue}
-                getFieldLabel={getFieldLabel}
-                groupApartmentsByFloor={groupApartmentsByFloor}
-                convertPrice={filters.convertPrice}
-                formatPrice={formatPrice}
-                project={project}
-                selectedCurrency={filters.selectedCurrency}
-                isMobile={isMobile}
-                themeColor={getThemeColor()}
-              />
-            </Suspense>
-          ) : viewMode === 'map' ? (
-            <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-              <InteractiveProjectsMap
-                project={project}
-                onProjectSelect={() => {
-                  setViewMode('list');
-                }}
-              />
-            </Suspense>
-          ) : viewMode === 'favorites' ? (
-            <div className="container mx-auto py-8 grow">
-              <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                <FavoritesTab
-                  fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
-                  handleViewApartment={openApartmentDetails}
-                  projectId={project.id} projectCurrency={project?.currency} />
-              </Suspense>
-            </div>
-          ) : (
-            // Facade and Floor Plan views with hero section
-            <>
-              {/* Main visualization area */}
-              <div className="relative grow flex">
-                {/* Hero section with building visualization */}
-                <div className="relative w-full">
-                  {viewMode === 'facade' ? (
-                    // Building facade view with interactive floor polygons
-                    <div className="w-full bg-white">
-                      <BuildingFacadeView
-                        projectId={project.id}
-                        project={project}
-                        apartments={filters.filteredApartments}
-                        onFloorSelect={(floor) => {
-                          setSelectedFloorForPlan(floor);
-                          setViewMode('floor-plan');
-                        }}
-                        onApartmentSelect={openApartmentDetails}
-                        filtersRef={filtersRef}
-                        externalImageLoaded={buildingImageLoaded}
-                        externalImageNaturalSize={buildingImageNaturalSize}
-                        showOnlyAvailable={filters.showOnlyAvailable}
-                        visibleFields={fieldSettings.filter(field => field.is_visible)}
-                      />
-
-                      {/* Layout gallery below facade when not expanded - hide for project_type = object */}
-                      {(project)?.project_type !== 'object' && (
-                        <LayoutGallery
-                          apartments={apartments}
-                          selectedRooms={filters.selectedRooms}
-                          selectedType={filters.selectedType}
-                          setSelectedRooms={filters.setSelectedRooms}
-                          setSelectedType={filters.setSelectedType}
-                          setViewMode={setViewMode}
-                          getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                          hasFreeLayout={filters.hasFreeLayout}
-                          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                          project={project}
-                          formatPrice={formatPrice}
-                          selectedCurrency={filters.selectedCurrency}
-                          isMobile={isMobile ?? false}
-                          themeColor={getThemeColor()}
-                          visibleFields={fieldSettings.filter(field => field.is_visible)}
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    // Floor plan view for specific floor with sidebar
-                    <div className="w-full bg-white min-h-[600px] h-full">
-                      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
-                        {/* Main floor plan area */}
-                        <div className="flex-1 relative">
-                          <ApartmentFloorPlan
-                            project={project}
+              ) : (
+                // Facade and Floor Plan views with hero section
+                <>
+                  {/* Main visualization area */}
+                  <div className="relative grow flex">
+                    {/* Hero section with building visualization */}
+                    <div className="relative w-full">
+                      {viewMode === 'facade' ? (
+                        // Building facade view with interactive floor polygons
+                        <div className="w-full bg-white">
+                          <BuildingFacadeView
                             projectId={project.id}
-                            apartments={apartments.filter(apt =>
-                              selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true
-                            )}
+                            project={project}
+                            apartments={filters.filteredApartments}
+                            onFloorSelect={floor => {
+                              setSelectedFloorForPlan(floor);
+                              setViewMode('floor-plan');
+                            }}
                             onApartmentSelect={openApartmentDetails}
-                            selectedFloorNumber={selectedFloorForPlan ?? undefined}
+                            filtersRef={filtersRef}
+                            externalImageLoaded={buildingImageLoaded}
+                            externalImageNaturalSize={buildingImageNaturalSize}
+                            showOnlyAvailable={filters.showOnlyAvailable}
                             visibleFields={fieldSettings.filter(field => field.is_visible)}
                           />
+
+                          {/* Layout gallery below facade when not expanded - hide for project_type = object */}
+                          {project?.project_type !== 'object' && (
+                            <LayoutGallery
+                              apartments={apartments}
+                              selectedRooms={filters.selectedRooms}
+                              selectedType={filters.selectedType}
+                              setSelectedRooms={filters.setSelectedRooms}
+                              setSelectedType={filters.setSelectedType}
+                              setViewMode={setViewMode}
+                              getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                              hasFreeLayout={filters.hasFreeLayout}
+                              preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                              project={project}
+                              formatPrice={formatPrice}
+                              selectedCurrency={filters.selectedCurrency}
+                              isMobile={isMobile ?? false}
+                              themeColor={getThemeColor()}
+                              visibleFields={fieldSettings.filter(field => field.is_visible)}
+                            />
+                          )}
                         </div>
+                      ) : (
+                        // Floor plan view for specific floor with sidebar
+                        <div className="w-full bg-white min-h-[600px] h-full">
+                          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
+                            {/* Main floor plan area */}
+                            <div className="flex-1 relative">
+                              <ApartmentFloorPlan
+                                project={project}
+                                projectId={project.id}
+                                apartments={apartments.filter(apt =>
+                                  selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
+                                )}
+                                onApartmentSelect={openApartmentDetails}
+                                selectedFloorNumber={selectedFloorForPlan ?? undefined}
+                                visibleFields={fieldSettings.filter(field => field.is_visible)}
+                              />
+                            </div>
 
-                        {/* Floor selector sidebar */}
-                        <Suspense fallback={<Loader color={getThemeColor()} size="sm" className="mx-auto" />}>
-                          <FloorSelector
-                            selectedFloorForPlan={selectedFloorForPlan}
-                            setSelectedFloorForPlan={setSelectedFloorForPlan}
-                            getUniqueFloors={filters.getUniqueFloors}
-                            themeColor={getThemeColor()}
-                            apartments={apartments}
-                            showOnlyAvailable={filters.showOnlyAvailable}
-                            filteredApartments={filters.filteredApartments}
-                          />
-                        </Suspense>
-                      </div>
+                            {/* Floor selector sidebar */}
+                            <Suspense fallback={<Loader color={getThemeColor()} size="sm" className="mx-auto" />}>
+                              <FloorSelector
+                                selectedFloorForPlan={selectedFloorForPlan}
+                                setSelectedFloorForPlan={setSelectedFloorForPlan}
+                                getUniqueFloors={filters.getUniqueFloors}
+                                themeColor={getThemeColor()}
+                                apartments={apartments}
+                                showOnlyAvailable={filters.showOnlyAvailable}
+                                filteredApartments={filters.filteredApartments}
+                              />
+                            </Suspense>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-
-              </div>
+                  </div>
+                </>
+              )}
             </>
-          )}
+          ) : null}
         </>
-      ) : null}
+      )}
 
       {/* Widget mode: button to open full project chessboard page */}
-      {isWidget && (
-        <div className="fixed bottom-10 left-8 md:left-20 md:bottom-20 z-50">
+      {isWidget && showFloatingButtonInWidget && (
+        <div
+          className="fixed z-50"
+          style={{
+            bottom: floatingButtonBottomOffset,
+            [floatingButtonSide]: floatingButtonSideOffset,
+          }}
+        >
           <Button
             size="icon-lg"
             onClick={openFullProjectPage}

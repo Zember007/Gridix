@@ -40,6 +40,13 @@ type InitOptions = {
   lazy?: boolean; // lazy load when widget enters viewport (uses Intersection Observer)
   loadOnInteraction?: boolean; // load widget only after user interaction (scroll, click, touch)
   intersectionRootMargin?: string; // margin for Intersection Observer (e.g. '100px' or '50%')
+
+  // Floating button & layout options
+  showFloatingButton?: boolean; // show/hide floating action button that opens full project
+  floatingButtonSide?: 'left' | 'right'; // side for floating button
+  floatingButtonBottomOffset?: number; // distance from bottom edge in px
+  floatingButtonSideOffset?: number; // distance from side edge in px
+  showFullProject?: boolean; // show/hide full embedded project inside widget container
 };
 
 const DEFAULT_CONTAINER_ID = 'gridix-widget-root';
@@ -232,14 +239,29 @@ function WidgetApp(props: InitOptions & { portalContainer: HTMLElement }) {
     lang,
     height,
     theme = 'light',
-    portalContainer
+    portalContainer,
+    showFloatingButton = true,
+    floatingButtonSide = 'right',
+    floatingButtonBottomOffset = 40,
+    floatingButtonSideOffset = 32,
+    showFullProject = true,
   } = props;
 
   const initialLang: Language | undefined =
     lang && (lang in LANGUAGE_CONFIG) ? (lang as Language) : undefined;
 
   const content = projectId
-    ? <ProjectApartmentSelector projectId={projectId} isWidget={true} />
+    ? (
+      <ProjectApartmentSelector
+        projectId={projectId}
+        isWidget={true}
+        showFullProjectInWidget={showFullProject}
+        showFloatingButtonInWidget={showFloatingButton}
+        floatingButtonSide={floatingButtonSide}
+        floatingButtonBottomOffset={floatingButtonBottomOffset}
+        floatingButtonSideOffset={floatingButtonSideOffset}
+      />
+    )
     : userId ? (
       <EmbedProjectsPage
         UserId={userId}
@@ -288,6 +310,16 @@ async function initInternal(options: InitOptions = {}) {
     const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
     const validDelay = parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0 ? parsedDelay : undefined;
 
+    // Floating button & layout params from URL
+    const showFloatingButtonParam = qp.get('showFloatingButton');
+    const showFullProjectParam = qp.get('showFullProject');
+    const floatingButtonSideParam = qp.get('floatingButtonSide');
+    const floatingButtonBottomOffsetParam = qp.get('floatingButtonBottomOffset');
+    const floatingButtonSideOffsetParam = qp.get('floatingButtonSideOffset');
+
+    const parsedFloatingBottom = floatingButtonBottomOffsetParam ? parseInt(floatingButtonBottomOffsetParam, 10) : undefined;
+    const parsedFloatingSide = floatingButtonSideOffsetParam ? parseInt(floatingButtonSideOffsetParam, 10) : undefined;
+
     const opts: InitOptions = {
       projectId: options.projectId ?? qp.get('projectId') ?? undefined,
       userId: options.userId ?? qp.get('userId') ?? undefined,
@@ -307,7 +339,17 @@ async function initInternal(options: InitOptions = {}) {
       lazy: options.lazy ?? (qp.get('lazy') === 'true'),
       loadOnInteraction: options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true'),
       intersectionRootMargin: options.intersectionRootMargin ?? qp.get('intersectionRootMargin') ?? '100px',
+      showFloatingButton: options.showFloatingButton ?? (showFloatingButtonParam ? showFloatingButtonParam !== 'false' : true),
+      showFullProject: options.showFullProject ?? (showFullProjectParam ? showFullProjectParam !== 'false' : true),
+      floatingButtonSide: options.floatingButtonSide ?? (floatingButtonSideParam === 'left' ? 'left' : 'right'),
+      floatingButtonBottomOffset: options.floatingButtonBottomOffset ?? (parsedFloatingBottom ?? 40),
+      floatingButtonSideOffset: options.floatingButtonSideOffset ?? (parsedFloatingSide ?? 32),
     } as InitOptions;
+
+    // Safety: ensure at least one of full project or floating button is enabled
+    if (opts.showFullProject === false && opts.showFloatingButton === false) {
+      opts.showFullProject = true;
+    }
 
     // Create container and shadow DOM
     const container = ensureContainer(opts.containerId, opts.forceReload);
@@ -365,15 +407,15 @@ async function init(options: InitOptions = {}) {
   const url = new URL(window.location.href);
   const qp = url.searchParams;
 
-  // Parse options from URL params if not provided
-  const delayParam = qp.get('delay');
-  const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
-  const validDelay = parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0 ? parsedDelay : undefined;
+  // Parse options from URL params if not provided (disabled for now in favour of fixed defaults)
+  // const delayParam = qp.get('delay');
+  // const parsedDelay = delayParam ? parseInt(delayParam, 10) : undefined;
+  // const validDelay = parsedDelay !== undefined && !isNaN(parsedDelay) && parsedDelay > 0 ? parsedDelay : undefined;
 
   // const delayValue = options.delay ?? validDelay;
-  //  const lazyValue = options.lazy ?? (qp.get('lazy') === 'true');
-  //  const loadOnInteractionValue = options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true');
-  
+  // const lazyValue = options.lazy ?? (qp.get('lazy') === 'true');
+  // const loadOnInteractionValue = options.loadOnInteraction ?? (qp.get('loadOnInteraction') === 'true');
+
   const delayValue = 500;
   const lazyValue = true;
   const loadOnInteractionValue = false;
