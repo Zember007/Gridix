@@ -60,64 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     updated_at: new Date().toISOString(),
   });
 
-  // Сохраняем реферальный код и UTM-метки сразу при заходе на /auth/signup (до авторизации)
-  // и логируем клик по ссылке (учитываются все переходы, даже без регистрации)
-  useEffect(() => {
-    const run = async () => {
-      try {
-        const path = window.location.pathname;
-        const isSignupPath = path.endsWith('/auth/signup');
-        if (!isSignupPath) return;
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const partnerCode = urlParams.get('ref');
-        const invitationCode = urlParams.get('invite');
-        const invitationType = urlParams.get('type');
-        const rawUtmSource = urlParams.get('utm_source');
-        const utmMedium = urlParams.get('utm_medium');
-        const utmCampaign = urlParams.get('utm_campaign');
-
-        if (!partnerCode) return;
-
-        const utmSource =
-          rawUtmSource && rawUtmSource.trim().length > 0
-            ? rawUtmSource.trim()
-            : 'direct';
-
-        const referralData = {
-          partnerCode,
-          invitationCode,
-          invitationType,
-          utmSource,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          timestamp: Date.now(),
-        };
-
-        localStorage.setItem('pending_referral', JSON.stringify(referralData));
-        console.log('Referral data saved to localStorage:', referralData);
-
-        // Логируем клик по ссылке в edge-функцию (без авторизации)
-        try {
-          await supabase.functions.invoke('partner-program', {
-            body: {
-              action: 'track_click',
-              partner_code: partnerCode,
-              utm_source: utmSource,
-              utm_medium: utmMedium,
-              utm_campaign: utmCampaign,
-            },
-          });
-        } catch (clickErr) {
-          console.error('Error logging referral click:', clickErr);
-        }
-      } catch (error) {
-        console.error('Error saving pending referral:', error);
-      }
-    };
-
-    void run();
-  }, []);
+ 
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -298,7 +241,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Define the expected Supabase response type
       const { data, error } = await Promise.race([
-        queryPromise as Promise<{ data: UserProfile | null; error: any }>,
+        queryPromise as unknown as Promise<{ data: UserProfile | null; error: any }>,
         new Promise<never>((_, reject) => timeoutId && reject(new Error('Query timeout'))),
       ]);
 
