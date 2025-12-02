@@ -9,6 +9,7 @@ import {
   FloatingProjectButtonProps,
 } from '@/components/widget/FloatingProjectButton';
 
+
 // Используется только для версионирования style.css
 declare const __WIDGET_VERSION__: string;
 

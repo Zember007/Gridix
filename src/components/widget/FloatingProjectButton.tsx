@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { House } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/hooks/useProjects';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,9 +96,10 @@ export const FloatingProjectButton = ({
         size="icon-lg"
         onClick={openFullProjectPage}
         style={{ backgroundColor: themeColor }}
-        className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm"
+        className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-2"
       >
-        <ExternalLink />
+        <House />
+        <span className="text-xs">Choose apartment</span>
       </Button>
     </div>
   );
