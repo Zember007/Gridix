@@ -92,15 +92,23 @@ export const FloatingProjectButton = ({
         [side]: sideOffset,
       }}
     >
-      <Button
-        size="icon-lg"
-        onClick={openFullProjectPage}
-        style={{ backgroundColor: themeColor }}
-        className="shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-2"
-      >
-        <House />
-        <span className="text-xs">Choose apartment</span>
-      </Button>
+      <div className="relative">
+        <span
+          className="absolute inset-0 rounded-full border-2 border-white/70 animate-ping"
+          aria-hidden="true"
+        />
+        <Button
+          size="icon-lg"
+          onClick={openFullProjectPage}
+          style={{ backgroundColor: themeColor }}
+          className="relative shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-1"
+        >
+          <House />
+          <span className="text-[8px] leading-[1] whitespace-normal text-center">
+            Choose apartment
+          </span>
+        </Button>
+      </div>
     </div>
   );
 };
