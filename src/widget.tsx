@@ -17,6 +17,7 @@ type InitOptions = {
   // Основные параметры
   projectId?: string | undefined; // slug или UUID проекта
   lang?: string | undefined; // ru | en | ka | ar
+  showFullProject?: boolean | undefined; // показывать полный проект в виджете
 
   // Настройки парящей кнопки
   showFloatingButton?: boolean; // показывать/скрывать кнопку
@@ -35,6 +36,7 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
   const floatingButtonSideParam = qp.get('floatingButtonSide');
   const floatingButtonBottomOffsetParam = qp.get('floatingButtonBottomOffset');
   const floatingButtonSideOffsetParam = qp.get('floatingButtonSideOffset');
+   const showFullProjectParam = qp.get('showFullProject');
 
   const parsedFloatingBottom = floatingButtonBottomOffsetParam
     ? parseInt(floatingButtonBottomOffsetParam, 10)
@@ -46,6 +48,9 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
   return {
     projectId: options.projectId ?? qp.get('projectId') ?? undefined,
     lang: options.lang ?? qp.get('lang') ?? undefined,
+    showFullProject:
+      options.showFullProject ??
+      (showFullProjectParam ? showFullProjectParam !== 'false' : true),
     showFloatingButton:
       options.showFloatingButton ??
       (showFloatingButtonParam ? showFloatingButtonParam !== 'false' : true),
@@ -252,6 +257,12 @@ async function initFloatingButton(opts: InitOptions) {
 // Полная инициализация виджета проекта
 async function initInternal(opts: InitOptions) {
   try {
+    // Если явно указано не показывать полный проект, просто выходим.
+    // Парящая кнопка уже инициализируется отдельно в init().
+    if (opts.showFullProject === false) {
+      return;
+    }
+
     const container = ensureContainer();
     const shadowRoot = createShadowRoot(container);
     await ensureStylesInShadow(shadowRoot);
