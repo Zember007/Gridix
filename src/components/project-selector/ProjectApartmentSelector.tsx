@@ -403,7 +403,7 @@ const ProjectApartmentSelector = ({
 
       {project && (
         <>
-          <div ref={filtersRef} className={`${isWidget ? 'md:h-[68px] h-[60px]' : 'fixed'}`}>
+          <div ref={filtersRef} className={`${isWidget ? '' : 'md:h-[68px] h-[60px]'} w-full`}>
             <ProjectHeader
               project={project as Project}
               isWidget={isWidget}
