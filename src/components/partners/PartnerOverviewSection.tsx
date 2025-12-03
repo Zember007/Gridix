@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Copy,
-  ExternalLink,
   Users,
   DollarSign,
   TrendingUp,
@@ -9,44 +8,36 @@ import {
   MousePointerClick,
   UserCheck,
   PieChart,
+  Link,
+  UserPlus,
+  Wallet,
+  ArrowRight,
+  Award,
 } from 'lucide-react';
 import { IncomeChart } from './IncomeChart';
 import { usePartner } from '@/hooks/usePartner';
 import { usePartnerStats } from '@/hooks/usePartnerStats';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '../ui/badge';
-import { useToast } from '@/hooks/use-toast';
 
-export const PartnerOverviewSection: React.FC = () => {
+interface PartnerOverviewSectionProps {
+  onNavigate?: (
+    tab: 'account' | 'overview' | 'referrals' | 'clients' | 'instructions',
+  ) => void;
+}
+
+export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
+  onNavigate,
+}) => {
   const { isPartner, partnerProfile } = usePartner();
   const { stats, loading } = usePartnerStats();
   const { language, t } = useLanguage();
-  const { toast } = useToast();
-  const [copied, setCopied] = useState(false);
 
   const referralCode = partnerProfile?.partner_code ?? '—';
-  const referralLink = `${window.location.origin}/${language}/auth/signup?ref=${referralCode}`;
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast({
-        title: t('partners.linkCopied'),
-        description: t('partners.linkCopiedDesc'),
-      });
-    } catch (error) {
-      toast({
-        title: t('partners.error'),
-        description: t('partners.copyFailed'),
-        variant: 'destructive',
-      });
-    }
-  };
 
   const incomeHistory = stats?.income_history ?? [];
   const chartData = incomeHistory.map((point) => point.amount);
+  const chartDates = incomeHistory.map((point) => point.date);
 
   const trafficStats = useMemo(() => {
     const clients = stats?.clients || [];
@@ -122,6 +113,28 @@ export const PartnerOverviewSection: React.FC = () => {
     0,
   );
 
+  // Текущая комиссия партнёра: сначала реферальная, затем управляемая
+  const currentCommission =
+    stats?.commission_percentage_referral ??
+    stats?.commission_percentage_managed ??
+    null;
+
+  // Данные по уровням и прогрессу приходят из Supabase функции (вся логика на бэкенде)
+  const totalProjectsLevel =
+    stats?.total_projects ?? stats?.active_clients ?? payingClients;
+  const nextLevelTarget = stats?.next_level_required_active_clients ?? null;
+  const clientsToNextLevel = stats?.clients_to_next_level ?? null;
+  const partnerLevelTitle = stats?.partner_level ?? 'Bronze Partner';
+  const nextLevelName = stats?.next_level_name ?? null;
+
+  const levelProgress =
+    nextLevelTarget && nextLevelTarget > 0
+      ? Math.min(
+          Math.round((totalProjectsLevel / nextLevelTarget) * 100),
+          100,
+        )
+      : 100;
+
   if (loading && !stats) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -174,6 +187,62 @@ export const PartnerOverviewSection: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Gamification / Level Card */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 bg-white/10 rounded-lg">
+                <Award size={18} className="text-yellow-400" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Ваш уровень
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold mb-1">
+              {partnerLevelTitle}{' '}
+              <span className="text-lg font-normal text-slate-400">
+                {currentCommission !== null ? `(${currentCommission}%)` : ''}
+              </span>
+            </h2>
+            {nextLevelName && clientsToNextLevel !== null && clientsToNextLevel > 0 ? (
+              <p className="text-sm text-slate-300 max-w-lg">
+                Привлеките еще{' '}
+                <span className="text-white font-bold">
+                  {clientsToNextLevel} активных проектов
+                </span>
+                , чтобы получить уровень{' '}
+                <span className="text-yellow-400 font-bold">
+                  {nextLevelName}
+                </span>
+                .
+              </p>
+            ) : (
+              <p className="text-sm text-slate-300 max-w-lg">
+                Вы достигли максимального уровня партнёрской программы.
+              </p>
+            )}
+          </div>
+          {nextLevelTarget && nextLevelTarget > 0 && (
+            <div className="w-full md:w-64">
+              <div className="flex justify-between text-xs font-semibold text-slate-400 mb-2">
+                <span>Прогресс</span>
+                <span>
+                  {totalProjectsLevel} / {nextLevelTarget} проектов
+                </span>
+              </div>
+              <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden border border-slate-600">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                  style={{ width: `${levelProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden group">
@@ -253,8 +322,8 @@ export const PartnerOverviewSection: React.FC = () => {
           </div>
         </div>
 
-        <div className="h-64 w-full">
-          <IncomeChart data={chartData} />
+        <div className="w-full">
+          <IncomeChart data={chartData} dates={chartDates} language={language} />
         </div>
       </div>
 
@@ -361,88 +430,59 @@ export const PartnerOverviewSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Referral link */}
-      <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">
-          {t('partners.referralLink')}
-        </h3>
-        <p className="text-gray-500 text-sm mb-4">{t('partners.shareLink')}</p>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-600 font-mono break-all sm:break-normal">
-            {referralLink}
+      {/* Quick actions (навигация по вкладкам партнёрки) */}
+      <div>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Быстрые действия</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div
+            onClick={() => onNavigate && onNavigate('referrals')}
+            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+          >
+            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              <Link size={20} />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-1">Получить ссылку</h4>
+            <p className="text-xs text-slate-500 mb-4 flex-1">
+              Скопируйте вашу уникальную ссылку для приглашения клиентов и заработка на рефералах.
+            </p>
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
+              Перейти к рефералам <ArrowRight size={12} />
+            </div>
           </div>
-          <div className="flex gap-2 sm:shrink-0">
-            <button
-              onClick={copyToClipboard}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg text-sm font-medium text-gray-700 transition-colors"
-            >
-              <Copy size={16} />
-              {copied ? 'Скопировано' : 'Копировать'}
-            </button>
-            <a
-              href={referralLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg text-sm font-medium text-gray-700 transition-colors"
-            >
-              <ExternalLink size={16} />
-              {t('partners.open')}
-            </a>
+
+          <div
+            onClick={() => onNavigate && onNavigate('clients')}
+            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+          >
+            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+              <UserPlus size={20} />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-1">Добавить клиента</h4>
+            <p className="text-xs text-slate-500 mb-4 flex-1">
+              Вручную добавьте клиента на сопровождение и управляйте его проектами (для Интеграторов).
+            </p>
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-600">
+              Перейти к клиентам <ArrowRight size={12} />
+            </div>
+          </div>
+
+          <div
+            onClick={() => onNavigate && onNavigate('account')}
+            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-green-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+          >
+            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-600 group-hover:text-white transition-colors">
+              <Wallet size={20} />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-1">Ваш счет</h4>
+            <p className="text-xs text-slate-500 mb-4 flex-1">
+              Проверяйте баланс, историю транзакций и запрашивайте вывод заработанных средств.
+            </p>
+            <div className="flex items-center gap-2 text-xs font-bold text-green-600">
+              Управление финансами <ArrowRight size={12} />
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Clients list */}
-      {stats?.clients && stats.clients.length > 0 && (
-        <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-1">
-            {t('partners.recentClients')}
-          </h3>
-          <p className="text-gray-500 text-sm mb-6">
-            {t('partners.recentClientsDesc')}
-          </p>
-          <div className="space-y-4">
-            {stats.clients.slice(0, 5).map((client) => (
-              <div
-                key={client.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {client.user_profiles.full_name?.[0] ||
-                        client.user_profiles.email?.[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {client.user_profiles.full_name ||
-                        client.user_profiles.email}
-                    </div>
-                    <div className="text-xs text-gray-400 sm:hidden mt-1">
-                      {new Date(client.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {client.user_profiles.email}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                  <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
-                    {client.type === 'referral'
-                      ? t('partners.referral')
-                      : t('partners.support')}
-                  </span>
-                  <span className="text-sm text-gray-500 hidden sm:block">
-                    {new Date(client.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {loading && (
         <div className="text-sm text-gray-400">

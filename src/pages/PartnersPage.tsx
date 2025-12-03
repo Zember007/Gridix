@@ -230,7 +230,9 @@ const PartnersPage = () => {
 
       <div className="mt-4">
         {activeTab === 'account' && <PartnerAccountSection />}
-        {activeTab === 'overview' && <PartnerOverviewSection />}
+        {activeTab === 'overview' && (
+          <PartnerOverviewSection onNavigate={(tab) => setActiveTab(tab)} />
+        )}
         {activeTab === 'referrals' && <PartnerReferralsSection />}
         {activeTab === 'clients' && <PartnerClientsSection />}
         {activeTab === 'instructions' && (

@@ -56,6 +56,17 @@ export function usePartnerAccountData() {
 
   const baseTransactions = stats?.transactions ?? [];
 
+  // Реальный доступный баланс партнёра
+  const accountBalance = stats?.available_for_withdrawal ?? 0;
+
+  // Комиссия партнёра считается так же, как в calculate_and_award_partner_commission:
+  // берём процент, рассчитанный функцией get_partner_commission_percentage в Supabase.
+  // Для отображения используем в первую очередь реферальный процент.
+  const commissionPercentage =
+    stats?.commission_percentage_referral ??
+    stats?.commission_percentage_managed ??
+    null;
+
   const filteredTransactions = useMemo(
     () =>
       baseTransactions.filter((tx) => {
@@ -117,6 +128,8 @@ export function usePartnerAccountData() {
     filteredTransactions,
     resetFilters,
     hasFilters,
+    accountBalance,
+    commissionPercentage,
   };
 }
 

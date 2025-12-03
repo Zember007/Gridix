@@ -1,21 +1,18 @@
-import React, { useState } from 'react';
-import { 
-  Search,
-  UserPlus,
-  LogIn,
-  CreditCard,
-  CheckCircle2,
-  AlertCircle,
-  StickyNote,
-  X,
-  Save,
-  CheckSquare,
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, UserPlus, LogIn, CheckCircle2, StickyNote, X, Save, CheckSquare } from 'lucide-react';
 import { usePartnerClients } from '@/hooks/usePartnerClients';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '../ui/card';
+import { Input } from '../ui/input';
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 export const PartnerClientsSection: React.FC = () => {
   const { clients, loading, error } = usePartnerClients();
@@ -23,6 +20,10 @@ export const PartnerClientsSection: React.FC = () => {
   const { t } = useLanguage();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>(
+    'all',
+  );
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [activeNoteClient, setActiveNoteClient] = useState<string | null>(null);
@@ -31,8 +32,87 @@ export const PartnerClientsSection: React.FC = () => {
   const [newClientEmail, setNewClientEmail] = useState('');
   const [isAddingClient, setIsAddingClient] = useState(false);
 
+  // Загружаем заметки из localStorage при монтировании
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const stored = window.localStorage.getItem('partner_client_notes');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          setNotes(parsed);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load partner client notes from localStorage:', err);
+    }
+  }, []);
+
+  // Сохраняем заметки в localStorage при изменениях
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      window.localStorage.setItem('partner_client_notes', JSON.stringify(notes));
+    } catch (err) {
+      console.error('Failed to save partner client notes to localStorage:', err);
+    }
+  }, [notes]);
+
   // Преобразуем реальных клиентов: показываем только на сопровождении (managed)
   const managedClients = clients.filter((c) => c.type === 'managed');
+
+  // Применяем поиск и фильтр статуса
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredClients = managedClients.filter((client) => {
+    const name =
+      client.user_profiles.full_name || client.user_profiles.email || '';
+    const email = client.user_profiles.email || '';
+
+    const matchesSearch =
+      !normalizedSearch ||
+      name.toLowerCase().includes(normalizedSearch) ||
+      email.toLowerCase().includes(normalizedSearch);
+
+    if (!matchesSearch) return false;
+
+    if (statusFilter === 'all') return true;
+
+    const projects = client.projects ?? [];
+
+    if (statusFilter === 'active') {
+      // активен, если есть хотя бы один активный/пробный проект
+      const hasActiveProject = projects.some(
+        (p) =>
+          p.subscription_status === 'active' ||
+          p.subscription_status === 'trialing',
+      );
+      const isAggregatedActive =
+        client.subscription_status === 'active' ||
+        client.subscription_status === 'trialing';
+
+      return hasActiveProject || isAggregatedActive;
+    }
+
+    if (statusFilter === 'expired') {
+      // истекшие — если все проекты либо истекли, либо нет активных, и агрегированный статус об этом говорит
+      const hasProjects = projects.length > 0;
+      const allProjectsExpired =
+        hasProjects &&
+        projects.every(
+          (p) =>
+            p.subscription_status === 'expired' ||
+            p.subscription_status === 'trial_expired',
+        );
+
+      const isAggregatedExpired =
+        client.subscription_status === 'expired' ||
+        client.subscription_status === 'trial_expired';
+
+      return allProjectsExpired || (!hasProjects && isAggregatedExpired);
+    }
+
+    return true;
+  });
 
   // Реальный вход в аккаунт клиента (старый функционал impersonate)
   const handleImpersonate = async (clientId: string) => {
@@ -230,11 +310,6 @@ export const PartnerClientsSection: React.FC = () => {
     setIsNoteModalOpen(false);
   };
 
-  const totalSelectedAmount = managedClients
-    .filter((c) => selectedIds.has(c.id))
-    // пока берём фиксированную цену, так как реальные тарифы на стороне клиента
-    .reduce((sum) => sum + 199, 0);
-
   if (loading) {
     return (
       <div className="space-y-4">
@@ -386,18 +461,30 @@ export const PartnerClientsSection: React.FC = () => {
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
-            <input
+            <Input
               type="text"
               placeholder="Поиск по имени или email..."
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all bg-slate-50 hover:bg-white focus:bg-white"
+              className="w-full pl-10 pr-4"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 sm:w-auto w-full">
-            <select className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm bg-slate-50 hover:bg-white outline-none focus:border-blue-500 transition-colors">
-              <option value="all">Все клиенты</option>
-              <option value="active">Активная подписка</option>
-              <option value="expired">Истекшие</option>
-            </select>
+            <ShadcnSelect
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(value as 'all' | 'active' | 'expired')
+              }
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Фильтр по подписке" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все клиенты</SelectItem>
+                <SelectItem value="active">Активная подписка</SelectItem>
+                <SelectItem value="expired">Истекшие</SelectItem>
+              </SelectContent>
+            </ShadcnSelect>
             <button
               onClick={toggleAll}
               className={`p-2.5 rounded-lg border transition-colors ${
@@ -415,20 +502,15 @@ export const PartnerClientsSection: React.FC = () => {
 
       {/* Список клиентов */}
       <div className="space-y-4">
-        {managedClients.map((client) => {
+        {filteredClients.map((client) => {
           const sub = getSubscriptionInfo(
             client.subscription_status,
             client.subscription_expires_at,
           );
+          const clientProjects = client.projects ?? [];
           const isExpired = sub.isExpired;
-          const isUrgent =
-            !isExpired && sub.daysLeft !== null && sub.daysLeft <= 5;
           const isSelected = selectedIds.has(client.id);
           const hasNote = !!notes[client.id];
-          const widthPercent =
-            sub.daysLeft !== null
-              ? Math.max(5, Math.min(100, (sub.daysLeft / 30) * 100))
-              : 0;
 
           const name = client.user_profiles.full_name || client.user_profiles.email;
           const email = client.user_profiles.email;
@@ -486,7 +568,7 @@ export const PartnerClientsSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Подписка */}
+                {/* Подписки по проектам */}
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
@@ -503,37 +585,47 @@ export const PartnerClientsSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                        Подписка
-                      </span>
-                      <span
-                        className={`text-xs font-bold ${sub.textColor} ${
-                          isUrgent ? 'animate-pulse' : ''
-                        }`}
-                      >
-                      {sub.label}
-                      </span>
-                    </div>
-                    {isExpired ? (
-                      <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
-                        <AlertCircle size={14} />
-                        <span className="text-xs font-bold">Требуется оплата</span>
-                      </div>
-                    ) : sub.daysLeft !== null ? (
-                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${sub.color}`}
-                          style={{ width: `${widthPercent}%` }}
-                        />
-                      </div>
-                    ) : null}
-                    {!isExpired && client.subscription_expires_at && (
-                      <div className="text-[10px] text-slate-400 mt-1 text-right">
-                        до{' '}
-                        {new Date(
-                          client.subscription_expires_at,
-                        ).toLocaleDateString('ru-RU')}
+                    {/* Подробности по каждому проекту клиента — только «Проекты и подписки» */}
+                    {clientProjects.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                          Проекты и подписки
+                        </div>
+                        {clientProjects.slice(0, 3).map((project) => {
+                          const projectSub = getSubscriptionInfo(
+                            project.subscription_status,
+                            project.subscription_expires_at,
+                          );
+                          const projectExpired = projectSub.isExpired;
+
+                          return (
+                            <div
+                              key={project.id}
+                              className="flex items-center justify-between gap-2 text-xs bg-slate-50 rounded-md px-2 py-1"
+                            >
+                              <div className="truncate text-slate-700">
+                                {project.name}
+                              </div>
+                              <div
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                  projectExpired
+                                    ? 'bg-red-50 text-red-600'
+                                    : projectSub.color.replace('bg-', 'bg-opacity-20 bg-') +
+                                      ' ' +
+                                      projectSub.textColor
+                                }`}
+                              >
+                                {projectSub.label}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {clientProjects.length > 3 && (
+                          <div className="text-[10px] text-slate-400 text-right">
+                            и ещё {clientProjects.length - 3}{' '}
+                            {clientProjects.length - 3 === 1 ? 'проект' : 'проекта'}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -556,19 +648,6 @@ export const PartnerClientsSection: React.FC = () => {
                     />
                   </button>
 
-                  {(isExpired || isUrgent) && (
-                    <button
-                      className={`w-full sm:w-auto px-4 py-2 border rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 ${
-                        isExpired
-                          ? 'bg-green-600 text-white hover:bg-green-700 border-transparent shadow-md'
-                          : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                      }`}
-                    >
-                      <CreditCard size={16} />
-                      {isExpired ? 'Оплатить' : 'Продлить'}
-                    </button>
-                  )}
-
                   <button
                     onClick={() => handleImpersonate(client.client_id)}
                     className="w-full sm:w-auto px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center justify-center gap-2 group"
@@ -586,44 +665,13 @@ export const PartnerClientsSection: React.FC = () => {
         })}
       </div>
 
-      {/* Плавающая панель массовых действий */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white rounded-xl shadow-2xl p-2 px-6 flex items-center gap-6 animate-in slide-in-from-bottom-4">
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-400 font-medium">
-              Выбрано клиентов: {selectedIds.size}
-            </span>
-            <span className="text-sm font-bold">
-              К оплате: ${totalSelectedAmount}
-            </span>
-          </div>
-          <div className="h-8 w-px bg-slate-700" />
-          <button
-            onClick={() =>
-              alert(
-                `Оплата за ${selectedIds.size} клиентов на сумму $${totalSelectedAmount}`,
-              )
-            }
-            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-md flex items-center gap-2"
-          >
-            <CreditCard size={16} /> Оплатить выбранные
-          </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      )}
-
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start mt-8">
         <div className="text-blue-500 mt-0.5">💡</div>
         <div className="text-sm text-blue-800 leading-relaxed">
           <p className="font-semibold mb-1">Кабинет Интегратора</p>
-          Вы можете выбрать несколько клиентов галочками и оплатить их подписки
-          одним платежом с вашего партнерского счета. Комиссия (ваша скидка)
-          будет учтена автоматически.
+          Здесь вы видите только клиентов на сопровождении. Для каждого клиента
+          доступны быстрые заметки и вход в аккаунт для настройки проектов и
+          подписок.
         </div>
       </div>
     </div>

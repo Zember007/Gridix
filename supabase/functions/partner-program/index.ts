@@ -484,15 +484,18 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
     const clientIds = (links || []).map(link => link.client_id).filter(Boolean)
     let enrichedLinks = links || []
 
+    let totalProjectsCount = 0
+
     if (clientIds.length > 0) {
       const { data: projects, error: projectsError } = await supabaseClient
         .from('projects')
-        .select('id, user_id, subscription_status, subscription_expires_at')
+        .select('id, name, user_id, subscription_status, subscription_expires_at')
         .in('user_id', clientIds)
 
       if (projectsError) {
         console.error('Error fetching client projects:', projectsError)
       } else if (projects) {
+        totalProjectsCount = projects.length
         const projectsByClient: Record<string, any[]> = {}
 
         for (const project of projects) {
@@ -533,7 +536,14 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
           return {
             ...link,
             subscription_status: aggregatedStatus,
-            subscription_expires_at: aggregatedExpiresAt
+            subscription_expires_at: aggregatedExpiresAt,
+            // Детальная информация по проектам клиента для фронтенда партнёра
+            projects: clientProjects.map(project => ({
+              id: project.id,
+              name: project.name,
+              subscription_status: project.subscription_status,
+              subscription_expires_at: project.subscription_expires_at
+            }))
           }
         })
       }
@@ -557,6 +567,96 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
     // Воронка конверсии
     const registrationsCount = enrichedLinks.length || 0
     const payingClientsCount = enrichedLinks.filter(link => link.subscription_status === 'active').length
+
+    // ---------------- ПАРТНЁРСКИЕ УРОВНИ ----------------
+    // Вся бизнес-логика по уровням должна опираться на таблицу commission_tiers,
+    // где супер-админ настраивает промежутки и проценты комиссии.
+    //
+    // Здесь мы используем то же самое определение, что и в get_partner_commission_percentage:
+    // количество ПРОЕКТОВ всех клиентов партнёра.
+    // Уровни по-прежнему именуются хардкодом:
+    // - Bronze Partner
+    // - Silver Partner
+    // - Gold Partner
+    //
+    // Но сами пороги берём из commission_tiers (для link_type = referral / NULL),
+    // чтобы сообщение о максимальном уровне и прогрессе всегда совпадало с настройками супер-админа.
+    const projectsCountForLevels = totalProjectsCount
+
+    let partnerLevelName = 'Bronze Partner'
+    let partnerLevelKey: 'bronze' | 'silver' | 'gold' = 'bronze'
+    let nextLevelName: string | null = null
+    let nextLevelRequiredActiveClients: number | null = null
+    let clientsToNextLevel: number | null = null
+
+    try {
+      const { data: tiers, error: tiersError } = await supabaseClient
+        .from('commission_tiers')
+        .select('min_projects, max_projects, commission_percentage, link_type')
+        .eq('is_active', true)
+        .order('min_projects', { ascending: true })
+
+      if (tiersError) {
+        console.error('Error fetching commission_tiers:', tiersError)
+      } else if (tiers && tiers.length > 0) {
+        const sortedTiers = [...tiers].sort(
+          (a: any, b: any) => (a.min_projects ?? 0) - (b.min_projects ?? 0)
+        )
+
+        let currentTierIndex = -1
+        for (let i = 0; i < sortedTiers.length; i++) {
+          const tier = sortedTiers[i]
+          const min = tier.min_projects ?? 0
+          const max = tier.max_projects
+
+          if (projectsCountForLevels >= min && (max === null || projectsCountForLevels <= max)) {
+            currentTierIndex = i
+            break
+          }
+        }
+
+        // Если не попали ни в один диапазон (например, активных клиентов меньше минимального),
+        // используем самый первый уровень как базовый.
+        if (currentTierIndex === -1) {
+          currentTierIndex = 0
+        }
+
+        const nextTier =
+          currentTierIndex < sortedTiers.length - 1
+            ? sortedTiers[currentTierIndex + 1]
+            : null
+
+        // Маппинг индекса диапазона на имя уровня:
+        // 0 → Bronze, 1 → Silver, 2+ → Gold
+        if (currentTierIndex === 0) {
+          partnerLevelName = 'Bronze Partner'
+          partnerLevelKey = 'bronze'
+        } else if (currentTierIndex === 1) {
+          partnerLevelName = 'Silver Partner'
+          partnerLevelKey = 'silver'
+        } else {
+          partnerLevelName = 'Gold Partner'
+          partnerLevelKey = 'gold'
+        }
+
+        if (nextTier) {
+          const target = nextTier.min_projects ?? projectsCountForLevels
+          nextLevelRequiredActiveClients = target
+          clientsToNextLevel = Math.max(target - projectsCountForLevels, 0)
+
+          const nextIndex = currentTierIndex + 1
+          if (nextIndex === 0) {
+            nextLevelName = 'Bronze Partner'
+          } else if (nextIndex === 1) {
+            nextLevelName = 'Silver Partner'
+          } else {
+            nextLevelName = 'Gold Partner'
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error calculating partner level from commission_tiers:', e)
+    }
 
     // История комиссий и дохода
     const commissionClientIds = enrichedLinks.map(link => link.client_id).filter(Boolean)
@@ -679,6 +779,37 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
     // Получаем доступный баланс для вывода
     const availableBalance = partnerProfile.total_earned - partnerProfile.total_withdrawn
 
+    // Рассчитываем проценты комиссии по тем же правилам, что и в calculate_and_award_partner_commission
+    // Используем хранимую функцию get_partner_commission_percentage(link_type, partner_id)
+    let commissionPercentageReferral: number | null = null
+    let commissionPercentageManaged: number | null = null
+
+    try {
+      const { data: referralPct } = await supabaseClient.rpc('get_partner_commission_percentage', {
+        p_link_type: 'referral',
+        partner_id_param: partnerProfile.id
+      })
+
+      if (typeof referralPct === 'number') {
+        commissionPercentageReferral = referralPct
+      }
+    } catch (e) {
+      console.error('Error getting referral commission percentage:', e)
+    }
+
+    try {
+      const { data: managedPct } = await supabaseClient.rpc('get_partner_commission_percentage', {
+        p_link_type: 'managed',
+        partner_id_param: partnerProfile.id
+      })
+
+      if (typeof managedPct === 'number') {
+        commissionPercentageManaged = managedPct
+      }
+    } catch (e) {
+      console.error('Error getting managed commission percentage:', e)
+    }
+
     return createJsonResponse(
       {
         total_clients: enrichedLinks.length || 0,
@@ -693,7 +824,17 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
         income_history: incomeHistory,
         transactions,
         funnel_registrations: registrationsCount,
-        funnel_paying_clients: payingClientsCount
+        funnel_paying_clients: payingClientsCount,
+        commission_percentage_referral: commissionPercentageReferral,
+        commission_percentage_managed: commissionPercentageManaged,
+        // Данные по партнёрским уровням и количеству проектов для фронтенда
+        total_projects: totalProjectsCount,
+        active_clients: totalProjectsCount,
+        partner_level: partnerLevelName,
+        partner_level_key: partnerLevelKey,
+        next_level_name: nextLevelName,
+        next_level_required_active_clients: nextLevelRequiredActiveClients,
+        clients_to_next_level: clientsToNextLevel
       },
       200,
       origin

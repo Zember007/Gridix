@@ -66,6 +66,9 @@ export interface PartnerStats {
   total_withdrawn: number;
   available_for_withdrawal: number;
   total_clicks: number;
+  // Проценты комиссии, рассчитанные той же логикой, что и calculate_and_award_partner_commission
+  commission_percentage_referral?: number | null;
+  commission_percentage_managed?: number | null;
   commissions: Array<{
     partner_commission_amount: number;
     created_at: string;
@@ -74,6 +77,14 @@ export interface PartnerStats {
   transactions?: PartnerTransaction[];
   funnel_registrations?: number;
   funnel_paying_clients?: number;
+  // Информация по партнёрским уровням (рассчитана целиком на бэкенде)
+  total_projects?: number;
+  active_clients?: number;
+  partner_level?: string | null;
+  partner_level_key?: 'bronze' | 'silver' | 'gold' | null;
+  next_level_name?: string | null;
+  next_level_required_active_clients?: number | null;
+  clients_to_next_level?: number | null;
   clients: Array<{
     id: string;
     type: 'referral' | 'managed';
@@ -85,6 +96,13 @@ export interface PartnerStats {
     utm_campaign?: string | null;
     subscription_status?: string | null;
     subscription_expires_at?: string | null;
+    // Детальная информация по активным проектам клиента (для витрины партнёра)
+    projects?: Array<{
+      id: string;
+      name: string;
+      subscription_status?: string | null;
+      subscription_expires_at?: string | null;
+    }>;
     user_profiles: {
       id: string;
       full_name: string | null;
@@ -104,6 +122,13 @@ export interface PartnerClient {
   utm_source?: string | null;
   utm_medium?: string | null;
   utm_campaign?: string | null;
+   // Детальная информация по проектам клиента (для вкладки «Клиенты» в партнёрском кабинете)
+  projects?: Array<{
+    id: string;
+    name: string;
+    subscription_status?: string | null;
+    subscription_expires_at?: string | null;
+  }>;
   user_profiles: {
     id: string;
     full_name: string | null;
@@ -150,4 +175,13 @@ export interface PartnerProgramResponse {
   funnel_registrations?: number;
   funnel_paying_clients?: number;
   clients?: Array<PartnerClient>;
+  commission_percentage_referral?: number | null;
+  commission_percentage_managed?: number | null;
+  total_projects?: number;
+  active_clients?: number;
+  partner_level?: string | null;
+  partner_level_key?: 'bronze' | 'silver' | 'gold' | null;
+  next_level_name?: string | null;
+  next_level_required_active_clients?: number | null;
+  clients_to_next_level?: number | null;
 }
