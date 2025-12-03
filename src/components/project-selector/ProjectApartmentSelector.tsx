@@ -68,6 +68,7 @@ const ProjectApartmentSelector = ({
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
   const loadedPolygonsForFloorsRef = useRef<Map<number, Apartment[]>>(new Map());
   const polygonsLoadingRef = useRef<Set<number>>(new Set());
@@ -94,6 +95,27 @@ const ProjectApartmentSelector = ({
   const getThemeColor = () => {
     return (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
   };
+
+  const scrollWidgetToTop = useCallback(() => {
+    if (!isWidget || !containerRef.current) return;
+
+    try {
+      // Scroll the widget container itself (if it's scrollable)
+      if (typeof containerRef.current.scrollTo === 'function') {
+        containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback for older browsers
+        containerRef.current.scrollTop = 0;
+      }
+
+      // Additionally ensure the widget is aligned to the top of the viewport
+      if (typeof containerRef.current.scrollIntoView === 'function') {
+        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (error) {
+      console.error('Error scrolling widget to top:', error);
+    }
+  }, [isWidget]);
 
   const getBaseDomain = async () => {
 
@@ -133,6 +155,7 @@ const ProjectApartmentSelector = ({
   const openApartmentDetails = async (apartment: Apartment) => {
     // Если мы в виджете, показываем модальное окно вместо редиректа
     if (isWidget) {
+      scrollWidgetToTop();
       setSelectedApartment(apartment);
       setIsApartmentModalOpen(true);
       return;
@@ -328,6 +351,16 @@ const ProjectApartmentSelector = ({
   }, [apartments, filters, selectedFloorForPlan]);
 
 
+  // Scroll widget to top when view mode or selected floor changes (widget only)
+  useEffect(() => {
+    if (!isWidget) return;
+    scrollWidgetToTop();
+  }, [viewMode, isWidget, scrollWidgetToTop]);
+
+  useEffect(() => {
+    if (!isWidget || viewMode !== 'floor-plan') return;
+    scrollWidgetToTop();
+  }, [selectedFloorForPlan, isWidget, viewMode, scrollWidgetToTop]);
 
   // Load polygons for floor plan view (optimized with caching)
   useEffect(() => {
@@ -496,7 +529,7 @@ const ProjectApartmentSelector = ({
   const shouldShowMainContent = !isWidget || showFullProjectInWidget;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col relative">
+    <div ref={containerRef} className="min-h-screen bg-white flex flex-col relative">
       {isInitialLoading && (
         <div className="absolute z-50 inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
           <Loader
