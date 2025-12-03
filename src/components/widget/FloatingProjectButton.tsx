@@ -89,16 +89,15 @@ export const FloatingProjectButton = ({
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
-    const previousOverflow = document.body.style.overflow;
 
     if (isIframeOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = previousOverflow || '';
+      document.body.style.overflow = '';
     }
 
     return () => {
-      document.body.style.overflow = previousOverflow || '';
+      document.body.style.overflow = '';
     };
   }, [isIframeOpen]);
 
