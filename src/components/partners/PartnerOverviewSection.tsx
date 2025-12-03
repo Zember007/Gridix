@@ -61,7 +61,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
     return entries.map(([source, count], index) => {
       let label = source;
       if (source === 'direct') {
-        label = 'Direct (Прямые)';
+        label = t('partners.sourceDirect');
       } else if (source === 'youtube') {
         label = 'YouTube';
       } else if (source === 'telegram') {
@@ -71,9 +71,9 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       } else if (source === 'facebook') {
         label = 'Facebook';
       } else if (source === 'blog') {
-        label = 'Blog';
+        label = t('partners.sourceBlog');
       } else if (source === 'email_newsletter') {
-        label = 'Email newsletter';
+        label = t('partners.sourceEmail');
       } else {
         label = source.charAt(0).toUpperCase() + source.slice(1);
       }
@@ -197,7 +197,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
                 <Award size={18} className="text-yellow-400" />
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Ваш уровень
+                {t('partners.levelLabel')}
               </span>
             </div>
             <h2 className="text-2xl font-bold mb-1">
@@ -208,28 +208,30 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
             </h2>
             {nextLevelName && clientsToNextLevel !== null && clientsToNextLevel > 0 ? (
               <p className="text-sm text-slate-300 max-w-lg">
-                Привлеките еще{' '}
+                {t('partners.levelHintPrefix')}{' '}
                 <span className="text-white font-bold">
-                  {clientsToNextLevel} активных проектов
+                  {clientsToNextLevel}{' '}
+                  {t('partners.levelHintProjects')}
                 </span>
-                , чтобы получить уровень{' '}
+                ,{' '}
                 <span className="text-yellow-400 font-bold">
-                  {nextLevelName}
+                  {t('partners.levelHintReach', { level: nextLevelName })}
                 </span>
                 .
               </p>
             ) : (
               <p className="text-sm text-slate-300 max-w-lg">
-                Вы достигли максимального уровня партнёрской программы.
+                {t('partners.levelMax')}
               </p>
             )}
           </div>
           {nextLevelTarget && nextLevelTarget > 0 && (
             <div className="w-full md:w-64">
               <div className="flex justify-between text-xs font-semibold text-slate-400 mb-2">
-                <span>Прогресс</span>
+                <span>{t('partners.levelProgress')}</span>
                 <span>
-                  {totalProjectsLevel} / {nextLevelTarget} проектов
+                  {totalProjectsLevel} / {nextLevelTarget}{' '}
+                  {t('partners.levelProjectsShort')}
                 </span>
               </div>
               <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden border border-slate-600">
@@ -310,15 +312,15 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           <div>
             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Activity size={20} className="text-green-500" />
-              Динамика дохода
+              {t('partners.incomeDynamics')}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Статистика заработка за последние 30 дней
+              {t('partners.incomeLast30d')}
             </p>
           </div>
           <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-green-100">
             <TrendingUp size={16} />
-            Доход за 30 дней: ${totalIncome30d.toFixed(2)}
+            {t('partners.income30d')}: ${totalIncome30d.toFixed(2)}
           </div>
         </div>
 
@@ -332,7 +334,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
             <MousePointerClick size={20} className="text-gray-400" />
-            Воронка конверсии
+            {t('partners.funnelTitle')}
           </h3>
           <div className="space-y-6 relative">
             <div className="absolute left-[19px] top-8 bottom-8 w-0.5 bg-gray-100 -z-10" />
@@ -344,10 +346,10 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    Переходы по ссылке
+                    {t('partners.funnelClicks')}
                   </div>
                   <div className="text-xs text-gray-500">
-                  Уникальные клики по реферальной ссылке
+                    {t('partners.funnelClicksDesc')}
                   </div>
                 </div>
               </div>
@@ -365,12 +367,14 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    Регистрации
+                    {t('partners.funnelRegistrations')}
                   </div>
                   <div className="text-xs text-gray-500">
                     {totalClicks > 0
-                      ? `Конверсия из переходов ${registrationsConversion}%`
-                      : 'Конверсия появится после первых переходов'}
+                      ? t('partners.funnelFromClicks', {
+                          value: registrationsConversion,
+                        })
+                      : t('partners.funnelFromClicksEmpty')}
                   </div>
                 </div>
               </div>
@@ -388,12 +392,14 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    Оплаты
+                    {t('partners.funnelPayments')}
                   </div>
                   <div className="text-xs text-gray-500">
                     {registrations > 0
-                      ? `Конверсия из регистраций ${paymentsConversion}%`
-                      : 'Конверсия появится после первых регистраций'}
+                      ? t('partners.funnelFromRegistrations', {
+                          value: paymentsConversion,
+                        })
+                      : t('partners.funnelFromRegistrationsEmpty')}
                   </div>
                 </div>
               </div>
@@ -409,11 +415,11 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
             <PieChart size={20} className="text-gray-400" />
-            Источники трафика
+            {t('partners.trafficTitle')}
           </h3>
           {trafficStats.length === 0 ? (
             <p className="text-sm text-gray-400">
-              Статистика источников появится после первых рефералов с UTM-метками.
+              {t('partners.trafficEmpty')}
             </p>
           ) : (
             <div className="space-y-4">
@@ -432,7 +438,9 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
       {/* Quick actions (навигация по вкладкам партнёрки) */}
       <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Быстрые действия</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">
+          {t('partners.quickActionsTitle')}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div
             onClick={() => onNavigate && onNavigate('referrals')}
@@ -441,12 +449,15 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
             <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
               <Link size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">Получить ссылку</h4>
+            <h4 className="font-bold text-slate-900 mb-1">
+              {t('partners.quickActionsRefLinkTitle')}
+            </h4>
             <p className="text-xs text-slate-500 mb-4 flex-1">
-              Скопируйте вашу уникальную ссылку для приглашения клиентов и заработка на рефералах.
+              {t('partners.quickActionsRefLinkDesc')}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
-              Перейти к рефералам <ArrowRight size={12} />
+              {t('partners.quickActionsRefLinkCta')}{' '}
+              <ArrowRight size={12} />
             </div>
           </div>
 
@@ -457,12 +468,15 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
             <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition-colors">
               <UserPlus size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">Добавить клиента</h4>
+            <h4 className="font-bold text-slate-900 mb-1">
+              {t('partners.quickActionsClientsTitle')}
+            </h4>
             <p className="text-xs text-slate-500 mb-4 flex-1">
-              Вручную добавьте клиента на сопровождение и управляйте его проектами (для Интеграторов).
+              {t('partners.quickActionsClientsDesc')}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-purple-600">
-              Перейти к клиентам <ArrowRight size={12} />
+              {t('partners.quickActionsClientsCta')}{' '}
+              <ArrowRight size={12} />
             </div>
           </div>
 
@@ -473,12 +487,15 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
             <div className="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-600 group-hover:text-white transition-colors">
               <Wallet size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">Ваш счет</h4>
+            <h4 className="font-bold text-slate-900 mb-1">
+              {t('partners.quickActionsAccountTitle')}
+            </h4>
             <p className="text-xs text-slate-500 mb-4 flex-1">
-              Проверяйте баланс, историю транзакций и запрашивайте вывод заработанных средств.
+              {t('partners.quickActionsAccountDesc')}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-green-600">
-              Управление финансами <ArrowRight size={12} />
+              {t('partners.quickActionsAccountCta')}{' '}
+              <ArrowRight size={12} />
             </div>
           </div>
         </div>
@@ -486,7 +503,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
       {loading && (
         <div className="text-sm text-gray-400">
-          Загрузка статистики партнёра…
+          {t('partners.loadingStats')}
         </div>
       )}
     </div>

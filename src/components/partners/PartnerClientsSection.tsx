@@ -155,7 +155,7 @@ export const PartnerClientsSection: React.FC = () => {
   ) => {
     if (!status || status === 'none') {
       return {
-        label: 'Нет активной подписки',
+        label: t('partners.noActiveSubscription'),
         daysLeft: null as number | null,
         color: 'bg-slate-300',
         textColor: 'text-slate-500',
@@ -179,7 +179,7 @@ export const PartnerClientsSection: React.FC = () => {
       (daysLeft !== null && daysLeft < 0)
     ) {
       return {
-        label: 'Истекла',
+        label: t('partners.subscriptionExpired'),
         daysLeft: 0,
         color: 'bg-slate-300',
         textColor: 'text-red-600',
@@ -189,7 +189,10 @@ export const PartnerClientsSection: React.FC = () => {
 
     if (daysLeft === null) {
       return {
-        label: status === 'active' || status === 'trialing' ? 'Активна' : status,
+        label:
+          status === 'active' || status === 'trialing'
+            ? t('partners.subscriptionActive')
+            : status,
         daysLeft: null,
         color: 'bg-green-500',
         textColor: 'text-green-600',
@@ -209,7 +212,9 @@ export const PartnerClientsSection: React.FC = () => {
     }
 
     const label =
-      daysLeft >= 0 ? `Осталось ${daysLeft} дн.` : 'Истекла';
+      daysLeft >= 0
+        ? t('partners.subscriptionDaysLeft', { days: daysLeft })
+        : t('partners.subscriptionExpired');
 
     return {
       label,
@@ -266,11 +271,11 @@ export const PartnerClientsSection: React.FC = () => {
       );
 
       if (error) {
-        throw new Error(error.message || 'Ошибка отправки приглашения');
+        throw new Error(error.message || t('partners.invitationFailed'));
       }
 
       if (!result?.success) {
-        throw new Error(result?.error || 'Не удалось отправить приглашение');
+        throw new Error(result?.error || t('partners.invitationFailed'));
       }
 
       toast({
@@ -331,7 +336,7 @@ export const PartnerClientsSection: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           <p className="text-destructive">
-            Ошибка загрузки клиентов: {error}
+            {t('partners.clientsLoadError', { error })}
           </p>
         </CardContent>
       </Card>
@@ -346,7 +351,7 @@ export const PartnerClientsSection: React.FC = () => {
           <div className="bg-white rounded-xl w-full max-w-md shadow-2xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-slate-900">
-                Заметки о клиенте
+                {t('partners.notesTitle')}
               </h3>
               <button
                 onClick={() => setIsNoteModalOpen(false)}
@@ -357,7 +362,7 @@ export const PartnerClientsSection: React.FC = () => {
             </div>
             <textarea
               className="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:border-blue-500 outline-none resize-none mb-4"
-              placeholder="Введите заметку (например: обещал оплатить в понедельник)..."
+              placeholder={t('partners.notesPlaceholder')}
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               autoFocus
@@ -367,13 +372,13 @@ export const PartnerClientsSection: React.FC = () => {
                 onClick={() => setIsNoteModalOpen(false)}
                 className="px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg"
               >
-                Отмена
+                {t('partners.cancel')}
               </button>
               <button
                 onClick={saveNote}
                 className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
               >
-                <Save size={16} /> Сохранить
+                <Save size={16} /> {t('partners.save')}
               </button>
             </div>
           </div>
@@ -441,9 +446,11 @@ export const PartnerClientsSection: React.FC = () => {
       <div className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Клиенты</h2>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {t('partners.clients')}
+            </h2>
             <p className="text-slate-500 text-sm mt-1">
-              Управляйте клиентами на сопровождении (Интегратор)
+              {t('partners.managedClientsHint')}
             </p>
           </div>
           <button
@@ -451,7 +458,7 @@ export const PartnerClientsSection: React.FC = () => {
             onClick={() => setIsAddClientModalOpen(true)}
           >
             <UserPlus size={18} />
-            Добавить клиента
+            {t('partners.addClient')}
           </button>
         </div>
 
@@ -463,7 +470,7 @@ export const PartnerClientsSection: React.FC = () => {
             />
             <Input
               type="text"
-              placeholder="Поиск по имени или email..."
+              placeholder={t('partners.searchPlaceholder')}
               className="w-full pl-10 pr-4"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -477,12 +484,20 @@ export const PartnerClientsSection: React.FC = () => {
               }
             >
               <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Фильтр по подписке" />
+                <SelectValue
+                  placeholder={t('partners.subscriptionFilterPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все клиенты</SelectItem>
-                <SelectItem value="active">Активная подписка</SelectItem>
-                <SelectItem value="expired">Истекшие</SelectItem>
+                <SelectItem value="all">
+                  {t('partners.filterAllClients')}
+                </SelectItem>
+                <SelectItem value="active">
+                  {t('partners.filterActive')}
+                </SelectItem>
+                <SelectItem value="expired">
+                  {t('partners.filterExpired')}
+                </SelectItem>
               </SelectContent>
             </ShadcnSelect>
             <button
@@ -492,7 +507,7 @@ export const PartnerClientsSection: React.FC = () => {
                   ? 'bg-blue-50 border-blue-200 text-blue-600'
                   : 'border-slate-200 text-slate-400 hover:bg-slate-50'
               }`}
-              title="Выбрать всех"
+              title={t('partners.selectAllTitle')}
             >
               <CheckSquare size={20} />
             </button>
@@ -572,14 +587,16 @@ export const PartnerClientsSection: React.FC = () => {
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      Тариф
+                      {t('partners.tariffLabel')}
                     </span>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="font-bold text-slate-800">
-                        Сопровождение
+                        {t('partners.tariffManaged')}
                       </span>
                       <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                        {client.status === 'active' ? 'Активен' : client.status}
+                        {client.status === 'active'
+                          ? t('partners.statusActive')
+                          : client.status}
                       </span>
                     </div>
                   </div>
@@ -589,7 +606,7 @@ export const PartnerClientsSection: React.FC = () => {
                     {clientProjects.length > 0 && (
                       <div className="space-y-1.5">
                         <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          Проекты и подписки
+                          {t('partners.projectsAndSubscriptions')}
                         </div>
                         {clientProjects.slice(0, 3).map((project) => {
                           const projectSub = getSubscriptionInfo(
@@ -622,8 +639,9 @@ export const PartnerClientsSection: React.FC = () => {
                         })}
                         {clientProjects.length > 3 && (
                           <div className="text-[10px] text-slate-400 text-right">
-                            и ещё {clientProjects.length - 3}{' '}
-                            {clientProjects.length - 3 === 1 ? 'проект' : 'проекта'}
+                            {t('partners.moreProjects', {
+                              count: clientProjects.length - 3,
+                            })}
                           </div>
                         )}
                       </div>
@@ -640,7 +658,7 @@ export const PartnerClientsSection: React.FC = () => {
                         ? 'bg-amber-50 border-amber-200 text-amber-600'
                         : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                     }`}
-                    title="Заметки"
+                    title={t('partners.notesTitle')}
                   >
                     <StickyNote
                       size={18}
@@ -656,7 +674,7 @@ export const PartnerClientsSection: React.FC = () => {
                       size={16}
                       className="group-hover:text-blue-600 transition-colors"
                     />
-                    Войти
+                    {t('partners.loginAs')}
                   </button>
                 </div>
               </div>
@@ -668,10 +686,10 @@ export const PartnerClientsSection: React.FC = () => {
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start mt-8">
         <div className="text-blue-500 mt-0.5">💡</div>
         <div className="text-sm text-blue-800 leading-relaxed">
-          <p className="font-semibold mb-1">Кабинет Интегратора</p>
-          Здесь вы видите только клиентов на сопровождении. Для каждого клиента
-          доступны быстрые заметки и вход в аккаунт для настройки проектов и
-          подписок.
+          <p className="font-semibold mb-1">
+            {t('partners.integratorCabinetTitle')}
+          </p>
+          <span>{t('partners.integratorCabinetText')}</span>
         </div>
       </div>
     </div>

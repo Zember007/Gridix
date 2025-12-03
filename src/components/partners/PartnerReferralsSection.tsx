@@ -67,13 +67,13 @@ export const PartnerReferralsSection: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({
-        title: 'Ссылка скопирована',
-        description: 'Теперь вы можете отправить её клиенту',
+        title: t('partners.linkCopied'),
+        description: t('partners.linkCopiedDesc'),
       });
     } catch {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось скопировать ссылку',
+        title: t('partners.error'),
+        description: t('partners.copyFailed'),
         variant: 'destructive',
       });
     }
@@ -84,14 +84,12 @@ export const PartnerReferralsSection: React.FC = () => {
     setUtmMedium('');
     setUtmCampaign('');
     toast({
-      title: 'Параметры сброшены',
+      title: t('partners.utmReset'),
     });
   };
 
   const handleShare = (platform: 'telegram' | 'whatsapp') => {
-    const text = encodeURIComponent(
-      'Рекомендую Gridix для управления недвижимостью! Регистрируйся по ссылке:',
-    );
+    const text = encodeURIComponent(t('partners.shareText'));
     const url = encodeURIComponent(generatedLink);
 
     if (platform === 'telegram') {
@@ -198,7 +196,7 @@ export const PartnerReferralsSection: React.FC = () => {
               <X size={20} />
             </button>
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Ваш QR-код
+              {t('partners.qrTitle')}
             </h3>
             <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm mb-6">
               <img
@@ -210,19 +208,18 @@ export const PartnerReferralsSection: React.FC = () => {
               />
             </div>
             <p className="text-xs text-gray-500 text-center mb-6 px-4">
-              Сканирование этого кода перенаправит пользователя на вашу
-              реферальную ссылку с учетом всех UTM-меток.
+              {t('partners.qrDescription')}
             </p>
             <button
               onClick={() =>
                 toast({
-                  title: 'Скачивание...',
-                  description: 'QR-код загружается на устройство',
+                  title: t('partners.qrDownloadTitle'),
+                  description: t('partners.qrDownloadDesc'),
                 })
               }
               className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-colors"
             >
-              <Download size={16} /> Скачать PNG
+              <Download size={16} /> {t('partners.qrDownloadCta')}
             </button>
           </div>
         </div>
@@ -234,24 +231,24 @@ export const PartnerReferralsSection: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">
-                Ваша реферальная ссылка
+                {t('partners.referralLinkTitle')}
               </h3>
               <p className="text-gray-500 text-sm">
-                Клиенты закрепляются за вами на 30 дней (Cookie).
+                {t('partners.referralLinkHint')}
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => handleShare('telegram')}
                 className="p-2 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
-                title="Поделиться в Telegram"
+                title={t('partners.shareTelegramTitle')}
               >
                 <Send size={18} />
               </button>
               <button
                 onClick={() => handleShare('whatsapp')}
                 className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                title="Поделиться в WhatsApp"
+                title={t('partners.shareWhatsAppTitle')}
               >
                 <MessageCircle size={18} />
               </button>
@@ -269,12 +266,12 @@ export const PartnerReferralsSection: React.FC = () => {
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-colors shadow-sm"
               >
                 <Copy size={16} />
-                {copied ? 'Скопировано' : 'Копировать'}
+                {copied ? t('partners.copied') : t('partners.copy')}
               </button>
               <button
                 onClick={() => setIsQrModalOpen(true)}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg text-slate-700 transition-colors"
-                title="Показать QR-код"
+                title={t('partners.qrShowTitle')}
               >
                 <QrCode size={18} />
               </button>
@@ -291,8 +288,8 @@ export const PartnerReferralsSection: React.FC = () => {
             >
               <Settings2 size={16} />
               {showUtmBuilder
-                ? 'Скрыть настройки метки (UTM)'
-                : 'Настроить метки (UTM)'}
+                ? t('partners.utmHide')
+                : t('partners.utmShow')}
               {showUtmBuilder ? (
                 <ChevronUp size={14} />
               ) : (
@@ -305,7 +302,7 @@ export const PartnerReferralsSection: React.FC = () => {
                 onClick={handleResetUtm}
                 className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-500 transition-colors"
               >
-                <RotateCcw size={12} /> Сбросить
+                <RotateCcw size={12} /> {t('partners.utmResetButton')}
               </button>
             )}
           </div>
@@ -314,11 +311,11 @@ export const PartnerReferralsSection: React.FC = () => {
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-200 pb-2">
               <div className="space-y-1 relative">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Источник (utm_source)
+                  {t('partners.utmSourceLabel')}
                 </label>
                 <input
                   type="text"
-                  placeholder="telegram, youtube"
+                  placeholder={t('partners.utmSourcePlaceholder')}
                   value={utmSource}
                   onChange={(e) => setUtmSource(e.target.value)}
                   list="utm-sources"
@@ -330,37 +327,37 @@ export const PartnerReferralsSection: React.FC = () => {
                   ))}
                 </datalist>
                 <p className="text-[10px] text-gray-400">
-                  Выберите из списка или введите свой
+                  {t('partners.utmSourceHint')}
                 </p>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Тип трафика (utm_medium)
+                  {t('partners.utmMediumLabel')}
                 </label>
                 <input
                   type="text"
-                  placeholder="cpc, banner, email"
+                  placeholder={t('partners.utmMediumPlaceholder')}
                   value={utmMedium}
                   onChange={(e) => setUtmMedium(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all"
                 />
                 <p className="text-[10px] text-gray-400">
-                  Тип рекламы или канала
+                  {t('partners.utmMediumHint')}
                 </p>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Кампания (utm_campaign)
+                  {t('partners.utmCampaignLabel')}
                 </label>
                 <input
                   type="text"
-                  placeholder="spring_sale"
+                  placeholder={t('partners.utmCampaignPlaceholder')}
                   value={utmCampaign}
                   onChange={(e) => setUtmCampaign(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all"
                 />
                 <p className="text-[10px] text-gray-400">
-                  Название поста или акции
+                  {t('partners.utmCampaignHint')}
                 </p>
               </div>
             </div>
@@ -375,7 +372,9 @@ export const PartnerReferralsSection: React.FC = () => {
             <MousePointerClick size={24} />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500">Переходы</p>
+            <p className="text-sm font-medium text-gray-500">
+              {t('partners.statsClicks')}
+            </p>
             <div className="flex items-end gap-2 mt-1">
               <p className="text-2xl font-bold text-gray-900 leading-none">
                 {totalClicks}
@@ -384,7 +383,9 @@ export const PartnerReferralsSection: React.FC = () => {
                 <ArrowUpRight size={10} /> {registrationsConversion}%
               </span>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Кликов за 30 дней</p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              {t('partners.statsClicksLast30')}
+            </p>
           </div>
         </div>
 
@@ -393,7 +394,9 @@ export const PartnerReferralsSection: React.FC = () => {
             <UserPlus size={24} />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500">Регистрации</p>
+            <p className="text-sm font-medium text-gray-500">
+              {t('partners.statsRegistrations')}
+            </p>
             <div className="flex items-end gap-2 mt-1">
               <p className="text-2xl font-bold text-gray-900 leading-none">
                 {registrations}
@@ -404,8 +407,10 @@ export const PartnerReferralsSection: React.FC = () => {
             </div>
             <p className="text-[10px] text-gray-400 mt-1">
               {totalClicks > 0
-                ? `Конверсия из кликов ${registrationsConversion}%`
-                : 'Конверсия появится после первых переходов'}
+                ? t('partners.statsFromClicks', {
+                    value: registrationsConversion,
+                  })
+                : t('partners.statsFromClicksEmpty')}
             </p>
           </div>
         </div>
@@ -415,7 +420,9 @@ export const PartnerReferralsSection: React.FC = () => {
             <UserCheck size={24} />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500">Активные</p>
+            <p className="text-sm font-medium text-gray-500">
+              {t('partners.statsActive')}
+            </p>
             <div className="flex items-end gap-2 mt-1">
               <p className="text-2xl font-bold text-gray-900 leading-none">
                 {payingClients}
@@ -426,16 +433,20 @@ export const PartnerReferralsSection: React.FC = () => {
             </div>
             <p className="text-[10px] text-gray-400 mt-1">
               {registrations > 0
-                ? `Конверсия из регистраций ${paymentsConversion}%`
-                : 'Конверсия появится после первых регистраций'}
+                ? t('partners.statsFromRegistrations', {
+                    value: paymentsConversion,
+                  })
+                : t('partners.statsFromRegistrationsEmpty')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Поиск по рефералам + таблица (моковая) */}
+      {/* Поиск по рефералам + таблица */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h2 className="text-lg font-bold text-gray-900">Список рефералов</h2>
+        <h2 className="text-lg font-bold text-gray-900">
+          {t('partners.referralsListTitle')}
+        </h2>
         <div className="relative w-full sm:w-72">
           <Search
             size={18}
@@ -443,7 +454,7 @@ export const PartnerReferralsSection: React.FC = () => {
           />
           <input
             type="text"
-            placeholder="Поиск по email или имени..."
+            placeholder={t('partners.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
           />
         </div>
@@ -554,9 +565,10 @@ export const PartnerReferralsSection: React.FC = () => {
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start">
         <div className="text-blue-500 mt-0.5">💡</div>
         <div className="text-sm text-blue-800">
-          <p className="font-semibold mb-1">Реферальная программа</p>
-          Используйте <b>UTM метки</b>, чтобы отслеживать эффективность разных
-          каналов трафика. Статистика по меткам появится в разделе «Обзор».
+          <p className="font-semibold mb-1">
+            {t('partners.utmInfoTitle')}
+          </p>
+          <span>{t('partners.utmInfoText')}</span>
         </div>
       </div>
     </div>

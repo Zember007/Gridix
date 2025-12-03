@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { X, Calculator } from 'lucide-react';
+
+
+
+import { useState } from "react";
+import { TrendingUp, ArrowRight } from "lucide-react";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface Props {
   isOpen: boolean;
@@ -11,137 +15,207 @@ export const PartnerIncomeCalculator: React.FC<Props> = ({
   isOpen,
   onClose,
 }) => {
-  const { t } = useLanguage();
-  const [projects, setProjects] = useState(5);
+ 
 
-  const SUBSCRIPTION_COST = 1815; // Средняя годовая подписка (заглушка по дизайну)
-  const COMMISSION_RATE_REFERRAL = 0.2;
-  const integratorRate = projects > 10 ? 0.5 : 0.4;
+  const [projectCount, setProjectCount] = useState(5);
+  const { t, language: locale } = useLanguage();
 
-  if (!isOpen) return null;
+  // Average annual subscription price
+  const ANNUAL_PRICE = 1815;
+
+  // Calculate income for all tiers
+  const basicIncome = projectCount * ANNUAL_PRICE * 0.2;
+  const integratorIncome = projectCount < 10 ? projectCount * ANNUAL_PRICE * 0.4 : 0;
+  const ambassadorIncome = projectCount >= 10 ? projectCount * ANNUAL_PRICE * 0.5 : 0;
+
+  // Determine current income
+  const currentIncome = projectCount >= 10 ? ambassadorIncome : integratorIncome;
+
+  // Get plural forms for projects
+  const getProjectPlural = (count: number) => {
+    if (count === 1) return t('partners.calculator.projectSingular');
+    if (count < 5) return t('partners.calculator.projectPluralFew');
+    return t('partners.calculator.projectPluralMany');
+  };
+
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl transform transition-all animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-100 p-2 rounded-lg">
-              <Calculator size={24} className="text-gray-700" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900">
-              {t('partners.calculatorTitle') || 'Рассчитайте ваш потенциальный доход'}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>{t('partners.calculator.title')}</DialogTitle>
+          <DialogDescription>
+            {t('partners.calculator.description')}
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="p-8">
+        <div className="mt-6">
           <div className="text-center mb-8">
-            <p className="text-gray-500 text-sm">
-              {t('partners.calculatorSubtitle') || 'Узнайте, сколько вы можете заработать, выбрав количество проектов в год'}
-            </p>
-          </div>
-
-          {/* Slider Section */}
-          <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-medium text-gray-900">
-                {t('partners.calculatorProjectsLabel') || 'Количество проектов в год'}
-              </span>
-              <span className="text-2xl font-bold text-black">{projects}</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={projects}
-              onChange={(e) => setProjects(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Partner */}
-            <div className="p-6 rounded-xl bg-white border border-gray-200 flex flex-col justify-between h-full hover:border-gray-300 transition-colors">
-              <div>
-                <div className="text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">
-                  {t('partners.calculatorBasicTitle') || 'Базовый партнёр'}
-                </div>
-                <div className="text-xs text-gray-400 mb-4">
-                  {t('partners.calculatorBasicRate') || '20% комиссия'}
-                </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">
-                  {(
-                    projects *
-                    SUBSCRIPTION_COST *
-                    COMMISSION_RATE_REFERRAL
-                  ).toLocaleString('en-US')}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t('partners.calculatorPerYear', { projects: projects.toString() }) || `год / ${projects} проектов`}
-                </div>
-              </div>
-            </div>
-
-            {/* Integrator */}
-            <div className="p-6 rounded-xl bg-gray-50 border border-gray-200 flex flex-col justify-between h-full relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] px-2 py-1 rounded-bl-lg font-bold">
-                {t('partners.calculatorBadge') || 'ВЫГОДНО'}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
-                  {t('partners.calculatorIntegratorTitle') || 'Интегратор'}
-                </div>
-                <div className="text-xs text-gray-500 mb-4 transition-all duration-300">
-                  {integratorRate === 0.5
-                    ? (t('partners.calculatorIntegratorRateHigh') || '50% комиссия')
-                    : (t('partners.calculatorIntegratorRateLow') || '40% комиссия')}
-                </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-black mb-1 transition-all duration-300">
-                  {(
-                    projects *
-                    SUBSCRIPTION_COST *
-                    integratorRate
-                  ).toLocaleString('en-US')}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {t('partners.calculatorPerYear', { projects: projects.toString() }) || `год / ${projects} проектов`}
-                </div>
-              </div>
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">{t('partners.calculator.badge')}</span>
             </div>
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg flex items-start gap-3">
-            <div className="text-blue-500 mt-0.5">💡</div>
-            <p className="text-xs text-blue-800 leading-relaxed">
-              {t('partners.calculatorNote', {
-                amount: SUBSCRIPTION_COST.toString(),
-              }) || `Все расчёты основаны на средней стоимости годовой подписки Gridix — $${SUBSCRIPTION_COST}. Ваш доход растёт с каждым активным клиентом. Интеграторы самостоятельно принимают оплату от клиентов.`}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Input Section */}
+            <div className="rounded-xl border border-border bg-background p-6 flex flex-col justify-center">
+              <label className="block mb-6">
+                <span className="text-sm font-semibold text-foreground mb-3 block">
+                  {t('partners.calculator.projectsLabel')}
+                </span>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={projectCount}
+                    onChange={(e) => setProjectCount(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <span className="text-2xl font-bold text-primary w-12 text-right">
+                    {projectCount}
+                  </span>
+                </div>
+              </label>
+
+              <div className="mt-4 p-4 rounded-lg bg-secondary/50 border border-border">
+                <p className="text-sm text-foreground/60 mb-2">{t('partners.calculator.statusLabel')}</p>
+                <p className="text-xl font-bold text-foreground">
+                  {projectCount < 5 ? (
+                    t('partners.calculator.tierBasic')
+                  ) : projectCount < 10 && projectCount >= 5 ? (
+                    t('partners.calculator.tierIntegrator')
+                  ) : (
+                    t('partners.calculator.tierAmbassador')
+                  )}
+                </p>
+              </div>
+
+              <div className="mt-4 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                <p className="text-sm text-foreground/60 mb-2">{t('partners.calculator.commissionLabel')}</p>
+                <p className="text-2xl font-bold text-primary">
+                  {projectCount < 5 ? "20%" : projectCount < 10 && projectCount >= 5 ? "40%" : "50%"}
+                </p>
+              </div>
+            </div>
+
+            {/* Results Section */}
+            <div className="flex flex-col gap-4">
+              {/* Current Tier Income */}
+              <div className="rounded-xl border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+                <p className="text-sm font-semibold text-primary mb-2">{t('partners.calculator.yearlyIncome')}</p>
+                <p className="text-3xl md:text-4xl font-bold text-foreground mb-1">
+                  ${currentIncome.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+                <p className="text-sm text-foreground/60">
+                  {t('partners.calculator.fromProjects', { count: projectCount, projects: getProjectPlural(projectCount) })}
+                </p>
+              </div>
+
+              {/* Tier Comparison */}
+              <div className="space-y-3">
+                {/* Basic */}
+                <div className={`rounded-lg border-2 p-4 transition-all ${projectCount < 5
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-background hover:border-primary/30"
+                  }`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-foreground text-sm">{t('partners.calculator.tierBasic')}</p>
+                        {projectCount < 5 && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
+                            {t('partners.calculator.youAreHere')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-foreground/60">
+                        {projectCount} {getProjectPlural(projectCount)} • {t('partners.calculator.commission20')}
+                      </p>
+                    </div>
+                    <p className={`text-lg font-bold ${projectCount < 5 ? "text-primary" : "text-foreground/60"}`}>
+                      ${basicIncome.toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Integrator */}
+                <div className={`rounded-lg border-2 p-4 transition-all ${projectCount < 10 && projectCount >= 5
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-background hover:border-primary/30"
+                  }`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-foreground text-sm">{t('partners.calculator.tierIntegrator')}</p>
+                        {projectCount < 10 && projectCount >= 5 && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
+                            {t('partners.calculator.youAreHere')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-foreground/60">{t('partners.calculator.integratorDesc')}</p>
+                    </div>
+                    <p className={`text-lg font-bold ${projectCount < 10 && projectCount >= 5 ? "text-primary" : "text-foreground/60"}`}>
+                      ${integratorIncome.toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Ambassador */}
+                <div className={`rounded-lg border-2 p-4 transition-all ${projectCount >= 10
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-background hover:border-primary/30"
+                  }`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-foreground text-sm">{t('partners.calculator.tierAmbassador')}</p>
+                        {projectCount >= 10 && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
+                            {t('partners.calculator.youAreHere')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-foreground/60">{t('partners.calculator.ambassadorDesc')}</p>
+                    </div>
+                    <p className={`text-lg font-bold ${projectCount >= 10 ? "text-primary" : "text-foreground/60"}`}>
+                      ${ambassadorIncome.toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Box */}
+          <div className="mt-6 p-4 rounded-xl border border-border bg-secondary/30">
+            <p className="text-sm text-foreground/60 text-center">
+              {t('partners.calculator.infoNote', { price: ANNUAL_PRICE })}
             </p>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-100 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg transition-colors"
-          >
-            {t('partners.cancel') || 'Закрыть'}
-          </button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
+
+

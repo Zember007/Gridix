@@ -93,9 +93,8 @@ const TARGET_AUDIENCE_KEYS = [
 ];
 
 export const PartnerInstructionsSection: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PartnerIncomeCalculator
@@ -307,11 +306,11 @@ export const PartnerInstructionsSection: React.FC = () => {
             </p>
           </div>
           <a
-            href="#"
+            href={`https://app.gridix.live/embed/project/85a56cab-d420-4d3e-aa37-2c21bce021a8?lang=${language}`}
             className="flex items-center justify-center gap-2 bg-white text-black py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
           >
             <ExternalLink size={18} />
-            {t('partners.instructionsDemoCta') || 'Открыть демо'}
+            {t('partners.instructionsDemoCta')}
           </a>
         </section>
       </div>
@@ -342,8 +341,8 @@ export const PartnerInstructionsSection: React.FC = () => {
       <div className="text-center py-8">
         <p className="text-gray-500 text-sm">
           {t('partners.instructionsSupportText') || 'Есть вопросы? Напишите в нашу'}{' '}
-          <a href="#" className="text-blue-600 hover:underline font-medium">
-            {t('partners.instructionsSupportLink') || 'Telegram-поддержку'}
+          <a href="https://t.me/gridix_bot" className="text-blue-600 hover:underline font-medium">
+            {t('partners.instructionsSupportLink')}
           </a>
         </p>
       </div>

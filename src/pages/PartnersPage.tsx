@@ -179,22 +179,22 @@ const PartnersPage = () => {
         <div className="hidden lg:flex items-center border-b border-slate-200 pb-2">
           <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
             <TabButton
-              label="Обзор"
+              label={t('partners.overview')}
               isActive={activeTab === 'overview'}
               onClick={() => setActiveTab('overview')}
             />
             <TabButton
-              label="Рефералы"
+              label={t('partners.referrals')}
               isActive={activeTab === 'referrals'}
               onClick={() => setActiveTab('referrals')}
             />
             <TabButton
-              label="Клиенты"
+              label={t('partners.clients')}
               isActive={activeTab === 'clients'}
               onClick={() => setActiveTab('clients')}
             />
             <TabButton
-              label="Инструкции"
+              label={t('partners.instructions')}
               isActive={activeTab === 'instructions'}
               onClick={() => setActiveTab('instructions')}
             />
@@ -205,22 +205,22 @@ const PartnersPage = () => {
         <div className="lg:hidden">
           <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex overflow-x-auto no-scrollbar">
             <TabButton
-              label="Обзор"
+              label={t('partners.overview')}
               isActive={activeTab === 'overview'}
               onClick={() => setActiveTab('overview')}
             />
             <TabButton
-              label="Рефералы"
+              label={t('partners.referrals')}
               isActive={activeTab === 'referrals'}
               onClick={() => setActiveTab('referrals')}
             />
             <TabButton
-              label="Клиенты"
+              label={t('partners.clients')}
               isActive={activeTab === 'clients'}
               onClick={() => setActiveTab('clients')}
             />
             <TabButton
-              label="Инструкции"
+              label={t('partners.instructions')}
               isActive={activeTab === 'instructions'}
               onClick={() => setActiveTab('instructions')}
             />
