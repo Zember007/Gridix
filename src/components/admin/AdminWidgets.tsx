@@ -89,7 +89,7 @@ const AdminWidgets = () => {
       })
       .join(', ');
 
-    return `<div id="gridix-widget-root" style="height: 100vh; width: 100%; position: relative; z-index: 1000;"></div>
+    return `<div id="gridix-widget-root" style="min-height: 100vh; width: 100%; position: relative; z-index: 1000;"></div>
 <script src="${scriptUrl}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
