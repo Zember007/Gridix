@@ -21,6 +21,8 @@ export const FloatingProjectButton = ({
   const { language, t } = useLanguage();
   const { project } = useProject(projectId);
   const [themeColor, setThemeColor] = useState<string>('#000000');
+  const [isIframeOpen, setIsIframeOpen] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (project && (project as unknown as Record<string, unknown>)?.theme_color) {
@@ -69,7 +71,8 @@ export const FloatingProjectButton = ({
         ? project.slug
         : `id/${project?.id || projectId}`;
       const url = `${baseDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_self');
+      setIframeUrl(url);
+      setIsIframeOpen(true);
     } catch (error) {
       console.error('Error opening full project page:', error);
       const fallbackDomain =
@@ -78,39 +81,80 @@ export const FloatingProjectButton = ({
         ? project.slug
         : `id/${project?.id || projectId}`;
       const url = `${fallbackDomain}/${language}/project/${projectPath}`;
-      window.open(url, '_self');
+      setIframeUrl(url);
+      setIsIframeOpen(true);
     }
+  };
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const previousOverflow = document.body.style.overflow;
+
+    if (isIframeOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = previousOverflow || '';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow || '';
+    };
+  }, [isIframeOpen]);
+
+  const closeIframe = () => {
+    setIsIframeOpen(false);
   };
 
   if (!project) return null;
 
   return (
-    <div
-      className="fixed z-50"
-      style={{
-        bottom: bottomOffset,
-        [side]: sideOffset,
-      }}
-    >
-      <div className="relative">
-        <span
-          className="absolute top-[10%] left-[10%] right-[10%] bottom-[10%] rounded-full border-2  animate-ping"
-          style={{ borderColor: themeColor }}
-          aria-hidden="true"
-        />
-        <Button
-          size="icon-lg"
-          onClick={openFullProjectPage}
-          style={{ backgroundColor: themeColor }}
-          className="relative shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-1"
-        >
-          <House />
-          <span className="text-[8px] leading-[1] whitespace-normal text-center px-[6px]">
-            {t('project.chooseApartment')}
-          </span>
-        </Button>
+    <>
+      <div
+        className="fixed z-50"
+        style={{
+          bottom: bottomOffset,
+          [side]: sideOffset,
+        }}
+      >
+        <div className="relative">
+          <span
+            className="absolute top-[10%] left-[10%] right-[10%] bottom-[10%] rounded-full border-2  animate-ping"
+            style={{ borderColor: themeColor }}
+            aria-hidden="true"
+          />
+          <Button
+            size="icon-lg"
+            onClick={openFullProjectPage}
+            style={{ backgroundColor: themeColor }}
+            className="relative shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-1"
+          >
+            <House />
+            <span className="text-[8px] leading-[1] whitespace-normal text-center px-[6px]">
+              {t('project.chooseApartment')}
+            </span>
+          </Button>
+        </div>
       </div>
-    </div>
+
+      {isIframeOpen && iframeUrl && (
+        <div className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/70">
+          <div className="relative w-full h-full">
+            <button
+              type="button"
+              onClick={closeIframe}
+              className="absolute right-4 top-4 z-[10000] rounded-full bg-black/70 px-3 py-1 text-sm text-white hover:bg-black/90"
+            >
+              ✕
+            </button>
+            <iframe
+              src={iframeUrl}
+              className="h-full w-full border-0 bg-white"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

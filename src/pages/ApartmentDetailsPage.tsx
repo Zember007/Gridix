@@ -440,16 +440,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     <Loader size="lg" className="mx-auto mb-4" />
   </div>;
 
-  // Показываем загрузку, если данные еще загружаются
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader size="lg" className="mx-auto mb-4"
-          color={project?.theme_color || '#000000'}
-        />
-      </div>
-    );
-  }
+
 
   // Обработка ошибок
   if (projectError || apartmentError) {
