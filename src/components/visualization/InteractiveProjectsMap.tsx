@@ -6,18 +6,21 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProjectsWithPrices, ProjectWithMinPrice } from '@/hooks/useProjectsWithPrices';
+import { Tables } from '@/integrations/supabase/types';
 
 type Project = ProjectWithMinPrice
+
+type ProjectProp = Tables<'projects'>;
 
 interface InteractiveProjectsMapProps {
   onProjectSelect?: (projectId: string) => void;
   selectedProjectId?: string;
   userId?: string;
-  project?: Project;
+  project?: ProjectProp;
 }
 
 // Кастомная иконка для маркеров проектов
-const createCustomIcon = (project: Project, isSelected: boolean = false) => {
+const createCustomIcon = (project: Project | ProjectProp, isSelected: boolean = false) => {
   const iconSize = isSelected ? 60 : 50;
 
   return new Icon({
@@ -30,7 +33,7 @@ const createCustomIcon = (project: Project, isSelected: boolean = false) => {
 };
 
 // Компонент для автоматической подгонки карты под маркеры
-const FitBounds = ({ projects }: { projects: Project[] }) => {
+const FitBounds = ({ projects }: { projects: Project[] | ProjectProp[] }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -49,7 +52,7 @@ const FitBounds = ({ projects }: { projects: Project[] }) => {
 };
 
 const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, project }: InteractiveProjectsMapProps) => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectProp | Project | null>(null);
   const { t } = useLanguage();
 
   // Используем оптимизированный хук для получения проектов
@@ -60,7 +63,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
     project.latitude !== null && project.longitude !== null
   );
 
-  const handleViewProject = (project: Project) => {
+  const handleViewProject = (project: Project | ProjectProp) => {
     if (onProjectSelect) {
       onProjectSelect(project.id);
     } else {
@@ -71,7 +74,7 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
     }
   };
 
-  const handleMarkerClick = (project: Project) => {
+  const handleMarkerClick = (project: ProjectProp | Project) => {
     setSelectedProject(project);
   };
 

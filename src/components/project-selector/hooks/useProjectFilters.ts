@@ -39,7 +39,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
   }, [project]);
 
   // Price conversion
-  const convertPrice = useCallback((price: number, fromCurrency: string | null | undefined, toCurrency: string): number => {
+  const convertPrice = useCallback((price: number, fromCurrency?: string | null, toCurrency?: string): number => {
     if (!price) return 0;
     const from = isValidCurrency(String(fromCurrency)) ? String(fromCurrency) as keyof typeof exchangeRates : 'RUB';
     const to = isValidCurrency(String(toCurrency)) ? String(toCurrency) as keyof typeof exchangeRates : 'RUB';
@@ -87,7 +87,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
       setPriceRange([minPrice, maxPrice]);
       setAreaRange([minArea, maxArea]);
     }
-  }, [selectedCurrency, project?.currency, minPrice, maxPrice, apartments.length]);
+  }, [selectedCurrency, project?.currency, minPrice, maxPrice, minArea, maxArea, apartments.length]);
 
   // Filtered apartments
   const filteredApartments = useMemo(() => {
@@ -119,13 +119,22 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
       filtered = filtered.filter(apt => apt.status === 'available');
     }
 
+    const minSelectedPrice = priceRange[0] ?? 0;
+    const maxSelectedPrice = priceRange[1] ?? Number.MAX_SAFE_INTEGER;
+    const minSelectedArea = areaRange[0] ?? 0;
+    const maxSelectedArea = areaRange[1] ?? Number.MAX_SAFE_INTEGER;
+
     filtered = filtered.filter(apt => {
       const price = apt.price || 0;
       const convertedPrice = convertPrice(price, project?.currency, selectedCurrency);
       const area = apt.area || 0;
 
-      return convertedPrice >= priceRange[0] && convertedPrice <= priceRange[1] &&
-        area >= areaRange[0] && area <= areaRange[1];
+      return (
+        convertedPrice >= minSelectedPrice &&
+        convertedPrice <= maxSelectedPrice &&
+        area >= minSelectedArea &&
+        area <= maxSelectedArea
+      );
     });
 
     if (searchQuery) {
@@ -175,3 +184,6 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     maxArea,
   };
 };
+
+export type ProjectFilters = ReturnType<typeof useProjectFilters>;
+

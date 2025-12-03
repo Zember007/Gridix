@@ -9,17 +9,9 @@ import { Apartment } from '@/types/apartment';
 import { getCurrencySymbolSafe } from '@/lib/currency-utils';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Project {
-  name?: string;
-  has_commercial?: boolean;
-  has_parking?: boolean;
-  currency?: string;
-  installment_enabled?: boolean;
-  min_down_payment_percent?: number;
-  max_installment_months?: number;
-  project_type?: 'building' | 'object' | null;
-}
+type Project = Tables<'projects'>;
 
 interface LayoutPhoto {
   id: string;

@@ -1,14 +1,11 @@
-export interface InstallmentProjectConfig {
-  installment_enabled?: boolean;
-  min_down_payment_percent?: number;
-  max_installment_months?: number;
-}
+import { Tables } from '@/integrations/supabase/types';
 
+type Project = Tables<'projects'>;
 /**
  * Provides helpers to calculate zero-interest installment monthly payment
  * using project configuration.
  */
-export function useInstallment(project?: InstallmentProjectConfig) {
+export function useInstallment(project?: Project) {
   /**
    * Calculates the monthly payment in the project's base currency.
    * Consumers should convert/format to target currency as needed.

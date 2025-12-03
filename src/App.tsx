@@ -24,10 +24,6 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Роуты без языкового префикса для редиректов */}
-{/*             <Route path="/contacts" element={<Navigate to={`/${DEFAULT_LANGUAGE}/contacts`} replace />} />
-            <Route path="/pricing" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} />
-            <Route path="/price" element={<Navigate to={`/${DEFAULT_LANGUAGE}/pricing`} replace />} /> */}
 
        
 
@@ -42,20 +38,6 @@ function App() {
                 </EmbedProviders>
               }
             />
-
-            {/* Partners page - отдельный защищенный роут */}
-      {/*       <Route
-              path="/:lang/partners"
-              element={
-                <AdminProviders>
-                  <ProtectedRoute>
-                    <Suspense fallback={<PageLoader />}>
-                      <PartnersPage />
-                    </Suspense>
-                  </ProtectedRoute>
-                </AdminProviders>
-              }
-            /> */}
 
             {/* Super admin page - отдельный защищенный роут */}
             <Route

@@ -1,28 +1,28 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/hooks/useProjects';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
-import { SlidersHorizontal, AlertTriangle } from 'lucide-react';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
-import { Language } from '@/lib/language-utils';
 import ApartmentFloorPlan from '../apartment/ApartmentFloorPlan';
-import BuildingFacadeView from '../visualization/BuildingFacadeView';
+import BuildingFacadeView, { type BuildingFloor, type FacadeSettings } from '../visualization/BuildingFacadeView';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Import new components
 import { useProjectFilters } from './hooks/useProjectFilters';
-import { ViewModeButtons } from './ViewModeButtons';
-import { CompactFilters } from './filters/CompactFilters';
-import { ExpandedFilters } from './filters/ExpandedFilters';
-import { MobileFilters } from './filters/MobileFilters';
 import { LayoutGallery } from './layouts/LayoutGallery';
+import { Project } from '@/hooks/useProjects';
+import LoaderView from './views/LoaderView';
+import { useApartmentsData } from './hooks/useApartmentsData';
+import { useBuildingImage } from './hooks/useBuildingImage';
+import { useFloorPolygons } from './hooks/useFloorPolygons';
+import { useWidgetScroll } from './hooks/useWidgetScroll';
+import { useFieldHelpers } from './hooks/useFieldHelpers';
+import { useSubscriptionStatus } from './hooks/useSubscriptionStatus';
+import { SubscriptionAlert } from './SubscriptionAlert';
+import { ProjectHeader } from './ProjectHeader';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -40,6 +40,7 @@ const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ def
 const ProjectApartmentSelector = ({
   projectId,
   isWidget = false,
+  // kept for backward compatibility, currently unused
   showFullProjectInWidget = true,
 }: ProjectApartmentSelectorProps) => {
 
@@ -50,10 +51,7 @@ const ProjectApartmentSelector = ({
   const { favoritesCount } = useFavorites(project?.id || undefined);
   const { user } = useAuth();
 
-
   // State
-  const [apartments, setApartments] = useState<Apartment[]>([]);
-  const [apartmentsLoaded, setApartmentsLoaded] = useState(false);
   const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites'>('facade');
   const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
@@ -61,18 +59,159 @@ const ProjectApartmentSelector = ({
   const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
   const [stagedPriceRange, setStagedPriceRange] = useState<number[] | null>(null);
   const [stagedAreaRange, setStagedAreaRange] = useState<number[] | null>(null);
-  const [preloadedLayoutPhotosByRooms, setPreloadedLayoutPhotosByRooms] = useState<Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]>>({});
-  const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
-  const [preloadLayoutLoaded, setPreloadLayoutLoaded] = useState(false);
-  const [buildingImageNaturalSize, setBuildingImageNaturalSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
-  const loadedPolygonsForFloorsRef = useRef<Map<number, Apartment[]>>(new Map());
-  const polygonsLoadingRef = useRef<Set<number>>(new Set());
-  const imageLoadRef = useRef<HTMLImageElement | null>(null);
+
+  const {
+    apartments,
+    setApartments,
+    apartmentsLoaded,
+    preloadedLayoutPhotosByRooms,
+  } = useApartmentsData({ projectId: project?.id });
+
+  const { buildingImageLoaded, buildingImageNaturalSize } = useBuildingImage(
+    project?.building_image_url,
+  );
+
+  // Facade data (floors + settings), loaded only when facade view is active
+  const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
+  const [floorsLoading, setFloorsLoading] = useState(false);
+  const [floorsLoaded, setFloorsLoaded] = useState(false);
+
+  const [facadeSettings, setFacadeSettings] = useState<FacadeSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  const shouldLoadFacadeData =
+    viewMode === 'facade' &&
+    !!project?.id &&
+    !!project?.building_image_url;
+
+  const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [viewMode, selectedFloorForPlan]);
+
+  // Load building floors only when facade view is active
+  useEffect(() => {
+    const loadBuildingFloors = async () => {
+      if (!project?.id) {
+        setBuildingFloors([]);
+        setFloorsLoaded(false);
+        return;
+      }
+
+      try {
+        setFloorsLoading(true);
+        const { data, error } = await supabase
+          .from('building_floors')
+          .select('*')
+          .eq('project_id', project.id)
+          .order('floor_number');
+
+        if (error) throw error;
+
+        const processedFloors: BuildingFloor[] = (data || []).map((floor: {
+          id: string;
+          floor_number: number;
+          polygon: unknown;
+          color: string;
+        }) => ({
+          id: floor.id,
+          floor_number: floor.floor_number,
+          polygon: Array.isArray(floor.polygon)
+            ? (floor.polygon as { x: number; y: number }[])
+            : [],
+          color: floor.color,
+        }));
+
+        setBuildingFloors(processedFloors);
+        setFloorsLoaded(true);
+      } catch (error) {
+        console.error('Error loading building floors:', error);
+        setBuildingFloors([]);
+        setFloorsLoaded(true);
+      } finally {
+        setFloorsLoading(false);
+      }
+    };
+
+    if (shouldLoadFacadeData && !floorsLoaded) {
+      void loadBuildingFloors();
+    }
+  }, [shouldLoadFacadeData, project?.id, floorsLoaded]);
+
+  // Load project-level facade settings only when facade view is active
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!project?.id) {
+        setFacadeSettings(null);
+        setSettingsLoaded(false);
+        return;
+      }
+
+      try {
+        setSettingsLoading(true);
+        const { data, error } = await supabase
+          .from('projects')
+          .select('polygon_settings_facade')
+          .eq('id', project.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
+          const s = data.polygon_settings_facade as Record<string, unknown>;
+          setFacadeSettings({
+            colors: {
+              building: (s?.colors as Record<string, unknown>)?.building as string || '#3b82f6',
+            },
+            opacity: {
+              normal:
+                typeof (s?.opacity as Record<string, unknown>)?.normal === 'number'
+                  ? (s.opacity as Record<string, unknown>).normal as number
+                  : 0.4,
+              hover:
+                typeof (s?.opacity as Record<string, unknown>)?.hover === 'number'
+                  ? (s.opacity as Record<string, unknown>).hover as number
+                  : 0.7,
+            },
+            hoverEffects: {
+              glow: !!(s?.hoverEffects as Record<string, unknown>)?.glow,
+              colorChange: !!(s?.hoverEffects as Record<string, unknown>)?.colorChange,
+              opacityChange: !!(s?.hoverEffects as Record<string, unknown>)?.opacityChange,
+            },
+            display: {
+              showNumbers: !!(s?.display as Record<string, unknown>)?.showNumbers,
+              showTooltip: !!(s?.display as Record<string, unknown>)?.showTooltip,
+            },
+          });
+        } else {
+          setFacadeSettings({
+            colors: { building: '#3b82f6' },
+            opacity: { normal: 0.4, hover: 0.7 },
+            hoverEffects: { glow: true, colorChange: true, opacityChange: true },
+            display: { showNumbers: true, showTooltip: false },
+          });
+        }
+        setSettingsLoaded(true);
+      } catch (e) {
+        console.error('Error loading facade settings:', e);
+        setFacadeSettings({
+          colors: { building: '#3b82f6' },
+          opacity: { normal: 0.4, hover: 0.7 },
+          hoverEffects: { glow: true, colorChange: true, opacityChange: true },
+          display: { showNumbers: true, showTooltip: false },
+        });
+        setSettingsLoaded(true);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    if (shouldLoadFacadeData && !settingsLoaded) {
+      void loadSettings();
+    }
+  }, [shouldLoadFacadeData, project?.id, settingsLoaded]);
 
   // Use filters hook
   const filters = useProjectFilters(
@@ -84,38 +223,21 @@ const ProjectApartmentSelector = ({
       : { apartments }
   );
 
-  // Helper functions
-  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
-    if (field.field_label_translations && field.field_label_translations[language]) {
-      return field.field_label_translations[language];
-    }
-    return field.field_label;
-  };
+  const { getFieldLabel, getCustomFieldValue, formatFieldValue, formatPrice } = useFieldHelpers({
+    language,
+    t,
+    convertPrice: filters.convertPrice,
+    projectCurrency: project?.currency,
+    selectedCurrency: filters.selectedCurrency,
+    selectedType: filters.selectedType,
+  });
 
   const getThemeColor = () => {
     return (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
   };
 
-  const scrollWidgetToTop = useCallback(() => {
-    if (!isWidget || !containerRef.current) return;
-
-    try {
-      // Scroll the widget container itself (if it's scrollable)
-      if (typeof containerRef.current.scrollTo === 'function') {
-        containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        // Fallback for older browsers
-        containerRef.current.scrollTop = 0;
-      }
-
-      // Additionally ensure the widget is aligned to the top of the viewport
-      if (typeof containerRef.current.scrollIntoView === 'function') {
-        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    } catch (error) {
-      console.error('Error scrolling widget to top:', error);
-    }
-  }, [isWidget]);
+  const facadeDataLoaded =
+    !shouldLoadFacadeData || (floorsLoaded && settingsLoaded);
 
   const getBaseDomain = async () => {
 
@@ -187,158 +309,12 @@ const ProjectApartmentSelector = ({
 
   // Full project page is now handled by separate FloatingProjectButton in widget context
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(Math.round(price));
-
-  // Load apartments and layout photos in parallel (optimized)
-  useEffect(() => {
-    if (!project?.id || apartmentsLoaded) return;
-
-    let isCancelled = false;
-
-    const loadDataInParallel = async () => {
-      try {
-        // Load apartments
-        const apartmentsResult = await supabase
-          .from('apartments')
-          .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type')
-          .eq('project_id', project.id);
-
-        if (isCancelled) return;
-
-        // Process apartments
-        const { data, error } = apartmentsResult;
-        if (error) throw error;
-
-        const normalizedApartments = (data || []).map(normalizeApartmentData);
-        if (!isCancelled) {
-          setApartments(normalizedApartments);
-          setApartmentsLoaded(true);
-
-          // Now load layout photos for visible apartments only (non-blocking)
-          // This happens after apartments are loaded, so UI can render
-          const uniqueLayouts = new Set<string>(
-            normalizedApartments.map(a =>
-            (a.type === 'apartment'
-              ? a.rooms == 0
-                ? 'studio'
-                : a.rooms === 'free_layout'
-                  ? 'free_layout'
-                  : `${Number(a.rooms)}-room`
-              : a.type)
-            )
-          );
-
-
-          if (uniqueLayouts.size > 0 && !isCancelled) {
-            // Load layout photos asynchronously without blocking
-            (async () => {
-              try {
-                const { data: layoutData, error: layoutError } = await supabase
-                  .from('layout_photos')
-                  .select('id, project_id, layout_type, image_url, description, order_index')
-                  .eq('project_id', project.id)
-                  .in('layout_type', Array.from(uniqueLayouts))
-                  .order('order_index', { ascending: true });
-
-                if (layoutError) {
-                  console.error('Error loading layout photos:', layoutError);
-                  setPreloadLayoutLoaded(true);
-                  return;
-                }
-
-                const grouped: Record<string, { id: string; image_url: string; description?: string; order_index: number; type: 'layout' }[]> = {};
-
-                (layoutData || []).forEach(p => {
-                  const key = p.layout_type;
-                  if (!grouped[key]) grouped[key] = [];
-                  const item: { id: string; image_url: string; description?: string; order_index: number; type: 'layout' } = {
-                    id: p.id,
-                    image_url: p.image_url,
-                    order_index: p.order_index,
-                    type: 'layout'
-                  };
-                  if (p.description) {
-                    item.description = p.description;
-                  }
-                  grouped[key].push(item);
-                });
-
-                console.log('Layout photos loaded:', Object.keys(grouped).length, 'types'); // Debug log
-                setPreloadedLayoutPhotosByRooms(grouped);
-                setPreloadLayoutLoaded(true);
-              } catch (e: unknown) {
-                console.error('Error preloading layout photos:', e);
-                setPreloadLayoutLoaded(true);
-              }
-            })();
-          } else {
-            setPreloadLayoutLoaded(true);
-          }
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          console.error('Error loading apartments:', error);
-          setApartmentsLoaded(true);
-          setPreloadLayoutLoaded(true);
-        }
-      }
-    };
-
-    loadDataInParallel();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [project?.id, apartmentsLoaded]);
-
-  // Lazy load building facade image (non-blocking)
-  useEffect(() => {
-    // Cancel previous image load
-    if (imageLoadRef.current) {
-      imageLoadRef.current.onload = null;
-      imageLoadRef.current.onerror = null;
-      imageLoadRef.current.src = '';
-    }
-
-    setBuildingImageLoaded(false);
-    setBuildingImageNaturalSize({ width: 0, height: 0 });
-    const imageUrl = project?.building_image_url;
-
-    if (!imageUrl) {
-      // Allow UI to render even without image
-      setBuildingImageLoaded(true);
-      return;
-    }
-
-    // Load image asynchronously without blocking UI
-    const img = new Image();
-    imageLoadRef.current = img;
-
-    img.onload = () => {
-      if (img === imageLoadRef.current) {
-        setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-        setBuildingImageLoaded(true);
-      }
-    };
-
-    img.onerror = () => {
-      // In case of error, still allow UI to proceed
-      if (img === imageLoadRef.current) {
-        setBuildingImageLoaded(true);
-      }
-    };
-
-    // Start loading (non-blocking)
-    img.src = imageUrl;
-
-    return () => {
-      if (imageLoadRef.current === img) {
-        imageLoadRef.current.onload = null;
-        imageLoadRef.current.onerror = null;
-        imageLoadRef.current = null;
-      }
-    };
-  }, [project?.building_image_url]);
+  useFloorPolygons({
+    projectId: project?.id,
+    viewMode,
+    selectedFloorForPlan,
+    setApartments,
+  });
 
   // Set default floor when apartments load
   useEffect(() => {
@@ -351,124 +327,14 @@ const ProjectApartmentSelector = ({
   }, [apartments, filters, selectedFloorForPlan]);
 
 
-  // Scroll widget to top when view mode or selected floor changes (widget only)
-  useEffect(() => {
-    if (!isWidget) return;
-    scrollWidgetToTop();
-  }, [viewMode, isWidget, scrollWidgetToTop]);
 
-  useEffect(() => {
-    if (!isWidget || viewMode !== 'floor-plan') return;
-    scrollWidgetToTop();
-  }, [selectedFloorForPlan, isWidget, viewMode, scrollWidgetToTop]);
-
-  // Load polygons for floor plan view (optimized with caching)
-  useEffect(() => {
-    const loadPolygonsForFloor = async (floor: number) => {
-      if (!project?.id || polygonsLoadingRef.current.has(floor)) return;
-
-      // Check if already cached
-      if (loadedPolygonsForFloorsRef.current.has(floor)) {
-        const cached = loadedPolygonsForFloorsRef.current.get(floor);
-        if (cached && cached.length > 0) {
-          // Update apartments with cached polygons
-          setApartments(prev => prev.map(apt => {
-            const found = cached.find(d => d.id === apt.id);
-            if (!found || apt.floor_number !== floor) return apt;
-            return {
-              ...apt,
-              polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : apt.polygon
-            };
-          }));
-          return;
-        }
-      }
-
-      polygonsLoadingRef.current.add(floor);
-
-      try {
-        const { data, error } = await supabase
-          .from('apartments')
-          .select('id, polygon')
-          .eq('project_id', project.id)
-          .eq('floor_number', floor);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          // Cache the polygons - store raw data, not Apartment objects
-          loadedPolygonsForFloorsRef.current.set(floor, data as unknown as Apartment[]);
-
-          // Update apartments efficiently - only update those on this floor
-          setApartments(prev => prev.map(apt => {
-            if (apt.floor_number !== floor) return apt;
-            const found = data.find(d => d.id === apt.id);
-            if (!found) return apt;
-            return {
-              ...apt,
-              polygon: Array.isArray(found.polygon) ? found.polygon as { x: number; y: number }[] : []
-            };
-          }));
-        }
-      } catch (e) {
-        console.error('Error loading polygons for floor:', e);
-      } finally {
-        polygonsLoadingRef.current.delete(floor);
-      }
-    };
-
-    if (viewMode === 'floor-plan' && selectedFloorForPlan !== null) {
-      loadPolygonsForFloor(selectedFloorForPlan);
-    }
-  }, [viewMode, selectedFloorForPlan, project?.id]);
-
-  // Helper functions for fields
-  const getVisibleFields = useCallback(() => {
-    return fieldSettings
-      .filter(field => field.is_visible)
-      .sort((a, b) => a.sort_order - b.sort_order);
-  }, [fieldSettings]);
-
-  const getCustomFieldValue = useCallback((apartment: Apartment, fieldName: string) => {
-    if (!apartment.custom_fields) return null;
-    const customFields = apartment.custom_fields as Record<string, unknown>;
-    return customFields[fieldName] || null;
-  }, []);
-
-  const formatFieldValue = useCallback((value: unknown, fieldType: string, fieldName: string) => {
-    if (value === null || value === undefined || ((value === 0 || Number.isNaN(value)) && (filters.selectedType == 'commercial' || filters.selectedType == 'parking'))) return '-';
-
-    if (fieldName === 'price') {
-      return formatPrice(filters.convertPrice(value as number, project?.currency, filters.selectedCurrency)) + ' ' + filters.selectedCurrency;
-    }
-
-    if (fieldName === 'area') {
-      return value + ' м²';
-    }
-
-    if (fieldName === 'floor_number') {
-      return value + ' ' + t('project.floor').toLowerCase();
-    }
-
-    if (fieldName === 'rooms') {
-      if (value === 0) {
-        return t('apartment.studio');
-      } else {
-        return value + ' ' + t('apartment.room').toLowerCase();
-      }
-    }
-
-    switch (fieldType) {
-      case 'boolean':
-        return value ? 'Да' : 'Нет';
-      case 'number':
-        return typeof value === 'number' ? value.toString() : String(value);
-      case 'select':
-        return Array.isArray(value) ? value.join(', ') : String(value);
-      default:
-        return String(value);
-    }
-  }, [filters, project?.currency, t]);
+  const getVisibleFields = useCallback(
+    () =>
+      fieldSettings
+        .filter(field => field.is_visible)
+        .sort((a, b) => a.sort_order - b.sort_order),
+    [fieldSettings],
+  );
 
   // Group apartments by floor for grid mode (memoized for performance)
   const groupApartmentsByFloor = useMemo(() => {
@@ -496,17 +362,16 @@ const ProjectApartmentSelector = ({
     }));
   }, [filters.filteredApartments]);
 
-  if (!project) return null;
+
 
   // Show incremental loading - don't block UI completely
-  const isInitialLoading = !apartmentsLoaded;
+  const isInitialLoading = useMemo(
+    () => !apartmentsLoaded || !project || (viewMode === 'facade' && !facadeDataLoaded),
+    [apartmentsLoaded, project, viewMode, facadeDataLoaded],
+  );
   const showContent = apartmentsLoaded; // Show content as soon as apartments are loaded
 
-  // Check subscription status
-  const isSubscriptionExpired = project.subscription_expires_at &&
-    new Date(project.subscription_expires_at) < new Date();
-  const isSubscriptionInactive = !['active', 'trialing', 'trial'].includes(project.subscription_status || '') || isSubscriptionExpired;
-  const isOwner = user && project.user_id === user.id;
+  const { isSubscriptionInactive, isOwner } = useSubscriptionStatus({ project, user });
 
   // If widget mode and apartment is selected, show apartment details
   if (isWidget && isApartmentModalOpen && selectedApartment) {
@@ -526,161 +391,39 @@ const ProjectApartmentSelector = ({
     );
   }
 
-  const shouldShowMainContent = !isWidget || showFullProjectInWidget;
 
   return (
     <div ref={containerRef} className="min-h-screen bg-white flex flex-col relative">
-      {isInitialLoading && (
-        <div className="absolute z-50 inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-          <Loader
-            color={getThemeColor()}
-            size="lg"
-            className="mx-auto"
-          />
-        </div>
-      )}
-      {/* Subscription Warning Banner */}
-      {isSubscriptionInactive && (
-        <Alert className="m-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertTitle className="text-yellow-800 dark:text-yellow-200">
-            {isOwner
-              ? language === 'ru'
-                ? 'Подписка на проект истекла'
-                : 'Project Subscription Expired'
-              : language === 'ru'
-                ? 'Этот проект временно недоступен'
-                : 'This project is temporarily unavailable'}
-          </AlertTitle>
-          <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-            {isOwner
-              ? language === 'ru'
-                ? 'Для продолжения работы с проектом необходимо продлить подписку. Перейдите в раздел "Подписка" в админ-панели.'
-                : 'To continue working with this project, please renew your subscription. Go to the "Subscription" section in the admin panel.'
-              : language === 'ru'
-                ? 'Владелец проекта приостановил доступ к проекту. Пожалуйста, свяжитесь с ним для получения дополнительной информации.'
-                : 'The project owner has suspended access to this project. Please contact them for more information.'}
-          </AlertDescription>
-          {isOwner && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2 border-yellow-600 text-yellow-800 hover:bg-yellow-100"
-              onClick={() => (window.location.href = `/${language}/admin#subscription`)}
-            >
-              {language === 'ru' ? 'Перейти к подпискам' : 'Go to Subscriptions'}
-            </Button>
-          )}
-        </Alert>
-      )}
+      <LoaderView color={getThemeColor()} loading={isInitialLoading} />
+      <SubscriptionAlert
+        isSubscriptionInactive={isSubscriptionInactive}
+        isOwner={!!isOwner}
+        language={language}
+      />
 
-      {shouldShowMainContent && (
+      {project && (
         <>
-          {/* Top header bar - always visible */}
-          <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
-            <div className="container mx-auto  md:px-6 py-4">
-              {/* View mode buttons */}
-              <div className={`flex items-center justify-between gap-3 mb-4`}>
-                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>{project.name}</h1>
-                <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
-                  <ViewModeButtons
-                    isWidget={isWidget}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                    favoritesCount={favoritesCount}
-                    isMobile={isMobile ?? false}
-                    mapVisible={!!project.latitude && !!project.longitude}
-                    projectType={(project as unknown as Record<string, unknown>)?.project_type as 'building' | 'object' | null}
-                    themeColor={getThemeColor()}
-                  />
-
-                  {/* Mobile filters button */}
-                  {isMobile && viewMode === 'list' && (
-                    <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                      <SheetTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-xs px-2">
-                          <SlidersHorizontal className="h-3 w-3" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent side="top" className="h-[80vh] px-2">
-                        <SheetHeader>
-                          <SheetTitle>{t('project.filters')}</SheetTitle>
-                          <SheetDescription>{t('project.filtersDescription')}</SheetDescription>
-                        </SheetHeader>
-                        <div className="mt-6 overflow-y-auto p-4 max-h-[80%]">
-                          <MobileFilters
-                            {...filters}
-                            priceRange={[filters.minPrice, filters.maxPrice]}
-                            getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                            getUniqueFloors={filters.getUniqueFloors}
-                            hasFreeLayout={filters.hasFreeLayout}
-                            project={project}
-                            viewMode={viewMode}
-                            formatPrice={formatPrice}
-                            themeColor={getThemeColor()}
-                          />
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-                  )}
-                </div>
-              </div>
-
-              {/* Desktop Filters */}
-              {!isMobile && viewMode === 'list' && (
-                <div className="space-y-4">
-                  <CompactFilters
-                    {...filters}
-                    getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                    getUniqueFloors={filters.getUniqueFloors}
-                    hasFreeLayout={filters.hasFreeLayout}
-                    project={project}
-                    viewMode={viewMode}
-                    themeColor={getThemeColor()}
-                    isDesktopFiltersExpanded={isDesktopFiltersExpanded}
-                    setIsDesktopFiltersExpanded={() => {
-                      if (!isDesktopFiltersExpanded) {
-                        setStagedPriceRange([...filters.priceRange]);
-                        setStagedAreaRange([...filters.areaRange]);
-                      }
-                      setIsDesktopFiltersExpanded(prev => !prev);
-                    }}
-                  />
-
-                  {/* Expanded filters - animated */}
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="pt-4 border-t border-gray-200">
-                      <ExpandedFilters
-                        priceRange={stagedPriceRange ?? filters.priceRange}
-                        setPriceRange={v => setStagedPriceRange(v)}
-                        areaRange={stagedAreaRange ?? filters.areaRange}
-                        setAreaRange={v => setStagedAreaRange(v)}
-                        selectedCurrency={filters.selectedCurrency}
-                        minPrice={filters.minPrice}
-                        maxPrice={filters.maxPrice}
-                        minArea={filters.minArea}
-                        maxArea={filters.maxArea}
-                        formatPrice={formatPrice}
-                        themeColor={getThemeColor()}
-                      />
-                      <div className="flex justify-end mt-4">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            if (stagedPriceRange) filters.setPriceRange(stagedPriceRange);
-                            if (stagedAreaRange) filters.setAreaRange(stagedAreaRange);
-                            setIsDesktopFiltersExpanded(false);
-                          }}
-                          style={{ backgroundColor: getThemeColor(), color: '#fff' }}
-                        >
-                          {language === 'ru' ? 'Применить' : 'Apply'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+          <div ref={filtersRef}>
+            <ProjectHeader
+              project={project as Project}
+              isWidget={isWidget}
+              isMobile={isMobile ?? false}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              favoritesCount={favoritesCount}
+              mapVisible={!!project?.latitude && !!project?.longitude}
+              projectType={project?.project_type as 'building' | 'object' | null}
+              themeColor={getThemeColor()}
+              filters={filters}
+              isFiltersOpen={isFiltersOpen}
+              setIsFiltersOpen={setIsFiltersOpen}
+              isDesktopFiltersExpanded={isDesktopFiltersExpanded}
+              setIsDesktopFiltersExpanded={setIsDesktopFiltersExpanded}
+              stagedPriceRange={stagedPriceRange}
+              setStagedPriceRange={setStagedPriceRange}
+              stagedAreaRange={stagedAreaRange}
+              setStagedAreaRange={setStagedAreaRange}
+            />
           </div>
 
           {/* Content based on view mode - show content as soon as apartments are loaded */}
@@ -705,7 +448,7 @@ const ProjectApartmentSelector = ({
                     formatPrice={formatPrice}
                     project={project}
                     selectedCurrency={filters.selectedCurrency}
-                    isMobile={isMobile}
+                    isMobile={isMobile ?? false}
                     themeColor={getThemeColor()}
                   />
                 </Suspense>
@@ -753,6 +496,9 @@ const ProjectApartmentSelector = ({
                             externalImageNaturalSize={buildingImageNaturalSize}
                             showOnlyAvailable={filters.showOnlyAvailable}
                             visibleFields={fieldSettings.filter(field => field.is_visible)}
+                            buildingFloors={buildingFloors}
+                            facadeSettings={facadeSettings}
+                            loading={floorsLoading || settingsLoading}
                           />
 
                           {/* Layout gallery below facade when not expanded - hide for project_type = object */}
@@ -789,7 +535,7 @@ const ProjectApartmentSelector = ({
                                   selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
                                 )}
                                 onApartmentSelect={openApartmentDetails}
-                                selectedFloorNumber={selectedFloorForPlan ?? undefined}
+                                selectedFloorNumber={selectedFloorForPlan ?? 0}
                                 visibleFields={fieldSettings.filter(field => field.is_visible)}
                               />
                             </div>

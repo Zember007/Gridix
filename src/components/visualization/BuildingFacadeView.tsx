@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -9,6 +8,20 @@ import ApartmentPopup from './ApartmentPopup';
 import { useLockBodyScroll } from '@/hooks/use-lockscroll';
 import { FieldSetting } from '@/hooks/useFields';
 import { Button } from '../ui/button';
+
+export interface BuildingFloor {
+  id: string;
+  floor_number: number;
+  polygon: { x: number; y: number }[];
+  color: string;
+}
+
+export interface FacadeSettings {
+  colors: { building: string };
+  opacity: { normal: number; hover: number };
+  hoverEffects: { glow: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
+  display: { showNumbers: boolean; showTooltip: boolean };
+}
 
 interface BuildingFacadeViewProps {
   projectId: string;
@@ -28,43 +41,41 @@ interface BuildingFacadeViewProps {
   externalImageNaturalSize?: { width: number; height: number };
   showOnlyAvailable?: boolean;
   visibleFields: FieldSetting[];
-}
-
-interface BuildingFloor {
-  id: string;
-  floor_number: number;
-  polygon: { x: number; y: number }[];
-  color: string;
+  buildingFloors: BuildingFloor[];
+  facadeSettings: FacadeSettings | null;
+  loading: boolean;
 }
 
 const COLLAPSED_HEIGHT = 288;
 
-const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onApartmentSelect, filtersRef, externalImageLoaded, externalImageNaturalSize, showOnlyAvailable = false, visibleFields }: BuildingFacadeViewProps) => {
+const BuildingFacadeView = ({
+  project,
+  apartments,
+  onFloorSelect,
+  onApartmentSelect,
+  filtersRef,
+  externalImageLoaded,
+  externalImageNaturalSize,
+  showOnlyAvailable = false,
+  visibleFields,
+  buildingFloors,
+  facadeSettings,
+  loading,
+}: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
-  const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-
-
-  const [facadeSettings, setFacadeSettings] = useState<{
-    colors: { building: string };
-    opacity: { normal: number; hover: number };
-    hoverEffects: { glow: boolean; colorChange?: boolean; opacityChange?: boolean; scale?: boolean };
-    display: { showNumbers: boolean; showTooltip: boolean; };
-  } | null>(null);
 
   // Floor popup state
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
-  const [isTouchZooming, setIsTouchZooming] = useState(false);
-  const [touchOrigin, setTouchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isTouchZooming] = useState(false);
+  const [touchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [mobileSwitcherPosition, setMobileSwitcherPosition] = useState<{ top: number; left: number } | null>(null);
 
@@ -78,7 +89,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   const updateImageDimensions = useCallback(() => {
     const imgEl = imgRef.current;
     const containerEl = containerRef.current;
-    if (!imgEl || !containerEl || !imageLoaded || imageNaturalSize.width === 0) return;
+    if (!imgEl || !containerEl || imageNaturalSize.width === 0) return;
 
     setImgDimensions(prev => {
       let containerHeight: number;
@@ -125,102 +136,14 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       }
       return newDims;
     });
-  }, [imageLoaded, imageNaturalSize.width, imageNaturalSize.height, isExpanded, isMobile, filtersRef]); // Убрали все изменяемые зависимости
+  }, [imageNaturalSize.width, imageNaturalSize.height, isExpanded, isMobile, filtersRef]); // Убрали все изменяемые зависимости
 
   // Сохраняем актуальную функцию в ref
   updateImageDimensionsRef.current = updateImageDimensions;
 
 
-  const loadBuildingFloors = useCallback(async () => {
-    if (!projectId) {
-      setBuildingFloors([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('building_floors')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('floor_number');
-
-      if (error) throw error;
-
-      const processedFloors = data.map(floor => ({
-        ...floor,
-        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
-      }));
-
-      setBuildingFloors(processedFloors);
-    } catch (error) {
-      console.error('Error loading building floors:', error);
-      setBuildingFloors([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
-
-  useEffect(() => {
-    loadBuildingFloors();
-  }, [loadBuildingFloors]);
-
-
-
-  // Load project-level facade settings
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('polygon_settings_facade')
-          .eq('id', projectId)
-          .single();
-        if (error) throw error;
-        if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
-          const s = data.polygon_settings_facade as Record<string, unknown>;
-          setFacadeSettings({
-            colors: {
-              building: (s?.colors as Record<string, unknown>)?.building as string || '#3b82f6'
-            },
-            opacity: {
-              normal: typeof (s?.opacity as Record<string, unknown>)?.normal === 'number' ? (s.opacity as Record<string, unknown>).normal as number : 0.4,
-              hover: typeof (s?.opacity as Record<string, unknown>)?.hover === 'number' ? (s.opacity as Record<string, unknown>).hover as number : 0.7,
-            },
-            hoverEffects: {
-              glow: !!(s?.hoverEffects as Record<string, unknown>)?.glow,
-              colorChange: !!(s?.hoverEffects as Record<string, unknown>)?.colorChange,
-              opacityChange: !!(s?.hoverEffects as Record<string, unknown>)?.opacityChange,
-            },
-            display: {
-              showNumbers: !!(s?.display as Record<string, unknown>)?.showNumbers,
-              showTooltip: !!(s?.display as Record<string, unknown>)?.showTooltip,
-            },
-          });
-        } else {
-          setFacadeSettings({
-            colors: { building: '#3b82f6' },
-            opacity: { normal: 0.4, hover: 0.7 },
-            hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-            display: { showNumbers: true, showTooltip: false }
-          });
-        }
-      } catch (e) {
-        setFacadeSettings({
-          colors: { building: '#3b82f6' },
-          opacity: { normal: 0.4, hover: 0.7 },
-          hoverEffects: { glow: true, colorChange: true, opacityChange: true },
-          display: { showNumbers: true, showTooltip: false }
-        });
-      }
-    };
-    loadSettings();
-  }, [projectId]);
-
   const visibleFloors = useMemo(() => {
-
-    if(project.project_type === 'object') {
+    if (project.project_type === 'object') {
       return buildingFloors;
     }
     
@@ -233,25 +156,23 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
     
     // Filter buildingFloors to only include floors with available apartments
     return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
-  }, [buildingFloors, apartments]);
+  }, [buildingFloors, apartments, project.project_type]);
 
   useEffect(() => {
-    if (!imageLoaded) return;
     const handleResize = () => {
       updateImageDimensionsRef.current?.();
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [imageLoaded]);
+  }, []);
 
 
 
   // Пересчет размеров при изменении размеров контейнера
   useEffect(() => {
-    if (!containerRef.current || !imageLoaded) return;
+    if (!containerRef.current) return;
     let frame: number | null = null;
     const observer = new ResizeObserver(() => {
-      if (!imageLoaded) return;
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         updateImageDimensionsRef.current?.();
@@ -262,14 +183,13 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [imageLoaded]);
+  }, []);
 
   // Пересчет при изменении высоты блока фильтров, влияющего на доступную высоту контейнера
   useEffect(() => {
-    if (!filtersRef?.current || !imageLoaded) return;
+    if (!filtersRef?.current) return;
     let frame: number | null = null;
     const observer = new ResizeObserver(() => {
-      if (!imageLoaded) return;
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         updateImageDimensionsRef.current?.();
@@ -280,17 +200,16 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [filtersRef, imageLoaded]);
+  }, [filtersRef]);
 
   useEffect(() => {
-    console.log('visibleFloors', visibleFloors);
-    if (imageLoaded && visibleFloors.length > 0) {
+    if (visibleFloors.length > 0) {
       updateImageDimensionsRef.current?.();
       if (isExpanded && isMobile) {
         setHoveredFloor(visibleFloors[0]?.floor_number ?? null);
       }
     }
-  }, [isExpanded, imageLoaded, visibleFloors, isMobile]);
+  }, [isExpanded, visibleFloors, isMobile]);
 
 
 
@@ -302,7 +221,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
   useEffect(() => {
     if (externalImageLoaded && externalImageNaturalSize && externalImageNaturalSize.width > 0) {
       setImageNaturalSize(externalImageNaturalSize);
-      setImageLoaded(true);
       // Немедленный пересчет после синхронизации размеров изображения (двойной rAF, чтобы дождаться layout)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -729,7 +647,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         }}
       >
         {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
-        {imageLoaded && project.building_image_url && (
+        {project.building_image_url && (
           <>
   
             <img
@@ -745,7 +663,7 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
         )}
 
         {/* Показываем изображение только после загрузки для предотвращения скачков */}
-        {imageLoaded ? (
+        {project.building_image_url ? (
           <div
             ref={wrapperRef}
             style={{
@@ -838,7 +756,6 @@ const BuildingFacadeView = ({ projectId, project, apartments, onFloorSelect, onA
                   onLoad={(e) => {
                     const img = e.target as HTMLImageElement;
                     setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-                    setImageLoaded(true);
                     // Двойной rAF для гарантии, что контейнер и изображение уже имеют корректные размеры
                     requestAnimationFrame(() => {
                       requestAnimationFrame(() => {
