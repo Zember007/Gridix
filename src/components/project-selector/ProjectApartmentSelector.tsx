@@ -403,28 +403,27 @@ const ProjectApartmentSelector = ({
 
       {project && (
         <>
-          <div ref={filtersRef} className={`${isWidget ? '' : 'md:h-[68px] h-[60px]'} w-full`}>
-            <ProjectHeader
-              project={project as Project}
-              isWidget={isWidget}
-              isMobile={isMobile ?? false}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              favoritesCount={favoritesCount}
-              mapVisible={!!project?.latitude && !!project?.longitude}
-              projectType={project?.project_type as 'building' | 'object' | null}
-              themeColor={getThemeColor()}
-              filters={filters}
-              isFiltersOpen={isFiltersOpen}
-              setIsFiltersOpen={setIsFiltersOpen}
-              isDesktopFiltersExpanded={isDesktopFiltersExpanded}
-              setIsDesktopFiltersExpanded={setIsDesktopFiltersExpanded}
-              stagedPriceRange={stagedPriceRange}
-              setStagedPriceRange={setStagedPriceRange}
-              stagedAreaRange={stagedAreaRange}
-              setStagedAreaRange={setStagedAreaRange}
-            />
-          </div>
+          <ProjectHeader
+            filtersRef={filtersRef}
+            project={project as Project}
+            isWidget={isWidget}
+            isMobile={isMobile ?? false}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            favoritesCount={favoritesCount}
+            mapVisible={!!project?.latitude && !!project?.longitude}
+            projectType={project?.project_type as 'building' | 'object' | null}
+            themeColor={getThemeColor()}
+            filters={filters}
+            isFiltersOpen={isFiltersOpen}
+            setIsFiltersOpen={setIsFiltersOpen}
+            isDesktopFiltersExpanded={isDesktopFiltersExpanded}
+            setIsDesktopFiltersExpanded={setIsDesktopFiltersExpanded}
+            stagedPriceRange={stagedPriceRange}
+            setStagedPriceRange={setStagedPriceRange}
+            stagedAreaRange={stagedAreaRange}
+            setStagedAreaRange={setStagedAreaRange}
+          />
 
           {/* Content based on view mode - show content as soon as apartments are loaded */}
           {showContent ? (

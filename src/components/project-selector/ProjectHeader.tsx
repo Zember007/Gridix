@@ -11,6 +11,7 @@ import type { ProjectFilters } from './hooks/useProjectFilters';
 
 interface ProjectHeaderProps {
   project: Project;
+  filtersRef: React.RefObject<HTMLDivElement>;
   isWidget: boolean;
   isMobile: boolean;
   viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites';
@@ -32,6 +33,7 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader = ({
   project,
+  filtersRef, 
   isWidget,
   isMobile,
   viewMode,
@@ -56,7 +58,7 @@ export const ProjectHeader = ({
     new Intl.NumberFormat('en-US').format(Math.round(price));
 
   return (
-    <div className={`bg-white border-b ${isWidget ? 'sticky' : 'fixed'} top-0 z-40 w-full`}>
+    <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
       <div className="container mx-auto  md:px-6 md:py-4 py-2 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3 ">
           <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>
