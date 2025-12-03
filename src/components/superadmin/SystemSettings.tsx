@@ -396,7 +396,6 @@ export function SystemSettings() {
   const loadCommissionTiers = async () => {
     setLoadingTiers(true);
     try {
-      // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
       const { data, error } = await supabase
         .from('commission_tiers')
         .select('*')
