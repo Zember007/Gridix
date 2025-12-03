@@ -46,7 +46,7 @@ export const PartnerIncomeCalculator: React.FC<Props> = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="w-[95vw] max-w-4xl p-4 sm:p-6 max-h-[90vh] sm:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('partners.calculator.title')}</DialogTitle>
           <DialogDescription>
@@ -69,16 +69,16 @@ export const PartnerIncomeCalculator: React.FC<Props> = ({
                 <span className="text-sm font-semibold text-foreground mb-3 block">
                   {t('partners.calculator.projectsLabel')}
                 </span>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <input
                     type="range"
                     min="1"
                     max="20"
                     value={projectCount}
                     onChange={(e) => setProjectCount(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                    className="w-full sm:flex-1 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                   />
-                  <span className="text-2xl font-bold text-primary w-12 text-right">
+                  <span className="text-2xl font-bold text-primary sm:w-12 text-left sm:text-right">
                     {projectCount}
                   </span>
                 </div>
