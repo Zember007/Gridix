@@ -143,29 +143,53 @@ const PartnersPage = () => {
   return (
     <div className="space-y-6">
       {/* Верхний блок как в новом дашборде: заголовок + кнопка «Ваш счёт» */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight truncate">
-            {t('partners.title')}
-          </h1>
-          <p className="text-xs md:text-sm text-slate-500 font-medium truncate">
-            {t('partners.subtitle')}
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 items-start">
+        <div className="flex items-center gap-6">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight truncate">
+              {t('partners.title')}
+            </h1>
+            <p className="text-xs md:text-sm text-slate-500 font-medium truncate">
+              {t('partners.subtitle')}
+            </p>
+          </div>
+          <div className="hidden xl:flex items-center border-l border-slate-200 pl-6">
+            <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
+              <TabButton
+                label={t('partners.overview')}
+                isActive={activeTab === 'overview'}
+                onClick={() => setActiveTab('overview')}
+              />
+              <TabButton
+                label={t('partners.referrals')}
+                isActive={activeTab === 'referrals'}
+                onClick={() => setActiveTab('referrals')}
+              />
+              <TabButton
+                label={t('partners.clients')}
+                isActive={activeTab === 'clients'}
+                onClick={() => setActiveTab('clients')}
+              />
+              <TabButton
+                label={t('partners.instructions')}
+                isActive={activeTab === 'instructions'}
+                onClick={() => setActiveTab('instructions')}
+              />
+            </div>
+          </div>
         </div>
         <button
           onClick={() => setActiveTab('account')}
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all border ${
-            activeTab === 'account'
-              ? 'bg-slate-900 text-white border-slate-900'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-          }`}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all border ${activeTab === 'account'
+            ? 'bg-slate-900 text-white border-slate-900'
+            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
         >
           <span
-            className={`p-1 rounded-full ${
-              activeTab === 'account'
-                ? 'bg-slate-700 text-white'
-                : 'bg-green-100 text-green-600'
-            }`}
+            className={`p-1 rounded-full ${activeTab === 'account'
+              ? 'bg-slate-700 text-white'
+              : 'bg-green-100 text-green-600'
+              }`}
           >
             <Wallet size={14} />
           </span>
@@ -175,34 +199,10 @@ const PartnersPage = () => {
 
       {/* Сабнавигация партнёрского раздела (Обзор / Рефералы / Клиенты / Инструкции) */}
       <>
-        {/* Десктоп */}
-        <div className="hidden lg:flex items-center border-b border-slate-200 pb-2">
-          <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1">
-            <TabButton
-              label={t('partners.overview')}
-              isActive={activeTab === 'overview'}
-              onClick={() => setActiveTab('overview')}
-            />
-            <TabButton
-              label={t('partners.referrals')}
-              isActive={activeTab === 'referrals'}
-              onClick={() => setActiveTab('referrals')}
-            />
-            <TabButton
-              label={t('partners.clients')}
-              isActive={activeTab === 'clients'}
-              onClick={() => setActiveTab('clients')}
-            />
-            <TabButton
-              label={t('partners.instructions')}
-              isActive={activeTab === 'instructions'}
-              onClick={() => setActiveTab('instructions')}
-            />
-          </div>
-        </div>
+
 
         {/* Мобильные переключатели */}
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex overflow-x-auto no-scrollbar">
             <TabButton
               label={t('partners.overview')}
@@ -251,11 +251,10 @@ const TabButton: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex-none py-1.5 px-4 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${
-        isActive
-          ? 'bg-white text-slate-900 shadow-sm'
-          : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
-      }`}
+      className={`flex-none py-1.5 px-4 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${isActive
+        ? 'bg-white text-slate-900 shadow-sm'
+        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
+        }`}
     >
       {label}
     </button>

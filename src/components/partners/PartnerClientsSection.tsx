@@ -557,19 +557,19 @@ export const PartnerClientsSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pl-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="md:pl-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 {/* Информация о клиенте */}
-                <div className="flex items-center gap-4 min-w-[250px]">
+                <div className="flex items-center gap-4 md:min-w-[250px] md:flex-row flex-col">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
+                    className={`w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
                       !isExpired ? 'bg-blue-600' : 'bg-slate-400'
                     }`}
                   >
                     {name.charAt(0)}
                   </div>
-                  <div>
+                  <div className='truncate max-w-full'>
                     <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      {name}
+                      <span className="truncate">{name}</span>
                       {hasNote && (
                         <StickyNote
                           size={14}
@@ -577,14 +577,14 @@ export const PartnerClientsSection: React.FC = () => {
                         />
                       )}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 truncate">
                       {email}
                     </div>
                   </div>
                 </div>
 
                 {/* Подписки по проектам */}
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
+                <div className="md:pl-0 pl-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                       {t('partners.tariffLabel')}

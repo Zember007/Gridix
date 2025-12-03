@@ -32,6 +32,14 @@
   font-style: normal;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Custom styles for project markers */
 .project-marker {
   border-radius: 50%;

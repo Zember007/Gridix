@@ -94,7 +94,7 @@ const AdminDashboard = () => {
         setIsMobileOpen={setIsMobileOpen}
       />
 
-      <div className="flex-1 bg-background flex flex-col">
+      <div className="flex-1 bg-background flex flex-col max-w-[100vw]">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto  py-4">
             <div className="flex items-center justify-between">
