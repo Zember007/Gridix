@@ -64,7 +64,7 @@ interface CommissionTier {
   min_projects: number;
   max_projects: number | null;
   commission_percentage: number;
-  link_type: 'referral' | 'managed' | null;
+  link_type: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -117,7 +117,6 @@ export function SystemSettings() {
     min_projects: 0,
     max_projects: null,
     commission_percentage: 20,
-    link_type: 'referral',
     is_active: true,
   });
 
@@ -400,7 +399,6 @@ export function SystemSettings() {
       const { data, error } = await supabase
         .from('commission_tiers')
         .select('*')
-        .order('link_type', { ascending: true })
         .order('min_projects', { ascending: true });
 
       if (error) throw error;
@@ -421,13 +419,13 @@ export function SystemSettings() {
     try {
       if (editingTier) {
         // Обновление существующего tier
+        // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
         const { error } = await supabase
           .from('commission_tiers')
           .update({
             min_projects: tier.min_projects,
             max_projects: tier.max_projects === undefined ? null : tier.max_projects,
             commission_percentage: tier.commission_percentage,
-            link_type: tier.link_type || null,
             is_active: tier.is_active ?? true,
             updated_at: new Date().toISOString(),
           })
@@ -440,13 +438,13 @@ export function SystemSettings() {
         });
       } else {
         // Создание нового tier
+        // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
         const { error } = await supabase
           .from('commission_tiers')
           .insert({
             min_projects: tier.min_projects || 0,
             max_projects: tier.max_projects === undefined ? null : tier.max_projects,
             commission_percentage: tier.commission_percentage || 20,
-            link_type: tier.link_type || null,
             is_active: tier.is_active ?? true,
           });
 
@@ -463,7 +461,6 @@ export function SystemSettings() {
         min_projects: 0,
         max_projects: null,
         commission_percentage: 20,
-        link_type: 'referral',
         is_active: true,
       });
       await loadCommissionTiers();
@@ -483,6 +480,7 @@ export function SystemSettings() {
     }
 
     try {
+      // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
       const { error } = await supabase
         .from('commission_tiers')
         .delete()
@@ -506,6 +504,7 @@ export function SystemSettings() {
 
   const handleToggleTierActive = async (tier: CommissionTier) => {
     try {
+      // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
       const { error } = await supabase
         .from('commission_tiers')
         .update({
@@ -1195,9 +1194,10 @@ export function SystemSettings() {
         <TabsContent value="commissions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Настройки комиссий партнеров</CardTitle>
+              <CardTitle>Настройки комиссий партнёров</CardTitle>
               <CardDescription>
-                Управление процентами комиссии в зависимости от количества проектов
+                Управление процентами комиссии в зависимости от суммарного количества проектов
+                всех клиентов партнёра (для реферальных и управляемых клиентов одновременно)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1229,68 +1229,13 @@ export function SystemSettings() {
                       </Button>
                     </div>
 
-                    {/* Referral Tiers */}
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm text-muted-foreground">Реферальные комиссии</h4>
+                      <h4 className="font-medium text-sm text-muted-foreground">
+                        Комиссии партнёрской программы (общие для рефералов и управляемых клиентов)
+                      </h4>
                       <div className="space-y-2">
                         {commissionTiers
-                          .filter(tier => tier.link_type === 'referral')
-                          .map((tier) => (
-                            <div
-                              key={tier.id}
-                              className="flex items-center justify-between p-3 border rounded-lg"
-                            >
-                              <div className="flex-1 grid grid-cols-4 gap-4 items-center">
-                                <div>
-                                  <span className="text-sm font-medium">
-                                    {tier.min_projects} - {tier.max_projects === null ? '∞' : tier.max_projects}
-                                  </span>
-                                  <p className="text-xs text-muted-foreground">проектов</p>
-                                </div>
-                                <div>
-                                  <span className="text-sm font-medium">{tier.commission_percentage}%</span>
-                                  <p className="text-xs text-muted-foreground">комиссия</p>
-                                </div>
-                                <div>
-                                  <Switch
-                                    checked={tier.is_active}
-                                    onCheckedChange={() => handleToggleTierActive(tier)}
-                                  />
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {tier.is_active ? 'Активна' : 'Неактивна'}
-                                  </p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setEditingTier(tier);
-                                      setIsTierDialogOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteTier(tier.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Managed Tiers */}
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm text-muted-foreground">Комиссии управляемых клиентов</h4>
-                      <div className="space-y-2">
-                        {commissionTiers
-                          .filter(tier => tier.link_type === 'managed')
+                          .sort((a, b) => (a.min_projects ?? 0) - (b.min_projects ?? 0))
                           .map((tier) => (
                             <div
                               key={tier.id}
@@ -1354,28 +1299,6 @@ export function SystemSettings() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="tier_link_type">Тип связи</Label>
-                          <Select
-                            value={editingTier?.link_type || newTier.link_type || 'referral'}
-                            onValueChange={(value) => {
-                              if (editingTier) {
-                                setEditingTier({ ...editingTier, link_type: value as 'referral' | 'managed' | null });
-                              } else {
-                                setNewTier({ ...newTier, link_type: value as 'referral' | 'managed' | null });
-                              }
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="referral">Реферальная</SelectItem>
-                              <SelectItem value="managed">Управляемая</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="tier_min_projects">Мин. проектов</Label>

@@ -7,42 +7,19 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import {
-  Search as SearchIcon,
-  LayoutDashboard as Dashboard,
-  CheckSquare as Task,
+
   Folder,
-  Calendar as CalendarIcon,
-  Users as UserMultiple,
-  BarChart3 as Analytics,
+
   FileText as DocumentAdd,
   Settings as SettingsIcon,
   User as UserIcon,
   ChevronDown as ChevronDownIcon,
-  Plus as AddLarge,
-  Filter,
-  Clock as Time,
-  RotateCw as InProgress,
-  Check as CheckmarkOutline,
-  Flag,
-  Archive,
-  Eye as View,
-  FileBarChart as Report,
-  Star as StarFilled,
-  Users as Group,
-  BarChart as ChartBar,
+
   BarChart3,
-  FolderOpen,
-  Share,
-  Upload as CloudUpload,
-  Shield as Security,
-  Bell as Notification,
+
   Zap as Integration,
   Building2,
   Code,
-  LogOut,
-  ArrowLeft,
-  Save,
-  Image,
   Layers3,
   Camera,
   UserCheck,
@@ -50,7 +27,6 @@ import {
   Crown,
   Handshake,
   Building,
-  ChevronDown,
   Book,
   Menu,
 } from "lucide-react";
@@ -73,7 +49,6 @@ const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, 
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
     { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
-    { id: "partners", icon: <Handshake size={20} />, label: t('admin.partners') },
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
     { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics.title') },
     { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
@@ -259,13 +234,22 @@ function SimplifiedSidebar({
       {/* Footer */}
       {userEmail && (
         <div>
-          <div className="flex gap-2 p-4">
+          <div className="flex flex-col gap-2 p-4">
+          <SidebarButton
+              icon={<Handshake size={20} />}
+              label={t('admin.partners')}
+              isActive={activeSection === 'partners'}
+              isCollapsed={isCollapsed}
+              onClick={() => handleSectionChange('partners')}
+              href={`/${language}/admin?page=partners`}
+            />
             <SidebarButton
               icon={<Book size={20} />}
               label={t('admin.documentation')}
               isCollapsed={isCollapsed}
               href={`https://docs.gridix.live/${language === 'ru' ? 'ru' : 'en'}`}
             />
+           
           </div>
           <div
             className="p-4"
@@ -368,6 +352,11 @@ export function AdminSidebar({
     }
   };
 
+  useEffect(() => {
+    setActiveSection(activeTab || "projects");
+  }, [activeTab]);
+
+
   const navItems = getAdminNavItems(t, userRole.type === 'manager', onNavigate);
 
   const sidebar = (
@@ -456,6 +445,7 @@ export function ProjectEditorSidebar({
       setIsMobileOpen(false);
     }
   };
+
 
   const navItems = getProjectEditorNavItems(t, projectType);
 

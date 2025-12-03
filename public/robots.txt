@@ -1,25 +1,2 @@
 User-agent: *
-# Разрешаем индексацию только главной страницы и страницы прайса
-Allow: /
-Allow: /pricing
-Allow: /price
-Allow: /en/
-Allow: /en/pricing
-Allow: /en/price
-Allow: /ru/
-Allow: /ru/pricing
-Allow: /ru/price
-# Запрещаем индексацию всех остальных страниц
-Disallow: /admin
-Disallow: /auth
-Disallow: /widget
-Disallow: /project
-Disallow: /partner-program
-Disallow: /privacy-policy
-Disallow: /terms-of-service
-Disallow: /refund-policy
-Disallow: /set-password
-Disallow: /invitation
-Disallow: /embed
-Disallow: /partners
-Disallow: /superadmin
+Disallow: /

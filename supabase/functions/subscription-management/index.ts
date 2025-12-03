@@ -480,7 +480,7 @@ async function handleConfirmPayment(req: Request, body: any) {
       .eq('id', subscription_id);
 
     if (updateError) {
-      return createJsonResponse({ error: "Failed to activate subscription" }, 500, origin);
+      return createJsonResponse({ error: "Failed to activate subscription", message: updateError }, 500, origin);
     }
 
     return createJsonResponse({

@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 
 interface PartnerProgramRequest {
-  action: 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
+  action: 'track_click' | 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
   partner_code?: string
   partner_id?: string
   client_id?: string
@@ -15,6 +15,16 @@ interface PartnerProgramRequest {
   email?: string
   invitation_type?: 'referral' | 'managed'
   invitation_code?: string
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+}
+
+function formatDateRu(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}.${month}.${year}`
 }
 
 serve(async (req) => {
@@ -36,7 +46,37 @@ serve(async (req) => {
       }
     )
 
-    // Создаем клиент с пользовательским токеном для проверки авторизации
+    const {
+      action,
+      partner_code,
+      partner_id,
+      client_id,
+      amount,
+      payment_method,
+      contact_info,
+      admin_action,
+      payout_percentage,
+      email,
+      invitation_type,
+      invitation_code,
+      utm_source,
+      utm_medium,
+      utm_campaign
+    }: PartnerProgramRequest = await req.json()
+
+    // Для отслеживания кликов авторизация пользователя не требуется
+    if (action === 'track_click') {
+      return await handleTrackClick(
+        supabaseClient,
+        partner_code,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        req.headers.get('origin')
+      )
+    }
+
+    // Для всех остальных действий требуется авторизованный пользователь
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -56,11 +96,19 @@ serve(async (req) => {
       )
     }
 
-    const { action, partner_code, partner_id, client_id, amount, payment_method, contact_info, admin_action, payout_percentage, email, invitation_type, invitation_code }: PartnerProgramRequest = await req.json()
-
     switch (action) {
       case 'track_referral':
-        return await handleTrackReferral(supabaseClient, user.id, partner_code, invitation_code, invitation_type, req.headers.get('origin'))
+        return await handleTrackReferral(
+          supabaseClient,
+          user.id,
+          partner_code,
+          invitation_code,
+          invitation_type,
+          req.headers.get('origin'),
+          utm_source,
+          utm_medium,
+          utm_campaign
+        )
       
       case 'get_stats':
         return await handleGetStats(supabaseClient, user.id, partner_id, req.headers.get('origin'))
@@ -95,7 +143,17 @@ serve(async (req) => {
 })
 
 // Отслеживание реферала при регистрации
-async function handleTrackReferral(supabaseClient: any, userId: string, partnerCode?: string, invitationCode?: string, invitationType?: string, origin?: string | null) {
+async function handleTrackReferral(
+  supabaseClient: any,
+  userId: string,
+  partnerCode?: string,
+  invitationCode?: string,
+  invitationType?: string,
+  origin?: string | null,
+  utmSource?: string | null,
+  utmMedium?: string | null,
+  utmCampaign?: string | null
+) {
   if (!partnerCode) {
     return createJsonResponse(
       { success: false, error: 'Partner code required' },
@@ -210,7 +268,10 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
         client_id: userId,
         type: linkType,
         status: linkStatus,
-        accepted_at: new Date().toISOString()
+        accepted_at: new Date().toISOString(),
+        utm_source: utmSource || null,
+        utm_medium: utmMedium || null,
+        utm_campaign: utmCampaign || null
       })
       .select()
       .single()
@@ -261,6 +322,73 @@ async function handleTrackReferral(supabaseClient: any, userId: string, partnerC
     )
   } catch (error) {
     console.error('Error in track_referral:', error)
+    return createJsonResponse(
+      { success: false, error: 'Internal server error' },
+      500,
+      origin
+    )
+  }
+}
+
+// Отслеживание кликов по реферальной ссылке (без авторизации пользователя)
+async function handleTrackClick(
+  supabaseClient: any,
+  partnerCode?: string,
+  utmSource?: string | null,
+  utmMedium?: string | null,
+  utmCampaign?: string | null,
+  origin?: string | null
+) {
+  if (!partnerCode) {
+    return createJsonResponse(
+      { success: false, error: 'Partner code required' },
+      400,
+      origin
+    )
+  }
+
+  try {
+    // Находим партнёра по коду
+    const { data: partner, error: partnerError } = await supabaseClient
+      .from('partner_profiles')
+      .select('id, status')
+      .eq('partner_code', partnerCode)
+      .eq('status', 'active')
+      .single()
+
+    if (partnerError || !partner) {
+      return createJsonResponse(
+        { success: false, error: 'Invalid partner code' },
+        400,
+        origin
+      )
+    }
+
+    const { error: clickError } = await supabaseClient
+      .from('partner_clicks')
+      .insert({
+        partner_id: partner.id,
+        utm_source: utmSource || null,
+        utm_medium: utmMedium || null,
+        utm_campaign: utmCampaign || null
+      })
+
+    if (clickError) {
+      console.error('Error logging partner click:', clickError)
+      return createJsonResponse(
+        { success: false, error: 'Failed to log click' },
+        500,
+        origin
+      )
+    }
+
+    return createJsonResponse(
+      { success: true },
+      200,
+      origin
+    )
+  } catch (error) {
+    console.error('Error in track_click:', error)
     return createJsonResponse(
       { success: false, error: 'Internal server error' },
       500,
@@ -326,6 +454,9 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
       .from('partner_links')
       .select(`
         id,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         type,
         status,
         created_at,
@@ -349,23 +480,361 @@ async function handleGetStats(supabaseClient: any, userId: string, targetPartner
 
     console.log('Found partner links:', links?.length || 0)
 
-      
+    // Получаем информацию о подписках клиентов по их проектам
+    const clientIds = (links || []).map(link => link.client_id).filter(Boolean)
+    let enrichedLinks = links || []
 
-    const referralClients = links?.filter(link => link.type === 'referral') || []
-    const managedClients = links?.filter(link => link.type === 'managed') || []
+    let totalProjectsCount = 0
+
+    if (clientIds.length > 0) {
+      const { data: projects, error: projectsError } = await supabaseClient
+        .from('projects')
+        .select('id, name, user_id, subscription_status, subscription_expires_at')
+        .in('user_id', clientIds)
+
+      if (projectsError) {
+        console.error('Error fetching client projects:', projectsError)
+      } else if (projects) {
+        totalProjectsCount = projects.length
+        const projectsByClient: Record<string, any[]> = {}
+
+        for (const project of projects) {
+          if (!projectsByClient[project.user_id]) {
+            projectsByClient[project.user_id] = []
+          }
+          projectsByClient[project.user_id].push(project)
+        }
+
+        enrichedLinks = enrichedLinks.map(link => {
+          const clientProjects = projectsByClient[link.client_id] || []
+          if (!clientProjects.length) {
+            return link
+          }
+
+          let aggregatedStatus = 'none'
+          let aggregatedExpiresAt: string | null = null
+
+          // Определяем статус подписки: приоритет active > trialing > expired/trial_expired > остальные
+          if (clientProjects.some(p => p.subscription_status === 'active')) {
+            aggregatedStatus = 'active'
+          } else if (clientProjects.some(p => p.subscription_status === 'trialing')) {
+            aggregatedStatus = 'trialing'
+          } else if (clientProjects.some(p => p.subscription_status === 'expired' || p.subscription_status === 'trial_expired')) {
+            aggregatedStatus = 'expired'
+          } else if (clientProjects[0]?.subscription_status) {
+            aggregatedStatus = clientProjects[0].subscription_status
+          }
+
+          for (const project of clientProjects) {
+            if (project.subscription_expires_at) {
+              if (!aggregatedExpiresAt || project.subscription_expires_at > aggregatedExpiresAt) {
+                aggregatedExpiresAt = project.subscription_expires_at
+              }
+            }
+          }
+
+          return {
+            ...link,
+            subscription_status: aggregatedStatus,
+            subscription_expires_at: aggregatedExpiresAt,
+            // Детальная информация по проектам клиента для фронтенда партнёра
+            projects: clientProjects.map(project => ({
+              id: project.id,
+              name: project.name,
+              subscription_status: project.subscription_status,
+              subscription_expires_at: project.subscription_expires_at
+            }))
+          }
+        })
+      }
+    }
+
+    const referralClients = enrichedLinks.filter(link => link.type === 'referral') || []
+    const managedClients = enrichedLinks.filter(link => link.type === 'managed') || []
+
+    // Считаем количество кликов по реферальным ссылкам
+    const { data: clicks, error: clicksError } = await supabaseClient
+      .from('partner_clicks')
+      .select('id')
+      .eq('partner_id', partnerProfile.id)
+
+    if (clicksError) {
+      console.error('Error fetching partner clicks:', clicksError)
+    }
+
+    const totalClicks = clicks?.length || 0
+
+    // Воронка конверсии
+    const registrationsCount = enrichedLinks.length || 0
+    const payingClientsCount = enrichedLinks.filter(link => link.subscription_status === 'active').length
+
+    // ---------------- ПАРТНЁРСКИЕ УРОВНИ ----------------
+    // Вся бизнес-логика по уровням должна опираться на таблицу commission_tiers,
+    // где супер-админ настраивает промежутки и проценты комиссии.
+    //
+    // Здесь мы используем то же самое определение, что и в get_partner_commission_percentage:
+    // количество ПРОЕКТОВ всех клиентов партнёра.
+    // Уровни по-прежнему именуются хардкодом:
+    // - Bronze Partner
+    // - Silver Partner
+    // - Gold Partner
+    //
+    // Но сами пороги берём из commission_tiers (для link_type = referral / NULL),
+    // чтобы сообщение о максимальном уровне и прогрессе всегда совпадало с настройками супер-админа.
+    const projectsCountForLevels = totalProjectsCount
+
+    let partnerLevelName = 'Bronze Partner'
+    let partnerLevelKey: 'bronze' | 'silver' | 'gold' = 'bronze'
+    let nextLevelName: string | null = null
+    let nextLevelRequiredActiveClients: number | null = null
+    let clientsToNextLevel: number | null = null
+
+    try {
+      const { data: tiers, error: tiersError } = await supabaseClient
+        .from('commission_tiers')
+        .select('min_projects, max_projects, commission_percentage, link_type')
+        .eq('is_active', true)
+        .order('min_projects', { ascending: true })
+
+      if (tiersError) {
+        console.error('Error fetching commission_tiers:', tiersError)
+      } else if (tiers && tiers.length > 0) {
+        const sortedTiers = [...tiers].sort(
+          (a: any, b: any) => (a.min_projects ?? 0) - (b.min_projects ?? 0)
+        )
+
+        let currentTierIndex = -1
+        for (let i = 0; i < sortedTiers.length; i++) {
+          const tier = sortedTiers[i]
+          const min = tier.min_projects ?? 0
+          const max = tier.max_projects
+
+          if (projectsCountForLevels >= min && (max === null || projectsCountForLevels <= max)) {
+            currentTierIndex = i
+            break
+          }
+        }
+
+        // Если не попали ни в один диапазон (например, активных клиентов меньше минимального),
+        // используем самый первый уровень как базовый.
+        if (currentTierIndex === -1) {
+          currentTierIndex = 0
+        }
+
+        const nextTier =
+          currentTierIndex < sortedTiers.length - 1
+            ? sortedTiers[currentTierIndex + 1]
+            : null
+
+        // Маппинг индекса диапазона на имя уровня:
+        // 0 → Bronze, 1 → Silver, 2+ → Gold
+        if (currentTierIndex === 0) {
+          partnerLevelName = 'Bronze Partner'
+          partnerLevelKey = 'bronze'
+        } else if (currentTierIndex === 1) {
+          partnerLevelName = 'Silver Partner'
+          partnerLevelKey = 'silver'
+        } else {
+          partnerLevelName = 'Gold Partner'
+          partnerLevelKey = 'gold'
+        }
+
+        if (nextTier) {
+          const target = nextTier.min_projects ?? projectsCountForLevels
+          nextLevelRequiredActiveClients = target
+          clientsToNextLevel = Math.max(target - projectsCountForLevels, 0)
+
+          const nextIndex = currentTierIndex + 1
+          if (nextIndex === 0) {
+            nextLevelName = 'Bronze Partner'
+          } else if (nextIndex === 1) {
+            nextLevelName = 'Silver Partner'
+          } else {
+            nextLevelName = 'Gold Partner'
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error calculating partner level from commission_tiers:', e)
+    }
+
+    // История комиссий и дохода
+    const commissionClientIds = enrichedLinks.map(link => link.client_id).filter(Boolean)
+    let commissions: { partner_commission_amount: number; created_at: string | null }[] = []
+
+    if (commissionClientIds.length > 0) {
+      const { data: commissionRows, error: commissionsError } = await supabaseClient
+        .from('user_subscriptions')
+        .select('partner_commission_amount, invoice_paid_at, created_at, user_id')
+        .in('user_id', commissionClientIds)
+        .not('partner_commission_amount', 'is', null)
+        .order('created_at', { ascending: true })
+
+      if (commissionsError) {
+        console.error('Error fetching partner commissions:', commissionsError)
+      } else if (commissionRows) {
+        commissions = commissionRows.map((row: any) => ({
+          partner_commission_amount: row.partner_commission_amount || 0,
+          created_at: row.invoice_paid_at || row.created_at
+        }))
+      }
+    }
+
+    // Собираем историю дохода по дням (последние 30 дней)
+    const incomeByDate: Record<string, number> = {}
+    for (const c of commissions) {
+      if (!c.created_at) continue
+      const d = new Date(c.created_at)
+      if (isNaN(d.getTime())) continue
+      const key = d.toISOString().slice(0, 10)
+      incomeByDate[key] = (incomeByDate[key] || 0) + (c.partner_commission_amount || 0)
+    }
+
+    const days = 30
+    const incomeHistory: { date: string; amount: number }[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      incomeHistory.push({
+        date: key,
+        amount: incomeByDate[key] || 0
+      })
+    }
+
+    // История операций по счету (комиссии и выводы)
+    const { data: payoutRows, error: payoutsError } = await supabaseClient
+      .from('partner_payouts')
+      .select('amount, status, created_at, requested_at, processed_at, payment_method')
+      .eq('partner_id', partnerProfile.id)
+      .order('created_at', { ascending: true })
+
+    if (payoutsError) {
+      console.error('Error fetching partner payouts:', payoutsError)
+    }
+
+    type LedgerEvent = {
+      sortDate: string
+      date: string
+      sum: number
+      comment: string
+    }
+
+    const ledgerEvents: LedgerEvent[] = []
+
+    for (const c of commissions) {
+      if (!c.created_at) continue
+      const d = new Date(c.created_at)
+      if (isNaN(d.getTime())) continue
+
+      ledgerEvents.push({
+        sortDate: d.toISOString(),
+        date: formatDateRu(d),
+        sum: c.partner_commission_amount || 0,
+        comment: 'Начисление комиссии партнёра'
+      })
+    }
+
+    for (const payout of payoutRows || []) {
+      const baseDate = payout.processed_at || payout.requested_at || payout.created_at
+      if (!baseDate) continue
+      const d = new Date(baseDate)
+      if (isNaN(d.getTime())) continue
+
+      const statusLabel =
+        payout.status === 'paid'
+          ? 'Выплата завершена'
+          : payout.status === 'approved'
+          ? 'Выплата подтверждена'
+          : payout.status === 'rejected'
+          ? 'Выплата отклонена'
+          : 'Запрос на вывод'
+
+      const methodLabel = payout.payment_method ? ` (${payout.payment_method})` : ''
+
+      ledgerEvents.push({
+        sortDate: d.toISOString(),
+        date: formatDateRu(d),
+        sum: -Math.abs(payout.amount || 0),
+        comment: `${statusLabel}${methodLabel}`
+      })
+    }
+
+    ledgerEvents.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
+
+    let runningBalance = 0
+    const transactions = ledgerEvents.map(event => {
+      runningBalance += event.sum
+      return {
+        date: event.date,
+        sum: event.sum,
+        balance: runningBalance,
+        comment: event.comment
+      }
+    })
 
     // Получаем доступный баланс для вывода
     const availableBalance = partnerProfile.total_earned - partnerProfile.total_withdrawn
 
+    // Рассчитываем проценты комиссии по тем же правилам, что и в calculate_and_award_partner_commission
+    // Используем хранимую функцию get_partner_commission_percentage(link_type, partner_id)
+    let commissionPercentageReferral: number | null = null
+    let commissionPercentageManaged: number | null = null
+
+    try {
+      const { data: referralPct } = await supabaseClient.rpc('get_partner_commission_percentage', {
+        p_link_type: 'referral',
+        partner_id_param: partnerProfile.id
+      })
+
+      if (typeof referralPct === 'number') {
+        commissionPercentageReferral = referralPct
+      }
+    } catch (e) {
+      console.error('Error getting referral commission percentage:', e)
+    }
+
+    try {
+      const { data: managedPct } = await supabaseClient.rpc('get_partner_commission_percentage', {
+        p_link_type: 'managed',
+        partner_id_param: partnerProfile.id
+      })
+
+      if (typeof managedPct === 'number') {
+        commissionPercentageManaged = managedPct
+      }
+    } catch (e) {
+      console.error('Error getting managed commission percentage:', e)
+    }
+
     return createJsonResponse(
       {
-        total_clients: links?.length || 0,
+        total_clients: enrichedLinks.length || 0,
         referral_clients: referralClients.length,
         managed_clients: managedClients.length,
         total_earned: partnerProfile.total_earned,
         total_withdrawn: partnerProfile.total_withdrawn,
         available_for_withdrawal: availableBalance,
-        clients: links || []
+        total_clicks: totalClicks,
+        clients: enrichedLinks || [],
+        commissions,
+        income_history: incomeHistory,
+        transactions,
+        funnel_registrations: registrationsCount,
+        funnel_paying_clients: payingClientsCount,
+        commission_percentage_referral: commissionPercentageReferral,
+        commission_percentage_managed: commissionPercentageManaged,
+        // Данные по партнёрским уровням и количеству проектов для фронтенда
+        total_projects: totalProjectsCount,
+        active_clients: totalProjectsCount,
+        partner_level: partnerLevelName,
+        partner_level_key: partnerLevelKey,
+        next_level_name: nextLevelName,
+        next_level_required_active_clients: nextLevelRequiredActiveClients,
+        clients_to_next_level: clientsToNextLevel
       },
       200,
       origin

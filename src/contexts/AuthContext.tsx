@@ -60,6 +60,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     updated_at: new Date().toISOString(),
   });
 
+ 
+
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -75,7 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Проверяем, требуется ли установка пароля
           const requiresPassword = session.user.user_metadata?.requires_password_setup === true;
           setRequiresPasswordSetup(requiresPassword);
-          
+
           await loadUserProfile(session.user.id, session.user, session, abortController.signal);
         } else {
           setLoading(false);
@@ -89,6 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     initializeAuth();
 
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (abortController.signal.aborted) return;
 
@@ -99,7 +102,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Проверяем, требуется ли установка пароля
         const requiresPassword = newSession.user.user_metadata?.requires_password_setup === true;
         setRequiresPasswordSetup(requiresPassword);
-        
+
         await loadUserProfile(newSession.user.id, newSession.user, newSession, abortController.signal);
       } else {
         setUserProfile(null);
@@ -126,59 +129,104 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
       return;
     }
-  
+
     loadingProfileRef.current.add(userId);
     let timeoutId: NodeJS.Timeout | null = null;
-  
+
     try {
-      // Обрабатываем реферальный код и приглашения сразу после авторизации
+      // Обрабатываем реферальный код и UTM-метки из localStorage (если есть)
       try {
-        // Получаем параметры из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const partnerCode = urlParams.get('ref');
-        const invitationCode = urlParams.get('invite');
-        const invitationType = urlParams.get('type');
-        
-        console.log('Registration URL params:', { partnerCode, invitationCode, invitationType });
-        
-        if (partnerCode) {
-          if (invitationCode && invitationType === 'managed') {
-            console.log('Processing managed invitation...');
-            // Обрабатываем приглашение для управляемого клиента
-            const { data: invitationData, error: invitationError } = await supabase.functions.invoke('partner-program', {
-              body: {
-                action: 'track_referral',
-                partner_code: partnerCode,
-                invitation_code: invitationCode,
-                invitation_type: 'managed'
-              }
+        const pendingReferralStr = localStorage.getItem('pending_referral');
+        if (pendingReferralStr) {
+          const pendingReferral = JSON.parse(pendingReferralStr);
+          const {
+            partnerCode,
+            invitationCode,
+            invitationType,
+            utmSource,
+            utmMedium,
+            utmCampaign,
+            timestamp,
+          } = pendingReferral;
+
+          const maxAge = 24 * 60 * 60 * 1000; // 24 часа
+          if (partnerCode && timestamp && Date.now() - timestamp < maxAge) {
+            console.log('Processing referral from localStorage:', {
+              partnerCode,
+              invitationCode,
+              invitationType,
+              utmSource,
+              utmMedium,
+              utmCampaign,
             });
 
-            if (invitationError) {
-              console.error('Error processing invitation:', invitationError);
-            } else if (invitationData?.success) {
-              console.log('Invitation processed successfully:', invitationData.partner_name, 'Link type:', invitationData.link_type);
+            if (invitationCode && invitationType === 'managed') {
+              console.log('Processing managed invitation (after auth)...');
+              const { data: invitationData, error: invitationError } =
+                await supabase.functions.invoke('partner-program', {
+                  body: {
+                    action: 'track_referral',
+                    partner_code: partnerCode,
+                    invitation_code: invitationCode,
+                    invitation_type: 'managed',
+                    utm_source: utmSource,
+                    utm_medium: utmMedium,
+                    utm_campaign: utmCampaign,
+                  },
+                });
+
+              if (invitationError) {
+                console.error(
+                  'Error processing invitation (after auth):',
+                  invitationError,
+                );
+              } else if (invitationData?.success) {
+                console.log(
+                  'Invitation processed successfully (after auth):',
+                  invitationData.partner_name,
+                  'Link type:',
+                  invitationData.link_type,
+                );
+                localStorage.removeItem('pending_referral');
+              }
+            } else {
+              console.log('Processing regular referral (after auth)...');
+              const { data: referralData, error: referralError } =
+                await supabase.functions.invoke('partner-program', {
+                  body: {
+                    action: 'track_referral',
+                    partner_code: partnerCode,
+                    utm_source: utmSource,
+                    utm_medium: utmMedium,
+                    utm_campaign: utmCampaign,
+                  },
+                });
+
+              if (referralError) {
+                console.error(
+                  'Error tracking referral (after auth):',
+                  referralError,
+                );
+              } else if (referralData?.success) {
+                console.log(
+                  'Referral tracked successfully (after auth):',
+                  referralData.partner_name,
+                  'Link type:',
+                  referralData.link_type,
+                );
+                localStorage.removeItem('pending_referral');
+              }
             }
           } else {
-            console.log('Processing regular referral...');
-            // Обычная реферальная связь
-            const { data: referralData, error: referralError } = await supabase.functions.invoke('partner-program', {
-              body: {
-                action: 'track_referral',
-                partner_code: partnerCode
-              }
-            });
-
-            if (referralError) {
-              console.error('Error tracking referral:', referralError);
-            } else if (referralData?.success) {
-              console.log('Referral tracked successfully:', referralData.partner_name, 'Link type:', referralData.link_type);
-            }
+            // Данные устарели или некорректны — очищаем
+            localStorage.removeItem('pending_referral');
           }
         }
       } catch (referralErr) {
-        console.error('Error processing referral/invitation:', referralErr);
-        // Не прерываем процесс регистрации из-за ошибки реферала
+        console.error(
+          'Error processing referral from localStorage (after auth):',
+          referralErr,
+        );
       }
 
       const queryPromise = supabase
@@ -186,19 +234,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .select('*')
         .eq('id', userId)
         .single();
-  
+
       timeoutId = setTimeout(() => {
         throw new Error('Query timeout');
       }, QUERY_TIMEOUT);
-  
+
       // Define the expected Supabase response type
       const { data, error } = await Promise.race([
-        queryPromise as Promise<{ data: UserProfile | null; error: any }>,
+        queryPromise as unknown as Promise<{ data: UserProfile | null; error: any }>,
         new Promise<never>((_, reject) => timeoutId && reject(new Error('Query timeout'))),
       ]);
-  
+
       if (signal.aborted || currentSession !== session) return;
-  
+
       if (error) {
         if (error.code === 'PGRST116') {
           try {
@@ -219,9 +267,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               .single();
 
             // Профиль создан, логика обработки приглашений уже выполнена выше
-  
+
             if (signal.aborted || currentSession !== session) return;
-  
+
             if (createError) {
               setUserProfile(createFallbackProfile(userId, currentUser));
             } else {

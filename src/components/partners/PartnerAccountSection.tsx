@@ -12,10 +12,20 @@ import { usePartnerAccountData } from '@/hooks/usePartnerAccountData';
 import { PartnerTopUpModal } from './PartnerTopUpModal';
 import { WithdrawalRequestsModal } from './WithdrawalRequestsModal';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Input } from '../ui/input';
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 export const PartnerAccountSection: React.FC = () => {
   const { t } = useLanguage();
   const {
+    loading,
+    error,
     isTopUpOpen,
     setIsTopUpOpen,
     isWithdrawalOpen,
@@ -33,7 +43,44 @@ export const PartnerAccountSection: React.FC = () => {
     filteredTransactions,
     resetFilters,
     hasFilters,
+    accountBalance,
+    commissionPercentage,
   } = usePartnerAccountData();
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 lg:gap-12 w-full lg:w-auto">
+              <div>
+                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-8 w-40 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-px w-full sm:h-12 sm:w-px bg-gray-100 sm:bg-gray-200" />
+              <div>
+                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="h-10 w-full bg-gray-100 rounded mb-3 animate-pulse" />
+          <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-6 space-y-3">
+            <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
+            <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+            <div className="h-4 w-5/6 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -46,6 +93,12 @@ export const PartnerAccountSection: React.FC = () => {
         onClose={() => setIsWithdrawalOpen(false)}
       />
 
+      {error && (
+        <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg px-4 py-3">
+          {t('partners.error')}: {error}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -54,9 +107,9 @@ export const PartnerAccountSection: React.FC = () => {
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                 {t('partners.accountBalance')}
               </div>
-              {/* Пока используем дефолтные данные */}
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-                $709.35
+                {/* Реальный доступный баланс партнёра из Supabase */}
+                ${accountBalance.toFixed(2)}
               </div>
             </div>
             <div className="h-px w-full sm:h-12 sm:w-px bg-gray-100 sm:bg-gray-200" />
@@ -65,7 +118,8 @@ export const PartnerAccountSection: React.FC = () => {
                 {t('partners.accountDiscount')}
               </div>
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-                50%
+                {/* Комиссия партнёра по тем же правилам, что и calculate_and_award_partner_commission */}
+                {commissionPercentage !== null ? `${commissionPercentage}%` : '—'}
               </div>
             </div>
           </div>
@@ -76,13 +130,13 @@ export const PartnerAccountSection: React.FC = () => {
             >
               {t('partners.withdrawMoney')}
             </button>
-            <button
+        {/*     <button
               onClick={() => setIsTopUpOpen(true)}
               className="flex-1 lg:flex-none py-3 px-8 rounded-lg bg-[#4CAF50] hover:bg-[#43A047] text-white text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all uppercase tracking-wider flex justify-center items-center gap-2 text-center"
             >
               <ArrowDownCircle size={18} />
               {t('partners.topUp')}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -90,29 +144,35 @@ export const PartnerAccountSection: React.FC = () => {
       {/* Filters */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-48">
+          <div className="relative w-full md:w-56">
             <Filter
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <select
+            <ShadcnSelect
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-9 p-2.5 outline-none transition-colors"
+              onValueChange={(value) => setFilterType(value)}
             >
-              <option value="all">
-                {t('partners.transactionsFilterAll')}
-              </option>
-              <option value="income">
-                {t('partners.transactionsFilterIncome')}
-              </option>
-              <option value="expense">
-                {t('partners.transactionsFilterExpense')}
-              </option>
-              <option value="commission">
-                {t('partners.transactionsFilterCommission')}
-              </option>
-            </select>
+              <SelectTrigger className="w-full bg-gray-50 border-gray-200 pl-9">
+                <SelectValue
+                  placeholder={t('partners.transactionsFilterAll')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('partners.transactionsFilterAll')}
+                </SelectItem>
+                <SelectItem value="income">
+                  {t('partners.transactionsFilterIncome')}
+                </SelectItem>
+                <SelectItem value="expense">
+                  {t('partners.transactionsFilterExpense')}
+                </SelectItem>
+                <SelectItem value="commission">
+                  {t('partners.transactionsFilterCommission')}
+                </SelectItem>
+              </SelectContent>
+            </ShadcnSelect>
           </div>
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:flex-none group">
@@ -120,12 +180,12 @@ export const PartnerAccountSection: React.FC = () => {
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
               />
-              <input
+              <Input
                 type="date"
                 value={startDate}
                 max={endDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 outline-none transition-colors placeholder-gray-400 cursor-pointer"
+                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
               />
             </div>
             <span className="text-gray-400 font-medium">-</span>
@@ -134,12 +194,12 @@ export const PartnerAccountSection: React.FC = () => {
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
               />
-              <input
+              <Input
                 type="date"
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5 outline-none transition-colors cursor-pointer"
+                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
               />
             </div>
           </div>
@@ -182,7 +242,7 @@ export const PartnerAccountSection: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredTransactions.map((tx, idx) => {
-                  let type: 'topup' | 'expense' | 'commission' = 'topup';
+                  let type: 'topup' | 'expense' | 'commission' = 'commission';
                   if (tx.sum < 0) type = 'expense';
                   else if (
                     tx.comment.toLowerCase().includes('комиссия') ||
