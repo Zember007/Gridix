@@ -45,8 +45,8 @@ export const DurationSelector: React.FC<DurationSelectorProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="bg-muted p-1.5 rounded-2xl inline-flex">
+    <div className="flex flex-col overflow-hidden">
+      <div className="bg-muted p-1.5 rounded-2xl inline-flex whitespace-nowrap overflow-x-auto mx-auto no-scrollbar">
         {options.map((option) => (
           <button
             key={option.value}

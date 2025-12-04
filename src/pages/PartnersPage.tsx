@@ -203,7 +203,7 @@ const PartnersPage = () => {
 
         {/* Мобильные переключатели */}
         <div className="xl:hidden">
-          <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex overflow-x-auto no-scrollbar">
+          <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex overflow-x-auto  ">
             <TabButton
               label={t('partners.overview')}
               isActive={activeTab === 'overview'}

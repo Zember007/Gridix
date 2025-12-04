@@ -99,7 +99,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ orders, projects }) 
 
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           {/* Status filter */}
-          <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="flex bg-slate-100 p-1 rounded-lg whitespace-nowrap overflow-x-auto no-scrollbar">
             {(['all', 'paid', 'pending'] as const).map((f) => (
               <button
                 key={f}

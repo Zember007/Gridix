@@ -236,7 +236,7 @@ export default function SubscriptionTab() {
     <div className="mx-auto flex flex-col gap-10 animate-in fade-in duration-500 pb-20">
       {/* Header / Active Plans (как в SubscriptionPage) */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold text-slate-900">
             {t('admin.subscriptionPage.title')}
           </h1>
