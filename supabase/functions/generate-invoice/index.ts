@@ -419,34 +419,91 @@ async function handleGenerateInvoice(req: Request, body: any) {
 
     console.log("generate-invoice: Company settings query result:", { companySettingsData, companyError });
 
-    if (companyError || !companySettingsData) {
+    // Fetch user profile for individual payer fallback
+    const { data: userProfileData, error: userProfileError } = await supabase
+      .from('user_profiles')
+      .select('full_name, email, phone, tax_id, legal_address')
+      .eq('id', subscription.user_id)
+      .maybeSingle();
+
+    console.log("generate-invoice: User profile query result:", { userProfileData, userProfileError });
+
+    // Determine payer data (company or individual)
+    type PayerSource = 'company' | 'individual';
+    let payerSource: PayerSource | null = null;
+    let payerName = '';
+    let payerTaxId = '';
+    let payerAddress = '';
+    let payerPhone = '';
+    let payerEmail = '';
+    let payerBank = '';
+    let payerIban = '';
+
+    if (!companyError && companySettingsData) {
+      // Prefer company settings when available (backwards compatible)
+      payerSource = 'company';
+      payerName = companySettingsData.company_name || '';
+      payerTaxId = companySettingsData.tax_id || '';
+      payerAddress = companySettingsData.address || '';
+      payerPhone = companySettingsData.phone || '';
+      payerEmail = companySettingsData.email || '';
+      payerBank = companySettingsData.bank_name || '';
+      payerIban = companySettingsData.iban || '';
+
+      // Validate required company settings fields (bank details optional)
+      const requiredCompanyFields = ['company_name', 'tax_id', 'address', 'phone', 'email'] as const;
+      const missingFields = requiredCompanyFields.filter(
+        (field) => !companySettingsData[field] || (companySettingsData[field] as string).trim() === ''
+      );
+
+      if (missingFields.length > 0) {
+        return createJsonResponse({
+          error: "COMPANY_SETTINGS_INCOMPLETE",
+          message: `Missing required company information: ${missingFields.join(', ')}. Please complete your company settings.`,
+          missing_fields: missingFields,
+          debug: {
+            user_id: subscription.user_id,
+            company_settings: companySettingsData
+          }
+        }, 400, origin);
+      }
+    } else if (userProfileData) {
+      // Fallback to individual payer details from user profile
+      payerSource = 'individual';
+      payerName = userProfileData.full_name || (userProfileData.email ? userProfileData.email.split('@')[0] : '');
+      payerTaxId = userProfileData.tax_id || '';
+      payerAddress = userProfileData.legal_address || '';
+      payerPhone = userProfileData.phone || '';
+      payerEmail = userProfileData.email || '';
+
+      const missingFields: string[] = [];
+      if (!payerName.trim()) missingFields.push('full_name');
+      if (!payerPhone.trim()) missingFields.push('phone');
+      if (!payerEmail.trim()) missingFields.push('email');
+
+      if (missingFields.length > 0) {
+        return createJsonResponse({
+          error: "PAYER_SETTINGS_INCOMPLETE",
+          message: `Missing required billing information: ${missingFields.join(', ')}. Please complete your billing profile.`,
+          missing_fields: missingFields,
+          debug: {
+            user_id: subscription.user_id,
+            user_profile: userProfileData
+          }
+        }, 400, origin);
+      }
+    } else {
+      // No payer information available
       return createJsonResponse({
-        error: "COMPANY_SETTINGS_NOT_FOUND",
-        message: "Company settings not found. Please configure your company information before generating invoices.",
+        error: "PAYER_SETTINGS_NOT_FOUND",
+        message: "Billing information not found. Please fill in your billing details before generating invoices.",
         debug: {
           user_id: subscription.user_id,
-          company_error: companyError
+          company_error: companyError,
+          user_profile_error: userProfileError
         }
       }, 400, origin);
     }
-
-    // Validate required company settings fields
-    const requiredFields = ['company_name', 'tax_id', 'address', 'phone', 'email', 'bank_name', 'iban'];
-    const missingFields = requiredFields.filter(field => !companySettingsData[field] || companySettingsData[field].trim() === '');
-    
-    if (missingFields.length > 0) {
-      return createJsonResponse({
-        error: "COMPANY_SETTINGS_INCOMPLETE",
-        message: `Missing required company information: ${missingFields.join(', ')}. Please complete your company settings.`,
-        missing_fields: missingFields,
-        debug: {
-          user_id: subscription.user_id,
-          company_settings: companySettingsData
-        }
-      }, 400, origin);
-    }
-
-    const companySettings = companySettingsData;
 
     // Generate invoice number with timestamp for uniqueness
     const now = new Date();
@@ -456,7 +513,7 @@ async function handleGenerateInvoice(req: Request, body: any) {
     const invoiceNumber = `INV-${dateStr}-${timeStr}-${projectId}`;
 
     // Generate payment purpose
-    const paymentPurpose = `Payment for ${subscription.duration_months} months of the "${subscription.projects?.name}" project (account ${companySettings.company_name})`;
+    const paymentPurpose = `Payment for ${subscription.duration_months} months of the "${subscription.projects?.name}" project (account ${payerName})`;
 
     // Convert prices from USD to target currency
     const monthlyPriceUSD = parseFloat(subscription.subscription_plans?.base_price || '0');
@@ -470,13 +527,13 @@ async function handleGenerateInvoice(req: Request, body: any) {
     const invoiceData = {
       invoiceNumber,
       date: now.toLocaleDateString('ka-GE'),
-      companyName: companySettings.company_name,
-      companyTaxId: companySettings.tax_id,
-      companyAddress: companySettings.address,
-      companyPhone: companySettings.phone,
-      companyEmail: companySettings.email,
-      companyBank: companySettings.bank_name,
-      companyIban: companySettings.iban,
+      companyName: payerName,
+      companyTaxId: payerTaxId,
+      companyAddress: payerAddress,
+      companyPhone: payerPhone,
+      companyEmail: payerEmail,
+      companyBank: payerBank,
+      companyIban: payerIban,
       projectName: subscription.projects?.name,
       planName: subscription.subscription_plans?.name,
       durationMonths: subscription.duration_months,

@@ -94,5 +94,137 @@
   "settings": "Настройки",
   "subscription": "Подписка",
   "widgets": "Виджеты",
-  "documentation": "Документация"
+  "documentation": "Документация",
+  "subscriptionPage": {
+    "title": "Ваши подписки",
+    "description": "Выберите тариф, который подходит вашему бизнесу.",
+    "refresh": "Обновить",
+    "projects": {
+      "emptyTitle": "Нет проектов",
+      "emptyDescription": "Создайте свой первый проект в разделе «Проекты», чтобы активировать для него подписку и открыть все возможности.",
+      "tariff": "Тариф",
+      "expiresAt": "Истекает",
+      "notSelected": "Не выбран",
+      "status": {
+        "active": "АКТИВЕН",
+        "expired": "ИСТЕК",
+        "inactive": "НЕ АКТИВЕН"
+      },
+      "buttons": {
+        "extend": "Продлить",
+        "activate": "Активировать"
+      }
+    },
+    "durations": {
+      "1": "1 месяц",
+      "3": "3 месяца",
+      "6": "6 месяцев",
+      "12": "12 месяцев"
+    },
+    "hints": {
+      "36": "🔥 Супер-выгода! Скидка 50% на весь срок.",
+      "12": "👍 Отличный выбор! Популярный тариф.",
+      "6": "💰 Хорошая экономия при оплате за полгода."
+    },
+    "pricing": {
+      "availablePlansTitle": "Доступные тарифы",
+      "availablePlansDescription": "Выберите план, который подходит именно вам.",
+      "usdPerMonth": "USD / мес",
+      "perProject": "за 1 проект",
+      "billedEvery": "Оплата раз в",
+      "monthsShort": "мес",
+      "monthsShortPlural": "мес",
+      "savings": "выгода",
+      "choosePlan": "Выбрать {{name}}"
+    },
+    "history": {
+      "title": "История заказов",
+      "filters": {
+        "all": "Все",
+        "paid": "Оплаченные",
+        "pending": "В обработке"
+      },
+      "table": {
+        "date": "Дата / ID",
+        "projects": "Проекты",
+        "tariff": "Тариф",
+        "method": "Метод",
+        "amount": "Сумма",
+        "status": "Статус",
+        "actions": "Действия"
+      },
+      "status": {
+        "paid": "Оплачено",
+        "pending": "В обработке",
+        "cancelled": "Отменено"
+      },
+      "unknownProject": "Не указано",
+      "projectsCount": "{{count}} проект(а)",
+      "downloadInvoice": "Скачать инвойс",
+      "empty": "Заказов не найдено"
+    },
+    "checkout": {
+      "title": "Оформление подписки",
+      "selectPlan": "Выберите тариф",
+      "selectProjects": "Выберите проекты",
+      "projectsSelected": "{{count}} выбрано",
+      "projectsHint": "Подписка оплачивается за каждый проект отдельно. Стоимость рассчитывается как: Цена тарифа × Кол-во проектов.",
+      "noProjects": "У вас пока нет проектов. Создайте проект перед оплатой.",
+      "payerType": {
+        "individual": "Физическое лицо",
+        "company": "Юридическое лицо"
+      },
+      "fields": {
+        "contactName": "ФИО / Контактное лицо",
+        "email": "Email",
+        "phone": "Телефон",
+        "companyName": "Название компании",
+        "taxId": "ИНН / Tax ID",
+        "address": "Юридический адрес"
+      },
+      "placeholders": {
+        "contactName": "Иван Иванов",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "ООО Ромашка"
+      },
+      "errors": {
+        "enterName": "Введите имя",
+        "enterEmail": "Введите email",
+        "invalidEmail": "Некорректный email",
+        "enterPhone": "Введите телефон",
+        "shortPhone": "Слишком короткий номер",
+        "enterCompanyName": "Введите название компании",
+        "selectAtLeastOneProject": "Пожалуйста, выберите хотя бы один проект для оплаты.",
+        "selectPlan": "Пожалуйста, выберите тариф",
+        "noProjectsSelected": "Пожалуйста, выберите хотя бы один проект"
+      },
+      "summary": {
+        "totalToPay": "К оплате",
+        "plan": "Тариф",
+        "projects": "Проектов:",
+        "payer": "Плательщик:"
+      },
+      "methods": {
+        "card": {
+          "title": "Банковская карта",
+          "description": "Visa, Mastercard, Apple Pay",
+          "unavailable": "Недоступно"
+        },
+        "invoice": {
+          "title": "Счет на оплату",
+          "description": "Генерация PDF (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "Итого:",
+        "next": "Далее",
+        "processing": "Обработка..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "Счет успешно запрошен. Вы можете скачать его в истории заказов.",
+      "invoiceRequestedMultiple": "Счета запрошены для {{count}} проектов"
+    }
+  }
 }

@@ -39,6 +39,9 @@ export interface UserSubscription {
   invoice_number: string | null;
   invoice_url: string | null;
   invoice_requested_at: string | null;
+  invoice_generated_at?: string | null;
+  created_at?: string | null;
+  payment_method?: string | null;
   subscription_plans: {
     name: string;
     slug: string;
@@ -59,6 +62,9 @@ export interface ProjectSubscription {
     email: string;
     full_name?: string;
     company_name?: string;
+    phone?: string | null;
+    tax_id?: string | null;
+    legal_address?: string | null;
   };
   user_subscriptions: UserSubscription[];
 }
@@ -69,6 +75,32 @@ export interface SubscriptionData {
   trialDaysRemaining: number;
 }
 
+export type BillingPayerType = 'individual' | 'company';
+
+export interface BillingDetails {
+  type: BillingPayerType;
+  name: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  taxId: string;
+  address: string;
+}
+
+export interface SubscriptionOrder {
+  id: string;
+  date: string | null;
+  projectId: string;
+  projectName: string;
+  status: string;
+  planName?: string;
+  durationMonths?: number | null;
+  amount?: number | null;
+  paymentMethod?: string | null;
+  invoiceUrl?: string | null;
+  projectIds: string[];
+}
+
 export function useSubscription(projectId?: string) {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
@@ -77,6 +109,8 @@ export function useSubscription(projectId?: string) {
   const [loading, setLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const fetchSubscription = async (specificProjectId?: string) => {
     if (!user) {
@@ -166,7 +200,7 @@ export function useSubscription(projectId?: string) {
       if (error) {
         throw error;
       }
-
+console.log('useSubscription: Plans:', data.plans);
       setPlans(data.plans || []);
     } catch (err) {
       console.error('Error fetching plans:', err);
@@ -258,6 +292,129 @@ export function useSubscription(projectId?: string) {
     return subscription.subscription.subscription_plans.slug === 'basic';
   };
 
+  const fetchBillingDetails = async () => {
+    if (!user) {
+      setBillingDetails(null);
+      return;
+    }
+
+    setBillingLoading(true);
+    try {
+      // Load user profile (individual details)
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('full_name, email, phone, tax_id, legal_address')
+        .eq('id', user.id)
+        .single();
+
+      // Load company settings (company payer details)
+      const { data: company } = await supabase
+        .from('company_settings')
+        .select('company_name, tax_id, address, phone, email')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (company) {
+        setBillingDetails({
+          type: 'company',
+          name: profile?.full_name || company.company_name || '',
+          email: company.email || profile?.email || '',
+          phone: company.phone || profile?.phone || '',
+          companyName: company.company_name || '',
+          taxId: company.tax_id || profile?.tax_id || '',
+          address: company.address || profile?.legal_address || '',
+        });
+      } else if (profile) {
+        setBillingDetails({
+          type: 'individual',
+          name:
+            profile.full_name ||
+            (profile.email ? profile.email.split('@')[0] : '') ||
+            '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          companyName: '',
+          taxId: profile.tax_id || '',
+          address: profile.legal_address || '',
+        });
+      } else {
+        setBillingDetails(null);
+      }
+    } catch (err) {
+      console.error('Error fetching billing details:', err);
+      // Do not surface as global error, keep separate
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  const saveBillingDetails = async (details: BillingDetails) => {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      // Always keep basic contact info in user_profiles
+      const profileUpdate: Record<string, string> = {};
+      if (details.type === 'individual') {
+        if (details.name) profileUpdate.full_name = details.name;
+        if (details.taxId) profileUpdate.tax_id = details.taxId;
+        if (details.address) profileUpdate.legal_address = details.address;
+      }
+      if (details.email) profileUpdate.email = details.email;
+      if (details.phone) profileUpdate.phone = details.phone;
+
+      if (Object.keys(profileUpdate).length > 0) {
+        await supabase
+          .from('user_profiles')
+          .update(profileUpdate)
+          .eq('id', user.id);
+      }
+
+      // For companies, also upsert company_settings
+      if (details.type === 'company') {
+        const companyPayload = {
+          user_id: user.id,
+          company_name: details.companyName || details.name,
+          tax_id: details.taxId || null,
+          address: details.address || null,
+          phone: details.phone,
+          email: details.email,
+        };
+
+        await supabase
+          .from('company_settings')
+          .upsert(companyPayload, { onConflict: 'user_id' });
+      }
+
+      await fetchBillingDetails();
+    } catch (err) {
+      console.error('Error saving billing details:', err);
+      throw err;
+    }
+  };
+
+  const orders: SubscriptionOrder[] = projectSubscriptions
+    .flatMap((project) =>
+      (project.user_subscriptions || []).map((sub) => ({
+        id: sub.id,
+        date: sub.invoice_requested_at || sub.current_period_start || sub.created_at || null,
+        projectId: project.id,
+        projectName: project.name,
+        status: sub.status,
+        planName: sub.subscription_plans?.name,
+        durationMonths: sub.duration_months,
+        amount: sub.final_price,
+        paymentMethod: sub.payment_method || 'invoice',
+        invoiceUrl: sub.invoice_url || null,
+        projectIds: [project.id],
+      }))
+    )
+    .sort((a, b) => {
+      if (!a.date || !b.date) return 0;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
   useEffect(() => {
     if (user) {
       if (projectId) {
@@ -265,6 +422,7 @@ export function useSubscription(projectId?: string) {
       } else {
         fetchProjectSubscriptions();
       }
+      fetchBillingDetails();
     } else {
       setLoading(false);
     }
@@ -279,10 +437,15 @@ export function useSubscription(projectId?: string) {
     loading,
     plansLoading,
     error,
+    billingDetails,
+    billingLoading,
     requestInvoice,
     requestInvoiceForMultiple,
     refreshSubscription: fetchSubscription,
     refreshProjectSubscriptions: fetchProjectSubscriptions,
+    fetchBillingDetails,
+    saveBillingDetails,
+    orders,
     hasFeature,
     isActive,
     isPro,

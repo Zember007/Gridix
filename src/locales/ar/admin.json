@@ -94,5 +94,137 @@
   "settings": "الإعدادات",
   "subscription": "الاشتراك",
   "widgets": "الودجات",
-  "documentation": "التوثيق"
+  "documentation": "التوثيق",
+  "subscriptionPage": {
+    "title": "اشتراكاتك",
+    "description": "اختر الخطة المناسبة لعملك.",
+    "refresh": "تحديث",
+    "projects": {
+      "emptyTitle": "لا توجد مشاريع",
+      "emptyDescription": "أنشئ أول مشروع لك في قسم \"المشاريع\" لتفعيل الاشتراك وفتح جميع الإمكانيات.",
+      "tariff": "الخطة",
+      "expiresAt": "ينتهي",
+      "notSelected": "غير محدد",
+      "status": {
+        "active": "مفعل",
+        "expired": "منتهي",
+        "inactive": "غير مفعل"
+      },
+      "buttons": {
+        "extend": "تمديد",
+        "activate": "تفعيل"
+      }
+    },
+    "durations": {
+      "1": "شهر واحد",
+      "3": "3 أشهر",
+      "6": "6 أشهر",
+      "12": "12 شهرًا"
+    },
+    "hints": {
+      "36": "🔥 توفير كبير! خصم 50٪ على كامل الفترة.",
+      "12": "👍 اختيار رائع! الخطة الأكثر شيوعًا.",
+      "6": "💰 توفير جيد عند الدفع لمدة 6 أشهر."
+    },
+    "pricing": {
+      "availablePlansTitle": "الخطط المتاحة",
+      "availablePlansDescription": "اختر الخطة الأنسب لك.",
+      "usdPerMonth": "دولار / شهر",
+      "perProject": "لكل مشروع",
+      "billedEvery": "الدفع مرة كل",
+      "monthsShort": "شهر",
+      "monthsShortPlural": "أشهر",
+      "savings": "توفير",
+      "choosePlan": "اختيار {{name}}"
+    },
+    "history": {
+      "title": "سجل الطلبات",
+      "filters": {
+        "all": "الكل",
+        "paid": "مدفوعة",
+        "pending": "قيد المعالجة"
+      },
+      "table": {
+        "date": "التاريخ / المعرف",
+        "projects": "المشاريع",
+        "tariff": "الخطة",
+        "method": "الطريقة",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "paid": "مدفوعة",
+        "pending": "قيد المعالجة",
+        "cancelled": "ملغاة"
+      },
+      "unknownProject": "غير محدد",
+      "projectsCount": "{{count}} مشروع(ات)",
+      "downloadInvoice": "تنزيل الفاتورة",
+      "empty": "لا توجد طلبات"
+    },
+    "checkout": {
+      "title": "إتمام الاشتراك",
+      "selectPlan": "اختر الخطة",
+      "selectProjects": "اختر المشاريع",
+      "projectsSelected": "{{count}} محدد",
+      "projectsHint": "يتم احتساب الاشتراك لكل مشروع على حدة. يتم حساب التكلفة الإجمالية كالتالي: سعر الخطة × عدد المشاريع.",
+      "noProjects": "لا توجد لديك مشاريع بعد. أنشئ مشروعًا قبل الدفع.",
+      "payerType": {
+        "individual": "فرد",
+        "company": "شركة"
+      },
+      "fields": {
+        "contactName": "الاسم الكامل / جهة الاتصال",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "companyName": "اسم الشركة",
+        "taxId": "الرقم الضريبي",
+        "address": "العنوان القانوني"
+      },
+      "placeholders": {
+        "contactName": "محمد أحمد",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "شركة مثال"
+      },
+      "errors": {
+        "enterName": "أدخل الاسم",
+        "enterEmail": "أدخل البريد الإلكتروني",
+        "invalidEmail": "بريد إلكتروني غير صالح",
+        "enterPhone": "أدخل رقم الهاتف",
+        "shortPhone": "رقم الهاتف قصير جدًا",
+        "enterCompanyName": "أدخل اسم الشركة",
+        "selectAtLeastOneProject": "يرجى اختيار مشروع واحد على الأقل للدفع.",
+        "selectPlan": "يرجى اختيار الخطة",
+        "noProjectsSelected": "يرجى اختيار مشروع واحد على الأقل"
+      },
+      "summary": {
+        "totalToPay": "المبلغ المستحق",
+        "plan": "الخطة",
+        "projects": "المشاريع:",
+        "payer": "المدفوع بواسطة:"
+      },
+      "methods": {
+        "card": {
+          "title": "بطاقة بنكية",
+          "description": "Visa, Mastercard, Apple Pay",
+          "unavailable": "غير متاح"
+        },
+        "invoice": {
+          "title": "فاتورة",
+          "description": "توليد PDF (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "الإجمالي:",
+        "next": "التالي",
+        "processing": "جاري المعالجة..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "تم طلب الفاتورة بنجاح. يمكنك تنزيلها من سجل الطلبات.",
+      "invoiceRequestedMultiple": "تم طلب فواتير لـ {{count}} مشروع(ات)"
+    }
+  }
 }

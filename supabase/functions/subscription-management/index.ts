@@ -271,6 +271,7 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
       .select(`
         id,
         name,
+        address,
         subscription_status,
         subscription_expires_at,
         user_id,
@@ -278,7 +279,10 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
           id,
           email,
           full_name,
-          company_name
+          company_name,
+          phone,
+          tax_id,
+          legal_address
         ),
         user_subscriptions (
           id,
@@ -289,6 +293,10 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
           invoice_requested_at,
           plan_id,
           final_price,
+          duration_months,
+          discount_percentage,
+          payment_method,
+          created_at,
           subscription_plans (
             name,
             slug,
@@ -333,8 +341,8 @@ async function handleGetPlans(req, corsHeaders) {
         ...plan,
         pricing: discounts.map((discount)=>{
           const { finalPrice, discountPercentage } = {
-            finalPrice: parseFloat(plan.base_price) * (100 - discount.discount_percentage) / 100 * discount.duration_months,
-            discountPercentage: discount.discount_percentage
+            finalPrice: Math.round(parseFloat(plan.base_price) * (100 - discount.discount_percentage) / 100 * discount.duration_months),
+            discountPercentage: Math.round(discount.discount_percentage)
           };
           return {
             durationMonths: discount.duration_months,
