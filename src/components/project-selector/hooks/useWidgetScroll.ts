@@ -5,6 +5,7 @@ export const useWidgetScroll = (
   deps: unknown[] = [],
 ) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const isFirstRender = useRef(true);
 
   const scrollWidgetToTop = useCallback(() => {
     if (!isWidget || !containerRef.current) return;
@@ -26,6 +27,13 @@ export const useWidgetScroll = (
 
   useEffect(() => {
     if (!isWidget) return;
+    
+    // Пропускаем скролл при первой инициализации
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
     scrollWidgetToTop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWidget, scrollWidgetToTop, ...deps]);
@@ -35,6 +43,8 @@ export const useWidgetScroll = (
     scrollWidgetToTop,
   };
 };
+
+
 
 
 
