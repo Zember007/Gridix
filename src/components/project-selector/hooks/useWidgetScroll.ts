@@ -8,6 +8,7 @@ export const useWidgetScroll = (
   const isFirstRender = useRef(true);
 
   const scrollWidgetToTop = useCallback(() => {
+    
     if (!isWidget || !containerRef.current) return;
 
     try {
@@ -27,7 +28,6 @@ export const useWidgetScroll = (
 
   useEffect(() => {
     if (!isWidget) return;
-    
     // Пропускаем скролл при первой инициализации
     if (isFirstRender.current) {
       isFirstRender.current = false;

@@ -89,7 +89,7 @@ const ProjectApartmentSelector = ({
     !!project?.id &&
     !!project?.building_image_url;
 
-  const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [viewMode, selectedFloorForPlan]);
+  const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [viewMode]);
 
   // Load building floors only when facade view is active
   useEffect(() => {
