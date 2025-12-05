@@ -21,6 +21,7 @@ export const FloatingProjectButton = ({
   const { language, t } = useLanguage();
   const { project } = useProject(projectId);
   const [themeColor, setThemeColor] = useState<string>('#000000');
+  const [isIframeOpen, setIsIframeOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export const FloatingProjectButton = ({
         : `id/${project?.id || projectId}`;
       const url = `${baseDomain}/${language}/project/${projectPath}`;
       setIframeUrl(url);
+      setIsIframeOpen(true);
     } catch (error) {
       console.error('Error opening full project page:', error);
       const fallbackDomain =
@@ -80,6 +82,7 @@ export const FloatingProjectButton = ({
         : `id/${project?.id || projectId}`;
       const url = `${fallbackDomain}/${language}/project/${projectPath}`;
       setIframeUrl(url);
+      setIsIframeOpen(true);
     }
   };
 
@@ -87,7 +90,7 @@ export const FloatingProjectButton = ({
     if (typeof document === 'undefined') return;
 
 
-    if (iframeUrl) {
+    if (isIframeOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -96,9 +99,11 @@ export const FloatingProjectButton = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [iframeUrl]);
+  }, [isIframeOpen]);
 
-
+  const closeIframe = () => {
+    setIsIframeOpen(false);
+  };
 
   if (!project) return null;
 
@@ -131,12 +136,21 @@ export const FloatingProjectButton = ({
         </div>
       </div>
 
-      {iframeUrl && (
+      {isIframeOpen && iframeUrl && (
         <div className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/70">
-          <iframe
-            src={iframeUrl}
-            className="h-full w-full border-0 bg-white"
-          />
+          <div className="relative w-full h-full">
+            <button
+              type="button"
+              onClick={closeIframe}
+              className="absolute right-4 top-4 z-[10000] rounded-full bg-black/70 px-3 py-1 text-sm text-white hover:bg-black/90"
+            >
+              ✕
+            </button>
+            <iframe
+              src={iframeUrl}
+              className="h-full w-full border-0 bg-white"
+            />
+          </div>
         </div>
       )}
     </>
