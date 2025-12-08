@@ -6,6 +6,7 @@ import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
+import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
 import {
 
   Folder,
@@ -14,16 +15,15 @@ import {
   Settings as SettingsIcon,
   User as UserIcon,
   ChevronDown as ChevronDownIcon,
-
+  LogOut,
+  Globe,
   BarChart3,
-
   Zap as Integration,
   Building2,
   Code,
   Layers3,
   Camera,
   UserCheck,
-  Globe,
   Crown,
   Handshake,
   Building,
@@ -37,14 +37,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "./button";
 import { SidebarButton } from "./sidebar-button";
-import { Sheet, SheetContent, SheetTrigger } from "./sheet";
+import { Sheet, SheetContent } from "./sheet";
 
 
 
 // Simplified admin navigation items
-const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, onNavigate?: (path: string) => void) => {
+const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false) => {
   const items = [
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
     { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
@@ -95,6 +102,7 @@ function SimplifiedSidebar({
   showWorkspaceSwitcher = false,
   isMobile = false,
   onMobileClose,
+  onSignOut,
 }: {
   navItems: Array<{ id: string; icon: React.ReactNode; label: string }>;
   activeSection: string;
@@ -106,8 +114,9 @@ function SimplifiedSidebar({
   showWorkspaceSwitcher?: boolean;
   isMobile?: boolean;
   onMobileClose?: () => void;
+  onSignOut?: () => void;
 }) {
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
 
   // Применяем CSS переменные темы
@@ -255,35 +264,99 @@ function SimplifiedSidebar({
             className="p-4"
             style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
           >
-            <div className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}>
-              <div className="flex-shrink-0">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-3 w-full ${isCollapsed ? "justify-center" : ""} rounded-md p-2 hover:bg-opacity-80 transition-colors`}
+                  style={{
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
-                  <UserIcon
-                    className="h-4 w-4"
-                    style={{ color: ADMIN_THEME.textOnPrimary }}
-                  />
-                </div>
-              </div>
-              {!isCollapsed && (
-                <div className="min-w-0 flex-1">
-                  <p
-                    className="text-sm font-medium truncate"
-                    style={{ color: ADMIN_THEME.sidebarText }}
+                  <div className="flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+                    >
+                      <UserIcon
+                        className="h-4 w-4"
+                        style={{ color: ADMIN_THEME.textOnPrimary }}
+                      />
+                    </div>
+                  </div>
+                  {!isCollapsed && (
+                    <div className="min-w-0 flex-1 text-left">
+                      <p
+                        className="text-sm font-medium truncate"
+                        style={{ color: ADMIN_THEME.sidebarText }}
+                      >
+                        {userEmail.split('@')[0]}
+                      </p>
+                      <p
+                        className="text-xs truncate"
+                        style={{ color: ADMIN_THEME.textMuted }}
+                      >
+                        {userEmail}
+                      </p>
+                    </div>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align={isCollapsed ? "center" : "end"}
+                side={isCollapsed ? "right" : "top"}
+                className="w-48"
+                style={{
+                  backgroundColor: ADMIN_THEME.sidebarBackground,
+                  borderColor: ADMIN_THEME.sidebarBorder,
+                }}
+              >
+                <DropdownMenuItem
+                  className="flex items-center gap-2 cursor-pointer"
+                  style={{
+                    color: ADMIN_THEME.sidebarText,
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Globe className="h-4 w-4" />
+                  <span className="flex-1">{t('common.language') || 'Language'}</span>
+                </DropdownMenuItem>
+                {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                  <DropdownMenuItem
+                    key={code}
+                    onClick={() => setLanguage(code as Language)}
+                    className={`cursor-pointer pl-8 ${language === code ? 'bg-accent' : ''}`}
+                    style={{
+                      color: ADMIN_THEME.sidebarText,
+                      backgroundColor: language === code ? ADMIN_THEME.sidebarActiveBackground : 'transparent',
+                    }}
                   >
-                    {userEmail.split('@')[0]}
-                  </p>
-                  <p
-                    className="text-xs truncate"
-                    style={{ color: ADMIN_THEME.textMuted }}
-                  >
-                    {userEmail}
-                  </p>
-                </div>
-              )}
-            </div>
+                    <span className="mr-2">{config.flag}</span>
+                    {config.name}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator 
+                  style={{ 
+                    backgroundColor: ADMIN_THEME.sidebarBorder 
+                  }} 
+                />
+                <DropdownMenuItem
+                  onClick={() => onSignOut?.()}
+                  className="flex items-center gap-2 cursor-pointer text-red-600"
+                  style={{
+                    color: '#dc2626',
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{t('auth.signOut')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       )}
@@ -324,19 +397,19 @@ function SimplifiedSidebar({
 /* --------------------------------- Layout -------------------------------- */
 
 export function AdminSidebar({
-  onNavigate,
   userEmail,
   activeTab,
   onTabChange,
   isMobileOpen,
   setIsMobileOpen,
+  onSignOut,
 }: {
-  onNavigate?: (path: string) => void;
   userEmail?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   isMobileOpen?: boolean;
   setIsMobileOpen?: (open: boolean) => void;
+  onSignOut?: () => void;
 }) {
   const { t } = useLanguage();
   const { userRole } = useUserRole();
@@ -357,7 +430,7 @@ export function AdminSidebar({
   }, [activeTab]);
 
 
-  const navItems = getAdminNavItems(t, userRole.type === 'manager', onNavigate);
+  const navItems = getAdminNavItems(t, userRole.type === 'manager');
 
   const sidebar = (
     <SimplifiedSidebar
@@ -369,12 +442,13 @@ export function AdminSidebar({
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('adminSidebar.title')}
       showWorkspaceSwitcher={userRole.type === 'manager'}
-      isMobile={isMobile}
+      isMobile={isMobile ?? false}
       onMobileClose={() => {
         if (setIsMobileOpen) {
           setIsMobileOpen(false);
         }
       }}
+      {...(onSignOut && { onSignOut })}
     />
   );
 
@@ -458,7 +532,7 @@ export function ProjectEditorSidebar({
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       title={t('projectEditorSidebar.title')}
-      isMobile={isMobile}
+      isMobile={isMobile ?? false}
       onMobileClose={() => {
         if (setIsMobileOpen) {
           setIsMobileOpen(false);
