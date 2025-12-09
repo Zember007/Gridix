@@ -103,3 +103,8 @@ export function getRelativeTime(dateString: string | Date): string {
     return formatDate(date, { day: 'numeric', month: 'short' });
   }
 }
+
+// URL кабинета застройщика для использования во внешних интеграциях (например, amoCRM iframe)
+export const AMOCRM_DEVELOPER_CABINET_URL =
+  "https://app.gridix.live/ru/admin/developer-projects?source=amocrm";
+
