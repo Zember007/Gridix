@@ -114,7 +114,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
       ) : (
         <div className="space-y-6">
           {/* Header with Create New Project Button */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap">
             <div>
               <h2
               style={{ color: ADMIN_THEME.textPrimary }}

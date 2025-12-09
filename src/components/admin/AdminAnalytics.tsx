@@ -176,6 +176,12 @@ export const AdminAnalytics = () => {
       const startDateISO = startDate?.toISOString();
       const endDateISO = endDate.toISOString();
 
+      console.log('analytics data', {
+        startDateISO,
+        endDateISO,
+        filteredProjectIds,
+      });
+
       // Загрузка всех данных параллельно для ускорения
       const [
         { data: viewsData, error: viewsError },
