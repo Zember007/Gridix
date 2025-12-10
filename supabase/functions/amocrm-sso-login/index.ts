@@ -24,7 +24,7 @@ Deno.serve(async (req)=>{
     });
   }
   try {
-    const body = await req.json().catch(()=>null);
+    const body = await req.json().catch(() => null);
     if (!body) {
       return new Response(JSON.stringify({
         error: "Invalid JSON body"
@@ -36,7 +36,9 @@ Deno.serve(async (req)=>{
         }
       });
     }
+    
     const { source, account_id, user_id, subdomain } = body;
+    
     if (source !== "amocrm") {
       return new Response(JSON.stringify({
         error: "Unsupported source"
@@ -48,6 +50,7 @@ Deno.serve(async (req)=>{
         }
       });
     }
+    
     if (!account_id || !user_id) {
       return new Response(JSON.stringify({
         error: "Missing account_id or user_id"
@@ -59,10 +62,12 @@ Deno.serve(async (req)=>{
         }
       });
     }
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const amoSecret = Deno.env.get("AMOCRM_SSO_SECRET") ?? "";
+    
     if (!supabaseUrl || !anonKey || !serviceRoleKey || !amoSecret) {
       console.error("Missing Supabase env configuration");
       return new Response(JSON.stringify({
@@ -75,25 +80,38 @@ Deno.serve(async (req)=>{
         }
       });
     }
+    
     const normalizedAccountId = String(account_id);
     const normalizedUserId = String(user_id);
-    // Synthetic, non-login email used only for SSO-based accounts
-    const email = `${normalizedUserId}.${normalizedAccountId}@amocrm.gridix.internal`;
-    // Deterministic, secret-based password so that the Edge Function can
-    // re-authenticate the user later, without ever exposing this value.
-    const password = `${amoSecret}:${normalizedAccountId}:${normalizedUserId}`;
+    
+    // Create service role client to query crm_connections
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
     });
-    // Ensure a Supabase Auth user exists for this AmoCRM identity
-    const { data: existingUserData, error: getUserError } = await adminClient.auth.admin.getUserByEmail(email);
-    if (getUserError && !getUserError.message?.includes("User not found")) {
-      console.error("Error fetching user by email", getUserError);
+    
+    // Find user in crm_connections table by AmoCRM credentials
+    // We need to find by subdomain and crm_type, as the account_id and user_id
+    // are metadata stored in user_metadata when connection was created
+    console.log('Looking up CRM connection for:', {
+      subdomain,
+      account_id: normalizedAccountId,
+      user_id: normalizedUserId
+    });
+    
+    const { data: connections, error: connectionsError } = await adminClient
+      .from('crm_connections')
+      .select('user_id, subdomain, account_name')
+      .eq('crm_type', 'amocrm')
+      .eq('subdomain', subdomain || '');
+    
+    if (connectionsError) {
+      console.error('Error querying crm_connections:', connectionsError);
       return new Response(JSON.stringify({
-        error: "Internal error (get user)"
+        error: "Database error",
+        details: connectionsError.message
       }), {
         status: 500,
         headers: {
@@ -102,55 +120,63 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    if (!existingUserData?.user) {
-      const { data: createdUser, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          source: "amocrm",
-          amocrm_account_id: normalizedAccountId,
-          amocrm_user_id: normalizedUserId,
-          amocrm_subdomain: subdomain ?? null
-        }
-      });
-      if (createError || !createdUser?.user) {
-        console.error("Error creating AmoCRM SSO user", createError);
-        return new Response(JSON.stringify({
-          error: "Internal error (create user)"
-        }), {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        });
-      }
-    }
-    // Sign in as this user to obtain a Supabase session
-    const publicClient = createClient(supabaseUrl, anonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-    const { data: signInData, error: signInError } = await publicClient.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (signInError || !signInData?.session) {
-      console.error("Error signing in AmoCRM SSO user", signInError);
+    
+    if (!connections || connections.length === 0) {
+      console.log('No CRM connection found for subdomain:', subdomain);
       return new Response(JSON.stringify({
-        error: "Internal error (sign in)"
+        error: "User not found",
+        message: "No AmoCRM connection found for this account. Please connect your AmoCRM account first."
       }), {
-        status: 500,
+        status: 404,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json"
         }
       });
     }
-    const session = signInData.session;
+    
+    // Get the first matching connection (should be only one per subdomain and crm_type)
+    const connection = connections[0];
+    const gridixUserId = connection.user_id;
+    
+    console.log('Found CRM connection for Gridix user:', gridixUserId);
+    
+    // Query user_profiles to get email
+    const { data: profileData, error: profileError } = await adminClient
+      .from('user_profiles')
+      .select('email')
+      .eq('id', gridixUserId)
+      .single();
+    
+    if (profileError || !profileData?.email) {
+      console.error('Error fetching user profile:', profileError);
+      return new Response(JSON.stringify({
+        error: "User profile not found",
+        details: profileError?.message || "No email found for user"
+      }), {
+        status: 404,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+    
+    console.log('Found user email:', profileData.email);
+    
+    // For SSO, we don't need actual Supabase session tokens in the SSO token
+    // The SSO token itself will be used by the widget to authenticate
+    // We'll include the user_id which can be used to create a session later if needed
+    
+    const session = {
+      user: {
+        id: gridixUserId,
+        email: profileData.email
+      },
+      expires_in: 3600 // 1 hour
+    };
+    
+    console.log('Successfully found user:', gridixUserId);
     
     // Calculate expiration timestamp
     const issuedAt = Math.floor(Date.now() / 1000);
@@ -162,26 +188,30 @@ Deno.serve(async (req)=>{
       iat: issuedAt,
       exp: expiresAt,
       sub: session.user.id,
+      email: session.user.email,
       
-      // Custom claims
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
+      // Expiration
       expires_in: session.expires_in,
-      token_type: session.token_type,
       
       // AmoCRM metadata
       amocrm_account_id: normalizedAccountId,
       amocrm_user_id: normalizedUserId,
-      amocrm_subdomain: subdomain ?? null
+      amocrm_subdomain: subdomain ?? null,
+      amocrm_connection_subdomain: connection.subdomain,
+      amocrm_account_name: connection.account_name
     };
     
     // Create signed token using HMAC-SHA256
     const token = await createSignedToken(ssoPayload, amoSecret);
     
+    console.log('SSO token generated successfully for user:', gridixUserId);
+    
     return new Response(JSON.stringify({
       token,
       expires_at: expiresAt,
-      expires_in: session.expires_in
+      expires_in: session.expires_in,
+      user_id: session.user.id,
+      email: session.user.email
     }), {
       status: 200,
       headers: {

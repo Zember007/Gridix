@@ -26,24 +26,33 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDk4MTI4MDAsImV4cCI6MTcwOTgxNjQ
   // Standard JWT claims
   iat: number;           // Issued at (Unix timestamp)
   exp: number;           // Expires at (Unix timestamp)
-  sub: string;           // Subject (Supabase user ID)
+  sub: string;           // Subject (Gridix user ID)
+  email: string;         // User email
   
-  // Supabase session data
-  access_token: string;  // Supabase access token
-  refresh_token: string; // Supabase refresh token
+  // Token info
   expires_in: number;    // Token lifetime in seconds
-  token_type: string;    // Usually "bearer"
   
   // AmoCRM metadata
-  amocrm_account_id: string;  // AmoCRM account ID
-  amocrm_user_id: string;     // AmoCRM user ID
-  amocrm_subdomain: string | null; // AmoCRM subdomain
+  amocrm_account_id: string;        // AmoCRM account ID
+  amocrm_user_id: string;           // AmoCRM user ID
+  amocrm_subdomain: string | null;  // AmoCRM subdomain from request
+  amocrm_connection_subdomain: string; // Subdomain from crm_connections
+  amocrm_account_name: string | null;  // Account name from crm_connections
 }
 ```
 
 ## Usage
 
 ### 1. Token Generation (amocrm-sso-login)
+
+**How it works:**
+1. Receives AmoCRM credentials (account_id, user_id, subdomain)
+2. Looks up user in `crm_connections` table by subdomain and crm_type='amocrm'
+3. If found, retrieves Gridix user_id and email from user_profiles
+4. Generates signed SSO token with user information
+5. Returns error if no matching connection found
+
+**Important:** This function does NOT create new users. The user must already have an AmoCRM connection in the system (created via OAuth flow).
 
 **Endpoint:** `POST /functions/v1/amocrm-sso-login`
 
@@ -57,12 +66,22 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDk4MTI4MDAsImV4cCI6MTcwOTgxNjQ
 }
 ```
 
-**Response:**
+**Response (Success):**
 ```json
 {
   "token": "eyJhbGci...",
   "expires_at": 1709816400,
-  "expires_in": 3600
+  "expires_in": 3600,
+  "user_id": "uuid-here",
+  "email": "user@example.com"
+}
+```
+
+**Response (User not found):**
+```json
+{
+  "error": "User not found",
+  "message": "No AmoCRM connection found for this account. Please connect your AmoCRM account first."
 }
 ```
 
@@ -121,6 +140,37 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDk4MTI4MDAsImV4cCI6MTcwOTgxNjQ
 3. **Validate on server**: Never trust client-side token validation
 4. **Handle expiration**: Implement token refresh logic
 
+## Flow Diagram
+
+```
+AmoCRM Widget Request
+        ↓
+[1] POST /amocrm-sso-login
+    - account_id: 12345
+    - user_id: 67890
+    - subdomain: example
+        ↓
+[2] Query crm_connections table
+    - WHERE crm_type = 'amocrm'
+    - WHERE subdomain = 'example'
+        ↓
+[3] Found? → Yes          No → Return 404 Error
+        ↓
+[4] Get user_id from connection
+        ↓
+[5] Query user_profiles
+    - Get email by user_id
+        ↓
+[6] Generate signed SSO token
+    - Include user_id, email
+    - Include AmoCRM metadata
+    - Sign with HMAC-SHA256
+        ↓
+[7] Return token to widget
+        ↓
+[8] Widget uses token for auth
+```
+
 ## Implementation in Other Functions
 
 ```typescript
@@ -137,7 +187,9 @@ if (!payload) {
 
 // Token is valid, use payload data
 const userId = payload.sub;
+const userEmail = payload.email;
 const amocrmAccountId = payload.amocrm_account_id;
+const amocrmSubdomain = payload.amocrm_connection_subdomain;
 ```
 
 ## Error Handling
