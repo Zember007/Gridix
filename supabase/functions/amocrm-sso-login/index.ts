@@ -1,5 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { createSignedToken } from '../_shared/sso-token.ts';
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
@@ -149,15 +151,37 @@ Deno.serve(async (req)=>{
       });
     }
     const session = signInData.session;
+    
+    // Calculate expiration timestamp
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const expiresAt = issuedAt + session.expires_in;
+    
+    // Create signed payload with standard JWT claims
     const ssoPayload = {
+      // Standard JWT claims
+      iat: issuedAt,
+      exp: expiresAt,
+      sub: session.user.id,
+      
+      // Custom claims
       access_token: session.access_token,
       refresh_token: session.refresh_token,
       expires_in: session.expires_in,
-      token_type: session.token_type
+      token_type: session.token_type,
+      
+      // AmoCRM metadata
+      amocrm_account_id: normalizedAccountId,
+      amocrm_user_id: normalizedUserId,
+      amocrm_subdomain: subdomain ?? null
     };
-    const token = btoa(JSON.stringify(ssoPayload));
+    
+    // Create signed token using HMAC-SHA256
+    const token = await createSignedToken(ssoPayload, amoSecret);
+    
     return new Response(JSON.stringify({
-      token
+      token,
+      expires_at: expiresAt,
+      expires_in: session.expires_in
     }), {
       status: 200,
       headers: {
