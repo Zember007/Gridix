@@ -16,20 +16,33 @@ interface AmoCRMSettingsProps {
   projectId: string;
 }
 
-interface AmoCRMSettings {
-  id?: string;
-  project_id: string;
+interface CRMConnection {
+  id: string;
+  user_id: string;
+  crm_type: string;
   subdomain: string;
   access_token?: string | null;
   refresh_token?: string | null;
   token_expires_at?: string | null;
+  account_name?: string;
+}
+
+interface ProjectCRMSettings {
+  id?: string;
+  project_id: string;
+  crm_connection_id: string;
   pipeline_id?: number;
   status_id?: number;
   responsible_user_id?: number;
   pipeline_name?: string;
   status_name?: string;
   user_name?: string;
-  account_name?: string;
+  crm_connections?: CRMConnection;
+}
+
+interface AmoCRMSettings {
+  projectSettings?: ProjectCRMSettings;
+  connection?: CRMConnection;
 }
 
 interface AmoCRMPipeline {
@@ -74,10 +87,7 @@ interface AmoCRMData {
 
 const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const { t } = useLanguage();
-  const [settings, setSettings] = useState<AmoCRMSettings>({
-    project_id: projectId,
-    subdomain: '',
-  });
+  const [settings, setSettings] = useState<AmoCRMSettings>({});
   const [loading, setLoading] = useState(true);
   const [authorizing, setAuthorizing] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -91,10 +101,12 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const [editingConfiguration, setEditingConfiguration] = useState(false);
 
   // Computed values
-  const isAuthorized = settings.access_token && settings.refresh_token;
-  const tokenExpired = settings.token_expires_at ? new Date(settings.token_expires_at) < new Date() : false;
-  const isConfigured = isAuthorized && !tokenExpired && settings.pipeline_id;
-  const needsConfiguration = isAuthorized && !tokenExpired && !settings.pipeline_id;
+  const connection = settings.connection;
+  const projectSettings = settings.projectSettings;
+  const isAuthorized = connection?.access_token && connection?.refresh_token;
+  const tokenExpired = connection?.token_expires_at ? new Date(connection.token_expires_at) < new Date() : false;
+  const isConfigured = isAuthorized && !tokenExpired && projectSettings?.pipeline_id;
+  const needsConfiguration = isAuthorized && !tokenExpired && !projectSettings?.pipeline_id;
   
   // Don't show token expired message while loading data (token might be refreshed)
   const showTokenExpired = tokenExpired && !loadingData;
@@ -103,7 +115,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const showNeedsConfiguration = needsConfiguration && !loadingData;
 
   const fetchAmoCRMData = useCallback(async (currentSettings: AmoCRMSettings, skipReload = false) => {
-    if (!currentSettings.access_token || !currentSettings.subdomain) return;
+    if (!currentSettings.connection?.access_token || !currentSettings.connection?.subdomain) return;
     
     setLoadingData(true);
     try {
@@ -117,13 +129,16 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       if (error) {
         if (!skipReload && (error.message?.includes('token') || error.message?.includes('expired') || error.message?.includes('refresh failed'))) {
           const { data: refreshedSettings } = await supabase
-            .from('amocrm_settings')
-            .select('*')
+            .from('project_crm_settings')
+            .select('*, crm_connections(*)')
             .eq('project_id', projectId)
             .single();
           
           if (refreshedSettings) {
-            setSettings(refreshedSettings);
+            setSettings({
+              projectSettings: refreshedSettings,
+              connection: refreshedSettings.crm_connections as unknown as CRMConnection
+            });
           }
         }
         throw error;
@@ -131,8 +146,11 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data?.data) {
         setAmocrmData(data.data);
-        if (data.token_expires_at) {
-          setSettings(prev => ({ ...prev, token_expires_at: data.token_expires_at }));
+        if (data.token_expires_at && currentSettings.connection) {
+          setSettings(prev => ({
+            ...prev,
+            connection: prev.connection ? { ...prev.connection, token_expires_at: data.token_expires_at } : undefined
+          }));
         }
       } else {
         throw new Error('Не удалось загрузить данные из AmoCRM');
@@ -148,8 +166,8 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const fetchSettings = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('amocrm_settings')
-        .select('*')
+        .from('project_crm_settings')
+        .select('*, crm_connections(*)')
         .eq('project_id', projectId)
         .single();
 
@@ -158,13 +176,18 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       }
 
       if (data) {
-        setSettings(data);
-        if (data.access_token) {
-          fetchAmoCRMData(data);
+        const connection = data.crm_connections as unknown as CRMConnection;
+        const newSettings = {
+          projectSettings: data,
+          connection: connection
+        };
+        setSettings(newSettings);
+        if (connection?.access_token) {
+          fetchAmoCRMData(newSettings);
         }
       }
     } catch (error) {
-      console.error('Error fetching AmoCRM settings:', error);
+      console.error('Error fetching CRM settings:', error);
       toast.error(t('amocrm.settingsLoadError'));
     } finally {
       setLoading(false);
@@ -180,11 +203,11 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     try {
       setAuthorizing(true);
       
-      if (settings?.id) {
+      if (projectSettings?.id) {
         await supabase
-          .from('amocrm_settings')
+          .from('project_crm_settings')
           .delete()
-          .eq('id', settings.id);
+          .eq('id', projectSettings.id);
       }
       
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
@@ -216,7 +239,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   }, [fetchSettings]);
 
   const saveAmoCRMSettings = async (pipelineId: number, statusId?: number, responsibleUserId?: number) => {
-    if (!amocrmData) return;
+    if (!amocrmData || !projectSettings) return;
     
     setSavingSettings(true);
     try {
@@ -232,20 +255,31 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
         status_name: selectedStatus?.name || null,
         responsible_user_id: responsibleUserId || null,
         user_name: selectedUser?.name || null,
-        account_name: amocrmData.account.name
       };
 
       const { error } = await supabase
-        .from('amocrm_settings')
+        .from('project_crm_settings')
         .update(updateData)
         .eq('project_id', projectId);
 
       if (error) throw error;
 
-      setSettings(prev => ({ ...prev, ...updateData }));
+      // Update connection with account name if needed
+      if (connection) {
+        await supabase
+          .from('crm_connections')
+          .update({ account_name: amocrmData.account.name })
+          .eq('id', connection.id);
+      }
+
+      setSettings(prev => ({
+        ...prev,
+        projectSettings: prev.projectSettings ? { ...prev.projectSettings, ...updateData } : undefined,
+        connection: prev.connection ? { ...prev.connection, account_name: amocrmData.account.name } : undefined
+      }));
       toast.success(t('amocrm.settingsSaveSuccess'));
     } catch (error) {
-      console.error('Error saving AmoCRM settings:', error);
+      console.error('Error saving CRM settings:', error);
       toast.error(t('amocrm.settingsSaveError'));
     } finally {
       setSavingSettings(false);
@@ -255,20 +289,19 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
   const handleDisconnect = async () => {
     try {
-      // Delete the entire row instead of setting values to null
-      // This avoids NOT NULL constraint violations
-      const { error } = await supabase
-        .from('amocrm_settings')
+      // Delete project CRM settings
+      const { error: projectError } = await supabase
+        .from('project_crm_settings')
         .delete()
         .eq('project_id', projectId);
 
-      if (error) throw error;
+      if (projectError) throw projectError;
+
+      // Note: We don't delete crm_connections here because other projects might use it
+      // The user might have the same AmoCRM connected to multiple projects
       
       // Reset local state to initial values
-      setSettings({
-        project_id: projectId,
-        subdomain: '',
-      });
+      setSettings({});
       setAmocrmData(null);
       
       toast.success(t('amocrm.disconnectSuccess'));
@@ -282,11 +315,11 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     try {
       setAuthorizing(true);
       
-      if (settings?.id) {
+      if (projectSettings?.id) {
         await supabase
-          .from('amocrm_settings')
+          .from('project_crm_settings')
           .delete()
-          .eq('id', settings.id);
+          .eq('id', projectSettings.id);
       }
       
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
@@ -345,9 +378,9 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const handleEditConfiguration = async () => {
     setEditingConfiguration(true);
     // Устанавливаем текущие значения как выбранные
-    setSelectedPipelineId(settings.pipeline_id || null);
-    setSelectedStatusId(settings.status_id || null);
-    setSelectedUserId(settings.responsible_user_id || null);
+    setSelectedPipelineId(projectSettings?.pipeline_id || null);
+    setSelectedStatusId(projectSettings?.status_id || null);
+    setSelectedUserId(projectSettings?.responsible_user_id || null);
     
     // Загружаем данные AmoCRM если их еще нет
     if (!amocrmData) {
@@ -417,10 +450,10 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                     <CheckCircle className="h-6 w-6 text-green-600" />
                     <div>
                       <h4 className="font-medium text-green-900">
-                        {settings.account_name ? `${t('amocrm.connectedTo')} ${settings.account_name}` : t('amocrm.integrationActive')}
+                        {connection?.account_name ? `${t('amocrm.connectedTo')} ${connection.account_name}` : t('amocrm.integrationActive')}
                       </h4>
                       <p className="text-sm text-green-700">
-                        {t('amocrm.account')} {settings.subdomain}.amocrm.ru
+                        {t('amocrm.account')} {connection?.subdomain}.amocrm.ru
                       </p>
                     </div>
                   </div>
@@ -428,18 +461,18 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-600">{t('amocrm.pipeline')}</span>
-                      <span className="font-medium">{settings.pipeline_name || `ID: ${settings.pipeline_id}`}</span>
+                      <span className="font-medium">{projectSettings?.pipeline_name || `ID: ${projectSettings?.pipeline_id}`}</span>
                     </div>
-                    {settings.status_name && (
+                    {projectSettings?.status_name && (
                       <div className="flex items-center gap-2">
                         <span className="text-gray-600">{t('amocrm.status')}</span>
-                        <span className="font-medium">{settings.status_name}</span>
+                        <span className="font-medium">{projectSettings.status_name}</span>
                       </div>
                     )}
-                    {settings.user_name && (
+                    {projectSettings?.user_name && (
                       <div className="flex items-center gap-2">
                         <span className="text-gray-600">{t('amocrm.responsible')}</span>
-                        <span className="font-medium">{settings.user_name}</span>
+                        <span className="font-medium">{projectSettings.user_name}</span>
                       </div>
                     )}
                   </div>

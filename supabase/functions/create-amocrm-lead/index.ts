@@ -10,17 +10,24 @@ interface LeadRequest {
   projectId: string;
 }
 
-interface AmoCRMSettings {
+interface CRMConnection {
   id: string;
-  client_id: string;
-  client_secret: string;
+  user_id: string;
+  crm_type: string;
+  subdomain: string;
   access_token: string | null;
   refresh_token: string | null;
   token_expires_at: string | null;
-  subdomain: string;
+}
+
+interface ProjectCRMSettings {
+  id: string;
+  project_id: string;
+  crm_connection_id: string;
   pipeline_id: number;
   status_id?: number;
   responsible_user_id?: number;
+  crm_connections?: CRMConnection;
 }
 
 interface TokenResponse {
@@ -48,27 +55,27 @@ interface AmoCRMLead {
   };
 }
 
-async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Promise<string | null> {
+async function getValidAccessToken(connection: CRMConnection, supabase: any): Promise<string | null> {
   // Проверяем актуальность токена
-  if (settings.access_token && settings.token_expires_at) {
-    const expiresAt = new Date(settings.token_expires_at);
+  if (connection.access_token && connection.token_expires_at) {
+    const expiresAt = new Date(connection.token_expires_at);
     const now = new Date();
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
     if (expiresAt > fiveMinutesFromNow) {
-      return settings.access_token;
+      return connection.access_token;
     }
   }
 
   // Обновляем токен
-  if (!settings.refresh_token) {
+  if (!connection.refresh_token) {
     console.error('No refresh token available');
     return null;
   }
 
   try {
     // Use account subdomain endpoint for token refresh
-    const tokenUrl = `https://${settings.subdomain}.amocrm.ru/oauth2/access_token`;
+    const tokenUrl = `https://${connection.subdomain}.amocrm.ru/oauth2/access_token`;
     // Use the same redirect_uri as used during authorization
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`
@@ -84,11 +91,11 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
       client_id: clientId,
       client_secret: clientSecret,
       grant_type: 'refresh_token',
-      refresh_token: settings.refresh_token,
+      refresh_token: connection.refresh_token,
       redirect_uri: redirectUri,
     })
 
-    console.log('Refreshing token for subdomain:', settings.subdomain, 'project:', settings.id);
+    console.log('Refreshing token for subdomain:', connection.subdomain, 'connection:', connection.id);
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
@@ -108,15 +115,15 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
       
       // If 401, the refresh token is invalid/revoked - clear tokens in DB
       if (response.status === 401) {
-        console.log('Refresh token invalid/revoked - clearing tokens for settings ID:', settings.id);
+        console.log('Refresh token invalid/revoked - clearing tokens for connection ID:', connection.id);
         await supabase
-          .from('amocrm_settings')
+          .from('crm_connections')
           .update({
             access_token: null,
             refresh_token: null,
             token_expires_at: null,
           })
-          .eq('id', settings.id);
+          .eq('id', connection.id);
       }
       
       return null;
@@ -127,13 +134,13 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
 
     // Обновляем токен в базе
     const { error: updateError } = await supabase
-      .from('amocrm_settings')
+      .from('crm_connections')
       .update({
         access_token: tokenResult.access_token,
         refresh_token: tokenResult.refresh_token,
         token_expires_at: expiresAt.toISOString()
       })
-      .eq('id', settings.id);
+      .eq('id', connection.id);
 
     if (updateError) {
       console.error('Failed to update token in database:', updateError);
@@ -146,13 +153,13 @@ async function getValidAccessToken(settings: AmoCRMSettings, supabase: any): Pro
   }
 }
 
-async function getContactFields(settings: AmoCRMSettings, accessToken: string) {
+async function getContactFields(connection: CRMConnection, accessToken: string) {
   let emailFieldId = 0;
   let phoneFieldId = 0;
 
   try {
     console.log('Fetching contact fields from AmoCRM API...');
-    const fieldsResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/contacts/custom_fields`, {
+    const fieldsResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/contacts/custom_fields`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -283,17 +290,17 @@ serve(async (req) => {
     console.log('Lead saved to database with ID:', savedLead.id);
 
     // Получение настроек AmoCRM (после сохранения лида)
-    console.log('Fetching AmoCRM settings for project:', projectId);
-    const { data: amocrmSettings, error: settingsError } = await svc
-      .from('amocrm_settings')
-      .select('*')
+    console.log('Fetching CRM settings for project:', projectId);
+    const { data: projectCRMSettings, error: settingsError } = await svc
+      .from('project_crm_settings')
+      .select('*, crm_connections(*)')
       .eq('project_id', projectId)
       .maybeSingle();
 
-    if (settingsError) console.error('Error fetching AmoCRM settings:', settingsError);
-    // If no AmoCRM settings found, just mark lead as saved_only and return success
-    if (settingsError || !amocrmSettings) {
-      console.log('AmoCRM settings not found for project:', projectId, 'Lead saved to DB only');
+    if (settingsError) console.error('Error fetching CRM settings:', settingsError);
+    // If no CRM settings found, just mark lead as saved_only and return success
+    if (settingsError || !projectCRMSettings) {
+      console.log('CRM settings not found for project:', projectId, 'Lead saved to DB only');
 
       await svc
         .from('leads')
@@ -308,10 +315,26 @@ serve(async (req) => {
       }, 200, origin);
     }
 
-    const settings = amocrmSettings as AmoCRMSettings;
+    const settings = projectCRMSettings as ProjectCRMSettings;
+    const connection = settings.crm_connections as unknown as CRMConnection;
+    
+    if (!connection || connection.crm_type !== 'amocrm') {
+      console.log('AmoCRM connection not found for project:', projectId);
+      await svc
+        .from('leads')
+        .update({ status: 'saved_only', amocrm_error: 'AmoCRM not configured for this project' })
+        .eq('id', savedLead.id);
+
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
+        crmIntegration: false
+      }, 200, origin);
+    }
 
     // Get valid access token for AmoCRM
-    const accessToken = await getValidAccessToken(settings, svc);
+    const accessToken = await getValidAccessToken(connection, svc);
     if (!accessToken) {
       console.error('Unable to get valid access token');
       // Update lead status to saved_only (not failed, since DB save was successful)
@@ -337,7 +360,7 @@ serve(async (req) => {
     if (!responsibleUserId) {
       try {
         console.log('Fetching user info from AmoCRM...');
-        const userInfoResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/account`, {
+        const userInfoResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/account`, {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 
@@ -374,7 +397,7 @@ serve(async (req) => {
     }
 
     // Получение полей для контактов
-    const { emailFieldId, phoneFieldId } = await getContactFields(settings, accessToken);
+    const { emailFieldId, phoneFieldId } = await getContactFields(connection, accessToken);
 
     if (!emailFieldId || !phoneFieldId) {
       console.error('Unable to get contact field IDs:', { emailFieldId, phoneFieldId });
@@ -399,7 +422,7 @@ serve(async (req) => {
     // Building lead payload (simple structure without custom lead fields)
     const leadData: AmoCRMLead = {
       name: `Apartment inquiry ${apartment.apartment_number} - ${apartment.projects?.name || 'Project'}`,
-      pipeline_id: settings.pipeline_id,
+      pipeline_id: settings.pipeline_id || 0,
       ...(settings.status_id && { status_id: settings.status_id }),
       responsible_user_id: responsibleUserId,
       _embedded: {
@@ -424,7 +447,7 @@ serve(async (req) => {
     console.log('Creating lead in AmoCRM with data:', JSON.stringify(leadData, null, 2));
 
     // Отправка лида в AmoCRM
-    const amocrmUrl = `https://${settings.subdomain}.amocrm.ru/api/v4/leads/complex`;
+    const amocrmUrl = `https://${connection.subdomain}.amocrm.ru/api/v4/leads/complex`;
     const amocrmResponse = await fetch(amocrmUrl, {
       method: 'POST',
       headers: {
@@ -539,7 +562,7 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
       };
 
       try {
-        const noteResponse = await fetch(`https://${settings.subdomain}.amocrm.ru/api/v4/leads/notes`, {
+        const noteResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/leads/notes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -566,7 +589,7 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
       contactId: amocrmResult[0]?._embedded?.contacts?.[0]?.id,
       message: 'Lead successfully created and sent to AmoCRM',
       crmIntegration: true,
-      leadUrl: `https://${settings.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
+      leadUrl: `https://${connection.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
     }, 200, origin);
 
   } catch (error) {

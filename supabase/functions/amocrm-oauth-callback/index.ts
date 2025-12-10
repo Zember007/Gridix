@@ -109,27 +109,40 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Проверяем, не использовался ли уже этот код авторизации
-    const { data: existingSettings, error: checkError } = await supabase
-      .from('amocrm_settings')
-      .select('authorization_code, access_token')
-      .eq('project_id', state)
+    // Получаем проект и user_id
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', state)
       .single()
 
-    console.log('Existing settings check:', {
-      found: !!existingSettings,
-      hasAuthCode: !!existingSettings?.authorization_code,
-      hasAccessToken: !!existingSettings?.access_token,
-      codeMatch: existingSettings?.authorization_code === code,
+    if (projectError || !project) {
+      console.error('Project not found:', state, projectError)
+      return createJsonResponse({ error: 'project_not_found' }, 404, origin);
+    }
+
+    // Проверяем, не использовался ли уже этот код авторизации
+    const { data: existingConnection, error: checkError } = await supabase
+      .from('crm_connections')
+      .select('authorization_code, access_token')
+      .eq('user_id', project.user_id)
+      .eq('crm_type', 'amocrm')
+      .single()
+
+    console.log('Existing connection check:', {
+      found: !!existingConnection,
+      hasAuthCode: !!existingConnection?.authorization_code,
+      hasAccessToken: !!existingConnection?.access_token,
+      codeMatch: existingConnection?.authorization_code === code,
       checkError: checkError?.message
     })
 
     // Если этот же код авторизации уже был использован, значит это повторный вызов
-    if (existingSettings && existingSettings.authorization_code === code) {
-      console.log('Same authorization code already processed for project:', state)
+    if (existingConnection && existingConnection.authorization_code === code) {
+      console.log('Same authorization code already processed for user:', project.user_id)
 
       // Если уже есть access_token, значит авторизация завершена успешно
-      if (existingSettings.access_token) {
+      if (existingConnection.access_token) {
         return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
       } else {
         return createJsonResponse({ error: 'authorization_code_already_used' }, 400, origin);
@@ -243,28 +256,46 @@ serve(async (req) => {
 
 
 
-    // Сохраняем или обновляем настройки AmoCRM
-    const { error: upsertError } = await supabase
-      .from('amocrm_settings')
+    // Сохраняем или обновляем CRM connection
+    const { data: crmConnection, error: connectionError } = await supabase
+      .from('crm_connections')
       .upsert({
-        project_id: state,
+        user_id: project.user_id,
+        crm_type: 'amocrm',
+        subdomain: subdomain,
         access_token: tokenResult.access_token,
         refresh_token: tokenResult.refresh_token,
         token_expires_at: expiresAt.toISOString(),
         authorization_code: code,
-        subdomain: subdomain,
+      }, {
+        onConflict: 'user_id,crm_type'
+      })
+      .select()
+      .single()
+
+    if (connectionError || !crmConnection) {
+      console.error('Failed to save CRM connection:', connectionError)
+      return createJsonResponse({ error: 'save_connection_failed', details: connectionError?.message }, 500, origin);
+    }
+
+    // Сохраняем настройки проекта
+    const { error: projectSettingsError } = await supabase
+      .from('project_crm_settings')
+      .upsert({
+        project_id: state,
+        crm_connection_id: crmConnection.id,
         pipeline_id: pipelineId,
         pipeline_name: pipelineName,
       }, {
-        onConflict: 'project_id'
+        onConflict: 'project_id,crm_connection_id'
       })
 
-    if (upsertError) {
-      console.error('Failed to save tokens:', upsertError)
-      return createJsonResponse({ error: 'save_tokens_failed', details: upsertError.message }, 500, origin);
+    if (projectSettingsError) {
+      console.error('Failed to save project CRM settings:', projectSettingsError)
+      return createJsonResponse({ error: 'save_project_settings_failed', details: projectSettingsError.message }, 500, origin);
     }
 
-    console.log(`✅ Успешная авторизация AmoCRM для проекта ${state}`)
+    console.log(`✅ Успешная авторизация AmoCRM для пользователя ${project.user_id} и проекта ${state}`)
 
     return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
 

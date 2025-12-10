@@ -12,86 +12,8 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
-      amocrm_custom_fields: {
-        Row: {
-          created_at: string | null
-          entity_type: string
-          field_code: string | null
-          field_id: number
-          field_name: string
-          field_type: string
-          id: string
-          is_editable: boolean | null
-          is_required: boolean | null
-          project_id: string
-          sort: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          entity_type: string
-          field_code?: string | null
-          field_id: number
-          field_name: string
-          field_type: string
-          id?: string
-          is_editable?: boolean | null
-          is_required?: boolean | null
-          project_id: string
-          sort?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          entity_type?: string
-          field_code?: string | null
-          field_id?: number
-          field_name?: string
-          field_type?: string
-          id?: string
-          is_editable?: boolean | null
-          is_required?: boolean | null
-          project_id?: string
-          sort?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "amocrm_custom_fields_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       amocrm_settings: {
         Row: {
           access_token: string | null
@@ -203,6 +125,54 @@ export type Database = {
             columns: ["apartment_id"]
             isOneToOne: false
             referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      apartment_views: {
+        Row: {
+          apartment_id: string
+          created_at: string
+          id: string
+          ip_address: unknown
+          project_id: string
+          referrer: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          project_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          project_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_views_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apartment_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -335,6 +305,39 @@ export type Database = {
           },
         ]
       }
+      commission_tiers: {
+        Row: {
+          commission_percentage: number
+          created_at: string
+          id: string
+          is_active: boolean
+          link_type: string | null
+          max_projects: number | null
+          min_projects: number
+          updated_at: string
+        }
+        Insert: {
+          commission_percentage: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          link_type?: string | null
+          max_projects?: number | null
+          min_projects?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_percentage?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          link_type?: string | null
+          max_projects?: number | null
+          min_projects?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           address: string | null
@@ -390,6 +393,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_connections: {
+        Row: {
+          access_token: string | null
+          account_name: string | null
+          authorization_code: string | null
+          base_domain: string | null
+          client_id: string | null
+          client_secret: string | null
+          created_at: string | null
+          crm_type: string
+          id: string
+          redirect_uri: string | null
+          refresh_token: string | null
+          subdomain: string
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_name?: string | null
+          authorization_code?: string | null
+          base_domain?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string | null
+          crm_type: string
+          id?: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          subdomain: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_name?: string | null
+          authorization_code?: string | null
+          base_domain?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string | null
+          crm_type?: string
+          id?: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          subdomain?: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       floor_plans: {
         Row: {
@@ -592,6 +649,42 @@ export type Database = {
           },
         ]
       }
+      manager_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          developer_id: string
+          email: string
+          expires_at: string | null
+          id: string
+          invitation_token: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          developer_id: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          invitation_token?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          developer_id?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invitation_token?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       manager_permissions: {
         Row: {
           allowed: boolean
@@ -666,6 +759,41 @@ export type Database = {
           },
         ]
       }
+      partner_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          partner_id: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_id: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_id?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_clicks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_invitations: {
         Row: {
           accepted_at: string | null
@@ -719,6 +847,9 @@ export type Database = {
           partner_id: string
           status: string
           type: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -728,6 +859,9 @@ export type Database = {
           partner_id: string
           status?: string
           type: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -737,6 +871,9 @@ export type Database = {
           partner_id?: string
           status?: string
           type?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: [
           {
@@ -758,6 +895,7 @@ export type Database = {
       partner_payouts: {
         Row: {
           amount: number
+          contact_info: string | null
           created_at: string
           id: string
           notes: string | null
@@ -771,6 +909,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          contact_info?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -784,6 +923,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          contact_info?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -807,6 +947,7 @@ export type Database = {
       }
       partner_profiles: {
         Row: {
+          commission_percentage: number | null
           created_at: string
           id: string
           partner_code: string
@@ -817,6 +958,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          commission_percentage?: number | null
           created_at?: string
           id?: string
           partner_code: string
@@ -827,6 +969,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          commission_percentage?: number | null
           created_at?: string
           id?: string
           partner_code?: string
@@ -842,6 +985,63 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_crm_settings: {
+        Row: {
+          created_at: string | null
+          crm_connection_id: string
+          id: string
+          pipeline_id: number | null
+          pipeline_name: string | null
+          project_id: string
+          responsible_user_id: number | null
+          status_id: number | null
+          status_name: string | null
+          updated_at: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          crm_connection_id: string
+          id?: string
+          pipeline_id?: number | null
+          pipeline_name?: string | null
+          project_id: string
+          responsible_user_id?: number | null
+          status_id?: number | null
+          status_name?: string | null
+          updated_at?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          crm_connection_id?: string
+          id?: string
+          pipeline_id?: number | null
+          pipeline_name?: string | null
+          project_id?: string
+          responsible_user_id?: number | null
+          status_id?: number | null
+          status_name?: string | null
+          updated_at?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_crm_settings_crm_connection_id_fkey"
+            columns: ["crm_connection_id"]
+            isOneToOne: false
+            referencedRelation: "crm_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_crm_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1381,6 +1581,7 @@ export type Database = {
           id: string
           is_vat_payer: boolean | null
           legal_address: string | null
+          partner_id: string | null
           phone: string | null
           tax_id: string | null
           updated_at: string
@@ -1398,6 +1599,7 @@ export type Database = {
           id: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          partner_id?: string | null
           phone?: string | null
           tax_id?: string | null
           updated_at?: string
@@ -1415,11 +1617,20 @@ export type Database = {
           id?: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          partner_id?: string | null
           phone?: string | null
           tax_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1465,7 +1676,6 @@ export type Database = {
           lemon_squeezy_subscription_id: string | null
           partner_commission_amount: number | null
           partner_commission_paid: boolean | null
-          partner_id: string | null
           payment_method: string | null
           payment_purpose: string | null
           plan_id: string
@@ -1494,7 +1704,6 @@ export type Database = {
           lemon_squeezy_subscription_id?: string | null
           partner_commission_amount?: number | null
           partner_commission_paid?: boolean | null
-          partner_id?: string | null
           payment_method?: string | null
           payment_purpose?: string | null
           plan_id: string
@@ -1523,7 +1732,6 @@ export type Database = {
           lemon_squeezy_subscription_id?: string | null
           partner_commission_amount?: number | null
           partner_commission_paid?: boolean | null
-          partner_id?: string | null
           payment_method?: string | null
           payment_purpose?: string | null
           plan_id?: string
@@ -1539,13 +1747,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_subscriptions_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "partner_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1569,6 +1770,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_expire_subscriptions: {
+        Args: never
+        Returns: {
+          expired_count: number
+          trial_expired_count: number
+          updated_subscriptions: string[]
+        }[]
+      }
       cleanup_expired_invitations: { Args: never; Returns: number }
       create_default_manager_permissions: {
         Args: { manager_account_id: string }
@@ -1585,7 +1794,7 @@ export type Database = {
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
       get_partner_commission_percentage: {
-        Args: { link_type: string }
+        Args: { p_link_type: string; partner_id_param: string }
         Returns: number
       }
       has_role: {
@@ -1743,9 +1952,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],
@@ -1755,3 +1961,4 @@ export const Constants = {
     },
   },
 } as const
+
