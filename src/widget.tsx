@@ -227,6 +227,8 @@ async function initFloatingButton(opts: InitOptions) {
       shadowRoot.appendChild(buttonMount);
     }
 
+
+
     const root = createRoot(buttonMount);
     const initialLang: Language | undefined =
       opts.lang && opts.lang in LANGUAGE_CONFIG
@@ -275,6 +277,15 @@ async function initInternal(opts: InitOptions) {
       mountPoint.style.width = '100%';
       mountPoint.style.display = 'contents';
       shadowRoot.appendChild(mountPoint);
+    }
+
+    let portalContainer = shadowRoot.getElementById('gridix-portal-container');
+    if (!portalContainer) {
+      portalContainer = document.createElement('div');
+      portalContainer.id = 'gridix-portal-container';
+      portalContainer.style.position = 'relative';
+      portalContainer.style.zIndex = '9999';
+      shadowRoot.appendChild(portalContainer);
     }
 
     const root = createRoot(mountPoint);
