@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFailedLeads } from '@/hooks/useLeads';
+import { useAllFailedLeadsStats } from '@/hooks/useAllFailedLeadsStats';
 
 interface LeadsNotificationProps {
   projectId?: string;
@@ -56,14 +57,15 @@ export function LeadsNotification({ projectId, onViewLeads, className }: LeadsNo
 }
 
 // Компонент для показа краткой статистики лидов
+// Использует общий хук, который загружает статистику по всем проектам разом
 export function LeadsStats({ projectId }: { projectId?: string }) {
-  const { getLeadCounts, loading } = useFailedLeads(projectId);
+  const { getStatsForProject, loading } = useAllFailedLeadsStats();
   
-  if (loading) {
+  if (loading || !projectId) {
     return null;
   }
 
-  const counts = getLeadCounts();
+  const counts = getStatsForProject(projectId);
   
   if (counts.total === 0) {
     return null;

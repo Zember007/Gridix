@@ -3,7 +3,7 @@
   "listView": "List view",
   "noProjects": "No projects found",
   "onMap": "On map",
-  "projects": "Projects ({count})",
+  "projects": "Projects ({{count}})",
   "resetFilters": "Reset filters",
   "subtitle": "Select a project to view available apartments",
   "title": "Real Estate Projects",

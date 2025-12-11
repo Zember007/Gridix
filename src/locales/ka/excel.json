@@ -4,9 +4,9 @@
       "createProject": "პროექტის შექმნა მონაცემებით"
     },
     "preview": {
-      "description": "როგორ იქნება თქვენი მონაცემები იმპორტირებული ({count} ჩანაწერი)",
+      "description": "როგორ იქნება თქვენი მონაცემები იმპორტირებული ({{count}} ჩანაწერი)",
       "title": "მონაცემების წინასწარი დათვალიერება",
-      "moreRecords": "... და კიდევ {count} ჩანაწერი"
+      "moreRecords": "... და კიდევ {{count}} ჩანაწერი"
     },
     "project": {
       "description": "აღწერა",
@@ -79,7 +79,7 @@
     "detectedGs": "აღმოჩენილია Google Sheets",
     "howToSetup": "როგორ დავაყენოთ წვდომა:",
     "importData": "მონაცემების იმპორტი",
-    "importedCount": "იმპორტირებულია {count} ჩანაწერი",
+    "importedCount": "იმპორტირებულია {{count}} ჩანაწერი",
     "importing": "იმპორტი...",
     "input": {
       "excel": "Excel ფაილის ბმული*",
@@ -108,8 +108,8 @@
       "gsAccessible": "Google Sheets ხელმისაწვდომია იმპორტისთვის",
       "invalidGs": "არასწორი Google Sheets ბმული",
       "linkAccessible": "ბმული ხელმისაწვდომია იმპორტისთვის",
-      "projectCreated": "პროექტი \"{name}\" შეიქმნა {count} ბინით {floors} სართულზე",
-      "projectCreatedObjects": "პროექტი \"{name}\" შეიქმნა {count} ობიექტით",
+      "projectCreated": "პროექტი \"{{name}}\" შეიქმნა {{count}} ბინით {{floors}} სართულზე",
+      "projectCreatedObjects": "პროექტი \"{{name}}\" შეიქმნა {{count}} ობიექტით",
       "projectCreationError": "პროექტის შექმნის შეცდომა"
     }
   }

@@ -53,6 +53,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
+import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
 
 interface AnalyticsData {
   projectViews: Array<{ date: string; views: number }>;
@@ -94,30 +95,9 @@ export const AdminAnalytics = () => {
 
     try {
       if (isManagerMode && activeWorkspaceId) {
-        const { data: managerAccount } = await supabase
-          .from('manager_accounts')
-          .select('id')
-          .eq('manager_id', user.id)
-          .eq('developer_id', activeWorkspaceId)
-          .eq('status', 'active')
-          .single();
-
-        if (!managerAccount) return [];
-
-        const { data: accessRules } = await supabase
-          .from('manager_project_access')
-          .select('project_id')
-          .eq('manager_account_id', managerAccount.id);
-
-        if (accessRules && accessRules.length > 0) {
-          return accessRules.map(r => r.project_id);
-        }
-        // Если нет access rules - доступ ко всем проектам
-        const { data: projects } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('user_id', activeWorkspaceId);
-        return projects?.map(p => p.id) || [];
+        // Для менеджера получаем доступные проекты через общую функцию
+        const managerProjectIds = await getManagerProjectIds(user.id, activeWorkspaceId);
+        return managerProjectIds;
       } else {
         // Собственный workspace
         const { data: projects } = await supabase

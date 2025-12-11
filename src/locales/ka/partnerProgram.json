@@ -96,7 +96,7 @@
     "statusAmbassador": "ამბასადორი",
     "commissionLabel": "საკომისიოს ზომა:",
     "yearlyIncome": "თქვენი წლიური შემოსავალი",
-    "fromProjects": "{count} {projects}-დან",
+    "fromProjects": "{{count}} {{projects}}-დან",
     "projectSingular": "პროექტი",
     "projectPluralFew": "პროექტები",
     "projectPluralMany": "პროექტები",

@@ -1,4 +1,4 @@
 {
-  "fileProcessed": "File processed successfully! Found {count} records",
+  "fileProcessed": "File processed successfully! Found {{count}} records",
   "templateDownloaded": "Template downloaded"
 }

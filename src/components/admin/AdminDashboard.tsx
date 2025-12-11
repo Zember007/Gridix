@@ -42,7 +42,6 @@ const AdminDashboard = () => {
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
 
-  // Mobile menu state (shared between AdminSidebar and AdminSidebarMenuButton)
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleCreateNew = () => {

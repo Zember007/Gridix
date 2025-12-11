@@ -96,7 +96,7 @@
     "statusAmbassador": "Ambassador",
     "commissionLabel": "Commission rate:",
     "yearlyIncome": "Your annual income",
-    "fromProjects": "from {count} {projects}",
+    "fromProjects": "from {{count}} {{projects}}",
     "projectSingular": "project",
     "projectPluralFew": "projects",
     "projectPluralMany": "projects",
@@ -107,7 +107,7 @@
     "youAreHere": "YOU ARE HERE",
     "integratorDesc": "up to 10 projects • 40% commission",
     "ambassadorDesc": "10+ projects • 50% commission",
-    "infoNote": "💡 All calculations are based on the average annual Gridix subscription cost — $ {price}. Your income grows with each active client.",
+    "infoNote": "💡 All calculations are based on the average annual Gridix subscription cost — $ {{price}}. Your income grows with each active client.",
     "ctaButton": "Become a partner and earn"
   },
   "caseStudies": {

@@ -1,11 +1,11 @@
 {
-  "apartmentOption": "Квартира {number} ({floor} этаж)",
+  "apartmentOption": "Квартира {{number}} ({{floor}} этаж)",
   "authRequired": "Необходимо войти в систему для загрузки фотографий",
   "deleteError": "Ошибка удаления фото",
   "deleteSuccess": "Фото удалено",
   "description": "Загружайте индивидуальные фотографии для конкретных квартир",
   "duplicateError": "Ошибка дублирования фотографий",
-  "duplicateSuccess": "Фотографии продублированы для {count} похожих квартир",
+  "duplicateSuccess": "Фотографии продублированы для {{count}} похожих квартир",
   "duplicateToSimilar": "Дублировать на похожие квартиры",
   "individualPhotos": "Индивидуальные фотографии",
   "layoutPhotos": "Фотографии планировок",

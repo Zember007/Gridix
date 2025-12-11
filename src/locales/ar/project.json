@@ -61,5 +61,5 @@
   "table": "جدول",
   "total": "الإجمالي",
   "type": "النوع",
-  "viewApartments": "عرض {count} خيارات"
+  "viewApartments": "عرض {{count}} خيارات"
 }

@@ -1,11 +1,11 @@
 {
-  "apartmentOption": "Apartment {number} (Floor {floor})",
+  "apartmentOption": "Apartment {{number}} (Floor {{floor}})",
   "authRequired": "Authentication required to upload photos",
   "deleteError": "Error deleting photo",
   "deleteSuccess": "Photo deleted",
   "description": "Upload individual photos for specific apartments",
   "duplicateError": "Error duplicating photos",
-  "duplicateSuccess": "Photos duplicated for {count} similar apartments",
+  "duplicateSuccess": "Photos duplicated for {{count}} similar apartments",
   "duplicateToSimilar": "Duplicate to similar apartments",
   "individualPhotos": "Individual Photos",
   "layoutPhotos": "Layout Photos",

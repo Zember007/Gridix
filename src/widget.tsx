@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { EmbedLanguageProvider } from '@/contexts/LanguageContext';
+import { EmbedLanguageInitializer } from '@/components/EmbedLanguageInitializer';
 import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
@@ -196,15 +196,12 @@ function WidgetApp(props: { projectId?: string | undefined; lang?: string | unde
     />
   );
 
-  const languageProviderProps =
-    initialLang !== undefined ? { initialLanguage: initialLang } : {};
-
   return (
-    <EmbedLanguageProvider {...languageProviderProps}>
+    <EmbedLanguageInitializer initialLanguage={initialLang}>
       <div className="h-full bg-background text-foreground">
         {content}
       </div>
-    </EmbedLanguageProvider>
+    </EmbedLanguageInitializer>
   );
 }
 
@@ -234,12 +231,10 @@ async function initFloatingButton(opts: InitOptions) {
       opts.lang && opts.lang in LANGUAGE_CONFIG
         ? (opts.lang as Language)
         : undefined;
-    const languageProviderProps =
-      initialLang !== undefined ? { initialLanguage: initialLang } : {};
 
     root.render(
       <AuthProvider>
-        <EmbedLanguageProvider {...languageProviderProps}>
+        <EmbedLanguageInitializer initialLanguage={initialLang}>
           <FloatingProjectButton
             projectId={opts.projectId as string}
             side={
@@ -248,7 +243,7 @@ async function initFloatingButton(opts: InitOptions) {
             bottomOffset={opts.floatingButtonBottomOffset}
             sideOffset={opts.floatingButtonSideOffset}
           />
-        </EmbedLanguageProvider>
+        </EmbedLanguageInitializer>
       </AuthProvider>
     );
   } catch (err) {

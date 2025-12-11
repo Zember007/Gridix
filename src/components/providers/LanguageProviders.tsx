@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { LanguageProvider } from "@/contexts/LanguageContext";
 import LanguageWrapper from "@/components/LanguageWrapper";
 
 interface LanguageProvidersProps {
@@ -8,10 +7,8 @@ interface LanguageProvidersProps {
 
 export function LanguageProviders({ children }: LanguageProvidersProps) {
   return (
-    <LanguageProvider>
-      <LanguageWrapper>
-        {children}
-      </LanguageWrapper>
-    </LanguageProvider>
+    <LanguageWrapper>
+      {children}
+    </LanguageWrapper>
   );
 }

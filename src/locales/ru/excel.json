@@ -4,9 +4,9 @@
       "createProject": "Создать проект с данными"
     },
     "preview": {
-      "description": "Как будут импортированы ваши данные ({count} записей)",
+      "description": "Как будут импортированы ваши данные ({{count}} записей)",
       "title": "Предварительный просмотр данных",
-      "moreRecords": "... и еще {count} записей"
+      "moreRecords": "... и еще {{count}} записей"
     },
     "project": {
       "description": "Описание",
@@ -79,7 +79,7 @@
     "detectedGs": "Google Sheets обнаружен",
     "howToSetup": "Как настроить доступ:",
     "importData": "Импортировать данные",
-    "importedCount": "Импортировано {count} записей",
+    "importedCount": "Импортировано {{count}} записей",
     "importing": "Импорт...",
     "input": {
       "excel": "Ссылка на Excel файл*",
@@ -108,8 +108,8 @@
       "gsAccessible": "Google Sheets доступен для импорта",
       "invalidGs": "Некорректная ссылка Google Sheets",
       "linkAccessible": "Ссылка доступна для импорта",
-      "projectCreated": "Проект \"{name}\" создан с {count} квартирами на {floors} этажах",
-      "projectCreatedObjects": "Проект \"{name}\" создан с {count} объектами",
+      "projectCreated": "Проект \"{{name}}\" создан с {{count}} квартирами на {{floors}} этажах",
+      "projectCreatedObjects": "Проект \"{{name}}\" создан с {{count}} объектами",
       "projectCreationError": "Ошибка при создании проекта"
     }
   }

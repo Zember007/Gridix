@@ -63,5 +63,5 @@
   "table": "Таблица",
   "total": "Всего",
   "type": "Тип",
-  "viewApartments": "Смотреть {count} вариантов"
+  "viewApartments": "Смотреть {{count}} вариантов"
 }

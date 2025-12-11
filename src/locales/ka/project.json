@@ -63,5 +63,5 @@
   "table": "ცხრილი",
   "total": "სულ",
   "type": "ტიპი",
-  "viewApartments": "იხილე {count} ვარიანტი"
+  "viewApartments": "იხილე {{count}} ვარიანტი"
 }

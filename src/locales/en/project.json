@@ -63,5 +63,5 @@
   "table": "Table",
   "total": "Total",
   "type": "Type",
-  "viewApartments": "View {count} options"
+  "viewApartments": "View {{count}} options"
 }

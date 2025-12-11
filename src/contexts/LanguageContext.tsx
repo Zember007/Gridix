@@ -1,268 +1,103 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Language,
   getLanguageFromPath,
   addLanguageToPath,
   removeLanguageFromPath,
-  DEFAULT_LANGUAGE,
-  LANGUAGE_CONFIG
+  LANGUAGE_CONFIG,
 } from '@/lib/language-utils';
 
-
-// Register all JSON translation files under src/locales/{lang}/*.json (lazy)
-const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  '@/locales/*/*.json'
-);
-
-interface Translations {
-  [key: string]: Partial<Record<Language, string>>;
-}
-
-// Helper function to flatten nested JSON objects
-function flattenTranslations(obj: Record<string, unknown>, prefix = ''): Record<string, string> {
-  const flattened: Record<string, string> = {};
-  
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = obj[key];
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        Object.assign(flattened, flattenTranslations(value as Record<string, unknown>, newKey));
-      } else {
-        flattened[newKey] = value as string;
-      }
-    }
-  }
-  
-  return flattened;
-}
-
-// Cache for loaded, flattened translations per language (process-wide)
-const languageCache: Record<Language, Record<string, string>> = {
-  ru: {},
-  en: {},
-  ka: {},
-  ar: {},
-};
-
-const loadedLanguages = new Set<Language>();
-
-async function loadLanguageIntoCache(lang: Language) {
-  if (loadedLanguages.has(lang)) return;
-  const entries = Object.entries(localeModules).filter(([path]) =>
-    path.includes(`/locales/${lang}/`)
-  );
-  const modules = await Promise.all(entries.map(([, loader]) => loader()));
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    if (!entry) continue;
-    const path = entry[0];
-    const mod = modules[i];
-    if (!mod) continue;
-    const m = path.match(/\/locales\/(ru|en|ka|ar)\/(.+)\.json$/);
-    const fileBase = m ? m[2] : '';
-    const data = mod.default ?? {};
-    if (data && typeof data === 'object') {
-      const flat = flattenTranslations(data as Record<string, unknown>, fileBase);
-      Object.assign(languageCache[lang], flat);
-    }
-  }
-  loadedLanguages.add(lang);
-}
-
-function buildTranslationsFromCache(): Translations {
-  const result: Translations = {};
-  const langs = Array.from(loadedLanguages) as Language[];
-  const allKeys = new Set<string>();
-  langs.forEach(l => {
-    Object.keys(languageCache[l]).forEach(k => allKeys.add(k));
-  });
-  allKeys.forEach(key => {
-    const entry: Partial<Record<Language, string>> = {};
-    langs.forEach(l => {
-      const v = languageCache[l][key];
-      if (v !== undefined) entry[l] = v;
-    });
-    result[key] = entry;
-  });
-  return result;
-}
-
-
-
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string, params?: Record<string, string | number>) => string;
-}
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
+/**
+ * Хук для работы с языком и переводами через react-i18next
+ * Синхронизирует язык с URL и предоставляет функции для переводов
+ */
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
-
-interface LanguageProviderProps {
-  children: ReactNode;
-  // Optional explicit language for embed/widget contexts
-  initialLanguage?: Language;
-}
-
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialize language from URL path or default
-  const [language, setLanguageState] = useState<Language>(() => {
-    return getLanguageFromPath(location.pathname);
-  });
+  const language = i18n.language as Language;
 
-  const [translations, setTranslations] = useState<Translations>({});
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
-
-  useEffect(() => {
-    let isCancelled = false;
-    setIsLoaded(false);
-    (async () => {
-      await loadLanguageIntoCache(language);
-      if (!isCancelled) {
-        setTranslations(buildTranslationsFromCache());
-        setIsLoaded(true);
-      }
-      if (language !== 'en') {
-        // Background load for fallback
-        loadLanguageIntoCache('en').then(() => {
-          if (!isCancelled) setTranslations(buildTranslationsFromCache());
-        });
-      }
-    })();
-    return () => { isCancelled = true; };
-  }, [language]);
-
-  // Update language when URL changes
+  // Синхронизация языка при изменении URL
   useEffect(() => {
     const urlLanguage = getLanguageFromPath(location.pathname);
-    if (urlLanguage !== language) {
-      setLanguageState(urlLanguage);
+    if (urlLanguage !== i18n.language) {
+      void i18n.changeLanguage(urlLanguage);
     }
-  }, [location.pathname, language]);
+  }, [location.pathname, i18n]);
 
+  // Функция для смены языка с навигацией
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
 
-    // Get current path without language prefix
+    // Получаем текущий путь без языкового префикса
     const cleanPath = removeLanguageFromPath(location.pathname);
 
-    // Create new path with new language prefix
+    // Создаем новый путь с новым языковым префиксом
     const newPath = addLanguageToPath(cleanPath, newLanguage);
 
-    // Navigate to new URL
+    // Меняем язык в i18next
+    void i18n.changeLanguage(newLanguage);
+
+    // Навигация на новый URL
     navigate(newPath, { replace: true });
   };
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    const base = translations[key] || {};
-    const translation = (base[language] ?? base.en ?? base.ru ?? key);
-
-    if (params) {
-      return Object.keys(params).reduce((text, param) => {
-        return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
-      }, translation);
-    }
-
-    return translation;
+  return {
+    language,
+    setLanguage,
+    t,
   };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {isLoaded ? children : null}
-    </LanguageContext.Provider>
-  );
 };
 
-// Embed Language Provider for standalone widgets (without URL routing)
-export const EmbedLanguageProvider: React.FC<LanguageProviderProps> = ({ children, initialLanguage }) => {
-  // Initialize language from URL query parameter, localStorage or default
-  const [language, setLanguageState] = useState<Language>(() => {
-    // Highest priority: explicit initialLanguage prop (e.g. from widget options)
-    if (initialLanguage && (initialLanguage as Language) in LANGUAGE_CONFIG) {
-      return initialLanguage as Language;
-    }
-    // First, check for lang query parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
-      return langParam as Language;
-    }
+/**
+ * Хук для работы с языком в embed-режиме (без роутинга)
+ * Использует localStorage и query параметры для определения языка
+ */
+export const useEmbedLanguage = (initialLanguage?: Language) => {
+  const { t, i18n } = useTranslation();
 
-    // Then check localStorage
-    const savedLanguage = localStorage.getItem('embed-language');
-    if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
-      return savedLanguage as Language;
-    }
-
-    return DEFAULT_LANGUAGE;
-  });
-
-  // Keep state in sync if an explicit initialLanguage prop is provided/changes
+  // Инициализация языка из разных источников
   useEffect(() => {
-    if (initialLanguage && initialLanguage !== language) {
-      setLanguageState(initialLanguage);
-      localStorage.setItem('embed-language', initialLanguage);
+    let detectedLanguage = initialLanguage;
+
+    // Проверяем query параметр
+    if (!detectedLanguage) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const langParam = urlParams.get('lang');
+      if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
+        detectedLanguage = langParam as Language;
+      }
     }
-  }, [initialLanguage, language]);
 
-  const [translations, setTranslations] = useState<Translations>({});
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
-
-  useEffect(() => {
-    let isCancelled = false;
-    setIsLoaded(false);
-    (async () => {
-      await loadLanguageIntoCache(language);
-      if (!isCancelled) {
-        setTranslations(buildTranslationsFromCache());
-        setIsLoaded(true);
+    // Проверяем localStorage
+    if (!detectedLanguage) {
+      const savedLanguage = localStorage.getItem('embed-language');
+      if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
+        detectedLanguage = savedLanguage as Language;
       }
-      if (language !== 'en') {
-        loadLanguageIntoCache('en').then(() => {
-          if (!isCancelled) setTranslations(buildTranslationsFromCache());
-        });
-      }
-    })();
-    return () => { isCancelled = true; };
-  }, [language]);
+    }
 
+    if (detectedLanguage && detectedLanguage !== i18n.language) {
+      void i18n.changeLanguage(detectedLanguage);
+    }
+  }, [initialLanguage, i18n]);
+
+  const language = i18n.language as Language;
+
+  // Функция для смены языка в embed-режиме
   const setLanguage = (newLanguage: Language) => {
     if (newLanguage === language) return;
 
-    setLanguageState(newLanguage);
+    void i18n.changeLanguage(newLanguage);
     localStorage.setItem('embed-language', newLanguage);
   };
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    const base = translations[key] || {};
-    const translation = (base[language] ?? base.en ?? base.ru ?? key);
-
-    if (params) {
-      return Object.keys(params).reduce((text, param) => {
-        return text.replace(new RegExp(`{${param}}`, 'g'), String(params[param]));
-      }, translation);
-    }
-
-    return translation;
+  return {
+    language,
+    setLanguage,
+    t,
   };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {isLoaded ? children : null}
-    </LanguageContext.Provider>
-  );
 };

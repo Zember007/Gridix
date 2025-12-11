@@ -96,7 +96,7 @@
     "statusAmbassador": "Амбассадор",
     "commissionLabel": "Размер комиссии:",
     "yearlyIncome": "Ваш годовой доход",
-    "fromProjects": "из {count} {projects}",
+    "fromProjects": "из {{count}} {{projects}}",
     "projectSingular": "проекта",
     "projectPluralFew": "проектов",
     "projectPluralMany": "проектов",

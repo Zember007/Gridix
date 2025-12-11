@@ -96,7 +96,7 @@
     "statusAmbassador": "سفير",
     "commissionLabel": "معدل العمولة:",
     "yearlyIncome": "دخلك السنوي",
-    "fromProjects": "من {count} {projects}",
+    "fromProjects": "من {{count}} {{projects}}",
     "projectSingular": "مشروع",
     "projectPluralFew": "مشاريع",
     "projectPluralMany": "مشاريع",

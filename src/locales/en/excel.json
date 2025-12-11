@@ -4,9 +4,9 @@
       "createProject": "Create project with data"
     },
     "preview": {
-      "description": "How your data will be imported ({count} records)",
+      "description": "How your data will be imported ({{count}} records)",
       "title": "Data preview",
-      "moreRecords": "... and {count} more records"
+      "moreRecords": "... and {{count}} more records"
     },
     "project": {
       "description": "Description",
@@ -79,7 +79,7 @@
     "detectedGs": "Google Sheets detected",
     "howToSetup": "How to set up access:",
     "importData": "Import data",
-    "importedCount": "Imported {count} records",
+    "importedCount": "Imported {{count}} records",
     "importing": "Importing...",
     "input": {
       "excel": "Excel file link*",
@@ -108,8 +108,8 @@
       "gsAccessible": "Google Sheets is accessible for import",
       "invalidGs": "Invalid Google Sheets link",
       "linkAccessible": "Link is accessible for import",
-      "projectCreated": "Project \"{name}\" created with {count} apartments on {floors} floors",
-      "projectCreatedObjects": "Project \"{name}\" created with {count} objects",
+      "projectCreated": "Project \"{{name}}\" created with {{count}} apartments on {{floors}} floors",
+      "projectCreatedObjects": "Project \"{{name}}\" created with {{count}} objects",
       "projectCreationError": "Error creating project"
     }
   }

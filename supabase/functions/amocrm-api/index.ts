@@ -86,9 +86,15 @@ serve(async (req) => {
 
     const { project_id, action } = await req.json();
 
+    if (!action) {
+      return createJsonResponse({ data: { status: 'OK' } }, 200, origin);
+    }
+
     if (!project_id) {
       return createJsonResponse({ error: 'project_id is required' }, 400, origin);
     }
+
+    
 
     // Initialize Supabase user client (RLS enforced)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

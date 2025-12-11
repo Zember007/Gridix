@@ -4,9 +4,9 @@
       "createProject": "إنشاء مشروع بالبيانات"
     },
     "preview": {
-      "description": "كيفية استيراد بياناتك ({count} سجل)",
+      "description": "كيفية استيراد بياناتك ({{count}} سجل)",
       "title": "معاينة البيانات",
-      "moreRecords": "... و {count} سجل إضافي"
+      "moreRecords": "... و {{count}} سجل إضافي"
     },
     "project": {
       "description": "الوصف",
@@ -79,7 +79,7 @@
     "detectedGs": "تم اكتشاف Google Sheets",
     "howToSetup": "كيفية إعداد الوصول:",
     "importData": "استيراد البيانات",
-    "importedCount": "تم استيراد {count} سجل",
+    "importedCount": "تم استيراد {{count}} سجل",
     "importing": "جارٍ الاستيراد...",
     "input": {
       "excel": "رابط ملف Excel*",
@@ -108,8 +108,8 @@
       "gsAccessible": "Google Sheets متاح للاستيراد",
       "invalidGs": "رابط Google Sheets غير صالح",
       "linkAccessible": "الرابط متاح للاستيراد",
-      "projectCreated": "تم إنشاء المشروع \"{name}\" مع {count} شقة في {floors} طوابق",
-      "projectCreatedObjects": "تم إنشاء المشروع \"{name}\" مع {count} كائن",
+      "projectCreated": "تم إنشاء المشروع \"{{name}}\" مع {{count}} شقة في {{floors}} طوابق",
+      "projectCreatedObjects": "تم إنشاء المشروع \"{{name}}\" مع {{count} } كائن",
       "projectCreationError": "خطأ في إنشاء المشروع"
     }
   }
