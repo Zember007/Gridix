@@ -1,13 +1,15 @@
 import { createRoot } from 'react-dom/client';
-import { EmbedLanguageInitializer } from '@/components/EmbedLanguageInitializer';
-import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
+import { I18nextProvider } from 'react-i18next';
+import { MemoryRouter } from 'react-router-dom';
+import i18n from '@/lib/i18n';
+import { LANGUAGE_CONFIG } from '@/lib/language-utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/components/ProjectApartmentSelector';
 import '@/index.css';
 import {
   FloatingProjectButton,
   FloatingProjectButtonProps,
-} from '@/components/widget/FloatingProjectButton';
+} from '@/components/widget/FloatingProjectButton'; 
 
 
 // Используется только для версионирования style.css
@@ -36,7 +38,7 @@ function buildInitOptions(options: InitOptions = {}): InitOptions {
   const floatingButtonSideParam = qp.get('floatingButtonSide');
   const floatingButtonBottomOffsetParam = qp.get('floatingButtonBottomOffset');
   const floatingButtonSideOffsetParam = qp.get('floatingButtonSideOffset');
-   const showFullProjectParam = qp.get('showFullProject');
+  const showFullProjectParam = qp.get('showFullProject');
 
   const parsedFloatingBottom = floatingButtonBottomOffsetParam
     ? parseInt(floatingButtonBottomOffsetParam, 10)
@@ -180,11 +182,8 @@ function lazyLoadWithObserver(
   );
 }
 
-function WidgetApp(props: { projectId?: string | undefined; lang?: string | undefined }) {
-  const { projectId, lang } = props;
-
-  const initialLang: Language | undefined =
-    lang && (lang in LANGUAGE_CONFIG) ? (lang as Language) : undefined;
+function WidgetApp(props: { projectId?: string | undefined; }) {
+  const { projectId } = props;
 
   if (!projectId) return null;
 
@@ -197,11 +196,11 @@ function WidgetApp(props: { projectId?: string | undefined; lang?: string | unde
   );
 
   return (
-    <EmbedLanguageInitializer initialLanguage={initialLang}>
-      <div className="h-full bg-background text-foreground">
-        {content}
-      </div>
-    </EmbedLanguageInitializer>
+
+    <div className="h-full bg-background text-foreground">
+      {content}
+    </div>
+
   );
 }
 
@@ -224,27 +223,30 @@ async function initFloatingButton(opts: InitOptions) {
       shadowRoot.appendChild(buttonMount);
     }
 
-
+    // Устанавливаем язык в i18n, если он указан
+    if (opts.lang && opts.lang in LANGUAGE_CONFIG) {
+      await i18n.changeLanguage(opts.lang);
+    }
 
     const root = createRoot(buttonMount);
-    const initialLang: Language | undefined =
-      opts.lang && opts.lang in LANGUAGE_CONFIG
-        ? (opts.lang as Language)
-        : undefined;
 
     root.render(
-      <AuthProvider>
-        <EmbedLanguageInitializer initialLanguage={initialLang}>
-          <FloatingProjectButton
-            projectId={opts.projectId as string}
-            side={
-              opts.floatingButtonSide as FloatingProjectButtonProps['side']
-            }
-            bottomOffset={opts.floatingButtonBottomOffset}
-            sideOffset={opts.floatingButtonSideOffset}
-          />
-        </EmbedLanguageInitializer>
-      </AuthProvider>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter>
+          <AuthProvider>
+
+                <FloatingProjectButton
+              projectId={opts.projectId as string}
+              side={
+                opts.floatingButtonSide as FloatingProjectButtonProps['side']
+              }
+              bottomOffset={opts.floatingButtonBottomOffset}
+              sideOffset={opts.floatingButtonSideOffset}
+            />
+
+          </AuthProvider>
+        </MemoryRouter>
+      </I18nextProvider>
     );
   } catch (err) {
     console.error('GridixWidget floating button init error:', err);
@@ -253,45 +255,51 @@ async function initFloatingButton(opts: InitOptions) {
 
 // Полная инициализация виджета проекта
 async function initInternal(opts: InitOptions) {
-  try {
-    // Если явно указано не показывать полный проект, просто выходим.
-    // Парящая кнопка уже инициализируется отдельно в init().
-    if (opts.showFullProject === false) {
-      return;
-    }
-
-    const container = ensureContainer();
-    const shadowRoot = createShadowRoot(container);
-    await ensureStylesInShadow(shadowRoot);
-
-    let mountPoint = shadowRoot.getElementById('gridix-mount-point');
-    if (!mountPoint) {
-      mountPoint = document.createElement('div');
-      mountPoint.id = 'gridix-mount-point';
-      mountPoint.style.height = '100%';
-      mountPoint.style.width = '100%';
-      mountPoint.style.display = 'contents';
-      shadowRoot.appendChild(mountPoint);
-    }
-
-    let portalContainer = shadowRoot.getElementById('gridix-portal-container');
-    if (!portalContainer) {
-      portalContainer = document.createElement('div');
-      portalContainer.id = 'gridix-portal-container';
-      portalContainer.style.position = 'relative';
-      portalContainer.style.zIndex = '9999';
-      shadowRoot.appendChild(portalContainer);
-    }
-
-    const root = createRoot(mountPoint);
-    root.render(
-      <AuthProvider>
-        <WidgetApp projectId={opts.projectId} lang={opts.lang} />
-      </AuthProvider>
-    );
-  } catch (err) {
-    console.error('GridixWidget init error:', err);
+  // Если явно указано не показывать полный проект, просто выходим.
+  // Парящая кнопка уже инициализируется отдельно в init().
+  if (opts.showFullProject === false) {
+    return;
   }
+
+  const container = ensureContainer();
+  const shadowRoot = createShadowRoot(container);
+  await ensureStylesInShadow(shadowRoot);
+
+  let mountPoint = shadowRoot.getElementById('gridix-mount-point');
+  if (!mountPoint) {
+    mountPoint = document.createElement('div');
+    mountPoint.id = 'gridix-mount-point';
+    mountPoint.style.height = '100%';
+    mountPoint.style.width = '100%';
+    mountPoint.style.display = 'contents';
+    shadowRoot.appendChild(mountPoint);
+  }
+
+  let portalContainer = shadowRoot.getElementById('gridix-portal-container');
+  if (!portalContainer) {
+    portalContainer = document.createElement('div');
+    portalContainer.id = 'gridix-portal-container';
+    portalContainer.style.position = 'relative';
+    portalContainer.style.zIndex = '9999';
+    shadowRoot.appendChild(portalContainer);
+  }
+
+  // Устанавливаем язык в i18n, если он указан
+  if (opts.lang && opts.lang in LANGUAGE_CONFIG) {
+    await i18n.changeLanguage(opts.lang);
+  }
+
+  const root = createRoot(mountPoint);
+  root.render(
+    <I18nextProvider i18n={i18n}>
+      <MemoryRouter>
+        <AuthProvider>
+          <WidgetApp projectId={opts.projectId} />
+        </AuthProvider>
+      </MemoryRouter>
+    </I18nextProvider>
+  );
+
 }
 
 // Публичный метод: инициализация виджета
