@@ -29,6 +29,7 @@ import {
   Building,
   Book,
   Menu,
+  ChevronUp,
 } from "lucide-react";
 import {
   Select,
@@ -244,7 +245,7 @@ function SimplifiedSidebar({
       {userEmail && (
         <div>
           <div className="flex flex-col gap-2 p-4">
-          <SidebarButton
+            <SidebarButton
               icon={<Handshake size={20} />}
               label={t('admin.partners')}
               isActive={activeSection === 'partners'}
@@ -258,7 +259,7 @@ function SimplifiedSidebar({
               isCollapsed={isCollapsed}
               href={`https://docs.gridix.live/${language === 'ru' ? 'ru' : 'en'}`}
             />
-           
+
           </div>
           <div
             className="p-4"
@@ -290,24 +291,28 @@ function SimplifiedSidebar({
                     </div>
                   </div>
                   {!isCollapsed && (
-                    <div className="min-w-0 flex-1 text-left">
-                      <p
-                        className="text-sm font-medium truncate"
-                        style={{ color: ADMIN_THEME.sidebarText }}
-                      >
-                        {userEmail.split('@')[0]}
-                      </p>
-                      <p
-                        className="text-xs truncate"
-                        style={{ color: ADMIN_THEME.textMuted }}
-                      >
-                        {userEmail}
-                      </p>
-                    </div>
+                    <>
+                      <div className="min-w-0 flex-1 text-left">
+                        <p
+                          className="text-sm font-medium truncate"
+                          style={{ color: ADMIN_THEME.sidebarText }}
+                        >
+                          {userEmail.split('@')[0]}
+                        </p>
+                        <p
+                          className="text-xs truncate"
+                          style={{ color: ADMIN_THEME.textMuted }}
+                        >
+                          {userEmail}
+                        </p>
+                      </div>
+                      <ChevronUp className={`h-4 w-4 text-white`} />
+                    </>
                   )}
+
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
+              <DropdownMenuContent
                 align={isCollapsed ? "center" : "end"}
                 side={isCollapsed ? "right" : "top"}
                 className="w-48"
@@ -317,7 +322,7 @@ function SimplifiedSidebar({
                 }}
               >
                 <DropdownMenuItem
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-2 cursor-pointer hover:!bg-transparent"
                   style={{
                     color: ADMIN_THEME.sidebarText,
                   }}
@@ -330,20 +335,20 @@ function SimplifiedSidebar({
                   <DropdownMenuItem
                     key={code}
                     onClick={() => setLanguage(code as Language)}
-                    className={`cursor-pointer pl-8 ${language === code ? 'bg-accent' : ''}`}
+                    className={`cursor-pointer pl-8 ${language === code ? '!bg-[var(--admin-sidebar-active-background)]' : 'hover:!bg-[var(--admin-sidebar-active-background)]'}`}
                     style={{
                       color: ADMIN_THEME.sidebarText,
-                      backgroundColor: language === code ? ADMIN_THEME.sidebarActiveBackground : 'transparent',
+                      
                     }}
                   >
                     <span className="mr-2">{config.flag}</span>
                     {config.name}
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator 
-                  style={{ 
-                    backgroundColor: ADMIN_THEME.sidebarBorder 
-                  }} 
+                <DropdownMenuSeparator
+                  style={{
+                    backgroundColor: ADMIN_THEME.sidebarBorder
+                  }}
                 />
                 <DropdownMenuItem
                   onClick={() => onSignOut?.()}

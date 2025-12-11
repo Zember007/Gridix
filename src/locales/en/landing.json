@@ -6,7 +6,7 @@
   "companyDescription": "Innovative platform for creating interactive real estate plans. We simplify the sales process and increase conversion.",
   "contacts": "Contacts",
   "copyright": "Gridix. All rights reserved.",
-  "crmIntegrationDesc": "Automatic transfer of leads and apartment data to AmoCRM, Bitrix24, HubSpot and other CRM systems. No lost applications — all clients are immediately in your funnel.",
+  "crmIntegrationDesc": "Automatic transfer of leads and apartment data to amoCRM, Bitrix24, HubSpot and other CRM systems. No lost applications — all clients are immediately in your funnel.",
   "crmIntegrationTitle": "Integration with popular CRM systems",
   "dataImportDesc": "Upload apartment statuses and prices from Excel, CSV or Google Sheets. All data will automatically sync to the system.",
   "dataImportTitle": "Data Import",
@@ -184,7 +184,7 @@
       },
       "automation": {
         "title": "Sales automation",
-        "content": "Automatic lead collection 24/7 with integration to AmoCRM, Bitrix24 and other CRMs. Leads immediately in CRM with selection data, auto-assignment to managers. Works even at night and on weekends.",
+        "content": "Automatic lead collection 24/7 with integration to amoCRM, Bitrix24 and other CRMs. Leads immediately in CRM with selection data, auto-assignment to managers. Works even at night and on weekends.",
         "category": "Integrations"
       },
       "dataImport": {
@@ -254,7 +254,7 @@
     },
     "crmIntegration": {
       "title": "CRM integration",
-      "description": "Leads automatically in AmoCRM/Bitrix24 with client selection data"
+      "description": "Leads automatically in amoCRM/Bitrix24 with client selection data"
     },
     "dataUpdate": {
       "title": "Data and status updates",
@@ -308,7 +308,7 @@
       "label": "Solution",
       "item1": "Loaded 380 apartments in 1 day",
       "item2": "Placed interactive widget on website",
-      "item3": "Connected AmoCRM for automation"
+      "item3": "Connected amoCRM for automation"
     },
     "results": {
       "label": "Results (1 month)",
@@ -372,7 +372,7 @@
       "item2": "No technical team required",
       "item3": "Support and updates included",
       "item4": "Stable operation without errors",
-      "item5": "Ready integrations with AmoCRM, Bitrix24",
+      "item5": "Ready integrations with amoCRM, Bitrix24",
       "item6": "Easily scales to any number of projects",
       "tryFree": "Try for free"
     }

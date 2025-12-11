@@ -27,7 +27,7 @@
     "gridix_label": "\"Made with GRIDIX\" label",
     "support": "Technical support",
     "team_management": "Add manager team — for managing floor plans and updating data",
-    "crm_integration": "CRM integration (AmoCRM, Bitrix24, and others) — lead synchronization",
+    "crm_integration": "CRM integration (amoCRM, Bitrix24, and others) — lead synchronization",
     "custom_domain": "Custom domain connection — www.yourcompany.com",
     "branding": "Design customization to match brand style — colors, logo, brand elements",
     "api_access": "API access — for integrations with internal systems",
