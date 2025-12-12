@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Save, Settings, ExternalLink, CheckCircle, AlertCircle, RefreshCw, Download, Info } from 'lucide-react';
+import { Save, Settings, ExternalLink, CheckCircle, AlertCircle, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,19 +22,19 @@ interface CRMConnection {
   access_token?: string | null;
   refresh_token?: string | null;
   token_expires_at?: string | null;
-  account_name?: string;
+  account_name?: string | null;
 }
 
 interface ProjectCRMSettings {
   id?: string;
   project_id: string;
   crm_connection_id: string;
-  pipeline_id?: number;
-  status_id?: number;
-  responsible_user_id?: number;
-  pipeline_name?: string;
-  status_name?: string;
-  user_name?: string;
+  pipeline_id?: number | null;
+  status_id?: number | null;
+  responsible_user_id?: number | null;
+  pipeline_name?: string | null;
+  status_name?: string | null;
+  user_name?: string | null;
   crm_connections?: CRMConnection;
 }
 
@@ -147,10 +145,13 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       if (data?.data) {
         setAmocrmData(data.data);
         if (data.token_expires_at && currentSettings.connection) {
-          setSettings(prev => ({
-            ...prev,
-            connection: prev.connection ? { ...prev.connection, token_expires_at: data.token_expires_at } : undefined
-          }));
+          setSettings(prev => {
+            if (!prev.connection) return prev;
+            return {
+              ...prev,
+              connection: { ...prev.connection, token_expires_at: data.token_expires_at }
+            };
+          });
         }
       } else {
         throw new Error('Не удалось загрузить данные из AmoCRM');
@@ -177,9 +178,21 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data) {
         const connection = data.crm_connections as unknown as CRMConnection;
-        const newSettings = {
-          projectSettings: data,
-          connection: connection
+        const projectSettings: ProjectCRMSettings = {
+          id: data.id,
+          project_id: data.project_id,
+          crm_connection_id: data.crm_connection_id,
+          pipeline_id: data.pipeline_id,
+          status_id: data.status_id,
+          responsible_user_id: data.responsible_user_id,
+          pipeline_name: data.pipeline_name,
+          status_name: data.status_name,
+          user_name: data.user_name,
+          crm_connections: connection
+        };
+        const newSettings: AmoCRMSettings = {
+          projectSettings,
+          connection
         };
         setSettings(newSettings);
         if (connection?.access_token) {
@@ -233,51 +246,29 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     }
   };
 
-  const handleAuthSuccess = useCallback(async () => {
-    await fetchSettings();
-   
-  }, [fetchSettings]);
 
   const saveAmoCRMSettings = async (pipelineId: number, statusId?: number, responsibleUserId?: number) => {
-    if (!amocrmData || !projectSettings) return;
-    
     setSavingSettings(true);
     try {
-      // Находим выбранные объекты для получения имен
-      const selectedPipeline = amocrmData.pipelines.find(p => p.id === pipelineId);
-      const selectedStatus = statusId ? selectedPipeline?.statuses.find(s => s.id === statusId) : null;
-      const selectedUser = responsibleUserId ? amocrmData.users.find(u => u.id === responsibleUserId) : null;
-
-      const updateData = {
-        pipeline_id: pipelineId,
-        pipeline_name: selectedPipeline?.name || null,
-        status_id: statusId || null,
-        status_name: selectedStatus?.name || null,
-        responsible_user_id: responsibleUserId || null,
-        user_name: selectedUser?.name || null,
-      };
-
-      const { error } = await supabase
-        .from('project_crm_settings')
-        .update(updateData)
-        .eq('project_id', projectId);
+      const { data, error } = await supabase.functions.invoke('amocrm-api', {
+        body: { 
+          project_id: projectId,
+          action: 'save_settings',
+          pipeline_id: pipelineId,
+          status_id: statusId || null,
+          responsible_user_id: responsibleUserId || null
+        }
+      });
 
       if (error) throw error;
 
-      // Update connection with account name if needed
-      if (connection) {
-        await supabase
-          .from('crm_connections')
-          .update({ account_name: amocrmData.account.name })
-          .eq('id', connection.id);
+      if (data?.success) {
+        // Refresh settings from database to get updated values
+        await fetchSettings();
+        toast.success(t('amocrm.settingsSaveSuccess'));
+      } else {
+        throw new Error(data?.message || 'Failed to save settings');
       }
-
-      setSettings(prev => ({
-        ...prev,
-        projectSettings: prev.projectSettings ? { ...prev.projectSettings, ...updateData } : undefined,
-        connection: prev.connection ? { ...prev.connection, account_name: amocrmData.account.name } : undefined
-      }));
-      toast.success(t('amocrm.settingsSaveSuccess'));
     } catch (error) {
       console.error('Error saving CRM settings:', error);
       toast.error(t('amocrm.settingsSaveError'));
@@ -289,22 +280,24 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
   const handleDisconnect = async () => {
     try {
-      // Delete project CRM settings
-      const { error: projectError } = await supabase
-        .from('project_crm_settings')
-        .delete()
-        .eq('project_id', projectId);
+      const { data, error } = await supabase.functions.invoke('amocrm-api', {
+        body: { 
+          project_id: projectId,
+          action: 'disconnect'
+        }
+      });
 
-      if (projectError) throw projectError;
+      if (error) throw error;
 
-      // Note: We don't delete crm_connections here because other projects might use it
-      // The user might have the same AmoCRM connected to multiple projects
-      
-      // Reset local state to initial values
-      setSettings({});
-      setAmocrmData(null);
-      
-      toast.success(t('amocrm.disconnectSuccess'));
+      if (data?.success) {
+        // Reset local state to initial values
+        setSettings({});
+        setAmocrmData(null);
+        
+        toast.success(t('amocrm.disconnectSuccess'));
+      } else {
+        throw new Error(data?.message || 'Failed to disconnect');
+      }
     } catch (error) {
       console.error('Error disconnecting AmoCRM:', error);
       toast.error(t('amocrm.disconnectError'));
@@ -343,12 +336,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     } finally {
       setAuthorizing(false);
     }
-  };
-
-  const handleSubdomainChange = (value: string) => {
-    // Clean subdomain input
-    const cleanSubdomain = value.replace(/https?:\/\//, '').replace(/\.amocrm\.ru.*/, '').trim();
-    setSettings(prev => ({ ...prev, subdomain: cleanSubdomain }));
   };
 
   const handlePipelineChange = (pipelineId: string) => {

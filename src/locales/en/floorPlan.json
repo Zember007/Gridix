@@ -6,7 +6,7 @@
     "available": "Available",
     "deleteError": "Error deleting apartment",
     "deleteSuccess": "Apartment deleted",
-    "editApartment": "Edit Polygon - Apartment #{number}",
+    "editApartment": "Edit Polygon - Apartment #{{number}}",
     "fillAllFields": "Fill all fields and create polygon (minimum 3 points)",
     "list": "Apartments on floor:",
     "loading": {
@@ -48,7 +48,7 @@
   },
   "settings": {
     "backToEditor": "Back to Editor",
-    "title": "Floor {floor} Polygon Settings"
+    "title": "Floor {{floor}} Polygon Settings"
   },
   "title": "Floor Plan",
   "upload": {
@@ -58,7 +58,7 @@
     "dragDrop": "Drag and drop image here",
     "dropToReplace": "Drop to replace image",
     "error": "Error uploading floor plan",
-    "floorPlan": "Floor {floor} plan",
+    "floorPlan": "Floor {{floor}} plan",
     "imageUploaded": "Image uploaded",
     "invalidFileType": "Please select an image file",
     "loading": "Loading...",

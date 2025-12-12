@@ -7,7 +7,10 @@
   },
   "cancel": "Cancel",
   "crm": {
-    "notSent": "Not sent"
+    "notSent": "Not sent",
+    "connected": "Connected",
+    "lastSync": "Last sync",
+    "systemName": "System"
   },
   "description": "All client requests with CRM delivery status",
   "empty": "No leads found",
@@ -16,7 +19,23 @@
     "dateFrom": "Date from",
     "dateTo": "Date to",
     "status": "Status",
-    "title": "Filters"
+    "title": "Filters",
+    "search": "Search and filter",
+    "searchPlaceholder": "Search by name, title...",
+    "source": "Source",
+    "allSources": "All sources",
+    "budgetFrom": "Budget from",
+    "budgetTo": "to",
+    "stages": "Stages",
+    "allStages": "All stages",
+    "selectedStages": "Stages selected",
+    "managers": "Managers",
+    "allManagers": "All managers",
+    "selectedManagers": "Selected",
+    "apply": "Apply",
+    "reset": "Reset",
+    "clearAll": "Clear all",
+    "found": "Found"
   },
   "loading": "Loading leads...",
   "notes": {
@@ -31,7 +50,8 @@
     "pending": "Pending",
     "savedOnly": "Saved only",
     "sent": "Sent to CRM",
-    "total": "Total leads"
+    "total": "Total leads",
+    "deals": "deals"
   },
   "status": {
     "all": "All",
@@ -76,6 +96,334 @@
     "notesSaved": {
       "desc": "Notes updated",
       "title": "Success"
+    },
+    "leadCreated": {
+      "title": "Success",
+      "desc": "New deal created"
+    },
+    "leadUpdated": {
+      "title": "Success",
+      "desc": "Deal updated"
+    },
+    "statusChanged": {
+      "title": "Status changed",
+      "desc": "Deal stage updated"
+    },
+    "funnelSaved": {
+      "title": "Success",
+      "desc": "Funnel settings saved"
+    },
+    "exportDone": {
+      "title": "Done",
+      "desc": "Export file downloaded"
+    },
+    "importDone": {
+      "title": "Import completed",
+      "desc": "Contacts loaded"
+    },
+    "nothingToExport": {
+      "title": "No data",
+      "desc": "List is empty, nothing to export."
+    },
+    "duplicatesNotFound": {
+      "title": "Clean",
+      "desc": "No duplicates found"
     }
+  },
+  "kanban": {
+    "noDeals": "No deals",
+    "dragHere": "Drag here",
+    "createDeal": "Create deal"
+  },
+  "list": {
+    "selectAll": "Select all",
+    "selected": "selected"
+  },
+  "drawer": {
+    "contact": "Contact",
+    "details": "Deal details",
+    "tasks": "Tasks",
+    "history": "History",
+    "addTask": "Add task",
+    "addNote": "Add note",
+    "tags": "Tags",
+    "source": "Source",
+    "budget": "Budget",
+    "apartment": "Apartment",
+    "created": "Created",
+    "close": "Close"
+  },
+  "createModal": {
+    "title": "New deal",
+    "name": "Client name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "create": "Create",
+    "cancel": "Cancel",
+    "duplicateWarning": "Similar lead found!",
+    "duplicateDesc": "A lead with this phone number already exists in the system:"
+  },
+  "funnel": {
+    "title": "Funnel setup",
+    "funnels": "Funnels",
+    "addFunnel": "Add funnel",
+    "archived": "Archived funnels",
+    "addStage": "Add stage",
+    "deleteStage": "Delete stage",
+    "rename": "Rename",
+    "triggers": "Automations",
+    "addTrigger": "Add trigger",
+    "noAutomations": "No automations",
+    "automationDesc": "Add actions when entering this stage",
+    "back": "Back",
+    "save": "Save",
+    "deleteAllTriggers": "Delete all triggers"
+  },
+  "settings": {
+    "import": "Import",
+    "export": "Export (CSV)",
+    "funnelSetup": "Funnel setup",
+    "cardAppearance": "Card appearance",
+    "findDuplicates": "Find duplicates",
+    "massActions": "Mass actions"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "Website",
+    "referral": "Referral",
+    "walk_in": "Walk-in",
+    "facebook": "Facebook",
+    "admin": "Admin"
+  },
+  "toolbar": {
+    "selected": "selected",
+    "changeStatus": "Change status",
+    "assign": "Assign",
+    "delete": "Delete",
+    "manager": "Manager"
+  },
+  "emptyState": {
+    "notFound": "Nothing found",
+    "tryChangingFilters": "Try changing search parameters or filters.",
+    "resetFilters": "Reset filters"
+  },
+  "list": {
+    "selectAll": "Select all",
+    "selected": "selected",
+    "client": "Client",
+    "status": "Status",
+    "task": "Task",
+    "project": "Project",
+    "budget": "Budget",
+    "unknown": "Unknown",
+    "noTasks": "No tasks",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago"
+  },
+  "kanban": {
+    "noDeals": "No deals",
+    "dragHere": "Drag here",
+    "createDeal": "Create deal",
+    "changeStage": "Change stage",
+    "budget": "Budget",
+    "noTasks": "No tasks",
+    "empty": "Empty",
+    "moveHere": "Move here",
+    "quickAdd": "+ Quick add..."
+  },
+  "drawer": {
+    "contact": "Contact",
+    "details": "Deal details",
+    "tasks": "Tasks",
+    "history": "History",
+    "addTask": "Add task",
+    "addNote": "Add note",
+    "tags": "Tags",
+    "source": "Source",
+    "budget": "Budget",
+    "apartment": "Apartment",
+    "created": "Created",
+    "close": "Close",
+    "edit": "Edit",
+    "save": "Save",
+    "info": "Information",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "editing": "Editing",
+    "phone": "Phone",
+    "project": "Project",
+    "addTag": "+ Add tag",
+    "overdue": "Overdue",
+    "today": "Today",
+    "future": "Future",
+    "completed": "Completed",
+    "noPlannedTasks": "No planned tasks",
+    "writeNote": "Write a note...",
+    "ctrlEnterToSend": "Ctrl+Enter to send"
+  },
+  "createModal": {
+    "title": "New deal",
+    "name": "Client name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "create": "Create",
+    "cancel": "Cancel",
+    "duplicateWarning": "Similar lead found!",
+    "duplicateDesc": "A lead with this phone number already exists in the system:",
+    "clientLabel": "Client",
+    "namePlaceholder": "First and Last Name",
+    "phonePlaceholder": "+1 555 000 0000",
+    "duplicateFound": "Duplicate found",
+    "duplicateExists": "Client {name} already exists in the database.",
+    "goToCard": "Go to card",
+    "budgetLabel": "Budget",
+    "sourceLabel": "Source",
+    "tagsLabel": "Tags",
+    "tagPlaceholder": "Enter tag and press Enter",
+    "duplicateNotAllowed": "Duplicate not allowed",
+    "createDeal": "Create deal"
+  },
+  "funnel": {
+    "title": "Funnel setup",
+    "funnels": "Funnels",
+    "addFunnel": "Add funnel",
+    "archived": "Archived funnels",
+    "addStage": "Add stage",
+    "deleteStage": "Delete stage",
+    "rename": "Rename",
+    "triggers": "Automations",
+    "addTrigger": "Add trigger",
+    "noAutomations": "No automations",
+    "automationDesc": "Add actions when entering this stage",
+    "back": "Back",
+    "save": "Save",
+    "deleteAllTriggers": "Delete all triggers",
+    "moveHere": "Move here",
+    "doubleClickToEdit": "Double-click to change name",
+    "insertStage": "Insert stage"
+  },
+  "cardAppearance": {
+    "title": "Card appearance",
+    "options": "Options",
+    "showAvatar": "Show contact avatar",
+    "showDate": "Show creation date",
+    "fieldsInCard": "Fields in card",
+    "preview": "Preview",
+    "today": "Today",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "import": {
+    "title": "Import contacts",
+    "step": "Step {step} of 3",
+    "dragFile": "Drag file here",
+    "orClick": "or click to select",
+    "supportedFormats": "Supported: .csv, .xlsx, .xls",
+    "important": "Important:",
+    "headersNote": "Make sure the file contains headers in the first row. This will help us recognize the data correctly.",
+    "downloadTemplate": "Download file template",
+    "fieldMapping": "Field mapping",
+    "importing": "Importing data...",
+    "dontClose": "Please do not close the window.",
+    "done": "Done!",
+    "successfullyAdded": "Successfully added {count} contacts.",
+    "backToList": "Back to list",
+    "cancel": "Cancel",
+    "next": "Next",
+    "startImport": "Start import",
+    "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "price": "Budget",
+      "project": "Project",
+      "source": "Source",
+      "skip": "Do not import"
+    }
+  },
+  "duplicates": {
+    "title": "Find and merge duplicates",
+    "scanning": "Scanning database...",
+    "foundGroups": "Found duplicate groups: {count}",
+    "searching": "Searching for matches...",
+    "noDuplicates": "No duplicates",
+    "perfectOrder": "Your contact database is in perfect order.",
+    "scanAgain": "Scan again",
+    "selectMaster": "Select the card that will remain the main one (Master). Others will be deleted and their history merged.",
+    "created": "Created:",
+    "project": "Project:",
+    "budget": "Budget:",
+    "keepThis": "Keep this (Merge)",
+    "selectGroup": "Select a duplicate group on the left to compare"
+  },
+  "tasks": {
+    "types": {
+      "call": "Contact",
+      "meeting": "Meeting",
+      "message": "Write",
+      "payment": "Payment",
+      "other": "Other"
+    },
+    "newTask": "New task",
+    "example": "For example: Contact client and clarify budget...",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "plus3Days": "+3 days",
+    "addTask": "Add task",
+    "result": "Completion result",
+    "whatHappened": "What happened? (e.g.: agreed on a meeting)",
+    "completeTask": "Complete task",
+    "return": "Return",
+    "edit": "Edit",
+    "delete": "Delete",
+    "responsible": "Responsible:",
+    "recipient": "Recipient:",
+    "task": "Task",
+    "noSettings": "No settings"
+  },
+  "triggers": {
+    "onStageEntry": "On stage entry",
+    "through": "In {delay} {unit}",
+    "tag": "Tag: {tagName}",
+    "trigger": "Trigger",
+    "edit": "Edit",
+    "delete": "Delete",
+    "whenToRun": "When to run",
+    "onStageEntryOption": "On transition/creation in stage",
+    "timerOption": "After N time",
+    "onTagAddOption": "On tag addition",
+    "whatToDo": "What to do",
+    "description": "Action description",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "tagNamePlaceholder": "Tag name",
+    "willTrigger": "Will trigger immediately when lead enters this stage.",
+    "taskText": "Task text",
+    "notificationText": "Notification text",
+    "assignResponsible": "Assign responsible",
+    "selectStage": "Select stage to move to",
+    "noAdditionalSettings": "No additional settings for this action type.",
+    "descriptionRequired": "Description cannot be empty.",
+    "icons": {
+      "clock": "Delay",
+      "distribution": "Distribution",
+      "task": "Task",
+      "statusChange": "Status change",
+      "editField": "Edit field",
+      "addTag": "Add tag",
+      "notification": "Notification"
+    }
+  },
+  "cardFields": {
+    "none": "No value",
+    "name": "Deal name",
+    "project": "Project",
+    "price": "Budget",
+    "tags": "Tags",
+    "assignedTo": "Responsible"
   }
 }

@@ -6,7 +6,7 @@
     "available": "متاحة",
     "deleteError": "خطأ في حذف الشقة",
     "deleteSuccess": "تم حذف الشقة",
-    "editApartment": "تحرير المضلع - الشقة رقم {number}",
+    "editApartment": "تحرير المضلع - الشقة رقم {{number}}",
     "fillAllFields": "املأ جميع الحقول وأنشئ مضلع (الحد الأدنى 3 نقاط)",
     "list": "الشقق في الطابق:",
     "loading": {
@@ -48,7 +48,7 @@
   },
   "settings": {
     "backToEditor": "العودة إلى المحرر",
-    "title": "إعدادات مضلع الطابق {floor}"
+    "title": "إعدادات مضلع الطابق {{floor}}"
   },
   "title": "مخطط الطابق",
   "upload": {
@@ -58,7 +58,7 @@
     "dragDrop": "اسحب وأفلت الصورة هنا",
     "dropToReplace": "أفلت لاستبدال الصورة",
     "error": "خطأ في رفع مخطط الطابق",
-    "floorPlan": "مخطط الطابق {floor}",
+    "floorPlan": "مخطط الطابق {{floor}}",
     "imageUploaded": "تم رفع الصورة",
     "invalidFileType": "يرجى اختيار ملف صورة",
     "loading": "جاري التحميل...",

@@ -5,19 +5,19 @@
     "addNew": "Добавить этаж",
     "canvas": "Холст для рисования",
     "configured": "Настроенные этажи:",
-    "creatingNew": "Создание {floor} этажа",
+    "creatingNew": "Создание {{floor}} этажа",
     "description": "Выберите этаж и отметьте его область на изображении здания",
     "edit": "Редактировать",
     "floor": "Этаж:",
-    "floorNumber": "{floor} этаж",
+    "floorNumber": "{{floor}} этаж",
     "title": "Настройка этажей"
   },
   "object": {
     "addNew": "Добавить объект",
     "configured": "Настроенные объекты",
-    "creating": "Создание полигона для объекта №{number}",
+    "creating": "Создание полигона для объекта №{{number}}",
     "number": "Номер объекта",
-    "objectNumber": "Объект №{number}",
+    "objectNumber": "Объект №{{number}}",
     "plan": "План объектов",
     "polygonsDescription": "Выделите области на плане для каждого объекта (виллы, таунхауса)",
     "polygonsTitle": "Полигоны объектов"
@@ -26,12 +26,12 @@
     "cancel": "Отмена",
     "create": "Создать",
     "createError": "Ошибка создания полигона",
-    "createSuccess": "Полигон для {floor} этажа создан",
+    "createSuccess": "Полигон для {{floor}} этажа создан",
     "deleteError": "Ошибка удаления полигона",
     "deleteSuccess": "Полигон этажа удален",
     "save": "Сохранить",
     "saveError": "Ошибка сохранения полигона",
-    "saveSuccess": "Полигон для {floor} этажа сохранен"
+    "saveSuccess": "Полигон для {{floor}} этажа сохранен"
   },
   "title": "Изображение здания",
   "upload": "Загрузить изображение",

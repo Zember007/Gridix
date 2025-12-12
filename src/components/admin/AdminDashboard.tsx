@@ -48,6 +48,9 @@ const AdminDashboard = () => {
     setShowCreateModal(true);
   };
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+
   // Проверяем, заблокирован ли менеджер
   if (userRole.type === 'manager' && (!availableWorkspaces || availableWorkspaces.length === 0)) {
     return <ManagerBlockedScreen />;
@@ -79,6 +82,8 @@ const AdminDashboard = () => {
     }
   };
 
+
+
   return (
     <div className="min-h-screen bg-background flex">
       <AdminSidebar
@@ -88,14 +93,16 @@ const AdminDashboard = () => {
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
         onSignOut={handleSignOut}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
 
-      <div className="flex-1 bg-background flex flex-col max-w-[100vw]">
+      <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-16 md:max-w-[calc(100vw-4rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         {/* Floating Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden fixed bottom-4 left-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="md:hidden fixed bottom-4 left-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
           style={{
             backgroundColor: ADMIN_THEME.primary,
             color: ADMIN_THEME.textOnPrimary,
@@ -114,7 +121,7 @@ const AdminDashboard = () => {
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="flex-1 container mx-auto  py-4 lg:py-8 overflow-auto">
+        <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
           {activeTab === 'projects' && (
             <div className="space-y-6">
               <ProjectList
@@ -125,9 +132,7 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'leads' && (
-            <div className="space-y-6">
               <LeadsManager showProjectColumn={!isManager} />
-            </div>
           )}
 
           {activeTab === 'subscription' && userRole.type !== 'manager' && (

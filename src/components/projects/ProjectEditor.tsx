@@ -360,17 +360,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div
-          className="animate-spin rounded-full h-8 w-8 border-b-2"
-          style={{ borderColor: ADMIN_THEME.primary }}
-        ></div>
-      </div>
-    );
-  }
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (accessError) {
     return (
@@ -419,6 +409,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-background flex">
       <ProjectEditorSidebar
@@ -428,11 +419,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         projectType={project.project_type ?? 'building'}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
 
-      <div className="flex-1 bg-background flex flex-col max-w-[100vw]">
+      <div className={`flex-1 bg-background flex flex-col  transition-all duration-300 ${isCollapsed ? 'md:ml-16 md:max-w-[calc(100vw-4rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto py-4">
+          <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={onBack}>
@@ -493,7 +486,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           </div>
         </div>
 
-        <div className="flex-1 container mx-auto py-4 lg:py-8 overflow-auto">
+        <div className="flex-1 px-6 py-4 lg:py-6 overflow-y-auto">
           {/* Show content based on activeTab without Tabs wrapper */}
 
 

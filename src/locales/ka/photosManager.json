@@ -1,11 +1,11 @@
 {
-  "apartmentOption": "ბინა {number} (სართული {floor})",
+  "apartmentOption": "ბინა {{number}} (სართული {{floor}})",
   "authRequired": "ფოტოების ატვირთვისთვის ავტორიზაცია საჭიროა",
   "deleteError": "ფოტოს წაშლის შეცდომა",
   "deleteSuccess": "ფოტო წაშლილია",
   "description": "ატვირთეთ ინდივიდუალური ფოტოები კონკრეტული ბინებისთვის",
   "duplicateError": "ფოტოების დუბლირების შეცდომა",
-  "duplicateSuccess": "ფოტოები დუბლირებულია {count} მსგავსი ბინისთვის",
+  "duplicateSuccess": "ფოტოები დუბლირებულია {{count}} მსგავსი ბინისთვის",
   "duplicateToSimilar": "მსგავს ბინებზე დუბლირება",
   "individualPhotos": "ინდივიდუალური ფოტოები",
   "layoutPhotos": "განლაგების ფოტოები",

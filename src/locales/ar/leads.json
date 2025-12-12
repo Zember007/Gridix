@@ -7,18 +7,37 @@
   },
   "cancel": "إلغاء",
   "crm": {
-    "notSent": "لم يتم الإرسال"
+    "notSent": "لم يتم الإرسال",
+    "connected": "متصل",
+    "lastSync": "آخر مزامنة",
+    "systemName": "النظام"
   },
-  "description": "جميع طلبات العملاء مع حالة الإرسال إلى CRM",
+  "description": "جميع طلبات العملاء مع حالة التسليم CRM",
   "empty": "لم يتم العثور على عملاء محتملين",
   "error": "خطأ",
   "filters": {
     "dateFrom": "التاريخ من",
     "dateTo": "التاريخ إلى",
     "status": "الحالة",
-    "title": "المرشحات"
+    "title": "الفلاتر",
+    "search": "البحث والتصفية",
+    "searchPlaceholder": "البحث بالاسم، العنوان...",
+    "source": "المصدر",
+    "allSources": "جميع المصادر",
+    "budgetFrom": "الميزانية من",
+    "budgetTo": "إلى",
+    "stages": "المراحل",
+    "allStages": "جميع المراحل",
+    "selectedStages": "المراحل المحددة",
+    "managers": "المديرين",
+    "allManagers": "جميع المديرين",
+    "selectedManagers": "محدد",
+    "apply": "تطبيق",
+    "reset": "إعادة تعيين",
+    "clearAll": "مسح الكل",
+    "found": "تم العثور"
   },
-  "loading": "جار تحميل العملاء المحتملين...",
+  "loading": "جاري تحميل العملاء المحتملين...",
   "notes": {
     "client": "العميل",
     "placeholder": "أدخل الملاحظات...",
@@ -26,20 +45,21 @@
   },
   "save": "حفظ",
   "stats": {
-    "cancelled": "ملغي",
-    "failed": "فشل",
-    "pending": "في الانتظار",
+    "cancelled": "ملغاة",
+    "failed": "فشلت",
+    "pending": "قيد الانتظار",
     "savedOnly": "محفوظ فقط",
     "sent": "مرسل إلى CRM",
-    "total": "إجمالي العملاء المحتملين"
+    "total": "إجمالي العملاء المحتملين",
+    "deals": "صفقات"
   },
   "status": {
     "all": "الكل",
-    "cancelled": "ملغي",
+    "cancelled": "ملغى",
     "failed": "فشل",
-    "pending": "في الانتظار",
+    "pending": "قيد الانتظار",
     "saved_only": "محفوظ فقط",
-    "sent_to_crm": "مرسل إلى CRM"
+    "sent_to_crm": "مرسل"
   },
   "table": {
     "actions": "الإجراءات",
@@ -51,31 +71,359 @@
     "project": "المشروع",
     "status": "الحالة"
   },
-  "title": "العملاء المحتملون",
+  "title": "العملاء المحتملين",
   "toast": {
     "cancelError": {
-      "desc": "فشل في إلغاء العميل المحتمل",
+      "desc": "فشل إلغاء العميل المحتمل",
       "title": "خطأ"
     },
     "cancelled": {
       "desc": "تم إلغاء العميل المحتمل",
-      "title": "نجاح"
+      "title": "نجح"
     },
     "copied": {
-      "desc": "تم نسخ معلومات العميل المحتمل إلى الحافظة",
+      "desc": "تم نسخ معلومات العميل المحتمل",
       "title": "تم النسخ"
     },
     "copyError": {
-      "desc": "فشل في نسخ المعلومات",
+      "desc": "فشل نسخ المعلومات",
       "title": "خطأ"
     },
     "notesError": {
-      "desc": "فشل في تحديث الملاحظات",
+      "desc": "فشل تحديث الملاحظات",
       "title": "خطأ"
     },
     "notesSaved": {
       "desc": "تم تحديث الملاحظات",
-      "title": "نجاح"
+      "title": "نجح"
+    },
+    "leadCreated": {
+      "title": "نجح",
+      "desc": "تم إنشاء صفقة جديدة"
+    },
+    "leadUpdated": {
+      "title": "نجح",
+      "desc": "تم تحديث الصفقة"
+    },
+    "statusChanged": {
+      "title": "تغيرت الحالة",
+      "desc": "تم تحديث مرحلة الصفقة"
+    },
+    "funnelSaved": {
+      "title": "نجح",
+      "desc": "تم حفظ إعدادات القمع"
+    },
+    "exportDone": {
+      "title": "تم",
+      "desc": "تم تنزيل ملف التصدير"
+    },
+    "importDone": {
+      "title": "اكتمل الاستيراد",
+      "desc": "تم تحميل جهات الاتصال"
+    },
+    "nothingToExport": {
+      "title": "لا توجد بيانات",
+      "desc": "القائمة فارغة، لا شيء للتصدير."
+    },
+    "duplicatesNotFound": {
+      "title": "نظيف",
+      "desc": "لم يتم العثور على تكرارات"
     }
+  },
+  "kanban": {
+    "noDeals": "لا توجد صفقات",
+    "dragHere": "اسحب هنا",
+    "createDeal": "إنشاء صفقة"
+  },
+  "list": {
+    "selectAll": "تحديد الكل",
+    "selected": "محدد"
+  },
+  "drawer": {
+    "contact": "جهة الاتصال",
+    "details": "تفاصيل الصفقة",
+    "tasks": "المهام",
+    "history": "التاريخ",
+    "addTask": "إضافة مهمة",
+    "addNote": "إضافة ملاحظة",
+    "tags": "الوسوم",
+    "source": "المصدر",
+    "budget": "الميزانية",
+    "apartment": "الشقة",
+    "created": "تم الإنشاء",
+    "close": "إغلاق"
+  },
+  "createModal": {
+    "title": "صفقة جديدة",
+    "name": "اسم العميل",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني (اختياري)",
+    "create": "إنشاء",
+    "cancel": "إلغاء",
+    "duplicateWarning": "تم العثور على عميل محتمل مشابه!",
+    "duplicateDesc": "يوجد بالفعل عميل محتمل بهذا الرقم في النظام:"
+  },
+  "funnel": {
+    "title": "إعداد القمع",
+    "funnels": "الأقماع",
+    "addFunnel": "إضافة قمع",
+    "archived": "الأقماع المؤرشفة",
+    "addStage": "إضافة مرحلة",
+    "deleteStage": "حذف المرحلة",
+    "rename": "إعادة تسمية",
+    "triggers": "الأتمتة",
+    "addTrigger": "إضافة محفز",
+    "noAutomations": "لا توجد أتمتة",
+    "automationDesc": "أضف إجراءات عند الانتقال إلى هذه المرحلة",
+    "back": "رجوع",
+    "save": "حفظ",
+    "deleteAllTriggers": "حذف جميع المحفزات"
+  },
+  "settings": {
+    "import": "استيراد",
+    "export": "تصدير (CSV)",
+    "funnelSetup": "إعداد القمع",
+    "cardAppearance": "مظهر البطاقة",
+    "findDuplicates": "البحث عن التكرارات",
+    "massActions": "الإجراءات الجماعية"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "الموقع",
+    "referral": "إحالة",
+    "walk_in": "وارد",
+    "facebook": "Facebook",
+    "admin": "المسؤول"
+  },
+  "toolbar": {
+    "selected": "محدد",
+    "changeStatus": "تغيير الحالة",
+    "assign": "تعيين",
+    "delete": "حذف",
+    "manager": "المدير"
+  },
+  "emptyState": {
+    "notFound": "لم يتم العثور على شيء",
+    "tryChangingFilters": "حاول تغيير معاملات البحث أو الفلاتر.",
+    "resetFilters": "إعادة تعيين الفلاتر"
+  },
+  "list": {
+    "selectAll": "تحديد الكل",
+    "selected": "محدد",
+    "client": "العميل",
+    "status": "الحالة",
+    "task": "المهمة",
+    "project": "المشروع",
+    "budget": "الميزانية",
+    "unknown": "غير معروف",
+    "noTasks": "لا توجد مهام",
+    "call": "اتصال",
+    "whatsapp": "WhatsApp",
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "daysAgo": "أيام مضت"
+  },
+  "kanban": {
+    "noDeals": "لا توجد صفقات",
+    "dragHere": "اسحب هنا",
+    "createDeal": "إنشاء صفقة",
+    "changeStage": "تغيير المرحلة",
+    "budget": "الميزانية",
+    "noTasks": "لا توجد مهام",
+    "empty": "فارغ",
+    "moveHere": "نقل هنا",
+    "quickAdd": "+ إضافة سريعة..."
+  },
+  "drawer": {
+    "contact": "جهة الاتصال",
+    "details": "تفاصيل الصفقة",
+    "tasks": "المهام",
+    "history": "التاريخ",
+    "addTask": "إضافة مهمة",
+    "addNote": "إضافة ملاحظة",
+    "tags": "الوسوم",
+    "source": "المصدر",
+    "budget": "الميزانية",
+    "apartment": "الشقة",
+    "created": "تم الإنشاء",
+    "close": "إغلاق",
+    "edit": "تحرير",
+    "save": "حفظ",
+    "info": "المعلومات",
+    "call": "اتصال",
+    "whatsapp": "WhatsApp",
+    "editing": "التحرير",
+    "phone": "الهاتف",
+    "project": "المشروع",
+    "addTag": "+ إضافة وسم",
+    "overdue": "متأخر",
+    "today": "اليوم",
+    "future": "مستقبلي",
+    "completed": "مكتمل",
+    "noPlannedTasks": "لا توجد مهام مخططة",
+    "writeNote": "كتابة ملاحظة...",
+    "ctrlEnterToSend": "Ctrl+Enter للإرسال"
+  },
+  "createModal": {
+    "title": "صفقة جديدة",
+    "name": "اسم العميل",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني (اختياري)",
+    "create": "إنشاء",
+    "cancel": "إلغاء",
+    "duplicateWarning": "تم العثور على عميل محتمل مشابه!",
+    "duplicateDesc": "يوجد بالفعل عميل محتمل بهذا الرقم في النظام:",
+    "clientLabel": "العميل",
+    "namePlaceholder": "الاسم الأول والأخير",
+    "phonePlaceholder": "+1 555 000 0000",
+    "duplicateFound": "تم العثور على تكرار",
+    "duplicateExists": "العميل {name} موجود بالفعل في قاعدة البيانات.",
+    "goToCard": "الانتقال إلى البطاقة",
+    "budgetLabel": "الميزانية",
+    "sourceLabel": "المصدر",
+    "tagsLabel": "الوسوم",
+    "tagPlaceholder": "أدخل الوسم واضغط Enter",
+    "duplicateNotAllowed": "التكرار غير مسموح",
+    "createDeal": "إنشاء صفقة"
+  },
+  "funnel": {
+    "title": "إعداد القمع",
+    "funnels": "الأقماع",
+    "addFunnel": "إضافة قمع",
+    "archived": "الأقماع المؤرشفة",
+    "addStage": "إضافة مرحلة",
+    "deleteStage": "حذف المرحلة",
+    "rename": "إعادة تسمية",
+    "triggers": "الأتمتة",
+    "addTrigger": "إضافة محفز",
+    "noAutomations": "لا توجد أتمتة",
+    "automationDesc": "أضف إجراءات عند الانتقال إلى هذه المرحلة",
+    "back": "رجوع",
+    "save": "حفظ",
+    "deleteAllTriggers": "حذف جميع المحفزات",
+    "moveHere": "نقل هنا",
+    "doubleClickToEdit": "انقر نقرًا مزدوجًا لتغيير الاسم",
+    "insertStage": "إدراج مرحلة"
+  },
+  "cardAppearance": {
+    "title": "مظهر البطاقة",
+    "options": "الخيارات",
+    "showAvatar": "إظهار صورة جهة الاتصال",
+    "showDate": "إظهار تاريخ الإنشاء",
+    "fieldsInCard": "الحقول في البطاقة",
+    "preview": "معاينة",
+    "today": "اليوم",
+    "cancel": "إلغاء",
+    "save": "حفظ"
+  },
+  "import": {
+    "title": "استيراد جهات الاتصال",
+    "step": "الخطوة {step} من 3",
+    "dragFile": "اسحب الملف هنا",
+    "orClick": "أو انقر للاختيار",
+    "supportedFormats": "المدعومة: .csv, .xlsx, .xls",
+    "important": "مهم:",
+    "headersNote": "تأكد من أن الملف يحتوي على رؤوس في الصف الأول. سيساعدنا هذا في التعرف على البيانات بشكل صحيح.",
+    "downloadTemplate": "تنزيل قالب الملف",
+    "fieldMapping": "تعيين الحقول",
+    "importing": "جاري استيراد البيانات...",
+    "dontClose": "يرجى عدم إغلاق النافذة.",
+    "done": "تم!",
+    "successfullyAdded": "تمت إضافة {count} جهة اتصال بنجاح.",
+    "backToList": "العودة إلى القائمة",
+    "cancel": "إلغاء",
+    "next": "التالي",
+    "startImport": "بدء الاستيراد",
+    "fields": {
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "price": "الميزانية",
+      "project": "المشروع",
+      "source": "المصدر",
+      "skip": "عدم الاستيراد"
+    }
+  },
+  "duplicates": {
+    "title": "البحث عن التكرارات ودمجها",
+    "scanning": "جاري فحص قاعدة البيانات...",
+    "foundGroups": "تم العثور على مجموعات مكررة: {count}",
+    "searching": "جاري البحث عن التطابقات...",
+    "noDuplicates": "لا توجد تكرارات",
+    "perfectOrder": "قاعدة بيانات جهات الاتصال الخاصة بك في حالة مثالية.",
+    "scanAgain": "فحص مرة أخرى",
+    "selectMaster": "اختر البطاقة التي ستبقى الرئيسية (Master). سيتم حذف الباقي ودمج تاريخها.",
+    "created": "تم الإنشاء:",
+    "project": "المشروع:",
+    "budget": "الميزانية:",
+    "keepThis": "الاحتفاظ بهذا (دمج)",
+    "selectGroup": "اختر مجموعة مكررة على اليسار للمقارنة"
+  },
+  "tasks": {
+    "types": {
+      "call": "اتصال",
+      "meeting": "اجتماع",
+      "message": "كتابة",
+      "payment": "دفع",
+      "other": "أخرى"
+    },
+    "newTask": "مهمة جديدة",
+    "example": "على سبيل المثال: الاتصال بالعميل وتوضيح الميزانية...",
+    "today": "اليوم",
+    "tomorrow": "غدًا",
+    "plus3Days": "+3 أيام",
+    "addTask": "إضافة مهمة",
+    "result": "نتيجة الإكمال",
+    "whatHappened": "ماذا حدث؟ (مثلاً: تم الاتفاق على اجتماع)",
+    "completeTask": "إكمال المهمة",
+    "return": "إرجاع",
+    "edit": "تحرير",
+    "delete": "حذف",
+    "responsible": "المسؤول:",
+    "recipient": "المستلم:",
+    "task": "المهمة",
+    "noSettings": "لا توجد إعدادات"
+  },
+  "triggers": {
+    "onStageEntry": "عند دخول المرحلة",
+    "through": "بعد {delay} {unit}",
+    "tag": "الوسم: {tagName}",
+    "trigger": "المحفز",
+    "edit": "تحرير",
+    "delete": "حذف",
+    "whenToRun": "متى يتم التشغيل",
+    "onStageEntryOption": "عند الانتقال/الإنشاء في المرحلة",
+    "timerOption": "بعد وقت N",
+    "onTagAddOption": "عند إضافة وسم",
+    "whatToDo": "ماذا نفعل",
+    "description": "وصف الإجراء",
+    "minutes": "دقائق",
+    "hours": "ساعات",
+    "days": "أيام",
+    "tagNamePlaceholder": "اسم الوسم",
+    "willTrigger": "سيتم تشغيله فورًا عند دخول العميل المحتمل إلى هذه المرحلة.",
+    "taskText": "نص المهمة",
+    "notificationText": "نص الإشعار",
+    "assignResponsible": "تعيين مسؤول",
+    "selectStage": "اختر المرحلة للانتقال إليها",
+    "noAdditionalSettings": "لا توجد إعدادات إضافية لهذا النوع من الإجراءات.",
+    "descriptionRequired": "لا يمكن أن يكون الوصف فارغًا.",
+    "icons": {
+      "clock": "تأخير",
+      "distribution": "توزيع",
+      "task": "مهمة",
+      "statusChange": "تغيير الحالة",
+      "editField": "تحرير الحقل",
+      "addTag": "إضافة وسم",
+      "notification": "إشعار"
+    }
+  },
+  "cardFields": {
+    "none": "بدون قيمة",
+    "name": "اسم الصفقة",
+    "project": "المشروع",
+    "price": "الميزانية",
+    "tags": "الوسوم",
+    "assignedTo": "المسؤول"
   }
 }

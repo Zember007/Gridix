@@ -144,11 +144,8 @@ function SimplifiedSidebar({
       >
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <Building2
-                className="h-6 w-6"
-                style={{ color: ADMIN_THEME.sidebarText }}
-              />
+            <div className="flex items-center gap-4">
+              <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
               <span
                 className="font-semibold whitespace-nowrap"
                 style={{ color: ADMIN_THEME.sidebarText }}
@@ -385,7 +382,7 @@ function SimplifiedSidebar({
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 h-screen sticky top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
+      className={`flex flex-col transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
         }`}
       style={{
         backgroundColor: ADMIN_THEME.sidebarBackground,
@@ -408,7 +405,11 @@ export function AdminSidebar({
   isMobileOpen,
   setIsMobileOpen,
   onSignOut,
+  isCollapsed,
+  setIsCollapsed,
 }: {
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
   userEmail?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -420,7 +421,6 @@ export function AdminSidebar({
   const { userRole } = useUserRole();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState(activeTab || "projects");
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -504,8 +504,12 @@ export function ProjectEditorSidebar({
   projectType,
   isMobileOpen,
   setIsMobileOpen,
+  isCollapsed,
+  setIsCollapsed,
 }: {
-  onSectionChange?: (section: string) => void;
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
+  onSectionChange: (section: string) => void;
   activeTab?: string;
   userEmail?: string;
   projectType?: 'building' | 'object' | null;
@@ -515,7 +519,7 @@ export function ProjectEditorSidebar({
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState(activeTab || "general");
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -585,15 +589,3 @@ export function ProjectEditorSidebarMenuButton({
     </Button>
   );
 }
-
-/* ------------------------------- Root Frame ------------------------------ */
-
-export function Frame760() {
-  return (
-    <div className="bg-background min-h-screen">
-      <AdminSidebar />
-    </div>
-  );
-}
-
-export default Frame760;

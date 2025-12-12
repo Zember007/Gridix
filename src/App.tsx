@@ -1,14 +1,12 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 import { BaseProviders, LanguageProviders, EmbedProviders, AdminProviders } from "@/components/providers";
 import { PublicRoutes, AdminRoutes, EmbedRoutes, DomainRoutes } from "@/routes";
 
 // Lazy load pages
 const NotFound = lazy(() => import("./pages/NotFound"));
-const PartnersPage = lazy(() => import("./pages/PartnersPage"));
 const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
 
 // Loading fallback component

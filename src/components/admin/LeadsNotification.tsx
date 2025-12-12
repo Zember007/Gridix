@@ -66,10 +66,6 @@ export function LeadsStats({ projectId }: { projectId?: string }) {
   }
 
   const counts = getStatsForProject(projectId);
-  
-  if (counts.total === 0) {
-    return null;
-  }
 
   return (
     <div className="flex items-center space-x-4 text-sm text-muted-foreground">

@@ -264,6 +264,10 @@ serve(async (req) => {
     }
 
     // First, save the lead to our database
+    // The trigger set_default_pipeline_stage_for_new_lead will automatically:
+    // 1. Find CRM funnel for this project (if AmoCRM is configured)
+    // 2. Or use default funnel for the project owner
+    // 3. Set pipeline_stage_id to the first stage (by order_index)
     console.log('Saving lead to database...');
     const { data: savedLead, error: leadSaveError } = await svc
       .from('leads')
@@ -273,8 +277,9 @@ serve(async (req) => {
         phone,
         project_id: projectId,
         apartment_id: apartmentId,
-        status: 'pending',
+        status: 'pending', // Technical status for CRM integration
         source: 'website'
+        // pipeline_stage_id will be set automatically by trigger
       })
       .select()
       .single();
@@ -287,9 +292,11 @@ serve(async (req) => {
       }, 500, origin);
     }
 
-    console.log('Lead saved to database with ID:', savedLead.id);
+    console.log('Lead saved to database with ID:', savedLead.id, 'pipeline_stage_id:', savedLead.pipeline_stage_id);
 
     // Получение настроек AmoCRM (после сохранения лида)
+    // If project has AmoCRM configured, we also send the lead to AmoCRM
+    // The local funnel stage is already set by trigger (either from CRM funnel or default funnel)
     console.log('Fetching CRM settings for project:', projectId);
     const { data: projectCRMSettings, error: settingsError } = await svc
       .from('project_crm_settings')
@@ -298,9 +305,11 @@ serve(async (req) => {
       .maybeSingle();
 
     if (settingsError) console.error('Error fetching CRM settings:', settingsError);
-    // If no CRM settings found, just mark lead as saved_only and return success
+    
+    // If no CRM settings found, the lead is already saved with pipeline_stage_id from default funnel
+    // Just mark as saved_only and return success
     if (settingsError || !projectCRMSettings) {
-      console.log('CRM settings not found for project:', projectId, 'Lead saved to DB only');
+      console.log('CRM settings not found for project:', projectId, 'Lead saved with default funnel stage');
 
       await svc
         .from('leads')
@@ -310,7 +319,7 @@ serve(async (req) => {
       return createJsonResponse({
         success: true,
         leadId: savedLead.id,
-        message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
+        message: 'Lead successfully saved to local funnel.',
         crmIntegration: false
       }, 200, origin);
     }

@@ -25,7 +25,7 @@
   "floor": "Floor",
   "floorplan": "Floor plans",
   "floorPlan": "Floor plan",
-  "floorPlanDesc": "Floor {floor} layout",
+  "floorPlanDesc": "Floor {{floor}} layout",
   "floorPlans": "Floor plans",
   "floorPlansDesc": "Manage floor layouts. Click on a floor to edit.",
   "floors": "Number of floors",

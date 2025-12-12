@@ -14,83 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      amocrm_settings: {
-        Row: {
-          access_token: string | null
-          account_name: string | null
-          authorization_code: string | null
-          base_domain: string | null
-          client_id: string | null
-          client_secret: string | null
-          created_at: string | null
-          id: string
-          pipeline_id: number
-          pipeline_name: string | null
-          project_id: string
-          redirect_uri: string | null
-          refresh_token: string | null
-          responsible_user_id: number | null
-          status_id: number | null
-          status_name: string | null
-          subdomain: string
-          token_expires_at: string | null
-          updated_at: string | null
-          user_name: string | null
-        }
-        Insert: {
-          access_token?: string | null
-          account_name?: string | null
-          authorization_code?: string | null
-          base_domain?: string | null
-          client_id?: string | null
-          client_secret?: string | null
-          created_at?: string | null
-          id?: string
-          pipeline_id: number
-          pipeline_name?: string | null
-          project_id: string
-          redirect_uri?: string | null
-          refresh_token?: string | null
-          responsible_user_id?: number | null
-          status_id?: number | null
-          status_name?: string | null
-          subdomain: string
-          token_expires_at?: string | null
-          updated_at?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          access_token?: string | null
-          account_name?: string | null
-          authorization_code?: string | null
-          base_domain?: string | null
-          client_id?: string | null
-          client_secret?: string | null
-          created_at?: string | null
-          id?: string
-          pipeline_id?: number
-          pipeline_name?: string | null
-          project_id?: string
-          redirect_uri?: string | null
-          refresh_token?: string | null
-          responsible_user_id?: number | null
-          status_id?: number | null
-          status_name?: string | null
-          subdomain?: string
-          token_expires_at?: string | null
-          updated_at?: string | null
-          user_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "amocrm_settings_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       apartment_photos: {
         Row: {
           apartment_id: string
@@ -448,6 +371,125 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_funnel_stages: {
+        Row: {
+          color: string
+          created_at: string
+          funnel_id: string
+          id: string
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          funnel_id: string
+          id?: string
+          name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          funnel_id?: string
+          id?: string
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_funnel_stages_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_funnel_triggers: {
+        Row: {
+          config: Json
+          created_at: string
+          description: string
+          event: Database["public"]["Enums"]["crm_funnel_trigger_event"]
+          funnel_id: string
+          icon: string
+          id: string
+          stage_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          description: string
+          event: Database["public"]["Enums"]["crm_funnel_trigger_event"]
+          funnel_id: string
+          icon: string
+          id?: string
+          stage_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          description?: string
+          event?: Database["public"]["Enums"]["crm_funnel_trigger_event"]
+          funnel_id?: string
+          icon?: string
+          id?: string
+          stage_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_funnel_triggers_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_funnel_triggers_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_funnels: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       floor_plans: {
         Row: {
           created_at: string
@@ -527,6 +569,91 @@ export type Database = {
           },
         ]
       }
+      lead_history: {
+        Row: {
+          created_at: string
+          id: string
+          lead_id: string
+          text: string
+          type: Database["public"]["Enums"]["lead_history_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_id: string
+          text: string
+          type: Database["public"]["Enums"]["lead_history_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_id?: string
+          text?: string
+          type?: Database["public"]["Enums"]["lead_history_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_tasks: {
+        Row: {
+          assigned_to_user_id: string | null
+          completed: boolean
+          created_at: string
+          due_date: string
+          due_time: string | null
+          id: string
+          lead_id: string
+          result: string | null
+          text: string
+          type: Database["public"]["Enums"]["lead_task_type"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          completed?: boolean
+          created_at?: string
+          due_date: string
+          due_time?: string | null
+          id?: string
+          lead_id: string
+          result?: string | null
+          text: string
+          type?: Database["public"]["Enums"]["lead_task_type"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          completed?: boolean
+          created_at?: string
+          due_date?: string
+          due_time?: string | null
+          id?: string
+          lead_id?: string
+          result?: string | null
+          text?: string
+          type?: Database["public"]["Enums"]["lead_task_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           amocrm_contact_id: number | null
@@ -535,15 +662,18 @@ export type Database = {
           amocrm_retries: number | null
           amocrm_sent_at: string | null
           apartment_id: string
+          assigned_to_user_id: string | null
           created_at: string
           email: string
           id: string
           name: string
           notes: string | null
           phone: string
+          pipeline_stage_id: string | null
           project_id: string
           source: string | null
           status: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
@@ -553,15 +683,18 @@ export type Database = {
           amocrm_retries?: number | null
           amocrm_sent_at?: string | null
           apartment_id: string
+          assigned_to_user_id?: string | null
           created_at?: string
           email: string
           id?: string
           name: string
           notes?: string | null
           phone: string
+          pipeline_stage_id?: string | null
           project_id: string
           source?: string | null
           status?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -571,15 +704,18 @@ export type Database = {
           amocrm_retries?: number | null
           amocrm_sent_at?: string | null
           apartment_id?: string
+          assigned_to_user_id?: string | null
           created_at?: string
           email?: string
           id?: string
           name?: string
           notes?: string | null
           phone?: string
+          pipeline_stage_id?: string | null
           project_id?: string
           source?: string | null
           status?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [
@@ -1771,14 +1907,14 @@ export type Database = {
     }
     Functions: {
       check_and_expire_subscriptions: {
-        Args: never
+        Args: Record<string, never>
         Returns: {
           expired_count: number
           trial_expired_count: number
           updated_subscriptions: string[]
         }[]
       }
-      cleanup_expired_invitations: { Args: never; Returns: number }
+      cleanup_expired_invitations: { Args: Record<string, never>; Returns: number }
       create_default_manager_permissions: {
         Args: { manager_account_id: string }
         Returns: undefined
@@ -1787,7 +1923,7 @@ export type Database = {
         Args: { base_slug: string; project_id?: string }
         Returns: string
       }
-      generate_invitation_token: { Args: never; Returns: string }
+      generate_invitation_token: { Args: Record<string, never>; Returns: string }
       generate_partner_code: {
         Args: { user_id_param: string }
         Returns: string
@@ -1809,12 +1945,6 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
-      is_amocrm_configured: {
-        Args: {
-          settings_row: Database["public"]["Tables"]["amocrm_settings"]["Row"]
-        }
-        Returns: boolean
-      }
       is_project_owner: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
@@ -1825,7 +1955,16 @@ export type Database = {
     Enums: {
       apartment_type: "apartment" | "commercial" | "parking"
       app_role: "superadmin" | "admin" | "moderator" | "user"
+      crm_funnel_trigger_event: "on_stage_entry" | "timer" | "on_tag_add"
       currency_type: "RUB" | "USD" | "EUR" | "GEL"
+      lead_history_type:
+        | "status_change"
+        | "call"
+        | "note"
+        | "creation"
+        | "task_completion"
+        | "automation"
+      lead_task_type: "call" | "meeting" | "message" | "payment" | "other"
       project_type: "building" | "object"
     }
     CompositeTypes: {
@@ -1956,9 +2095,18 @@ export const Constants = {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],
       app_role: ["superadmin", "admin", "moderator", "user"],
+      crm_funnel_trigger_event: ["on_stage_entry", "timer", "on_tag_add"],
       currency_type: ["RUB", "USD", "EUR", "GEL"],
+      lead_history_type: [
+        "status_change",
+        "call",
+        "note",
+        "creation",
+        "task_completion",
+        "automation",
+      ],
+      lead_task_type: ["call", "meeting", "message", "payment", "other"],
       project_type: ["building", "object"],
     },
   },
 } as const
-

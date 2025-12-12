@@ -1,6 +1,6 @@
 {
   "addApartment": "ბინის დამატება",
-  "apartment": "ბინა {number}",
+  "apartment": "ბინა {{number}}",
   "apartmentNumber": "ბინის ნომერი*",
   "apartmentType": "ფართის ტიპი",
   "area": "ფართობი (მ²)*",
@@ -11,7 +11,7 @@
   "deleteError": "ბინის წაშლის შეცდომა",
   "deleteSuccess": "ბინა წაშლილია",
   "description": "ბინების და მათი მახასიათებლების მართვა",
-  "floor": "სართული {floor}",
+  "floor": "სართული {{floor}}",
   "floorNumber": "სართული*",
   "floorRequired": "სართულის ნომერი საჭიროა",
   "loading": "ბინების ჩატვირთვა...",

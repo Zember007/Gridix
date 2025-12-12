@@ -40,10 +40,7 @@ const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ def
 const ProjectApartmentSelector = ({
   projectId,
   isWidget = false,
-  // kept for backward compatibility, currently unused
-  showFullProjectInWidget = true,
 }: ProjectApartmentSelectorProps) => {
-
   const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const { project } = useProject(projectId);

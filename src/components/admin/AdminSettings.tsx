@@ -575,7 +575,7 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
                     type="email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder={t('adminSettings.newEmailPlaceholder')}
+                    placeholder={'email@example.com'}
                   />
                 </div>
                 <Button 

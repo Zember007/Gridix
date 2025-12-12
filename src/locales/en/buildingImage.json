@@ -6,19 +6,19 @@
     "addNew": "Add Floor",
     "canvas": "Drawing Canvas",
     "configured": "Configured floors:",
-    "creatingNew": "Creating floor {floor}",
+    "creatingNew": "Creating floor {{floor}}",
     "description": "Select a floor and mark its area on the building image",
     "edit": "Edit",
     "floor": "Floor:",
-    "floorNumber": "Floor {floor}",
+    "floorNumber": "Floor {{floor}}",
     "title": "Floor Configuration"
   },
   "object": {
     "addNew": "Add Object",
     "configured": "Configured Objects",
-    "creating": "Creating polygon for object #{number}",
+    "creating": "Creating polygon for object #{{number}}",
     "number": "Object Number",
-    "objectNumber": "Object #{number}",
+    "objectNumber": "Object #{{number}}",
     "plan": "Objects Plan",
     "polygonsDescription": "Mark areas on the plan for each object (villas, townhouses)",
     "polygonsTitle": "Object Polygons"
@@ -27,12 +27,12 @@
     "cancel": "Cancel",
     "create": "Create",
     "createError": "Error creating polygon",
-    "createSuccess": "Polygon for floor {floor} created",
+    "createSuccess": "Polygon for floor {{floor}} created",
     "deleteError": "Error deleting polygon",
     "deleteSuccess": "Floor polygon deleted",
     "save": "Save",
     "saveError": "Error saving polygon",
-    "saveSuccess": "Polygon for floor {floor} saved"
+    "saveSuccess": "Polygon for floor {{floor}} saved"
   },
   "title": "Building Image",
   "upload": "Upload Image",

@@ -25,7 +25,7 @@
   "floor": "الطابق",
   "floorplan": "المخططات",
   "floorPlan": "مخطط الطابق",
-  "floorPlanDesc": "تخطيط الطابق {floor}",
+  "floorPlanDesc": "تخطيط الطابق {{floor}}",
   "floorPlans": "مخططات الطوابق",
   "floorPlansDesc": "إدارة مخططات الطوابق. انقر على طابق للتحرير.",
   "floors": "عدد الطوابق",

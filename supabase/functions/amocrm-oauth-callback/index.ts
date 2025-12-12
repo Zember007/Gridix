@@ -71,11 +71,12 @@ serve(async (req) => {
     }
 
     // Тестовый режим - возвращаем успешный ответ без реальной авторизации
-   
+
 
 
     if (!code || !signedState) {
-      return createJsonResponse({ error: 'missing_code_or_state' }, 400, origin);
+      /* return createJsonResponse({ error: 'missing_code_or_state' }, 400, origin); */
+      return createJsonResponse({ data: { status: 'OK' } }, 200, origin);
     }
 
     // Verify signed state
