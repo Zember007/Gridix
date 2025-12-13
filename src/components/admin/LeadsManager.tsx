@@ -377,12 +377,12 @@ export function LeadsManager({
                             >
                               <Edit size={14} />
                             </button>
-                            <button
+                           {/*  <button
                               onClick={() => handleDeleteFunnel(funnel.id)}
                               className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-100 rounded"
                             >
                               <Trash2 size={14} />
-                            </button>
+                            </button> */}
                           </div>
                         </>
                       )}

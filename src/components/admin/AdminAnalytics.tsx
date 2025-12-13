@@ -45,7 +45,6 @@ import {
   Home,
   TrendingUp,
   AlertCircle,
-  Clock,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -54,6 +53,8 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
 import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
+import { Loader } from '@/components/ui/loader';
+import { ADMIN_THEME } from '@/lib/admin-theme-config';
 
 interface AnalyticsData {
   projectViews: Array<{ date: string; views: number }>;
@@ -83,7 +84,7 @@ export const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  
+
   const [dateRange, setDateRange] = useState<'7' | '30' | '90' | 'all'>('30');
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -148,8 +149,8 @@ export const AdminAnalytics = () => {
       }
 
       // Фильтр по проекту
-      const filteredProjectIds = selectedProject !== 'all' 
-        ? [selectedProject] 
+      const filteredProjectIds = selectedProject !== 'all'
+        ? [selectedProject]
         : projectIds;
 
       // Подготовка базовых запросов
@@ -220,7 +221,7 @@ export const AdminAnalytics = () => {
 
       // Загрузка просмотров квартир с join к apartments для получения данных квартир
       const apartmentIds = (apartmentsData || []).map((a: { id: string }) => a.id);
-      
+
       let apartmentViewsData: Array<{
         apartment_id: string;
         created_at: string;
@@ -256,7 +257,7 @@ export const AdminAnalytics = () => {
       // Обработка данных для графиков
       const viewsByDate = new Map<string, number>();
       const leadsByDate = new Map<string, number>();
-      
+
       (viewsData || []).forEach((view: { created_at: string }) => {
         const date = format(new Date(view.created_at), 'yyyy-MM-dd');
         viewsByDate.set(date, (viewsByDate.get(date) || 0) + 1);
@@ -286,9 +287,9 @@ export const AdminAnalytics = () => {
 
       // Топ проектов по просмотрам
       const projectViewsCount = new Map<string, { views: number; leads: number; name: string }>();
-      (viewsData || []).forEach((view: { 
-        project_id: string; 
-        projects?: { id?: string; name?: string } 
+      (viewsData || []).forEach((view: {
+        project_id: string;
+        projects?: { id?: string; name?: string }
       }) => {
         const projectId = view.project_id;
         const projectName = view.projects?.name || projectsMap.get(projectId) || 'Unknown';
@@ -377,15 +378,8 @@ export const AdminAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center">
-              <Clock className="w-6 h-6 animate-spin mr-2" />
-              <span>{t('admin.analytics.loading')}</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center py-12">
+        <Loader size="md" color={ADMIN_THEME.primary} />
       </div>
     );
   }
@@ -621,15 +615,15 @@ export const AdminAnalytics = () => {
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={analyticsData.topApartments}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="apartment_number" 
-                  angle={-45} 
-                  textAnchor="end" 
+                <XAxis
+                  dataKey="apartment_number"
+                  angle={-45}
+                  textAnchor="end"
                   height={100}
                   label={{ value: t('admin.analytics.apartment'), position: 'insideBottom', offset: -5 }}
                 />
                 <YAxis />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [value, t('admin.analytics.views')]}
                   labelFormatter={(label) => `${t('admin.analytics.apartment')} №${label}`}
                 />

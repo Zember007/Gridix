@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+import { createOrUpdateLocalFunnel, type AmoCRMPipeline } from '../_shared/amocrm-funnel.ts'
 
 async function hmacVerify(inputB64: string, signature: string, secret: string): Promise<boolean> {
   const enc = new TextEncoder()
@@ -24,13 +25,15 @@ interface TokenResponse {
   expires_in: number;
 }
 
-interface AmoCRMPipeline {
+interface AmoCRMStatus {
   id: number;
   name: string;
   sort: number;
-  is_main: boolean;
-  is_archive: boolean;
+  color: string;
+  type: number;
+  pipeline_id: number;
 }
+
 
 interface AmoCRMAccountData {
   id: number;
@@ -38,6 +41,17 @@ interface AmoCRMAccountData {
   subdomain: string;
   _embedded?: {
     pipelines?: AmoCRMPipeline[];
+  };
+}
+
+interface AmoCRMUser {
+  id: number;
+  name: string;
+  email: string;
+  is_admin: boolean;
+  group: {
+    id: number;
+    name: string;
   };
 }
 serve(async (req) => {
@@ -215,44 +229,97 @@ serve(async (req) => {
 
     console.log('Tokens received successfully')
 
-    // Получаем данные аккаунта и воронки из AmoCRM API
+    // Получаем данные аккаунта, воронки и пользователей из AmoCRM API
     let accountData: AmoCRMAccountData | null = null
+    let selectedPipeline: AmoCRMPipeline | null = null
     let pipelineId = 1 // fallback значение
     let pipelineName: string | null = null
+    let responsibleUserId: number | null = null
+    let responsibleUserName: string | null = null
+
+    const baseUrl = `https://${subdomain}.amocrm.ru/api/v4`
+    const headers = {
+      'Authorization': `Bearer ${tokenResult.access_token}`,
+      'Content-Type': 'application/json'
+    }
 
     try {
-      const accountUrl = `https://${subdomain}.amocrm.ru/api/v4/leads/pipelines`
-      console.log('Fetching account data from:', accountUrl)
+      // Получаем список воронок
+      const pipelinesUrl = `${baseUrl}/leads/pipelines`
+      console.log('Fetching pipelines from:', pipelinesUrl)
 
-      const accountResponse = await fetch(accountUrl, {
-        headers: {
-          'Authorization': `Bearer ${tokenResult.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const pipelinesResponse = await fetch(pipelinesUrl, { headers })
 
-      if (accountResponse.ok) {
-        accountData = await accountResponse.json() as AmoCRMAccountData
+      if (pipelinesResponse.ok) {
+        accountData = await pipelinesResponse.json() as AmoCRMAccountData
 
-        // Находим первую активную воронку или главную воронку
+        // Находим главную воронку или первую активную воронку
         const pipelines = accountData?._embedded?.pipelines || []
         const mainPipeline = pipelines.find((p: AmoCRMPipeline) => p.is_main && !p.is_archive)
         const firstActivePipeline = pipelines.find((p: AmoCRMPipeline) => !p.is_archive)
 
-        if (mainPipeline) {
-          pipelineId = mainPipeline.id
-          pipelineName = mainPipeline.name
-          console.log('Using main pipeline:', { id: pipelineId, name: pipelineName })
-        } else if (firstActivePipeline) {
-          pipelineId = firstActivePipeline.id
-          pipelineName = firstActivePipeline.name
-          console.log('Using first active pipeline:', { id: pipelineId, name: pipelineName })
+        const targetPipeline = mainPipeline || firstActivePipeline
+
+        if (targetPipeline) {
+          pipelineId = targetPipeline.id
+          pipelineName = targetPipeline.name
+          console.log('Using pipeline:', { id: pipelineId, name: pipelineName, is_main: targetPipeline.is_main })
+
+          // Получаем полную информацию о воронке со статусами
+          try {
+            const pipelineDetailUrl = `${baseUrl}/leads/pipelines/${pipelineId}`
+            console.log('Fetching pipeline details from:', pipelineDetailUrl)
+
+            const pipelineDetailResponse = await fetch(pipelineDetailUrl, { headers })
+            if (pipelineDetailResponse.ok) {
+              const pipelineDetail = await pipelineDetailResponse.json()
+              const statuses = pipelineDetail._embedded?.statuses || pipelineDetail.statuses || []
+              
+              selectedPipeline = {
+                ...targetPipeline,
+                statuses: statuses
+              }
+              console.log('Pipeline statuses count:', statuses.length)
+            } else {
+              console.warn('Failed to fetch pipeline details:', pipelineDetailResponse.status)
+            }
+          } catch (error) {
+            console.warn('Error fetching pipeline details:', error)
+          }
         }
       } else {
-        console.warn('Failed to fetch account data:', accountResponse.status, await accountResponse.text())
+        console.warn('Failed to fetch pipelines:', pipelinesResponse.status, await pipelinesResponse.text())
+      }
+
+      // Получаем список пользователей для выбора ответственного
+      try {
+        const usersUrl = `${baseUrl}/users`
+        console.log('Fetching users from:', usersUrl)
+
+        const usersResponse = await fetch(usersUrl, { headers })
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json()
+          const users: AmoCRMUser[] = usersData._embedded?.users || []
+
+          // Выбираем главного сотрудника (администратора или первого пользователя)
+          const adminUser = users.find((u: AmoCRMUser) => u.is_admin)
+          const mainUser = adminUser || users[0]
+
+          if (mainUser) {
+            responsibleUserId = mainUser.id
+            responsibleUserName = mainUser.name
+            console.log('Selected responsible user:', { id: responsibleUserId, name: responsibleUserName, is_admin: mainUser.is_admin })
+          } else {
+            console.warn('No users found in AmoCRM account')
+          }
+        } else {
+          console.warn('Failed to fetch users:', usersResponse.status)
+        }
+      } catch (error) {
+        console.warn('Error fetching users:', error)
       }
     } catch (error) {
-      console.warn('Error fetching account data:', error)
+      console.warn('Error fetching AmoCRM data:', error)
     }
 
 
@@ -287,6 +354,8 @@ serve(async (req) => {
         crm_connection_id: crmConnection.id,
         pipeline_id: pipelineId,
         pipeline_name: pipelineName,
+        responsible_user_id: responsibleUserId,
+        user_name: responsibleUserName,
       }, {
         onConflict: 'project_id,crm_connection_id'
       })
@@ -294,6 +363,24 @@ serve(async (req) => {
     if (projectSettingsError) {
       console.error('Failed to save project CRM settings:', projectSettingsError)
       return createJsonResponse({ error: 'save_project_settings_failed', details: projectSettingsError.message }, 500, origin);
+    }
+
+    // Создаем локальную воронку со статусами, если выбрана воронка
+    if (selectedPipeline && selectedPipeline.statuses && selectedPipeline.statuses.length > 0) {
+      try {
+        await createOrUpdateLocalFunnel(
+          state,
+          project.user_id,
+          selectedPipeline,
+          supabase
+        )
+        console.log('Local funnel created/updated successfully')
+      } catch (error) {
+        console.error('Failed to create/update local funnel:', error)
+        // Не прерываем процесс, так как основная авторизация уже выполнена
+      }
+    } else {
+      console.warn('Pipeline not selected or has no statuses, skipping local funnel creation')
     }
 
     console.log(`✅ Успешная авторизация AmoCRM для пользователя ${project.user_id} и проекта ${state}`)
