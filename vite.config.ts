@@ -69,14 +69,14 @@ export default defineConfig(({ mode }) => {
         },
       },
       build: {
-        outDir: "dist-widget",
+        outDir: 'public/widget',
         cssCodeSplit: false,
         minify: "esbuild",
         lib: {
           entry: path.resolve(__dirname, "src/widget.tsx"),
           name: "GridixWidget",
           formats: ["iife"],
-          fileName: () => "widget.js",
+          fileName: () => "index.js",
         },
         rollupOptions: {
           external: [],

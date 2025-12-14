@@ -66,8 +66,8 @@ const AdminWidgets = () => {
   };
 
   const generateEmbedCode = () => {
-    const origin = import.meta.env.VITE_WIDGET_DOMAIN;
-    const scriptUrl = `https://${origin}/widget.js`;
+    const origin = window.location.origin;
+    const scriptUrl = `${origin}/widget/index.js`;
 
     const params: Record<string, string | number | boolean> = {
       lang: defaultLanguage,
