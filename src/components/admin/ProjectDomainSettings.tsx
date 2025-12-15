@@ -53,6 +53,7 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       if (!domains || domains.length === 0) return;
       
       for (const domain of domains) {
+        if (domain.status === 'active') continue; // Skip DNS fetch for already active domains
         try {
           const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
             body: {
@@ -595,64 +596,66 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
                 </div>
                 
                 {/* DNS Instructions for this domain */}
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="space-y-3">
-                    <div className="font-medium">📋 DNS Records для {domain.domain}</div>
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {hasInstructions
-                        ? "Точные DNS записи получены от Vercel."
-                        : "Показаны стандартные DNS записи Vercel. Нажмите кнопку проверки (✓), чтобы подтянуть статус/записи с сервера."}
-                    </div>
-                    <div className="space-y-3">
-                      {recordsToShow.map((record, idx) => {
-                        const displayName = record.name === "@" ? domain.domain : `${record.name}.${domain.domain}`;
-                        return (
-                          <div key={idx} className="bg-muted p-3 rounded-lg">
-                            <div className="font-medium text-sm mb-2">
-                              {record.name === "@"
-                                ? t('domains.instructions.rootDomain')
-                                : t('domains.instructions.subdomain')
-                              }
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-                              <div>
-                                <div className="font-semibold text-foreground">{t('domains.dnsType')}</div>
-                                <div className="bg-background p-2 rounded border">{record.type}</div>
+                {domain.status !== 'active' && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="space-y-3">
+                      <div className="font-medium">📋 DNS Records для {domain.domain}</div>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {hasInstructions
+                          ? "Точные DNS записи получены от Vercel."
+                          : "Показаны стандартные DNS записи Vercel. Нажмите кнопку проверки (✓), чтобы подтянуть статус/записи с сервера."}
+                      </div>
+                      <div className="space-y-3">
+                        {recordsToShow.map((record, idx) => {
+                          const displayName = record.name === "@" ? domain.domain : `${record.name}.${domain.domain}`;
+                          return (
+                            <div key={idx} className="bg-muted p-3 rounded-lg">
+                              <div className="font-medium text-sm mb-2">
+                                {record.name === "@"
+                                  ? t('domains.instructions.rootDomain')
+                                  : t('domains.instructions.subdomain')
+                                }
                               </div>
-                              <div>
-                                <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
-                                <div className="bg-background p-2 rounded border">{displayName}</div>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-foreground flex items-center gap-2">
-                                  {t('domains.dnsValue')}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={() => copyToClipboard(record.value)}
-                                  >
-                                    <Copy className="h-3 w-3" />
-                                  </Button>
+                              <div className="grid grid-cols-3 gap-4 text-xs font-mono">
+                                <div>
+                                  <div className="font-semibold text-foreground">{t('domains.dnsType')}</div>
+                                  <div className="bg-background p-2 rounded border">{record.type}</div>
                                 </div>
-                                <div className="bg-background p-2 rounded border">{record.value}</div>
+                                <div>
+                                  <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
+                                  <div className="bg-background p-2 rounded border">{displayName}</div>
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-foreground flex items-center gap-2">
+                                    {t('domains.dnsValue')}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => copyToClipboard(record.value)}
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  <div className="bg-background p-2 rounded border">{record.value}</div>
+                                </div>
                               </div>
+                              {record.description && (
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  {record.description}
+                                </div>
+                              )}
                             </div>
-                            {record.description && (
-                              <div className="text-xs text-muted-foreground mt-2">
-                                {record.description}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-xs text-muted-foreground pt-2 border-t">
-                      ⏱️ DNS изменения могут занять до 24 часов для полного распространения
-                    </div>
-                  </AlertDescription>
-                </Alert>
+                          );
+                        })}
+                      </div>
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        ⏱️ DNS изменения могут занять до 24 часов для полного распространения
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
               );
               })}

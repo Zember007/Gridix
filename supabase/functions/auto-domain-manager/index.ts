@@ -214,6 +214,16 @@ Deno.serve(async (req)=>{
       const { data: dbDomain } = await supabase.from('project_domains').select('*').eq('domain', cleanedDomain).eq('project_id', project_id).single();
       // Get DNS instructions from Vercel config
       const vercelConfig = await vercel.getDomainConfig(cleanedDomain);
+      // If Vercel reports the domain as configured (misconfigured === false), mark it active in DB
+      if (vercelConfig && vercelConfig.misconfigured === false && dbDomain?.id) {
+        await supabase.from('project_domains').update({
+          status: 'active',
+          updated_at: new Date().toISOString()
+        }).eq('id', dbDomain.id);
+        if (dbDomain) {
+          dbDomain.status = 'active';
+        }
+      }
       // IMPORTANT: Always return DNS records (fallback to Vercel defaults) so UI can show setup instructions
       const dnsRecords = vercelConfig ? [
         {
@@ -290,11 +300,11 @@ Deno.serve(async (req)=>{
         error: "Domain already exists in database"
       }, 409, origin);
     }
-    // Add domain to database with pending status
+    // Add domain to database with initial not_configured status
     const { data: domainData, error: dbError } = await supabase.from('project_domains').insert({
       project_id,
       domain: cleanedDomain,
-      status: 'pending'
+      status: 'not_configured'
     }).select().single();
     if (dbError) {
       console.error('Database error:', dbError);
@@ -366,33 +376,9 @@ Deno.serve(async (req)=>{
     }
     // Vercel handles SSL automatically once DNS is configured
     automationResults.ssl_ready = automationResults.hosting_added;
-    // Update domain status based on automation results
-    let newStatus = 'active';
-    if (!automationResults.dns_created && !automationResults.hosting_added) {
-      newStatus = 'pending_setup';
-    } else if (automationResults.dns_created || automationResults.hosting_added) {
-      newStatus = 'active';
-    }
-    await supabase.from('project_domains').update({
-      status: newStatus,
-      updated_at: new Date().toISOString()
-    }).eq('id', domainData.id);
-    // Determine final status and message
-    let finalStatus = 'active';
-    let finalMessage = '';
-    if (automationResults.dns_created && automationResults.hosting_added) {
-      finalStatus = 'active';
-      finalMessage = "Domain automated successfully! DNS records created and domain added to Vercel. SSL certificate will be issued automatically once DNS propagates (may take up to 24 hours).";
-    } else if (automationResults.hosting_added) {
-      finalStatus = 'active';
-      finalMessage = "Domain added to Vercel successfully! Please configure DNS records manually using the provided instructions. SSL certificate will be issued automatically once DNS is configured.";
-    } else if (automationResults.dns_created) {
-      finalStatus = 'pending_setup';
-      finalMessage = "DNS records created successfully! Please add the domain to Vercel manually.";
-    } else {
-      finalStatus = 'pending_setup';
-      finalMessage = "Domain added to database! Please add the domain to Vercel and configure DNS records manually using the provided instructions.";
-    }
+    // Initial status remains not_configured until Vercel reports misconfigured === false
+    const finalStatus = 'not_configured';
+    const finalMessage = "Domain saved. Configure DNS using the provided instructions and check status to activate.";
     return createJsonResponse({
       success: true,
       domain: cleanedDomain,
