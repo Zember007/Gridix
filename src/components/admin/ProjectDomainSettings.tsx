@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,19 +29,55 @@ interface ProjectDomainSettingsProps {
   projectName: string;
 }
 
+interface DNSRecord {
+  type: string;
+  name: string;
+  value: string;
+  description: string;
+}
+
 export default function ProjectDomainSettings({ projectId, projectName }: ProjectDomainSettingsProps) {
-  const { domains, loading, updateDomain, deleteDomain } = useProjectDomains(projectId);
+  const { domains, loading, updateDomain } = useProjectDomains(projectId);
   const [newDomain, setNewDomain] = useState("");
   const [isAddingDomain, setIsAddingDomain] = useState(false);
   const [dnsProvider, setDnsProvider] = useState<'manual' | 'cloudflare'>('manual');
   const [dnsApiKey, setDnsApiKey] = useState("");
   const [dnsZoneId, setDnsZoneId] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [dnsInstructions, setDnsInstructions] = useState<Record<string, DNSRecord[]>>({});
   const { t } = useLanguage();
 
-  // Получаем IP адрес VPS из переменных окружения или используем дефолтный
-  const serverIP = import.meta.env.VITE_SERVER_IP || "YOUR_VPS_IP";
-  const serverDomain = import.meta.env.VITE_SERVER_DOMAIN || "your-domain.com";
+  // Автоматически загружать DNS инструкции для всех доменов при загрузке
+  useEffect(() => {
+    const loadDnsInstructions = async () => {
+      if (!domains || domains.length === 0) return;
+      
+      for (const domain of domains) {
+        try {
+          const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
+            body: {
+              action: 'status',
+              domain: domain.domain,
+              project_id: projectId,
+            },
+          });
+
+          if (!error && result?.success && result.automation?.instructions?.dns_records) {
+            setDnsInstructions(prev => ({
+              ...prev,
+              [domain.domain]: result.automation.instructions.dns_records
+            }));
+          }
+        } catch (error) {
+          console.error(`Failed to load DNS instructions for ${domain.domain}:`, error);
+        }
+      }
+    };
+
+    if (!loading && domains.length > 0) {
+      loadDnsInstructions();
+    }
+  }, [domains, loading, projectId]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -57,15 +93,28 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
     setIsAddingDomain(true);
     
     try {
+      // Prepare request body - only include DNS provider credentials if Cloudflare is selected
+      const requestBody: {
+        domain: string;
+        project_id: string;
+        dns_provider?: 'cloudflare' | 'godaddy' | 'namecheap';
+        api_key?: string;
+        zone_id?: string;
+      } = {
+        domain: newDomain.trim(),
+        project_id: projectId,
+      };
+
+      // Only include DNS provider info if Cloudflare is selected and credentials are provided
+      if (dnsProvider === 'cloudflare' && dnsApiKey && dnsZoneId) {
+        requestBody.dns_provider = 'cloudflare';
+        requestBody.api_key = dnsApiKey;
+        requestBody.zone_id = dnsZoneId;
+      }
+
       // Directly call the Edge Function via Supabase client
       const { data: result, error } = await supabase.functions.invoke('auto-domain-manager', {
-        body: {
-          domain: newDomain.trim(),
-          project_id: projectId,
-          dns_provider: dnsProvider,
-          api_key: dnsApiKey,
-          zone_id: dnsZoneId,
-        },
+        body: requestBody,
       });
 
       if (error) {
@@ -87,6 +136,15 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       if (result?.success) {
         // Show main success message
         toast.success(result.message || '✅ Domain added successfully!');
+        
+        // Save DNS instructions from the response
+        if (result.automation?.instructions?.dns_records) {
+          setDnsInstructions(prev => ({
+            ...prev,
+            [result.domain]: result.automation.instructions.dns_records
+          }));
+        }
+        
         setNewDomain("");
         setDnsApiKey("");
         setDnsZoneId("");
@@ -133,7 +191,9 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
         
         // Refresh domains list
         setTimeout(() => {
-          window.location.reload();
+          const url = new URL(window.location.href);
+          url.searchParams.set('page', 'domains');
+          window.location.href = url.toString();
         }, 1500);
       } else {
         // Handle error response from the function
@@ -257,17 +317,43 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
       }
 
       if (result?.success) {
-        const payload = result.status; // status payload from edge
-        const overall = payload?.overall_status || 'Unknown';
-        const nginxEnabled = payload?.nginx?.enabled === true;
-        const sslValid = payload?.ssl?.certificate_valid === true;
-        const nginxStatus = nginxEnabled ? '✅ Enabled' : '❌ Disabled';
-        const sslStatus = sslValid ? '✅ Valid' : '❌ Invalid';
-        const overallIcon = overall === 'active' ? '✅' : '⚠️';
-        toast.success(`${overallIcon} Domain Status: ${overall}`, {
-          description: `Nginx: ${nginxStatus} | SSL: ${sslStatus}`,
-          duration: 5000,
-        });
+        // Update DNS instructions if available in status response
+        if (result.automation?.instructions?.dns_records) {
+          setDnsInstructions(prev => ({
+            ...prev,
+            [domain.domain]: result.automation.instructions.dns_records
+          }));
+        }
+        
+        // Check if we have vercel status
+        if (result.vercel) {
+          const vercel = result.vercel;
+          const verified = vercel.verified ? '✅ Verified' : '⚠️ Not verified';
+          const configured = vercel.configured ? '✅ Configured' : '⚠️ Not configured';
+          toast.success(`Domain Status: ${verified} | ${configured}`, {
+            duration: 5000,
+          });
+        } else {
+          // Fallback to old format if available
+          const payload = result.status;
+          if (payload) {
+            const overall = payload?.overall_status || 'Unknown';
+            const nginxEnabled = payload?.nginx?.enabled === true;
+            const sslValid = payload?.ssl?.certificate_valid === true;
+            const nginxStatus = nginxEnabled ? '✅ Enabled' : '❌ Disabled';
+            const sslStatus = sslValid ? '✅ Valid' : '❌ Invalid';
+            const overallIcon = overall === 'active' ? '✅' : '⚠️';
+            toast.success(`${overallIcon} Domain Status: ${overall}`, {
+              description: `Nginx: ${nginxStatus} | SSL: ${sslStatus}`,
+              duration: 5000,
+            });
+          } else {
+            toast.success('✅ Domain status checked', {
+              description: 'Domain is registered in the system',
+              duration: 5000,
+            });
+          }
+        }
       } else {
         const errorMessage = result?.error || 'Failed to check status';
         toast.error(`❌ ${errorMessage}`);
@@ -312,80 +398,13 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
             <div className="text-sm space-y-2">
               <div><strong>1.</strong> {t('domains.instructions.step1')}</div>
               <div><strong>2.</strong> {t('domains.instructions.step2')}</div>
+              <div><strong>3.</strong> {t('domains.instructions.step3')}</div>
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              💡 DNS инструкции для каждого домена отображаются ниже в списке подключенных доменов
             </div>
           </AlertDescription>
         </Alert>
-
-        {/* DNS Records Table */}
-        {newDomain && (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription className="space-y-3">
-              <div className="font-medium">{t('domains.instructions.dnsRecords')}</div>
-              <div className="space-y-3">
-                <div className="bg-muted p-3 rounded-lg">
-                  <div className="font-medium text-sm mb-2">{t('domains.instructions.rootDomain')}</div>
-                  <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-                    <div>
-                      <div className="font-semibold text-foreground">{t('domains.dnsType')}</div>
-                      <div className="bg-background p-2 rounded border">A</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
-                      <div className="bg-background p-2 rounded border">{newDomain}</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground flex items-center gap-2">
-                        {t('domains.dnsValue')}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => copyToClipboard(serverIP)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <div className="bg-background p-2 rounded border">{serverIP}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-muted p-3 rounded-lg">
-                  <div className="font-medium text-sm mb-2">{t('domains.instructions.subdomain')}</div>
-                  <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-                    <div>
-                      <div className="font-semibold text-foreground">{t('domains.dnsType')}</div>
-                      <div className="bg-background p-2 rounded border">CNAME</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
-                      <div className="bg-background p-2 rounded border">www.{newDomain}</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground flex items-center gap-2">
-                        {t('domains.dnsValue')}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => copyToClipboard(serverDomain)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <div className="bg-background p-2 rounded border">{serverDomain}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-sm text-muted-foreground">
-                  <strong>3.</strong> {t('domains.instructions.step3')}
-                </div>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
 
         <Separator />
 
@@ -487,30 +506,36 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
             </div>
           ) : (
             <div className="space-y-3">
-              {domains.map((domain) => (
-                <div key={domain.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">{domain.domain}</span>
-                        {domain.is_primary && (
-                          <Badge variant="default" className="text-xs">
-                            {t('domains.primary')}
-                          </Badge>
-                        )}
-                        <Badge 
-                          variant={domain.status === 'active' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {domain.status === 'active' ? t('domains.active') : domain.status}
-                        </Badge>
+              {domains.map((domain) => {
+                const domainInstructions = dnsInstructions[domain.domain] || [];
+                const hasInstructions = domainInstructions.length > 0;
+                const recordsToShow = domainInstructions;
+                
+                return (
+                  <div key={domain.id} className="space-y-3">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono">{domain.domain}</span>
+                            {domain.is_primary && (
+                              <Badge variant="default" className="text-xs">
+                                {t('domains.primary')}
+                              </Badge>
+                            )}
+                            <Badge 
+                              variant={domain.status === 'active' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {domain.status === 'active' ? t('domains.active') : domain.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {t('domains.addedOn')} {new Date(domain.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {t('domains.addedOn')} {new Date(domain.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
                   
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
@@ -568,7 +593,69 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
                     </AlertDialog>
                   </div>
                 </div>
-              ))}
+                
+                {/* DNS Instructions for this domain */}
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="space-y-3">
+                    <div className="font-medium">📋 DNS Records для {domain.domain}</div>
+                    <div className="text-xs text-muted-foreground mb-2">
+                      {hasInstructions
+                        ? "Точные DNS записи получены от Vercel."
+                        : "Показаны стандартные DNS записи Vercel. Нажмите кнопку проверки (✓), чтобы подтянуть статус/записи с сервера."}
+                    </div>
+                    <div className="space-y-3">
+                      {recordsToShow.map((record, idx) => {
+                        const displayName = record.name === "@" ? domain.domain : `${record.name}.${domain.domain}`;
+                        return (
+                          <div key={idx} className="bg-muted p-3 rounded-lg">
+                            <div className="font-medium text-sm mb-2">
+                              {record.name === "@"
+                                ? t('domains.instructions.rootDomain')
+                                : t('domains.instructions.subdomain')
+                              }
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-xs font-mono">
+                              <div>
+                                <div className="font-semibold text-foreground">{t('domains.dnsType')}</div>
+                                <div className="bg-background p-2 rounded border">{record.type}</div>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground">{t('domains.dnsName')}</div>
+                                <div className="bg-background p-2 rounded border">{displayName}</div>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground flex items-center gap-2">
+                                  {t('domains.dnsValue')}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => copyToClipboard(record.value)}
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                <div className="bg-background p-2 rounded border">{record.value}</div>
+                              </div>
+                            </div>
+                            {record.description && (
+                              <div className="text-xs text-muted-foreground mt-2">
+                                {record.description}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="text-xs text-muted-foreground pt-2 border-t">
+                      ⏱️ DNS изменения могут занять до 24 часов для полного распространения
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </div>
+              );
+              })}
             </div>
           )}
         </div>

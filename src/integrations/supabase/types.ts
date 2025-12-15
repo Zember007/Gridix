@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       apartment_photos: {
@@ -373,6 +398,8 @@ export type Database = {
       }
       crm_funnel_stages: {
         Row: {
+          amocrm_pipeline_id: number | null
+          amocrm_status_id: number | null
           color: string
           created_at: string
           funnel_id: string
@@ -382,6 +409,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amocrm_pipeline_id?: number | null
+          amocrm_status_id?: number | null
           color?: string
           created_at?: string
           funnel_id: string
@@ -391,6 +420,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amocrm_pipeline_id?: number | null
+          amocrm_status_id?: number | null
           color?: string
           created_at?: string
           funnel_id?: string
@@ -465,30 +496,44 @@ export type Database = {
       }
       crm_funnels: {
         Row: {
+          amocrm_pipeline_id: number | null
           created_at: string
           id: string
           is_default: boolean
           name: string
+          project_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string
           is_default?: boolean
           name: string
+          project_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string
           is_default?: boolean
           name?: string
+          project_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_funnels_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       floor_plans: {
         Row: {
@@ -1907,14 +1952,14 @@ export type Database = {
     }
     Functions: {
       check_and_expire_subscriptions: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
           expired_count: number
           trial_expired_count: number
           updated_subscriptions: string[]
         }[]
       }
-      cleanup_expired_invitations: { Args: Record<string, never>; Returns: number }
+      cleanup_expired_invitations: { Args: never; Returns: number }
       create_default_manager_permissions: {
         Args: { manager_account_id: string }
         Returns: undefined
@@ -1923,7 +1968,7 @@ export type Database = {
         Args: { base_slug: string; project_id?: string }
         Returns: string
       }
-      generate_invitation_token: { Args: Record<string, never>; Returns: string }
+      generate_invitation_token: { Args: never; Returns: string }
       generate_partner_code: {
         Args: { user_id_param: string }
         Returns: string
@@ -2091,6 +2136,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],

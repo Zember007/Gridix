@@ -20,7 +20,7 @@
     "dnsRecords": "Exact DNS records for your domain:",
     "rootDomain": "For root domain (without www):",
     "step1": "Add your domain to the list below",
-    "step2": "In your domain registrar control panel, create DNS records:",
+    "step2": "In your domain registrar control panel, create DNS records",
     "step3": "Wait for DNS propagation (up to 24 hours)",
     "subdomain": "For www subdomain:",
     "title": "Domain connection instructions:"
