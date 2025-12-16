@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, Eye, ChevronDown } from 'lucide-react';
-import { useTranslation } from 'node_modules/react-i18next';
+import { useTranslation } from 'react-i18next';
 import { CardAppearanceConfig, CardField, LeadUser } from '@/types/crm';
 import { getCardFieldOptions } from '@/constants/crm';
 import { UserAvatar } from '@/components/admin/UserAvatar';

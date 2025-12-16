@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Phone, MessageCircle, ChevronDown, Bell, Send, StickyNote, CheckCircle2, Pencil, Save } from 'lucide-react';
-import { useTranslation } from 'node_modules/react-i18next';
+import { useTranslation } from 'react-i18next';
 import { ExtendedLead, FunnelStage } from '@/types/crm';
 import { LeadTask, LeadUser, TaskType } from '@/types/crm';
 import { TaskComposer, TaskCard } from '@/components/admin/leads/TaskComponents';

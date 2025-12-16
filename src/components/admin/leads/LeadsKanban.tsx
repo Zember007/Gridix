@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Phone, MessageCircle, Building2, AlertCircle, User, Calendar, MoreHorizontal, Ghost, Globe, Instagram, Facebook } from 'lucide-react';
-import { useTranslation } from 'node_modules/react-i18next';
+import { useTranslation } from 'react-i18next';
 import { LeadTask, LeadUser, LeadSource } from '@/types/crm';
 import { ExtendedLead, FunnelStage, CardAppearanceConfig } from '@/types/crm';
 import { useDragScroll } from '@/hooks/useDragScroll';

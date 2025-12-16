@@ -18,7 +18,7 @@ import {
   Wrench,
   UserPlus,
 } from 'lucide-react';
-import { useTranslation } from 'node_modules/react-i18next';
+import { useTranslation } from 'react-i18next';
 import { LeadsList } from '@/components/admin/leads/LeadsList';
 import { LeadsKanban } from '@/components/admin/leads/LeadsKanban';
 import { LeadDrawer } from '@/components/admin/leads/LeadDrawer';

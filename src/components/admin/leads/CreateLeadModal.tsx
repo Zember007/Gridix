@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, User, Phone, DollarSign, Globe, Tag, Plus, AlertTriangle, ArrowRight } from 'lucide-react';
-import { useTranslation } from 'node_modules/react-i18next';
+import { useTranslation } from 'react-i18next';
 import { LeadSource, ExtendedLead } from '@/types/crm';
 
 interface CreateLeadModalProps {
