@@ -1,5 +1,5 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next } from 'node_modules/react-i18next';
 import { DEFAULT_LANGUAGE } from '@/lib/language-utils';
 
 // Импорт всех JSON файлов переводов

@@ -8,6 +8,9 @@ const ProjectEditorPage = lazy(() => import("../pages/ProjectEditorPage"));
 const DeveloperProjectsPage = lazy(
   () => import("../pages/DeveloperProjectsPage")
 );
+const AdminAnalyticsPage = lazy(
+  () => import("../pages/AdminAnalyticsPage")
+);
 
 export function AdminRoutes() {
   return (
@@ -28,6 +31,16 @@ export function AdminRoutes() {
         element={
           <ProtectedRoute>
             <DeveloperProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin analytics page without sidebar */}
+      <Route
+        path="developer-analytics"
+        element={
+          <ProtectedRoute>
+            <AdminAnalyticsPage />
           </ProtectedRoute>
         }
       />

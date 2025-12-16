@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'node_modules/react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useLeads, Lead as DbLead, LeadFilters as DbLeadFilters } from '@/hooks/useLeads';
 import { useWorkspace } from '@/contexts/WorkspaceContext';

@@ -8,7 +8,7 @@ import {
   Zap,
   Settings,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'node_modules/react-i18next';
 import { FunnelStage, FunnelTrigger, LeadUser } from '@/types/crm';
 import { useDragScroll } from '@/hooks/useDragScroll';
 import { FunnelTriggerCard } from './FunnelTriggerCard';

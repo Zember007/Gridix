@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, Calendar, ChevronRight, MessageCircle, Phone, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'node_modules/react-i18next';
 import { ExtendedLead, FunnelStage } from '@/types/crm';
 import { UserAvatar } from '@/components/admin/UserAvatar';
 import { LeadTask } from '@/types/crm';
