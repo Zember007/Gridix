@@ -37,7 +37,7 @@ const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promis
 
 // Функция для загрузки PDF из API
 const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
-  const response = await fetch(`https://${import.meta.env.VITE_SERVER_DOMAIN}/api/pdf?url=${pdfUrl}`);
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/pdf?url=${pdfUrl}`);
   if (!response.ok) {
     throw new Error(`Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`);
   }
