@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { AuthForm } from '@/components/Auth/AuthForm';
 import ResetPasswordForm from '@/components/Auth/ResetPasswordForm';
@@ -17,6 +17,7 @@ const AuthPage = () => {
   const redirectTo = searchParams.get('redirect') || '/admin';
   const mode = searchParams.get('mode');
   const [isRecovery, setIsRecovery] = useState<boolean>(false);
+  const linkingAmoRef = useRef(false);
   
   // Определяем режим на основе URL
   const isSignup = location.pathname.includes('/signup');
@@ -44,6 +45,24 @@ const AuthPage = () => {
         if (!isSignupPath) return;
 
         const urlParams = new URLSearchParams(window.location.search);
+        // Если пришли из amoCRM (без SSO) — сохраняем параметры установки/контекста
+        // чтобы после регистрации можно было инициировать привязку аккаунта amoCRM
+        const amoInstall = urlParams.get('amo_install') === '1';
+        const amoAccountId = urlParams.get('amo_account_id');
+        const amoUserId = urlParams.get('amo_user_id');
+        const amoSubdomain = urlParams.get('amo_subdomain');
+
+        if (amoInstall || amoAccountId || amoUserId || amoSubdomain) {
+          const amoPayload = {
+            amo_install: amoInstall ? '1' : '0',
+            amo_account_id: amoAccountId,
+            amo_user_id: amoUserId,
+            amo_subdomain: amoSubdomain,
+            captured_at: new Date().toISOString(),
+          };
+          localStorage.setItem('pending_amocrm_install', JSON.stringify(amoPayload));
+        }
+
         const partnerCode = urlParams.get('ref');
         const invitationCode = urlParams.get('invite');
         const invitationType = urlParams.get('type');
@@ -106,15 +125,69 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user && !loading && !roleLoading && !isRecovery) {
-      // Если redirect содержит языковой префикс, используем его напрямую
-      // Иначе добавляем языковой префикс
-      if (redirectTo.match(/^\/(ru|en|ka)\//)) {
-        window.location.href = redirectTo;
-      } else {
-        // Все пользователи (и застройщики, и менеджеры) попадают в /admin
-        // Там уже будет определяться контекст на основе роли
-        navigate('/admin');
-      }
+      const run = async () => {
+        // 1) Если пришли из amoCRM (виджет без SSO) — пробуем "связать аккаунты" без токенов:
+        // создаём/обновляем запись в crm_connections с crm_type=amocrm и subdomain.
+        // Это нужно для того, чтобы следующий заход из amoCRM смог получить SSO через amocrm-sso-login.
+        try {
+          if (!linkingAmoRef.current) {
+            linkingAmoRef.current = true;
+            const raw = localStorage.getItem('pending_amocrm_install');
+            if (raw) {
+              const parsed = JSON.parse(raw) as {
+                amo_install?: string;
+                amo_subdomain?: string | null;
+                amo_account_id?: string | null;
+                amo_user_id?: string | null;
+              };
+
+              const subdomain = parsed?.amo_subdomain ?? null;
+              if (subdomain && typeof subdomain === 'string' && subdomain.trim().length > 0) {
+                // Проверяем существующую связь пользователя с amoCRM
+                const { data: existing } = await supabase
+                  .from('crm_connections')
+                  .select('id, subdomain')
+                  .eq('crm_type', 'amocrm')
+                  .eq('user_id', user.id)
+                  .maybeSingle();
+
+                // Создаём/обновляем связь (токены остаются null — OAuth для интеграции настраивается позже через AmoCRMSettings)
+                if (!existing || existing.subdomain !== subdomain) {
+                  await supabase
+                    .from('crm_connections')
+                    .upsert(
+                      {
+                        user_id: user.id,
+                        crm_type: 'amocrm',
+                        subdomain: subdomain,
+                      },
+                      { onConflict: 'user_id,crm_type' }
+                    );
+                }
+
+                // После успешной привязки очищаем pending, чтобы не повторять каждый логин
+                localStorage.removeItem('pending_amocrm_install');
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to link amoCRM install after auth:', e);
+          // Не блокируем вход/редирект, даже если привязка не удалась (например, из-за RLS)
+        }
+
+        // 2) Редирект после авторизации
+        // Если redirect содержит языковой префикс, используем его напрямую
+        // Иначе добавляем языковой префикс
+        if (redirectTo.match(/^\/(ru|en|ka)\//)) {
+          window.location.href = redirectTo;
+        } else {
+          // Все пользователи (и застройщики, и менеджеры) попадают в /admin
+          // Там уже будет определяться контекст на основе роли
+          navigate('/admin');
+        }
+      };
+
+      void run();
     }
   }, [user, loading, roleLoading, navigate, redirectTo, isRecovery, userRole]);
 

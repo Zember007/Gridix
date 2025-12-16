@@ -15,6 +15,31 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
   const [ssoHandled, setSsoHandled] = useState(false);
   const [ssoProcessing, setSsoProcessing] = useState(false);
 
+  // Если открылись из amoCRM без SSO — сохраняем параметры установки в localStorage,
+  // чтобы не потерять их при редиректе на /auth/signup
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(location.search);
+      const amoInstall = sp.get('amo_install') === '1';
+      const amoAccountId = sp.get('amo_account_id');
+      const amoUserId = sp.get('amo_user_id');
+      const amoSubdomain = sp.get('amo_subdomain');
+
+      if (!amoInstall && !amoAccountId && !amoUserId && !amoSubdomain) return;
+
+      const payload = {
+        amo_install: amoInstall ? '1' : '0',
+        amo_account_id: amoAccountId,
+        amo_user_id: amoUserId,
+        amo_subdomain: amoSubdomain,
+        captured_at: new Date().toISOString(),
+      };
+      localStorage.setItem('pending_amocrm_install', JSON.stringify(payload));
+    } catch (e) {
+      console.error('Failed to persist amoCRM install params:', e);
+    }
+  }, [location.search]);
+
   // Обработка SSO-токена из query-параметра ?sso=
   // Используем Bring Your Own JWT подход: обмениваем custom JWT на полноценную сессию
   useEffect(() => {
@@ -115,10 +140,21 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
   // 3. НЕТ SSO токена в URL (или он уже обработан)
   // 4. Обработка SSO не идет
   if (requireAuth && !user && !hasSso && !ssoProcessing) {
+    const amoParams = new URLSearchParams(location.search);
+    const hasAmoInstall =
+      amoParams.get('amo_install') === '1' ||
+      amoParams.has('amo_account_id') ||
+      amoParams.has('amo_user_id') ||
+      amoParams.has('amo_subdomain');
+
     // Получаем текущий язык из URL и создаем правильный путь для авторизации
     const currentLanguage = getLanguageFromPath(location.pathname);
-    const authPath = addLanguageToPath('/auth', currentLanguage);
-    return <Navigate to={`${authPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    const authPath = addLanguageToPath(hasAmoInstall ? '/auth/signup' : '/auth', currentLanguage);
+
+    // Сохраняем полный redirect (pathname+search), чтобы после регистрации вернуться в нужную страницу,
+    // а query с amo-параметрами не потерялся
+    const redirectValue = location.pathname + (location.search || '');
+    return <Navigate to={`${authPath}?redirect=${encodeURIComponent(redirectValue)}`} replace />;
   }
 
   // Проверяем, требуется ли установка пароля

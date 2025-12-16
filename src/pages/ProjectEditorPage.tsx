@@ -1,7 +1,6 @@
 
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ProjectEditor from '@/components/projects/ProjectEditor';
-import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 
 interface ProjectEditorPageProps {
   useId?: boolean;
@@ -9,7 +8,7 @@ interface ProjectEditorPageProps {
 
 const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   const { projectId, projectSlug } = useParams<{ projectId?: string; projectSlug?: string }>();
-  const { navigate } = useLanguageNavigation();
+  const navigate = useNavigate();
   
   // Определяем идентификатор проекта в зависимости от типа маршрута
   const projectIdentifier = useId ? projectId : (projectSlug || projectId);
@@ -17,7 +16,7 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
   const actualProjectId = isNew ? '' : projectIdentifier;
 
   const goBack = () => {
-    navigate('/admin');
+    navigate(-1);
   };
 
   return (
