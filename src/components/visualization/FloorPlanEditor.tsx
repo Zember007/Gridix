@@ -486,7 +486,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
             
             if (!targetApts || targetApts.length === 0) {
               const [area, rooms] = key.split('_');
-              console.log(`No apartments found with area ${area}m² and ${rooms} rooms on floor ${targetFloor}`);
               continue;
             }
 
@@ -507,7 +506,6 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
                   })
                   .eq('id', targetApt.id);
                 
-                console.log(`Updated polygon for apartment ${targetApt.apartment_number} (${key}) on floor ${targetFloor} from source ${sourceApt.apartment_number}`);
               } catch (error) {
                 console.error('Error updating apartment polygon:', error, {
                   apartmentId: targetApt.id,

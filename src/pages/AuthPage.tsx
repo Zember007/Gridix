@@ -88,7 +88,6 @@ const AuthPage = () => {
         };
 
         localStorage.setItem('pending_referral', JSON.stringify(referralData));
-        console.log('Referral data saved to localStorage:', referralData);
 
         // Логируем клик по ссылке в edge-функцию (без авторизации)
         try {

@@ -51,14 +51,12 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
       return;
     }
 
-    console.log('Processing SSO token from URL...');
     setSsoHandled(true);
     setSsoProcessing(true);
 
     (async () => {
       try {
         // Verify and decode the signed SSO token
-        console.log('Verifying SSO token...');
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         
         if (!supabaseUrl) {
@@ -93,7 +91,6 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
           return;
         }
 
-        console.log('SSO session set successfully for user:', sessionData.user?.email);
 
         // Очищаем sso из URL, чтобы избежать повторной обработки и утечки токена в историю
         const newSearch = new URLSearchParams(location.search);
@@ -103,7 +100,6 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
           location.pathname + (newSearchString ? `?${newSearchString}` : '') + location.hash;
         window.history.replaceState({}, '', newUrl);
         
-        console.log('SSO token removed from URL');
         setSsoProcessing(false);
       } catch (e) {
         console.error('Failed to process SSO token:', e);

@@ -393,7 +393,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
     setIsCreating(true);
     try {
-      console.log('Начало создания проекта с данными:', importedData.length, 'записей');
       
       // Вычисляем максимальный этаж из данных (только для типа building)
       let maxFloor = 1;
@@ -401,12 +400,10 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         maxFloor = Math.max(...importedData.map(row => {
           const floorValue = row[columnMapping.floor];
           const parsedFloor = parseInt(String(floorValue)) || 1;
-          console.log('Этаж из строки:', floorValue, 'преобразован в:', parsedFloor);
           return parsedFloor;
         }));
       }
 
-      console.log('Максимальный этаж:', maxFloor);
 
       // Создаем реальный проект
       const projectDataForCreation = {
@@ -442,7 +439,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       const project = await createProject(projectDataForCreation);
 
       if (!project) throw new Error('Failed to create project');
-      console.log('Проект создан:', project);
 
       // Сохраняем кастомные поля в реальный проект
       if (customFields.length > 0) {
@@ -482,8 +478,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
         if (floorError) {
           console.error('Ошибка при создании этажей:', floorError);
-        } else {
-          console.log('Этажи созданы для визуализации');
         }
       }
 
@@ -561,11 +555,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
           }
         });
 
-        if (apartmentNumber !== baseApartmentNumber) {
-          console.log(`Номер квартиры "${baseApartmentNumber}" изменен на "${apartmentNumber}" для избежания дублирования`);
-        }
-        console.log(`Квартира ${apartmentNumber}: этаж ${floorNumber}, комнат ${rooms}, площадь ${area}, статус ${status}`);
-
+   
         return {
           project_id: project.id,
           apartment_number: apartmentNumber,
@@ -579,7 +569,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         };
       });
 
-      console.log('Данные квартир для вставки:', apartmentData.slice(0, 3));
 
       const { error: apartmentError } = await supabase
         .from('apartments')
@@ -601,7 +590,6 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         return acc;
       }, {} as Record<number, number>);
 
-      console.log('Квартиры по этажам:', apartmentsByFloor);
 
       const successMessage = projectData.type === 'building' 
         ? t('excel.url.toast.projectCreated', { 

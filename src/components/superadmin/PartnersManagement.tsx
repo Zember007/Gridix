@@ -72,7 +72,7 @@ export function PartnersManagement() {
 
   useEffect(() => {
     fetchPartners();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePartnerAction = async (partnerId: string, action: 'suspend' | 'activate') => {
@@ -123,18 +123,13 @@ export function PartnersManagement() {
   };
 
   const filteredPartners = partners.filter(partner => {
-    console.log(partner.user_profiles.full_name);
-    console.log(partner.user_profiles.email);
-    console.log(partner.partner_code);
-    console.log(searchTerm);
-    console.log(statusFilter);
-    const matchesSearch = 
+    const matchesSearch =
       partner.user_profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       partner.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       partner.partner_code.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesFilter = statusFilter === 'all' || partner.status === statusFilter;
-    
+
     return matchesSearch && matchesFilter;
   });
 
@@ -305,16 +300,16 @@ export function PartnersManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge 
+                    <Badge
                       variant={
-                        partner.status === 'active' ? 'default' : 
-                        partner.status === 'suspended' ? 'destructive' : 
-                        'secondary'
+                        partner.status === 'active' ? 'default' :
+                          partner.status === 'suspended' ? 'destructive' :
+                            'secondary'
                       }
                     >
                       {partner.status === 'active' ? 'Активный' :
-                       partner.status === 'suspended' ? 'Приостановлен' :
-                       'Неактивный'}
+                        partner.status === 'suspended' ? 'Приостановлен' :
+                          'Неактивный'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -368,7 +363,7 @@ export function PartnersManagement() {
               {action === 'suspend' ? 'Приостановить партнёра' : 'Активировать партнёра'}
             </DialogTitle>
             <DialogDescription>
-              {action === 'suspend' 
+              {action === 'suspend'
                 ? 'Вы уверены, что хотите приостановить этого партнёра? Он не сможет получать новые комиссии.'
                 : 'Вы уверены, что хотите активировать этого партнёра? Он снова сможет получать комиссии.'
               }
@@ -387,21 +382,21 @@ export function PartnersManagement() {
                   Код: {selectedPartner.partner_code}
                 </p>
               </div>
-              
+
               <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsActionDialogOpen(false)}
                 >
                   Отмена
                 </Button>
-                <Button 
+                <Button
                   variant={action === 'suspend' ? 'destructive' : 'default'}
                   onClick={() => selectedPartner && handlePartnerAction(selectedPartner.id, action!)}
                   disabled={isProcessing}
                 >
-                  {isProcessing ? "Обработка..." : 
-                   action === 'suspend' ? "Приостановить" : "Активировать"}
+                  {isProcessing ? "Обработка..." :
+                    action === 'suspend' ? "Приостановить" : "Активировать"}
                 </Button>
               </div>
             </div>

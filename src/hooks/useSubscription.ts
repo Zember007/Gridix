@@ -147,16 +147,13 @@ export function useSubscription(projectId?: string) {
 
   const fetchProjectSubscriptions = async () => {
     if (!user) {
-      console.log('useSubscription: No user, skipping fetchProjectSubscriptions');
       setLoading(false);
       return;
     }
 
-    console.log('useSubscription: Fetching project subscriptions for user:', user.id);
     
     try {
       const session = await supabase.auth.getSession();
-      console.log('useSubscription: Session token available:', !!session.data.session?.access_token);
       
       const { data, error } = await supabase.functions.invoke('subscription-management', {
         body: { action: 'get-project-subscriptions' },
@@ -165,13 +162,11 @@ export function useSubscription(projectId?: string) {
         },
       });
 
-      console.log('useSubscription: Function response:', { data, error });
 
       if (error) {
         throw error;
       }
 
-      console.log('useSubscription: Setting project subscriptions:', data.projects || []);
       setProjectSubscriptions(data.projects || []);
     } catch (err) {
       console.error('Error fetching project subscriptions:', err);
@@ -200,7 +195,6 @@ export function useSubscription(projectId?: string) {
       if (error) {
         throw error;
       }
-console.log('useSubscription: Plans:', data.plans);
       setPlans(data.plans || []);
     } catch (err) {
       console.error('Error fetching plans:', err);

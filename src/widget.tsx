@@ -165,7 +165,6 @@ function lazyLoadWithObserver(
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           observer.disconnect();
-          console.log('GridixWidget: Widget entered viewport, loading...');
           void initFn();
         }
       });
@@ -177,9 +176,7 @@ function lazyLoadWithObserver(
   );
 
   observer.observe(container);
-  console.log(
-    'GridixWidget: Lazy loading enabled, waiting for widget to enter viewport'
-  );
+
 }
 
 function WidgetApp(props: { projectId?: string | undefined; }) {

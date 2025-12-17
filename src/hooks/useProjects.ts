@@ -92,7 +92,6 @@ export const useProject = (identifier?: string) => {
       setError(null);
       
       try {
-        console.log('loadProject', identifier);
         
         const data = await loadProject(identifier);
         
@@ -110,10 +109,6 @@ export const useProject = (identifier?: string) => {
           setProject(null);
         }
       } finally {
-        console.log('loading false', identifier);
-        console.log(!controller.signal.aborted, 'controller.signal.aborted');
-        console.log(mountedRef.current, 'mountedRef.current');
-        console.log(identifierRef.current === identifier, 'identifierRef.current === identifier');
         // Не блокируемся на controller.signal.aborted, т.к. сам запрос не принимает signal
         if (mountedRef.current && identifierRef.current === identifier) {
           setLoading(false);
@@ -162,7 +157,6 @@ export const useProject = (identifier?: string) => {
         setProject(null);
       }
     } finally {
-      console.log('loading false2', identifier);
 
       if (!controller.signal.aborted && mountedRef.current) {
         setLoading(false);

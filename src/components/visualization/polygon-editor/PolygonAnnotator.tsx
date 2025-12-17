@@ -152,28 +152,22 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     // Экспортируем метод для получения актуального currentShape из аннотатора
     useImperativeHandle(ref, () => ({
         getCurrentShape: async () => {
-            console.log('[getCurrentShape] Starting...');
             
             if (!annotator) {
-                console.log('[getCurrentShape] No annotator available');
                 return null;
             }
             
             if (!currentShape) {
-                console.log('[getCurrentShape] No currentShape, checking annotations...');
                 // Пытаемся получить первую аннотацию, если currentShape нет
                 if (annotations.length > 0) {
                     const shape = await annotationToShape(annotations[0] as ImageAnnotation);
-                    console.log('[getCurrentShape] Returning first annotation as shape:', shape);
                     return shape;
                 }
-                console.log('[getCurrentShape] No annotations available');
                 return null;
             }
             
             // Сохраняем ID текущей аннотации
             const currentShapeId = currentShape.id;
-            console.log('[getCurrentShape] CurrentShape ID:', currentShapeId);
             
             try {
                 // Программно снимаем выделение, чтобы закоммитить все изменения
@@ -184,14 +178,11 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 
                 // Получаем все аннотации и находим нужную по ID
                 const allAnnotations = annotations;
-                console.log('[getCurrentShape] All annotations:', allAnnotations.length);
                 const updatedAnnotation = allAnnotations.find(a => a.id === currentShapeId);
                 
                 if (updatedAnnotation) {
-                    console.log('[getCurrentShape] Found updated annotation');
                     // Конвертируем аннотацию в Shape с актуальными координатами
                     const shape = await annotationToShape(updatedAnnotation as ImageAnnotation);
-                    console.log('[getCurrentShape] Converted to shape:', shape);
                     
                     // Восстанавливаем выделение
                     annotator.setSelected(currentShapeId);
@@ -199,7 +190,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                     return shape;
                 }
                 
-                console.log('[getCurrentShape] Annotation not found, returning currentShape');
                 // Если не нашли аннотацию, возвращаем currentShape
                 return currentShape;
             } catch (error) {
@@ -261,7 +251,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             return;
         }
         
-        console.log('Shapes IDs changed, updating annotator');
         prevShapesRef.current = shapes;
         
         // Показываем только неактивные shapes (фоновые)
@@ -283,7 +272,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             return;
         }
         
-        console.log('CurrentShape ID changed:', prevCurrentShapeIdRef.current, '->', currentShapeId);
         prevCurrentShapeIdRef.current = currentShapeId;
         
         // Показываем все shapes: фоновые + текущий редактируемый
@@ -305,7 +293,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 setTimeout(() => {
                     const annotation = annotations.find(a => a.id === currentShape.id);
                     if (annotation) {
-                        console.log('Selecting annotation for editing:', currentShape.id);
                         annotator.setSelected(annotation.id);
                     }
                 }, 100);
@@ -326,39 +313,32 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         if (!annotator) return;
 
         const handleCreate = async (annotation: ImageAnnotation) => {
-            console.log('[handleCreate] Annotation created:', annotation.id);
             const shape = await annotationToShape(annotation);
             
             if (shape) {
-                console.log('[handleCreate] Converted to shape:', shape);
                 // Если мы в режиме редактирования и создаем новый полигон
                 if (drawingEnabled && onCurrentShapeUpdate) {
                     // Помечаем новый shape как незавершенный (редактируемый)
                     const editableShape = { ...shape, isSelected: false };
-                    console.log('[handleCreate] Updating currentShape to:', editableShape);
                     onCurrentShapeUpdate(editableShape);
                 }
             }
         };
 
         const handleUpdate = async (annotation: ImageAnnotation) => {
-            console.log('[handleUpdate] Annotation updated:', annotation.id);
             const shape = await annotationToShape(annotation);
             
             if (shape) {
-                console.log('[handleUpdate] Converted to shape:', shape);
                 // Если обновляемая аннотация - это currentShape
                 if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
                     // Сохраняем статус isSelected при обновлении
                     const updatedShape = { ...shape, isSelected: currentShape.isSelected };
-                    console.log('[handleUpdate] Updating currentShape to:', updatedShape);
                     onCurrentShapeUpdate(updatedShape);
                 }
             }
         };
 
         const handleDelete = (annotation: ImageAnnotation) => {
-            console.log('Annotation deleted:', annotation);
             
             // Если удалили currentShape, сбрасываем его
             if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
@@ -367,7 +347,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         };
 
         const handleSelectionChanged = async (selected: ImageAnnotation[]) => {
-            console.log('Selection changed:', selected);
             
             if (selected.length > 0) {
                 // Пользователь выделил аннотацию - делаем её currentShape
@@ -375,7 +354,6 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 const shape = await annotationToShape(annotation);
                 
                 if (shape && onCurrentShapeUpdate) {
-                    console.log('Setting currentShape from selection:', shape);
                     onCurrentShapeUpdate(shape);
                 }
             } else if (!drawingEnabled) {

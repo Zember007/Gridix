@@ -25,15 +25,9 @@ export const useManagerProjects = () => {
   const [error, setError] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
-    console.log('loadProjects called with:', { 
-      user: user?.id, 
-      userRoleType: userRole.type, 
-      isManager, 
-      developerIds 
-    });
+
 
     if (!user || userRole.type === 'loading') {
-      console.log('Skipping load - user not ready or role loading');
       return;
     }
 
@@ -42,7 +36,6 @@ export const useManagerProjects = () => {
 
     try {
       if (isManager && developerIds.length > 0) {
-        console.log('Loading projects for manager, developer IDs:', developerIds);
         
         // Получаем manager_account_id для текущего пользователя
         const { data: managerAccounts } = await supabase
@@ -80,7 +73,6 @@ export const useManagerProjects = () => {
           .in('user_id', developerIds)
           .order('created_at', { ascending: false });
 
-        console.log('Manager projects query result:', { data: allProjectsData, error: projectsError });
 
         if (projectsError) throw projectsError;
 
@@ -103,10 +95,8 @@ export const useManagerProjects = () => {
           developer_info: project.user_profiles
         }));
 
-        console.log('Processed projects for manager:', projectsWithDeveloper.length);
         setProjects(projectsWithDeveloper);
       } else if (!isManager && user.id) {
-        console.log('Loading projects for developer:', user.id);
         
         // Для застройщиков загружаем только их проекты
         const { data: projectsData, error: projectsError } = await supabase
@@ -115,12 +105,10 @@ export const useManagerProjects = () => {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        console.log('Developer projects query result:', { data: projectsData, error: projectsError });
 
         if (projectsError) throw projectsError;
         setProjects(projectsData || []);
       } else {
-        console.log('No projects to load - not manager or no developer IDs');
         setProjects([]);
       }
     } catch (err: any) {

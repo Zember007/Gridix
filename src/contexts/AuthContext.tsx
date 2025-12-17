@@ -151,17 +151,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           const maxAge = 24 * 60 * 60 * 1000; // 24 часа
           if (partnerCode && timestamp && Date.now() - timestamp < maxAge) {
-            console.log('Processing referral from localStorage:', {
-              partnerCode,
-              invitationCode,
-              invitationType,
-              utmSource,
-              utmMedium,
-              utmCampaign,
-            });
+            
 
             if (invitationCode && invitationType === 'managed') {
-              console.log('Processing managed invitation (after auth)...');
               const { data: invitationData, error: invitationError } =
                 await supabase.functions.invoke('partner-program', {
                   body: {
@@ -181,16 +173,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   invitationError,
                 );
               } else if (invitationData?.success) {
-                console.log(
-                  'Invitation processed successfully (after auth):',
-                  invitationData.partner_name,
-                  'Link type:',
-                  invitationData.link_type,
-                );
+              
                 localStorage.removeItem('pending_referral');
               }
             } else {
-              console.log('Processing regular referral (after auth)...');
               const { data: referralData, error: referralError } =
                 await supabase.functions.invoke('partner-program', {
                   body: {
@@ -208,12 +194,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   referralError,
                 );
               } else if (referralData?.success) {
-                console.log(
-                  'Referral tracked successfully (after auth):',
-                  referralData.partner_name,
-                  'Link type:',
-                  referralData.link_type,
-                );
+               
                 localStorage.removeItem('pending_referral');
               }
             }

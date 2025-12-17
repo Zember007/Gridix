@@ -67,19 +67,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
 
 
-  // Логируем состояние проекта для диагностики
-  useEffect(() => {
-    console.log('Project and apartment state:', {
-      projectIdentifier,
-      apartmentIdentifier,
-      project: project ? 'loaded' : 'not loaded',
-      apartment: apartment ? 'loaded' : 'not loaded',
-      projectLoading,
-      apartmentLoading,
-      projectError,
-      apartmentError
-    });
-  }, [projectIdentifier, apartmentIdentifier, project, apartment, projectLoading, apartmentLoading, projectError, apartmentError]);
 
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
@@ -312,7 +299,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const goBackToProject = () => {
     if (onClose) {
-      console.log('onClose', onClose);
       onClose();
       return;
     }

@@ -44,7 +44,6 @@ const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
   // клонируем поток, чтобы можно было читать дважды
   const clone = response.clone();
   const blob = await clone.blob();
-  console.log('PDF MIME:', blob.type, 'Size:', blob.size);
 
   // читаем основное тело
   return await response.arrayBuffer();

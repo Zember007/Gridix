@@ -170,7 +170,6 @@ export const useProjectsManager = () => {
 
     // Проверяем, не загружается ли уже
     if (loadingStates.has(`project-${identifier}`)) {
-      console.log('loadingStates', loadingStates.get(`project-${identifier}`));
       
       try {
         return await loadingStates.get(`project-${identifier}`);
@@ -181,7 +180,6 @@ export const useProjectsManager = () => {
 
     // Создаем промис загрузки
     const loadingPromise = (async (): Promise<Project | null> => {
-      console.log('loadingPromise', identifier);
       
       try {
         // Проверяем, является ли identifier UUID или slug

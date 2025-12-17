@@ -475,7 +475,6 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleAddNote = (leadId: string, noteText: string) => {
     // UI-level only for now; server-side history can be added later
-    console.log('Add note', leadId, noteText);
   };
 
   const handleAddTag = async (leadId: string, tag: string) => {

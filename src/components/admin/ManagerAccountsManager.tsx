@@ -285,7 +285,6 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
     const encodedToken = encodeURIComponent(token);
     const invitationUrl = `${siteUrl}/accept-invitation?token=${encodedToken}`;
     
-    console.log('Generated invitation URL:', invitationUrl);
     
     try {
       await navigator.clipboard.writeText(invitationUrl);

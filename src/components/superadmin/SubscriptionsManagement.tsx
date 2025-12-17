@@ -738,7 +738,6 @@ export function SubscriptionsManagement() {
             </TableHeader>
             <TableBody>
               {pendingSubscriptions.map((sub) => {
-                console.log(sub);
                 return (
                   <TableRow key={sub.id}>
                     <TableCell>

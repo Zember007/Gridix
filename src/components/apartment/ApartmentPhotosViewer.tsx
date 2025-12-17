@@ -92,7 +92,6 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
       }
 
       const layoutType = getLayoutType(typeof currentRooms === 'number' ? currentRooms : Number(currentRooms));
-
       // Если переданы предзагруженные фото планировок — используем их, иначе загружаем
       let layoutPhotos: LayoutPhoto[] | null = null;
       if (preloadedLayoutPhotos && preloadedLayoutPhotos.length > 0) {
@@ -123,6 +122,8 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
         .order('order_index', { ascending: true });
 
       if (apartmentPhotosError) throw apartmentPhotosError;
+
+
       
       // Объединяем фотографии: сначала планировки, затем индивидуальные
       const combinedPhotos: CombinedPhoto[] = [
@@ -160,7 +161,7 @@ const ApartmentPhotosViewer = ({ apartmentId, projectId, roomsHint, preloadedLay
       return;
     }
     // Если нужно работать только с предзагруженными, не делаем запрос и ждём пропсы
-    if (fetchMode === 'preloaded-only') {
+    if (fetchMode === 'preloaded-only' && projectId !== '04bcb797-a155-479c-a9ae-131ce850375f') {
       setLoading(true);
       return;
     }

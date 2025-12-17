@@ -72,8 +72,6 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           // Получаем заголовки из первой записи
           const headers = Object.keys(jsonData[0]).filter(header => header.trim() !== '');
 
-          console.log('Извлеченные заголовки:', headers);
-          console.log('Обработанные данные:', jsonData.slice(0, 3));
 
           setExcelColumns(headers);
           setImportedData(jsonData);

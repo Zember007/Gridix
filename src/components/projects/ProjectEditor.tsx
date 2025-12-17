@@ -122,7 +122,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       return;
     }
 
-    console.log('loadProject effect triggered');
 
     try {
       // Проверяем права на редактирование
@@ -136,7 +135,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       );
 
       if (!canEdit) {
-        console.log('canEdit', canEdit, 'isManagerMode', isManagerMode, 'activeWorkspaceId', activeWorkspaceId, 'project.user_id', cachedProject.user_id);
         setAccessError(t('projectEditor.noEditRights'));
         setLoading(false);
         return;

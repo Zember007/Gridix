@@ -273,7 +273,6 @@ const PolygonCanvas = ({
         const nearestPointIndex = findNearestPoint(point, canvasPoints, 15 / zoom);
         
         if (nearestPointIndex !== null) {
-          console.log('Нашли точку для перетаскивания:', nearestPointIndex);
           setDragPoint({ shapeIndex: 0, pointIndex: nearestPointIndex });
           setIsDrawing(true);
           return;
@@ -294,7 +293,6 @@ const PolygonCanvas = ({
         // Проверяем клик по точкам
         const nearestPointIndex = findNearestPoint(point, canvasPoints, 15 / zoom);
         if (nearestPointIndex !== null) {
-          console.log('Нашли точку для перетаскивания в shapes:', nearestPointIndex);
           setDragPoint({ shapeIndex: i, pointIndex: nearestPointIndex });
           setIsDrawing(true);
           onCurrentShapeUpdate(shape);
@@ -416,7 +414,6 @@ const PolygonCanvas = ({
       const point = getCanvasCoordinates(e.clientX, e.clientY);
       const percentPoint = canvasToPercent(point);
       
-      console.log('Перетаскивание точки:', dragPoint.pointIndex, 'в позицию:', percentPoint);
       
       // Обновляем точку в фигуре
       if (currentShape) {

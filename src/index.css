@@ -472,10 +472,6 @@ svg text {
   }
 }
 
-[data-theme="light"] {
-  height: 100%;
-}
-
 [title="Zoom in"]::after {
   content: '';
   background: url("/images/zoomin_rest.svg") no-repeat center center;

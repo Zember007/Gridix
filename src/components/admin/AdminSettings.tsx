@@ -77,7 +77,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
   }, []);
 
   useEffect(() => {
-    console.log('userProfile', userProfile);
 
     if (userProfile) {
       // Load profile data from user_profiles table instead of user_metadata
@@ -97,7 +96,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               company_name: userProfile.user_metadata.company_name || '',
             });
           } else {
-            console.log('Loaded profile data:', data);
             setSettings({
               user_id: userProfile.id,
               company_name: data?.company_name || '',
@@ -141,7 +139,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               updated_at: null,
             });
           } else {
-            console.log('Loaded company settings:', data);
             setCompanySettings({
               id: data?.id || '',
               user_id: userProfile.id,
@@ -268,8 +265,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         updated_at: new Date().toISOString()
       };
 
-      console.log('Saving profile data:', profileData);
-      console.log('User ID:', userProfile.id);
 
       const { data: profileResult, error: profileError } = await supabase
         .from('user_profiles')
@@ -277,7 +272,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         .eq('id', userProfile.id)
         .select();
 
-      console.log('Profile update result:', { data: profileResult, error: profileError });
 
       if (profileError) {
         console.error('Supabase profile error:', profileError);
@@ -298,7 +292,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         updated_at: new Date().toISOString()
       };
 
-      console.log('Saving company settings:', companyData);
 
       const { data: companyResult, error: companyError } = await supabase
         .from('company_settings')
@@ -306,7 +299,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         .eq('user_id', userProfile.id)
         .select();
 
-      console.log('Company settings update result:', { data: companyResult, error: companyError });
 
       if (companyError) {
         console.error('Supabase company settings error:', companyError);

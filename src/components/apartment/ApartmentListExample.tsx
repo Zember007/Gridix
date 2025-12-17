@@ -53,8 +53,6 @@ const ApartmentListExample = ({ projectId }: ApartmentListExampleProps) => {
   };
 
   const handleApartmentSelect = (apartment: Apartment) => {
-    console.log('Selected apartment:', apartment);
-    // Здесь можно добавить логику для отображения деталей квартиры
   };
 
   if (loading) {

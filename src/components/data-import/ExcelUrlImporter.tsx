@@ -105,7 +105,6 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       if (isGoogleSheetsUrl(excelUrl)) {
         try {
           urlToFetch = convertGoogleSheetsUrl(excelUrl);
-          console.log('Converted Google Sheets URL:', urlToFetch);
         } catch (error) {
           toast.error(t('excel.url.toast.invalidGs'));
           setIsLoading(false);
@@ -141,8 +140,6 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       const headers = Object.keys(jsonData[0]).filter(header => header.trim() !== '');
      
   
-      console.log('Извлеченные заголовки:', headers);
-      console.log('Обработанные данные:', jsonData.slice(0, 3));
       
       onDataImported(jsonData, headers);
       toast.success(t('excel.url.importedCount', { count: jsonData.length }));

@@ -203,7 +203,6 @@ const BuildingFacadeView = ({
     if (visibleFloors.length > 0) {
       updateImageDimensionsRef.current?.();
       if (isExpanded && isMobile && imgDimensions.width > 0 && imgDimensions.height > 0) {
-        console.log('handleFloorHover', visibleFloors[0]?.floor_number); 
         handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
       }
     }
@@ -232,7 +231,6 @@ const BuildingFacadeView = ({
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && showPopup) {
-        console.log('handleEscape', 'setShowPopup');
         setShowPopup(false);
       }
     };
@@ -244,7 +242,6 @@ const BuildingFacadeView = ({
   // Close popup when switching between expanded/collapsed modes
   useEffect(() => {
     if (showPopup && !isExpanded) {
-      console.log('useEffect', 'setShowPopup');
       setShowPopup(false);
     }
   }, [isExpanded, showPopup]);
@@ -466,13 +463,11 @@ const BuildingFacadeView = ({
   const handleFloorLeave = () => {
     if (!isExpanded) return;
     setHoveredFloor(null);
-    console.log('handleFloorLeave', 'setShowPopup');
     setShowPopup(false);
   };
 
   const handleSVGFloorClick = (floorNumber: number) => {
     // Закрываем попап если он открыт
-    console.log('handleSVGFloorClick', 'setShowPopup');
     setShowPopup(false);
     // Выполняем обычное действие клика
     handleFloorClick(floorNumber);

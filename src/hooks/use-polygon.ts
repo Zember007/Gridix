@@ -63,9 +63,7 @@ export function shapeToPercents(shape: Shape, imageWidth: number, imageHeight: n
     };
   
     const inPixels = shapeToPixels(shape, width, height);
-    console.log("→ В пикселях:", inPixels);
   
     const backToPercents = shapeToPercents(inPixels, width, height);
-    console.log("→ Обратно в проценты:", backToPercents);
   })(); */
 

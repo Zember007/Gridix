@@ -68,7 +68,6 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
           .eq('partner_code', refCode)
           .single();
 
-          console.log(data);
 
         if (error || !data) {
           toast.error(t('auth.invalidReferralCode'));

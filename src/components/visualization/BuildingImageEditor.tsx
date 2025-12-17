@@ -196,11 +196,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
   };
 
-  const handleShapeUpdate = (newShapes: Shape[]) => {
-    // Этот callback больше не используется, так как мы избегаем циклических обновлений
-    // Обновления идут только через onCurrentShapeUpdate
-    console.log('Shapes updated from PolygonAnnotator (ignored to avoid loops):', newShapes);
-  };
+
 
   const handlePolygonSave = async () => {
     if (!currentShape) return;
@@ -212,7 +208,6 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         const actualShape = await polygonAnnotatorRef.current.getCurrentShape();
         if (actualShape) {
           shapeToSave = actualShape;
-          console.log('Using actual shape from annotator:', actualShape);
         }
       }
 

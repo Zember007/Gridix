@@ -192,15 +192,7 @@ export const LeadsKanban: React.FC<{
 
     const firstStageId = funnelStages[0]?.id;
 
-    // Debug logging
-    useEffect(() => {
-        console.log('[LeadsKanban] Rendered with:', {
-            leadsCount: leads.length,
-            stagesCount: funnelStages.length,
-            stages: funnelStages.map(s => ({ id: s.id, name: s.name })),
-            leadStatuses: leads.map(l => ({ name: l.name, status: l.status }))
-        });
-    }, [leads, funnelStages]);
+
 
     return (
         <div 

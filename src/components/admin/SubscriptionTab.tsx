@@ -39,15 +39,8 @@ export default function SubscriptionTab() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
 
-  // Debug logging
-  console.log('SubscriptionTab: projectSubscriptions:', projectSubscriptions);
-  console.log('SubscriptionTab: loading:', loading);
-  console.log('SubscriptionTab: plansLoading:', plansLoading);
 
-  // Debug subscription IDs
-  projectSubscriptions.forEach(project => {
-    console.log(`Project ${project.name} (${project.id}) subscriptions:`, project.user_subscriptions?.map(sub => ({ id: sub.id, status: sub.status })));
-  });
+
 
   if (loading || plansLoading) {
     return (
