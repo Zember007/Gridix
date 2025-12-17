@@ -706,10 +706,8 @@ const BuildingFacadeView = ({
                       <g key={floor.id}>
                         <polygon
                           points={points}
-                          fill={(isHovered || isActive) ? hoverColor : baseColor}
+                          fill={baseColor}
                           fillOpacity={(isHovered || isActive) ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
-                          stroke={(isHovered || isActive) ? hoverColor : baseColor}
-                          strokeWidth={(isHovered || isActive) ? (isMobile ? 0.6 : 0.5) : (isMobile ? 0.3 : 0.2)}
                           className="cursor-pointer transition-all duration-200"
                           data-floor={floor.floor_number}
                           onClick={() => handleSVGFloorClick(floor.floor_number)}
