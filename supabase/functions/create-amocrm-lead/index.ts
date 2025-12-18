@@ -40,6 +40,7 @@ interface TokenResponse {
 interface AmoCRMLead {
   name: string;
   pipeline_id: number;
+  price?: number;
   status_id?: number;
   responsible_user_id?: number;
   _embedded?: {
@@ -53,6 +54,23 @@ interface AmoCRMLead {
       }>;
     }>;
   };
+}
+
+function extractAmoComplexLeadIds(payload: any): { leadId: number | null; contactId: number | null } {
+  // AmoCRM /api/v4/leads/complex may respond as:
+  // - Array of leads
+  // - Object with _embedded.leads
+  // We handle both to avoid losing the created lead id.
+  const lead = Array.isArray(payload)
+    ? payload[0]
+    : payload?._embedded?.leads?.[0] ?? payload?.leads?.[0] ?? null;
+
+  const leadId = typeof lead?.id === 'number' ? lead.id : null;
+  const contactId = typeof lead?._embedded?.contacts?.[0]?.id === 'number'
+    ? lead._embedded.contacts[0].id
+    : null;
+
+  return { leadId, contactId };
 }
 
 async function getValidAccessToken(connection: CRMConnection, supabase: any): Promise<string | null> {
@@ -432,6 +450,8 @@ serve(async (req) => {
     const leadData: AmoCRMLead = {
       name: `Apartment inquiry ${apartment.apartment_number} - ${apartment.projects?.name || 'Project'}`,
       pipeline_id: settings.pipeline_id || 0,
+      // Save price to AmoCRM main lead field (not only in a note)
+      price: Number(apartment.price ?? 0),
       ...(settings.status_id && { status_id: settings.status_id }),
       responsible_user_id: responsibleUserId,
       _embedded: {
@@ -511,28 +531,46 @@ serve(async (req) => {
     const amocrmResult = await amocrmResponse.json();
     console.log('AmoCRM lead created successfully:', amocrmResult);
 
-    // Update lead status in database with AmoCRM IDs
-    if (amocrmResult[0]?.id) {
-      const amocrmLeadId = amocrmResult[0].id;
-      const amocrmContactId = amocrmResult[0]._embedded?.contacts?.[0]?.id;
+    const { leadId: amocrmLeadId, contactId: amocrmContactId } = extractAmoComplexLeadIds(amocrmResult);
+
+    if (!amocrmLeadId) {
+      const diagnostic = `AmoCRM lead created but id not found in response. Response keys: ${Object.keys(amocrmResult || {}).join(',') || '(non-object)'}`;
+      console.error(diagnostic);
 
       await svc
         .from('leads')
         .update({
-          status: 'sent_to_crm',
-          amocrm_lead_id: amocrmLeadId,
-          amocrm_contact_id: amocrmContactId,
-          amocrm_sent_at: new Date().toISOString(),
-          amocrm_error: null
+          status: 'saved_only',
+          amocrm_error: diagnostic,
+          amocrm_retries: 1,
         })
         .eq('id', savedLead.id);
 
-      console.log('Lead status updated in database');
+      return createJsonResponse({
+        success: true,
+        leadId: savedLead.id,
+        message: 'Lead successfully saved. AmoCRM response did not contain lead id; please check integration logs.',
+        crmIntegration: false,
+      }, 200, origin);
     }
 
+    // Update lead status in database with AmoCRM IDs (link local lead -> AmoCRM lead)
+    await svc
+      .from('leads')
+      .update({
+        status: 'sent_to_crm',
+        amocrm_lead_id: amocrmLeadId,
+        amocrm_contact_id: amocrmContactId,
+        amocrm_sent_at: new Date().toISOString(),
+        amocrm_error: null
+      })
+      .eq('id', savedLead.id);
+
+    console.log('Lead status updated in database, linked AmoCRM lead id:', amocrmLeadId);
+
     // Add a detailed note with apartment and client information
-    if (amocrmResult[0]?.id) {
-      const leadId = amocrmResult[0].id;
+    if (amocrmLeadId) {
+      const leadId = amocrmLeadId;
 
       // Create a detailed note with all the information
       const currentDate = new Date().toLocaleString('en-US', {
@@ -594,11 +632,11 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
     return createJsonResponse({
       success: true,
       leadId: savedLead.id, // Our internal lead ID
-      amocrmLeadId: amocrmResult[0]?.id, // AmoCRM lead ID
-      contactId: amocrmResult[0]?._embedded?.contacts?.[0]?.id,
+      amocrmLeadId: amocrmLeadId, // AmoCRM lead ID
+      contactId: amocrmContactId,
       message: 'Lead successfully created and sent to AmoCRM',
       crmIntegration: true,
-      leadUrl: `https://${connection.subdomain}.amocrm.ru/leads/detail/${amocrmResult[0]?.id}`
+      leadUrl: `https://${connection.subdomain}.amocrm.ru/leads/detail/${amocrmLeadId}`
     }, 200, origin);
 
   } catch (error) {

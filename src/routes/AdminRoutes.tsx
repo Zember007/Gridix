@@ -11,6 +11,7 @@ const DeveloperProjectsPage = lazy(
 const AdminAnalyticsPage = lazy(
   () => import("../pages/AdminAnalyticsPage")
 );
+const AmoCrmLeadLinkPage = lazy(() => import("../pages/AmoCrmLeadLinkPage"));
 
 export function AdminRoutes() {
   return (
@@ -61,6 +62,16 @@ export function AdminRoutes() {
         element={
           <ProtectedRoute>
             <ProjectEditorPage useId />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* AmoCRM lead linking (iframe) */}
+      <Route
+        path="amocrm/lead-link"
+        element={
+          <ProtectedRoute>
+            <AmoCrmLeadLinkPage />
           </ProtectedRoute>
         }
       />

@@ -1,7 +1,7 @@
 project_id = "owilwkmenbrcinfwuvyx"
 
-
-
+[functions.amocrm-webhook-callback]
+verify_jwt = false
 
 [functions.create-amocrm-lead]
 verify_jwt = false

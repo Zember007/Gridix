@@ -79,13 +79,16 @@ serve(async (req) => {
     }
 
     const requestBody = await req.json();
-    const { project_id, action, pipeline_id, status_id, responsible_user_id } = requestBody;
-
-    if (!project_id) {
-      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
-    }
-
-    
+    const {
+      project_id,
+      action,
+      pipeline_id,
+      status_id,
+      responsible_user_id,
+      lead_id,
+      apartment_id,
+      data,
+    } = requestBody as Record<string, unknown>;
 
     // Initialize Supabase user client (RLS enforced)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -94,6 +97,286 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
+
+    // Escalate to service role to read sensitive tokens AFTER access check
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const svc = createClient(supabaseUrl, supabaseServiceKey);
+
+    const normalizeAmoLeadId = (input: unknown): number | null => {
+      if (typeof input === 'number' && Number.isFinite(input)) return input;
+      if (typeof input === 'string' && input.trim() !== '' && Number.isFinite(Number(input))) {
+        return Number(input);
+      }
+      return null;
+    };
+
+    const buildLeadBindingResponse = (row: any) => {
+      const project = row?.projects;
+      const apartment = row?.apartments;
+
+      return {
+        bound: true,
+        lead: {
+          id: row?.id,
+          amocrm_lead_id: row?.amocrm_lead_id ?? null,
+        },
+        project: project
+          ? {
+            id: project.id,
+            slug: project.slug ?? null,
+            name: project.name ?? null,
+            project_type: project.project_type ?? null,
+          }
+          : null,
+        apartment: apartment
+          ? {
+            id: apartment.id,
+            apartment_number: apartment.apartment_number ?? null,
+          }
+          : null,
+      };
+    };
+
+    // Special action: update lead (local + remote AmoCRM)
+    if (action === 'update_lead') {
+      if (!lead_id) {
+        return createJsonResponse({ error: 'lead_id is required for update_lead' }, 400, origin);
+      }
+
+      const allowedKeys = new Set([
+        'name',
+        'pipeline_stage_id',
+        'email',
+        'phone',
+        'notes',
+        'tags',
+        'assigned_to_user_id',
+      ]);
+
+      const inputPatch = (data && typeof data === 'object') ? (data as Record<string, unknown>) : {};
+      const localPatch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(inputPatch)) {
+        if (allowedKeys.has(k)) localPatch[k] = v;
+      }
+
+      if (Object.keys(localPatch).length === 0) {
+        return createJsonResponse({ success: true, message: 'Nothing to update' }, 200, origin);
+      }
+
+      // Check lead access via RLS
+      const { data: lead, error: leadError } = await userClient
+        .from('leads')
+        .select('id, project_id, amocrm_lead_id')
+        .eq('id', lead_id)
+        .single();
+
+      if (leadError || !lead) {
+        return createJsonResponse({ error: 'Lead not found or access denied' }, 404, origin);
+      }
+
+      // Best-effort remote sync (only for name/stage, only if lead is linked to AmoCRM and project has AmoCRM configured)
+      const remoteName = typeof localPatch.name === 'string' ? localPatch.name : undefined;
+      const remoteStageId = typeof localPatch.pipeline_stage_id === 'string' ? localPatch.pipeline_stage_id : undefined;
+
+      if (lead.amocrm_lead_id && (remoteName || remoteStageId)) {
+        const { data: projectSettings } = await svc
+          .from('project_crm_settings')
+          .select('*, crm_connections(*)')
+          .eq('project_id', lead.project_id)
+          .maybeSingle();
+
+        const crmConnection = projectSettings?.crm_connections as unknown as CRMConnection | undefined;
+
+        if (crmConnection?.crm_type === 'amocrm' && crmConnection.subdomain) {
+          const { accessToken } = await getValidAccessToken(crmConnection, svc);
+          if (accessToken) {
+            const baseUrl = `https://${crmConnection.subdomain}.amocrm.ru/api/v4`;
+            const headers = {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            };
+
+            const amoPatch: Record<string, unknown> = { id: lead.amocrm_lead_id };
+            if (remoteName) amoPatch.name = remoteName;
+
+            if (remoteStageId) {
+              // Map local stage -> AmoCRM status/pipeline
+              const { data: stage, error: stageError } = await svc
+                .from('crm_funnel_stages')
+                .select('funnel_id, amocrm_status_id, amocrm_pipeline_id')
+                .eq('id', remoteStageId)
+                .single();
+
+              if (!stageError && stage?.amocrm_status_id && stage?.amocrm_pipeline_id) {
+                // Ensure stage belongs to the same project funnel
+                const { data: funnel } = await svc
+                  .from('crm_funnels')
+                  .select('id, project_id')
+                  .eq('id', stage.funnel_id)
+                  .maybeSingle();
+
+                if (funnel?.project_id === lead.project_id) {
+                  amoPatch.status_id = stage.amocrm_status_id;
+                  amoPatch.pipeline_id = stage.amocrm_pipeline_id;
+                }
+              }
+            }
+
+            // Only call AmoCRM if we have something besides id
+            if (Object.keys(amoPatch).length > 1) {
+              const amoResp = await fetch(`${baseUrl}/leads`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify([amoPatch]),
+              });
+
+              if (!amoResp.ok) {
+                const errText = await amoResp.text();
+                console.error('Failed to update lead in AmoCRM:', amoResp.status, errText);
+                return createJsonResponse({
+                  error: 'Failed to update lead in AmoCRM',
+                  status: amoResp.status,
+                  details: errText,
+                }, 502, origin);
+              }
+            }
+          }
+        }
+      }
+
+      // Update locally AFTER remote success (to keep them consistent)
+      const { error: updateError } = await userClient
+        .from('leads')
+        .update({ ...localPatch, updated_at: new Date().toISOString() })
+        .eq('id', lead_id);
+
+      if (updateError) {
+        return createJsonResponse({ error: updateError.message }, 400, origin);
+      }
+
+      return createJsonResponse({ success: true }, 200, origin);
+    }
+
+    // Special action: check if AmoCRM lead is already bound to a local Gridix lead/apartment
+    if (action === 'lead_binding_status') {
+      const amoLeadId = normalizeAmoLeadId(lead_id);
+      if (!amoLeadId) {
+        return createJsonResponse({ error: 'lead_id (amo lead id) is required for lead_binding_status' }, 400, origin);
+      }
+
+      // RLS-protected: the caller must be the user associated with this account (via SSO)
+      const { data: existing, error } = await userClient
+        .from('leads')
+        .select(
+          'id, amocrm_lead_id, project_id, apartment_id, projects(id, slug, name, project_type), apartments(id, apartment_number)',
+        )
+        .eq('amocrm_lead_id', amoLeadId)
+        .maybeSingle();
+
+      if (error) {
+        return createJsonResponse({ error: error.message }, 400, origin);
+      }
+
+      if (!existing) {
+        return createJsonResponse({ bound: false }, 200, origin);
+      }
+
+      return createJsonResponse(buildLeadBindingResponse(existing), 200, origin);
+    }
+
+    // Special action: bind an AmoCRM lead to a Gridix apartment and create local lead if missing
+    if (action === 'bind_lead_to_apartment') {
+      const amoLeadId = normalizeAmoLeadId(lead_id);
+      if (!amoLeadId) {
+        return createJsonResponse({ error: 'lead_id (amo lead id) is required for bind_lead_to_apartment' }, 400, origin);
+      }
+      if (typeof project_id !== 'string' || !project_id) {
+        return createJsonResponse({ error: 'project_id is required for bind_lead_to_apartment' }, 400, origin);
+      }
+      if (typeof apartment_id !== 'string' || !apartment_id) {
+        return createJsonResponse({ error: 'apartment_id is required for bind_lead_to_apartment' }, 400, origin);
+      }
+
+      // Access check via RLS
+      const { data: project, error: projectError } = await userClient
+        .from('projects')
+        .select('id, slug, name, project_type')
+        .eq('id', project_id)
+        .single();
+
+      if (projectError || !project) {
+        return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
+      }
+
+      const { data: apartment, error: apartmentError } = await userClient
+        .from('apartments')
+        .select('id, apartment_number, project_id')
+        .eq('id', apartment_id)
+        .single();
+
+      if (apartmentError || !apartment) {
+        return createJsonResponse({ error: 'Apartment not found or access denied' }, 404, origin);
+      }
+
+      if (apartment.project_id !== project.id) {
+        return createJsonResponse({ error: 'Apartment does not belong to selected project' }, 400, origin);
+      }
+
+      // Idempotency: if already exists, do not overwrite (return conflict if mismatched)
+      const { data: existing, error: existingError } = await svc
+        .from('leads')
+        .select('id, project_id, apartment_id, amocrm_lead_id, projects(id, slug, name, project_type), apartments(id, apartment_number)')
+        .eq('amocrm_lead_id', amoLeadId)
+        .maybeSingle();
+
+      if (existingError) {
+        return createJsonResponse({ error: existingError.message }, 400, origin);
+      }
+
+      if (existing) {
+        if (existing.project_id !== project.id || existing.apartment_id !== apartment.id) {
+          return createJsonResponse(
+            {
+              error: 'Lead is already bound to another apartment',
+              ...buildLeadBindingResponse(existing),
+            },
+            409,
+            origin,
+          );
+        }
+
+        return createJsonResponse(buildLeadBindingResponse(existing), 200, origin);
+      }
+
+      const placeholderEmail = `amocrm-lead-${amoLeadId}@gridix.local`;
+      const placeholderPhone = '';
+      const placeholderName = `AmoCRM Lead #${amoLeadId}`;
+
+      const { data: created, error: createError } = await svc
+        .from('leads')
+        .insert({
+          name: placeholderName,
+          email: placeholderEmail,
+          phone: placeholderPhone,
+          project_id: project.id,
+          apartment_id: apartment.id,
+          status: 'pending',
+          source: 'amocrm_widget',
+          amocrm_lead_id: amoLeadId,
+        })
+        .select('id, amocrm_lead_id, project_id, apartment_id, projects(id, slug, name, project_type), apartments(id, apartment_number)')
+        .single();
+
+      if (createError || !created) {
+        return createJsonResponse({ error: createError?.message || 'Failed to create lead' }, 500, origin);
+      }
+
+      return createJsonResponse(buildLeadBindingResponse(created), 200, origin);
+    }
+
+    if (!project_id) {
+      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
+    }
 
     // Check if project exists and user has access via RLS
     const { data: project, error: projectError } = await userClient
@@ -105,10 +388,6 @@ serve(async (req) => {
     if (projectError || !project) {
       return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
     }
-
-    // Escalate to service role to read sensitive tokens AFTER access check
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const svc = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get CRM connection and project settings
     // First get project CRM settings

@@ -184,6 +184,30 @@ serve(async (req) => {
       tokenUrl = `https://${referer}/oauth2/access_token`
     }
 
+    // Проверяем, что этот поддомен ещё не привязан к другому аккаунту
+    const { data: sameSubdomainConnections, error: sameSubdomainError } = await supabase
+      .from('crm_connections')
+      .select('id, user_id')
+      .eq('crm_type', 'amocrm')
+      .eq('subdomain', subdomain)
+      .neq('user_id', project.user_id)
+      .limit(1)
+
+    if (sameSubdomainError) {
+      console.error('Failed to check existing AmoCRM subdomain:', sameSubdomainError)
+      return createJsonResponse({ error: 'subdomain_check_failed' }, 500, origin);
+    }
+
+    if (sameSubdomainConnections && sameSubdomainConnections.length > 0) {
+      console.warn('AmoCRM subdomain already connected to another account:', {
+        subdomain,
+        currentUserId: project.user_id,
+        existingUserId: sameSubdomainConnections[0].user_id,
+      })
+
+      return createJsonResponse({ error: 'subdomain_already_connected' }, 400, origin);
+    }
+
     const tokenData = new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,

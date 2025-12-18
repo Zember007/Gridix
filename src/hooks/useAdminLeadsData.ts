@@ -326,10 +326,24 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const updateLeadMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
-      const { error } = await supabase
-        .from('leads')
-        .update(data)
-        .eq('id', id);
+      console.debug('updateLeadMutation', id, data);
+      const shouldSyncWithAmo = Object.prototype.hasOwnProperty.call(data, 'pipeline_stage_id') ||
+        Object.prototype.hasOwnProperty.call(data, 'name');
+
+      if (shouldSyncWithAmo) {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('amocrm-api', {
+          body: {
+            action: 'update_lead',
+            lead_id: id,
+            data,
+          },
+        });
+        if (fnError) throw fnError;
+        if (fnData?.error) throw new Error(fnData.error);
+        return;
+      }
+
+      const { error } = await supabase.from('leads').update(data).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -473,7 +487,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const handleToggleTask = () => {};
   const handleDeleteTask = () => {};
 
-  const handleAddNote = (leadId: string, noteText: string) => {
+  const handleAddNote = () => {
     // UI-level only for now; server-side history can be added later
   };
 
