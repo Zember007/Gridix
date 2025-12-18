@@ -31,6 +31,7 @@ import { useAdminLeadsData } from '@/hooks/useAdminLeadsData';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { showToast } from '@/lib/toast';
 import type { LeadsFilters } from '@/types/crm';
+import { Button } from '@/components/ui/button';
 
 interface LeadsManagerProps {
   projectId?: string;
@@ -848,13 +849,15 @@ export function LeadsManager({
       />
 
       {/* Mobile FAB */}
-      <button
+      <Button
+        variant="default"
+        size="icon"
         onClick={() => setIsCreateModalOpen(true)}
-        className="lg:hidden fixed bottom-8 right-8 z-30 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-transform hover:scale-105 group"
+        className="lg:hidden fixed bottom-20 right-4 z-30 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-transform hover:scale-105 group"
         aria-label={t('leads.createModal.title')}
       >
-        <Plus size={28} />
-      </button>
+        <Plus size={18} />
+      </Button>
     </div>
   );
 }

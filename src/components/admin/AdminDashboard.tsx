@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { HelpCircle, Menu } from 'lucide-react';
+import { HelpCircle, Menu, MessageCircleQuestionMark } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
@@ -17,6 +17,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar } from '@/components/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
+import { useAmoWidget } from '@/hooks/useAmoWidget';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -206,7 +207,7 @@ const AdminDashboard = () => {
             window.open('https://t.me/gridix_bot', '_blank');
           }}
         >
-          <HelpCircle className="h-5 w-5 lg:h-6 lg:w-6" />
+          <MessageCircleQuestionMark />
         </Button>
       </div>
     </div>
