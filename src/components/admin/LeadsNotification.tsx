@@ -82,14 +82,14 @@ export function LeadsStats({ projectId }: { projectId?: string }) {
           </Badge>
         </div>
       )}
-      {counts.pending > 0 && (
+      {/* {counts.pending > 0 && (
         <div className="flex items-center space-x-1">
           <span className="text-yellow-600">Ожидают:</span>
           <Badge variant="outline" className="text-xs text-yellow-600">
             {counts.pending}
           </Badge>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

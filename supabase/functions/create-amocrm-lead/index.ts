@@ -558,7 +558,7 @@ serve(async (req) => {
     await svc
       .from('leads')
       .update({
-        status: 'sent_to_crm',
+        status: 'pending',
         amocrm_lead_id: amocrmLeadId,
         amocrm_contact_id: amocrmContactId,
         amocrm_sent_at: new Date().toISOString(),
