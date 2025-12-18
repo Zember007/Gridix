@@ -36,10 +36,10 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
     trigger?.event || 'on_stage_entry',
   );
   const [description, setDescription] = useState(
-    trigger?.description || t('leads.tasks.newTask'),
+    trigger?.description || t('leads.triggers.icons.apartmentStatus'),
   );
   const [icon, setIcon] = useState<FunnelTrigger['icon']>(
-    trigger?.icon || 'task',
+    trigger?.icon || 'apartment_status',
   );
   const [config, setConfig] = useState(trigger?.config || {});
 

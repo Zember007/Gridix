@@ -67,7 +67,6 @@ export interface FunnelTrigger {
   stageId: string;
   event: FunnelTriggerEvent;
   icon:
-    | 'clock'
     | 'distribution'
     | 'task'
     | 'status_change'

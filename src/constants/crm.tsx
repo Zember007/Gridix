@@ -20,10 +20,10 @@ export const getTriggerIcons = (
     label: string;
   };
 } => ({
-  clock: {
-    icon: React.createElement(Clock, { size: 16 }),
-    color: 'bg-gray-100 text-gray-600',
-    label: t('leads.triggers.icons.clock'),
+  apartment_status: {
+    icon: React.createElement(Home, { size: 16 }),
+    color: 'bg-indigo-50 text-indigo-600',
+    label: t('leads.triggers.icons.apartmentStatus'),
   },
   distribution: {
     icon: React.createElement(Users, { size: 16 }),
@@ -55,11 +55,7 @@ export const getTriggerIcons = (
     color: 'bg-amber-50 text-amber-600',
     label: t('leads.triggers.icons.notification'),
   },
-  apartment_status: {
-    icon: React.createElement(Home, { size: 16 }),
-    color: 'bg-indigo-50 text-indigo-600',
-    label: t('leads.triggers.icons.apartmentStatus'),
-  },
+
 });
 
 export const getCardFieldOptions = (

@@ -5,9 +5,7 @@ import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 // Lazy load admin pages
 const AdminPage = lazy(() => import("../pages/AdminPage"));
 const ProjectEditorPage = lazy(() => import("../pages/ProjectEditorPage"));
-const DeveloperProjectsPage = lazy(
-  () => import("../pages/DeveloperProjectsPage")
-);
+
 const AdminAnalyticsPage = lazy(
   () => import("../pages/AdminAnalyticsPage")
 );
@@ -22,16 +20,6 @@ export function AdminRoutes() {
         element={
           <ProtectedRoute>
             <AdminPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Developer projects cabinet without sidebar */}
-      <Route
-        path="developer-projects"
-        element={
-          <ProtectedRoute>
-            <DeveloperProjectsPage />
           </ProtectedRoute>
         }
       />

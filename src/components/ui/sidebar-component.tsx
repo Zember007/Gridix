@@ -7,6 +7,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
 import { Language, LANGUAGE_CONFIG } from "@/lib/language-utils";
+import { useAmoWidget } from "@/hooks/useAmoWidget";
 import {
 
   Folder,
@@ -52,10 +53,10 @@ import { Sheet, SheetContent } from "./sheet";
 
 
 // Simplified admin navigation items
-const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false) => {
+const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, amoWidget: boolean = false) => {
   const items = [
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
-    { id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') },
+    ...(!amoWidget ? [{ id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') }] : []),
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
     { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics.title') },
@@ -117,6 +118,7 @@ function SimplifiedSidebar({
   onMobileClose?: () => void;
   onSignOut?: () => void;
 }) {
+  const { amoWidget } = useAmoWidget();
   const { t, language, setLanguage } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
 
@@ -146,12 +148,12 @@ function SimplifiedSidebar({
           {!isCollapsed && (
             <div className="flex items-center gap-4">
               <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
-              <span
-                className="font-semibold whitespace-nowrap"
-                style={{ color: ADMIN_THEME.sidebarText }}
-              >
-                {title}
-              </span>
+              {!amoWidget && <span
+                  className="font-semibold whitespace-nowrap"
+                  style={{ color: ADMIN_THEME.sidebarText }}
+                >
+                  {title}
+                </span>}
             </div>
           )}
           {!isMobile && (
@@ -258,7 +260,7 @@ function SimplifiedSidebar({
             />
 
           </div>
-          <div
+          {!amoWidget && <div
             className="p-4"
             style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
           >
@@ -335,7 +337,7 @@ function SimplifiedSidebar({
                     className={`cursor-pointer pl-8 ${language === code ? '!bg-[var(--admin-sidebar-active-background)]' : 'hover:!bg-[var(--admin-sidebar-active-background)]'}`}
                     style={{
                       color: ADMIN_THEME.sidebarText,
-                      
+
                     }}
                   >
                     <span className="mr-2">{config.flag}</span>
@@ -359,7 +361,7 @@ function SimplifiedSidebar({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div>}
         </div>
       )}
     </>
@@ -434,8 +436,11 @@ export function AdminSidebar({
     setActiveSection(activeTab || "projects");
   }, [activeTab]);
 
+  const { amoWidget } = useAmoWidget();
 
-  const navItems = getAdminNavItems(t, userRole.type === 'manager');
+
+
+  const navItems = getAdminNavItems(t, userRole.type === 'manager', amoWidget);
 
   const sidebar = (
     <SimplifiedSidebar
