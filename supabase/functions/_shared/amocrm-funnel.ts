@@ -30,13 +30,15 @@ export async function createOrUpdateLocalFunnel(
   svc: any
 ): Promise<void> {
   try {
-    // Check if funnel already exists for this project and AmoCRM pipeline
+    // Check if funnel already exists for this user and AmoCRM pipeline.
+    // IMPORTANT: the same AmoCRM pipeline can be connected to multiple projects,
+    // but we keep only ONE local funnel per user+amo_funnel_id to avoid duplicates in UI and webhook logic.
     const { data: existingFunnel } = await svc
       .from('crm_funnels')
-      .select('id, name')
-      .eq('project_id', projectId)
-      .eq('amocrm_pipeline_id', amoPipeline.id)
-      .single();
+      .select('id, name, project_id, amo_funnel_id, amocrm_pipeline_id')
+      .eq('user_id', userId)
+      .or(`amo_funnel_id.eq.${amoPipeline.id},amocrm_pipeline_id.eq.${amoPipeline.id}`)
+      .maybeSingle();
 
     // Sort statuses by sort order for comparison
     const sortedStatuses = [...amoPipeline.statuses].sort((a, b) => a.sort - b.sort);
@@ -77,23 +79,30 @@ export async function createOrUpdateLocalFunnel(
     if (existingFunnel) {
       funnelId = existingFunnel.id;
       // Update funnel name if it changed
+      const funnelPatch: Record<string, unknown> = {
+        // Keep amo_funnel_id in sync; also write legacy column for backward compatibility
+        amo_funnel_id: amoPipeline.id,
+        amocrm_pipeline_id: amoPipeline.id,
+        // This funnel is shared across projects; don't bind it to one project
+        project_id: null,
+        updated_at: new Date().toISOString(),
+      };
       if (existingFunnel.name !== amoPipeline.name) {
-        await svc
-          .from('crm_funnels')
-          .update({ 
-            name: amoPipeline.name,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', funnelId);
+        funnelPatch.name = amoPipeline.name;
       }
+      await svc.from('crm_funnels').update(funnelPatch).eq('id', funnelId);
     } else {
       // Create new funnel
       const { data: newFunnel, error: funnelError } = await svc
         .from('crm_funnels')
         .insert({
           user_id: userId,
-          project_id: projectId,
+          // Shared across projects; project is tracked in `project_crm_settings`
+          project_id: null,
           name: amoPipeline.name,
+          // New preferred field
+          amo_funnel_id: amoPipeline.id,
+          // Legacy field (kept for existing code/rows)
           amocrm_pipeline_id: amoPipeline.id,
           is_default: false,
           created_at: new Date().toISOString(),
@@ -135,6 +144,9 @@ export async function createOrUpdateLocalFunnel(
             name: status.name,
             color: color,
             order_index: i,
+            // Keep amo funnel id in sync; also write legacy column for backward compatibility
+            amo_funnel_id: amoPipeline.id,
+            amocrm_pipeline_id: amoPipeline.id,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingStageId);
@@ -150,6 +162,9 @@ export async function createOrUpdateLocalFunnel(
             color: color,
             order_index: i,
             amocrm_status_id: status.id,
+            // New preferred field
+            amo_funnel_id: amoPipeline.id,
+            // Legacy field
             amocrm_pipeline_id: amoPipeline.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -157,13 +172,53 @@ export async function createOrUpdateLocalFunnel(
       }
     }
 
-    // Delete stages that no longer exist in AmoCRM
+    // Delete stages that no longer exist in AmoCRM.
+    // IMPORTANT: never delete stages that are already referenced by existing local entities,
+    // otherwise we can break existing leads/automations (stage ids are used as references).
     if (existingStageMap.size > 0) {
-      const stageIdsToDelete = Array.from(existingStageMap.values());
-      await svc
-        .from('crm_funnel_stages')
-        .delete()
-        .in('id', stageIdsToDelete);
+      const stageIdsToDelete = Array.from(existingStageMap.values()) as string[];
+
+      const [{ data: leadsUsing }, { data: triggersUsing }, { data: jobsUsing }] = await Promise.all([
+        svc
+          .from('leads')
+          .select('pipeline_stage_id')
+          .in('pipeline_stage_id', stageIdsToDelete),
+        svc
+          .from('crm_funnel_triggers')
+          .select('stage_id')
+          .in('stage_id', stageIdsToDelete),
+        svc
+          .from('crm_automation_jobs')
+          .select('stage_id')
+          .in('stage_id', stageIdsToDelete),
+      ]);
+
+      const protectedStageIds = new Set<string>([
+        ...(leadsUsing || []).map((r: any) => r.pipeline_stage_id).filter(Boolean),
+        ...(triggersUsing || []).map((r: any) => r.stage_id).filter(Boolean),
+        ...(jobsUsing || []).map((r: any) => r.stage_id).filter(Boolean),
+      ]);
+
+      const safeToDelete: string[] = stageIdsToDelete.filter((id) => !protectedStageIds.has(id));
+      const protectedToDetach: string[] = stageIdsToDelete.filter((id) => protectedStageIds.has(id));
+
+      if (safeToDelete.length > 0) {
+        await svc
+          .from('crm_funnel_stages')
+          .delete()
+          .in('id', safeToDelete);
+      }
+
+      if (protectedToDetach.length > 0) {
+        // Stage is still used locally; detach it from AmoCRM status mapping so future sync won't treat it as a live Amo status.
+        await svc
+          .from('crm_funnel_stages')
+          .update({
+            amocrm_status_id: null,
+            updated_at: new Date().toISOString(),
+          })
+          .in('id', protectedToDetach);
+      }
     }
 
     console.log(`Local funnel synchronized for project ${projectId}, AmoCRM pipeline ${amoPipeline.id}`);

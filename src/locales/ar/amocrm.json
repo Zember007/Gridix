@@ -46,5 +46,10 @@
   "settingsLoadError": "خطأ في تحميل إعدادات amoCRM",
   "dataFetchError": "خطأ في تحميل البيانات من amoCRM",
   "authStartError": "خطأ في بدء التفويض:",
-  "authUrlError": "لم يتم استلام رابط التفويض"
+  "authUrlError": "لم يتم استلام رابط التفويض",
+  "globalConnectionInfo": "حسابك على amoCRM متصل بجميع المشاريع. يمكنك تكوين الأنبوب والإعدادات بشكل فردي لكل مشروع.",
+  "disconnectWarningTitle": "تحذير قطع الاتصال",
+  "disconnectWarningMessage": "هل أنت متأكد من رغبتك في قطع اتصال تكامل amoCRM؟",
+  "disconnectWarningNote": "تحذير: سيؤثر قطع الاتصال على جميع المشاريع التي تستخدم حساب amoCRM هذا. سيتوقف إرسال العملاء المحتملين في جميع المشاريع إلى CRM.",
+  "confirmDisconnect": "قطع الاتصال من جميع المشاريع"
 }

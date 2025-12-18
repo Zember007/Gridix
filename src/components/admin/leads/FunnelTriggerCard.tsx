@@ -125,11 +125,27 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
         );
       }
       case 'add_tag':
+        return (() => {
+          const tags = Array.isArray(trigger.config.tagsToAdd)
+            ? trigger.config.tagsToAdd
+            : typeof trigger.config.tagsToAdd === 'string'
+              ? trigger.config.tagsToAdd.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : [];
+          const preview = tags.length ? tags.map((t: string) => `#${t}`).join(' ') : '...';
+          return (
+            <span className="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+              {preview}
+            </span>
+          );
+        })();
+      case 'apartment_status': {
+        const status = trigger.config.apartmentStatus || 'reserved';
         return (
           <span className="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-            #{trigger.config.tagsToAdd}
+            {status}
           </span>
         );
+      }
       default:
         return null;
     }

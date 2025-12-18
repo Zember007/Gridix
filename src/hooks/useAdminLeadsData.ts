@@ -121,6 +121,44 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     },
   });
 
+  const funnelAutomationComplianceQuery = useQuery({
+    queryKey: ['crm_funnel_triggers', 'apartment_status_compliance', user?.id],
+    enabled: !!user && !!funnelsQuery.data && funnelsQuery.data.length > 0,
+    queryFn: async () => {
+      const funnelIds = (funnelsQuery.data || []).map((f) => f.id);
+      if (funnelIds.length === 0) return [] as Array<{ id: string; name: string }>;
+
+      const { data: triggers, error } = await supabase
+        .from('crm_funnel_triggers')
+        .select('funnel_id, icon, config')
+        .in('funnel_id', funnelIds);
+
+      if (error) throw error;
+
+      const byFunnel = new Map<string, { reserved: boolean; sold: boolean }>();
+      funnelIds.forEach((id) => byFunnel.set(id, { reserved: false, sold: false }));
+
+      (triggers || []).forEach((tr) => {
+        if (tr.icon !== 'apartment_status') return;
+        const cfg = (tr.config as Record<string, unknown>) || {};
+        const status = String((cfg as any).apartmentStatus || 'reserved');
+        const entry = byFunnel.get(tr.funnel_id);
+        if (!entry) return;
+        if (status === 'reserved') entry.reserved = true;
+        if (status === 'sold') entry.sold = true;
+      });
+
+      const funnelNameById = new Map((funnelsQuery.data || []).map((f) => [f.id, f.name]));
+
+      return funnelIds
+        .filter((id) => {
+          const entry = byFunnel.get(id); 
+          return !entry || !(entry.reserved && entry.sold);
+        })
+        .map((id) => ({ id, name: funnelNameById.get(id) || id }));
+    },
+  });
+
   useEffect(() => {
     const data = funnelsQuery.data;
     if (data && data.length > 0) {
@@ -158,7 +196,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         supabase
           .from('crm_funnel_triggers')
           .select('*')
-          .eq('funnel_id', activeFunnelId),
+          .eq('funnel_id', activeFunnelId)
+          .order('stage_id', { ascending: true })
+          .order('order_index', { ascending: true }),
       ]);
 
       setFunnelStages(
@@ -484,8 +524,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const handleCompleteTask = () => {
     /* placeholder – will be wired to lead_tasks table if needed */
   };
-  const handleToggleTask = () => {};
-  const handleDeleteTask = () => {};
+  const handleToggleTask = () => { };
+  const handleDeleteTask = () => { };
 
   const handleAddNote = () => {
     // UI-level only for now; server-side history can be added later
@@ -585,7 +625,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
       // Invalidate queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      
+
       showToast('success', t('leads.toast.mergeSuccess.title'), t('leads.toast.mergeSuccess.desc', { count: duplicateIds.length }));
     } catch (error) {
       console.error('Failed to merge leads', error);
@@ -858,36 +898,65 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     targetTriggerId: string | null,
     targetStageId: string,
   ) => {
+    let computedNext: FunnelTrigger[] | null = null;
+    let computedStageIds: string[] = [];
+
     setFunnelTriggers((prevTriggers) => {
       const draggedTrigger = prevTriggers.find((t) => t.id === draggedTriggerId);
       if (!draggedTrigger) return prevTriggers;
 
-      const triggersWithoutDragged = prevTriggers.filter(
-        (t) => t.id !== draggedTriggerId,
-      );
+      const fromStageId = draggedTrigger.stageId;
+      const stageIds = new Set<string>([fromStageId, targetStageId]);
 
+      const triggersWithoutDragged = prevTriggers.filter((t) => t.id !== draggedTriggerId);
       const updatedDraggedTrigger = { ...draggedTrigger, stageId: targetStageId };
 
+      let next: FunnelTrigger[];
       if (targetTriggerId === null) {
-        const newTriggers = triggersWithoutDragged.filter(
+        const otherStageTriggers = triggersWithoutDragged.filter(
           (t) => t.stageId !== targetStageId,
         );
         const targetStageTriggers = triggersWithoutDragged.filter(
           (t) => t.stageId === targetStageId,
         );
-        return [...newTriggers, ...targetStageTriggers, updatedDraggedTrigger];
+        next = [...otherStageTriggers, ...targetStageTriggers, updatedDraggedTrigger];
+      } else {
+        const targetIndex = triggersWithoutDragged.findIndex(
+          (t) => t.id === targetTriggerId,
+        );
+        if (targetIndex === -1) return prevTriggers;
+
+        next = [...triggersWithoutDragged];
+        next.splice(targetIndex, 0, updatedDraggedTrigger);
       }
 
-      const targetIndex = triggersWithoutDragged.findIndex(
-        (t) => t.id === targetTriggerId,
-      );
-      if (targetIndex === -1) return prevTriggers;
-
-      const newTriggers = [...triggersWithoutDragged];
-      newTriggers.splice(targetIndex, 0, updatedDraggedTrigger);
-
-      return newTriggers;
+      computedNext = next;
+      computedStageIds = Array.from(stageIds);
+      return next;
     });
+
+    // Persist stage_id + order_index for affected stages (best-effort)
+    (async () => {
+      try {
+        if (!computedNext || computedStageIds.length === 0) return;
+
+        const updates: Array<{ id: string; stage_id: string; order_index: number }> = [];
+        computedStageIds.forEach((sid) => {
+          const stageTriggers = computedNext!.filter((t) => t.stageId === sid);
+          stageTriggers.forEach((t, idx) => {
+            updates.push({ id: t.id, stage_id: sid, order_index: idx });
+          });
+        });
+
+        if (updates.length > 0) {
+          await supabase.from('crm_funnel_triggers').upsert(updates, {
+            onConflict: 'id',
+          });
+        }
+      } catch (e) {
+        console.error('Failed to persist trigger reorder', e);
+      }
+    })();
   };
 
   const handleSaveFunnelSetup = async () => {
@@ -903,7 +972,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       supabase
         .from('crm_funnel_triggers')
         .select('*')
-        .eq('funnel_id', activeFunnelId),
+        .eq('funnel_id', activeFunnelId)
+        .order('stage_id', { ascending: true })
+        .order('order_index', { ascending: true }),
     ]);
 
     setFunnelStages(
@@ -935,7 +1006,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       supabase
         .from('crm_funnel_triggers')
         .select('*')
-        .eq('funnel_id', activeFunnelId),
+        .eq('funnel_id', activeFunnelId)
+        .order('stage_id', { ascending: true })
+        .order('order_index', { ascending: true }),
     ]);
 
     setFunnelStages(
@@ -1025,6 +1098,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     handleCancelEditFunnel,
     funnelStages,
     funnelTriggers,
+    missingApartmentStatusFunnels: funnelAutomationComplianceQuery.data || [],
     handleUpdateStage,
     handleAddStage,
     handleDeleteStage,

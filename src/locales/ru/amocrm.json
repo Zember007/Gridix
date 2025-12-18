@@ -46,5 +46,10 @@
   "settingsLoadError": "Ошибка при загрузке настроек amoCRM",
   "dataFetchError": "Ошибка при загрузке данных из amoCRM",
   "authStartError": "Ошибка при запуске авторизации:",
-  "authUrlError": "Не получен URL авторизации"
+  "authUrlError": "Не получен URL авторизации",
+  "globalConnectionInfo": "Ваш аккаунт amoCRM подключен ко всем проектам. Для каждого проекта вы можете настроить свою воронку и параметры.",
+  "disconnectWarningTitle": "Предупреждение об отключении",
+  "disconnectWarningMessage": "Вы действительно хотите отключить интеграцию с amoCRM?",
+  "disconnectWarningNote": "Внимание: отключение затронет ВСЕ проекты, использующие этот аккаунт amoCRM. Заявки во всех проектах перестанут отправляться в CRM.",
+  "confirmDisconnect": "Отключить от всех проектов"
 }

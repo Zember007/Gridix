@@ -207,6 +207,12 @@
     "tryChangingFilters": "Try changing search parameters or filters.",
     "resetFilters": "Reset filters"
   },
+  "warnings": {
+    "funnelTriggersTitle": "Warning: required apartment status triggers are missing",
+    "funnelTriggersDesc": "To correctly handle reservations and sales, set triggers that change the bound apartment status to “Reserved” and “Sold” in every funnel.",
+    "missingFunnels": "Funnels missing triggers",
+    "funnelTriggersCta": "Open funnel setup"
+  },
   "list": {
     "selectAll": "Select all",
     "selected": "selected",
@@ -391,10 +397,7 @@
     "trigger": "Trigger",
     "edit": "Edit",
     "delete": "Delete",
-    "whenToRun": "When to run",
-    "onStageEntryOption": "On transition/creation in stage",
-    "timerOption": "After N time",
-    "onTagAddOption": "On tag addition",
+    "whenToRun": "Trigger runs every minute",
     "whatToDo": "What to do",
     "description": "Action description",
     "minutes": "minutes",
@@ -408,6 +411,10 @@
     "selectStage": "Select stage to move to",
     "noAdditionalSettings": "No additional settings for this action type.",
     "descriptionRequired": "Description cannot be empty.",
+    "tagsToAddPlaceholder": "Tags to add (comma-separated)",
+    "apartmentStatusReserved": "Reserved",
+    "apartmentStatusSold": "Sold",
+    "apartmentStatusAvailable": "Available",
     "icons": {
       "clock": "Delay",
       "distribution": "Distribution",
@@ -415,7 +422,8 @@
       "statusChange": "Status change",
       "editField": "Edit field",
       "addTag": "Add tag",
-      "notification": "Notification"
+      "notification": "Notification",
+      "apartmentStatus": "Apartment status"
     }
   },
   "cardFields": {

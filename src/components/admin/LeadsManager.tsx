@@ -129,6 +129,7 @@ export function LeadsManager({
     handleSaveFunnelSetup,
     handleResetFunnelSetup,
     handleDeleteAllTriggers,
+    missingApartmentStatusFunnels,
     cardConfig,
     handleSaveCardConfig,
     MOCK_USERS,
@@ -774,6 +775,32 @@ export function LeadsManager({
           />
         ) : (
           <div className="p-4 h-full">
+            {missingApartmentStatusFunnels.length > 0 && (
+              <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-amber-900">
+                      {t('leads.warnings.funnelTriggersTitle')}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      {t('leads.warnings.funnelTriggersDesc')}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-2 truncate">
+                      <span className="font-bold">
+                        {t('leads.warnings.missingFunnels')}:
+                      </span>{' '}
+                      {missingApartmentStatusFunnels.map((f) => f.name).join(', ')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsFunnelSetupMode(true)}
+                    className="shrink-0 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors"
+                  >
+                    {t('leads.warnings.funnelTriggersCta')}
+                  </button>
+                </div>
+              </div>
+            )}
             {filteredAndSortedLeads.length === 0 ? (
               <EmptyState
                 icon={Search}

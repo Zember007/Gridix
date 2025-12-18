@@ -7,6 +7,7 @@ import {
   Edit,
   Tag,
   Bell,
+  Home,
 } from 'lucide-react';
 import { FunnelTrigger, CardField } from '@/types/crm';
 
@@ -53,6 +54,11 @@ export const getTriggerIcons = (
     icon: React.createElement(Bell, { size: 16 }),
     color: 'bg-amber-50 text-amber-600',
     label: t('leads.triggers.icons.notification'),
+  },
+  apartment_status: {
+    icon: React.createElement(Home, { size: 16 }),
+    color: 'bg-indigo-50 text-indigo-600',
+    label: t('leads.triggers.icons.apartmentStatus'),
   },
 });
 

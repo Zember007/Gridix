@@ -46,5 +46,10 @@
   "settingsLoadError": "Error loading amoCRM settings",
   "dataFetchError": "Error loading data from amoCRM",
   "authStartError": "Error starting authorization:",
-  "authUrlError": "Authorization URL not received"
+  "authUrlError": "Authorization URL not received",
+  "globalConnectionInfo": "Your amoCRM account is connected to all projects. You can configure pipeline and settings for each project individually.",
+  "disconnectWarningTitle": "Disconnect Warning",
+  "disconnectWarningMessage": "Are you sure you want to disconnect amoCRM integration?",
+  "disconnectWarningNote": "Warning: disconnecting will affect ALL projects using this amoCRM account. Leads in all projects will stop being sent to CRM.",
+  "confirmDisconnect": "Disconnect from all projects"
 }

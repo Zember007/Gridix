@@ -207,6 +207,12 @@
     "tryChangingFilters": "Попробуйте изменить параметры поиска или фильтры.",
     "resetFilters": "Сбросить фильтры"
   },
+  "warnings": {
+    "funnelTriggersTitle": "Внимание: не настроены обязательные триггеры по статусу квартиры",
+    "funnelTriggersDesc": "Для корректной работы резервов и продаж нужно настроить триггеры, которые меняют статус привязанной квартиры на «Резерв» и «Продажа» в каждой воронке.",
+    "missingFunnels": "Проблемные воронки",
+    "funnelTriggersCta": "Открыть настройку воронки"
+  },
   "list": {
     "selectAll": "Выбрать все",
     "selected": "выбрано",
@@ -391,10 +397,7 @@
     "trigger": "Триггер",
     "edit": "Изменить",
     "delete": "Удалить",
-    "whenToRun": "Когда запускать",
-    "onStageEntryOption": "При переходе/создании в этапе",
-    "timerOption": "Через N времени",
-    "onTagAddOption": "При добавлении тега",
+    "whenToRun": "Триггер запускается раз в минуту",
     "whatToDo": "Что сделать",
     "description": "Описание действия",
     "minutes": "минут",
@@ -408,6 +411,10 @@
     "selectStage": "Выбрать этап для перевода",
     "noAdditionalSettings": "Для этого типа действия нет дополнительных настроек.",
     "descriptionRequired": "Описание не может быть пустым.",
+    "tagsToAddPlaceholder": "Теги для добавления (через запятую)",
+    "apartmentStatusReserved": "Резерв",
+    "apartmentStatusSold": "Продажа",
+    "apartmentStatusAvailable": "Доступно",
     "icons": {
       "clock": "Задержка",
       "distribution": "Распределение",
@@ -415,7 +422,8 @@
       "statusChange": "Смена статуса",
       "editField": "Изменить поле",
       "addTag": "Добавить тег",
-      "notification": "Уведомление"
+      "notification": "Уведомление",
+      "apartmentStatus": "Статус квартиры"
     }
   },
   "cardFields": {

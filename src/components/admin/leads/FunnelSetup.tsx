@@ -332,7 +332,7 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
                   </div>
 
                   {/* Triggers Area */}
-              {/*     <div
+                  <div
                     className="flex-1 overflow-y-auto custom-scrollbar p-3 flex flex-col bg-slate-50/30"
                     onDragEnter={(e) => {
                       e.preventDefault();
@@ -446,7 +446,7 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
                         </span>
                       </button>
                     )}
-                  </div> */}
+                  </div>
                 </div>
               </div>
 

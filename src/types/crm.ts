@@ -66,7 +66,15 @@ export interface FunnelTrigger {
   id: string;
   stageId: string;
   event: FunnelTriggerEvent;
-  icon: 'clock' | 'distribution' | 'task' | 'status_change' | 'edit_field' | 'add_tag' | 'notification';
+  icon:
+    | 'clock'
+    | 'distribution'
+    | 'task'
+    | 'status_change'
+    | 'edit_field'
+    | 'add_tag'
+    | 'notification'
+    | 'apartment_status';
   title: string;
   description: string;
   subtext?: string;

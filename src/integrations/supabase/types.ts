@@ -398,6 +398,7 @@ export type Database = {
       }
       crm_funnel_stages: {
         Row: {
+          amo_funnel_id: number | null
           amocrm_pipeline_id: number | null
           amocrm_status_id: number | null
           color: string
@@ -409,6 +410,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amo_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           amocrm_status_id?: number | null
           color?: string
@@ -420,6 +422,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amo_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           amocrm_status_id?: number | null
           color?: string
@@ -496,6 +499,7 @@ export type Database = {
       }
       crm_funnels: {
         Row: {
+          amo_funnel_id: number | null
           amocrm_pipeline_id: number | null
           created_at: string
           id: string
@@ -506,6 +510,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amo_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string
@@ -516,6 +521,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amo_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string

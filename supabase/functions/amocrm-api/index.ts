@@ -203,11 +203,12 @@ serve(async (req) => {
               // Map local stage -> AmoCRM status/pipeline
               const { data: stage, error: stageError } = await svc
                 .from('crm_funnel_stages')
-                .select('funnel_id, amocrm_status_id, amocrm_pipeline_id')
+                .select('funnel_id, amocrm_status_id, amo_funnel_id, amocrm_pipeline_id')
                 .eq('id', remoteStageId)
                 .single();
 
-              if (!stageError && stage?.amocrm_status_id && stage?.amocrm_pipeline_id) {
+              const stagePipelineId = stage?.amo_funnel_id ?? stage?.amocrm_pipeline_id ?? null;
+              if (!stageError && stage?.amocrm_status_id && stagePipelineId) {
                 // Ensure stage belongs to the same project funnel
                 const { data: funnel } = await svc
                   .from('crm_funnels')
@@ -215,9 +216,10 @@ serve(async (req) => {
                   .eq('id', stage.funnel_id)
                   .maybeSingle();
 
-                if (funnel?.project_id === lead.project_id) {
+                // AmoCRM funnels can be shared across projects (project_id may be NULL).
+                if (!funnel?.project_id || funnel.project_id === lead.project_id) {
                   amoPatch.status_id = stage.amocrm_status_id;
-                  amoPatch.pipeline_id = stage.amocrm_pipeline_id;
+                  amoPatch.pipeline_id = stagePipelineId;
                 }
               }
             }
@@ -389,20 +391,18 @@ serve(async (req) => {
       return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
     }
 
-    // Get CRM connection and project settings
-    // First get project CRM settings
-    const { data: projectSettings, error: projectSettingsError } = await svc
-      .from('project_crm_settings')
-      .select('*, crm_connections(*)')
-      .eq('project_id', project_id)
-      .single();
+    // Get AmoCRM connection on user level (shared across projects)
+    const { data: crmConnection, error: connectionError } = await svc
+      .from('crm_connections')
+      .select('*')
+      .eq('user_id', project.user_id)
+      .eq('crm_type', 'amocrm')
+      .maybeSingle();
 
-    if (projectSettingsError || !projectSettings) {
-      return createJsonResponse({ error: 'AmoCRM settings not found for this project' }, 404, origin);
+    if (connectionError) {
+      throw connectionError;
     }
 
-    const crmConnection = projectSettings.crm_connections as unknown as CRMConnection;
-    
     if (!crmConnection || crmConnection.crm_type !== 'amocrm') {
       return createJsonResponse({ error: 'AmoCRM connection not found' }, 404, origin);
     }
@@ -412,7 +412,7 @@ serve(async (req) => {
     }
 
     // Ensure we have a valid token (refresh if expired or close to expiry)
-    const { accessToken, tokenExpiresAt } = await getValidAccessToken(crmConnection, svc);
+    const { accessToken, tokenExpiresAt } = await getValidAccessToken(crmConnection as CRMConnection, svc);
     if (!accessToken) {
       return createJsonResponse({ error: 'AmoCRM token refresh failed' }, 401, origin);
     }
@@ -694,26 +694,81 @@ async function disconnectAmoCRM(
   origin: string | null
 ): Promise<Response> {
   try {
-    // Delete project CRM settings
-    const { error } = await svc
-      .from('project_crm_settings')
-      .delete()
-      .eq('project_id', projectId);
+    // Get user_id from the project
+    const { data: project } = await svc
+      .from('projects')
+      .select('user_id')
+      .eq('id', projectId)
+      .maybeSingle();
 
-    if (error) {
-      throw error;
+    const userId = project?.user_id ?? null;
+    if (!userId) {
+      throw new Error('Project not found or user not identified');
     }
 
-    // Delete local CRM funnel for this project (keep default funnel)
-    await svc
-      .from('crm_funnels')
+    // Get the user's AmoCRM connection
+    const { data: connection } = await svc
+      .from('crm_connections')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('crm_type', 'amocrm')
+      .maybeSingle();
+
+    if (!connection) {
+      // Already disconnected
+      return createJsonResponse({ 
+        success: true,
+        message: 'AmoCRM already disconnected'
+      }, 200, origin);
+    }
+
+    // Get all pipeline IDs used by this user (for funnel cleanup)
+    const { data: allSettings } = await svc
+      .from('project_crm_settings')
+      .select('pipeline_id')
+      .eq('crm_connection_id', connection.id);
+
+    const pipelineIds = [...new Set(
+      (allSettings || [])
+        .map((s: any) => s.pipeline_id)
+        .filter((id: any) => typeof id === 'number')
+    )];
+
+    // Delete all project CRM settings for this connection (all projects)
+    const { error: settingsError } = await svc
+      .from('project_crm_settings')
       .delete()
-      .eq('project_id', projectId)
-      .not('amocrm_pipeline_id', 'is', null);
+      .eq('crm_connection_id', connection.id);
+
+    if (settingsError) {
+      throw settingsError;
+    }
+
+    // Delete the CRM connection itself
+    const { error: connectionError } = await svc
+      .from('crm_connections')
+      .delete()
+      .eq('id', connection.id);
+
+    if (connectionError) {
+      throw connectionError;
+    }
+
+    // Cleanup all funnels for these pipelines
+    if (pipelineIds.length > 0) {
+      for (const pipelineId of pipelineIds) {
+        await svc
+          .from('crm_funnels')
+          .delete()
+          .eq('user_id', userId)
+          // Prefer new column `amo_funnel_id`, fallback to legacy `amocrm_pipeline_id`
+          .or(`amo_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`);
+      }
+    }
 
     return createJsonResponse({ 
       success: true,
-      message: 'AmoCRM disconnected successfully'
+      message: 'AmoCRM disconnected successfully from all projects'
     }, 200, origin);
 
   } catch (error) {

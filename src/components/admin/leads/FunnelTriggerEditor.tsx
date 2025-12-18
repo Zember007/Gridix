@@ -66,23 +66,6 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleEventChange = (newEvent: FunnelTriggerEvent) => {
-    setEvent(newEvent);
-    const newConfig = { ...config };
-    delete newConfig.delay;
-    delete newConfig.unit;
-    delete newConfig.tagName;
-
-    if (newEvent === 'timer') {
-      newConfig.delay = 5;
-      newConfig.unit = 'minutes';
-    }
-    if (newEvent === 'on_tag_add') {
-      newConfig.tagName = '';
-    }
-    setConfig(newConfig);
-  };
-
   const handleIconChange = (newIcon: FunnelTrigger['icon']) => {
     setIcon(newIcon);
     setDescription(TRIGGER_ICONS[newIcon].label);
@@ -92,51 +75,10 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
     delete newConfig.assignTo;
     delete newConfig.targetStageId;
     delete newConfig.notificationText;
+    delete newConfig.tagsToAdd;
+    delete newConfig.apartmentStatus;
 
     setConfig(newConfig);
-  };
-
-  const renderEventConfigFields = () => {
-    switch (event) {
-      case 'timer':
-        return (
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              value={config.delay || ''}
-              onChange={(e) => handleConfigChange('delay', e.target.value)}
-              className="w-20 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-blue-500"
-            />
-            <select
-              value={config.unit || 'minutes'}
-              onChange={(e) => handleConfigChange('unit', e.target.value)}
-              className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500"
-            >
-              <option value="minutes">{t('leads.triggers.minutes')}</option>
-              <option value="hours">{t('leads.triggers.hours')}</option>
-              <option value="days">{t('leads.triggers.days')}</option>
-            </select>
-          </div>
-        );
-      case 'on_tag_add':
-        return (
-          <input
-            type="text"
-            placeholder={t('leads.triggers.tagNamePlaceholder')}
-            value={config.tagName || ''}
-            onChange={(e) => handleConfigChange('tagName', e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-blue-500"
-          />
-        );
-      case 'on_stage_entry':
-      default:
-        return (
-          <p className="text-xs text-center text-gray-400 p-2 bg-gray-50/50 rounded-md">
-            {t('leads.triggers.willTrigger')}
-          </p>
-        );
-    }
   };
 
   const renderActionConfigFields = () => {
@@ -172,6 +114,23 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
           </div>
         );
       }
+      case 'distribution':
+        return (
+          <select
+            value={config.assignTo || ''}
+            onChange={(e) => handleConfigChange('assignTo', e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500"
+          >
+            <option value="" disabled>
+              {t('leads.triggers.assignResponsible')}
+            </option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        );
       case 'status_change':
         return (
           <select
@@ -191,6 +150,39 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
             ))}
           </select>
         );
+      case 'add_tag': {
+        const tagsToAddValue = Array.isArray(config.tagsToAdd)
+          ? (config.tagsToAdd as string[]).join(', ')
+          : (config.tagsToAdd || '');
+        return (
+          <input
+            type="text"
+            placeholder={t('leads.triggers.tagsToAddPlaceholder')}
+            value={tagsToAddValue}
+            onChange={(e) => {
+              const raw = e.target.value;
+              const parsed = raw
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean);
+              handleConfigChange('tagsToAdd', parsed);
+            }}
+            className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-blue-500"
+          />
+        );
+      }
+      case 'apartment_status':
+        return (
+          <select
+            value={config.apartmentStatus || 'reserved'}
+            onChange={(e) => handleConfigChange('apartmentStatus', e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 outline-none focus:border-blue-500"
+          >
+            <option value="reserved">{t('leads.triggers.apartmentStatusReserved')}</option>
+            <option value="sold">{t('leads.triggers.apartmentStatusSold')}</option>
+            <option value="available">{t('leads.triggers.apartmentStatusAvailable')}</option>
+          </select>
+        );
       default:
         return (
           <p className="text-xs text-center text-gray-400 p-4 bg-gray-50 rounded-md">
@@ -202,26 +194,10 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
 
   return (
     <div className="p-3 border-2 border-blue-400 rounded-lg bg-white shadow-lg space-y-3 animate-in fade-in duration-200">
-      {/* Event Section */}
-      <div>
-        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-          {t('leads.triggers.whenToRun')}
-        </label>
-        <select
-          value={event}
-          onChange={(e) =>
-            handleEventChange(e.target.value as FunnelTriggerEvent)
-          }
-          className="w-full mt-1 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-500 shadow-sm"
-        >
-          {EVENT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <div className="mt-2 pl-1">{renderEventConfigFields()}</div>
-      </div>
+      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+        {t('leads.triggers.whenToRun')}
+      </span>
+
 
       <div className="h-px bg-gray-100 my-2"></div>
 
@@ -236,11 +212,10 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
               <button
                 key={iconKey}
                 onClick={() => handleIconChange(iconKey)}
-                className={`flex items-center justify-center p-2 rounded-lg transition-all ${
-                  icon === iconKey
+                className={`flex items-center justify-center p-2 rounded-lg transition-all ${icon === iconKey
                     ? 'ring-2 ring-blue-500 ring-offset-1'
                     : ''
-                } ${TRIGGER_ICONS[iconKey].color}`}
+                  } ${TRIGGER_ICONS[iconKey].color}`}
                 title={TRIGGER_ICONS[iconKey].label}
               >
                 {TRIGGER_ICONS[iconKey].icon}

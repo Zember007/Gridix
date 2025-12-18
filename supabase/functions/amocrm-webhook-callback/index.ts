@@ -371,8 +371,9 @@ serve(async (req) => {
       const { data: funnel } = await svc
         .from("crm_funnels")
         .select("id")
-        .eq("project_id", localLead.project_id)
-        .eq("amocrm_pipeline_id", pipelineId)
+        .eq("user_id", project.user_id)
+        // Prefer new column `amo_funnel_id`, fallback to legacy `amocrm_pipeline_id`
+        .or(`amo_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`)
         .limit(1)
         .maybeSingle();
 

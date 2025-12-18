@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, Settings, ExternalLink, CheckCircle, AlertCircle, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,6 +92,8 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [amocrmData, setAmocrmData] = useState<AmoCRMData | null>(null);
   const [loadingData, setLoadingData] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   
   // Local selection state for configuration
   const [selectedPipelineId, setSelectedPipelineId] = useState<number | null>(null);
@@ -166,38 +169,60 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('project_crm_settings')
-        .select('*, crm_connections(*)')
-        .eq('project_id', projectId)
+      // First, check if user has any AmoCRM connection
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: userConnection, error: connectionError } = await supabase
+        .from('crm_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('crm_type', 'amocrm')
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
+      if (connectionError && connectionError.code !== 'PGRST116') {
+        throw connectionError;
       }
 
-      if (data) {
-        const connection = data.crm_connections as unknown as CRMConnection;
-        const projectSettings: ProjectCRMSettings = {
-          id: data.id,
-          project_id: data.project_id,
-          crm_connection_id: data.crm_connection_id,
-          pipeline_id: data.pipeline_id,
-          status_id: data.status_id,
-          responsible_user_id: data.responsible_user_id,
-          pipeline_name: data.pipeline_name,
-          status_name: data.status_name,
-          user_name: data.user_name,
-          crm_connections: connection
-        };
-        const newSettings: AmoCRMSettings = {
-          projectSettings,
-          connection
-        };
+      // Then check project settings
+      const { data: projectData, error: projectError } = await supabase
+        .from('project_crm_settings')
+        .select('*')
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+      if (projectError && projectError.code !== 'PGRST116') {
+        throw projectError;
+      }
+
+      const newSettings: AmoCRMSettings = {};
+
+      if (userConnection) {
+        const connection: CRMConnection = userConnection;
+        newSettings.connection = connection;
+
+        if (projectData) {
+          const projectSettings: ProjectCRMSettings = {
+            id: projectData.id,
+            project_id: projectData.project_id,
+            crm_connection_id: projectData.crm_connection_id,
+            pipeline_id: projectData.pipeline_id,
+            status_id: projectData.status_id,
+            responsible_user_id: projectData.responsible_user_id,
+            pipeline_name: projectData.pipeline_name,
+            status_name: projectData.status_name,
+            user_name: projectData.user_name,
+          };
+          newSettings.projectSettings = projectSettings;
+        }
+
         setSettings(newSettings);
+        
         if (connection?.access_token) {
           fetchAmoCRMData(newSettings);
         }
+      } else {
+        setSettings({});
       }
     } catch (error) {
       console.error('Error fetching CRM settings:', error);
@@ -216,13 +241,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     try {
       setAuthorizing(true);
       
-      if (projectSettings?.id) {
-        await supabase
-          .from('project_crm_settings')
-          .delete()
-          .eq('id', projectSettings.id);
-      }
-      
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
         body: { project_id: projectId }
       });
@@ -233,7 +251,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data?.auth_url) {
         window.open(data.auth_url, '_self');
-
       } else {
         throw new Error('Не получен URL авторизации');
       }
@@ -278,8 +295,13 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
   };
 
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = () => {
+    setShowDisconnectDialog(true);
+  };
+
+  const confirmDisconnect = async () => {
     try {
+      setDisconnecting(true);
       const { data, error } = await supabase.functions.invoke('amocrm-api', {
         body: { 
           project_id: projectId,
@@ -293,6 +315,7 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
         // Reset local state to initial values
         setSettings({});
         setAmocrmData(null);
+        setShowDisconnectDialog(false);
         
         toast.success(t('amocrm.disconnectSuccess'));
       } else {
@@ -301,19 +324,14 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
     } catch (error) {
       console.error('Error disconnecting AmoCRM:', error);
       toast.error(t('amocrm.disconnectError'));
+    } finally {
+      setDisconnecting(false);
     }
   };
 
   const handleAuthorize = async () => {
     try {
       setAuthorizing(true);
-      
-      if (projectSettings?.id) {
-        await supabase
-          .from('project_crm_settings')
-          .delete()
-          .eq('id', projectSettings.id);
-      }
       
       const { data, error } = await supabase.functions.invoke('amocrm-start-auth', {
         body: { project_id: projectId }
@@ -325,7 +343,6 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
 
       if (data?.auth_url) {
         window.open(data.auth_url, '_self');
-
       } else {
         throw new Error('Не получен URL авторизации');
       }
@@ -432,6 +449,13 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
           <>
             {!editingConfiguration ? (
               <>
+                <Alert className="mb-4 border-blue-200 bg-blue-50">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800">
+                    {t('amocrm.globalConnectionInfo')}
+                  </AlertDescription>
+                </Alert>
+
                 <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3 mb-4">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -754,7 +778,48 @@ const AmoCRMSettings = ({ projectId }: AmoCRMSettingsProps) => {
       </CardContent>
     </Card>
     
-
+    <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-amber-600">
+            <AlertCircle className="h-5 w-5" />
+            {t('amocrm.disconnectWarningTitle')}
+          </DialogTitle>
+          <DialogDescription className="space-y-3 pt-2">
+            <p className="text-base">
+              {t('amocrm.disconnectWarningMessage')}
+            </p>
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                {t('amocrm.disconnectWarningNote')}
+              </AlertDescription>
+            </Alert>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowDisconnectDialog(false)}
+            disabled={disconnecting}
+          >
+            {t('amocrm.cancel')}
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={confirmDisconnect}
+            disabled={disconnecting}
+          >
+            {disconnecting ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <AlertCircle className="h-4 w-4 mr-2" />
+            )}
+            {t('amocrm.confirmDisconnect')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 };
