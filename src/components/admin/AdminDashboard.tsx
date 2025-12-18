@@ -44,7 +44,13 @@ const AdminDashboard = () => {
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const { amoWidget } = useAmoWidget();
+
   const handleCreateNew = () => {
+    if(amoWidget) {
+      window.open('https://app.gridix.live/ru/admin', '_blank');
+      return;
+    }
     setShowCreateModal(true);
   };
 

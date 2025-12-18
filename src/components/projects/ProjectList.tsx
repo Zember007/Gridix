@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LeadsStats } from '@/components/admin/LeadsNotification';
 import { Project } from '@/hooks/useWorkspaceProjects';
+import { useAmoWidget } from '@/hooks/useAmoWidget';
 
 
 interface ProjectListProps {
@@ -25,6 +26,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   const { user } = useAuth();
   const { projects, loading, error, refresh, isManagerMode } = useWorkspaceProjects();
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
+  const { amoWidget } = useAmoWidget();
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -248,7 +250,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                  
                     
                     {/* Кнопка удаления скрыта для менеджеров */}
-                    {!isManagerMode && (
+                    {!isManagerMode && !amoWidget && (
                       <Button
                         size="sm"
                         variant="ghost"
