@@ -112,7 +112,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
             type="tel"
             value={phone} 
             onChange={(e) => setPhone(e.target.value)} 
-            placeholder="+7 (999) 999-99-99" 
+            placeholder="+995 (999) 00-00-00" 
             required    
           />
         </div>

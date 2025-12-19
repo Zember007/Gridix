@@ -15,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     )
 
     // If type is tel and no custom mask is provided, use a default phone mask
-    const phoneMask = type === "tel" && !mask ? "+9 (999) 999-99-99" : mask
+    const phoneMask = type === "tel" && !mask ? "+999 (999) 99-99-99" : mask
 
     if (phoneMask) {
       return (
