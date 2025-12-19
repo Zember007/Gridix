@@ -778,7 +778,7 @@ const BuildingFacadeView = ({
             <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
           </button>
         )}
-        {isExpanded && (
+     {/*    {isExpanded && (
           <button
             className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
               }`}
@@ -788,7 +788,7 @@ const BuildingFacadeView = ({
           >
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
-        )}
+        )} */}
         {showPopup && selectedFloor !== null && popupPosition && (
           <FloorPopup Number={selectedFloor} position={popupPosition} />
         )}

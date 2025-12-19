@@ -145,6 +145,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   }, [project?.currency]);
 
+  const getLayoutType = (rooms: number): string => {
+    return rooms == 0 ? 'studio' : `${rooms}-room`;
+  };
+
   // Load photos (layout + apartment) in parent and pass down
   useEffect(() => {
     const loadPhotos = async () => {
@@ -152,11 +156,21 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       setPhotosLoading(true);
       try {
 
-        const [aptRes] = await Promise.all([
+        const currentRooms = apartment.rooms;
+        const layoutType = getLayoutType(typeof currentRooms === 'number' ? currentRooms : Number(currentRooms));
+
+
+        const [aptRes, layoutRes] = await Promise.all([
           supabase
             .from('apartment_photos')
             .select('*')
             .eq('apartment_id', apartment.id)
+            .order('order_index', { ascending: true }),
+          supabase
+            .from('layout_photos')
+            .select('*')
+            .eq('project_id', project.id)
+            .eq('layout_type', layoutType)
             .order('order_index', { ascending: true })
         ]);
 
@@ -169,7 +183,15 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
           type: 'apartment' as const
         }));
 
-        setPhotos(apartmentPhotos);
+        const layoutPhotos = project.id !== '04bcb797-a155-479c-a9ae-131ce850375f' ? [] : (layoutRes.data || []).map((photo) => ({
+          id: photo.id,
+          image_url: photo.image_url,
+          description: photo.description ?? null,
+          order_index: photo.order_index,
+          type: 'layout' as const
+        }))
+
+        setPhotos([...layoutPhotos, ...apartmentPhotos].sort((a, b) => a.order_index - b.order_index));
       } catch (err) {
         console.error('Error loading photos in parent:', err);
         setPhotos([]);
@@ -422,10 +444,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const loading = projectLoading || apartmentLoading || photosLoading;
 
-  if (!project) return <div className="min-h-screen bg-background flex items-center justify-center">
-    <Loader size="lg" className="mx-auto mb-4" />
-  </div>;
-
 
 
   // Обработка ошибок
@@ -459,7 +477,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   }
 
   // Если данные еще не загружены, не рендерим основной контент
-  if (!apartment || !project) {
+  if (!apartment || !project || loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <Loader size="lg" className="mx-auto mb-4"
         color={project?.theme_color || '#000000'}
@@ -497,22 +515,11 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
             )}
 
             {/* Main apartment image */}
-            <div className="min-h-70  relative overflow-hidden ">
-              {photosLoading ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Loader size="lg" />
-                </div>
-              ) : (
-                <ApartmentPhotosViewer
-                  apartmentId={apartment.id}
-                  projectId={apartment.project_id}
-                  preloadedLayoutPhotos={photos.map(photo => ({
-                    ...photo,
-                    description: photo.description || ''
-                  }))}
-                  fetchMode="preloaded-only"
-                />
-              )}
+            <div className="relative overflow-hidden ">
+
+              <ApartmentPhotosViewer
+                preloadedLayoutPhotos={photos}
+              />
             </div>
           </div>
 
@@ -714,21 +721,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                       </Badge>
                     </div>
                   )}
-                  {photosLoading ? (
-                    <div className="w-full h-[480px] flex items-center justify-center bg-gray-100 rounded-lg">
-                      <Loader size="lg" />
-                    </div>
-                  ) : (
-                    <ApartmentPhotosViewer
-                      apartmentId={apartment.id}
-                      projectId={apartment.project_id}
-                      preloadedLayoutPhotos={photos.map(photo => ({
-                        ...photo,
-                        description: photo.description || ''
-                      }))}
-                      fetchMode="preloaded-only"
-                    />
-                  )}
+
+                  <ApartmentPhotosViewer
+                    preloadedLayoutPhotos={photos}
+                  />
                   {/* Gallery navigation line */}
 
                 </div>

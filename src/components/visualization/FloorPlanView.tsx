@@ -232,7 +232,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
 
   return (
     <Card className='h-full grow'>
-      <CardContent className="p-4 flex flex-col h-full">
+      <CardContent className="flex flex-col h-full">
 
 
         <div className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center">
