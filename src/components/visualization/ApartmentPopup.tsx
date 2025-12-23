@@ -1,8 +1,7 @@
 import React from 'react';
 import { Apartment } from '@/types/apartment';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { convertPrice, formatPrice, formatPriceWithCurrency } from '@/lib/currency-utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { formatPriceWithCurrency } from '@/lib/currency-utils';
 
 interface ApartmentPopupProps {
   apartment: Apartment;
@@ -17,46 +16,23 @@ interface ApartmentPopupProps {
   selectedCurrency?: string;
 }
 
-const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
+const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
   apartment,
   position,
   settings,
   currency,
-  selectedCurrency
-}) => {
+}, ref) => {
   const { t } = useLanguage();
-
-  const isMobile = useIsMobile();
 
   if (!settings.showTooltip) return null;
 
-  const popupWidth = 150;
-  const popupHeight = 120;
-  const margin = 20;
-
-  // Calculate position to avoid screen edges
-  let adjustedX = position.x + 10;
-  let adjustedY = position.y - popupHeight / 2 - 30;
-
-  // Adjust if popup goes off screen
-  if (adjustedX + popupWidth > window.innerWidth - margin) {
-    adjustedX = position.x - popupWidth - 10;
-  }
-  if (adjustedY < margin) {
-    adjustedY = margin;
-  }
-  if (adjustedY + popupHeight > window.innerHeight - margin) {
-    adjustedY = window.innerHeight - popupHeight - margin;
-  }
-
   return (
     <div
+      ref={ref}
       className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs"
       style={{
-        left: adjustedX,
-        top: adjustedY,
-        width: popupWidth,
-        minHeight: popupHeight,
+        left: position.x,
+        top: position.y,
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -108,6 +84,6 @@ const ApartmentPopup: React.FC<ApartmentPopupProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default ApartmentPopup;

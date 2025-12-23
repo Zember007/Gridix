@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from 'react';
+import { Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Apartment } from '@/types/apartment';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -56,7 +56,7 @@ const BuildingFacadeView = ({
   filtersRef,
   externalImageLoaded,
   externalImageNaturalSize,
-  showOnlyAvailable = false,
+  showOnlyAvailable: _showOnlyAvailable = false,
   visibleFields,
   buildingFloors,
   facadeSettings,
@@ -74,12 +74,263 @@ const BuildingFacadeView = ({
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [popupSize, setPopupSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [popupAnchor, setPopupAnchor] = useState<{
+    floorNumber: number;
+    polygonBounds: { minX: number; maxX: number; minY: number; maxY: number };
+  } | null>(null);
+  const [mobilePopupDockPosition, setMobilePopupDockPosition] = useState<{ x: number; y: number } | null>(null);
   const [isTouchZooming] = useState(false);
   const [touchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [mobileSwitcherPosition, setMobileSwitcherPosition] = useState<{ top: number; left: number } | null>(null);
 
   useLockBodyScroll(isTouchZooming);
+
+  const visibleFloors = useMemo(() => {
+    if (project.project_type === 'object') {
+      return buildingFloors;
+    }
+
+    // Get unique floor numbers that have at least one available apartment
+    const floorsWithAvailable = new Set(
+      apartments
+        .filter(apt => apt.status === 'available')
+        .map(apt => apt.floor_number)
+    );
+
+    // Filter buildingFloors to only include floors with available apartments
+    return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
+  }, [buildingFloors, apartments, project.project_type]);
+
+  const getPolygonBoundsPct = (polygon: { x: number; y: number }[]) => {
+    let minX = 100, maxX = 0, minY = 100, maxY = 0;
+    polygon.forEach((p) => {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    });
+    return { minX, maxX, minY, maxY };
+  };
+
+  type Rect = { x: number; y: number; width: number; height: number };
+
+  const computeMobileDockPosition = useCallback((size: { width: number; height: number }) => {
+    const rectOverlapArea = (a: Rect, b: Rect) => {
+      const x1 = Math.max(a.x, b.x);
+      const y1 = Math.max(a.y, b.y);
+      const x2 = Math.min(a.x + a.width, b.x + b.width);
+      const y2 = Math.min(a.y + a.height, b.y + b.height);
+      const w = x2 - x1;
+      const h = y2 - y1;
+      return w > 0 && h > 0 ? w * h : 0;
+    };
+
+    if (!containerRef.current) return null;
+    if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return null;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+
+    const svgWidth = imgDimensions.width;
+    const svgHeight = imgDimensions.height;
+    const svgLeft = (containerWidth - svgWidth) / 2;
+    const svgTop = (containerHeight - svgHeight) / 2;
+
+    const padding = 8;
+    const offset = 12;
+
+    const popupW = Math.max(1, size.width);
+    const popupH = Math.max(1, size.height);
+
+    const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+    const clampWithin = (pos: number, popupSize: number, containerSize: number, pad: number) => {
+      const maxPos = Math.max(pad, containerSize - popupSize - pad);
+      return clamp(pos, pad, maxPos);
+    };
+
+    // Поля всех полигонов (в px) — используем bbox каждого полигона, чтобы найти позицию без перекрытий.
+    const polygonRects: Rect[] = visibleFloors
+      .filter((f) => f.polygon && f.polygon.length >= 3)
+      .map((f) => {
+        const b = getPolygonBoundsPct(f.polygon);
+        const x = svgLeft + (b.minX / 100) * svgWidth;
+        const y = svgTop + (b.minY / 100) * svgHeight;
+        const width = ((b.maxX - b.minX) / 100) * svgWidth;
+        const height = ((b.maxY - b.minY) / 100) * svgHeight;
+        return { x, y, width, height };
+      });
+
+    // Если полигонов нет — фиксируем справа по центру
+    if (polygonRects.length === 0) {
+      const x = clampWithin(containerWidth - popupW - padding, popupW, containerWidth, padding);
+      const y = clampWithin(containerHeight / 2 - popupH / 2, popupH, containerHeight, padding);
+      return { x, y };
+    }
+
+    const minX = Math.min(...polygonRects.map((r) => r.x));
+    const maxX = Math.max(...polygonRects.map((r) => r.x + r.width));
+    const minY = Math.min(...polygonRects.map((r) => r.y));
+    const maxY = Math.max(...polygonRects.map((r) => r.y + r.height));
+    const polyCenterX = (minX + maxX) / 2;
+    const polyCenterY = (minY + maxY) / 2;
+
+    const candidates: Array<{ id: string; x: number; y: number }> = [
+      { id: 'right-center', x: maxX + offset, y: containerHeight / 2 - popupH / 2 },
+      { id: 'left-center', x: minX - offset - popupW, y: containerHeight / 2 - popupH / 2 },
+      { id: 'bottom-center', x: polyCenterX - popupW / 2, y: maxY + offset },
+      { id: 'top-center', x: polyCenterX - popupW / 2, y: minY - offset - popupH },
+      { id: 'right-top', x: maxX + offset, y: minY },
+      { id: 'right-bottom', x: maxX + offset, y: maxY - popupH },
+      { id: 'left-top', x: minX - offset - popupW, y: minY },
+      { id: 'left-bottom', x: minX - offset - popupW, y: maxY - popupH },
+      { id: 'center', x: containerWidth / 2 - popupW / 2, y: containerHeight / 2 - popupH / 2 },
+    ];
+
+    const scoreCandidate = (c: { x: number; y: number }) => {
+      const rect: Rect = {
+        x: clampWithin(c.x, popupW, containerWidth, padding),
+        y: clampWithin(c.y, popupH, containerHeight, padding),
+        width: popupW,
+        height: popupH,
+      };
+
+      let overlapArea = 0;
+      let overlapCount = 0;
+      for (const p of polygonRects) {
+        const area = rectOverlapArea(rect, p);
+        if (area > 0) overlapCount += 1;
+        overlapArea += area;
+      }
+
+      const dist = Math.abs((rect.x + popupW / 2) - polyCenterX) + Math.abs((rect.y + popupH / 2) - polyCenterY);
+      return { rect, overlapCount, overlapArea, dist };
+    };
+
+    let best: ReturnType<typeof scoreCandidate> | null = null;
+    for (const c of candidates) {
+      const s = scoreCandidate(c);
+      if (!best) {
+        best = s;
+        continue;
+      }
+      // Минимизируем: пересечения -> площадь -> расстояние до центра полигонов (чтобы быть "рядом", но не сверху)
+      const better =
+        s.overlapCount < best.overlapCount ||
+        (s.overlapCount === best.overlapCount && s.overlapArea < best.overlapArea) ||
+        (s.overlapCount === best.overlapCount && s.overlapArea === best.overlapArea && s.dist < best.dist);
+      if (better) best = s;
+    }
+
+    return best ? { x: best.rect.x, y: best.rect.y } : null;
+  }, [imgDimensions.height, imgDimensions.width, isExpanded, visibleFloors]);
+
+  const computePopupPositionForPolygon = useCallback(
+    (
+      polygonBoundsPct: { minX: number; maxX: number; minY: number; maxY: number },
+      size: { width: number; height: number }
+    ) => {
+      const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+      const clampWithin = (pos: number, popupSize: number, containerSize: number, padding: number) => {
+        const maxPos = Math.max(padding, containerSize - popupSize - padding);
+        return clamp(pos, padding, maxPos);
+      };
+
+      if (!containerRef.current) return null;
+      if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return null;
+
+      const padding = 8;
+      const offset = 12;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      const svgWidth = imgDimensions.width;
+      const svgHeight = imgDimensions.height;
+      const svgLeft = (containerWidth - svgWidth) / 2;
+      const svgTop = (containerHeight - svgHeight) / 2;
+
+      const polyMinX = svgLeft + (polygonBoundsPct.minX / 100) * svgWidth;
+      const polyMaxX = svgLeft + (polygonBoundsPct.maxX / 100) * svgWidth;
+      const polyMinY = svgTop + (polygonBoundsPct.minY / 100) * svgHeight;
+      const polyMaxY = svgTop + (polygonBoundsPct.maxY / 100) * svgHeight;
+
+      const popupW = Math.max(1, size.width);
+      const popupH = Math.max(1, size.height);
+
+      const polygonCenterXPct = (polygonBoundsPct.minX + polygonBoundsPct.maxX) / 2;
+      const preferRight = polygonCenterXPct < 50;
+
+      const rightCandidateX = polyMaxX + offset;
+      const leftCandidateX = polyMinX - offset - popupW;
+      const fitsRight = rightCandidateX + popupW + padding <= containerWidth;
+      const fitsLeft = leftCandidateX >= padding;
+
+      let x = preferRight
+        ? (fitsRight ? rightCandidateX : (fitsLeft ? leftCandidateX : rightCandidateX))
+        : (fitsLeft ? leftCandidateX : (fitsRight ? rightCandidateX : leftCandidateX));
+
+      const polygonCenterY = (polyMinY + polyMaxY) / 2;
+      let y = polygonCenterY - popupH / 2;
+
+      x = clampWithin(x, popupW, containerWidth, padding);
+      y = clampWithin(y, popupH, containerHeight, padding);
+
+      return { x, y };
+    },
+    [imgDimensions.height, imgDimensions.width, isExpanded]
+  );
+
+  const handleFloorHover = useCallback((floorNumber: number) => {
+    if (!isExpanded) return;
+    if (!containerRef.current) return;
+
+    // Находим полигон для данного этажа
+    const floor = buildingFloors.find(f => f.floor_number === floorNumber);
+    if (!floor || !floor.polygon || floor.polygon.length === 0) return;
+
+    // Set hovered floor for visual effects
+    setHoveredFloor(floorNumber);
+
+    // Show popup if tooltip is enabled in settings
+    if (facadeSettings?.display?.showTooltip) {
+      const polygonBounds = getPolygonBoundsPct(floor.polygon);
+      setPopupAnchor({ floorNumber, polygonBounds });
+      setSelectedFloor(floorNumber);
+      setShowPopup(true);
+
+      // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
+      if (isMobile) {
+        const sizeForInitial =
+          (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
+        const dock = mobilePopupDockPosition ?? computeMobileDockPosition(sizeForInitial);
+        if (dock) {
+          setMobilePopupDockPosition(dock);
+          setPopupPosition(dock);
+        }
+        return;
+      }
+
+      // Desktop: быстрое предварительное позиционирование (потом useLayoutEffect уточнит по реальному размеру)
+      const sizeForInitial =
+        (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
+      const nextPos = computePopupPositionForPolygon(polygonBounds, sizeForInitial);
+      if (nextPos) setPopupPosition(nextPos);
+    }
+  }, [
+    buildingFloors,
+    computeMobileDockPosition,
+    computePopupPositionForPolygon,
+    facadeSettings?.display?.showTooltip,
+    isExpanded,
+    isMobile,
+    mobilePopupDockPosition,
+    popupSize,
+  ]);
 
   const updateImageDimensionsRef = useRef<() => void>();
 
@@ -139,22 +390,6 @@ const BuildingFacadeView = ({
   updateImageDimensionsRef.current = updateImageDimensions;
 
 
-  const visibleFloors = useMemo(() => {
-    if (project.project_type === 'object') {
-      return buildingFloors;
-    }
-    
-    // Get unique floor numbers that have at least one available apartment
-    const floorsWithAvailable = new Set(
-      apartments
-        .filter(apt => apt.status === 'available')
-        .map(apt => apt.floor_number)
-    );
-    
-    // Filter buildingFloors to only include floors with available apartments
-    return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
-  }, [buildingFloors, apartments, project.project_type]);
-
   useEffect(() => {
     const handleResize = () => {
       updateImageDimensionsRef.current?.();
@@ -206,7 +441,7 @@ const BuildingFacadeView = ({
         handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
       }
     }
-  }, [isExpanded, visibleFloors, isMobile, imgDimensions]);
+  }, [handleFloorHover, imgDimensions.height, imgDimensions.width, isExpanded, isMobile, visibleFloors]);
 
 
 
@@ -243,6 +478,9 @@ const BuildingFacadeView = ({
   useEffect(() => {
     if (showPopup && !isExpanded) {
       setShowPopup(false);
+      setPopupAnchor(null);
+      setPopupPosition(null);
+      setSelectedFloor(null);
     }
   }, [isExpanded, showPopup]);
 
@@ -271,77 +509,8 @@ const BuildingFacadeView = ({
   // Floor Popup Component
   const FloorPopup = ({ Number, position }: { Number: number; position: { x: number; y: number } }) => {
     const { t } = useLanguage();
-    const tSafe = t || ((key: string) => key);
 
-    // Position popup to the left of the polygon
-    const popupWidth = 256; // min-w-64 = 16rem = 256px
-    const popupHeight = 160; // estimated height
-    const margin = 20;
 
-    // Получаем размеры родительского контейнера
-    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
-    const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
-
-    let adjustedX = position.x;
-    let adjustedY = position.y;
-    let positionType: 'left' | 'right' | 'top' | 'bottom' = 'left';
-
-    // Пытаемся позиционировать слева от полигона
-    const leftX = position.x - popupWidth - 20;
-    const rightX = position.x + 20;
-    const topY = position.y - popupHeight - 20;
-    const bottomY = position.y + 20;
-
-    // Проверяем, помещается ли слева
-    const fitsLeft = leftX >= margin;
-    // Проверяем, помещается ли справа
-    const fitsRight = rightX + popupWidth <= containerWidth - margin;
-    // Проверяем, помещается ли сверху
-    const fitsTop = topY >= margin;
-    // Проверяем, помещается ли снизу
-    const fitsBottom = bottomY + popupHeight <= containerHeight - margin;
-
-    // Приоритет: слева -> справа -> сверху -> снизу
-    if (fitsLeft) {
-      adjustedX = leftX;
-      adjustedY = position.y - popupHeight / 2;
-      positionType = 'left';
-    } else if (fitsRight) {
-      adjustedX = rightX;
-      adjustedY = position.y - popupHeight / 2;
-      positionType = 'right';
-    } else if (fitsTop) {
-      adjustedX = position.x - popupWidth / 2;
-      adjustedY = topY;
-      positionType = 'top';
-    } else if (fitsBottom) {
-      adjustedX = position.x - popupWidth / 2;
-      adjustedY = bottomY;
-      positionType = 'bottom';
-    } else {
-      // Если не помещается нигде, показываем справа и обрезаем по границам
-      adjustedX = Math.max(margin, Math.min(rightX, containerWidth - popupWidth - margin));
-      adjustedY = position.y - popupHeight / 2;
-      positionType = 'right';
-    }
-
-    // Финальная проверка вертикальных границ для левой/правой позиции
-    if (positionType === 'left' || positionType === 'right') {
-      if (adjustedY < margin) {
-        adjustedY = margin;
-      } else if (adjustedY + popupHeight > containerHeight - margin) {
-        adjustedY = containerHeight - popupHeight - margin;
-      }
-    }
-
-    // Финальная проверка горизонтальных границ для верхней/нижней позиции
-    if (positionType === 'top' || positionType === 'bottom') {
-      if (adjustedX < margin) {
-        adjustedX = margin;
-      } else if (adjustedX + popupWidth > containerWidth - margin) {
-        adjustedX = containerWidth - popupWidth - margin;
-      }
-    }
 
     // For project_type = object, Number is apartment number, not floor number
     if (project.project_type === 'object') {
@@ -353,8 +522,9 @@ const BuildingFacadeView = ({
 
       return (
         <ApartmentPopup
+          ref={popupRef}
           apartment={apartment}
-          position={{ x: adjustedX, y: adjustedY }}
+          position={{ x: position.x, y: position.y }}
           settings={{
             showNumbers: facadeSettings?.display?.showNumbers ?? true,
             showTooltip: facadeSettings?.display?.showTooltip ?? false,
@@ -371,31 +541,93 @@ const BuildingFacadeView = ({
 
     return (
       <div
+        ref={popupRef}
         className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:min-w-[100px] md:h-[100px] min-w-[80px] h-[110px]"
         style={{
-          left: adjustedX,
-          top: adjustedY,
+          left: position.x,
+          top: position.y,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {facadeSettings?.display?.showNumbers && (
           <div className="text-center flex items-center justify-center gap-[7px] md:p-0 p-1">
-            {tSafe('project.floor')} <span className='font-bold'>{Number}</span>
+            {t('project.floor')} <span className='font-bold'>{Number}</span>
           </div>
         )}
 
-        <div className= "md:mx-0 mx-1 flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
+        <div className="md:mx-0 mx-1 flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
           <div className="md:text-[32px] text-[20px] leading-[1.1]">{stats.available}</div>
-          {tSafe('project.available')}
+          {t('project.available')}
         </div>
         <Button
-        onClick={() => {handleFloorClick(Number);}}
-        variant="outline"  className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
+          onClick={() => { handleFloorClick(Number); }}
+          variant="outline" className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
           {t('customFields.show')}
         </Button>
       </div>
     );
   };
+
+  useLayoutEffect(() => {
+    if (!showPopup || !containerRef.current || !popupRef.current) return;
+    if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return;
+
+    const rect = popupRef.current.getBoundingClientRect();
+    const measured = { width: rect.width, height: rect.height };
+
+    const sizeChanged =
+      Math.abs(measured.width - popupSize.width) > 0.5 || Math.abs(measured.height - popupSize.height) > 0.5;
+    if (sizeChanged) {
+      setPopupSize(measured);
+    }
+
+    // Mobile: позиция всегда одна — выбираем best dock по всем полигонам и используем его
+    if (isMobile) {
+      const size = (measured.width > 0 && measured.height > 0)
+        ? measured
+        : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 });
+      const dock = computeMobileDockPosition(size);
+      if (!dock) return;
+
+      const dockChanged =
+        !mobilePopupDockPosition ||
+        Math.abs(dock.x - mobilePopupDockPosition.x) > 0.5 ||
+        Math.abs(dock.y - mobilePopupDockPosition.y) > 0.5;
+      if (dockChanged) setMobilePopupDockPosition(dock);
+
+      const posChanged =
+        !popupPosition || Math.abs(dock.x - popupPosition.x) > 0.5 || Math.abs(dock.y - popupPosition.y) > 0.5;
+      if (posChanged) setPopupPosition(dock);
+      return;
+    }
+
+    if (!popupAnchor) return;
+
+    const nextPos =
+      computePopupPositionForPolygon(
+        popupAnchor.polygonBounds,
+        (measured.width > 0 && measured.height > 0) ? measured : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 })
+      ) ?? null;
+
+    if (!nextPos) return;
+    const changed =
+      !popupPosition || Math.abs(nextPos.x - popupPosition.x) > 0.5 || Math.abs(nextPos.y - popupPosition.y) > 0.5;
+    if (changed) {
+      setPopupPosition(nextPos);
+    }
+  }, [
+    computeMobileDockPosition,
+    computePopupPositionForPolygon,
+    imgDimensions.height,
+    imgDimensions.width,
+    isExpanded,
+    isMobile,
+    mobilePopupDockPosition,
+    popupAnchor,
+    popupPosition,
+    popupSize,
+    showPopup
+  ]);
 
   const handleFloorClick = (floorNumber: number) => {
     // For project_type = object, floorNumber is actually apartment number
@@ -417,53 +649,13 @@ const BuildingFacadeView = ({
     }
   };
 
-  const handleFloorHover = (floorNumber: number) => {
-    if (!isExpanded) return;
-
-    if (!containerRef.current) return;
-
-    // Находим полигон для данного этажа
-    const floor = buildingFloors.find(f => f.floor_number === floorNumber);
-    if (!floor || !floor.polygon || floor.polygon.length === 0) return;
-
-    // Set hovered floor for visual effects
-    setHoveredFloor(floorNumber);
-
-    // Show popup if tooltip is enabled in settings
-    if (facadeSettings?.display?.showTooltip) {
-      // Вычисляем границы полигона
-      const polygonBounds = {
-        minX: Math.min(...floor.polygon.map(p => p.x)),
-        maxX: Math.max(...floor.polygon.map(p => p.x)),
-        minY: Math.min(...floor.polygon.map(p => p.y)),
-        maxY: Math.max(...floor.polygon.map(p => p.y))
-      };
-
-      // Преобразуем координаты полигона из процентов SVG в пиксели контейнера
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      // В расширенном режиме SVG центрирован и имеет размеры imgDimensions
-      if (!isExpanded || imgDimensions.width === 0) return;
-
-      const svgWidth = imgDimensions.width;
-      const svgHeight = imgDimensions.height;
-      const svgLeft = (containerRect.width - svgWidth) / 2;
-      const svgTop = (containerRect.height - svgHeight) / 2;
-
-      // Переводим проценты полигона в пиксели
-      const polygonLeftPx = svgLeft + (polygonBounds.minX / 100) * svgWidth + 100;
-      const polygonCenterY = svgTop + ((polygonBounds.minY + polygonBounds.maxY) / 2 / 100) * svgHeight;
-
-      setSelectedFloor(floorNumber);
-      setPopupPosition({ x: polygonLeftPx, y: polygonCenterY });
-      setShowPopup(true);
-    }
-  };
-
   const handleFloorLeave = () => {
     if (!isExpanded) return;
     setHoveredFloor(null);
     setShowPopup(false);
+    setPopupAnchor(null);
+    setPopupPosition(null);
+    setSelectedFloor(null);
   };
 
   const handleSVGFloorClick = (floorNumber: number) => {
@@ -613,7 +805,7 @@ const BuildingFacadeView = ({
     setMobileSwitcherPosition({ top: chosen.cy, left: chosen.cx });
   }, [isMobile, isExpanded, visibleFloors, imgDimensions.width, imgDimensions.height]);
 
-  
+
   if (loading) {
     return (
       <div
@@ -646,7 +838,7 @@ const BuildingFacadeView = ({
         {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
         {project.building_image_url && (
           <>
-  
+
             <img
               src={project.building_image_url}
               alt="Building"
@@ -668,7 +860,7 @@ const BuildingFacadeView = ({
               height: imgDimensions.height || 'auto',
               touchAction: isTouchZooming ? 'none' : 'manipulation'
             }}
-    
+
           >
             <div
               style={{
@@ -700,8 +892,6 @@ const BuildingFacadeView = ({
                     const baseColor = getFloorFillColor(floor);
                     const isHovered = hoveredFloor === floor.floor_number;
                     const isActive = hoveredFloor === floor.floor_number;
-                    const hoverColor = facadeSettings?.hoverEffects?.colorChange ?
-                      (baseColor === '#3b82f6' ? '#10b981' : baseColor) : baseColor;
                     return (
                       <g key={floor.id}>
                         <polygon
@@ -711,7 +901,7 @@ const BuildingFacadeView = ({
                           className="cursor-pointer transition-all duration-200"
                           data-floor={floor.floor_number}
                           onClick={() => handleSVGFloorClick(floor.floor_number)}
-                        
+
                           onMouseEnter={() => {
                             if (isExpanded) {
                               handleSVGFloorHover(floor.floor_number);
@@ -778,7 +968,7 @@ const BuildingFacadeView = ({
             <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
           </button>
         )}
-     {/*    {isExpanded && (
+        {/*    {isExpanded && (
           <button
             className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
               }`}
