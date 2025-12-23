@@ -391,7 +391,7 @@ const ProjectApartmentSelector = ({
 
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-white flex flex-col relative">
+    <div ref={containerRef} className="min-h-screen bg-white flex flex-col relative select-none">
       <LoaderView color={getThemeColor()} loading={isInitialLoading} />
       <SubscriptionAlert
         isSubscriptionInactive={isSubscriptionInactive}
