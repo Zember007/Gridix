@@ -26,4 +26,63 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   }
+  ,
+  // Layer boundaries (FSD-like). We allow app-layer imports only inside src/app.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/app/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/app/*"],
+              message:
+                "Do not import from app-layer outside of src/app. Move shared logic to shared/entities/features/widgets.",
+            },
+          ],
+        },
+      ],
+    },
+  }
+  ,
+  // Prevent direct Supabase client imports (use `@/shared/api/supabase` wrapper).
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/integrations/**", "src/shared/api/supabase.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/integrations/supabase/client"],
+              message:
+                "Import Supabase client via `@/shared/api/supabase` (single boundary point).",
+            },
+          ],
+        },
+      ],
+    },
+  }
+  ,
+  // Entities should not depend on UI layers directly.
+  {
+    files: ["src/entities/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "warn",
+        {
+          patterns: [
+            {
+              group: ["@/components/*", "@/pages/*"],
+              message:
+                "Entities should not import UI. Move composition into features/widgets/pages.",
+            },
+          ],
+        },
+      ],
+    },
+  }
 );

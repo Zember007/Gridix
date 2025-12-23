@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Switch } from '@/shared/ui/switch';
+import { Textarea } from '@/shared/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Save, Building2, AlertCircle, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 
 export function CompanyBillingSettings() {
   const { settings, loading, error, saveSettings, isSettingsComplete } = useCompanySettings();

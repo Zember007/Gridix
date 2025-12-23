@@ -1,21 +1,21 @@
 import { Navigate, useParams } from "react-router-dom";
-import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
-import { useProjectByDomain } from "@/hooks/useProjectByDomain";
+import { DEFAULT_LANGUAGE } from "@/shared/lib/language-utils";
+import { useProjectByDomain } from "@/entities/project/queries/useProjectByDomain";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
+import { useProject } from '@/entities/project/queries/useProjects';
 import { useFields } from '@/hooks/useFields';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
-import { Language } from '@/lib/language-utils';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
+import { Language } from '@/shared/lib/language-utils';
+import { Badge } from '@/shared/ui/badge';
+import { Separator } from '@/shared/ui/separator';
+import { Button } from '@/shared/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
 import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/shared/ui/sonner';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
@@ -138,7 +138,7 @@ export default function DomainApartmentPage() {
     setIsGeneratingPDF(true);
     try {
       // Динамически загружаем модуль PDF только когда нужен
-      const { generateApartmentPDF } = await import('@/lib/pdf-utils');
+      const { generateApartmentPDF } = await import('@/shared/lib/pdf-utils');
 
       const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}/pdf`;
 

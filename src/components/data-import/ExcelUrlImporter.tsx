@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Switch } from '@/shared/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { AlertCircle, Link, RefreshCw, FileSpreadsheet, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -13,9 +13,9 @@ import {
   isGoogleSheetsUrl, 
   validateGoogleSheetsAccess,
   getGoogleSheetsInstructions 
-} from '@/lib/google-sheets-utils';
+} from '@/shared/lib/google-sheets-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
+import { adminThemeClasses as admin } from '@/shared/lib/admin-theme-config';
 
 interface ExcelUrlImporterProps {
   onDataImported: (data: any[], columns: string[]) => void;

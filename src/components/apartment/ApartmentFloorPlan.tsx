@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { Building2 } from 'lucide-react';
-import { Apartment } from '@/types/apartment';
+import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import FloorPlanView from '@/components/visualization/FloorPlanView';
-import { Project } from '@/hooks/useProjectsManager';
+import { Project } from '@/entities/project/queries/useProjectsManager';
 import { FieldSetting } from '@/hooks/useFields';
 
 interface ApartmentFloorPlanProps {

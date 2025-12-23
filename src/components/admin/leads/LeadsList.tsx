@@ -1,9 +1,9 @@
 import React from 'react';
 import { Building2, Calendar, ChevronRight, MessageCircle, Phone, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ExtendedLead, FunnelStage } from '@/types/crm';
+import { ExtendedLead, FunnelStage } from '@/entities/crm/model/types';
 import { UserAvatar } from '@/components/admin/UserAvatar';
-import { LeadTask } from '@/types/crm';
+import { LeadTask } from '@/entities/crm/model/types';
 
 const getRelativeDate = (dateStr: string, t: any) => {
     const date = new Date(dateStr);

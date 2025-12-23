@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { Apartment } from '@/types/apartment';
-import { normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import type { Apartment } from '@/entities/apartment/model/types';
+import { normalizeApartmentData } from '@/entities/apartment/model/types';
 
 function isNumericLike(v: string) {
   return v.trim() !== '' && Number.isFinite(Number(v));

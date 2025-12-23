@@ -15,10 +15,10 @@ import {
   Award,
 } from 'lucide-react';
 import { IncomeChart } from './IncomeChart';
-import { usePartner } from '@/hooks/usePartner';
-import { usePartnerStats } from '@/hooks/usePartnerStats';
+import { usePartner } from '@/entities/partner/queries/usePartner';
+import { usePartnerStats } from '@/entities/partner/queries/usePartnerStats';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Badge } from '../ui/badge';
+import { Badge } from '@/shared/ui/badge';
 
 interface PartnerOverviewSectionProps {
   onNavigate?: (

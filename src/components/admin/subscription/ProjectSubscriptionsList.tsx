@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import {
   Building2,
   CheckCircle2,
@@ -7,7 +7,7 @@ import {
   ArrowRight,
   Plus,
 } from 'lucide-react';
-import { ProjectSubscription } from '@/hooks/useSubscription';
+import { ProjectSubscription } from '@/entities/subscription/queries/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectSubscriptionsListProps {

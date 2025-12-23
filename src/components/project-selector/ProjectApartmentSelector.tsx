@@ -1,19 +1,20 @@
 import { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useProject } from '@/hooks/useProjects';
-import { Loader } from '@/components/ui/loader';
-import { Apartment } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { useProject } from '@/entities/project/queries/useProjects';
+import { Loader } from '@/shared/ui/loader';
+import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFields } from '@/hooks/useFields';
 import ApartmentFloorPlan from '../apartment/ApartmentFloorPlan';
-import BuildingFacadeView, { type BuildingFloor, type FacadeSettings } from '../visualization/BuildingFacadeView';
+import BuildingFacadeView from '@/features/visualization/buildingFacade/ui/BuildingFacadeView';
+import { BuildingFloor, FacadeSettings } from '@/features/visualization/buildingFacade/model/types';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { useProjectFilters } from './hooks/useProjectFilters';
 import { LayoutGallery } from './layouts/LayoutGallery';
-import { Project } from '@/hooks/useProjects';
+import { Project } from '@/entities/project/queries/useProjects';
 import LoaderView from './views/LoaderView';
 import { useApartmentsData } from './hooks/useApartmentsData';
 import { useBuildingImage } from './hooks/useBuildingImage';
@@ -479,6 +480,7 @@ const ProjectApartmentSelector = ({
                         // Building facade view with interactive floor polygons
                         <div className="w-full bg-white">
                           <BuildingFacadeView
+                            themeColor={getThemeColor()}
                             projectId={project.id}
                             project={project}
                             apartments={filters.filteredApartments}

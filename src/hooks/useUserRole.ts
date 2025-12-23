@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface ManagerRole {

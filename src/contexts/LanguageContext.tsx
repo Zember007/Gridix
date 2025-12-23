@@ -7,7 +7,7 @@ import {
   addLanguageToPath,
   removeLanguageFromPath,
   LANGUAGE_CONFIG,
-} from '@/lib/language-utils';
+} from '@/shared/lib/language-utils';
 
 /**
  * Хук для работы с языком и переводами через react-i18next

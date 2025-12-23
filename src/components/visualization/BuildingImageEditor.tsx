@@ -1,16 +1,16 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
 import PolygonCustomizationSettings from './PolygonCustomizationSettings';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProject } from '@/hooks/useProjects';
+import { useProject } from '@/entities/project/queries/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Shape, Point } from './polygon-editor/GeometryShapes';
 import { compressToWebP } from '@/hooks/use-upload';

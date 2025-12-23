@@ -5,7 +5,7 @@ import {
   FunnelStage,
   FunnelTriggerEvent,
   LeadUser,
-} from '@/types/crm';
+} from '@/entities/crm/model/types';
 import { getTriggerIcons } from '@/constants/crm';
 
 interface FunnelTriggerEditorProps {

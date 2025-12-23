@@ -1,4 +1,4 @@
-import type { Project } from '@/hooks/useProjectsManager';
+import type { Project } from '@/entities/project/queries/useProjectsManager';
 
 export function ProjectSelect({
   projects,

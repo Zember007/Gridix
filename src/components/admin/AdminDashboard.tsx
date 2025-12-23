@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { HelpCircle, Menu, MessageCircleQuestionMark } from 'lucide-react';
-import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
@@ -15,7 +15,7 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { AdminSidebar } from '@/components/ui/sidebar-component';
+import { AdminSidebar } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
 

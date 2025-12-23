@@ -1,12 +1,12 @@
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Home, Maximize, Banknote, MapPin } from 'lucide-react';
-import { Apartment } from '@/types/apartment';
+import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
-import { useProjectCurrency } from '@/hooks/useProjectCache';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
+import { useProjectCurrency } from '@/entities/project/queries/useProjectCache';
 
 interface ApartmentListProps {
   apartments: Apartment[];

@@ -1,12 +1,12 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { Switch } from '@/shared/ui/switch';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
+import { Slider } from '@/shared/ui/slider';
 import { Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 import { Tables } from '@/integrations/supabase/types';
 type Project = Tables<'projects'>;
 

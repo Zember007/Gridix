@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { usePartner } from '@/hooks/usePartner';
-import { usePartnerStats } from '@/hooks/usePartnerStats';
-import type { PartnerClient } from '@/types/partner';
+import { usePartner } from '@/entities/partner/queries/usePartner';
+import { usePartnerStats } from '@/entities/partner/queries/usePartnerStats';
+import type { PartnerClient } from '@/entities/partner/model/types';
 
 // Вкладка «Рефералы» — адаптирована из gridix-dashboard PartnerReferralsPage.
 // Вся статистика и переходы здесь моковые по умолчанию.

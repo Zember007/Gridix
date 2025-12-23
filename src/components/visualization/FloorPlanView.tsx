@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment } from '@/types/apartment';
+import { Card, CardContent } from '@/shared/ui/card';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { FieldSetting } from '@/hooks/useFields';

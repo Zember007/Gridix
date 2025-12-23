@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LeadTask, LeadUser, TaskType, MOCK_USERS } from '@/types/crm';
+import { LeadTask, LeadUser, TaskType, MOCK_USERS } from '@/entities/crm/model/types';
 
 export const getTaskTypes = (t: any): Record<
   TaskType,

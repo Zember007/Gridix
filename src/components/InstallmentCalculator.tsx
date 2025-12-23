@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Label } from '@/shared/ui/label';
+import { Slider } from '@/shared/ui/slider';
+import { Button } from '@/shared/ui/button';
 import { Calculator, CreditCard } from 'lucide-react';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InstallmentCalculatorProps {

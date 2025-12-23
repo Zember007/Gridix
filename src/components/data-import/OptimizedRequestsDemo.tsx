@@ -1,8 +1,8 @@
 import React from 'react';
-import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
-import { useProjectCache } from '@/hooks/useProjectCache';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useProjectsWithPrices } from '@/entities/project/queries/useProjectsWithPrices';
+import { useProjectCache } from '@/entities/project/queries/useProjectCache';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 
 interface OptimizedRequestsDemoProps {
   userId: string;

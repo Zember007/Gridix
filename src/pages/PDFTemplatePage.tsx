@@ -1,15 +1,15 @@
 import { useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
-import { useApartment } from '@/hooks/useApartment';
+import { useProject } from '@/entities/project/queries/useProjects';
+import { useApartment } from '@/entities/apartment/queries/useApartment';
 import { useFields } from '@/hooks/useFields';
-import { formatPriceWithCurrency, convertPrice } from '@/lib/currency-utils';
-import { Language } from '@/lib/language-utils';
-import { Loader } from '@/components/ui/loader';
+import { formatPriceWithCurrency, convertPrice } from '@/shared/lib/currency-utils';
+import { Language } from '@/shared/lib/language-utils';
+import { Loader } from '@/shared/ui/loader';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment } from '@/types/apartment';
-import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment } from '@/entities/apartment/model/types';
+import { Badge } from '@/shared/ui/badge';
 
 interface PDFTemplatePageProps {
     useId?: boolean;

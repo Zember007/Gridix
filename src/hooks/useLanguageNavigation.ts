@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { addLanguageToPath, removeLanguageFromPath, getLanguageParam } from '@/lib/language-utils';
+import { addLanguageToPath, removeLanguageFromPath, getLanguageParam } from '@/shared/lib/language-utils';
 
 /**
  * Hook for language-aware navigation

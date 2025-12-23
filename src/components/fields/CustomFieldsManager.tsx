@@ -1,17 +1,17 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Switch } from '@/shared/ui/switch';
+import { Badge } from '@/shared/ui/badge';
 import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { SUPPORTED_LANGUAGES, LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
+import { SUPPORTED_LANGUAGES, LANGUAGE_CONFIG, Language } from '@/shared/lib/language-utils';
 
 interface CustomField {
   id?: string;

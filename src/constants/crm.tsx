@@ -9,7 +9,7 @@ import {
   Bell,
   Home,
 } from 'lucide-react';
-import { FunnelTrigger, CardField } from '@/types/crm';
+import { FunnelTrigger, CardField } from '@/entities/crm/model/types';
 
 export const getTriggerIcons = (
   t: (key: string) => string,

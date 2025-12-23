@@ -29,9 +29,9 @@ import { ImportModal } from '@/components/admin/leads/ImportModal';
 import { DuplicateFinderModal } from '@/components/admin/leads/DuplicateFinderModal';
 import { useAdminLeadsData } from '@/hooks/useAdminLeadsData';
 import { EmptyState } from '@/components/admin/EmptyState';
-import { showToast } from '@/lib/toast';
-import type { LeadsFilters } from '@/types/crm';
-import { Button } from '@/components/ui/button';
+import { showToast } from '@/shared/lib/toast';
+import type { LeadsFilters } from '@/entities/crm/model/types';
+import { Button } from '@/shared/ui/button';
 
 interface LeadsManagerProps {
   projectId?: string;

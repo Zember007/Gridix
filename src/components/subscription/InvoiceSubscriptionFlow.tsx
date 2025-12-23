@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscription } from '@/entities/subscription/queries/useSubscription';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { InvoiceViewer } from './InvoiceViewer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Badge } from '@/shared/ui/badge';
 import { Loader2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 

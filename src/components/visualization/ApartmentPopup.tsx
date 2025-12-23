@@ -1,7 +1,7 @@
 import React from 'react';
-import { Apartment } from '@/types/apartment';
+import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
 
 interface ApartmentPopupProps {
   apartment: Apartment;

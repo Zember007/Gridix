@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { supabase } from '@/shared/api/supabase';
+import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
 import {
   Table,
   TableBody,
@@ -9,10 +9,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import { Eye, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/badge';
 
 interface Project {
   id: string;

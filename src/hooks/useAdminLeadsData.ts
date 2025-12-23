@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
-import { useLeads, Lead as DbLead, LeadFilters as DbLeadFilters } from '@/hooks/useLeads';
+import { supabase } from '@/shared/api/supabase';
+import { useLeads, Lead as DbLead, LeadFilters as DbLeadFilters } from '@/entities/lead/queries/useLeads';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
-import { showToast } from '@/lib/toast';
+import { showToast } from '@/shared/lib/toast';
 import {
   ExtendedLead,
   LeadsFilters,
@@ -19,7 +19,7 @@ import {
   CardAppearanceConfig,
   MOCK_USERS,
   TaskType,
-} from '@/types/crm';
+} from '@/entities/crm/model/types';
 
 // Map DB lead to ExtendedLead used by UI
 function mapDbLeadToExtended(dbLead: DbLead): ExtendedLead {

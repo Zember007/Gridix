@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
+import { processPendingReferralAfterAuth } from '@/features/partnerProgram/referralTracking';
 
 export interface UserProfile {
   id: string;
@@ -134,81 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     let timeoutId: NodeJS.Timeout | null = null;
 
     try {
-      // Обрабатываем реферальный код и UTM-метки из localStorage (если есть)
-      try {
-        const pendingReferralStr = localStorage.getItem('pending_referral');
-        if (pendingReferralStr) {
-          const pendingReferral = JSON.parse(pendingReferralStr);
-          const {
-            partnerCode,
-            invitationCode,
-            invitationType,
-            utmSource,
-            utmMedium,
-            utmCampaign,
-            timestamp,
-          } = pendingReferral;
-
-          const maxAge = 24 * 60 * 60 * 1000; // 24 часа
-          if (partnerCode && timestamp && Date.now() - timestamp < maxAge) {
-            
-
-            if (invitationCode && invitationType === 'managed') {
-              const { data: invitationData, error: invitationError } =
-                await supabase.functions.invoke('partner-program', {
-                  body: {
-                    action: 'track_referral',
-                    partner_code: partnerCode,
-                    invitation_code: invitationCode,
-                    invitation_type: 'managed',
-                    utm_source: utmSource,
-                    utm_medium: utmMedium,
-                    utm_campaign: utmCampaign,
-                  },
-                });
-
-              if (invitationError) {
-                console.error(
-                  'Error processing invitation (after auth):',
-                  invitationError,
-                );
-              } else if (invitationData?.success) {
-              
-                localStorage.removeItem('pending_referral');
-              }
-            } else {
-              const { data: referralData, error: referralError } =
-                await supabase.functions.invoke('partner-program', {
-                  body: {
-                    action: 'track_referral',
-                    partner_code: partnerCode,
-                    utm_source: utmSource,
-                    utm_medium: utmMedium,
-                    utm_campaign: utmCampaign,
-                  },
-                });
-
-              if (referralError) {
-                console.error(
-                  'Error tracking referral (after auth):',
-                  referralError,
-                );
-              } else if (referralData?.success) {
-               
-                localStorage.removeItem('pending_referral');
-              }
-            }
-          } else {
-            // Данные устарели или некорректны — очищаем
-            localStorage.removeItem('pending_referral');
-          }
-        }
-      } catch (referralErr) {
-        console.error(
-          'Error processing referral from localStorage (after auth):',
-          referralErr,
-        );
-      }
+      await processPendingReferralAfterAuth();
 
       const queryPromise = supabase
         .from('user_profiles')
@@ -222,7 +149,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Define the expected Supabase response type
       const { data, error } = await Promise.race([
-        queryPromise as unknown as Promise<{ data: UserProfile | null; error: any }>,
+        queryPromise as unknown as Promise<{ data: UserProfile | null; error: unknown }>,
         new Promise<never>((_, reject) => timeoutId && reject(new Error('Query timeout'))),
       ]);
 

@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Switch } from '@/shared/ui/switch';
+import { Badge } from '@/shared/ui/badge';
 import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Language } from '@/lib/language-utils';
+import { Language } from '@/shared/lib/language-utils';
 import CustomFieldsManager from './CustomFieldsManager';
 
 interface CustomField {

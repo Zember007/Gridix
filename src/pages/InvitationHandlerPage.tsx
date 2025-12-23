@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../integrations/supabase/client'
+import { supabase } from '@/shared/api/supabase'
 
 export default function InvitationHandlerPage() {
   const [searchParams] = useSearchParams()

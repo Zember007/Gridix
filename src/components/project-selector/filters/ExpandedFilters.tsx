@@ -1,7 +1,7 @@
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { Label } from '@/shared/ui/label';
+import { Slider } from '@/shared/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 
 interface ExpandedFiltersProps {
   priceRange: number[];

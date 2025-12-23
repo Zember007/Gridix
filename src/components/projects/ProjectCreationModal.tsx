@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { Progress } from '@/shared/ui/progress';
+import { Badge } from '@/shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/data-import/ExcelColumnMapper';
 import ExcelUrlImporter from '@/components/data-import/ExcelUrlImporter';
 import * as XLSX from 'xlsx';
-import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
+import { adminThemeClasses as admin } from '@/shared/lib/admin-theme-config';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectCreationModalProps {

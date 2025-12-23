@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Apartment } from '@/types/apartment';
-import { isValidCurrency } from '@/lib/currency-utils';
+import { Apartment } from '@/entities/apartment/model/types';
+import { isValidCurrency } from '@/shared/lib/currency-utils';
 
 interface Project {
   currency?: string;

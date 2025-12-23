@@ -1,9 +1,9 @@
 import React from 'react';
 import { AlertTriangle, Eye } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useFailedLeads } from '@/hooks/useLeads';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { useFailedLeads } from '@/entities/lead/queries/useLeads';
 import { useAllFailedLeadsStats } from '@/hooks/useAllFailedLeadsStats';
 
 interface LeadsNotificationProps {

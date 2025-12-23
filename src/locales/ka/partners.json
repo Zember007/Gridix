@@ -179,7 +179,7 @@
   "levelLabel": "თქვენი დონე",
   "levelHintPrefix": "მოიზიდეთ",
   "levelHintProjects": "აქტიური პროექტი",
-  "levelHintReach": "რომ მიიღოთ დონი {level}",
+  "levelHintReach": "რომ მიიღოთ დონი {{level}}",
   "levelMax": "თქვენ მიაღწიეთ პარტნიორული პროგრამის მაქსიმალურ დონეს.",
   "levelProgress": "პრോഗრესი",
   "levelProjectsShort": "პროექტი",

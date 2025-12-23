@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { Language } from '@/lib/language-utils';
-import type { Apartment } from '@/types/apartment';
+import { Language } from '@/shared/lib/language-utils';
+import type { Apartment } from '@/entities/apartment/model/types';
 
 interface FieldConfig {
   field_label: string;

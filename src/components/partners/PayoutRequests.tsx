@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { Badge } from '../ui/badge';
-import { Alert, AlertDescription } from '../ui/alert';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
+import { Badge } from '@/shared/ui/badge';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { CreditCard, DollarSign, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { usePartnerStats } from '../../hooks/usePartnerStats';
-import { toast } from '@/components/ui/sonner';
-import { supabase } from '../../integrations/supabase/client';
-import { PartnerPayout } from '../../types/partner';
+import { usePartnerStats } from '@/entities/partner/queries/usePartnerStats';
+import { toast } from '@/shared/ui/sonner';
+import { supabase } from '@/shared/api/supabase';
+import { PartnerPayout } from '@/entities/partner/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function PayoutRequests() {

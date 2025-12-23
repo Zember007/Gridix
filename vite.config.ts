@@ -73,7 +73,7 @@ export default defineConfig(({ mode }) => {
         cssCodeSplit: false,
         minify: "esbuild",
         lib: {
-          entry: path.resolve(__dirname, "src/widget.tsx"),
+          entry: path.resolve(__dirname, "src/app/entries/widget/index.tsx"),
           name: "GridixWidget",
           formats: ["iife"],
           fileName: () => "index.js",

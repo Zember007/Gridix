@@ -2,17 +2,17 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects } from '@/entities/project/queries/useProjects';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { BindingStatusCard } from '@/components/amocrm-link/BindingStatusCard';
 import { ProjectSelect } from '@/components/amocrm-link/ProjectSelect';
 import { ApartmentChessboard } from '@/components/amocrm-link/ApartmentChessboard';
 import { ObjectUnitSelect } from '@/components/amocrm-link/ObjectUnitSelect';
-import type { Apartment } from '@/types/apartment';
+import type { Apartment } from '@/entities/apartment/model/types';
 
 type BindingStatus =
   | { bound: false }

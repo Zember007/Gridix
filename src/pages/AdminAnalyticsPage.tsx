@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
-import { ADMIN_THEME, getAdminThemeVariables } from "@/lib/admin-theme-config";
+import { ADMIN_THEME, getAdminThemeVariables } from "@/shared/lib/admin-theme-config";
 
 const AdminAnalyticsPage = () => {
   useEffect(() => {

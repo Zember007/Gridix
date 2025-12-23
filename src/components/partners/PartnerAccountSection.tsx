@@ -8,18 +8,18 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
 } from 'lucide-react';
-import { usePartnerAccountData } from '@/hooks/usePartnerAccountData';
+import { usePartnerAccountData } from '@/entities/partner/queries/usePartnerAccountData';
 import { PartnerTopUpModal } from './PartnerTopUpModal';
 import { WithdrawalRequestsModal } from './WithdrawalRequestsModal';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Input } from '../ui/input';
+import { Input } from '@/shared/ui/input';
 import {
   Select as ShadcnSelect,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from '@/shared/ui/select';
 
 export const PartnerAccountSection: React.FC = () => {
   const { t } = useLanguage();

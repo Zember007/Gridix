@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/shared/ui/card';
 import {
   Table,
   TableBody,
@@ -15,15 +15,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+} from '@/shared/ui/table';
+import { Input } from '@/shared/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import {
   LineChart,
   Line,
@@ -46,15 +46,15 @@ import {
   TrendingUp,
   AlertCircle,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
+import { useWorkspaceProjects } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
-import { Loader } from '@/components/ui/loader';
-import { ADMIN_THEME } from '@/lib/admin-theme-config';
+import { Loader } from '@/shared/ui/loader';
+import { ADMIN_THEME } from '@/shared/lib/admin-theme-config';
 
 interface AnalyticsData {
   projectViews: Array<{ date: string; views: number }>;

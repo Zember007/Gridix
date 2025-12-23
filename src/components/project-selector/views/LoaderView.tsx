@@ -1,4 +1,4 @@
-import Loader from '@/components/ui/loader';
+import Loader from '@/shared/ui/loader';
 import { useEffect, useState } from 'react';
 
 interface LoaderViewProps {

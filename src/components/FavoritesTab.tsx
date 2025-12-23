@@ -1,12 +1,12 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFavorites } from '@/hooks/useFavorites';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 import { Heart, Home, Square, ExternalLink } from 'lucide-react';
 
-import { Apartment } from '@/types/apartment';
+import { Apartment } from '@/entities/apartment/model/types';
 
 interface FavoritesTabProps {
   projectId: string;

@@ -9,7 +9,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { FunnelStage, FunnelTrigger, LeadUser } from '@/types/crm';
+import { FunnelStage, FunnelTrigger, LeadUser } from '@/entities/crm/model/types';
 import { useDragScroll } from '@/hooks/useDragScroll';
 import { FunnelTriggerCard } from './FunnelTriggerCard';
 import { FunnelTriggerEditor } from './FunnelTriggerEditor';

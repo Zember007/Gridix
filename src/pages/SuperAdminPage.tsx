@@ -1,7 +1,7 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/shared/ui/sidebar';
 import { SuperAdminSidebar } from '@/components/superadmin/SuperAdminSidebar';
 import { UsersManagement } from '@/components/superadmin/UsersManagement';
 import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';

@@ -1,8 +1,8 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { addLanguageToPath, getLanguageFromPath } from '@/lib/language-utils';
-import { supabase } from '@/integrations/supabase/client';
+import { addLanguageToPath, getLanguageFromPath } from '@/shared/lib/language-utils';
+import { supabase } from '@/shared/api/supabase';
 
 interface ProtectedRouteProps {
   children: ReactNode;

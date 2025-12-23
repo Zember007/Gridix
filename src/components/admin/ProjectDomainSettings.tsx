@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Badge } from "@/shared/ui/badge";
+import { Separator } from "@/shared/ui/separator";
 import { AlertCircle, Plus, Trash2, ExternalLink, Globe, Info, Copy, CheckCircle } from "lucide-react";
-import { useProjectDomains } from "@/hooks/useProjectDomains";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useProjectDomains } from "@/entities/project/queries/useProjectDomains";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,11 +18,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/alert-dialog";
+import { Switch } from "@/shared/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/shared/api/supabase";
 
 interface ProjectDomainSettingsProps {
   projectId: string;

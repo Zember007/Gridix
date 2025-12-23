@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
 import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Language } from '@/lib/language-utils';
+import { Language } from '@/shared/lib/language-utils';
 import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useFields, FieldSetting } from '@/hooks/useFields';
 

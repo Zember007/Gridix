@@ -1,2 +1,2 @@
-// Re-export the new modular component
-export { default } from './project-selector/ProjectApartmentSelector';
+// Backward compatibility re-export
+export { default } from "@/widgets/projectApartmentSelector";

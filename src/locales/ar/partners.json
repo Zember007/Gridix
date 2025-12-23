@@ -180,7 +180,7 @@
   "levelLabel": "مستواك",
   "levelHintPrefix": "اجذب",
   "levelHintProjects": "مشروعاً نشطاً",
-  "levelHintReach": "للوصول إلى مستوى {level}",
+  "levelHintReach": "للوصول إلى مستوى {{level}}",
   "levelMax": "لقد وصلت إلى أعلى مستوى في برنامج الشراكة.",
   "levelProgress": "التقدم",
   "levelProjectsShort": "مشاريع",

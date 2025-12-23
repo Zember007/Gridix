@@ -1,12 +1,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Label } from '@/shared/ui/label';
+import { Switch } from '@/shared/ui/switch';
+import { Button } from '@/shared/ui/button';
+import { Slider } from '@/shared/ui/slider';
+import { Separator } from '@/shared/ui/separator';
+import { supabase } from '@/shared/api/supabase';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Json } from '@/integrations/supabase/types';

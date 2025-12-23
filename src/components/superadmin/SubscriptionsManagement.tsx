@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { supabase } from '@/shared/api/supabase';
+import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import { Plus, X, Check, Loader2, ExternalLink, FileText, Download, Eye, AlertCircle, Edit } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -18,19 +18,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+} from '@/shared/ui/dialog';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/shared/ui/select';
+import { Badge } from '@/shared/ui/badge';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Checkbox } from '@/shared/ui/checkbox';
 
 interface Subscription {
   id: string;

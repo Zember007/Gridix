@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { House } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
-import { supabase } from '@/integrations/supabase/client';
+import { useProject } from '@/entities/project/queries/useProjects';
+import { supabase } from '@/shared/api/supabase';
 
 export interface FloatingProjectButtonProps {
   projectId: string;

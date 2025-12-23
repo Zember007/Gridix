@@ -1,12 +1,12 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Switch } from '@/shared/ui/switch';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tables } from '@/integrations/supabase/types';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 
 type Project = Tables<'projects'>;
 

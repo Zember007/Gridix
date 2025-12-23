@@ -1,6 +1,6 @@
 import React from 'react';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CurrencyType, getCurrencySymbol, isValidCurrency } from '@/lib/currency-utils';
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
+import { CurrencyType, getCurrencySymbol, isValidCurrency } from '@/shared/lib/currency-utils';
 
 export interface CurrencyToggleProps {
   selectedCurrency: string;

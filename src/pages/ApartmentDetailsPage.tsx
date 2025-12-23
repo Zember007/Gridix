@@ -1,20 +1,20 @@
 import { useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
-import { useApartment } from '@/hooks/useApartment';
+import { useProject } from '@/entities/project/queries/useProjects';
+import { useApartment } from '@/entities/apartment/queries/useApartment';
 import { useFields } from '@/hooks/useFields';
-import { formatPriceWithCurrency, convertPrice } from '@/lib/currency-utils';
+import { formatPriceWithCurrency, convertPrice } from '@/shared/lib/currency-utils';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
-import { Language } from '@/lib/language-utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Loader } from '@/components/ui/loader';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Language } from '@/shared/lib/language-utils';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Loader } from '@/shared/ui/loader';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
 import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart, Loader2 } from 'lucide-react';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/shared/ui/sonner';
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
@@ -412,7 +412,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     setIsGeneratingPDF(true);
     try {
       // Динамически загружаем модуль PDF только когда нужен
-      const { generateApartmentPDF } = await import('@/lib/pdf-utils');
+      const { generateApartmentPDF } = await import('@/shared/lib/pdf-utils');
 
       // Формируем URL для API
       const projectSlug = project.slug || `id/${project.id}`;

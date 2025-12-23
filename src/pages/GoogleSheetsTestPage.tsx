@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import GoogleSheetsImportDemo from '@/components/data-import/GoogleSheetsImportDemo';
 import { useNavigate } from 'react-router-dom';
 

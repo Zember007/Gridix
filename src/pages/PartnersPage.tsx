@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePartner } from '@/hooks/usePartner';
+import { usePartner } from '@/entities/partner/queries/usePartner';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wallet } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,7 +8,7 @@ import { PartnerInstructionsSection } from '@/components/partners/PartnerInstruc
 import { PartnerOverviewSection } from '@/components/partners/PartnerOverviewSection';
 import { PartnerReferralsSection } from '@/components/partners/PartnerReferralsSection';
 import { PartnerClientsSection } from '@/components/partners/PartnerClientsSection';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 
 const PartnersPage = () => {
   const { isPartner, loading, createPartnerProfile } = usePartner();

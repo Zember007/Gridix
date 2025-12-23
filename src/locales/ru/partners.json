@@ -218,7 +218,7 @@
   "levelLabel": "Ваш уровень",
   "levelHintPrefix": "Привлеките ещё",
   "levelHintProjects": "активных проектов",
-  "levelHintReach": "до уровня {level}",
+  "levelHintReach": "до уровня {{level}}",
   "levelMax": "Вы достигли максимального уровня партнёрской программы.",
   "levelProgress": "Прогресс",
   "levelProjectsShort": "проектов",

@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { Checkbox } from '@/shared/ui/checkbox';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 
 interface ApartmentSyncDialogProps {
   open: boolean;

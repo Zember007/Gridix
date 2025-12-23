@@ -10,7 +10,7 @@ import {
     Annotation
 } from '@annotorious/react';
 import '@annotorious/react/annotorious-react.css';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { Shape, Point } from './GeometryShapes';
 import { getImageSize, shapeToPercents, shapeToPixels } from '@/hooks/use-polygon';
 

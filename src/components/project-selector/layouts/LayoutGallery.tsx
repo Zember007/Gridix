@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 import { Ruler, Building2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Apartment } from '@/types/apartment';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { Apartment } from '@/entities/apartment/model/types';
+import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 import { FieldSetting } from '@/hooks/useFields';
-import { Project } from '@/hooks/useProjectsManager';
+import { Project } from '@/entities/project/queries/useProjectsManager';
 
 
 

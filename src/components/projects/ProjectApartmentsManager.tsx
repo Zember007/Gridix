@@ -1,22 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
 import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw, Building, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import ApartmentCustomFields from '@/components/apartment/ApartmentCustomFields';
 import ApartmentSyncDialog from '@/components/apartment/ApartmentSyncDialog';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import type { Json } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ADMIN_THEME } from '@/lib/admin-theme-config';
+import { useProject } from '@/entities/project/queries/useProjects';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { ADMIN_THEME } from '@/shared/lib/admin-theme-config';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;

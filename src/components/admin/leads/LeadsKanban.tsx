@@ -2,8 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Phone, MessageCircle, Building2, AlertCircle, User, Calendar, MoreHorizontal, Ghost, Globe, Instagram, Facebook } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LeadTask, LeadUser, LeadSource } from '@/types/crm';
-import { ExtendedLead, FunnelStage, CardAppearanceConfig } from '@/types/crm';
+import { LeadTask, LeadUser, LeadSource } from '@/entities/crm/model/types';
+import { ExtendedLead, FunnelStage, CardAppearanceConfig } from '@/entities/crm/model/types';
 import { useDragScroll } from '@/hooks/useDragScroll';
 import { UserAvatar } from '@/components/admin/UserAvatar';
 
@@ -136,16 +136,12 @@ const KanbanCard: React.FC<{
                         <Building2 size={10} className="shrink-0"/>
                         <span className="truncate">{lead.project}</span>
                     </div>
-                </div>
-                
-                {lead.tags && lead.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                        {lead.tags.slice(0, 3).map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200 shadow-sm">{tag}</span>
-                        ))}
-                        {lead.tags.length > 3 && <span className="text-[10px] text-slate-400">+{lead.tags.length - 3}</span>}
-                    </div>
-                )}
+                    {lead.apartment && (
+                        <div className="bg-slate-100 text-slate-500 p-1 rounded text-[10px] font-bold uppercase border border-slate-200 tracking-wide truncate max-w-full flex items-center gap-1">
+                            <span className="truncate">{lead.apartment}</span>
+                        </div>
+                    )}
+                </div>                
             </div>
             
             {/* Footer: Task & Contact Actions */}

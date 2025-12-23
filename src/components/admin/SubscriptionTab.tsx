@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/shared/ui/button';
 import {
   useSubscription,
   ProjectSubscription,
   BillingDetails,
-} from '@/hooks/useSubscription';
+} from '@/entities/subscription/queries/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { toast } from 'sonner';
 import { ProjectSubscriptionsList } from './subscription/ProjectSubscriptionsList';
 import { DurationSelector } from './subscription/DurationSelector';

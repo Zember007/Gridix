@@ -8,8 +8,8 @@ import {
   Phone,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ExtendedLead } from '@/types/crm';
-import { showToast } from '@/lib/toast';
+import { ExtendedLead } from '@/entities/crm/model/types';
+import { showToast } from '@/shared/lib/toast';
 
 interface Props {
   isOpen: boolean;

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Search, UserPlus, LogIn, CheckCircle2, StickyNote, X, Save, CheckSquare } from 'lucide-react';
-import { usePartnerClients } from '@/hooks/usePartnerClients';
+import { usePartnerClients } from '@/entities/partner/queries/usePartnerClients';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '../../integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent } from '../ui/card';
-import { Input } from '../ui/input';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
 import {
   Select as ShadcnSelect,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from '@/shared/ui/select';
 
 export const PartnerClientsSection: React.FC = () => {
   const { clients, loading, error } = usePartnerClients();

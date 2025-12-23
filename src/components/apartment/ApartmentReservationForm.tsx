@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { SuccessNotification } from '@/components/ui/success-notification';
+import { supabase } from '@/shared/api/supabase';
+import { SuccessNotification } from '@/shared/ui/success-notification';
 
 interface ApartmentReservationFormProps {
   apartmentId: string;

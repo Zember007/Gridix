@@ -1,7 +1,7 @@
 import React from 'react';
 import { Crown, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { SubscriptionPlan } from '@/hooks/useSubscription';
+import { Button } from '@/shared/ui/button';
+import { SubscriptionPlan } from '@/entities/subscription/queries/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PricingPlansProps {

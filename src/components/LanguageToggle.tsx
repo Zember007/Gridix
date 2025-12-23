@@ -1,14 +1,14 @@
 
 import { Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Language, LANGUAGE_CONFIG } from '@/lib/language-utils';
+import { Language, LANGUAGE_CONFIG } from '@/shared/lib/language-utils';
 
 export const LanguageToggle = ({ classNameButton = '' }: { classNameButton?: string }) => {
   

@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Upload, Image as ImageIcon, Trash2, Home } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { compressToWebP } from '@/hooks/use-upload';
 

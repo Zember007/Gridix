@@ -1,14 +1,14 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Building2, MapPin, Eye, SlidersHorizontal, DollarSign, Calendar, Grid, Clock, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
-import { formatPriceWithCurrency } from '@/lib/currency-utils';
-import { useProjectsWithPrices } from '@/hooks/useProjectsWithPrices';
-import Loader from '@/components/ui/loader';
+import { formatPriceWithCurrency } from '@/shared/lib/currency-utils';
+import { useProjectsWithPrices } from '@/entities/project/queries/useProjectsWithPrices';
+import Loader from '@/shared/ui/loader';
 
 // Lazy load heavy map component
 const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'));

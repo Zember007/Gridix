@@ -1,12 +1,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Card, CardContent } from '@/shared/ui/card';
+import { TooltipProvider } from '@/shared/ui/tooltip';
 import { toast } from 'sonner';
 import PolygonAnnotator, { PolygonAnnotatorRef } from './PolygonAnnotator';
 
 import { Shape, Point } from './GeometryShapes';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { Save } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 

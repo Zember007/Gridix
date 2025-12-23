@@ -1,12 +1,12 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useInstallment } from '@/hooks/useInstallment';
-import { Apartment } from '@/types/apartment';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { Apartment } from '@/entities/apartment/model/types';
+import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Tables } from '@/integrations/supabase/types';

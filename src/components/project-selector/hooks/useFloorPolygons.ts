@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { Apartment } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import type { Apartment } from '@/entities/apartment/model/types';
 
 export interface UseFloorPolygonsParams {
   // explicit union to work well with exactOptionalPropertyTypes

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FunnelTrigger, FunnelStage, LeadUser } from '@/types/crm';
+import { FunnelTrigger, FunnelStage, LeadUser } from '@/entities/crm/model/types';
 import { MoreVertical, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { getTriggerIcons } from '@/constants/crm';
 

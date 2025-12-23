@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { TrendingUp, ArrowRight } from "lucide-react";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 
 interface Props {
   isOpen: boolean;

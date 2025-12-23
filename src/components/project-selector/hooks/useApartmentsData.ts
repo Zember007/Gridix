@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment, normalizeApartmentData } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 
 interface UseApartmentsDataParams {
   // explicit union to work well with exactOptionalPropertyTypes

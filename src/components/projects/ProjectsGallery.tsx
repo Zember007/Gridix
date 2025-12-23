@@ -1,17 +1,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Badge } from '@/shared/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Slider } from '@/shared/ui/slider';
+import { Label } from '@/shared/ui/label';
 import { MapPin, Home, Search, Filter, Grid3X3, ExternalLink, Building2 } from 'lucide-react';
-import { usePublicProjects } from '@/hooks/useProjects';
+import { usePublicProjects } from '@/entities/project/queries/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Project as BaseProject } from '@/hooks/useProjects';
-import { getCurrencySymbolSafe } from '@/lib/currency-utils';
+import { Project as BaseProject } from '@/entities/project/queries/useProjects';
+import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 
 interface Project {
   id: string;

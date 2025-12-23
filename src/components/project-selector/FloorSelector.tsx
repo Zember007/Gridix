@@ -1,7 +1,7 @@
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '../ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/shared/ui/carousel';
 import { useEffect, useState, useMemo } from 'react';
-import { Apartment } from '@/types/apartment';
+import { Apartment } from '@/entities/apartment/model/types';
 
 interface FloorSelectorProps {
   selectedFloorForPlan: number | null;

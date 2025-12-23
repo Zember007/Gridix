@@ -1,20 +1,20 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
+import { Badge } from '@/shared/ui/badge';
 import { Check, ArrowRight, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
-import { useProjectCRUD } from '@/hooks/useProjects';
+import { useProjectCRUD } from '@/entities/project/queries/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { adminThemeClasses as admin } from '@/lib/admin-theme-config';
-import { Language } from '@/lib/language-utils';
+import { adminThemeClasses as admin } from '@/shared/lib/admin-theme-config';
+import { Language } from '@/shared/lib/language-utils';
 
 interface ImportedRowData {
   [key: string]: string | number | null | undefined;

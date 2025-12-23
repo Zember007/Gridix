@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Label } from '@/shared/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group';
+import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { CreditCard, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 

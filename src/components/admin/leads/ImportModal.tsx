@@ -9,7 +9,7 @@ import {
   Database,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { showToast } from '@/lib/toast';
+import { showToast } from '@/shared/lib/toast';
 
 interface Props {
   isOpen: boolean;

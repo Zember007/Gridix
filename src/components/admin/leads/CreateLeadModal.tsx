@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Phone, DollarSign, Globe, Tag, Plus, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LeadSource, ExtendedLead } from '@/types/crm';
+import { LeadSource, ExtendedLead } from '@/entities/crm/model/types';
 
 interface CreateLeadModalProps {
     isOpen: boolean;

@@ -1,18 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Switch } from '@/shared/ui/switch';
 import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
-import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
 import { toast } from 'sonner';
-import { useUserProjects } from '@/hooks/useProjects';
+import { useUserProjects } from '@/entities/project/queries/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LANGUAGE_CONFIG, Language } from '@/lib/language-utils';
+import { LANGUAGE_CONFIG, Language } from '@/shared/lib/language-utils';
 
 // Local Project interface kept for potential future extensions
 // interface Project {

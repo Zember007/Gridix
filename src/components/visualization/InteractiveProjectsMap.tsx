@@ -2,10 +2,10 @@ import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { MapPin, Eye, SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProjectsWithPrices, ProjectWithMinPrice } from '@/hooks/useProjectsWithPrices';
+import { useProjectsWithPrices, ProjectWithMinPrice } from '@/entities/project/queries/useProjectsWithPrices';
 import { Tables } from '@/integrations/supabase/types';
 
 type Project = ProjectWithMinPrice

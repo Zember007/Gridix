@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Apartment } from '@/types/apartment';
+import { supabase } from '@/shared/api/supabase';
+import { Apartment } from '@/entities/apartment/model/types';
 import ApartmentList from './ApartmentList';
-import { preloadProject } from '@/hooks/useProjectCache';
+import { preloadProject } from '@/entities/project/queries/useProjectCache';
 
 interface ApartmentListExampleProps {
   projectId: string;

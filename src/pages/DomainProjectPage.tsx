@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom";
-import { DEFAULT_LANGUAGE } from "@/lib/language-utils";
-import { useProjectByDomain } from "@/hooks/useProjectByDomain";
+import { DEFAULT_LANGUAGE } from "@/shared/lib/language-utils";
+import { useProjectByDomain } from "@/entities/project/queries/useProjectByDomain";
 import { Loader2, AlertTriangle } from "lucide-react";
 import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/shared/api/supabase";
 
 export default function DomainProjectPage() {
   const { project, loading, error, isDomainProject } = useProjectByDomain();

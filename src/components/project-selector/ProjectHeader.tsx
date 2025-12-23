@@ -1,12 +1,12 @@
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
+import { Button } from '@/shared/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ViewModeButtons } from './ViewModeButtons';
 import { CompactFilters } from './filters/CompactFilters';
 import { ExpandedFilters } from './filters/ExpandedFilters';
 import { MobileFilters } from './filters/MobileFilters';
-import type { Project } from '@/hooks/useProjects';
+import type { Project } from '@/entities/project/queries/useProjects';
 import type { ProjectFilters } from './hooks/useProjectFilters';
 
 interface ProjectHeaderProps {

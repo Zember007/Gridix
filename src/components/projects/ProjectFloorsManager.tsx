@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible';
 import { Settings, ChevronDown, ChevronRight, Layers3 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/hooks/useProjects';
+import { useProject } from '@/entities/project/queries/useProjects';
 import FloorPlanEditor from '@/components/visualization/FloorPlanEditor';
 import PolygonCustomizationSettings from '@/components/visualization/PolygonCustomizationSettings';
 

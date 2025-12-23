@@ -17,7 +17,7 @@ import {
   SubscriptionPlan,
   BillingDetails,
   BillingPayerType,
-} from '@/hooks/useSubscription';
+} from '@/entities/subscription/queries/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Select,
@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 
 interface CheckoutModalProps {
   isOpen: boolean;

@@ -5,7 +5,7 @@ import ResetPasswordForm from '@/components/Auth/ResetPasswordForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/shared/api/supabase';
 
 const AuthPage = () => {
   const { navigate } = useLanguageNavigation();

@@ -1,18 +1,18 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader } from '@/components/ui/loader';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Loader } from '@/shared/ui/loader';
 import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3, Building } from 'lucide-react';
-import { ADMIN_THEME, getAdminThemeVariables } from '@/lib/admin-theme-config';
-import { useWorkspaceProjects } from '@/hooks/useWorkspaceProjects';
-import { useProjectCRUD } from '@/hooks/useProjects';
+import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
+import { useWorkspaceProjects } from '@/entities/workspace/queries/useWorkspaceProjects';
+import { useProjectCRUD } from '@/entities/project/queries/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LeadsStats } from '@/components/admin/LeadsNotification';
-import { Project } from '@/hooks/useWorkspaceProjects';
+import { Project } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
 
 

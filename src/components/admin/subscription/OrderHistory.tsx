@@ -15,8 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { SubscriptionOrder, ProjectSubscription } from '@/hooks/useSubscription';
+} from '@/shared/ui/table';
+import { SubscriptionOrder, ProjectSubscription } from '@/entities/subscription/queries/useSubscription';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OrderHistoryProps {
