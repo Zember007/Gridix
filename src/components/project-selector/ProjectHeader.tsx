@@ -61,7 +61,13 @@ export const ProjectHeader = ({
     <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
       <div className="container mx-auto  md:px-6 md:py-4 py-2 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3 ">
-          <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 truncate`}>
+          <h1 className={` font-bold text-gray-900 whitespace-nowrap`}
+          style={
+            {
+              fontSize: 'clamp(14px, 4vw, 18px)'
+            }
+          }
+          >
             {project?.name}
           </h1>
           <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>

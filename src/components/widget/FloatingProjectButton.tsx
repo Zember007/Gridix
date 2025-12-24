@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/shared/ui/button';
-import { House } from 'lucide-react';
+import { ArrowLeft, House } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/entities/project/queries/useProjects';
 import { supabase } from '@/shared/api/supabase';
@@ -139,13 +139,15 @@ export const FloatingProjectButton = ({
       {isIframeOpen && iframeUrl && (
         <div className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/70">
           <div className="relative w-full h-full">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={closeIframe}
-              className="absolute right-4 top-4 z-[10000] rounded-full bg-black/70 px-3 py-1 text-sm text-white hover:bg-black/90"
+              className="absolute bottom-4 left-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 bg-black text-white"
+
             >
-              ✕
-            </button>
+              <ArrowLeft />
+            </Button>
             <iframe
               src={iframeUrl}
               className="h-full w-full border-0 bg-white"

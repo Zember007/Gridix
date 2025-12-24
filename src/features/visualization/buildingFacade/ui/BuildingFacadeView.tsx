@@ -17,7 +17,7 @@ import {
   getPolygonBoundsPct,
 } from "@/features/visualization/buildingFacade/lib/popupPosition";
 
-const COLLAPSED_HEIGHT = 288;
+const COLLAPSED_HEIGHT = 280;
 
 const BuildingFacadeView = ({
   project,
@@ -789,13 +789,13 @@ const BuildingFacadeView = ({
           <FloorPopup Number={selectedFloor} position={popupPosition} />
         )}
         {isMobile && isExpanded && visibleFloors.length > 0 && (
-            <div className={`${isMobile ? ' w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center`}>
-              <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
+            <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
+              <div className={`flex flex-row items-center gap-4 w-full`}>
 
 
                 {/* Floor Carousel */}
-                <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 ' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
-                  <div className={`${isMobile ? ' w-full max-w-[100vw]' : 'w-10 h-full'} relative`}>
+                <div className={`flex-1 flex items-center justify-center min-h-0`}>
+                  <div className={`w-full max-w-[100vw] relative`}>
                     <Carousel
                       className="w-full h-full "
                       orientation={isMobile ? "horizontal" : "vertical"}
@@ -810,7 +810,7 @@ const BuildingFacadeView = ({
                           {visibleFloors.map((floor, index) => (
                             <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
                               <button
-                                className={`w-full h-14 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloor === floor.floor_number
+                                className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloor === floor.floor_number
                                   ? 'text-white'
                                   : 'hover:bg-gray-100 text-gray-700'
                                   }`}
