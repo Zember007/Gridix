@@ -37,13 +37,22 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
       onClick={(e) => e.stopPropagation()}
     >
 
-      <div className="space-y-1">
+      <div className="space-y-1 flex flex-col">
         {/* Apartment number */}
-        {settings.showNumbers && (
-          <div className="md:text-lg text-sm font-bold text-gray-900">
-            № {apartment.apartment_number}
-          </div>
-        )}
+        <div className="flex justify-between items-center gap-2">
+          {settings.showNumbers && (
+            <div className="md:text-lg text-sm font-bold text-gray-900">
+              № {apartment.apartment_number}
+            </div>
+          )}
+
+          <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
+            apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+            {t(`project.${apartment.status}`)}
+          </span>
+        </div>
 
         {/* Floor */}
         <div className="text-sm text-gray-600">
@@ -63,17 +72,6 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
             {t('project.price')}: {formatPriceWithCurrency(apartment.price, currency || null)}
           </div>
         )}
-
-        {/* Status */}
-        <div className="text-sm">
-          <span className="font-medium">{t('project.status')}: </span>
-          <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
-              apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-            }`}>
-            {t(`project.${apartment.status}`)}
-          </span>
-        </div>
 
         {/* Rooms */}
         {apartment.rooms && (

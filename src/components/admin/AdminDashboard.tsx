@@ -15,7 +15,7 @@ import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { AdminSidebar } from '@/shared/ui/sidebar-component';
+import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
 
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
   const { amoWidget } = useAmoWidget();
 
   const handleCreateNew = () => {
-    if(amoWidget) {
+    if (amoWidget) {
       window.open('https://app.gridix.live/ru/admin', '_blank');
       return;
     }
@@ -106,27 +106,9 @@ const AdminDashboard = () => {
 
       <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-16 md:max-w-[calc(100vw-4rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         {/* Floating Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden fixed bottom-4 left-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
-          style={{
-            backgroundColor: ADMIN_THEME.primary,
-            color: ADMIN_THEME.textOnPrimary,
-            borderColor: ADMIN_THEME.primary,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onClick={() => setIsMobileOpen(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        <ProjectEditorSidebarMenuButton
+          setIsMobileOpen={setIsMobileOpen}
+        />
 
         <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
           {activeTab === 'projects' && (
@@ -139,7 +121,7 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'leads' && (
-              <LeadsManager showProjectColumn={!isManager} />
+            <LeadsManager showProjectColumn={!isManager} />
           )}
 
           {activeTab === 'subscription' && userRole.type !== 'manager' && (
@@ -189,7 +171,7 @@ const AdminDashboard = () => {
         {/* Support Button */}
         <Button
           size={"icon"}
-          className="fixed bottom-4 right-4 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
           style={{
             backgroundColor: ADMIN_THEME.primary,
             color: ADMIN_THEME.textOnPrimary,

@@ -189,7 +189,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
     if (!floorSettings?.display?.showTooltip) return;
 
     setHoveredApartment(apartment);
-    const e: any = event;
+    const e = event;
     if ('clientX' in e && 'clientY' in e) {
       setPopupPosition({ x: e.clientX, y: e.clientY });
     } else if ('touches' in e && e.touches?.[0]) {

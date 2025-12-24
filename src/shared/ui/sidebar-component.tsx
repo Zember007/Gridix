@@ -149,11 +149,11 @@ function SimplifiedSidebar({
             <div className="flex items-center gap-4">
               <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
               {!amoWidget && <span
-                  className="font-semibold whitespace-nowrap"
-                  style={{ color: ADMIN_THEME.sidebarText }}
-                >
-                  {title}
-                </span>}
+                className="font-semibold whitespace-nowrap"
+                style={{ color: ADMIN_THEME.sidebarText }}
+              >
+                {title}
+              </span>}
             </div>
           )}
           {!isMobile && (
@@ -568,25 +568,29 @@ export function ProjectEditorSidebar({
   return sidebar;
 }
 
-// Export mobile menu button component for ProjectEditor
 export function ProjectEditorSidebarMenuButton({
   setIsMobileOpen,
 }: {
   setIsMobileOpen?: (open: boolean) => void;
 }) {
-  const isMobile = useIsMobile();
-
-  if (!isMobile || !setIsMobileOpen) {
-    return null;
-  }
 
   return (
     <Button
       variant="ghost"
-      size="sm"
-      className="lg:hidden"
+      size="icon"
+      className="md:hidden fixed bottom-2 left-2 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
       style={{
-        color: ADMIN_THEME.sidebarText,
+        backgroundColor: ADMIN_THEME.primary,
+        color: ADMIN_THEME.textOnPrimary,
+        borderColor: ADMIN_THEME.primary,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+        e.currentTarget.style.transform = 'scale(1.05)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+        e.currentTarget.style.transform = 'scale(1)';
       }}
       onClick={() => setIsMobileOpen(true)}
     >
