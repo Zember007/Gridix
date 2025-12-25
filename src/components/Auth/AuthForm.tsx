@@ -4,6 +4,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
+import { Checkbox } from '@/shared/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle, Loader2 } from 'lucide-react';
@@ -26,6 +27,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
   const [resetLoading, setResetLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
+  const [marketingEmailsConsent, setMarketingEmailsConsent] = useState(false);
   
   // Реферальный код и партнер
   const refCode = searchParams.get('ref');
@@ -120,7 +122,8 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               email: formData.email,
               full_name: formData.fullName,
               account_type: 'developer',
-              partner_id: partnerInfo?.id || null
+              partner_id: partnerInfo?.id || null,
+              marketing_emails_consent: marketingEmailsConsent
             });
 
           if (profileError) {
@@ -379,6 +382,20 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                     </Button>
                   </div>
                 </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="marketing-consent"
+                    checked={marketingEmailsConsent}
+                    onCheckedChange={(checked) => setMarketingEmailsConsent(checked === true)}
+                  />
+                  <Label
+                    htmlFor="marketing-consent"
+                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {t('auth.marketingEmailsConsent')}
+                  </Label>
+                </div>
               </TabsContent>
 
               <Button type="submit" className="w-full" disabled={loading || checkingPartner}>
@@ -400,6 +417,12 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                   </button>
                 </div>
             </form>
+
+            {mode === 'signup' && (
+              <p className="text-xs text-muted-foreground mt-4 text-center">
+                {t('auth.essentialEmailsNote')}
+              </p>
+            )}
 
            {/*  <div className="mt-6">
               <div className="relative">

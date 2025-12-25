@@ -1,5 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { createJsonResponse, createCorsResponse } from '../_shared/cors.ts'
 
 interface RequestBody {
   projectId: string
@@ -9,8 +10,10 @@ interface RequestBody {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin')
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return createCorsResponse(origin)
   }
 
   try {
@@ -67,9 +70,10 @@ Deno.serve(async (req) => {
 
     if (fetchError) throw fetchError
     if (!apartments || apartments.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'No apartments found for this project' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      return createJsonResponse(
+        { message: 'No apartments found for this project' },
+        200,
+        origin
       )
     }
 
@@ -103,41 +107,43 @@ Deno.serve(async (req) => {
     })
 
     // Perform updates in batches to avoid payload limits
-    // Since we need to update different values for each apartment, we'll use individual updates
-    // or upsert with proper handling
     const BATCH_SIZE = 100
     let updatedCount = 0
     
     for (let i = 0; i < updates.length; i += BATCH_SIZE) {
       const batch = updates.slice(i, i + BATCH_SIZE)
       
-      // Use upsert to update existing records by ID
-      // This will only update if the ID exists (which it should for all apartments)
-      const { error: updateError } = await supabaseClient
-        .from('apartments')
-        .upsert(batch.map(u => ({ id: u.id, price: u.price })), {
-          onConflict: 'id'
-        })
-      
-      if (updateError) {
-        throw new Error(`Failed to update batch: ${updateError.message}`)
+      // Update each apartment individually since we have different prices
+      for (const update of batch) {
+        const { error: updateError } = await supabaseClient
+          .from('apartments')
+          .update({ price: update.price })
+          .eq('id', update.id)
+        
+        if (updateError) {
+          throw new Error(`Failed to update apartment ${update.id}: ${updateError.message}`)
+        }
+        
+        updatedCount++
       }
-      
-      updatedCount += batch.length
     }
 
-    return new Response(
-      JSON.stringify({ 
+    return createJsonResponse(
+      { 
         message: `Updated ${updatedCount} apartments successfully`,
         count: updatedCount
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      },
+      200,
+      origin
     )
 
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return createJsonResponse(
+      { 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      400,
+      origin
     )
   }
 })
