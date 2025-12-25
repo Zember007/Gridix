@@ -391,7 +391,7 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                   />
                   <Label
                     htmlFor="marketing-consent"
-                    className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                   >
                     {t('auth.marketingEmailsConsent')}
                   </Label>
