@@ -810,7 +810,7 @@ const BuildingFacadeView = ({
                           {visibleFloors.map((floor, index) => (
                             <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
                               <button
-                                className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloor === floor.floor_number
+                                className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl  ${selectedFloor === floor.floor_number
                                   ? 'text-white'
                                   : 'hover:bg-gray-100 text-gray-700'
                                   }`}

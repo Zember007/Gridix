@@ -303,8 +303,8 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                             handleApartmentHover(apartment, e)
                           }}
                         onMouseLeave={() => {if(isMobile) return; handleApartmentLeave()}}
-                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
-                        onTouchEnd={() => {if(isMobile) handleApartmentLeave()}}
+ /*                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
+                        onTouchEnd={() => {if(isMobile) handleApartmentLeave()}} */
                         
                       />
                       {floorSettings?.display?.showNumbers !== false && (
