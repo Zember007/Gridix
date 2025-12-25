@@ -6,7 +6,7 @@
   "createFirst": "Create first project",
   "createFirstDescription": "Create your first real estate project with interactive floor and apartment plans",
   "createNew": "Create project",
-  "deleteConfirm": "Are you sure you want to delete project {name}?",
+  "deleteConfirm": "Are you sure you want to delete project {{name}}?",
   "deleteProject": "Delete project",
   "editProject": "Edit project",
   "errorDeleting": "Error deleting project",

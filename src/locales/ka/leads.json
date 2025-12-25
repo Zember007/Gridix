@@ -277,7 +277,7 @@
     "namePlaceholder": "სახელი და გვარი",
     "phonePlaceholder": "+995 555 00 00 00",
     "duplicateFound": "დუბლიკატი ნაპოვნია",
-    "duplicateExists": "კლიენტი {name} უკვე არსებობს ბაზაში.",
+    "duplicateExists": "კლიენტი {{name}} უკვე არსებობს ბაზაში.",
     "goToCard": "ბარათზე გადასვლა",
     "budgetLabel": "ბიუჯეტი",
     "sourceLabel": "წყარო",

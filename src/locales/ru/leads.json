@@ -283,7 +283,7 @@
     "namePlaceholder": "Имя и Фамилия",
     "phonePlaceholder": "+995 555 00 00 00",
     "duplicateFound": "Найден дубль",
-    "duplicateExists": "Клиент {name} уже есть в базе.",
+    "duplicateExists": "Клиент {{name}} уже есть в базе.",
     "goToCard": "Перейти к карточке",
     "budgetLabel": "Бюджет",
     "sourceLabel": "Источник",

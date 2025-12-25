@@ -6,7 +6,7 @@
   "createFirst": "إنشاء المشروع الأول",
   "createFirstDescription": "أنشئ مشروعك العقاري الأول مع مخططات الطوابق والشقق التفاعلية",
   "createNew": "إنشاء مشروع",
-  "deleteConfirm": "هل أنت متأكد أنك تريد حذف المشروع {name}؟",
+  "deleteConfirm": "هل أنت متأكد أنك تريد حذف المشروع {{name}}؟",
   "deleteProject": "حذف المشروع",
   "editProject": "تعديل المشروع",
   "errorDeleting": "خطأ في حذف المشروع",

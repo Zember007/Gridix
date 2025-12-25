@@ -277,7 +277,7 @@
     "namePlaceholder": "الاسم الأول والأخير",
     "phonePlaceholder": "+1 555 000 0000",
     "duplicateFound": "تم العثور على تكرار",
-    "duplicateExists": "العميل {name} موجود بالفعل في قاعدة البيانات.",
+    "duplicateExists": "العميل {{name}} موجود بالفعل في قاعدة البيانات.",
     "goToCard": "الانتقال إلى البطاقة",
     "budgetLabel": "الميزانية",
     "sourceLabel": "المصدر",

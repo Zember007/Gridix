@@ -70,7 +70,7 @@ export const ProjectHeader = ({
           >
             {project?.name}
           </h1>
-          <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 `}>
+          <div className={`flex ${isMobile ? 'justify-center' : 'items-center'} gap-1 md:gap-2 items-center`}>
             <ViewModeButtons
               isWidget={isWidget}
               viewMode={viewMode}
@@ -94,7 +94,7 @@ export const ProjectHeader = ({
                     <SheetTitle>{t('project.filters')}</SheetTitle>
                     <SheetDescription>{t('project.filtersDescription')}</SheetDescription>
                   </SheetHeader>
-                  <div className="mt-6 overflow-y-auto p-4 max-h[80%]">
+                  <div className="mt-6 overflow-y-auto p-4 h-[calc(100%-74px)]">
                     <MobileFilters
                       {...filters}
                       priceRange={[filters.minPrice, filters.maxPrice]}

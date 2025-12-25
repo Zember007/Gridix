@@ -283,7 +283,7 @@
     "namePlaceholder": "First and Last Name",
     "phonePlaceholder": "+1 555 000 0000",
     "duplicateFound": "Duplicate found",
-    "duplicateExists": "Client {name} already exists in the database.",
+    "duplicateExists": "Client {{name}} already exists in the database.",
     "goToCard": "Go to card",
     "budgetLabel": "Budget",
     "sourceLabel": "Source",
