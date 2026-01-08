@@ -3,14 +3,12 @@ const BitrixInstallPage = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   useEffect(() => {
 
-    if (typeof BX24 !== 'undefined') {
-      alert(BX24.init);
+    if (typeof BX24 !== 'undefined' && BX24 !== null) {
       setIsInitialized(true);
 
       
       BX24.init(() => {
         setIsInitialized(true);
-        console.log('BX24 успешно инициализирован');
         BX24.resizeWindow(1200, 800); // или BX24.fitWindow() для авторесайза
 
         // Получаем auth (токены, member_id и т.д.)
