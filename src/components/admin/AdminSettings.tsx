@@ -415,7 +415,6 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
                 <Label htmlFor="company_name">{t('adminSettings.companyName')}</Label>
                 <Input
                   id="company_name"
-                  className="blur"
                   value={settings.company_name}
                   onChange={(e) => handleInputChange('company_name', e.target.value)}
                   placeholder={t('adminSettings.companyNamePlaceholder')}
@@ -434,7 +433,7 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
                 {t('adminSettings.billingInfoDesc')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 blur">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="company_name_billing">{t('adminSettings.companyName')}</Label>
@@ -558,7 +557,7 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
                     type="email"
                     value={userProfile?.email || ''}
                     disabled
-                    className="bg-muted blur"
+                    className="bg-muted"
                   />
                 </div>
                 <div>

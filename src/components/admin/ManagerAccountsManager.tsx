@@ -556,7 +556,7 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                           htmlFor={`new-project-${project.id}`}
                           className="flex-1 cursor-pointer"
                         >
-                          <div className="font-medium text-sm blur">{project.name}</div>
+                          <div className="font-medium text-sm ">{project.name}</div>
                           {project.description && (
                             <div className="text-xs text-muted-foreground">
                               {project.description}
@@ -602,13 +602,13 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-medium blur">{manager.full_name}</h4>
+                        <h4 className="font-medium ">{manager.full_name}</h4>
                         {getStatusBadge(manager.status)}
                       </div>
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
                         <div className="flex items-center space-x-1">
                           <Mail className="h-3 w-3" />
-                          <span className="blur">{manager.email}</span>
+                          <span >{manager.email}</span>
                         </div>
                         {manager.phone && (
                           <div className="flex items-center space-x-1">
@@ -765,9 +765,9 @@ const ManagerAccountsManager = ({ developerId }: { developerId: string }) => {
                         htmlFor={`project-${project.id}`}
                         className="flex-1 cursor-pointer"
                       >
-                        <div className="font-medium blur">{project.name}</div>
+                        <div className="font-medium ">{project.name}</div>
                         {project.description && (
-                          <div className="text-sm text-muted-foreground blur">
+                          <div className="text-sm text-muted-foreground ">
                             {project.description}
                           </div>
                         )}

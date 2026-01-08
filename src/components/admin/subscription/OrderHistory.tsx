@@ -153,7 +153,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ orders, projects }) 
                   </TableCell>
                   <TableCell>
                     <div
-                      className="text-sm text-slate-700 font-medium max-w-[200px] truncate blur"
+                      className="text-sm text-slate-700 font-medium max-w-[200px] truncate"
                       title={getProjectNames(order.projectIds)}
                     >
                       {getProjectNames(order.projectIds) || (

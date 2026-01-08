@@ -152,7 +152,7 @@ const AdminWidgets = () => {
                 <SelectContent>
                   {/* <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem> */}
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id} className="blur">
+                    <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
                   ))}
