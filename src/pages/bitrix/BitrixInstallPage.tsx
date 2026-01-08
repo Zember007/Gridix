@@ -3,20 +3,23 @@ const BitrixInstallPage = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   useEffect(() => {
 
-    const BX24 = (window as any).BX24;
-    if (BX24) {
+    if (typeof BX24 !== 'undefined') {
       BX24.init(() => {
         setIsInitialized(true);
-        console.log('BX24 инициализирован');
+        console.log('BX24 успешно инициализирован');
+        BX24.resizeWindow(1200, 800); // или BX24.fitWindow() для авторесайза
 
-        BX24.resizeWindow(1200, 800); // Важно! Без ресайза вкладка может быть крошечной/пустой
-        // BX24.fitWindow(); // альтернатива
+        // Получаем auth (токены, member_id и т.д.)
+        const auth = BX24.getAuth();
+        console.log('Auth данные:', auth);
+
+        // Здесь твой основной UI виджета
       });
     } else {
-      console.log('BX24 не инициализирован');
       setIsInitialized(false);
+      console.error('BX24 не загрузился');
     }
-    
+
   }, []);
   return (
     <div>
