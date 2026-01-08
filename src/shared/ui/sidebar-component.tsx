@@ -291,7 +291,7 @@ function SimplifiedSidebar({
                   </div>
                   {!isCollapsed && (
                     <>
-                      <div className="min-w-0 flex-1 text-left">
+                      <div className="min-w-0 flex-1 text-left blur">
                         <p
                           className="text-sm font-medium truncate"
                           style={{ color: ADMIN_THEME.sidebarText }}

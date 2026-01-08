@@ -151,7 +151,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                   <div className="flex-1">
                     <CardTitle
                     style={{ color: ADMIN_THEME.textPrimary }}
-                    className="text-lg  transition-colors line-clamp-1">
+                    className="text-lg  transition-colors line-clamp-1 blur">
                       {project.name}
                     </CardTitle>
                     <CardDescription

@@ -145,14 +145,14 @@ const AdminWidgets = () => {
             <div>
               <Label htmlFor="project-select">{t('adminWidgets.selectProject')}</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger>
+                <SelectTrigger className='text-[0px]'>
                   <SelectValue placeholder={'-'} />
                 </SelectTrigger>
                 
                 <SelectContent>
                   {/* <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem> */}
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                    <SelectItem key={project.id} value={project.id} className="blur">
                       {project.name}
                     </SelectItem>
                   ))}

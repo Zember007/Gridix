@@ -71,6 +71,8 @@ export default function App() {
               }
             />
 
+            
+
             <Route
               path="/*"
               element={
@@ -96,6 +98,10 @@ export default function App() {
     </BaseProviders>
   );
 }
+
+
+
+
 
 
 

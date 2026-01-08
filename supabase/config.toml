@@ -8,3 +8,7 @@ verify_jwt = false
 
 [functions.amocrm-oauth-callback]
 verify_jwt = false
+
+[functions.bitrix-install]
+verify_jwt = false
+

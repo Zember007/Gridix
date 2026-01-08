@@ -68,10 +68,10 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
                   {project.name.substring(0, 2)}
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 truncate max-w-[200px]">
+                  <h3 className="font-bold text-slate-900 truncate max-w-[200px] blur">
                     {project.name}
                   </h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                  <p className="text-xs text-slate-500 flex items-center gap-1 blur">
                     <Building2 size={10} />{' '}
                     {project.user_profiles?.company_name ||
                       project.user_profiles?.full_name ||
