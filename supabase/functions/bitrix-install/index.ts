@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
 
-  return Response.redirect(`${Deno.env.get("SITE_URL")}admin/`, 302);
+  return Response.redirect(`${Deno.env.get("SITE_URL")}embed/connect/bitrix24`, 302);
 
 
   if (req.method === 'GET') {
