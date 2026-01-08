@@ -7,6 +7,8 @@ const BitrixInstallPage = () => {
         script.onload = () => {
           const BX24 = (window as any).BX24;
           if (BX24) {
+            console.log('BX24 инициализирован');
+
             BX24.init(() => {
 
               BX24.resizeWindow(1200, 800); // Важно! Без ресайза вкладка может быть крошечной/пустой

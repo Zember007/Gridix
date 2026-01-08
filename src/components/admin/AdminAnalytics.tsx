@@ -727,7 +727,7 @@ export const AdminAnalytics = () => {
                   const conversion = project.views > 0 ? (project.leads / project.views * 100).toFixed(2) : '0.00';
                   return (
                     <TableRow key={index}>
-                      <TableCell className="font-medium blur">{project.name}</TableCell>
+                      <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>{project.views}</TableCell>
                       <TableCell>{project.leads}</TableCell>
                       <TableCell>{conversion}%</TableCell>
