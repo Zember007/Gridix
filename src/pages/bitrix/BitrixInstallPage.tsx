@@ -4,7 +4,7 @@ const BitrixInstallPage = () => {
   useEffect(() => {
 
     if (typeof BX24 !== 'undefined') {
-      alert('BX24 загрузился');
+      alert(BX24.init);
       setIsInitialized(true);
 
       
