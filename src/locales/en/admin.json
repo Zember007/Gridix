@@ -83,6 +83,7 @@
         "title": "Manual setup"
       },
       "requiredData": {
+        "title": "Required data:",
         "fields": "Apartment numbers, floors, rooms, area, price, status"
       },
       "supportedFormats": "Supported formats:",

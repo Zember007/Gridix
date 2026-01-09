@@ -317,7 +317,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
               <div className="text-sm text-real-estate-600 bg-real-estate-50 p-3 rounded-md">
                 <p><strong>{t('admin.project.create.supportedFormats') || 'Поддерживаемые форматы:'}</strong> Excel (.xlsx, .xls), CSV {t('admin.project.create.googleSheets') || 'и Google Sheets'}</p>
-                <p><strong>{t('admin.project.create.requiredData') || 'Необходимые данные:'}</strong> {t('admin.project.create.requiredData.fields') || 'Номера квартир, этажи, комнаты, площадь, цена, статус'}</p>
+                <p><strong>{t('admin.project.create.requiredData.title') || 'Необходимые данные:'}</strong> {t('admin.project.create.requiredData.fields') || 'Номера квартир, этажи, комнаты, площадь, цена, статус'}</p>
                 <p><strong>{t('admin.project.create.googleSheets') || 'Google Sheets:'}</strong> {t('admin.project.create.infoText') || 'Любой формат ссылки, автоматическое преобразование и синхронизация'}</p>
               </div>
             </CardContent>
