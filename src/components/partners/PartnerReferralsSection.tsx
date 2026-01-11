@@ -472,7 +472,7 @@ export const PartnerReferralsSection: React.FC = () => {
                   {t('partners.registrationDate') || 'Дата регистрации'}
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {t('partners.status') || 'Статус'}
+                  {t('partners.statusLabel') || 'Статус'}
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
                   {t('partners.income') || 'Доход'}

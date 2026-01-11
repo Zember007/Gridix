@@ -145,7 +145,7 @@ const AdminWidgets = () => {
             <div>
               <Label htmlFor="project-select">{t('adminWidgets.selectProject')}</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger className='text-[0px]'>
+                <SelectTrigger>
                   <SelectValue placeholder={'-'} />
                 </SelectTrigger>
                 
