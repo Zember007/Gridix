@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { PartnerIncomeCalculator } from './IncomeCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { VideoModalPlayer, type VideoChapter } from '@/shared/ui/video-modal-player';
 import {
   Accordion,
   AccordionContent,
@@ -19,13 +20,15 @@ import {
 
 type MaterialItem = {
   titleKey: string;
-  type: 'ppt' | 'pdf';
-  languages?: string[];
+  languages: Array<'RU' | 'EN'>;
+  files: Record<'RU' | 'EN', string>;
 };
 
 type VideoItem = {
+  id: string;
   titleKey: string;
-  duration: string;
+  src: string;
+  chapters?: VideoChapter[];
 };
 
 type FaqItem = {
@@ -36,29 +39,33 @@ type FaqItem = {
 const MATERIALS: MaterialItem[] = [
   {
     titleKey: 'instructionsMaterial1',
-    type: 'ppt',
-    languages: ['RU', 'EN', 'GE'],
-  },
-  {
-    titleKey: 'instructionsMaterial2',
-    type: 'pdf',
-    languages: ['RU', 'EN', 'GE'],
-  },
-  {
-    titleKey: 'instructionsMaterial3',
-    type: 'pdf',
-  },
-  {
-    titleKey: 'instructionsMaterial4',
-    type: 'pdf',
+    languages: ['RU', 'EN'],
+    files: {
+      RU: '/instructions/pdf/GRIDIX-RU.pdf',
+      EN: '/instructions/pdf/GRIDIX-EN.pdf',
+    },
   },
 ];
 
 const VIDEOS: VideoItem[] = [
-  { titleKey: 'instructionsVideo1', duration: '5:00' },
-  { titleKey: 'instructionsVideo2', duration: '3:00' },
-  { titleKey: 'instructionsVideo3', duration: '4:00' },
-  { titleKey: 'instructionsVideo4', duration: '5:00' },
+  {
+    id: 'explore_service',
+    titleKey: 'instructionsVideo3',
+    src: '/instructions/videos/Explore_service_.mp4',
+    chapters: [],
+  },
+  {
+    id: 'create_project',
+    titleKey: 'instructionsVideo1',
+    src: '/instructions/videos/Create_project_.mp4',
+    chapters: [],
+  },
+  {
+    id: 'edit_project',
+    titleKey: 'instructionsVideo2',
+    src: '/instructions/videos/Edit_project_gridix_.mp4',
+    chapters: [],
+  },
 ];
 
 const FAQ_ITEMS: FaqItem[] = [
@@ -95,11 +102,31 @@ const TARGET_AUDIENCE_KEYS = [
 export const PartnerInstructionsSection: React.FC = () => {
   const { t, language } = useLanguage();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [materialsLang, setMaterialsLang] = useState<'RU' | 'EN'>(() => {
+    const normalized = String(language || '').toLowerCase();
+    return normalized.startsWith('ru') ? 'RU' : 'EN';
+  });
+
+  const activeVideo = activeVideoId
+    ? VIDEOS.find((v) => v.id === activeVideoId) || null
+    : null;
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PartnerIncomeCalculator
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
+      />
+
+      <VideoModalPlayer
+        open={Boolean(activeVideo)}
+        onOpenChange={(open) => {
+          if (!open) setActiveVideoId(null);
+        }}
+        title={activeVideo ? t(`partners.${activeVideo.titleKey}`) : ''}
+        src={activeVideo?.src || ''}
+        chapters={activeVideo?.chapters ?? []}
       />
 
       {/* Как работает партнёрка */}
@@ -184,44 +211,48 @@ export const PartnerInstructionsSection: React.FC = () => {
             <Download size={20} className="text-gray-400" />
             {t('partners.instructionsMaterialsTitle') || 'Готовые материалы'}
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {MATERIALS.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group cursor-pointer"
+                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
-                      item.type === 'ppt'
-                        ? 'bg-orange-100 text-orange-600'
-                        : 'bg-red-100 text-red-600'
-                    }`}
-                  >
-                    {item.type.toUpperCase()}
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">
+                    {t(`partners.${item.titleKey}`)}
                   </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-800 group-hover:text-black">
-                      {t(`partners.${item.titleKey}`)}
-                    </div>
-                    {item.languages && (
-                      <div className="flex gap-1 mt-1">
-                        {item.languages.map((lang) => (
-                          <span
-                            key={lang}
-                            className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded border border-gray-200"
-                          >
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[11px] text-gray-500">
+                      {t('partners.materialsLanguageLabel') || 'Язык'}:
+                    </span>
+                    {item.languages.map((langCode) => {
+                      const isActive = materialsLang === langCode;
+                      return (
+                        <button
+                          key={langCode}
+                          type="button"
+                          onClick={() => setMaterialsLang(langCode)}
+                          className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${isActive
+                              ? 'bg-black text-white border-black'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-white'
+                            }`}
+                        >
+                          {langCode}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                <Download
-                  size={16}
-                  className="text-gray-300 group-hover:text-black"
-                />
+
+                <a
+                  href={item.files[materialsLang]}
+                  download
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 transition-colors flex-none"
+                  aria-label={t('partners.download') || 'Скачать'}
+                  title={t('partners.download') || 'Скачать'}
+                >
+                  <Download size={16} className="text-gray-800" />
+                </a>
               </div>
             ))}
           </div>
@@ -234,25 +265,34 @@ export const PartnerInstructionsSection: React.FC = () => {
             {t('partners.instructionsVideosTitle') || 'Обучающие видео'}
           </h2>
           <div className="space-y-4">
-            {VIDEOS.map((video, idx) => (
+            {VIDEOS.map((video) => (
               <div
-                key={idx}
-                className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer"
+                key={video.id}
+                className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors group cursor-pointer border border-transparent hover:border-gray-100"
+                onClick={() => setActiveVideoId(video.id)}
               >
-                <div className="w-24 h-16 bg-gray-200 rounded-md flex-shrink-0 relative overflow-hidden">
-                  <img
-                    src={`https://picsum.photos/150/100?random=${idx}`}
-                    alt={t(`partners.${video.titleKey}`)}
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                <div className="w-24 h-16 rounded-md flex-shrink-0 relative overflow-hidden border border-slate-200 bg-black">
+                  <video
+                    src={video.src}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    onLoadedData={(e) => {
+                      const el = e.currentTarget;
+                  
+                      try {
+                        if (el.currentTime === 0) el.currentTime = 0.1;
+                      } catch {
+                        // ignore
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-black/50 text-white rounded-full p-1 group-hover:bg-black/70 transition-colors">
                       <PlayCircle size={16} />
                     </div>
                   </div>
-                  <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] px-1 rounded">
-                    {video.duration}
-                  </span>
                 </div>
                 <div className="flex flex-col justify-center">
                   <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
