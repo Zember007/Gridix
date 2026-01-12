@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     setShowCreateModal(true);
   };
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
 
   // Проверяем, заблокирован ли менеджер
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
         setIsCollapsed={setIsCollapsed}
       />
 
-      <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-16 md:max-w-[calc(100vw-4rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
+      <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-28 md:max-w-[calc(100vw-7rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         {/* Floating Mobile Menu Button */}
         <ProjectEditorSidebarMenuButton
           setIsMobileOpen={setIsMobileOpen}

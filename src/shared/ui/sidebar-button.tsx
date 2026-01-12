@@ -40,7 +40,7 @@ export function SidebarButton({
   href,
   title,
 }: SidebarButtonProps) {
-  const className = `w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${isCollapsed ? "justify-center px-2" : ""}`;
+  const className = `w-full flex ${isCollapsed ? "flex-col items-center gap-1 px-2 py-2" : "items-center gap-3 px-3 py-2"} rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
   const displayTitle = title || (isCollapsed ? label : undefined);
 
   const content = (
@@ -48,9 +48,7 @@ export function SidebarButton({
       <div className="flex-shrink-0">
         {icon}
       </div>
-      {!isCollapsed && (
-        <span className="font-medium whitespace-nowrap">{label}</span>
-      )}
+      <span className={`font-medium ${isCollapsed ? "text-xs text-center break-words" : "whitespace-nowrap"}`} style={isCollapsed ? { lineHeight: '1.2' } : {}}>{label}</span>
     </>
   );
 

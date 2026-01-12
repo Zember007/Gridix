@@ -324,7 +324,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
   };
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   if (accessError) {
     return (
@@ -392,7 +392,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         setIsMobileOpen={setIsMobileOpen}
       />
 
-      <div className={`flex-1 bg-background flex flex-col  transition-all duration-300 ${isCollapsed ? 'md:ml-16 md:max-w-[calc(100vw-4rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
+      <div className={`flex-1 bg-background flex flex-col  transition-all duration-300 ${isCollapsed ? 'md:ml-28 md:max-w-[calc(100vw-7rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">

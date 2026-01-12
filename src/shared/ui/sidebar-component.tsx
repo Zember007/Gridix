@@ -144,42 +144,48 @@ function SimplifiedSidebar({
         className="p-4"
         style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
       >
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex items-center gap-4">
-              <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
-              {!amoWidget && <span
+        <div className={`flex items-center ${isCollapsed ? "flex-col gap-3" : "justify-between"}`}>
+          <div className={`flex items-center ${isCollapsed ? "flex-col gap-2" : "gap-4"}`}>
+            <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
+            {!isCollapsed && !amoWidget && (
+              <span
                 className="font-semibold whitespace-nowrap"
                 style={{ color: ADMIN_THEME.sidebarText }}
               >
                 {title}
-              </span>}
-            </div>
-          )}
+              </span>
+            )}
+          </div>
+
           {!isMobile && (
             <button
               onClick={onToggleCollapse}
-              className="p-1 rounded-md transition-colors"
+              className={`flex items-center justify-center rounded-lg transition-colors  duration-200 ${
+                isCollapsed ? " px-3 py-2" : "p-1"
+              }`}
               style={{
                 color: ADMIN_THEME.sidebarText,
+                border: `1px solid transparent`,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+                e.currentTarget.style.borderColor = ADMIN_THEME.sidebarActiveBorder;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'transparent';
               }}
               title={isCollapsed ? t('common.more') : t('common.hide')}
             >
               <ChevronDownIcon
-                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
-                  }`}
+                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"}`}
               />
             </button>
           )}
+        
         </div>
       </div>
-
+     
       {/* Workspace Switcher */}
       {showWorkspaceSwitcher && availableWorkspaces.length > 0 && !isCollapsed && (
         <div
@@ -384,7 +390,7 @@ function SimplifiedSidebar({
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-16" : "w-64"
+      className={`flex flex-col transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
         }`}
       style={{
         backgroundColor: ADMIN_THEME.sidebarBackground,
@@ -495,7 +501,7 @@ export function AdminSidebarMenuButton({
       style={{
         color: ADMIN_THEME.sidebarText,
       }}
-      onClick={() => setIsMobileOpen(true)}
+      onClick={() => setIsMobileOpen?.(true)}
     >
       <Menu className="h-5 w-5" />
     </Button>
@@ -592,7 +598,7 @@ export function ProjectEditorSidebarMenuButton({
         e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
         e.currentTarget.style.transform = 'scale(1)';
       }}
-      onClick={() => setIsMobileOpen(true)}
+      onClick={() => setIsMobileOpen?.(true)}
     >
       <Menu className="h-5 w-5" />
     </Button>
