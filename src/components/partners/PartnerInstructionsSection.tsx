@@ -66,6 +66,12 @@ const VIDEOS: VideoItem[] = [
     src: '/instructions/videos/Edit_project_gridix_.mp4',
     chapters: [],
   },
+  {
+    id: 'explore_crm',
+    titleKey: 'instructionsVideo5',
+    src: '/instructions/videos/Gridix_explore_crm.mp4',
+    chapters: [],
+  },
 ];
 
 const FAQ_ITEMS: FaqItem[] = [
