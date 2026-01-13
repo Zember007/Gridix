@@ -66,9 +66,9 @@ serve(async (req) => {
 
     // AmoCRM OAuth настройки
     const clientId = Deno.env.get('AMOCRM_CLIENT_ID') ;
-    const stateSecret = Deno.env.get('AMOCRM_STATE_SECRET')
+    const stateSecret = Deno.env.get('JWT_SECRET')
     if (!stateSecret) {
-      return createJsonResponse({ error: 'Server configuration error: missing AMOCRM_STATE_SECRET' }, 500, origin);
+      return createJsonResponse({ error: 'Server configuration error: missing JWT_SECRET' }, 500, origin);
     }
 
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`;

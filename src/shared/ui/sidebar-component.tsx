@@ -390,7 +390,7 @@ function SimplifiedSidebar({
 
   return (
     <aside
-      className={`flex flex-col transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
+      className={`flex flex-col start_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
         }`}
       style={{
         backgroundColor: ADMIN_THEME.sidebarBackground,

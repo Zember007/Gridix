@@ -24,6 +24,7 @@ import { useFieldHelpers } from './hooks/useFieldHelpers';
 import { useSubscriptionStatus } from './hooks/useSubscriptionStatus';
 import { SubscriptionAlert } from './SubscriptionAlert';
 import { ProjectHeader } from './ProjectHeader';
+import { ProjectSidePanel, type SidePanelState } from './ProjectSidePanel';
 
 interface ProjectApartmentSelectorProps {
   projectId: string;
@@ -59,6 +60,8 @@ const ProjectApartmentSelector = ({
   const [stagedAreaRange, setStagedAreaRange] = useState<number[] | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
+  const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [sidePanelState, setSidePanelState] = useState<SidePanelState | null>(null);
 
   const filtersRef = useRef<HTMLDivElement>(null);
 
@@ -305,6 +308,28 @@ const ProjectApartmentSelector = ({
     }
   };
 
+  const openFloorPreview = (floorNumber: number) => {
+    setSelectedFloorForPlan(floorNumber);
+    setSidePanelState({ kind: 'floor', floorNumber });
+    setSidePanelOpen(true);
+  };
+
+  const openApartmentPreview = (apartment: Apartment) => {
+    // Widget keeps its modal-based UX
+    if (isWidget) {
+      void openApartmentDetails(apartment);
+      return;
+    }
+    setSidePanelState({ kind: 'apartment', apartment });
+    setSidePanelOpen(true);
+  };
+
+  const openFloorPlanFromPanel = (floorNumber: number) => {
+    setSelectedFloorForPlan(floorNumber);
+    setViewMode('floor-plan');
+    setSidePanelOpen(false);
+  };
+
   // Full project page is now handled by separate FloatingProjectButton in widget context
 
   useFloorPolygons({
@@ -434,7 +459,7 @@ const ProjectApartmentSelector = ({
                     setListViewMode={setListViewMode}
                     selectedType={filters.selectedType}
                     setSelectedType={filters.setSelectedType}
-                    openApartmentDetails={openApartmentDetails}
+                    openApartmentDetails={openApartmentPreview}
                     preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
                     getVisibleFields={getVisibleFields}
                     getCustomFieldValue={getCustomFieldValue}
@@ -463,7 +488,7 @@ const ProjectApartmentSelector = ({
                   <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
                     <FavoritesTab
                       fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
-                      handleViewApartment={openApartmentDetails}
+                      handleViewApartment={openApartmentPreview}
                       projectId={project.id}
                       projectCurrency={project?.currency}
                     />
@@ -475,7 +500,7 @@ const ProjectApartmentSelector = ({
                   {/* Main visualization area */}
                   <div className="relative grow flex">
                     {/* Hero section with building visualization */}
-                    <div className="relative w-full">
+                    <div className="relative flex-1 min-w-0">
                       {viewMode === 'facade' ? (
                         // Building facade view with interactive floor polygons
                         <div className="w-full bg-white">
@@ -485,10 +510,9 @@ const ProjectApartmentSelector = ({
                             project={project}
                             apartments={filters.filteredApartments}
                             onFloorSelect={floor => {
-                              setSelectedFloorForPlan(floor);
-                              setViewMode('floor-plan');
+                              openFloorPreview(floor);
                             }}
-                            onApartmentSelect={openApartmentDetails}
+                            onApartmentSelect={openApartmentPreview}
                             filtersRef={filtersRef}
                             externalImageLoaded={buildingImageLoaded}
                             externalImageNaturalSize={buildingImageNaturalSize}
@@ -532,7 +556,7 @@ const ProjectApartmentSelector = ({
                                 apartments={apartments.filter(apt =>
                                   selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
                                 )}
-                                onApartmentSelect={openApartmentDetails}
+                                onApartmentSelect={openApartmentPreview}
                                 selectedFloorNumber={selectedFloorForPlan ?? 0}
                                 visibleFields={fieldSettings.filter(field => field.is_visible)}
                               />
@@ -554,6 +578,27 @@ const ProjectApartmentSelector = ({
                         </div>
                       )}
                     </div>
+
+                    {/* Static right side panel (no overlay). Hidden by width=0 when closed */}
+                    {project && !isWidget && (
+                      <ProjectSidePanel
+                        open={sidePanelOpen}
+                        onOpenChange={(open) => {
+                          setSidePanelOpen(open);
+                          if (!open) setSidePanelState(null);
+                        }}
+                        state={sidePanelState}
+                        project={project as Project}
+                        language={language}
+                        themeColor={getThemeColor()}
+                        t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
+                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                        filteredApartments={filters.filteredApartments}
+                        onSelectApartmentPreview={openApartmentPreview}
+                        onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
+                        onOpenFloorPlan={openFloorPlanFromPanel}
+                      />
+                    )}
                   </div>
                 </>
               )}

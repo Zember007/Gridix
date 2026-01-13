@@ -94,7 +94,7 @@ serve(async (req) => {
     }
 
     // Verify signed state
-    const stateSecret = Deno.env.get('AMOCRM_STATE_SECRET')
+    const stateSecret = Deno.env.get('JWT_SECRET')
     if (!stateSecret) {
       return createJsonResponse({ error: 'server_misconfigured' }, 500, origin);
     }

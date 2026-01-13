@@ -1,4 +1,4 @@
-project_id = "owilwkmenbrcinfwuvyx"
+project_id = "ebonmrtmfopohayxfvdy"
 
 [functions.amocrm-webhook-callback]
 verify_jwt = false

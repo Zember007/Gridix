@@ -9,6 +9,9 @@ import {
   LanguageProviders,
 } from "@/app/providers";
 import { AdminRoutes, DomainRoutes, EmbedRoutes, PublicRoutes } from "@/app/router";
+import { initUsertour } from "@/integrations/usertour";
+
+initUsertour();
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SuperAdminPage = lazy(() => import("@/pages/SuperAdminPage"));

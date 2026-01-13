@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useRef } fro
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, supabaseAuthInitPromise } from '@/shared/api/supabase';
 import { processPendingReferralAfterAuth } from '@/features/partnerProgram/referralTracking';
+import { identifyUsertourUser, resetUsertour } from '@/integrations/usertour';
 
 export interface UserProfile {
   id: string;
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     initializeAuth();
 
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (abortController.signal.aborted) return;
 
       setSession(newSession);
@@ -122,6 +123,50 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Usertour: initialize/identify only after auth + profile are ready.
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      resetUsertour();
+      return;
+    } 
+
+    
+
+    const run = async () => {
+      try {
+        await identifyUsertourUser({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+      } catch (e) {
+        // Don't break auth flow on analytics/onboarding SDK failures.
+        console.warn('Usertour identify failed:', e);
+      }
+    };
+
+    void run(); 
+  }, [loading, user, userProfile]);
 
   const loadUserProfile = async (
     userId: string,
@@ -159,7 +204,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (signal.aborted || currentSession !== session) return;
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        const errorCode =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? (error as { code?: unknown }).code
+            : undefined;
+
+        if (errorCode === 'PGRST116') {
           try {
             const { data: newProfile, error: createError } = await supabase
               .from('user_profiles')

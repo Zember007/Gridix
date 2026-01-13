@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
-import { HelpCircle, Menu, MessageCircleQuestionMark } from 'lucide-react';
+import { MessageCircleQuestionMark } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
@@ -18,6 +18,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
+import { startAdminOnboardingTour } from '@/integrations/usertour';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -39,6 +40,44 @@ const AdminDashboard = () => {
       setActiveTab(tab);
     }
   }, []);
+
+  // First admin entry: trigger onboarding tour once per user (handled by Usertour with `once: true`).
+  useEffect(() => {
+    if (loading) return;
+    if (!user?.id) return;
+
+    const run = () => {
+      try {
+        startAdminOnboardingTour({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+      } catch (e) {
+        // Don't block admin UX if onboarding SDK fails
+        console.warn('Failed to start admin onboarding tour:', e);
+      }
+    };
+
+    void run();
+  }, [loading, user, userProfile]);
   const { navigate } = useLanguageNavigation();
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
