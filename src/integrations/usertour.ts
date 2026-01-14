@@ -92,6 +92,7 @@ export function isDevTourMode(): boolean {
   }
   
 
+
   const env = import.meta.env.VITE_USERTOUR_DEV_TOUR;
 
   return env === 'true' || env === '1';
