@@ -126,7 +126,7 @@ const PartnersPage = () => {
                   <Button
                     onClick={handleCreatePartner}
                     disabled={isCreating}
-                    className="w-full"
+                    className="w-full partners_become_usertour"
                   >
                     {isCreating
                       ? t('partners.creating')
@@ -160,21 +160,25 @@ const PartnersPage = () => {
                 label={t('partners.overview')}
                 isActive={activeTab === 'overview'}
                 onClick={() => setActiveTab('overview')}
+                className="partners_overview_tab_usertour"
               />
               <TabButton
                 label={t('partners.referrals')}
                 isActive={activeTab === 'referrals'}
                 onClick={() => setActiveTab('referrals')}
+                className="partners_referrals_tab_usertour"
               />
               <TabButton
                 label={t('partners.clients')}
                 isActive={activeTab === 'clients'}
                 onClick={() => setActiveTab('clients')}
+                className="partners_clients_tab_usertour"
               />
               <TabButton
                 label={t('partners.instructions')}
                 isActive={activeTab === 'instructions'}
                 onClick={() => setActiveTab('instructions')}
+                className="partners_instructions_tab_usertour"
               />
             </div>
           </div>
@@ -184,7 +188,7 @@ const PartnersPage = () => {
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all border ${activeTab === 'account'
             ? 'bg-slate-900 text-white border-slate-900'
             : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
+            } partners_account_tab_usertour`}
         >
           <span
             className={`p-1 rounded-full ${activeTab === 'account'
@@ -209,21 +213,25 @@ const PartnersPage = () => {
               label={t('partners.overview')}
               isActive={activeTab === 'overview'}
               onClick={() => setActiveTab('overview')}
+              className="partners_overview_tab_usertour"
             />
             <TabButton
               label={t('partners.referrals')}
               isActive={activeTab === 'referrals'}
               onClick={() => setActiveTab('referrals')}
+              className="partners_referrals_tab_usertour"
             />
             <TabButton
               label={t('partners.clients')}
               isActive={activeTab === 'clients'}
               onClick={() => setActiveTab('clients')}
+              className="partners_clients_tab_usertour"
             />
             <TabButton
               label={t('partners.instructions')}
               isActive={activeTab === 'instructions'}
               onClick={() => setActiveTab('instructions')}
+              className="partners_instructions_tab_usertour"
             />
           </div>
         </div>
@@ -248,14 +256,15 @@ const TabButton: React.FC<{
   label: string;
   isActive: boolean;
   onClick: () => void;
-}> = ({ label, isActive, onClick }) => {
+  className?: string;
+}> = ({ label, isActive, onClick, className }) => {
   return (
     <button
       onClick={onClick}
       className={`flex-none py-1.5 px-4 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${isActive
         ? 'bg-white text-slate-900 shadow-sm'
         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'
-        }`}
+        } ${className || ''}`}
     >
       {label}
     </button>

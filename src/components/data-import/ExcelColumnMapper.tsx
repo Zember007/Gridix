@@ -15,6 +15,9 @@ import { useProjectCRUD } from '@/entities/project/queries/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { adminThemeClasses as admin } from '@/shared/lib/admin-theme-config';
 import { Language } from '@/shared/lib/language-utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { getOnboardingState, setPendingNext } from '@/integrations/onboarding';
+import { isDevTourMode } from '@/integrations/usertour';
 
 interface ImportedRowData {
   [key: string]: string | number | null | undefined;
@@ -77,6 +80,7 @@ interface RoomsValidationResult {
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
   const { createProject } = useProjectCRUD();
   const { t, language } = useLanguage();
+  const { userProfile, updateProfile } = useAuth();
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = useCallback((field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
@@ -181,6 +185,15 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
     
     return baseLabels;
   }, [t, projectData.type]);
+
+  const toColumnClass = useCallback((columnName: string) => {
+    const safe = String(columnName)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    return `excelcol_${safe}_usertour`;
+  }, []);
 
   const requiredFields = useMemo(() => {
     const baseFields = ['apartmentNumber', 'area'];
@@ -440,6 +453,19 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       if (!project) throw new Error('Failed to create project');
 
+      // Mark that the next screen should run the project editor onboarding for this project.
+      try {
+        if (!isDevTourMode()) {
+          const nextOnboarding = {
+            ...setPendingNext(userProfile, 'project_editor', project.id),
+            project_creation_done: true,
+          };
+          await updateProfile({ onboarding: nextOnboarding });
+        }
+      } catch (e) {
+        console.warn('Failed to set onboarding pending_next for project editor:', e);
+      }
+
       // Сохраняем кастомные поля в реальный проект
       if (customFields.length > 0) {
         const customFieldsData = customFields.map(field => ({
@@ -643,7 +669,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               id="projectName"
               value={projectData.name}
               onChange={(e) => setProjectData(prev => ({ ...prev, name: e.target.value }))}
-              className="mt-1"
+              className="mt-1 excel_project_name_usertour"
             />
           </div>
           <div>
@@ -652,11 +678,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               value={projectData.type}
               onValueChange={(value: 'building' | 'object') => setProjectData(prev => ({ ...prev, type: value }))}
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 excel_project_type_usertour">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="building">
+                <SelectItem value="building" className="excel_project_type_building_usertour">
                   {t('excel.mapper.project.types.building') || 'Здание (квартиры)'}
                 </SelectItem>
                 <SelectItem value="object">
@@ -671,7 +697,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
               id="projectDescription"
               value={projectData.description}
               onChange={(e) => setProjectData(prev => ({ ...prev, description: e.target.value }))}
-              className="mt-1"
+              className="mt-1 excel_project_description_usertour"
             />
           </div>
           {projectData.type === 'building' && (
@@ -701,7 +727,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       />
 
       {/* Соотнести столбцы */}
-      <Card>
+      <Card className="excel_mapping_required_usertour">
         <CardHeader>
           <CardTitle>{t('excel.mapper.columns.title') || 'Соотнести столбцы Excel'}</CardTitle>
           <CardDescription>
@@ -724,13 +750,18 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
                     value={currentValue || ''}
                     onValueChange={(value) => handleMappingChange(field as keyof ColumnMapping, value)}
                   >
-                    <SelectTrigger className={(!currentValue || currentValue === '__none__') && isRequired ? 'border-red-300' : ''}>
+                    <SelectTrigger
+                      className={[
+                        (!currentValue || currentValue === '__none__') && isRequired ? 'border-red-300' : '',
+                        `excel_mapping_${field}_usertour`,
+                      ].filter(Boolean).join(' ')}
+                    >
                       <SelectValue placeholder={t('excel.mapper.columns.selectColumn') || 'Выберите столбец'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">{t('excel.mapper.columns.selectColumnPlaceholder') || '-- Выберите столбец --'}</SelectItem>
                       {excelColumns.map((column) => (
-                        <SelectItem key={column} value={column}>
+                        <SelectItem key={column} value={column} className={toColumnClass(column)}>
                           {column}
                         </SelectItem>
                       ))}
@@ -753,7 +784,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       {/* Валидация статусов и комнат */}
       {((columnMapping.status && columnMapping.status !== '__none__') || 
         (projectData.type === 'building' && columnMapping.rooms && columnMapping.rooms !== '__none__')) && (
-        <Card>
+        <Card className="excel_validation_usertour">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {t('excel.mapper.validation.title') || 'Валидация данных'}
@@ -1111,7 +1142,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         <Button
           onClick={createProjectWithData}
           disabled={!isValidWithCustom || !projectData.name.trim() || isCreating}
-          className={`${admin.primary} ${admin.primaryHover}`}
+          className={`${admin.primary} ${admin.primaryHover} excel_create_project_usertour`}
         >
           {isCreating ? (t('state.creatingProject') || 'Создание проекта...') : (t('excel.mapper.actions.createProject') || 'Создать проект с данными')}
         </Button>

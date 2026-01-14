@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
 import { MessageCircleQuestionMark } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
@@ -18,13 +18,17 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
-import { startAdminOnboardingTour } from '@/integrations/usertour';
+import { endAllFlows, isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
+import { getOnboardingState } from '@/integrations/onboarding';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const { user, userProfile, signOut, loading } = useAuth();
+  const { user, userProfile, signOut, loading, updateProfile } = useAuth();
+  const startedAdminTourRef = useRef(false);
+  const startedPartnersTourRef = useRef(false);
+  const startedProjectCreationTourRef = useRef(false);
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -41,14 +45,96 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // First admin entry: trigger onboarding tour once per user (handled by Usertour with `once: true`).
+  // Admin main onboarding: once per user (stored in user_profiles.onboarding.admin_main_done)
   useEffect(() => {
     if (loading) return;
+
     if (!user?.id) return;
 
-    const run = () => {
+    if (startedAdminTourRef.current) return;
+
+    const devTour = isDevTourMode();
+    // In dev tour mode we allow starting even if profile isn't loaded yet.
+    if (!userProfile && !devTour) return;
+
+    const onboarding = userProfile ? getOnboardingState(userProfile) : {
+      admin_main_done: false,
+      project_creation_done: false,
+      partners_done: false,
+      project_editor_done_ids: [],
+      pending_next: null,
+      pending_project_id: null,
+    };
+    if (!devTour && onboarding.admin_main_done) return;
+
+    startedAdminTourRef.current = true;
+    const run = async () => {
       try {
-        startAdminOnboardingTour({
+        
+        await startAdminOnboardingTour({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+        if (!devTour) {
+          await updateProfile({
+            onboarding: {
+              ...onboarding,
+              admin_main_done: true,
+            },
+          });
+        }
+      } catch (e) {
+        // Don't block admin UX if onboarding SDK fails
+        console.warn('Failed to start admin onboarding tour:', e);
+      }
+    };
+
+    void run();
+  }, [loading, user, userProfile, updateProfile]);
+
+  // Project creation onboarding: once per user, when opening creation modal
+  useEffect(() => {
+
+    if (loading) return;
+    const devTour = isDevTourMode();
+    // allow re-opening in dev mode
+
+    if (devTour && !showCreateModal) {
+      startedProjectCreationTourRef.current = false;
+      return;
+    }
+
+    if (!showCreateModal) return;
+    if (!user?.id) return;
+    if (!userProfile && !devTour) return;
+    if (startedProjectCreationTourRef.current) return;
+
+
+    const onboarding = getOnboardingState(userProfile);
+    if (!devTour && onboarding.project_creation_done) return;
+
+    startedProjectCreationTourRef.current = true;
+    const run = async () => {
+      try {
+        await startProjectCreationTour({
           userId: user.id,
           email: userProfile?.email ?? user.email ?? null,
           name:
@@ -71,13 +157,12 @@ const AdminDashboard = () => {
               : null),
         });
       } catch (e) {
-        // Don't block admin UX if onboarding SDK fails
-        console.warn('Failed to start admin onboarding tour:', e);
+        console.warn('Failed to start project creation onboarding tour:', e);
       }
     };
 
     void run();
-  }, [loading, user, userProfile]);
+  }, [loading, showCreateModal, user, userProfile, updateProfile]);
   const { navigate } = useLanguageNavigation();
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
@@ -85,6 +170,65 @@ const AdminDashboard = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const { amoWidget } = useAmoWidget();
+
+  // Partners onboarding: once per user, when opening partners tab
+  useEffect(() => {
+    const devTour = isDevTourMode();
+    // allow re-opening in dev mode
+    if (devTour && activeTab !== 'partners') {
+      startedPartnersTourRef.current = false;
+      return;
+    }
+    if (loading) return;
+    if (activeTab !== 'partners') return;
+    if (!user?.id) return;
+    if (!userProfile) return;
+    if (startedPartnersTourRef.current) return;
+
+    const onboarding = getOnboardingState(userProfile);
+    if (!devTour && onboarding.partners_done) return;
+
+    startedPartnersTourRef.current = true;
+    const run = async () => {
+      try {
+        await startPartnersTour({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+
+        if (!devTour) {
+          await updateProfile({
+            onboarding: {
+              ...onboarding,
+              partners_done: true,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to start partners onboarding tour:', e);
+      }
+    };
+
+    void run();
+  }, [activeTab, loading, updateProfile, user, userProfile]);
 
   const handleCreateNew = () => {
     if (amoWidget) {
@@ -151,7 +295,7 @@ const AdminDashboard = () => {
 
         <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
           {activeTab === 'projects' && (
-            <div className="space-y-6">
+            <div className="space-y-6 projects_list_usertour">
               <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
@@ -210,7 +354,7 @@ const AdminDashboard = () => {
         {/* Support Button */}
         <Button
           size={"icon"}
-          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour"
           style={{
             backgroundColor: ADMIN_THEME.primary,
             color: ADMIN_THEME.textOnPrimary,

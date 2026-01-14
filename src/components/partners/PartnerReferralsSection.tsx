@@ -263,7 +263,7 @@ export const PartnerReferralsSection: React.FC = () => {
             <div className="flex gap-2 sm:shrink-0">
               <button
                 onClick={copyToClipboard}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-colors shadow-sm"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-colors shadow-sm partners_copy_link_usertour"
               >
                 <Copy size={16} />
                 {copied ? t('partners.copied') : t('partners.copy')}
@@ -284,7 +284,7 @@ export const PartnerReferralsSection: React.FC = () => {
           <div className="flex justify-between items-center">
             <button
               onClick={() => setShowUtmBuilder((v) => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors partners_utm_toggle_usertour"
             >
               <Settings2 size={16} />
               {showUtmBuilder

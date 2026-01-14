@@ -82,7 +82,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Projects Grid */}
       {projects.length === 0 ? (
         <Card className="border-dashed border-2 ">
@@ -97,6 +97,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
             <Button
               onClick={onCreateNew}
               size="lg"
+              className="create_project_usertour"
               style={{
                 backgroundColor: ADMIN_THEME.primary,
                 color: ADMIN_THEME.textOnPrimary,
@@ -127,6 +128,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
             </div>
             <Button
               onClick={onCreateNew}
+              className="create_project_usertour"
               style={{
                 backgroundColor: ADMIN_THEME.primary,
                 color: ADMIN_THEME.textOnPrimary,
@@ -145,7 +147,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ">
+            <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 project_card_usertour">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -234,6 +236,7 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       size="sm"
                       variant="outline"
                       onClick={() => onEditProject(project.id, false)}
+                      className="edit_project_usertour"
                       style={{
                         borderColor: ADMIN_THEME.primary,
                         color: ADMIN_THEME.primary,

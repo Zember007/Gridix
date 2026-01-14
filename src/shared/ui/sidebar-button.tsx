@@ -3,6 +3,7 @@ import { ADMIN_THEME } from "@/shared/lib/admin-theme-config";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
+  id: string;
   label: string;
   isActive?: boolean;
   isCollapsed?: boolean;
@@ -33,6 +34,7 @@ const handleMouseLeave = (e: React.MouseEvent<HTMLElement>, isActive: boolean) =
 
 export function SidebarButton({
   icon,
+  id,
   label,
   isActive = false,
   isCollapsed = false,
@@ -40,7 +42,7 @@ export function SidebarButton({
   href,
   title,
 }: SidebarButtonProps) {
-  const className = `w-full flex ${isCollapsed ? "flex-col items-center gap-1 px-2 py-2" : "items-center gap-3 px-3 py-2"} rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
+  const className = `w-full flex ${isCollapsed ? "flex-col items-center gap-1 px-1 py-2" : "items-center gap-3 px-3 py-2"} rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
   const displayTitle = title || (isCollapsed ? label : undefined);
 
   const content = (
@@ -57,15 +59,15 @@ export function SidebarButton({
       <a
         href={href}
         rel="noopener noreferrer"
-        className={className}
+        className={className + ` ${id}_usertour`}
         style={buttonStyles(isActive)}
         onMouseEnter={(e) => handleMouseEnter(e, isActive)}
         onMouseLeave={(e) => handleMouseLeave(e, isActive)}
         title={displayTitle}
         onClick={(e) => {
-         if (href === window.location.href) {
-          e.preventDefault();
-         }
+          if (href === window.location.href) {
+            e.preventDefault();
+          }
           onClick?.();
         }}
       >
@@ -77,7 +79,7 @@ export function SidebarButton({
   return (
     <button
       onClick={onClick}
-      className={className}
+      className={className + ` ${id}_usertour`}
       style={buttonStyles(isActive)}
       onMouseEnter={(e) => handleMouseEnter(e, isActive)}
       onMouseLeave={(e) => handleMouseLeave(e, isActive)}

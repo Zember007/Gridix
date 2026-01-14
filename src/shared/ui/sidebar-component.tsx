@@ -236,6 +236,7 @@ function SimplifiedSidebar({
           {navItems.map((item) => (
             <SidebarButton
               key={item.id}
+              id={item.id}
               icon={item.icon}
               label={item.label}
               isActive={activeSection === item.id}
@@ -251,6 +252,7 @@ function SimplifiedSidebar({
         <div>
           <div className="flex flex-col gap-2 p-4">
             <SidebarButton
+              id="partners"
               icon={<Handshake size={20} />}
               label={t('admin.partners')}
               isActive={activeSection === 'partners'}
@@ -259,6 +261,7 @@ function SimplifiedSidebar({
               href={`/${language}/admin?page=partners`}
             />
             <SidebarButton
+              id="documentation"
               icon={<Book size={20} />}
               label={t('admin.documentation')}
               isCollapsed={isCollapsed}
@@ -390,7 +393,7 @@ function SimplifiedSidebar({
 
   return (
     <aside
-      className={`flex flex-col start_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
+      className={`flex flex-col sidebar_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
         }`}
       style={{
         backgroundColor: ADMIN_THEME.sidebarBackground,

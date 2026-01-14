@@ -3,9 +3,8 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Progress } from '@/shared/ui/progress';
-import { Badge } from '@/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Upload, FileSpreadsheet, Settings, Building2, Download, X, Link, ArrowLeft } from 'lucide-react';
+import { Upload, FileSpreadsheet, Building2, Download, Link, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import ExcelColumnMapper from '@/components/data-import/ExcelColumnMapper';
 import ExcelUrlImporter from '@/components/data-import/ExcelUrlImporter';
@@ -38,8 +37,8 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+
       toast.error(t('admin.project.create.supportedFormats') || 'Поддерживаемые форматы: Excel (.xlsx, .xls) и CSV');
       return;
     }
@@ -49,14 +48,43 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
     try {
       const reader = new FileReader();
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 100);
 
       reader.onload = (e) => {
         try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const result = e.target?.result;
+          if (!result) {
+            toast.error(t('errors.file.read') || 'Ошибка при чтении файла');
+            return;
+          }
+
+          // CSV читаем как string, Excel как ArrayBuffer
+          const workbook = isCsv
+            ? XLSX.read(
+              typeof result === 'string' ? result : new TextDecoder('utf-8').decode(result as ArrayBuffer),
+              { type: 'string' }
+            )
+            : XLSX.read(new Uint8Array(result as ArrayBuffer), { type: 'array' });
 
           const firstSheetName = workbook.SheetNames[0];
+          if (!firstSheetName) {
+            toast.error(t('errors.file.noData') || 'Файл не содержит данных');
+            return;
+          }
           const worksheet = workbook.Sheets[firstSheetName];
+          if (!worksheet) {
+            toast.error(t('errors.file.noData') || 'Файл не содержит данных');
+            return;
+          }
 
           // Читаем данные как JSON с первой строкой в качестве заголовков
           const jsonData = XLSX.utils.sheet_to_json<ImportedRow>(worksheet, {
@@ -64,13 +92,20 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           });
 
           if (jsonData.length === 0) {
+            console.log('jsonData', worksheet);
+
             toast.error(t('errors.file.noData') || 'Файл не содержит данных');
             setIsProcessing(false);
             return;
           }
 
           // Получаем заголовки из первой записи
-          const headers = Object.keys(jsonData[0]).filter(header => header.trim() !== '');
+          const firstRow = jsonData[0];
+          if (!firstRow) {
+            toast.error(t('errors.file.noData') || 'Файл не содержит данных');
+            return;
+          }
+          const headers = Object.keys(firstRow).filter(header => header.trim() !== '');
 
 
           setExcelColumns(headers);
@@ -83,37 +118,33 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           console.error('Ошибка обработки файла:', error);
           toast.error(t('errors.file.process') || 'Ошибка при обработке файла');
         } finally {
+          clearInterval(progressInterval);
           setIsProcessing(false);
+          // чтобы onChange сработал при выборе того же файла повторно
+          event.target.value = '';
         }
       };
 
       reader.onerror = () => {
         toast.error(t('errors.file.read') || 'Ошибка при чтении файла');
+        clearInterval(progressInterval);
         setIsProcessing(false);
+        event.target.value = '';
       };
 
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 100);
-
-      if (file.name.endsWith('.csv')) {
+      if (isCsv) {
         reader.readAsText(file, 'UTF-8');
       } else {
         reader.readAsArrayBuffer(file);
       }
 
-      toast.info(t('admin.project.create.import.processing') || 'Обработка Excel файла...');
+      toast.info(t('admin.project.create.import.processing') || 'Обработка файла...');
 
     } catch (error) {
       console.error('Ошибка:', error);
       toast.error(t('errors.file.upload') || 'Ошибка при загрузке файла');
       setIsProcessing(false);
+      event.target.value = '';
     }
   };
 
@@ -161,7 +192,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
       <Dialog open={open} onOpenChange={handleCloseModal}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-          
+
           </DialogHeader>
           <ExcelColumnMapper
             excelColumns={excelColumns}
@@ -200,7 +231,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
   return (
     <Dialog open={open} onOpenChange={handleCloseModal}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl project_creation_modal_usertour">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-real-estate-600" />
@@ -213,7 +244,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
 
         <div className="space-y-6 py-4">
           {/* Ручное создание */}
-          <Card className="cursor-pointer hover:bg-real-estate-50 transition-colors" onClick={handleManualCreateClick}>
+          <Card className="cursor-pointer hover:bg-real-estate-50 transition-colors project_manual_create_usertour" onClick={handleManualCreateClick}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-real-estate-600" />
@@ -231,7 +262,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
           </Card>
 
           {/* Импорт из Excel */}
-          <Card>
+          <Card className="project_import_excel_usertour">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-real-estate-600" />
@@ -244,11 +275,11 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
             <CardContent className="space-y-4">
               <Tabs value={importMethod} onValueChange={(value) => setImportMethod(value as 'file' | 'url')}>
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="file" className="flex items-center gap-2">
+                  <TabsTrigger value="file" className="flex items-center gap-2 project_import_file_tab_usertour">
                     <Upload className="h-4 w-4" />
                     {t('admin.project.create.import.uploadTab') || 'Загрузить файл'}
                   </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-2">
+                  <TabsTrigger value="url" className="flex items-center gap-2 project_import_url_tab_usertour">
                     <Link className="h-4 w-4" />
                     {t('admin.project.create.import.urlTab') || 'По ссылке'}
                   </TabsTrigger>
@@ -259,7 +290,7 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isProcessing}
-                      className={`${admin.primary} ${admin.primaryHover}`}
+                      className={`${admin.primary} ${admin.primaryHover} project_import_upload_usertour`}
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       {isProcessing ? (t('admin.project.create.import.processing') || 'Обработка...') : (t('admin.project.create.import.uploadButton') || 'Загрузить Excel файл')}
@@ -267,10 +298,16 @@ const ProjectCreationModal = ({ open, onClose, onManualCreate }: ProjectCreation
                     <Button
                       variant="outline"
                       onClick={downloadTemplate}
-                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50"
+                      className="border-real-estate-300 text-real-estate-600 hover:bg-real-estate-50 project_import_template_usertour"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       {t('admin.project.create.import.template') || 'Скачать шаблон'}
+                    </Button>
+                    <Button asChild variant="outline" className="project_import_demo_usertour">
+                      <a href="/Demo_chess_import.csv" download>
+                        <Download className="h-4 w-4 mr-2" />
+                        Скачать демо
+                      </a>
                     </Button>
                   </div>
 

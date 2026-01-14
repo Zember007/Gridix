@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -28,6 +28,8 @@ import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/shared/u
 import { useSearchParams } from 'react-router-dom';
 import ProjectFloorsManager from '@/components/projects/ProjectFloorsManager';
 import { ProjectPriceManager } from '@/components/projects/ProjectPriceManager';
+import { isDevTourMode, startProjectEditorTour } from '@/integrations/usertour';
+import { getOnboardingState } from '@/integrations/onboarding';
 import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
@@ -52,12 +54,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
 
   const { navigate } = useLanguageNavigation();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, updateProfile, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
   const { project: cachedProject } = useProject(projectId);
   const [searchParams] = useSearchParams();
+  const startedEditorTourRef = useRef(false);
 
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -134,6 +137,77 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, cachedProject?.id]);
+
+  // Project editor onboarding: once per project (tracked in user_profiles.onboarding.project_editor_done_ids)
+  useEffect(() => {
+
+    if (authLoading) return;
+    const devTour = isDevTourMode();
+
+    if (!user?.id) return;
+    if (!userProfile && !devTour) return;
+    if (isNew) return;
+    if (!project?.id) return;
+    if (startedEditorTourRef.current) return;
+
+    const onboarding = getOnboardingState(userProfile);
+    const doneIds = onboarding.project_editor_done_ids ?? [];
+    const alreadyDone = doneIds.includes(project.id);
+
+    const shouldStartBecausePending =
+      onboarding.pending_next === 'project_editor' &&
+      onboarding.pending_project_id === project.id;
+      
+    if (!devTour && !shouldStartBecausePending && alreadyDone) return;
+    startedEditorTourRef.current = true;
+    const run = async () => {
+      try {
+        await startProjectEditorTour({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+
+        if (!devTour) {
+          const nextDoneIds = alreadyDone ? doneIds : [...doneIds, project.id];
+          await updateProfile({
+            onboarding: {
+              ...onboarding,
+              project_editor_done_ids: nextDoneIds,
+              pending_next: null,
+              pending_project_id: null,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to start project editor onboarding tour:', e);
+      }
+    };
+
+    void run();
+  }, [authLoading, isNew, project?.id, updateProfile, user, userProfile]);
+
+  // Reset per-project guard when switching projects (and allow re-run on navigation)
+  useEffect(() => {
+    startedEditorTourRef.current = false;
+  }, [project?.id]);
 
   const handleSave = async () => {
     if (!project.name.trim()) {
@@ -397,7 +471,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={onBack}>
+                <Button variant="ghost" size="sm" onClick={onBack} className="project_back_usertour">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">{t('projectEditor.back')}</span>
                 </Button>
@@ -426,6 +500,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   onClick={handleSave}
                   disabled={saving}
                   size="sm"
+                  className="project_save_usertour"
                   style={{
                     backgroundColor: ADMIN_THEME.primary,
                     color: ADMIN_THEME.textOnPrimary,
@@ -451,7 +526,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           </div>
         </div>
 
-        <div className="flex-1 px-6 py-4 lg:py-6 overflow-y-auto">
+        <div className="flex-1 px-6 py-4 lg:py-6 overflow-y-auto project_editor_content_usertour">
           {/* Show content based on activeTab without Tabs wrapper */}
 
 

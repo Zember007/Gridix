@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase, supabaseAuthInitPromise } from '@/shared/api/supabase';
 import { processPendingReferralAfterAuth } from '@/features/partnerProgram/referralTracking';
 import { identifyUsertourUser, resetUsertour } from '@/integrations/usertour';
+import { isDevTourMode } from '@/integrations/usertour';
 
 export interface UserProfile {
   id: string;
@@ -11,6 +12,14 @@ export interface UserProfile {
   avatar_url: string | null;
   company_name: string | null;
   phone: string | null;
+  onboarding?: {
+    admin_main_done?: boolean;
+    project_creation_done?: boolean;
+    partners_done?: boolean;
+    project_editor_done_ids?: string[];
+    pending_next?: string | null;
+    pending_project_id?: string | null;
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +67,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     avatar_url: null,
     company_name: currentUser?.user_metadata?.company_name || null,
     phone: currentUser?.user_metadata?.phone || null,
+    onboarding: {
+      admin_main_done: false,
+      project_creation_done: false,
+      partners_done: false,
+      project_editor_done_ids: [],
+      pending_next: null,
+      pending_project_id: null,
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
@@ -106,11 +123,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (newSession?.user) {
         // Проверяем, требуется ли установка пароля
         const requiresPassword = newSession.user.user_metadata?.requires_password_setup === true;
+        console.log('requiresPassword', requiresPassword);
         setRequiresPasswordSetup(requiresPassword);
 
         await loadUserProfile(newSession.user.id, newSession.user, newSession, abortController.signal);
       } else {
         setUserProfile(null);
+
         setRequiresPasswordSetup(false);
         profileLoadedRef.current.clear();
         loadingProfileRef.current.clear();
@@ -174,6 +193,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     currentSession: Session,
     signal: AbortSignal
   ) => {
+
     if (loadingProfileRef.current.has(userId) || profileLoadedRef.current.has(userId)) {
       setLoading(false);
       return;
@@ -202,7 +222,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       ]);
 
       if (signal.aborted || currentSession !== session) return;
-
       if (error) {
         const errorCode =
           typeof error === 'object' && error !== null && 'code' in error
@@ -220,6 +239,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   full_name: currentUser?.user_metadata?.full_name || null,
                   company_name: currentUser?.user_metadata?.company_name || null,
                   phone: currentUser?.user_metadata?.phone || null,
+                  onboarding: {
+                    admin_main_done: false,
+                    project_creation_done: false,
+                    partners_done: false,
+                    project_editor_done_ids: [],
+                    pending_next: null,
+                    pending_project_id: null,
+                  },
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 },
@@ -244,6 +271,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUserProfile(createFallbackProfile(userId, currentUser));
         }
       } else if (data) {
+        console.log('data', data);
         setUserProfile(data);
       } else {
         setUserProfile(createFallbackProfile(userId, currentUser));

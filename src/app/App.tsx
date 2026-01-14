@@ -9,9 +9,7 @@ import {
   LanguageProviders,
 } from "@/app/providers";
 import { AdminRoutes, DomainRoutes, EmbedRoutes, PublicRoutes } from "@/app/router";
-import { initUsertour } from "@/integrations/usertour";
-
-initUsertour();
+import { UsertourBlockingGate } from "@/integrations/UsertourBlockingGate";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SuperAdminPage = lazy(() => import("@/pages/SuperAdminPage"));
@@ -27,75 +25,75 @@ export default function App() {
     <BaseProviders>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route
-              path="/embed/*"
-              element={
-                <EmbedProviders>
-                  <Suspense fallback={<PageLoader />}>
-                    <EmbedRoutes />
-                  </Suspense>
-                </EmbedProviders>
-              }
-            />
-
-            <Route
-              path="/:lang/superadmin"
-              element={
-                <LanguageProviders>
-                  <ProtectedRoute>
+          <UsertourBlockingGate>
+            <Routes>
+              <Route
+                path="/embed/*"
+                element={
+                  <EmbedProviders>
                     <Suspense fallback={<PageLoader />}>
-                      <SuperAdminPage />
+                      <EmbedRoutes />
                     </Suspense>
-                  </ProtectedRoute>
-                </LanguageProviders>
-              }
-            />
+                  </EmbedProviders>
+                }
+              />
 
-            <Route
-              path="/:lang/admin/*"
-              element={
-                <AdminProviders>
+              <Route
+                path="/:lang/superadmin"
+                element={
+                  <LanguageProviders>
+                    <ProtectedRoute>
+                      <Suspense fallback={<PageLoader />}>
+                        <SuperAdminPage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  </LanguageProviders>
+                }
+              />
+
+              <Route
+                path="/:lang/admin/*"
+                element={
+                  <AdminProviders>
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminRoutes />
+                    </Suspense>
+                  </AdminProviders>
+                }
+              />
+
+              <Route
+                path="/:lang/*"
+                element={
+                  <LanguageProviders>
+                    <Suspense fallback={<PageLoader />}>
+                      <PublicRoutes />
+                    </Suspense>
+                  </LanguageProviders>
+                }
+              />
+
+              <Route
+                path="/*"
+                element={
+                  <EmbedProviders>
+                    <Suspense fallback={<PageLoader />}>
+                      <DomainRoutes />
+                    </Suspense>
+                  </EmbedProviders>
+                }
+              />
+
+              <Route
+                path="*"
+                element={
                   <Suspense fallback={<PageLoader />}>
-                    <AdminRoutes />
+                    <NotFound />
                   </Suspense>
-                </AdminProviders>
-              }
-            />
-
-            <Route
-              path="/:lang/*"
-              element={
-                <LanguageProviders>
-                  <Suspense fallback={<PageLoader />}>
-                    <PublicRoutes />
-                  </Suspense>
-                </LanguageProviders>
-              }
-            />
-
-            
-
-            <Route
-              path="/*"
-              element={
-                <EmbedProviders>
-                  <Suspense fallback={<PageLoader />}>
-                    <DomainRoutes />
-                  </Suspense>
-                </EmbedProviders>
-              }
-            />
-
-            <Route
-              path="*"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <NotFound />
-                </Suspense>
-              }
-            />
-          </Routes>
+                }
+              />
+            </Routes>
+          </UsertourBlockingGate>
         </AuthProvider>
       </BrowserRouter>
     </BaseProviders>

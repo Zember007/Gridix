@@ -1,4 +1,11 @@
-import usertour from 'usertour.js';
+type UsertourClient = {
+  init: (token: string) => void;
+  identify: (userId: string, traits?: Record<string, unknown>) => Promise<void> | void;
+  start: (contentId: string, options?: { continue?: boolean }) => void;
+  reset: () => void;
+  endAll: () => void;
+  setBaseZIndex: (zIndex: number) => void;
+};
 
 type IdentifyPayload = {
   userId: string;
@@ -12,6 +19,27 @@ type IdentifyPayload = {
 
 let initialized = false;
 let lastIdentifiedUserId: string | null = null;
+
+let usertourClient: UsertourClient | null = null;
+let usertourImportPromise: Promise<UsertourClient> | null = null;
+
+let uiBlocked = false;
+const uiBlockedListeners = new Set<() => void>();
+
+function setUiBlocked(next: boolean) {
+  if (uiBlocked === next) return;
+  uiBlocked = next;
+  uiBlockedListeners.forEach((cb) => cb());
+}
+
+export function getUsertourUiBlocked(): boolean {
+  return uiBlocked;
+}
+
+export function subscribeUsertourUiBlocked(cb: () => void): () => void {
+  uiBlockedListeners.add(cb);
+  return () => uiBlockedListeners.delete(cb);
+}
 
 function getUsertourToken(): string | undefined {
   const token = import.meta.env.VITE_USERTOUR_TOKEN;
@@ -27,37 +55,98 @@ function getAdminOnboardingContentId(): string | undefined {
     : undefined;
 }
 
+function getProjectCreationContentId(): string | undefined {
+  const contentId = import.meta.env.VITE_USERTOUR_PROJECT_CREATION_CONTENT_ID;
+  return typeof contentId === 'string' && contentId.trim().length > 0
+    ? contentId.trim()
+    : undefined;
+}
+
+function getProjectEditorContentId(): string | undefined {
+  const contentId = import.meta.env.VITE_USERTOUR_PROJECT_EDITOR_CONTENT_ID;
+  return typeof contentId === 'string' && contentId.trim().length > 0
+    ? contentId.trim()
+    : undefined;
+}
+
+function getPartnersContentId(): string | undefined {
+  const contentId = import.meta.env.VITE_USERTOUR_PARTNERS_CONTENT_ID;
+  return typeof contentId === 'string' && contentId.trim().length > 0
+    ? contentId.trim()
+    : undefined;
+}
+
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
-/**
- * Init once
- */
-export function initUsertour(): void {
-  if (!isBrowser()) return;
-  if (initialized) return;
+export function isDevTourMode(): boolean {
+  if (!isBrowser()) return false;
+  try {
+    const url = new URL(window.location.href);
+    const qp = url.searchParams.get('dev_tour');
 
-  const token = getUsertourToken();
-  if (!token) return;
+    if (qp === 'true' || qp === '1') return true;
+  } catch {
+    // ignore
+  }
 
-  usertour.init(token);
-  initialized = true;
+  const env = import.meta.env.VITE_USERTOUR_DEV_TOUR;
+
+  return env === 'true' || env === '1';
+}
+
+async function loadUsertourClient(): Promise<UsertourClient> {
+  if (!isBrowser()) {
+    throw new Error('Usertour can only be loaded in the browser');
+  }
+
+  if (usertourClient) return usertourClient;
+  if (usertourImportPromise) return usertourImportPromise;
+
+  usertourImportPromise = import('usertour.js').then((mod) => {
+    const client = ((mod as unknown as { default?: UsertourClient }).default ??
+      (mod as unknown as UsertourClient)) as UsertourClient;
+    usertourClient = client;  
+    return client;
+  });
+
+  return usertourImportPromise;
+}
+
+async function prepareUsertour(opts: { blockUi: boolean }): Promise<UsertourClient | null> {
+  if (!isBrowser()) return null;
+
+  if (opts.blockUi) setUiBlocked(true);
+  try {
+    const client = await loadUsertourClient();
+    if (!initialized) {
+      const token = getUsertourToken();
+      if (!token) return client;
+      client.init(token);
+      client.setBaseZIndex(2000000);
+      initialized = true;
+    }
+    return client;
+  } finally {
+    if (opts.blockUi) setUiBlocked(false);
+  }
 }
 
 /**
- * Identify user (fire-and-forget)
+ * Deprecated: left for backward compatibility. We no longer eagerly load the SDK on app start.
  */
-export async function identifyUsertourUser(payload: IdentifyPayload): Promise<void> {
-  if (!isBrowser()) return;
+export function initUsertour(): void {
+  // no-op
+}
 
+async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): Promise<void> {
   const userId = payload.userId;
   if (!userId) return;
 
-
   if (lastIdentifiedUserId === userId) return;
 
-  await usertour.identify(userId, {
+  await client.identify(userId, {
     email: payload.email ?? undefined,
     name: payload.name ?? undefined,
     signed_up_at: payload.signedUpAt ?? undefined,
@@ -67,30 +156,85 @@ export async function identifyUsertourUser(payload: IdentifyPayload): Promise<vo
 }
 
 /**
+ * Identify user (fire-and-forget)
+ */
+export async function identifyUsertourUser(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+  console.log('identifyUsertourUser');
+  const client = await prepareUsertour({ blockUi: false });
+  if (!client) return;
+  await identifyImpl(client, payload);
+}
+
+export async function endAllFlows(): Promise<void> {
+  if (!isBrowser()) return;
+  const client = await prepareUsertour({ blockUi: false });
+  if (!client) return;
+  client.endAll();
+}
+
+/**
  * Start admin onboarding
  */
 export async function startAdminOnboardingTour(payload: IdentifyPayload): Promise<void> {
+
   if (!isBrowser()) return;
 
   const contentId = getAdminOnboardingContentId();
   if (!contentId) return;
 
 
-  usertour.start(contentId, {
-    continue: true
-  });
+  const client = await prepareUsertour({ blockUi: true });
+  if (!client) return;
+  await identifyImpl(client, payload);
+  client.start(contentId);
 }
 
-/**
- * Reset on logout
- */
+export async function startProjectCreationTour(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+
+  const contentId = getProjectCreationContentId();
+  if (!contentId) return;
+
+  const client = await prepareUsertour({ blockUi: true });
+  if (!client) return;
+  await identifyImpl(client, payload);
+  client.start(contentId);
+}
+
+export async function startProjectEditorTour(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+
+  const contentId = getProjectEditorContentId();
+  if (!contentId) return;
+
+  const client = await prepareUsertour({ blockUi: true });
+  if (!client) return;
+  await identifyImpl(client, payload);
+  client.start(contentId);
+}
+
+export async function startPartnersTour(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+
+  const contentId = getPartnersContentId();
+  if (!contentId) return;
+
+  const client = await prepareUsertour({ blockUi: true });
+  if (!client) return;
+  await identifyImpl(client, payload);
+  client.start(contentId);
+}
+
+
 export function resetUsertour(): void {
   if (!isBrowser()) return;
 
   try {
-    usertour.reset();
+    usertourClient?.reset?.();
   } finally {
     initialized = false;
     lastIdentifiedUserId = null;
+    setUiBlocked(false);
   }
 }
