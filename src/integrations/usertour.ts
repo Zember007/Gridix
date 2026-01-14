@@ -90,6 +90,7 @@ export function isDevTourMode(): boolean {
   } catch {
     // ignore
   }
+  
 
   const env = import.meta.env.VITE_USERTOUR_DEV_TOUR;
 
