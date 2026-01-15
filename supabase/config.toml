@@ -12,3 +12,5 @@ verify_jwt = false
 [functions.bitrix-install]
 verify_jwt = false
 
+[functions.bitrix-app]
+verify_jwt = false

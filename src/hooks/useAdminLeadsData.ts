@@ -380,11 +380,24 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         });
         if (fnError) throw fnError;
         if (fnData?.error) throw new Error(fnData.error);
-        return;
+      } else {
+        const { error } = await supabase.from('leads').update(data).eq('id', id);
+        if (error) throw error;
       }
 
-      const { error } = await supabase.from('leads').update(data).eq('id', id);
-      if (error) throw error;
+      // Best-effort Bitrix sync (do NOT block UI if not connected / no mapping / no link)
+      if (Object.prototype.hasOwnProperty.call(data, 'pipeline_stage_id')) {
+        try {
+          await supabase.functions.invoke('bitrix-app', {
+            body: {
+              action: 'push_lead_status_to_bitrix',
+              lead_id: id,
+            },
+          });
+        } catch (e) {
+          console.debug('Bitrix sync skipped/failed (non-blocking):', e);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
