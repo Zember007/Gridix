@@ -98,7 +98,7 @@ serve(async (req) => {
   const siteUrl = Deno.env.get("SITE_URL") ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const webhookSecret = Deno.env.get("BITRIX_WEBHOOK_SECRET") ?? "";
+  const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
 
   if (!siteUrl || !supabaseUrl || !serviceRoleKey) {
     console.error("Missing env configuration", {
@@ -250,7 +250,7 @@ serve(async (req) => {
         params: { event: "OnCrmDealAdd", handler: handlerUrl },
       }).catch((e) => console.warn("event.bind OnCrmDealAdd failed:", e));
     } else {
-      console.warn("BITRIX_WEBHOOK_SECRET is not set; skipping event.bind");
+      console.warn("JWT_SECRET is not set; skipping event.bind");
     }
   } catch (e) {
     console.error("Bitrix placement/event/UF setup failed:", e);

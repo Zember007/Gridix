@@ -39,6 +39,8 @@ export default function BitrixDealTabPage() {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [apartmentId, setApartmentId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [bxDomain, setBxDomain] = useState<string | null>(null);
+  const [bxMemberId, setBxMemberId] = useState<string | null>(null);
 
   const selectedProject = useMemo(
     () => projects.find((p) => p.id === projectId) ?? null,
@@ -53,6 +55,11 @@ export default function BitrixDealTabPage() {
           BX24.init(() => {
             try {
               BX24.fitWindow?.();
+              const auth = (BX24 as any)?.getAuth?.() ?? null;
+              const domain = auth?.domain ?? null;
+              const memberId = auth?.member_id ?? auth?.memberId ?? null;
+              if (domain) setBxDomain(domain);
+              if (memberId) setBxMemberId(memberId);
             } catch {
               // ignore
             }
@@ -61,6 +68,25 @@ export default function BitrixDealTabPage() {
 
         const dId = getBitrixDealIdFromPlacement();
         setDealId(dId);
+
+        // Bitrix SSO (Amo-like): auto-login once the app is connected
+        const { data: u0 } = await supabase.auth.getUser();
+        if (!u0?.user && bxDomain && bxMemberId) {
+          const { data: ssoData, error: ssoErr } = await supabase.functions.invoke('bitrix-app', {
+            body: { action: 'sso_create', domain: bxDomain, member_id: bxMemberId },
+          });
+          if (!ssoErr && ssoData?.sso) {
+            const { data: sessionData, error: verifyErr } = await supabase.functions.invoke('bitrix-app', {
+              body: { action: 'sso_verify', token: ssoData.sso },
+            });
+            if (!verifyErr && sessionData?.access_token && sessionData?.refresh_token) {
+              await supabase.auth.setSession({
+                access_token: sessionData.access_token,
+                refresh_token: sessionData.refresh_token,
+              });
+            }
+          }
+        }
 
         const { data: projectsData, error: projectsErr } = await supabase.functions.invoke('bitrix-app', {
           body: { action: 'get_projects' },
@@ -83,7 +109,7 @@ export default function BitrixDealTabPage() {
       }
     };
     void run();
-  }, []);
+  }, [bxDomain, bxMemberId]);
 
   useEffect(() => {
     const run = async () => {

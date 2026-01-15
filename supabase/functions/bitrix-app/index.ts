@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
+import { createSignedToken, verifyAndDecodeToken } from "../_shared/sso-token.ts";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -188,6 +189,128 @@ async function getValidBitrixAccessToken(opts: {
   return nextAccess;
 }
 
+async function handleSsoCreate(opts: {
+  svc: any;
+  supabaseUrl: string;
+  anonKey: string;
+  serviceRoleKey: string;
+  jwtSecret: string;
+  domain: string;
+  memberId: string;
+  origin: string | null;
+}): Promise<Response> {
+  const domain = normalizeDomain(opts.domain);
+  const memberId = String(opts.memberId ?? "");
+  if (!domain || !memberId) {
+    return createJsonResponse({ error: "Missing domain/member_id" }, 400, opts.origin);
+  }
+  if (!opts.jwtSecret) {
+    return createJsonResponse({ error: "Server configuration error (JWT_SECRET missing)" }, 500, opts.origin);
+  }
+
+  const { data: connection, error: connErr } = await opts.svc
+    .from("crm_connections")
+    .select("id,user_id,crm_type,base_domain,bitrix_member_id")
+    .eq("crm_type", "bitrix24")
+    .eq("base_domain", domain)
+    .eq("bitrix_member_id", memberId)
+    .maybeSingle();
+
+  if (connErr) {
+    console.error("SSO: failed to load crm_connection", connErr);
+    return createJsonResponse({ error: "Failed to resolve connection" }, 500, opts.origin);
+  }
+  if (!connection?.user_id) {
+    return createJsonResponse({ error: "Connection not found" }, 404, opts.origin);
+  }
+
+  const { data: profile, error: profileErr } = await opts.svc
+    .from("user_profiles")
+    .select("email")
+    .eq("id", connection.user_id)
+    .maybeSingle();
+
+  if (profileErr) {
+    console.error("SSO: failed to load user profile", profileErr);
+    return createJsonResponse({ error: "User profile not found" }, 404, opts.origin);
+  }
+  const email = profile?.email ?? null;
+  if (!email) {
+    return createJsonResponse({ error: "User email not found" }, 404, opts.origin);
+  }
+
+  // Generate magic link server-side (no user interaction), then immediately verify OTP to obtain a session.
+  const adminClient = createClient(opts.supabaseUrl, opts.serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: {
+      // Not used by our flow; required by API. Keep it on Supabase callback.
+      redirectTo: `${opts.supabaseUrl}/auth/v1/callback`,
+    },
+  });
+
+  const tokenHash = linkData?.properties?.hashed_token ?? null;
+  if (linkError || !tokenHash) {
+    console.error("SSO: generateLink failed", linkError);
+    return createJsonResponse({ error: "Failed to generate magic link" }, 500, opts.origin);
+  }
+
+  const verifyClient = createClient(opts.supabaseUrl, opts.anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: otpData, error: otpError } = await verifyClient.auth.verifyOtp({
+    type: "magiclink",
+    token_hash: tokenHash,
+  });
+
+  if (otpError || !otpData?.session) {
+    console.error("SSO: verifyOtp failed", otpError);
+    return createJsonResponse({ error: "Failed to create session" }, 500, opts.origin);
+  }
+
+  const session = otpData.session;
+  const now = Math.floor(Date.now() / 1000);
+  const tokenPayload = {
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_at: session.expires_at,
+    user: session.user,
+    exp: now + 60, // 1 minute
+    iat: now,
+  };
+
+  const signedToken = await createSignedToken(tokenPayload, opts.jwtSecret);
+  return createJsonResponse({ sso: signedToken }, 200, opts.origin);
+}
+
+async function handleSsoVerify(opts: {
+  jwtSecret: string;
+  token: string;
+  origin: string | null;
+}): Promise<Response> {
+  if (!opts.token) return createJsonResponse({ error: "Missing token" }, 400, opts.origin);
+  if (!opts.jwtSecret) return createJsonResponse({ error: "Server configuration error" }, 500, opts.origin);
+
+  const payload = await verifyAndDecodeToken(opts.token, opts.jwtSecret);
+  if (!payload) return createJsonResponse({ error: "Invalid or expired token" }, 401, opts.origin);
+
+  return createJsonResponse(
+    {
+      access_token: payload.access_token,
+      refresh_token: payload.refresh_token,
+      expires_at: payload.expires_at,
+      user: payload.user,
+    },
+    200,
+    opts.origin
+  );
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS") return createCorsResponse(origin);
@@ -195,7 +318,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const webhookSecret = Deno.env.get("BITRIX_WEBHOOK_SECRET") ?? "";
+  const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
 
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
     return createJsonResponse({ error: "Server configuration error" }, 500, origin);
@@ -314,6 +437,31 @@ Deno.serve(async (req) => {
     return createJsonResponse({ status: "ok" }, 200, origin);
   }
 
+  // ---- Non-authenticated API (UI -> Supabase): Bitrix SSO
+  const parsedBody = await parseBody(req);
+  const body = (parsedBody.json ?? {}) as JsonRecord;
+  const action = String(body.action ?? "");
+
+  if (action === "sso_create") {
+    const domain = normalizeDomain(String(body.domain ?? ""));
+    const memberId = String(body.member_id ?? body.memberId ?? "");
+    return await handleSsoCreate({
+      svc,
+      supabaseUrl,
+      anonKey,
+      serviceRoleKey,
+      jwtSecret: webhookSecret,
+      domain,
+      memberId,
+      origin,
+    });
+  }
+
+  if (action === "sso_verify") {
+    const token = String(body.token ?? "");
+    return await handleSsoVerify({ jwtSecret: webhookSecret, token, origin });
+  }
+
   // ---- Authenticated API (UI -> Supabase)
   const authHeader = req.headers.get("Authorization") ?? "";
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -327,9 +475,7 @@ Deno.serve(async (req) => {
     return createJsonResponse({ error: "Unauthorized" }, 401, origin);
   }
 
-  const { json } = await parseBody(req);
-  const body = (json ?? {}) as JsonRecord;
-  const action = String(body.action ?? "");
+  // Reuse the already-parsed JSON body to avoid reading the stream twice.
 
   try {
     switch (action) {

@@ -23,6 +23,7 @@ import BuildingImageEditor from '@/components/visualization/BuildingImageEditor'
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
 import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
+import Bitrix24Settings from '@/components/admin/Bitrix24Settings';
 import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { useSearchParams } from 'react-router-dom';
@@ -907,7 +908,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           )}
 
           {activeTab === 'integrations' && (
-            <AmoCRMSettings projectId={project.id} />
+            <div className="space-y-4">
+              <AmoCRMSettings projectId={project.id} />
+              <Bitrix24Settings projectId={project.id} />
+            </div>
           )}
         </div>
       </div>

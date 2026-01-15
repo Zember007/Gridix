@@ -6,6 +6,13 @@ import { Input } from '@/shared/ui/input';
 import Loader from '@/shared/ui/loader';
 import { toast } from 'sonner';
 
+function getPublicAppOrigin(): string {
+  // In local dev, Supabase magic-link redirects often end up on localhost.
+  // Force a public origin so the user lands back on the real app and can "claim" the install.
+  if (!import.meta.env.PROD) return 'https://app.gridix.live';
+  return window.location.origin;
+}
+
 export default function BitrixInstallPage() {
   const [bxReady, setBxReady] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -62,11 +69,12 @@ export default function BitrixInstallPage() {
     if (!trimmed) return;
     try {
       setLoading(true);
+      const redirectTo = `${getPublicAppOrigin()}/embed/connect/bitrix24${window.location.search}`;
       const { error } = await supabase.auth.signInWithOtp({
         email: trimmed,
         options: {
           // after login user can return to this page to claim the install
-          emailRedirectTo: window.location.href,
+          emailRedirectTo: redirectTo,
         },
       });
       if (error) throw error;
