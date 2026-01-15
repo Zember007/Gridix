@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.1"
   }
   graphql_public: {
     Tables: {
@@ -218,6 +218,146 @@ export type Database = {
         }
         Relationships: []
       }
+      bitrix_deal_links: {
+        Row: {
+          apartment_id: string
+          bitrix_deal_id: number
+          created_at: string
+          crm_connection_id: string
+          id: string
+          lead_id: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          apartment_id: string
+          bitrix_deal_id: number
+          created_at?: string
+          crm_connection_id: string
+          id?: string
+          lead_id?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          apartment_id?: string
+          bitrix_deal_id?: number
+          created_at?: string
+          crm_connection_id?: string
+          id?: string
+          lead_id?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bitrix_deal_links_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bitrix_deal_links_crm_connection_id_fkey"
+            columns: ["crm_connection_id"]
+            isOneToOne: false
+            referencedRelation: "crm_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bitrix_deal_links_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bitrix_deal_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bitrix_pending_installs: {
+        Row: {
+          access_token: string
+          created_at: string
+          domain: string
+          id: string
+          member_id: string
+          refresh_token: string
+          subdomain: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          domain: string
+          id?: string
+          member_id: string
+          refresh_token: string
+          subdomain: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          member_id?: string
+          refresh_token?: string
+          subdomain?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bitrix_stage_mapping: {
+        Row: {
+          bitrix_stage_id: string
+          created_at: string
+          id: string
+          lead_pipeline_stage_id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          bitrix_stage_id: string
+          created_at?: string
+          id?: string
+          lead_pipeline_stage_id: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          bitrix_stage_id?: string
+          created_at?: string
+          id?: string
+          lead_pipeline_stage_id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bitrix_stage_mapping_lead_pipeline_stage_id_fkey"
+            columns: ["lead_pipeline_stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bitrix_stage_mapping_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       building_floors: {
         Row: {
           color: string
@@ -342,12 +482,125 @@ export type Database = {
           },
         ]
       }
+      crm_automation_job_runs: {
+        Row: {
+          details: Json
+          error: string | null
+          finished_at: string | null
+          id: string
+          job_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          details?: Json
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          details?: Json
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_automation_job_runs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "crm_automation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_automation_jobs: {
+        Row: {
+          attempts: number
+          context: Json
+          created_at: string
+          funnel_id: string
+          id: string
+          last_error: string | null
+          lead_id: string
+          run_at: string
+          stage_id: string | null
+          status: string
+          trigger_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          context?: Json
+          created_at?: string
+          funnel_id: string
+          id?: string
+          last_error?: string | null
+          lead_id: string
+          run_at: string
+          stage_id?: string | null
+          status?: string
+          trigger_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          context?: Json
+          created_at?: string
+          funnel_id?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string
+          run_at?: string
+          stage_id?: string | null
+          status?: string
+          trigger_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_automation_jobs_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automation_jobs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automation_jobs_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automation_jobs_trigger_id_fkey"
+            columns: ["trigger_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_triggers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_connections: {
         Row: {
           access_token: string | null
           account_name: string | null
           authorization_code: string | null
           base_domain: string | null
+          bitrix_member_id: string | null
           client_id: string | null
           client_secret: string | null
           created_at: string | null
@@ -365,6 +618,7 @@ export type Database = {
           account_name?: string | null
           authorization_code?: string | null
           base_domain?: string | null
+          bitrix_member_id?: string | null
           client_id?: string | null
           client_secret?: string | null
           created_at?: string | null
@@ -382,6 +636,7 @@ export type Database = {
           account_name?: string | null
           authorization_code?: string | null
           base_domain?: string | null
+          bitrix_member_id?: string | null
           client_id?: string | null
           client_secret?: string | null
           created_at?: string | null
@@ -452,6 +707,7 @@ export type Database = {
           funnel_id: string
           icon: string
           id: string
+          order_index: number
           stage_id: string
           title: string
           updated_at: string
@@ -464,6 +720,7 @@ export type Database = {
           funnel_id: string
           icon: string
           id?: string
+          order_index?: number
           stage_id: string
           title: string
           updated_at?: string
@@ -476,6 +733,7 @@ export type Database = {
           funnel_id?: string
           icon?: string
           id?: string
+          order_index?: number
           stage_id?: string
           title?: string
           updated_at?: string
@@ -1172,6 +1430,57 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_bitrix_settings: {
+        Row: {
+          assigned_by_id: number | null
+          category_id: number | null
+          created_at: string
+          crm_connection_id: string
+          deal_link_uf_field: string
+          id: string
+          project_id: string
+          stage_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_by_id?: number | null
+          category_id?: number | null
+          created_at?: string
+          crm_connection_id: string
+          deal_link_uf_field?: string
+          id?: string
+          project_id: string
+          stage_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_by_id?: number | null
+          category_id?: number | null
+          created_at?: string
+          crm_connection_id?: string
+          deal_link_uf_field?: string
+          id?: string
+          project_id?: string
+          stage_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_bitrix_settings_crm_connection_id_fkey"
+            columns: ["crm_connection_id"]
+            isOneToOne: false
+            referencedRelation: "crm_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bitrix_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1970,6 +2279,7 @@ export type Database = {
         Args: { manager_account_id: string }
         Returns: undefined
       }
+      crm_run_automation_jobs: { Args: { p_limit?: number }; Returns: Json }
       ensure_unique_slug: {
         Args: { base_slug: string; project_id?: string }
         Returns: string

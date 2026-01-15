@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
 import { createSignedToken, verifyAndDecodeToken } from "../_shared/sso-token.ts";
 
@@ -201,25 +201,45 @@ async function handleSsoCreate(opts: {
 }): Promise<Response> {
   const domain = normalizeDomain(opts.domain);
   const memberId = String(opts.memberId ?? "");
-  if (!domain || !memberId) {
-    return createJsonResponse({ error: "Missing domain/member_id" }, 400, opts.origin);
+  if (!domain) {
+    return createJsonResponse({ error: "Missing domain" }, 400, opts.origin);
   }
   if (!opts.jwtSecret) {
     return createJsonResponse({ error: "Server configuration error (JWT_SECRET missing)" }, 500, opts.origin);
   }
 
-  const { data: connection, error: connErr } = await opts.svc
-    .from("crm_connections")
-    .select("id,user_id,crm_type,base_domain,bitrix_member_id")
-    .eq("crm_type", "bitrix24")
-    .eq("base_domain", domain)
-    .eq("bitrix_member_id", memberId)
-    .maybeSingle();
+  const subdomain = extractSubdomain(domain);
 
-  if (connErr) {
-    console.error("SSO: failed to load crm_connection", connErr);
-    return createJsonResponse({ error: "Failed to resolve connection" }, 500, opts.origin);
+  // Resolve Gridix user by Bitrix portal (domain/subdomain). Prefer member_id match when available.
+  let connection: any = null;
+  const baseQuery = opts.svc
+    .from("crm_connections")
+    .select("id,user_id,crm_type,base_domain,subdomain,bitrix_member_id")
+    .eq("crm_type", "bitrix24");
+
+  if (memberId) {
+    const { data, error } = await baseQuery
+      .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+      .eq("bitrix_member_id", memberId)
+      .maybeSingle();
+    if (error) {
+      console.error("SSO: failed to load crm_connection (member_id)", error);
+      return createJsonResponse({ error: "Failed to resolve connection" }, 500, opts.origin);
+    }
+    connection = data ?? null;
   }
+
+  if (!connection) {
+    const { data, error } = await baseQuery
+      .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+      .maybeSingle();
+    if (error) {
+      console.error("SSO: failed to load crm_connection", error);
+      return createJsonResponse({ error: "Failed to resolve connection" }, 500, opts.origin);
+    }
+    connection = data ?? null;
+  }
+
   if (!connection?.user_id) {
     return createJsonResponse({ error: "Connection not found" }, 404, opts.origin);
   }

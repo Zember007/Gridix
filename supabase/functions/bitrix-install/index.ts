@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 function normalizeDomain(raw: string): string {
   const d = String(raw || "").trim();
@@ -94,7 +94,7 @@ function htmlInstallFinish(opts: { siteUrl: string; redirectTo: string }) {
 </html>`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const siteUrl = Deno.env.get("SITE_URL") ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -149,24 +149,58 @@ serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // Store install tokens in pending table (crm_connections.user_id is required, so claim happens after user login)
-  const { error: pendingErr } = await supabase
-    .from("bitrix_pending_installs")
-    .upsert(
-      {
-        domain,
-        subdomain,
-        member_id: memberId,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        token_expires_at: tokenExpiresAt,
-      },
-      { onConflict: "member_id,domain" }
-    );
+  // If the user already pre-configured Bitrix subdomain in Gridix (crm_connections exists),
+  // we can attach tokens immediately without any "claim" UI step.
+  const { data: existingConn, error: existingConnErr } = await supabase
+    .from("crm_connections")
+    .select("id")
+    .eq("crm_type", "bitrix24")
+    .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+    .maybeSingle();
 
-  if (pendingErr) {
-    console.error("Supabase upsert pending install error:", pendingErr);
+  if (existingConnErr) {
+    console.error("Failed to query existing crm_connection:", existingConnErr);
     return new Response("Internal error", { status: 500 });
+  }
+
+  if (existingConn?.id) {
+    const { error: updateErr } = await supabase
+      .from("crm_connections")
+      .update({
+        base_domain: domain,
+        subdomain,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+        token_expires_at: tokenExpiresAt,
+        bitrix_member_id: memberId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingConn.id);
+
+    if (updateErr) {
+      console.error("Failed to update crm_connection with Bitrix tokens:", updateErr);
+      return new Response("Internal error", { status: 500 });
+    }
+  } else {
+    // Otherwise store install tokens in pending table (claim happens via token on BitrixInstallPage)
+    const { error: pendingErr } = await supabase
+      .from("bitrix_pending_installs")
+      .upsert(
+        {
+          domain,
+          subdomain,
+          member_id: memberId,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          token_expires_at: tokenExpiresAt,
+        },
+        { onConflict: "member_id,domain" }
+      );
+
+    if (pendingErr) {
+      console.error("Supabase upsert pending install error:", pendingErr);
+      return new Response("Internal error", { status: 500 });
+    }
   }
 
   // Bind UI placements (left menu + deal tab)

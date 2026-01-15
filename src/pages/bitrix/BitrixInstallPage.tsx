@@ -6,18 +6,11 @@ import { Input } from '@/shared/ui/input';
 import Loader from '@/shared/ui/loader';
 import { toast } from 'sonner';
 
-function getPublicAppOrigin(): string {
-  // In local dev, Supabase magic-link redirects often end up on localhost.
-  // Force a public origin so the user lands back on the real app and can "claim" the install.
-  if (!import.meta.env.PROD) return 'https://app.gridix.live';
-  return window.location.origin;
-}
-
 export default function BitrixInstallPage() {
   const [bxReady, setBxReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState('');
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [token, setToken] = useState('');
+  const [claimed, setClaimed] = useState(false);
 
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);
   const domain = qp.get('domain') ?? '';
@@ -39,24 +32,8 @@ export default function BitrixInstallPage() {
             }
           });
         }
-
-        // Get current Gridix session
-        const { data } = await supabase.auth.getUser();
-        const user = data?.user ?? null;
-        setSessionEmail(user?.email ?? null);
-
-        // If logged in and we have install params -> claim pending install
-        if (user && domain && memberId) {
-          const { error } = await supabase.functions.invoke('bitrix-app', {
-            body: { action: 'claim_install', domain, member_id: memberId },
-          });
-          if (error) throw error;
-          toast.success('Bitrix подключен к аккаунту Gridix');
-        }
       } catch (e) {
         console.error(e);
-        // don't spam: only show toast when we actually have params
-        if (domain && memberId) toast.error('Не удалось завершить подключение Bitrix');
       } finally {
         setLoading(false);
       }
@@ -64,24 +41,27 @@ export default function BitrixInstallPage() {
     void run();
   }, [domain, memberId]);
 
-  const sendMagicLink = async () => {
-    const trimmed = email.trim();
+  const claimInstallByToken = async () => {
+    const trimmed = token.trim();
     if (!trimmed) return;
+    if (!domain || !memberId) {
+      toast.error('Нет параметров установки (domain/member_id)');
+      return;
+    }
     try {
       setLoading(true);
-      const redirectTo = `${getPublicAppOrigin()}/embed/connect/bitrix24${window.location.search}`;
-      const { error } = await supabase.auth.signInWithOtp({
-        email: trimmed,
-        options: {
-          // after login user can return to this page to claim the install
-          emailRedirectTo: redirectTo,
+      const { error } = await supabase.functions.invoke('bitrix-app', {
+        body: { action: 'claim_install', domain, member_id: memberId },
+        headers: {
+          Authorization: `Bearer ${trimmed}`,
         },
       });
       if (error) throw error;
-      toast.success('Ссылка для входа отправлена на email. Откройте её и вернитесь сюда.');
+      setClaimed(true);
+      toast.success('Bitrix подключен к аккаунту Gridix');
     } catch (e) {
       console.error(e);
-      toast.error('Не удалось отправить ссылку для входа');
+      toast.error('Не удалось подключить Bitrix: проверьте токен');
     } finally {
       setLoading(false);
     }
@@ -118,18 +98,16 @@ export default function BitrixInstallPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Вход в Gridix (email)</CardTitle>
+            <CardTitle className="text-base">Подключение к аккаунту Gridix (токен)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
               <div className="py-6">
                 <Loader size="md" className="mx-auto" />
               </div>
-            ) : sessionEmail ? (
+            ) : claimed ? (
               <div className="space-y-3">
-                <div className="text-sm">
-                  Вы вошли как: <span className="font-medium">{sessionEmail}</span>
-                </div>
+                <div className="text-sm">Готово. Интеграция привязана к вашему аккаунту.</div>
                 <div className="grid grid-cols-1 gap-2">
                   <Button
                     onClick={() => (window.location.href = '/embed/bitrix/projects')}
@@ -145,17 +123,17 @@ export default function BitrixInstallPage() {
             ) : (
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">
-                  Введите email вашего аккаунта Gridix — мы отправим magic-link для входа, затем автоматически привяжем
-                  установку Bitrix к аккаунту.
+                  Вставьте токен вашего аккаунта Gridix (JWT). Он используется один раз, чтобы привязать установку Bitrix
+                  к вашему пользователю.
                 </div>
                 <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  type="email"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  type="password"
                 />
-                <Button onClick={sendMagicLink} className="w-full">
-                  Отправить ссылку для входа
+                <Button onClick={claimInstallByToken} className="w-full" disabled={!domain || !memberId}>
+                  Привязать установку Bitrix к аккаунту
                 </Button>
               </div>
             )}

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import Loader from '@/shared/ui/loader';
 import { supabase } from '@/shared/api/supabase';
+import { Input } from '@/shared/ui/input';
 import { toast } from 'sonner';
 
 interface Bitrix24SettingsProps {
@@ -31,6 +32,7 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
   const [connection, setConnection] = useState<CRMConnection | null>(null);
   const [projectSettings, setProjectSettings] = useState<ProjectBitrixSettings | null>(null);
   const [busy, setBusy] = useState(false);
+  const [domainInput, setDomainInput] = useState('');
 
   const fetchState = useCallback(async () => {
     try {
@@ -50,7 +52,9 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
         .eq('crm_type', 'bitrix24')
         .maybeSingle();
       if (connErr) throw connErr;
-      setConnection((conn ?? null) as unknown as CRMConnection | null);
+      const nextConn = (conn ?? null) as unknown as CRMConnection | null;
+      setConnection(nextConn);
+      setDomainInput(nextConn?.base_domain ?? nextConn?.subdomain ?? '');
 
       const { data: ps, error: psErr } = await supabase
         .from('project_bitrix_settings')
@@ -91,6 +95,45 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
     }
   };
 
+  const saveConnection = async () => {
+    const raw = domainInput.trim();
+    if (!raw) return toast.error('Укажите поддомен/домен Bitrix24');
+    try {
+      setBusy(true);
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user ?? null;
+      if (!user) {
+        toast.error('Нужно войти в Gridix');
+        return;
+      }
+
+      const normalized = raw.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      const subdomain = normalized.split('.')[0] ?? normalized;
+
+      const { error } = await supabase
+        .from('crm_connections')
+        .upsert(
+          {
+            user_id: user.id,
+            crm_type: 'bitrix24',
+            subdomain,
+            base_domain: normalized,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,crm_type' }
+        );
+      if (error) throw error;
+
+      toast.success('Bitrix24: поддомен сохранён');
+      await fetchState();
+    } catch (e) {
+      console.error(e);
+      toast.error('Не удалось сохранить поддомен Bitrix24');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const detachFromProject = async () => {
     try {
       setBusy(true);
@@ -121,48 +164,58 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
           </div>
         ) : (
           <>
-            {!connection ? (
-              <div className="space-y-2">
-                <div className="text-muted-foreground">
-                  Bitrix24 ещё не подключен к вашему аккаунту Gridix.
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => window.open('/embed/connect/bitrix24', '_blank')}
-                >
-                  Открыть страницу подключения Bitrix24
-                </Button>
+            <div className="space-y-2">
+              <div className="text-muted-foreground">
+                Укажите поддомен/домен портала Bitrix24. По нему виджет будет находить ваш `user_id` и делать SSO
+                автоматически (как в amoCRM).
               </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="text-muted-foreground">
-                  Подключение: <span className="font-mono">{connection.base_domain ?? connection.subdomain}</span>
-                </div>
-                {tokenExpired && (
-                  <div className="text-xs text-red-600">
-                    Токен Bitrix24 истёк. Переустановите приложение в Bitrix24 или повторите подключение.
-                  </div>
-                )}
-
-                {projectSettings ? (
-                  <div className="space-y-2">
-                    <div className="rounded-md border p-2">
-                      <div className="font-medium">Проект подключен</div>
-                      <div className="text-muted-foreground">
-                        crm_connection_id: <span className="font-mono">{projectSettings.crm_connection_id}</span>
-                      </div>
-                    </div>
-                    <Button variant="outline" onClick={detachFromProject} disabled={busy}>
-                      Отключить от проекта
-                    </Button>
-                  </div>
-                ) : (
-                  <Button onClick={attachToProject} disabled={busy || tokenExpired}>
-                    Подключить Bitrix24 к этому проекту
+              <Input
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+                placeholder="mycompany.bitrix24.ru или mycompany"
+              />
+              <div className="flex gap-2">
+                <Button onClick={saveConnection} disabled={busy}>
+                  Сохранить
+                </Button>
+                {connection && (
+                  <Button variant="outline" onClick={fetchState} disabled={busy}>
+                    Обновить
                   </Button>
                 )}
               </div>
-            )}
+
+              {connection && (
+                <>
+                  <div className="text-muted-foreground">
+                    Текущее: <span className="font-mono">{connection.base_domain ?? connection.subdomain}</span>
+                  </div>
+                  {tokenExpired && (
+                    <div className="text-xs text-red-600">
+                      Токен Bitrix24 истёк. Переустановите приложение в Bitrix24 (чтобы `bitrix-install` обновил токены).
+                    </div>
+                  )}
+
+                  {projectSettings ? (
+                    <div className="space-y-2">
+                      <div className="rounded-md border p-2">
+                        <div className="font-medium">Проект подключен</div>
+                        <div className="text-muted-foreground">
+                          crm_connection_id: <span className="font-mono">{projectSettings.crm_connection_id}</span>
+                        </div>
+                      </div>
+                      <Button variant="outline" onClick={detachFromProject} disabled={busy}>
+                        Отключить от проекта
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={attachToProject} disabled={busy || tokenExpired}>
+                      Подключить Bitrix24 к этому проекту
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </>
         )}
       </CardContent>
