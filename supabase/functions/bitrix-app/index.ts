@@ -1,3 +1,4 @@
+/// <reference path="../_shared/ts-shims.d.ts" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
@@ -8,6 +9,12 @@ type JsonRecord = Record<string, unknown>;
 function normalizeDomain(raw: string): string {
   const d = String(raw || "").trim();
   return d.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+}
+
+function normalizeEmail(raw: string): string {
+  return String(raw || "")
+    .trim()
+    .toLowerCase();
 }
 
 function extractSubdomain(domain: string): string {
@@ -536,6 +543,111 @@ Deno.serve(async (req) => {
         await svc.from("bitrix_pending_installs").delete().eq("id", pending.id);
 
         return createJsonResponse({ success: true }, 200, origin);
+      }
+
+      case "get_pending_install": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        const domainInput = normalizeDomain(String(body.domain ?? body.base_domain ?? body.subdomain ?? ""));
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+        if (!domainInput) return createJsonResponse({ error: "Missing domain" }, 400, origin);
+
+        // Ensure project belongs to user
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const subdomain = extractSubdomain(domainInput);
+        const { data: pending, error } = await svc
+          .from("bitrix_pending_installs")
+          .select("domain,subdomain,member_id,claim_token,created_at,updated_at")
+          .or(`domain.eq.${domainInput},subdomain.eq.${subdomain}`)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error("get_pending_install error", error);
+          return createJsonResponse({ error: "Failed to load pending install" }, 500, origin);
+        }
+
+        return createJsonResponse({ pending: pending ?? null }, 200, origin);
+      }
+
+      case "claim_install_by_token": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        const token = String(body.token ?? body.claim_token ?? "").trim();
+        const emailInput = normalizeEmail(String(body.email ?? ""));
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+        if (!token) return createJsonResponse({ error: "Missing token" }, 400, origin);
+        if (!emailInput) return createJsonResponse({ error: "Missing email" }, 400, origin);
+
+        // Ensure project belongs to user
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const userEmail = normalizeEmail(user.email ?? "");
+        if (!userEmail || userEmail !== emailInput) {
+          return createJsonResponse({ error: "Email mismatch" }, 403, origin);
+        }
+
+        const { data: pending, error: pendingErr } = await svc
+          .from("bitrix_pending_installs")
+          .select("*")
+          .eq("claim_token", token)
+          .maybeSingle();
+
+        if (pendingErr) {
+          console.error("claim_install_by_token: pending query failed", pendingErr);
+          return createJsonResponse({ error: "Failed to claim token" }, 500, origin);
+        }
+        if (!pending) return createJsonResponse({ error: "Invalid token" }, 404, origin);
+
+        const { data: connRow, error: upsertErr } = await svc
+          .from("crm_connections")
+          .upsert(
+            {
+              user_id: user.id,
+              crm_type: "bitrix24",
+              subdomain: pending.subdomain,
+              base_domain: pending.domain,
+              access_token: pending.access_token,
+              refresh_token: pending.refresh_token,
+              token_expires_at: pending.token_expires_at,
+              bitrix_member_id: pending.member_id,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,crm_type" }
+          )
+          .select("id")
+          .maybeSingle();
+
+        if (upsertErr || !connRow?.id) {
+          console.error("claim_install_by_token: connection upsert failed", upsertErr);
+          return createJsonResponse({ error: "Failed to create connection" }, 500, origin);
+        }
+
+        const { error: attachErr } = await svc.from("project_bitrix_settings").upsert({
+          project_id: projectId,
+          crm_connection_id: connRow.id,
+          updated_at: new Date().toISOString(),
+        });
+        if (attachErr) {
+          console.error("claim_install_by_token: attach failed", attachErr);
+          return createJsonResponse({ error: "Failed to attach to project" }, 500, origin);
+        }
+
+        await svc.from("bitrix_pending_installs").delete().eq("id", pending.id);
+
+        return createJsonResponse({ success: true, crm_connection_id: connRow.id }, 200, origin);
       }
 
       case "get_projects": {

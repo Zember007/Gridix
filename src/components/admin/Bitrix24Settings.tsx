@@ -33,6 +33,9 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
   const [projectSettings, setProjectSettings] = useState<ProjectBitrixSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [domainInput, setDomainInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [claimTokenInput, setClaimTokenInput] = useState('');
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
 
   const fetchState = useCallback(async () => {
     try {
@@ -44,6 +47,7 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
         setProjectSettings(null);
         return;
       }
+      setEmailInput(user.email ?? '');
 
       const { data: conn, error: connErr } = await supabase
         .from('crm_connections')
@@ -54,7 +58,7 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
       if (connErr) throw connErr;
       const nextConn = (conn ?? null) as unknown as CRMConnection | null;
       setConnection(nextConn);
-      setDomainInput(nextConn?.base_domain ?? nextConn?.subdomain ?? '');
+      setDomainInput((prev) => prev || nextConn?.base_domain || nextConn?.subdomain || '');
 
       const { data: ps, error: psErr } = await supabase
         .from('project_bitrix_settings')
@@ -95,40 +99,78 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
     }
   };
 
-  const saveConnection = async () => {
-    const raw = domainInput.trim();
-    if (!raw) return toast.error('Укажите поддомен/домен Bitrix24');
+  const normalizeDomain = (raw: string) => raw.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
+  const buildPortalDomain = (raw: string) => {
+    const normalized = normalizeDomain(raw);
+    if (!normalized) return '';
+    // Allow user to type just subdomain
+    if (!normalized.includes('.')) return `${normalized}.bitrix24.ru`;
+    return normalized;
+  };
+
+  const openMarketplace = async () => {
+    const domain = buildPortalDomain(domainInput);
+    if (!domain) return toast.error('Укажите поддомен/домен Bitrix24');
+
+    const tpl = (import.meta as any)?.env?.VITE_BITRIX_MARKET_APP_URL_TEMPLATE as string | undefined;
+    if (!tpl || !tpl.includes('{domain}')) {
+      toast.error('Не настроена ссылка на Marketplace приложения (VITE_BITRIX_MARKET_APP_URL_TEMPLATE).');
+      // Fallback: at least open Marketplace root so user can find the app manually.
+      window.open(`https://${domain}/marketplace/`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const url = tpl.replace('{domain}', domain);
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const checkPendingToken = async () => {
+    const domain = buildPortalDomain(domainInput);
+    if (!domain) return toast.error('Укажите поддомен/домен Bitrix24');
     try {
       setBusy(true);
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user ?? null;
-      if (!user) {
-        toast.error('Нужно войти в Gridix');
-        return;
-      }
-
-      const normalized = raw.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-      const subdomain = normalized.split('.')[0] ?? normalized;
-
-      const { error } = await supabase
-        .from('crm_connections')
-        .upsert(
-          {
-            user_id: user.id,
-            crm_type: 'bitrix24',
-            subdomain,
-            base_domain: normalized,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id,crm_type' }
-        );
+      const { data, error } = await supabase.functions.invoke('bitrix-app', {
+        body: { action: 'get_pending_install', project_id: projectId, domain },
+      });
       if (error) throw error;
-
-      toast.success('Bitrix24: поддомен сохранён');
-      await fetchState();
+      const token = (data as any)?.pending?.claim_token ?? null;
+      setPendingToken(token);
+      if (token) toast.success('Установка найдена — токен готов');
+      else toast.message('Пока нет данных об установке. Установите приложение в Bitrix и повторите.');
     } catch (e) {
       console.error(e);
-      toast.error('Не удалось сохранить поддомен Bitrix24');
+      toast.error('Не удалось проверить установку Bitrix');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const claimByToken = async () => {
+    const domain = buildPortalDomain(domainInput);
+    if (!domain) return toast.error('Укажите поддомен/домен Bitrix24');
+    const email = emailInput.trim();
+    const token = claimTokenInput.trim() || pendingToken || '';
+    if (!email) return toast.error('Укажите email');
+    if (!token) return toast.error('Укажите token');
+    try {
+      setBusy(true);
+      const { data, error } = await supabase.functions.invoke('bitrix-app', {
+        body: { action: 'claim_install_by_token', project_id: projectId, email, token },
+      });
+      if (error) throw error;
+      if ((data as any)?.success) {
+        toast.success('Bitrix24 привязан и подключен к проекту');
+        setClaimTokenInput('');
+        setPendingToken(null);
+        await fetchState();
+      } else {
+        toast.error('Не удалось привязать token');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Не удалось привязать Bitrix: проверьте email/token');
     } finally {
       setBusy(false);
     }
@@ -166,8 +208,10 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
           <>
             <div className="space-y-2">
               <div className="text-muted-foreground">
-                Укажите поддомен/домен портала Bitrix24. По нему виджет будет находить ваш `user_id` и делать SSO
-                автоматически (как в amoCRM).
+                1) Укажите поддомен/домен портала Bitrix24 и нажмите “Подключить” — откроется Marketplace с приложением.
+                <br />
+                2) После установки получите Token (показывается в Bitrix при установке) и введите Email + Token для
+                привязки к проекту.
               </div>
               <Input
                 value={domainInput}
@@ -175,14 +219,12 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
                 placeholder="mycompany.bitrix24.ru или mycompany"
               />
               <div className="flex gap-2">
-                <Button onClick={saveConnection} disabled={busy}>
-                  Сохранить
+                <Button onClick={openMarketplace} disabled={busy}>
+                  Подключить (Marketplace)
                 </Button>
-                {connection && (
-                  <Button variant="outline" onClick={fetchState} disabled={busy}>
-                    Обновить
-                  </Button>
-                )}
+                <Button variant="outline" onClick={checkPendingToken} disabled={busy}>
+                  Проверить установку
+                </Button>
               </div>
 
               {connection && (
@@ -214,6 +256,30 @@ export default function Bitrix24Settings({ projectId }: Bitrix24SettingsProps) {
                     </Button>
                   )}
                 </>
+              )}
+
+              {!connection && (
+                <div className="rounded-md border p-3 space-y-2">
+                  <div className="font-medium">Привязка после установки (Email + Token)</div>
+                  <div className="text-muted-foreground text-xs">
+                    Token появляется при установке приложения в Bitrix. Можно также нажать “Проверить установку” — токен
+                    подтянется автоматически, если установка уже дошла до сервера.
+                  </div>
+                  <Input value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="email@domain.com" />
+                  <Input
+                    value={claimTokenInput}
+                    onChange={(e) => setClaimTokenInput(e.target.value)}
+                    placeholder={pendingToken ? `Token найден: ${pendingToken}` : 'GRIDIX-XXXXXXXXXXXX'}
+                  />
+                  {pendingToken && (
+                    <div className="text-muted-foreground text-xs">
+                      Token найден: <span className="font-mono">{pendingToken}</span>
+                    </div>
+                  )}
+                  <Button onClick={claimByToken} disabled={busy}>
+                    Привязать Bitrix к проекту
+                  </Button>
+                </div>
               )}
             </div>
           </>

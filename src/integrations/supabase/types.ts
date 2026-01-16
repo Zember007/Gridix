@@ -283,6 +283,7 @@ export type Database = {
       bitrix_pending_installs: {
         Row: {
           access_token: string
+          claim_token: string | null
           created_at: string
           domain: string
           id: string
@@ -294,6 +295,7 @@ export type Database = {
         }
         Insert: {
           access_token: string
+          claim_token?: string | null
           created_at?: string
           domain: string
           id?: string
@@ -305,6 +307,7 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          claim_token?: string | null
           created_at?: string
           domain?: string
           id?: string
