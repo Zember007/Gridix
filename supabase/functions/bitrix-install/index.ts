@@ -119,6 +119,7 @@ function htmlInstallFinish(opts: {
     </style>
   </head>
   <body>
+  
     <div class="wrap">
       <div class="card">
         <div class="ok">✅ Приложение Gridix установлено в Bitrix24</div>
@@ -190,12 +191,11 @@ Deno.serve(async (req) => {
     });
     return new Response("Server configuration error", { status: 500 });
   }
-
-  if (req.method === "GET") {
+  console.log("req.method", req.method);
+if (req.method === "GET") {
     return Response.redirect(`${siteUrl}embed/connect/bitrix24`, 302);
   }
 
-  // Allow browser preflight / health probes (doesn't affect Bitrix server-to-server POST)
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
