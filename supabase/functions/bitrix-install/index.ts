@@ -195,19 +195,42 @@ Deno.serve(async (req) => {
     return Response.redirect(`${siteUrl}embed/connect/bitrix24`, 302);
   }
 
+  // Allow browser preflight / health probes (doesn't affect Bitrix server-to-server POST)
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    });
+  }
+
+  if (req.method === "HEAD") {
+    return new Response(null, { status: 200 });
+  }
+
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
   const queryParams = new URL(req.url).searchParams;
-  const domain = normalizeDomain(queryParams.get("DOMAIN") ?? "");
-  const subdomain = extractSubdomain(domain);
 
   const formData = await req.formData();
   const params: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
     params[key] = value.toString();
   }
+
+  const domain = normalizeDomain(
+    queryParams.get("DOMAIN") ??
+      params["DOMAIN"] ??
+      params["domain"] ??
+      params["auth[domain]"] ??
+      ""
+  );
+  const subdomain = extractSubdomain(domain);
 
   console.log("Bitrix install query params:", Object.fromEntries(queryParams.entries()));
   console.log("Bitrix install request:", params);
