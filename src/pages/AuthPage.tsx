@@ -175,15 +175,17 @@ const AuthPage = () => {
         }
 
         // 2) Редирект после авторизации
-        // Если redirect содержит языковой префикс, используем его напрямую
-        // Иначе добавляем языковой префикс
-        if (redirectTo.match(/^\/(ru|en|ka)\//)) {
-          window.location.href = redirectTo;
-        } else {
-          // Все пользователи (и застройщики, и менеджеры) попадают в /admin
-          // Там уже будет определяться контекст на основе роли
-          navigate('/admin');
+        // Поддерживаем внутренние embed-страницы без языкового префикса (например, /embed/connect/bitrix24)
+        // и обычные языковые роуты (/ru/*, /en/*, /ka/*, /ar/*).
+        if (redirectTo && redirectTo.startsWith('/')) {
+          if (redirectTo.match(/^\/(ru|en|ka|ar)\//) || redirectTo.startsWith('/embed/')) {
+            window.location.href = redirectTo;
+            return;
+          }
         }
+
+        // Фоллбек: все пользователи попадают в /admin (роль определит контекст)
+        navigate('/admin');
       };
 
       void run();
@@ -215,11 +217,13 @@ const AuthPage = () => {
         redirectTo={redirectTo}
         defaultMode={isSignup ? 'signup' : isSignin ? 'signin' : undefined}
         onSuccess={() => {
-          if (redirectTo.match(/^\/(ru|en|ka)\//)) {
-            window.location.href = redirectTo;
-          } else {
-            navigate('/admin');
+          if (redirectTo && redirectTo.startsWith('/')) {
+            if (redirectTo.match(/^\/(ru|en|ka|ar)\//) || redirectTo.startsWith('/embed/')) {
+              window.location.href = redirectTo;
+              return;
+            }
           }
+          navigate('/admin');
         }}
       />
     )

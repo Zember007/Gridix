@@ -92,11 +92,17 @@ async function callBitrixRest(opts: {
   return json;
 }
 
+type SetupResult = { title: string; ok: boolean; details?: string };
+
 function htmlInstallFinish(opts: {
   claimToken: string | null;
   domain: string;
+  memberId: string;
   siteUrl: string;
+  connectUrl: string;
+  authUrl: string;
   note?: string;
+  setupResults?: SetupResult[];
 }) {
   return `<!doctype html>
 <html lang="ru">
@@ -110,11 +116,14 @@ function htmlInstallFinish(opts: {
       .wrap { max-width: 720px; margin: 24px auto; padding: 0 16px; }
       .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
       .muted { color: #6b7280; font-size: 14px; }
-      .row { display:flex; gap: 8px; margin-top: 12px; }
+      .row { display:flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
       input { flex:1; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
       button { padding: 10px 12px; border: 1px solid #111827; background: #111827; color: #fff; border-radius: 10px; cursor: pointer; }
       button.secondary { background: #fff; color: #111827; }
       .ok { color: #16a34a; font-weight: 600; }
+      .bad { color: #dc2626; font-weight: 600; }
+      .list { margin-top: 10px; padding-left: 18px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     </style>
   </head>
   <body>
@@ -125,13 +134,25 @@ function htmlInstallFinish(opts: {
         <div class="muted" style="margin-top:6px">
           Домен портала: <span style="font-family: ui-monospace, monospace">${opts.domain}</span>
         </div>
+        <div class="muted" style="margin-top:6px">
+          member_id: <span class="mono">${opts.memberId}</span>
+        </div>
         ${
           opts.note
             ? `<div class="muted" style="margin-top:8px">${opts.note}</div>`
             : `<div class="muted" style="margin-top:8px">
-                Теперь откройте Gridix → Проект → Интеграции → Bitrix24 и введите Email + Token, чтобы привязать установку.
+                Чтобы завершить подключение, войдите в Gridix и привяжите установку к аккаунту.
               </div>`
         }
+
+        <div style="margin-top:12px; font-weight:600">Подключение</div>
+        <div class="row">
+          <button onclick="openAuth()">Войти в Gridix и подключить</button>
+          <button class="secondary" onclick="openConnect()">Открыть страницу подключения</button>
+        </div>
+        <div class="muted" style="margin-top:8px">
+          Если вы ещё не вошли в Gridix — используйте “Войти в Gridix и подключить”. Если уже вошли — достаточно “Открыть страницу подключения”.
+        </div>
 
         <div style="margin-top:12px; font-weight:600">Token для привязки</div>
         ${
@@ -141,6 +162,22 @@ function htmlInstallFinish(opts: {
                 <button class="secondary" onclick="copyToken()">Скопировать</button>
               </div>`
             : `<div class="muted" style="margin-top:8px">Token не был создан (возможно, установка уже привязана).</div>`
+        }
+
+        ${
+          Array.isArray(opts.setupResults) && opts.setupResults.length > 0
+            ? `<div style="margin-top:14px; font-weight:600">Диагностика установки</div>
+               <ul class="list">
+                 ${opts.setupResults
+                   .map((r) => {
+                     const status = r.ok ? '✅' : '❌';
+                     const cls = r.ok ? 'muted' : 'bad';
+                     const details = r.details ? `<div class="muted" style="margin-top:4px">${r.details}</div>` : '';
+                     return `<li class="${cls}">${status} ${r.title}${details}</li>`;
+                   })
+                   .join('')}
+               </ul>`
+            : ``
         }
 
         <div class="row" style="margin-top:14px">
@@ -153,6 +190,12 @@ function htmlInstallFinish(opts: {
     </div>
 
     <script>
+      function openAuth() {
+        try { window.open(${JSON.stringify(opts.authUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
+      }
+      function openConnect() {
+        try { window.open(${JSON.stringify(opts.connectUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
+      }
       function copyToken() {
         try {
           var el = document.getElementById('token');
@@ -181,6 +224,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
+  const baseSiteUrl = siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`;
 
   if (!siteUrl || !supabaseUrl || !serviceRoleKey) {
     console.error("Missing env configuration", {
@@ -191,8 +235,8 @@ Deno.serve(async (req) => {
     return new Response("Server configuration error", { status: 500 });
   }
   console.log("req.method", req.method);
-if (req.method === "GET") {
-    return Response.redirect(`${siteUrl}embed/connect/bitrix24`, 302);
+  if (req.method === "GET") {
+    return Response.redirect(`${baseSiteUrl}embed/connect/bitrix24`, 302);
   }
 
   if (req.method === "OPTIONS") {
@@ -253,6 +297,10 @@ if (req.method === "GET") {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   const claimToken = generateClaimToken();
+  const connectUrl = `${baseSiteUrl}embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`;
+  const authUrl = `${baseSiteUrl}ru/auth?redirect=${encodeURIComponent(
+    `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`
+  )}`;
 
   // If the user already pre-configured Bitrix subdomain in Gridix (crm_connections exists),
   // we can attach tokens immediately without any "claim" UI step.
@@ -310,63 +358,85 @@ if (req.method === "GET") {
     return new Response("Internal error", { status: 500 });
   }
 
-  // Bind UI placements (left menu + deal tab)
+  // Bind UI placements (left menu + deal tab) + UF field + events (best effort)
+  const setupResults: SetupResult[] = [];
   try {
-    const projectsHandler = `${siteUrl}embed/bitrix/projects`;
-    const dealTabHandler = `${siteUrl}embed/bitrix/deal-tab`;
+    const projectsHandler = `${baseSiteUrl}embed/bitrix/projects`;
+    const dealTabHandler = `${baseSiteUrl}embed/bitrix/deal-tab`;
 
-    await callBitrixRest({
-      domain,
-      accessToken,
-      method: "placement.bind",
-      params: {
-        PLACEMENT: "LEFT_MENU",
-        HANDLER: projectsHandler,
-        TITLE: "Проекты",
-      },
-    });
-
-    await callBitrixRest({
-      domain,
-      accessToken,
-      method: "placement.bind",
-      params: {
-        PLACEMENT: "CRM_DEAL_DETAIL_TAB",
-        HANDLER: dealTabHandler,
-        TITLE: "Gridix",
-      },
-    });
-
-    // Ensure UF field exists for storing Gridix apartment id
-    const ufName = "UF_GRIDIX_APARTMENT_ID";
-    const ufList = await callBitrixRest({
-      domain,
-      accessToken,
-      method: "crm.deal.userfield.list",
-    });
-
-    const exists =
-      Array.isArray(ufList?.result) &&
-      ufList.result.some((f: any) => String(f?.FIELD_NAME ?? "") === ufName);
-
-    if (!exists) {
+    try {
       await callBitrixRest({
         domain,
         accessToken,
-        method: "crm.deal.userfield.add",
-        params: {
-          fields: {
-            FIELD_NAME: ufName,
-            EDIT_FORM_LABEL: { ru: "Gridix квартира", en: "Gridix apartment" },
-            LIST_COLUMN_LABEL: { ru: "Gridix квартира", en: "Gridix apartment" },
-            USER_TYPE_ID: "string",
-            XML_ID: "GRIDIX_APARTMENT_ID",
-            SORT: 500,
-            MULTIPLE: "N",
-            MANDATORY: "N",
-            SHOW_FILTER: "N",
+        method: "placement.bind",
+        params: { PLACEMENT: "LEFT_MENU", HANDLER: projectsHandler, TITLE: "Проекты" },
+      });
+      setupResults.push({ title: "Размещение в левом меню (LEFT_MENU)", ok: true });
+    } catch (e) {
+      setupResults.push({
+        title: "Размещение в левом меню (LEFT_MENU)",
+        ok: false,
+        details: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    try {
+      await callBitrixRest({
+        domain,
+        accessToken,
+        method: "placement.bind",
+        params: { PLACEMENT: "CRM_DEAL_DETAIL_TAB", HANDLER: dealTabHandler, TITLE: "Gridix" },
+      });
+      setupResults.push({ title: "Вкладка в сделке (CRM_DEAL_DETAIL_TAB)", ok: true });
+    } catch (e) {
+      setupResults.push({
+        title: "Вкладка в сделке (CRM_DEAL_DETAIL_TAB)",
+        ok: false,
+        details: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    // Ensure UF field exists for storing Gridix apartment id
+    const ufName = "UF_GRIDIX_APARTMENT_ID";
+    try {
+      const ufList = await callBitrixRest({
+        domain,
+        accessToken,
+        method: "crm.deal.userfield.list",
+      });
+
+      const exists =
+        Array.isArray(ufList?.result) &&
+        ufList.result.some((f: any) => String(f?.FIELD_NAME ?? "") === ufName);
+
+      if (exists) {
+        setupResults.push({ title: `Пользовательское поле сделки уже существует (${ufName})`, ok: true });
+      } else {
+        await callBitrixRest({
+          domain,
+          accessToken,
+          method: "crm.deal.userfield.add",
+          params: {
+            fields: {
+              FIELD_NAME: ufName,
+              EDIT_FORM_LABEL: { ru: "Gridix квартира", en: "Gridix apartment" },
+              LIST_COLUMN_LABEL: { ru: "Gridix квартира", en: "Gridix apartment" },
+              USER_TYPE_ID: "string",
+              XML_ID: "GRIDIX_APARTMENT_ID",
+              SORT: 500,
+              MULTIPLE: "N",
+              MANDATORY: "N",
+              SHOW_FILTER: "N",
+            },
           },
-        },
+        });
+        setupResults.push({ title: `Создание пользовательского поля сделки (${ufName})`, ok: true });
+      }
+    } catch (e) {
+      setupResults.push({
+        title: "Пользовательское поле сделки (UF_GRIDIX_APARTMENT_ID)",
+        ok: false,
+        details: e instanceof Error ? e.message : String(e),
       });
     }
 
@@ -376,26 +446,53 @@ if (req.method === "GET") {
         webhookSecret
       )}`;
 
-      // Best-effort: some portals/apps may not allow bind or may require additional scopes
-      await callBitrixRest({
-        domain,
-        accessToken,
-        method: "event.bind",
-        params: { event: "OnCrmDealUpdate", handler: handlerUrl },
-      }).catch((e) => console.warn("event.bind OnCrmDealUpdate failed:", e));
+      try {
+        await callBitrixRest({
+          domain,
+          accessToken,
+          method: "event.bind",
+          params: { event: "OnCrmDealUpdate", handler: handlerUrl },
+        });
+        setupResults.push({ title: "Webhook: OnCrmDealUpdate", ok: true });
+      } catch (e) {
+        setupResults.push({
+          title: "Webhook: OnCrmDealUpdate",
+          ok: false,
+          details: e instanceof Error ? e.message : String(e),
+        });
+      }
 
-      await callBitrixRest({
-        domain,
-        accessToken,
-        method: "event.bind",
-        params: { event: "OnCrmDealAdd", handler: handlerUrl },
-      }).catch((e) => console.warn("event.bind OnCrmDealAdd failed:", e));
+      try {
+        await callBitrixRest({
+          domain,
+          accessToken,
+          method: "event.bind",
+          params: { event: "OnCrmDealAdd", handler: handlerUrl },
+        });
+        setupResults.push({ title: "Webhook: OnCrmDealAdd", ok: true });
+      } catch (e) {
+        setupResults.push({
+          title: "Webhook: OnCrmDealAdd",
+          ok: false,
+          details: e instanceof Error ? e.message : String(e),
+        });
+      }
     } else {
       console.warn("JWT_SECRET is not set; skipping event.bind");
+      setupResults.push({
+        title: "Webhook: события сделок (event.bind)",
+        ok: false,
+        details: "JWT_SECRET не задан — синхронизация стадий Bitrix → Gridix работать не будет",
+      });
     }
   } catch (e) {
     console.error("Bitrix placement/event/UF setup failed:", e);
-    // We still finish install to avoid broken installs; user can re-install or we can add a retry action later
+    setupResults.push({
+      title: "Инициализация интеграции в Bitrix (placement/UF/webhooks)",
+      ok: false,
+      details: e instanceof Error ? e.message : String(e),
+    });
+    // We still finish install to avoid broken installs; user can re-install later
   }
 
   const note =
@@ -403,8 +500,20 @@ if (req.method === "GET") {
       ? "Эта установка уже привязана к аккаунту Gridix (токены обновлены). Если нужно привязать к другому аккаунту — используйте Token ниже."
       : undefined;
 
-  return new Response(htmlInstallFinish({ claimToken, domain, siteUrl, note }), {
+  return new Response(
+    htmlInstallFinish({
+      claimToken,
+      domain,
+      memberId,
+      siteUrl: baseSiteUrl,
+      connectUrl,
+      authUrl,
+      note,
+      setupResults,
+    }),
+    {
     status: 200,
     headers: { "Content-Type": "text/html; charset=utf-8" },
-  });
+    }
+  );
 });

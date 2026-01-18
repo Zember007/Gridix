@@ -7,7 +7,7 @@
 - 🏢 **Управление проектами**: Создание и редактирование проектов недвижимости
 - 🏠 **Интерактивные планировки**: Визуальные планы этажей с квартирами
 - 🌐 **Кастомные домены**: Подключение собственных доменов к проектам
-- 📊 **Управление лидами**: Интеграция с AmoCRM
+- 📊 **Управление лидами**: Интеграция с AmoCRM / Bitrix24
 - 🎨 **Настройка полей**: Кастомные поля для квартир
 - 📱 **Адаптивный дизайн**: Работа на всех устройствах
 
@@ -90,6 +90,10 @@ Simply open [Lovable](https://lovable.dev/projects/2c952242-a330-4eed-983b-11a86
 5. Дождитесь распространения DNS (до 24 часов)
 
 Подробная инструкция: [docs/custom-domains-setup.md](docs/custom-domains-setup.md)
+
+## Bitrix24 integration (dev notes)
+
+See `supabase/functions/bitrix-install/README.md`.
 
 ## Can I connect a custom domain to my Lovable project?
 

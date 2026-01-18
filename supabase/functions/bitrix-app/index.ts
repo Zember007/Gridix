@@ -371,24 +371,38 @@ Deno.serve(async (req) => {
       return createJsonResponse({ status: "ok", skipped: true, reason: "no_deal_id" }, 200, origin);
     }
 
-    const domain = parsed.domain;
-    const memberId = parsed.memberId;
+    const domain = parsed.domain ? normalizeDomain(parsed.domain) : null;
+    const memberId = parsed.memberId ? String(parsed.memberId) : null;
 
-    // Find connection by domain/member_id (if already claimed)
-    const q = svc
-      .from("crm_connections")
-      .select("id, user_id, crm_type, subdomain, base_domain, access_token, refresh_token, token_expires_at, bitrix_member_id");
-
-    let connResp = null as any;
-    if (domain) {
-      connResp = await q.eq("crm_type", "bitrix24").eq("base_domain", domain).maybeSingle();
-    } else if (memberId) {
-      connResp = await q.eq("crm_type", "bitrix24").eq("bitrix_member_id", memberId).maybeSingle();
-    } else {
-      connResp = await q.eq("crm_type", "bitrix24").eq("subdomain", "").maybeSingle();
+    if (!domain && !memberId) {
+      return createJsonResponse(
+        { status: "ok", skipped: true, reason: "no_domain_or_member_id" },
+        200,
+        origin
+      );
     }
 
-    const connection = connResp?.data ?? null;
+    // Find connection by member_id first (most stable), fallback to domain/subdomain.
+    const q = svc
+      .from("crm_connections")
+      .select(
+        "id, user_id, crm_type, subdomain, base_domain, access_token, refresh_token, token_expires_at, bitrix_member_id"
+      )
+      .eq("crm_type", "bitrix24");
+
+    let connection: any | null = null;
+
+    if (memberId) {
+      const { data } = await q.eq("bitrix_member_id", memberId).maybeSingle();
+      connection = data ?? null;
+    }
+
+    if (!connection && domain) {
+      const sub = extractSubdomain(domain);
+      const { data } = await q.or(`base_domain.eq.${domain},subdomain.eq.${sub}`).maybeSingle();
+      connection = data ?? null;
+    }
+
     if (!connection) {
       return createJsonResponse({ status: "ok", skipped: true, reason: "no_connection" }, 200, origin);
     }

@@ -2,15 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/shared/api/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
 import Loader from '@/shared/ui/loader';
 import { toast } from 'sonner';
+import type { Language } from '@/shared/lib/language-utils';
+import { LANGUAGE_CONFIG } from '@/shared/lib/language-utils';
 
 export default function BitrixInstallPage() {
   const [bxReady, setBxReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState('');
   const [claimed, setClaimed] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);
   const domain = qp.get('domain') ?? '';
@@ -32,6 +33,11 @@ export default function BitrixInstallPage() {
             }
           });
         }
+
+        // Load current user (if already logged in)
+        const { data } = await supabase.auth.getUser();
+        const user = data?.user ?? null;
+        setUserEmail(user?.email ?? null);
       } catch (e) {
         console.error(e);
       } finally {
@@ -41,27 +47,44 @@ export default function BitrixInstallPage() {
     void run();
   }, [domain, memberId]);
 
-  const claimInstallByToken = async () => {
-    const trimmed = token.trim();
-    if (!trimmed) return;
+  const detectEmbedLanguage = (): Language => {
+    const langParam = qp.get('lang');
+    if (langParam && (langParam as Language) in LANGUAGE_CONFIG) return langParam as Language;
+
+    const saved = localStorage.getItem('embed-language');
+    if (saved && (saved as Language) in LANGUAGE_CONFIG) return saved as Language;
+
+    return 'ru';
+  };
+
+  const buildAuthUrl = () => {
+    const lang = detectEmbedLanguage();
+    // Auth routes live under /:lang/*
+    const redirect = `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`;
+    return `/${lang}/auth?redirect=${encodeURIComponent(redirect)}`;
+  };
+
+  const claimInstall = async () => {
     if (!domain || !memberId) {
       toast.error('Нет параметров установки (domain/member_id)');
+      return;
+    }
+    const { data } = await supabase.auth.getUser();
+    if (!data?.user) {
+      toast.error('Сначала войдите в Gridix, чтобы привязать установку');
       return;
     }
     try {
       setLoading(true);
       const { error } = await supabase.functions.invoke('bitrix-app', {
         body: { action: 'claim_install', domain, member_id: memberId },
-        headers: {
-          Authorization: `Bearer ${trimmed}`,
-        },
       });
       if (error) throw error;
       setClaimed(true);
       toast.success('Bitrix подключен к аккаунту Gridix');
     } catch (e) {
       console.error(e);
-      toast.error('Не удалось подключить Bitrix: проверьте токен');
+      toast.error('Не удалось подключить Bitrix: попробуйте переустановить приложение или проверить параметры установки');
     } finally {
       setLoading(false);
     }
@@ -77,6 +100,9 @@ export default function BitrixInstallPage() {
           <CardContent className="space-y-3 text-sm">
             <div className="text-muted-foreground">
               BX24: {bxReady ? 'инициализирован' : 'не обнаружен (вне Bitrix iframe)'}
+            </div>
+            <div className="text-muted-foreground">
+              Gridix: {userEmail ? `вход выполнен (${userEmail})` : 'не выполнен (нужно войти)'}
             </div>
             {domain && memberId ? (
               <div className="rounded-md border p-2">
@@ -98,7 +124,7 @@ export default function BitrixInstallPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Подключение к аккаунту Gridix (токен)</CardTitle>
+            <CardTitle className="text-base">Привязка установки к аккаунту Gridix</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
@@ -122,19 +148,29 @@ export default function BitrixInstallPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="text-sm text-muted-foreground">
-                  Вставьте токен вашего аккаунта Gridix (JWT). Он используется один раз, чтобы привязать установку Bitrix
-                  к вашему пользователю.
-                </div>
-                <Input
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  type="password"
-                />
-                <Button onClick={claimInstallByToken} className="w-full" disabled={!domain || !memberId}>
-                  Привязать установку Bitrix к аккаунту
-                </Button>
+                {!userEmail ? (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      Чтобы привязать установку Bitrix к вашему аккаунту, нужно войти в Gridix в этом окне.
+                    </div>
+                    <Button
+                      onClick={() => (window.location.href = buildAuthUrl())}
+                      className="w-full"
+                      disabled={!domain || !memberId}
+                    >
+                      Войти в Gridix
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      Нажмите кнопку ниже — мы привяжем текущую установку Bitrix (domain/member_id) к вашему аккаунту Gridix.
+                    </div>
+                    <Button onClick={claimInstall} className="w-full" disabled={!domain || !memberId}>
+                      Привязать установку Bitrix к аккаунту
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
