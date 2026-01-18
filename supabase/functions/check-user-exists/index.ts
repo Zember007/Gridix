@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+import { getSupabaseUser } from '../_shared/auth.ts'
 
 interface CheckUserRequest {
   email: string
@@ -14,6 +15,12 @@ serve(async (req) => {
   }
 
   try {
+    // Require authenticated user (used from authenticated admin UI)
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ success: false, error: 'Unauthorized' }, 401, origin);
+    }
+
     // Создаем клиент с service role key для административных операций
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

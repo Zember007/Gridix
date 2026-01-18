@@ -14,3 +14,43 @@ verify_jwt = false
 
 [functions.bitrix-app]
 verify_jwt = false
+
+[functions.amocrm-sso-login]
+verify_jwt = false
+
+# All functions below must verify auth inside the function code (JWT Signing Keys compatible)
+[functions.amocrm-api]
+verify_jwt = false
+
+[functions.amocrm-start-auth]
+verify_jwt = false
+
+[functions.auto-domain-manager]
+verify_jwt = false
+
+[functions.check-user-exists]
+verify_jwt = false
+
+[functions.crm-funnel-automation]
+verify_jwt = false
+
+[functions.generate-invoice]
+verify_jwt = false
+
+[functions.optimize-images]
+verify_jwt = false
+
+[functions.partner-program]
+verify_jwt = false
+
+[functions.send-manager-invitation]
+verify_jwt = false
+
+[functions.subscription-management]
+verify_jwt = false
+
+[functions.superadmin-user-management]
+verify_jwt = false
+
+[functions.update-project-prices]
+verify_jwt = false

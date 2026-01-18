@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+import { getSupabaseUser } from "../_shared/auth.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -19,16 +20,9 @@ async function calculatePrice(basePriceStr, durationMonths) {
 async function handleRequestInvoice(req, body, corsHeaders) {
   const origin = req.headers.get('Origin');
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
-    }
-    
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: "Unauthorized" }, 401, origin);
     }
 
     // Expect project_id, plan_id, and duration_months in request body
@@ -144,17 +138,9 @@ async function handleRequestInvoice(req, body, corsHeaders) {
 
 async function handleGetSubscription(req, body, corsHeaders) {
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response("Missing authorization header", {
-        status: 401
-      });
-    }
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return new Response("Invalid token", {
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return new Response("Unauthorized", {
         status: 401,
         headers: corsHeaders
       });
@@ -249,18 +235,10 @@ async function handleGetProjectSubscriptions(req, corsHeaders) {
   try {
     console.log("handleGetProjectSubscriptions: Starting request");
     
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.log("handleGetProjectSubscriptions: Missing authorization header");
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
-    }
-    
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      console.log("handleGetProjectSubscriptions: Invalid token or user error:", userError);
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      console.log("handleGetProjectSubscriptions: Unauthorized");
+      return createJsonResponse({ error: "Unauthorized" }, 401, origin);
     }
     
     console.log("handleGetProjectSubscriptions: User authenticated:", user.id);
@@ -375,17 +353,12 @@ async function handleGenerateInvoice(req: Request, body: any) {
   const origin = req.headers.get('Origin');
   
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
+    const authHeader = req.headers.get("Authorization") || "";
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: "Unauthorized" }, 401, origin);
     }
-    
     const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
-    }
 
     const { subscription_id } = body;
     if (!subscription_id) {
@@ -415,16 +388,9 @@ async function handleConfirmPayment(req: Request, body: any) {
   const origin = req.headers.get('Origin');
   
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
-    }
-    
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: "Unauthorized" }, 401, origin);
     }
 
     const { subscription_id } = body;

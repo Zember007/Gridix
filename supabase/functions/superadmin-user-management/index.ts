@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+import { getSupabaseUser } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   // Handle CORS
@@ -20,14 +21,8 @@ Deno.serve(async (req) => {
         },
       }
     );
-
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    
-    if (authError || !user) {
+    const user = await getSupabaseUser(req);
+    if (!user) {
       return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
     }
 

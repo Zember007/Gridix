@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+import { getSupabaseUser } from '../_shared/auth.ts';
 class CloudflareDNS {
   apiKey;
   zoneId;
@@ -170,14 +171,26 @@ Deno.serve(async (req)=>{
     }, 405, origin);
   }
   try {
+    // Require authenticated user
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
     // Validate required environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const vercelApiKey = Deno.env.get('VERCEL_API_KEY');
     const vercelProjectId = Deno.env.get('VERCEL_PROJECT_ID');
     if (!supabaseUrl || !supabaseServiceKey) {
       return createJsonResponse({
         error: "Server configuration error: Supabase credentials missing"
+      }, 500, origin);
+    }
+    if (!supabaseAnonKey) {
+      return createJsonResponse({
+        error: "Server configuration error: SUPABASE_ANON_KEY missing"
       }, 500, origin);
     }
     if (!vercelApiKey || !vercelProjectId) {
@@ -200,6 +213,21 @@ Deno.serve(async (req)=>{
         error: "Missing required fields: domain and project_id"
       }, 400, origin);
     }
+
+    // Access check via RLS
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: req.headers.get('Authorization') || '' } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data: project, error: projectErr } = await userClient
+      .from('projects')
+      .select('id')
+      .eq('id', project_id)
+      .single();
+    if (projectErr || !project) {
+      return createJsonResponse({ error: "Project not found or access denied" }, 404, origin);
+    }
+
     const cleanedDomain = cleanDomain(domain);
     if (!isValidDomain(cleanedDomain)) {
       return createJsonResponse({

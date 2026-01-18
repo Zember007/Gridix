@@ -4,6 +4,7 @@ import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shar
 import { createGeorgianInvoiceTemplate } from '../_shared/invoice-template-ka.ts';
 import { createEnglishInvoiceTemplate } from '../_shared/invoice-template-en.ts';
 import { georgianBoldBase64, georgianRegularBase64 } from "../_shared/fonts.ts";
+import { getSupabaseUser } from "../_shared/auth.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -342,16 +343,9 @@ async function handleGenerateInvoice(req: Request, body: any) {
   const origin = req.headers.get('Origin');
 
   try {
-    // Get user from JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return createJsonResponse({ error: "Missing authorization header" }, 401, origin);
-    }
-
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      return createJsonResponse({ error: "Invalid token" }, 401, origin);
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: "Unauthorized" }, 401, origin);
     }
 
     const { subscription_id } = body;

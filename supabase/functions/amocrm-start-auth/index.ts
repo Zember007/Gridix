@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+import { getSupabaseUser } from '../_shared/auth.ts'
 
 async function hmacSign(input: string, secret: string): Promise<string> {
   const enc = new TextEncoder()
@@ -31,6 +32,12 @@ serve(async (req) => {
 
     if (req.method !== 'POST') {
       return createJsonResponse({ error: 'Method not allowed' }, 405, origin);
+    }
+
+    // Require authenticated user (JWT Signing Keys compatible)
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
     const { project_id } = await req.json();
