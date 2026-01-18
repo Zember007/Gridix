@@ -910,7 +910,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
           {activeTab === 'integrations' && (
             <div className="space-y-4">
               <AmoCRMSettings projectId={project.id} />
-              <Bitrix24Settings projectId={project.id} />
+              {/* <Bitrix24Settings projectId={project.id} /> */}
             </div>
           )}
         </div>
