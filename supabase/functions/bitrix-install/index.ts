@@ -168,15 +168,7 @@ function htmlInstallFinish(opts: {
           Если вы ещё не вошли в Gridix — используйте “Войти в Gridix и подключить”. Если уже вошли — достаточно “Открыть страницу подключения”.
         </div>
 
-        <div style="margin-top:12px; font-weight:600">Token для привязки</div>
-        ${
-          opts.claimToken
-            ? `<div class="row">
-                <input id="token" value="${opts.claimToken}" readonly />
-                <button class="secondary" onclick="copyToken()">Скопировать</button>
-              </div>`
-            : `<div class="muted" style="margin-top:8px">Token не был создан (возможно, установка уже привязана).</div>`
-        }
+        <!-- claim_token is kept in DB for support/debug, but not shown to avoid confusion with Gridix JWT token -->
 
         ${
           Array.isArray(opts.setupResults) && opts.setupResults.length > 0
@@ -249,15 +241,6 @@ function htmlInstallFinish(opts: {
       }
       function openConnect() {
         try { window.open(${JSON.stringify(opts.connectUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
-      }
-      function copyToken() {
-        try {
-          var el = document.getElementById('token');
-          if (!el) return;
-          el.focus();
-          el.select();
-          document.execCommand('copy');
-        } catch (e) {}
       }
       function finish() {
         try {
@@ -359,21 +342,21 @@ Deno.serve(async (req) => {
     `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`
   )}`;
 
-  // If the user already pre-configured Bitrix subdomain in Gridix (crm_connections exists),
-  // we can attach tokens immediately without any "claim" UI step.
+  // If a Bitrix portal was already connected earlier, try to update its tokens.
+  // IMPORTANT: the DB may contain duplicates from older versions; never use maybeSingle() without limit(1).
   const { data: existingConn, error: existingConnErr } = await supabase
     .from("crm_connections")
-    .select("id,user_id")
+    .select("id,user_id,updated_at")
     .eq("crm_type", "bitrix24")
-    .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+    .or(`bitrix_member_id.eq.${memberId},base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (existingConnErr) {
     console.error("Failed to query existing crm_connection:", existingConnErr);
-    return new Response("Internal error", { status: 500 });
-  }
-
-  if (existingConn?.id) {
+    // Do NOT fail install; we can still store pending install and let user claim later.
+  } else if (existingConn?.id) {
     const { error: updateErr } = await supabase
       .from("crm_connections")
       .update({
@@ -389,7 +372,7 @@ Deno.serve(async (req) => {
 
     if (updateErr) {
       console.error("Failed to update crm_connection with Bitrix tokens:", updateErr);
-      return new Response("Internal error", { status: 500 });
+      // Do NOT fail install; user can re-install or claim again.
     }
   }
 

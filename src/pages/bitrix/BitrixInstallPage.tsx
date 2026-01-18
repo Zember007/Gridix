@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/shared/api/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
 import Loader from '@/shared/ui/loader';
 import { toast } from 'sonner';
 import type { Language } from '@/shared/lib/language-utils';
@@ -12,6 +13,7 @@ export default function BitrixInstallPage() {
   const [loading, setLoading] = useState(true);
   const [claimed, setClaimed] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [gridixToken, setGridixToken] = useState('');
 
   const qp = useMemo(() => new URLSearchParams(window.location.search), []);
   const domain = qp.get('domain') ?? '';
@@ -90,6 +92,36 @@ export default function BitrixInstallPage() {
     }
   };
 
+  const claimInstallWithToken = async () => {
+    const trimmed = gridixToken.trim();
+    if (!trimmed) return;
+    if (!domain || !memberId) {
+      toast.error('Нет параметров установки (domain/member_id)');
+      return;
+    }
+    if (trimmed.startsWith('GRIDIX-')) {
+      toast.error('Это не Gridix JWT. Нужен токен вида "eyJ..." (скопируйте в Gridix и вставьте сюда).');
+      return;
+    }
+    try {
+      setLoading(true);
+      const { error } = await supabase.functions.invoke('bitrix-app', {
+        body: { action: 'claim_install', domain, member_id: memberId },
+        headers: {
+          Authorization: `Bearer ${trimmed}`,
+        },
+      });
+      if (error) throw error;
+      setClaimed(true);
+      toast.success('Bitrix подключен к аккаунту Gridix');
+    } catch (e) {
+      console.error(e);
+      toast.error('Не удалось подключить Bitrix: проверьте токен');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-4 flex items-start justify-center">
       <div className="w-full max-w-lg space-y-4">
@@ -151,7 +183,9 @@ export default function BitrixInstallPage() {
                 {!userEmail ? (
                   <>
                     <div className="text-sm text-muted-foreground">
-                      Чтобы привязать установку Bitrix к вашему аккаунту, нужно войти в Gridix в этом окне.
+                      Чтобы привязать установку Bitrix к вашему аккаунту, можно:
+                      <br />1) войти в Gridix в этом окне (рекомендуется), или
+                      <br />2) вставить Gridix JWT токен (eyJ...) — это подтверждение владения аккаунтом.
                     </div>
                     <Button
                       onClick={() => (window.location.href = buildAuthUrl())}
@@ -160,6 +194,23 @@ export default function BitrixInstallPage() {
                     >
                       Войти в Gridix
                     </Button>
+
+                    <div className="rounded-md border p-3 space-y-2">
+                      <div className="font-medium text-sm">Альтернатива: привязка по токену</div>
+                      <div className="text-xs text-muted-foreground">
+                        В Gridix откройте интеграции Bitrix24 и скопируйте токен (JWT, начинается с <span className="font-mono">eyJ</span>),
+                        затем вставьте сюда.
+                      </div>
+                      <Input
+                        value={gridixToken}
+                        onChange={(e) => setGridixToken(e.target.value)}
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        type="password"
+                      />
+                      <Button onClick={claimInstallWithToken} className="w-full" disabled={!domain || !memberId || !gridixToken.trim()}>
+                        Привязать по токену
+                      </Button>
+                    </div>
                   </>
                 ) : (
                   <>
