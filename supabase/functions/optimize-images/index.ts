@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
+import { isServiceRoleRequest } from '../_shared/auth.ts';
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -366,6 +367,11 @@ Deno.serve(async (req) => {
   }
   
   try {
+    // Restrict to server-to-server calls (Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>)
+    if (!isServiceRoleRequest(req)) {
+      return createJsonResponse({ error: 'forbidden' }, 403, origin);
+    }
+
     console.log('Starting image optimization...');
     
     // Получаем список всех файлов из bucket

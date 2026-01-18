@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 import { createOrUpdateLocalFunnel, type AmoCRMPipeline } from '../_shared/amocrm-funnel.ts'
+import { getSupabaseUser } from '../_shared/auth.ts'
 
 interface CRMConnection {
   id: string;
@@ -78,6 +79,15 @@ serve(async (req) => {
       return createJsonResponse({ error: 'Method not allowed' }, 405, origin);
     }
 
+    // Supabase projects using JWT Signing Keys (ES256/RS256) are incompatible with the platform-level
+    // `verify_jwt` check for Edge Functions. We disable `verify_jwt` and validate inside code.
+    const user = await getSupabaseUser(req);
+    if (!user) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
+    }
+
+    const authHeader = req.headers.get('Authorization') || '';
+
     const requestBody = await req.json();
     const {
       project_id,
@@ -93,7 +103,6 @@ serve(async (req) => {
     // Initialize Supabase user client (RLS enforced)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authHeader = req.headers.get('Authorization') || ''
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
@@ -423,7 +432,10 @@ serve(async (req) => {
         return await fetchAmoCRMData(crmConnection, accessToken, origin, tokenExpiresAt);
       
       case 'save_settings':
-        if (!pipeline_id) {
+        if (typeof project_id !== 'string' || !project_id) {
+          return createJsonResponse({ error: 'project_id is required for save_settings' }, 400, origin);
+        }
+        if (typeof pipeline_id !== 'number' || !Number.isFinite(pipeline_id)) {
           return createJsonResponse({ error: 'pipeline_id is required for save_settings' }, 400, origin);
         }
         return await saveAmoCRMSettings(
@@ -439,6 +451,9 @@ serve(async (req) => {
         );
       
       case 'disconnect':
+        if (typeof project_id !== 'string' || !project_id) {
+          return createJsonResponse({ error: 'project_id is required for disconnect' }, 400, origin);
+        }
         return await disconnectAmoCRM(project_id, svc, origin);
       
       default:

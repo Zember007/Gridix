@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createJsonResponse, createCorsResponse } from '../_shared/cors.ts'
+import { getSupabaseUser } from '../_shared/auth.ts'
 
 interface RequestBody {
   projectId: string
@@ -17,6 +18,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const user = await getSupabaseUser(req)
+    if (!user) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin)
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -26,15 +32,6 @@ Deno.serve(async (req) => {
         },
       }
     )
-
-    // Verify user is authenticated
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser()
-
-    if (!user) {
-      throw new Error('Unauthorized')
-    }
 
     const { projectId, operation, type, value } = await req.json() as RequestBody
 

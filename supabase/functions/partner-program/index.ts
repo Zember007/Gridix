@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+import { getSupabaseUser } from '../_shared/auth.ts'
 
 interface PartnerProgramRequest {
   action: 'track_click' | 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request' | 'send_invitation'
@@ -77,18 +78,8 @@ serve(async (req) => {
     }
 
     // Для всех остальных действий требуется авторизованный пользователь
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
-
-    const { data: { user }, error: authError } = await userClient.auth.getUser()
-    if (authError || !user) {
+    const user = await getSupabaseUser(req)
+    if (!user) {
       return createJsonResponse(
         { error: 'Unauthorized' },
         401,

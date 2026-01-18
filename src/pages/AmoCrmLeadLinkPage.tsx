@@ -49,7 +49,7 @@ export default function AmoCrmLeadLinkPage() {
 
   const bindingStatusQuery = useQuery({
     queryKey: ['amocrm', 'lead-binding-status', amoLeadId],
-    enabled: typeof amoLeadId === 'number',
+    enabled: typeof amoLeadId === 'number' && !!user,
     queryFn: async (): Promise<BindingStatus> => {
       const { data, error } = await supabase.functions.invoke('amocrm-api', {
         body: {
