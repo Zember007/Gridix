@@ -1,5 +1,12 @@
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { createClient } from "npm:@supabase/supabase-js@2";
+
+// TS in the web app workspace may not understand Supabase Edge runtime globals.
+// In Edge runtime, `Deno` exists.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const Deno: any;
 
 function normalizeDomain(raw: string): string {
   const d = String(raw || "").trim();
@@ -101,6 +108,7 @@ function htmlInstallFinish(opts: {
   siteUrl: string;
   connectUrl: string;
   authUrl: string;
+  supabaseUrl: string;
   note?: string;
   setupResults?: SetupResult[];
 }) {
@@ -124,6 +132,9 @@ function htmlInstallFinish(opts: {
       .bad { color: #dc2626; font-weight: 600; }
       .list { margin-top: 10px; padding-left: 18px; }
       .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #e5e7eb; font-size: 12px; }
+      .pill.ok { border-color: rgba(22,163,74,.35); color: #16a34a; }
+      .pill.wait { border-color: rgba(245,158,11,.35); color: #b45309; }
     </style>
   </head>
   <body>
@@ -136,6 +147,9 @@ function htmlInstallFinish(opts: {
         </div>
         <div class="muted" style="margin-top:6px">
           member_id: <span class="mono">${opts.memberId}</span>
+        </div>
+        <div style="margin-top:10px">
+          <span id="claimStatus" class="pill wait">⏳ Ожидание привязки к аккаунту Gridix…</span>
         </div>
         ${
           opts.note
@@ -181,15 +195,55 @@ function htmlInstallFinish(opts: {
         }
 
         <div class="row" style="margin-top:14px">
-          <button onclick="finish()">Завершить установку</button>
+          <button id="finishBtn" onclick="finish()" disabled>Завершить установку</button>
+          <button class="secondary" onclick="checkClaim(true)">Проверить привязку</button>
         </div>
         <div class="muted" style="margin-top:10px">
-          Если окно не закрывается автоматически — нажмите “Завершить установку”.
+          “Завершить установку” станет доступно автоматически, когда Bitrix будет привязан к аккаунту Gridix.
         </div>
       </div>
     </div>
 
     <script>
+      var SUPABASE_URL = ${JSON.stringify(opts.supabaseUrl)};
+      var DOMAIN = ${JSON.stringify(opts.domain)};
+      var MEMBER_ID = ${JSON.stringify(opts.memberId)};
+
+      function setClaimUI(claimed) {
+        var el = document.getElementById('claimStatus');
+        var btn = document.getElementById('finishBtn');
+        if (claimed) {
+          if (el) { el.textContent = '✅ Bitrix привязан к аккаунту Gridix'; el.className = 'pill ok'; }
+          if (btn) { btn.disabled = false; }
+        } else {
+          if (el) { el.textContent = '⏳ Ожидание привязки к аккаунту Gridix…'; el.className = 'pill wait'; }
+          if (btn) { btn.disabled = true; }
+        }
+      }
+
+      async function checkClaim(showAlert) {
+        try {
+          var url = (SUPABASE_URL || '').replace(/\/+$/, '') + '/functions/v1/bitrix-app';
+          var resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'install_status', domain: DOMAIN, member_id: MEMBER_ID })
+          });
+          var json = await resp.json().catch(function(){ return null; });
+          var claimed = !!(json && json.claimed);
+          setClaimUI(claimed);
+          if (showAlert && !claimed) {
+            alert('Пока не привязано. Откройте “Войти в Gridix и подключить”, выполните привязку и повторите.');
+          }
+          if (claimed) {
+            // Auto-finish once confirmed
+            finish();
+          }
+        } catch (e) {
+          if (showAlert) alert('Не удалось проверить привязку. Попробуйте ещё раз.');
+        }
+      }
+
       function openAuth() {
         try { window.open(${JSON.stringify(opts.authUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
       }
@@ -212,8 +266,11 @@ function htmlInstallFinish(opts: {
           }
         } catch (e) {}
       }
-      // Auto-finish after short delay as fallback.
-      setTimeout(function () { finish(); }, 15000);
+
+      // Poll claim status while the installer page is open.
+      setClaimUI(false);
+      setTimeout(function(){ checkClaim(false); }, 800);
+      setInterval(function(){ checkClaim(false); }, 4000);
     </script>
   </body>
 </html>`;
@@ -508,6 +565,7 @@ Deno.serve(async (req) => {
       siteUrl: baseSiteUrl,
       connectUrl,
       authUrl,
+      supabaseUrl,
       note,
       setupResults,
     }),

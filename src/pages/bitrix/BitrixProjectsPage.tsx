@@ -34,6 +34,8 @@ export default function BitrixProjectsPage() {
   const [apartmentsLoading, setApartmentsLoading] = useState(false);
   const [bxDomain, setBxDomain] = useState<string | null>(null);
   const [bxMemberId, setBxMemberId] = useState<string | null>(null);
+  const [needsConnect, setNeedsConnect] = useState(false);
+  const [connectUrl, setConnectUrl] = useState<string | null>(null);
 
   const selectedProject = useMemo(
     () => projects.find((p) => p.id === selectedProjectId) ?? null,
@@ -44,6 +46,7 @@ export default function BitrixProjectsPage() {
     const run = async () => {
       try {
         setLoading(true);
+        setNeedsConnect(false);
         if (typeof BX24 !== 'undefined') {
           BX24.init(() => {
             try {
@@ -59,23 +62,41 @@ export default function BitrixProjectsPage() {
           });
         }
 
-        // Bitrix SSO: if not logged into Gridix yet, auto-login using Bitrix domain+member_id
+        // Bitrix SSO: auto-login using Bitrix domain+member_id
         const { data: u0 } = await supabase.auth.getUser();
-        if (!u0?.user && bxDomain && bxMemberId) {
+        let user = u0?.user ?? null;
+
+        if (!user && bxDomain && bxMemberId) {
           const { data: ssoData, error: ssoErr } = await supabase.functions.invoke('bitrix-app', {
             body: { action: 'sso_create', domain: bxDomain, member_id: bxMemberId },
           });
-          if (!ssoErr && ssoData?.sso) {
+
+          if (!ssoErr && (ssoData as any)?.sso) {
             const { data: sessionData, error: verifyErr } = await supabase.functions.invoke('bitrix-app', {
-              body: { action: 'sso_verify', token: ssoData.sso },
+              body: { action: 'sso_verify', token: (ssoData as any).sso },
             });
-            if (!verifyErr && sessionData?.access_token && sessionData?.refresh_token) {
+            if (!verifyErr && (sessionData as any)?.access_token && (sessionData as any)?.refresh_token) {
               await supabase.auth.setSession({
-                access_token: sessionData.access_token,
-                refresh_token: sessionData.refresh_token,
+                access_token: (sessionData as any).access_token,
+                refresh_token: (sessionData as any).refresh_token,
               });
             }
           }
+
+          const { data: u1 } = await supabase.auth.getUser();
+          user = u1?.user ?? null;
+        }
+
+        if (!user) {
+          // Avoid calling protected actions (they return Unauthorized) until connected.
+          setNeedsConnect(true);
+          if (bxDomain && bxMemberId) {
+            setConnectUrl(
+              `/embed/connect/bitrix24?domain=${encodeURIComponent(bxDomain)}&member_id=${encodeURIComponent(bxMemberId)}`
+            );
+          }
+          setProjects([]);
+          return;
         }
 
         const { data, error } = await supabase.functions.invoke('bitrix-app', {
@@ -148,6 +169,25 @@ export default function BitrixProjectsPage() {
           Обновить
         </Button>
       </div>
+
+      {needsConnect && (
+        <Card>
+          <CardContent className="p-4 text-sm space-y-3">
+            <div className="text-muted-foreground">
+              Чтобы открыть проекты, нужно подключить Bitrix24 к аккаунту Gridix (SSO).
+            </div>
+            {connectUrl ? (
+              <Button onClick={() => window.open(connectUrl, '_blank', 'noopener,noreferrer')} className="w-full">
+                Подключить Bitrix24
+              </Button>
+            ) : (
+              <div className="text-muted-foreground">
+                Не удалось получить параметры Bitrix (domain/member_id). Откройте эту страницу из меню приложения в Bitrix.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {projects.length === 0 ? (
         <Card>

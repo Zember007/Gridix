@@ -1,7 +1,14 @@
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
 import { createSignedToken, verifyAndDecodeToken } from "../_shared/sso-token.ts";
+
+// TS in the web app workspace may not understand Supabase Edge runtime globals.
+// In Edge runtime, `Deno` exists.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const Deno: any;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -481,6 +488,40 @@ Deno.serve(async (req) => {
   const parsedBody = await parseBody(req);
   const body = (parsedBody.json ?? {}) as JsonRecord;
   const action = String(body.action ?? "");
+
+  if (action === "install_status") {
+    const domain = normalizeDomain(String(body.domain ?? ""));
+    const memberId = String(body.member_id ?? body.memberId ?? "");
+    if (!domain || !memberId) return createJsonResponse({ error: "Missing domain/member_id" }, 400, origin);
+
+    const { data: pending, error: pendingErr } = await svc
+      .from("bitrix_pending_installs")
+      .select("id, domain, member_id, created_at, updated_at")
+      .eq("domain", domain)
+      .eq("member_id", memberId)
+      .maybeSingle();
+
+    if (pendingErr) {
+      console.error("install_status: pending query failed", pendingErr);
+      return createJsonResponse({ error: "Failed to load pending install" }, 500, origin);
+    }
+
+    const { data: conn, error: connErr } = await svc
+      .from("crm_connections")
+      .select("id, user_id, crm_type, base_domain, bitrix_member_id")
+      .eq("crm_type", "bitrix24")
+      .eq("base_domain", domain)
+      .eq("bitrix_member_id", memberId)
+      .maybeSingle();
+
+    if (connErr) {
+      console.error("install_status: connection query failed", connErr);
+      return createJsonResponse({ error: "Failed to load connection" }, 500, origin);
+    }
+
+    const claimed = !!conn?.id && !!conn?.user_id;
+    return createJsonResponse({ pending: !!pending?.id, claimed }, 200, origin);
+  }
 
   if (action === "sso_create") {
     const domain = normalizeDomain(String(body.domain ?? ""));

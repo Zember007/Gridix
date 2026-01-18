@@ -41,6 +41,8 @@ export default function BitrixDealTabPage() {
   const [busy, setBusy] = useState(false);
   const [bxDomain, setBxDomain] = useState<string | null>(null);
   const [bxMemberId, setBxMemberId] = useState<string | null>(null);
+  const [needsConnect, setNeedsConnect] = useState(false);
+  const [connectUrl, setConnectUrl] = useState<string | null>(null);
 
   const selectedProject = useMemo(
     () => projects.find((p) => p.id === projectId) ?? null,
@@ -51,6 +53,7 @@ export default function BitrixDealTabPage() {
     const run = async () => {
       try {
         setLoading(true);
+        setNeedsConnect(false);
         if (typeof BX24 !== 'undefined') {
           BX24.init(() => {
             try {
@@ -71,21 +74,38 @@ export default function BitrixDealTabPage() {
 
         // Bitrix SSO (Amo-like): auto-login once the app is connected
         const { data: u0 } = await supabase.auth.getUser();
-        if (!u0?.user && bxDomain && bxMemberId) {
+        let user = u0?.user ?? null;
+
+        if (!user && bxDomain && bxMemberId) {
           const { data: ssoData, error: ssoErr } = await supabase.functions.invoke('bitrix-app', {
             body: { action: 'sso_create', domain: bxDomain, member_id: bxMemberId },
           });
-          if (!ssoErr && ssoData?.sso) {
+          if (!ssoErr && (ssoData as any)?.sso) {
             const { data: sessionData, error: verifyErr } = await supabase.functions.invoke('bitrix-app', {
-              body: { action: 'sso_verify', token: ssoData.sso },
+              body: { action: 'sso_verify', token: (ssoData as any).sso },
             });
-            if (!verifyErr && sessionData?.access_token && sessionData?.refresh_token) {
+            if (!verifyErr && (sessionData as any)?.access_token && (sessionData as any)?.refresh_token) {
               await supabase.auth.setSession({
-                access_token: sessionData.access_token,
-                refresh_token: sessionData.refresh_token,
+                access_token: (sessionData as any).access_token,
+                refresh_token: (sessionData as any).refresh_token,
               });
             }
           }
+
+          const { data: u1 } = await supabase.auth.getUser();
+          user = u1?.user ?? null;
+        }
+
+        if (!user) {
+          setNeedsConnect(true);
+          if (bxDomain && bxMemberId) {
+            setConnectUrl(
+              `/embed/connect/bitrix24?domain=${encodeURIComponent(bxDomain)}&member_id=${encodeURIComponent(bxMemberId)}`
+            );
+          }
+          setProjects([]);
+          setExistingLink(null);
+          return;
         }
 
         const { data: projectsData, error: projectsErr } = await supabase.functions.invoke('bitrix-app', {
@@ -172,6 +192,25 @@ export default function BitrixDealTabPage() {
 
   return (
     <div className="bg-white p-3 space-y-3">
+      {needsConnect && (
+        <Card>
+          <CardContent className="p-3 text-sm space-y-3">
+            <div className="text-muted-foreground">
+              Чтобы работать с вкладкой сделки, нужно подключить Bitrix24 к аккаунту Gridix (SSO).
+            </div>
+            {connectUrl ? (
+              <Button onClick={() => window.open(connectUrl, '_blank', 'noopener,noreferrer')} className="w-full">
+                Подключить Bitrix24
+              </Button>
+            ) : (
+              <div className="text-muted-foreground">
+                Не удалось получить параметры Bitrix (domain/member_id).
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Gridix • Сделка Bitrix</CardTitle>
