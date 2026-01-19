@@ -31,9 +31,11 @@ export default function App() {
                 path="/embed/*"
                 element={
                   <EmbedProviders>
-                    <Suspense fallback={<PageLoader />}>
-                      <EmbedRoutes />
-                    </Suspense>
+                    <ProtectedRoute requireAuth={false}>
+                      <Suspense fallback={<PageLoader />}>
+                        <EmbedRoutes />
+                      </Suspense>
+                    </ProtectedRoute>
                   </EmbedProviders>
                 }
               />

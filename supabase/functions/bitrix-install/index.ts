@@ -50,20 +50,32 @@ async function callBitrixRest(opts: {
   const domain = normalizeDomain(opts.domain);
   const url = `https://${domain}/rest/${opts.method}.json`;
 
+  const appendParam = (sp: URLSearchParams, key: string, value: unknown) => {
+    if (value === undefined) return;
+    if (value === null) {
+      sp.set(key, "");
+      return;
+    }
+    if (Array.isArray(value)) {
+      // Bitrix accepts JSON for arrays in many methods; keep as JSON string to avoid exploding the query.
+      sp.set(key, JSON.stringify(value));
+      return;
+    }
+    if (typeof value === "object") {
+      // Bitrix often expects nested params as fields[KEY]=... instead of JSON strings.
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        appendParam(sp, `${key}[${k}]`, v);
+      }
+      return;
+    }
+    sp.set(key, String(value));
+  };
+
   const body = new URLSearchParams();
   body.set("auth", opts.accessToken);
   if (opts.params) {
     for (const [k, v] of Object.entries(opts.params)) {
-      if (v === undefined) continue;
-      if (v === null) {
-        body.set(k, "");
-        continue;
-      }
-      if (typeof v === "object") {
-        body.set(k, JSON.stringify(v));
-        continue;
-      }
-      body.set(k, String(v));
+      appendParam(body, k, v);
     }
   }
 
@@ -88,12 +100,14 @@ async function callBitrixRest(opts: {
       statusText: resp.statusText,
       body: text,
     });
-    throw new Error(`Bitrix REST call failed: ${resp.status}`);
+    const desc = json?.error_description ? ` ${json.error_description}` : "";
+    throw new Error(`Bitrix REST call failed: ${resp.status}${desc}`);
   }
 
   if (json?.error) {
     console.error("Bitrix REST returned error", { url, json });
-    throw new Error(`Bitrix REST error: ${json.error}`);
+    const desc = json?.error_description ? ` ${json.error_description}` : "";
+    throw new Error(`Bitrix REST error: ${json.error}${desc}`);
   }
 
   return json;
@@ -109,6 +123,7 @@ function htmlInstallFinish(opts: {
   connectUrl: string;
   authUrl: string;
   supabaseUrl: string;
+  initiallyClaimed?: boolean;
   note?: string;
   setupResults?: SetupResult[];
 }) {
@@ -197,9 +212,10 @@ function htmlInstallFinish(opts: {
     </div>
 
     <script>
-      var SUPABASE_URL = ${JSON.stringify(opts.supabaseUrl)};
-      var DOMAIN = ${JSON.stringify(opts.domain)};
-      var MEMBER_ID = ${JSON.stringify(opts.memberId)};
+      var SUPABASE_URL = ${JSON.stringify(String(opts.supabaseUrl ?? ""))};
+      var DOMAIN = ${JSON.stringify(String(opts.domain ?? ""))};
+      var MEMBER_ID = ${JSON.stringify(String(opts.memberId ?? ""))};
+      var INITIALLY_CLAIMED = ${JSON.stringify(!!opts.initiallyClaimed)};
 
       function setClaimUI(claimed) {
         var el = document.getElementById('claimStatus');
@@ -213,15 +229,24 @@ function htmlInstallFinish(opts: {
         }
       }
 
-      async function checkClaim(showAlert) {
+      // Make sure these functions are on window so inline onclick handlers can find them.
+      window.checkClaim = async function checkClaim(showAlert) {
         try {
-          var url = (SUPABASE_URL || '').replace(/\/+$/, '') + '/functions/v1/bitrix-app';
+          var base = (SUPABASE_URL || '');
+          while (base.length > 0 && base.charAt(base.length - 1) === '/') base = base.slice(0, -1);
+          var url = base + '/functions/v1/bitrix-app';
           var resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'install_status', domain: DOMAIN, member_id: MEMBER_ID })
           });
           var json = await resp.json().catch(function(){ return null; });
+          if (!resp.ok) {
+            if (showAlert) {
+              alert('Не удалось проверить привязку (server error). Откройте “Войти в Gridix и подключить”, выполните привязку и повторите.');
+            }
+            return;
+          }
           var claimed = !!(json && json.claimed);
           setClaimUI(claimed);
           if (showAlert && !claimed) {
@@ -234,26 +259,31 @@ function htmlInstallFinish(opts: {
         } catch (e) {
           if (showAlert) alert('Не удалось проверить привязку. Попробуйте ещё раз.');
         }
-      }
+      };
 
-      function openAuth() {
-        try { window.open(${JSON.stringify(opts.authUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
-      }
-      function openConnect() {
-        try { window.open(${JSON.stringify(opts.connectUrl)}, '_blank', 'noopener,noreferrer'); } catch (e) {}
-      }
-      function finish() {
+      window.openAuth = function openAuth() {
+        try { window.open(${JSON.stringify(String(opts.authUrl ?? ""))}, '_blank', 'noopener,noreferrer'); } catch (e) {}
+      };
+      window.openConnect = function openConnect() {
+        try { window.open(${JSON.stringify(String(opts.connectUrl ?? ""))}, '_blank', 'noopener,noreferrer'); } catch (e) {}
+      };
+      window.finish = function finish() {
         try {
           if (typeof BX24 !== 'undefined' && BX24 && BX24.installFinish) {
             BX24.installFinish();
           }
         } catch (e) {}
-      }
+      };
 
       // Poll claim status while the installer page is open.
-      setClaimUI(false);
-      setTimeout(function(){ checkClaim(false); }, 800);
-      setInterval(function(){ checkClaim(false); }, 4000);
+      setClaimUI(INITIALLY_CLAIMED);
+      if (INITIALLY_CLAIMED) {
+        // If already claimed (e.g. reinstall), finish immediately.
+        setTimeout(function(){ window.finish(); }, 250);
+      } else {
+        setTimeout(function(){ window.checkClaim(false); }, 800);
+      }
+      setInterval(function(){ window.checkClaim(false); }, 4000);
     </script>
   </body>
 </html>`;
@@ -413,10 +443,12 @@ Deno.serve(async (req) => {
       });
       setupResults.push({ title: "Размещение в левом меню (LEFT_MENU)", ok: true });
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const already = /already binded/i.test(msg);
       setupResults.push({
         title: "Размещение в левом меню (LEFT_MENU)",
-        ok: false,
-        details: e instanceof Error ? e.message : String(e),
+        ok: already ? true : false,
+        details: already ? "Уже привязано (ok)" : msg,
       });
     }
 
@@ -429,15 +461,18 @@ Deno.serve(async (req) => {
       });
       setupResults.push({ title: "Вкладка в сделке (CRM_DEAL_DETAIL_TAB)", ok: true });
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const already = /already binded/i.test(msg);
       setupResults.push({
         title: "Вкладка в сделке (CRM_DEAL_DETAIL_TAB)",
-        ok: false,
-        details: e instanceof Error ? e.message : String(e),
+        ok: already ? true : false,
+        details: already ? "Уже привязано (ok)" : msg,
       });
     }
 
     // Ensure UF field exists for storing Gridix apartment id
-    const ufName = "UF_GRIDIX_APARTMENT_ID";
+    // Bitrix uses UF_CRM_* prefix for CRM entity userfields.
+    const ufName = "UF_CRM_GRIDIX_APARTMENT_ID";
     try {
       const ufList = await callBitrixRest({
         domain,
@@ -473,10 +508,12 @@ Deno.serve(async (req) => {
         setupResults.push({ title: `Создание пользовательского поля сделки (${ufName})`, ok: true });
       }
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const alreadyExists = /уже существует/i.test(msg) || /already exists/i.test(msg);
       setupResults.push({
-        title: "Пользовательское поле сделки (UF_GRIDIX_APARTMENT_ID)",
-        ok: false,
-        details: e instanceof Error ? e.message : String(e),
+        title: `Пользовательское поле сделки (${ufName})`,
+        ok: alreadyExists ? true : false,
+        details: alreadyExists ? "Уже существует (ok)" : msg,
       });
     }
 
@@ -495,10 +532,12 @@ Deno.serve(async (req) => {
         });
         setupResults.push({ title: "Webhook: OnCrmDealUpdate", ok: true });
       } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        const already = /already binded/i.test(msg);
         setupResults.push({
           title: "Webhook: OnCrmDealUpdate",
-          ok: false,
-          details: e instanceof Error ? e.message : String(e),
+          ok: already ? true : false,
+          details: already ? "Уже привязано (ok)" : msg,
         });
       }
 
@@ -511,10 +550,12 @@ Deno.serve(async (req) => {
         });
         setupResults.push({ title: "Webhook: OnCrmDealAdd", ok: true });
       } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        const already = /already binded/i.test(msg);
         setupResults.push({
           title: "Webhook: OnCrmDealAdd",
-          ok: false,
-          details: e instanceof Error ? e.message : String(e),
+          ok: already ? true : false,
+          details: already ? "Уже привязано (ok)" : msg,
         });
       }
     } else {
@@ -535,10 +576,21 @@ Deno.serve(async (req) => {
     // We still finish install to avoid broken installs; user can re-install later
   }
 
-  const note =
-    existingConn?.user_id
-      ? "Эта установка уже привязана к аккаунту Gridix (токены обновлены). Если нужно привязать к другому аккаунту — используйте Token ниже."
-      : undefined;
+  // Confirm claim status using the same criteria as bitrix-app install_status.
+  const { data: claimedConn } = await supabase
+    .from("crm_connections")
+    .select("id,user_id,updated_at")
+    .eq("crm_type", "bitrix24")
+    .eq("base_domain", domain)
+    .eq("bitrix_member_id", memberId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const initiallyClaimed = !!claimedConn?.user_id;
+  const note = initiallyClaimed
+    ? "Эта установка уже привязана к аккаунту Gridix (токены обновлены). Установка будет завершена автоматически."
+    : undefined;
 
   return new Response(
     htmlInstallFinish({
@@ -549,6 +601,7 @@ Deno.serve(async (req) => {
       connectUrl,
       authUrl,
       supabaseUrl,
+      initiallyClaimed,
       note,
       setupResults,
     }),
