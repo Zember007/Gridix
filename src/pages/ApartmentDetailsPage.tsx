@@ -918,7 +918,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
               {/* Right side - Price and actions */}
               <div className="w-[400px]">
                 <div className="sticky top-6">
-                  <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] flex flex-col justify-between h-[340px]">
+                  <div className="bg-gray-50 rounded-2xl p-6 space-y-[24px] flex flex-col justify-between min-h-[340px]">
                     {/* Currency selector */}
                     <div className="space-y-[24px]">
                       <div className="flex items-center justify-between">

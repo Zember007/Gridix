@@ -323,7 +323,8 @@ export async function startAdminOnboardingTour(
 
     try {
       await identifyImpl(client, payload);
-      await client.start(contentId, { once: true, continue: true });
+      console.log('startAdminOnboardingTour', contentId);
+      await client.start(contentId, { continue: true });
       // Ensure our overlay doesn't disappear before the tour UI has a chance to paint.
       await nextAnimationFrame();
     } catch (e) {

@@ -4,6 +4,7 @@ export type OnboardingState = NonNullable<UserProfile["onboarding"]>;
 
 export function getOnboardingState(profile: UserProfile | null | undefined): OnboardingState {
   const raw = profile?.onboarding ?? {};
+  console.log('raw', raw);
   return {
     admin_main_done: raw.admin_main_done ?? false,
     project_creation_done: raw.project_creation_done ?? false,

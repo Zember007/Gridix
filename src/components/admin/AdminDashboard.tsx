@@ -48,6 +48,7 @@ const AdminDashboard = () => {
 
   // Admin main onboarding: once per user (stored in user_profiles.onboarding.admin_main_done)
   useEffect(() => {
+    console.log('admin onboarding useEffect', loading, user?.id, startedAdminTourRef.current, userProfile);
     if (loading) return;
 
     if (!user?.id) return;
