@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/entities/project/queries/useProjects';
 import { useApartment } from '@/entities/apartment/queries/useApartment';
@@ -12,7 +12,7 @@ import { Loader } from '@/shared/ui/loader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog';
 import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart, Loader2 } from 'lucide-react';
 import { toast } from '@/shared/ui/sonner';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/shared/api/supabase';
 import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
@@ -29,6 +29,8 @@ interface ApartmentDetailsPageProps {
 }
 
 const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdProp = '', onClose }: ApartmentDetailsPageProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     projectId,
     projectSlug,
@@ -71,10 +73,130 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [bitrixBusy, setBitrixBusy] = useState(false);
   const [recommendedApartments, setRecommendedApartments] = useState<Apartment[]>([]);
   const [recommendationThumbnails, setRecommendationThumbnails] = useState<Record<string, string | null>>({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
   const [viewTracked, setViewTracked] = useState(false);
+
+  const bitrixContext = useMemo(() => {
+    const sp = new URLSearchParams(location.search);
+    const crm = sp.get('crm');
+    const dealIdRaw = sp.get('deal_id');
+    const dealIdNum = dealIdRaw ? Number(dealIdRaw) : NaN;
+    return {
+      isBitrix: crm === 'bitrix',
+      dealId: Number.isFinite(dealIdNum) && dealIdNum > 0 ? dealIdNum : null,
+    };
+  }, [location.search]);
+
+  const [bitrixDealId, setBitrixDealId] = useState<number | null>(bitrixContext.dealId);
+
+  useEffect(() => {
+    setBitrixDealId(bitrixContext.dealId);
+  }, [bitrixContext.dealId]);
+
+  const patchSearchParams = (patch: Record<string, string | null>) => {
+    const url = new URL(window.location.href);
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null || v === undefined || v === '') url.searchParams.delete(k);
+      else url.searchParams.set(k, v);
+    }
+    navigate({ search: url.search }, { replace: true });
+  };
+
+  const selectBitrixDealId = async (): Promise<number> => {
+    if (typeof BX24 === 'undefined') throw new Error('BX24 недоступен');
+    const bx = BX24 as unknown as {
+      selectCRM?: (opts: { entityType: string | string[]; multiple?: boolean }, cb: (res: unknown) => void) => void;
+    };
+    const fn = bx.selectCRM;
+    if (typeof fn !== 'function') throw new Error('BX24.selectCRM недоступен');
+
+    return await new Promise<number>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Bitrix: таймаут выбора сделки')), 15000);
+      try {
+        // Some portals expect entityType as array, some accept string.
+        const opts: { entityType: string | string[]; multiple?: boolean } = { entityType: ['deal', 'DEAL'], multiple: false };
+        fn(opts, (res: unknown) => {
+          clearTimeout(timeout);
+          const first = Array.isArray(res)
+            ? res[0]
+            : (typeof res === 'object' && res !== null && '0' in (res as Record<string, unknown>))
+              ? (res as Record<string, unknown>)['0']
+              : res;
+          const obj = first as { id?: unknown; ID?: unknown } | unknown;
+          const id = Number((obj as { id?: unknown })?.id ?? (obj as { ID?: unknown })?.ID ?? obj);
+          if (Number.isFinite(id) && id > 0) return resolve(id);
+          return reject(new Error('Сделка не выбрана'));
+        });
+      } catch (e) {
+        clearTimeout(timeout);
+        reject(e instanceof Error ? e : new Error('Не удалось открыть выбор сделки'));
+      }
+    });
+  };
+
+  const ensureGridixAuth = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data?.user) throw new Error('Нужно подключить Bitrix к аккаунту Gridix (SSO)');
+    return data.user;
+  };
+
+  const bitrixCreateDeal = async () => {
+    if (!apartment || !project) return;
+    try {
+      setBitrixBusy(true);
+      await ensureGridixAuth();
+
+      const { data, error } = await supabase.functions.invoke('bitrix-app', {
+        body: { action: 'create_deal_from_apartment', project_id: apartment.project_id, apartment_id: apartment.id },
+      });
+      if (error) throw error;
+
+      const createdDealId = Number((data as { bitrix_deal_id?: unknown } | null)?.bitrix_deal_id);
+      if (Number.isFinite(createdDealId) && createdDealId > 0) {
+        setBitrixDealId(createdDealId);
+        patchSearchParams({ crm: 'bitrix', deal_id: String(createdDealId) });
+      }
+
+      toast.success(createdDealId ? `Сделка создана (#${createdDealId})` : 'Сделка создана');
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : 'Не удалось создать сделку в Bitrix');
+    } finally {
+      setBitrixBusy(false);
+    }
+  };
+
+  const bitrixLinkToDeal = async () => {
+    if (!apartment || !project) return;
+    try {
+      setBitrixBusy(true);
+      await ensureGridixAuth();
+
+      const dealId = bitrixDealId ?? (await selectBitrixDealId());
+      setBitrixDealId(dealId);
+      patchSearchParams({ crm: 'bitrix', deal_id: String(dealId) });
+
+      const { error } = await supabase.functions.invoke('bitrix-app', {
+        body: {
+          action: 'link_apartment_to_deal',
+          bitrix_deal_id: dealId,
+          project_id: apartment.project_id,
+          apartment_id: apartment.id,
+        },
+      });
+      if (error) throw error;
+
+      toast.success(`Квартира привязана к сделке #${dealId}`);
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : 'Не удалось привязать квартиру к сделке');
+    } finally {
+      setBitrixBusy(false);
+    }
+  };
 
   // Трекинг просмотра квартиры
   useEffect(() => {
@@ -886,29 +1008,52 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         {/* Green installment button */}
 
 
-                        {/* Main reserve button */}
-                        <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-                          <DialogTrigger asChild>
+                        {/* Main reserve / Bitrix actions */}
+                        {bitrixContext.isBitrix ? (
+                          <div className="space-y-2">
                             <Button
                               className="w-full text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 font-poppins"
                               style={getButtonStyle('available')}
+                              onClick={bitrixLinkToDeal}
+                              disabled={bitrixBusy}
                             >
-                              {t('common.reserve')}
+                              {bitrixBusy
+                                ? '...'
+                                : bitrixDealId
+                                  ? `Привязать к сделке #${bitrixDealId}`
+                                  : 'Привязать к существующей сделке'}
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[500px]">
-                            <DialogHeader>
-                              <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
-                            </DialogHeader>
-                            <ApartmentReservationForm
-                              apartmentId={apartment.id}
-                              projectId={apartment.project_id}
-                              onSubmit={() => setIsReserveDialogOpen(false)}
-                              onCancel={() => setIsReserveDialogOpen(false)}
-                              themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
-                            />
-                          </DialogContent>
-                        </Dialog>
+                            <Button variant="outline" className="w-full py-3 rounded-lg font-poppins text-sm" onClick={bitrixCreateDeal} disabled={bitrixBusy}>
+                              {bitrixBusy ? '...' : 'Создать сделку в Bitrix'}
+                            </Button>
+                            <div className="text-xs text-muted-foreground">
+                              В Bitrix сделку будут записаны данные квартиры (цена/номер/проект/адрес и т.д.), а в Gridix создастся локальный лид для синхронизации.
+                            </div>
+                          </div>
+                        ) : (
+                          <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                className="w-full text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 font-poppins"
+                                style={getButtonStyle('available')}
+                              >
+                                {t('common.reserve')}
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                              <DialogHeader>
+                                <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
+                              </DialogHeader>
+                              <ApartmentReservationForm
+                                apartmentId={apartment.id}
+                                projectId={apartment.project_id}
+                                onSubmit={() => setIsReserveDialogOpen(false)}
+                                onCancel={() => setIsReserveDialogOpen(false)}
+                                themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                        )}
 
                         {/* Secondary buttons row */}
                         <div className="flex gap-3">
@@ -924,7 +1069,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                                   <DialogTitle>{t('installment.calculator')}</DialogTitle>
                                 </DialogHeader>
                                 <InstallmentCalculator
-                                  applyInstallment={() => { setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true); }}
+                                  applyInstallment={() => { setIsCalculatorDialogOpen(false); if (!bitrixContext.isBitrix) setIsReserveDialogOpen(true); }}
                                   apartmentPrice={apartment.price}
                                   currency={project.currency}
                                   minDownPaymentPercent={project.min_down_payment_percent || 20}
@@ -1025,27 +1170,47 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
         {apartment.status === 'available' && (
           <div className="lg:hidden sticky bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div className="max-w-sm mx-auto space-y-3">
-              <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
-                <DialogTrigger asChild>
+              {bitrixContext.isBitrix ? (
+                <div className="space-y-2">
                   <Button
                     className="w-full text-white py-3 rounded-2xl text-lg font-semibold hover:opacity-90"
                     style={getButtonStyle('available')}
+                    onClick={bitrixLinkToDeal}
+                    disabled={bitrixBusy}
                   >
-                    {t('common.reserve')}
+                    {bitrixBusy
+                      ? '...'
+                      : bitrixDealId
+                        ? `Привязать к сделке #${bitrixDealId}`
+                        : 'Привязать к сделке'}
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
-                  </DialogHeader>
-                  <ApartmentReservationForm
-                    apartmentId={apartment.id}
-                    projectId={apartment.project_id}
-                    onCancel={() => setIsReserveDialogOpen(false)}
-                    themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
-                  />
-                </DialogContent>
-              </Dialog>
+                  <Button variant="outline" className="w-full py-3 rounded-2xl border-2 border-gray-200 hover:border-gray-300" onClick={bitrixCreateDeal} disabled={bitrixBusy}>
+                    {bitrixBusy ? '...' : 'Создать сделку'}
+                  </Button>
+                </div>
+              ) : (
+                <Dialog open={isReserveDialogOpen} onOpenChange={setIsReserveDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      className="w-full text-white py-3 rounded-2xl text-lg font-semibold hover:opacity-90"
+                      style={getButtonStyle('available')}
+                    >
+                      {t('common.reserve')}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>{t('common.reserve')} {t('apartment.apartment')} {apartment.apartment_number}</DialogTitle>
+                    </DialogHeader>
+                    <ApartmentReservationForm
+                      apartmentId={apartment.id}
+                      projectId={apartment.project_id}
+                      onCancel={() => setIsReserveDialogOpen(false)}
+                      themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
 
               <div className="flex gap-3">
                 {project?.installment_enabled && apartment.price && priceVisible && (
@@ -1061,7 +1226,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         <DialogTitle>{t('installment.calculator')}</DialogTitle>
                       </DialogHeader>
                       <InstallmentCalculator
-                        applyInstallment={() => { setIsCalculatorDialogOpen(false); setIsReserveDialogOpen(true); }}
+                        applyInstallment={() => { setIsCalculatorDialogOpen(false); if (!bitrixContext.isBitrix) setIsReserveDialogOpen(true); }}
                         apartmentPrice={apartment.price}
                         currency={project.currency}
                         minDownPaymentPercent={project.min_down_payment_percent || 20}

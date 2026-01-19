@@ -294,17 +294,43 @@ const ProjectApartmentSelector = ({
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
 
       // Формируем полный URL
-      const url = `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
+      const url = new URL(
+        `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`,
+        window.location.origin,
+      );
+
+      // Preserve CRM context in Bitrix embed flow
+      try {
+        const current = new URL(window.location.href);
+        const crm = current.searchParams.get('crm');
+        const dealId = current.searchParams.get('deal_id');
+        if (crm) url.searchParams.set('crm', crm);
+        if (dealId) url.searchParams.set('deal_id', dealId);
+      } catch {
+        // ignore
+      }
 
       // Открываем в новой вкладке
-      window.open(url, '_self');
+      window.open(url.toString(), '_self');
     } catch (error) {
       console.error('Error opening apartment details:', error);
       // В случае ошибки используем запасной вариант
       const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-      const url = `${fallbackDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
-      window.open(url, '_self');
+      const url = new URL(
+        `${fallbackDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`,
+        window.location.origin,
+      );
+      try {
+        const current = new URL(window.location.href);
+        const crm = current.searchParams.get('crm');
+        const dealId = current.searchParams.get('deal_id');
+        if (crm) url.searchParams.set('crm', crm);
+        if (dealId) url.searchParams.set('deal_id', dealId);
+      } catch {
+        // ignore
+      }
+      window.open(url.toString(), '_self');
     }
   };
 

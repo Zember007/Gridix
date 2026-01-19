@@ -44,11 +44,11 @@ Deno.serve(async (req) => {
     switch (action) {
       case "amocrm":
         return await handleAmoCrmSSO(actionParams, origin);
+      case "bitrix24":
+        return await handleBitrix24SSO(actionParams, origin);
       case "verify":
         return await handleVerifyToken(actionParams, origin);
       // Add more actions here in the future
-      // case "bitrix24":
-      //   return await handleBitrix24SSO(actionParams, origin);
       default:
         return createJsonResponse(
           { error: `Unsupported action: ${action}` },
@@ -231,6 +231,130 @@ async function handleAmoCrmSSO(params: any, origin: string | null): Promise<Resp
     200,
     origin
   )
+}
+
+/**
+ * Handle Bitrix24 SSO login (resolve Gridix user by Bitrix portal domain/member_id)
+ */
+async function handleBitrix24SSO(params: any, origin: string | null): Promise<Response> {
+  const normalizeDomain = (raw: string) =>
+    String(raw || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const extractSubdomain = (domain: string) => normalizeDomain(domain).split(".")[0] ?? normalizeDomain(domain);
+
+  const domainRaw = params?.domain ?? params?.DOMAIN ?? params?.base_domain ?? "";
+  const memberIdRaw = params?.member_id ?? params?.memberId ?? params?.MEMBER_ID ?? "";
+  const domain = normalizeDomain(String(domainRaw));
+  const memberId = String(memberIdRaw || "").trim();
+  const subdomain = domain ? extractSubdomain(domain) : "";
+
+  if (!domain || !memberId) {
+    return createJsonResponse({ error: "Missing domain or member_id" }, 400, origin);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const jwtSecret = Deno.env.get("JWT_SECRET") ?? "";
+
+  if (!supabaseUrl || !serviceRoleKey || !anonKey || !jwtSecret) {
+    console.error("Missing Supabase env configuration");
+    return createJsonResponse({ error: "Server configuration error" }, 500, origin);
+  }
+
+  // Service client to query crm_connections and generate magic link
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Find claimed Bitrix connection: prefer member_id match; fall back to domain/subdomain
+  const baseQuery = adminClient
+    .from("crm_connections")
+    .select("user_id, base_domain, subdomain, bitrix_member_id, updated_at")
+    .eq("crm_type", "bitrix24")
+    .not("user_id", "is", null);
+
+  let connection: any | null = null;
+  const { data: byMember, error: byMemberErr } = await baseQuery
+    .eq("bitrix_member_id", memberId)
+    .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (byMemberErr) {
+    console.error("Bitrix SSO: failed to load crm_connection (member_id)", byMemberErr);
+    return createJsonResponse({ error: "Failed to resolve connection" }, 500, origin);
+  }
+  connection = byMember ?? null;
+
+  if (!connection) {
+    const { data: byDomain, error: byDomainErr } = await baseQuery
+      .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (byDomainErr) {
+      console.error("Bitrix SSO: failed to load crm_connection", byDomainErr);
+      return createJsonResponse({ error: "Failed to resolve connection" }, 500, origin);
+    }
+    connection = byDomain ?? null;
+  }
+
+  if (!connection?.user_id) {
+    return createJsonResponse({ error: "User not found" }, 404, origin);
+  }
+
+  // Resolve email
+  const { data: profileData, error: profileError } = await adminClient
+    .from("user_profiles")
+    .select("email")
+    .eq("id", connection.user_id)
+    .single();
+
+  if (profileError || !profileData?.email) {
+    console.error("Bitrix SSO: user profile not found", profileError);
+    return createJsonResponse({ error: "User profile not found" }, 404, origin);
+  }
+
+  // Generate magic link server-side, then verify OTP to obtain session
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: "magiclink",
+    email: profileData.email,
+    options: { redirectTo: `${supabaseUrl}/auth/v1/callback` },
+  });
+
+  const tokenHash = linkData?.properties?.hashed_token ?? null;
+  if (linkError || !tokenHash) {
+    console.error("Bitrix SSO: generateLink failed", linkError);
+    return createJsonResponse({ error: "Failed to generate magic link" }, 500, origin);
+  }
+
+  const verifyClient = createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: otpData, error: otpError } = await verifyClient.auth.verifyOtp({
+    type: "magiclink",
+    token_hash: tokenHash,
+  });
+
+  if (otpError || !otpData?.session) {
+    console.error("Bitrix SSO: verifyOtp failed", otpError);
+    return createJsonResponse({ error: "Failed to create session" }, 500, origin);
+  }
+
+  const session = otpData.session;
+  const now = Math.floor(Date.now() / 1000);
+  const tokenPayload = {
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_at: session.expires_at,
+    user: session.user,
+    exp: now + 60,
+    iat: now,
+  };
+
+  const signedToken = await createSignedToken(tokenPayload, jwtSecret);
+  return createJsonResponse({ sso: signedToken }, 200, origin);
 }
 
 /**

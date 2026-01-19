@@ -3,7 +3,6 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 // @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
-import { createSignedToken, verifyAndDecodeToken } from "../_shared/sso-token.ts";
 
 // TS in the web app workspace may not understand Supabase Edge runtime globals.
 // In Edge runtime, `Deno` exists.
@@ -94,20 +93,32 @@ async function callBitrixRest(opts: {
   const domain = normalizeDomain(opts.domain);
   const url = `https://${domain}/rest/${opts.method}.json`;
 
+  const appendParam = (sp: URLSearchParams, key: string, value: unknown) => {
+    if (value === undefined) return;
+    if (value === null) {
+      sp.set(key, "");
+      return;
+    }
+    if (Array.isArray(value)) {
+      // Keep arrays compact; Bitrix often accepts JSON for arrays.
+      sp.set(key, JSON.stringify(value));
+      return;
+    }
+    if (typeof value === "object") {
+      // Bitrix expects nested params as fields[KEY]=... (not JSON strings) for many CRM methods.
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        appendParam(sp, `${key}[${k}]`, v);
+      }
+      return;
+    }
+    sp.set(key, String(value));
+  };
+
   const body = new URLSearchParams();
   body.set("auth", opts.accessToken);
   if (opts.params) {
     for (const [k, v] of Object.entries(opts.params)) {
-      if (v === undefined) continue;
-      if (v === null) {
-        body.set(k, "");
-        continue;
-      }
-      if (typeof v === "object") {
-        body.set(k, JSON.stringify(v));
-        continue;
-      }
-      body.set(k, String(v));
+      appendParam(body, k, v);
     }
   }
 
@@ -132,12 +143,14 @@ async function callBitrixRest(opts: {
       statusText: resp.statusText,
       body: text,
     });
-    throw new Error(`Bitrix REST call failed: ${resp.status}`);
+    const desc = json?.error_description ? ` ${json.error_description}` : "";
+    throw new Error(`Bitrix REST call failed: ${resp.status}${desc}`);
   }
 
   if (json?.error) {
     console.error("Bitrix REST returned error", { url, json });
-    throw new Error(`Bitrix REST error: ${json.error}`);
+    const desc = json?.error_description ? ` ${json.error_description}` : "";
+    throw new Error(`Bitrix REST error: ${json.error}${desc}`);
   }
 
   return json;
@@ -202,191 +215,12 @@ async function getValidBitrixAccessToken(opts: {
   return nextAccess;
 }
 
-async function handleSsoCreate(opts: {
-  svc: any;
-  supabaseUrl: string;
-  anonKey: string;
-  serviceRoleKey: string;
-  jwtSecret: string;
-  domain: string;
-  memberId: string;
-  origin: string | null;
-}): Promise<Response> {
-  const token = await generateSsoTokenForBitrixPortal({
-    svc: opts.svc,
-    supabaseUrl: opts.supabaseUrl,
-    anonKey: opts.anonKey,
-    serviceRoleKey: opts.serviceRoleKey,
-    jwtSecret: opts.jwtSecret,
-    domain: opts.domain,
-    memberId: opts.memberId,
-    origin: opts.origin,
-  });
-
-  if (token.status !== "ok") {
-    return createJsonResponse({ error: token.error }, token.httpStatusCode, opts.origin);
-  }
-
-  return createJsonResponse({ sso: token.sso }, 200, opts.origin);
-}
-
-async function generateSsoTokenForBitrixPortal(opts: {
-  svc: any;
-  supabaseUrl: string;
-  anonKey: string;
-  serviceRoleKey: string;
-  jwtSecret: string;
-  domain: string;
-  memberId: string;
-  origin: string | null;
-}): Promise<
-  | { status: "ok"; sso: string }
-  | { status: "error"; httpStatusCode: number; error: string }
-> {
-  const domain = normalizeDomain(opts.domain);
-  const memberId = String(opts.memberId ?? "");
-  if (!domain) {
-    return { status: "error", httpStatusCode: 400, error: "Missing domain" };
-  }
-  if (!opts.jwtSecret) {
-    return { status: "error", httpStatusCode: 500, error: "Server configuration error (JWT_SECRET missing)" };
-  }
-
-  const subdomain = extractSubdomain(domain);
-
-  // Resolve Gridix user by Bitrix portal (domain/subdomain). Prefer member_id match when available.
-  let connection: any = null;
-  const baseQuery = opts.svc
-    .from("crm_connections")
-    .select("id,user_id,crm_type,base_domain,subdomain,bitrix_member_id,updated_at")
-    .eq("crm_type", "bitrix24")
-    // SSO can only work for claimed connections (must have user_id). This also helps avoid duplicates.
-    .not("user_id", "is", null);
-
-  if (memberId) {
-    const { data, error } = await baseQuery
-      .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
-      .eq("bitrix_member_id", memberId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) {
-      console.error("SSO: failed to load crm_connection (member_id)", error);
-      return { status: "error", httpStatusCode: 500, error: "Failed to resolve connection" };
-    }
-    connection = data ?? null;
-  }
-
-  if (!connection) {
-    const { data, error } = await baseQuery
-      .or(`base_domain.eq.${domain},subdomain.eq.${subdomain}`)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) {
-      console.error("SSO: failed to load crm_connection", error);
-      return { status: "error", httpStatusCode: 500, error: "Failed to resolve connection" };
-    }
-    connection = data ?? null;
-  }
-
-  if (!connection?.user_id) {
-    return { status: "error", httpStatusCode: 404, error: "Connection not found" };
-  }
-
-  const { data: profile, error: profileErr } = await opts.svc
-    .from("user_profiles")
-    .select("email")
-    .eq("id", connection.user_id)
-    .maybeSingle();
-
-  if (profileErr) {
-    console.error("SSO: failed to load user profile", profileErr);
-    return { status: "error", httpStatusCode: 404, error: "User profile not found" };
-  }
-  const email = profile?.email ?? null;
-  if (!email) {
-    return { status: "error", httpStatusCode: 404, error: "User email not found" };
-  }
-
-  // Generate magic link server-side (no user interaction), then immediately verify OTP to obtain a session.
-  const adminClient = createClient(opts.supabaseUrl, opts.serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: {
-      // Not used by our flow; required by API. Keep it on Supabase callback.
-      redirectTo: `${opts.supabaseUrl}/auth/v1/callback`,
-    },
-  });
-
-  const tokenHash = linkData?.properties?.hashed_token ?? null;
-  if (linkError || !tokenHash) {
-    console.error("SSO: generateLink failed", linkError);
-    return { status: "error", httpStatusCode: 500, error: "Failed to generate magic link" };
-  }
-
-  const verifyClient = createClient(opts.supabaseUrl, opts.anonKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { data: otpData, error: otpError } = await verifyClient.auth.verifyOtp({
-    type: "magiclink",
-    token_hash: tokenHash,
-  });
-
-  if (otpError || !otpData?.session) {
-    console.error("SSO: verifyOtp failed", otpError);
-    return { status: "error", httpStatusCode: 500, error: "Failed to create session" };
-  }
-
-  const session = otpData.session;
-  const now = Math.floor(Date.now() / 1000);
-  const tokenPayload = {
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-    expires_at: session.expires_at,
-    user: session.user,
-    exp: now + 60, // 1 minute
-    iat: now,
-  };
-
-  const signedToken = await createSignedToken(tokenPayload, opts.jwtSecret);
-  return { status: "ok", sso: signedToken };
-}
-
-async function handleSsoVerify(opts: {
-  jwtSecret: string;
-  token: string;
-  origin: string | null;
-}): Promise<Response> {
-  if (!opts.token) return createJsonResponse({ error: "Missing token" }, 400, opts.origin);
-  if (!opts.jwtSecret) return createJsonResponse({ error: "Server configuration error" }, 500, opts.origin);
-
-  const payload = await verifyAndDecodeToken(opts.token, opts.jwtSecret);
-  if (!payload) return createJsonResponse({ error: "Invalid or expired token" }, 401, opts.origin);
-
-  return createJsonResponse(
-    {
-      access_token: payload.access_token,
-      refresh_token: payload.refresh_token,
-      expires_at: payload.expires_at,
-      user: payload.user,
-    },
-    200,
-    opts.origin
-  );
-}
-
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS") return createCorsResponse(origin);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const siteUrl = Deno.env.get("SITE_URL") ?? "";
+  const siteUrl = Deno.env.get("SITE_DEV_URL") ?? "";
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
@@ -401,11 +235,11 @@ Deno.serve(async (req) => {
 
 
   if (req.method === "GET" && !event) {
+    // If Bitrix calls the handler without a POST body (some environments do), just send users to embed UI.
+    // SSO requires domain/member_id (provided only in POST form payload), so we can't auto-login here.
     const baseSiteUrl = siteUrl ? (siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`) : "";
-    if (!baseSiteUrl) {
-      return new Response("Server configuration error (SITE_URL missing)", { status: 500 });
-    }
-    return Response.redirect(`${baseSiteUrl}embed/bitrix/projects`, 302);
+    if (!baseSiteUrl) return new Response("Server configuration error (SITE_URL missing)", { status: 500 });
+    return Response.redirect(`${baseSiteUrl}embed/bitrix`, 302);
   }
 
   const svc = createClient(supabaseUrl, serviceRoleKey, {
@@ -420,6 +254,7 @@ Deno.serve(async (req) => {
 
     const { form } = await parseBody(req);
     const parsed = parseBitrixEvent(form);
+
 
     if (!parsed.dealId) {
       return createJsonResponse({ status: "ok", skipped: true, reason: "no_deal_id" }, 200, origin);
@@ -475,8 +310,9 @@ Deno.serve(async (req) => {
       return createJsonResponse({ status: "ok", skipped: true, reason: "no_token" }, 200, origin);
     }
 
-    // Fetch current deal stage (more reliable than parsing event)
+    // Fetch current deal stage + title (more reliable than parsing event)
     let stageId: string | null = parsed.stageId ?? null;
+    let dealTitle: string | null = null;
     try {
       const deal = await callBitrixRest({
         domain: baseDomain,
@@ -485,6 +321,7 @@ Deno.serve(async (req) => {
         params: { id: parsed.dealId },
       });
       stageId = String(deal?.result?.STAGE_ID ?? stageId ?? "");
+      dealTitle = deal?.result?.TITLE ? String(deal.result.TITLE) : null;
     } catch (e) {
       console.warn("crm.deal.get failed; will use stageId from event if present", e);
     }
@@ -516,9 +353,15 @@ Deno.serve(async (req) => {
       return createJsonResponse({ status: "ok", skipped: true, reason: "no_mapping" }, 200, origin);
     }
 
+    const leadPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    leadPatch.pipeline_stage_id = mapping.lead_pipeline_stage_id;
+    if (dealTitle) {
+      leadPatch.name = dealTitle;
+    }
+
     await svc
       .from("leads")
-      .update({ pipeline_stage_id: mapping.lead_pipeline_stage_id, updated_at: new Date().toISOString() })
+      .update(leadPatch)
       .eq("id", link.lead_id);
 
     await svc.from("lead_history").insert({
@@ -534,9 +377,9 @@ Deno.serve(async (req) => {
   // ---- Non-authenticated API (UI -> Supabase): Bitrix SSO
   const parsedBody = await parseBody(req);
   const body = (parsedBody.json ?? parsedBody.form ?? {}) as JsonRecord;
+  console.log("parsed", body);
   const action = String(body.action ?? "");
 
-  console.log("req.method", req.method, event, req, parsedBody);
 
   if (!event && req.method === "POST" && !action) {
     // Bitrix loads app iframe via POST + x-www-form-urlencoded and DOES NOT send `action`.
@@ -564,45 +407,30 @@ Deno.serve(async (req) => {
     const domain = normalizeDomain(String(domainRaw || ""));
     const memberId = String(memberIdRaw || "");
 
-    const placement = String(form["PLACEMENT"] ?? body.PLACEMENT ?? "");
-    const isDealTab =
-      placement.toUpperCase().includes("DEAL") ||
-      placement.toUpperCase().includes("CRM_DEAL") ||
-      placement.toUpperCase().includes("DEAL_DETAIL");
+    // We keep a single UI entrypoint; additionally, forward deal_id when available (for stable context).
+    const targetPath = "embed/bitrix";
+    let dealIdFromPlacement: string | null = null;
+    try {
+      const rawOpts = String(form["PLACEMENT_OPTIONS"] ?? body.PLACEMENT_OPTIONS ?? "");
+      if (rawOpts) {
+        const parsed = JSON.parse(rawOpts);
+        const id = parsed?.ID ?? parsed?.id ?? null;
+        const n = typeof id === "string" || typeof id === "number" ? Number(id) : NaN;
+        if (Number.isFinite(n) && n > 0) dealIdFromPlacement = String(n);
+      }
+    } catch {
+      // ignore
+    }
 
-    const targetPath = isDealTab ? "embed/bitrix/deal-tab" : "embed/bitrix/projects";
-
-    // If we can create SSO -> redirect with ?sso=. Otherwise redirect to connect flow with domain/member_id.
+    // We no longer generate SSO here (it's handled by shared `amocrm-sso-login` in the UI layer).
+    // Redirect into the web app, forwarding domain/member_id so the frontend can SSO.
     if (domain) {
-      const token = await generateSsoTokenForBitrixPortal({
-        svc,
-        supabaseUrl,
-        anonKey,
-        serviceRoleKey,
-        jwtSecret: webhookSecret,
-        domain,
-        memberId,
-        origin,
-      });
-
-      if (token.status === "ok") {
-        const dest = new URL(`${baseSiteUrl}${targetPath}`);
-        dest.searchParams.set("sso", token.sso);
-        dest.searchParams.set("domain", domain);
-        if (memberId) dest.searchParams.set("member_id", memberId);
-        return Response.redirect(dest.toString(), 303);
-      }
-
-      // Not connected yet (or missing mapping) -> connect page
-      if (token.httpStatusCode === 404) {
-        const connect = new URL(`${baseSiteUrl}embed/connect/bitrix24`);
-        connect.searchParams.set("domain", domain);
-        if (memberId) connect.searchParams.set("member_id", memberId);
-        return Response.redirect(connect.toString(), 303);
-      }
-
-      // For other errors, keep JSON for debuggability
-      return createJsonResponse({ error: token.error }, token.httpStatusCode, origin);
+      const dest = new URL(`${baseSiteUrl}${targetPath}`);
+      dest.searchParams.set("crm", "bitrix");
+      dest.searchParams.set("domain", domain);
+      if (memberId) dest.searchParams.set("member_id", memberId);
+      if (dealIdFromPlacement) dest.searchParams.set("deal_id", dealIdFromPlacement);
+      return Response.redirect(dest.toString(), 303);
     }
 
     // No domain -> fallback to projects
@@ -643,26 +471,6 @@ Deno.serve(async (req) => {
 
     const claimed = !!conn?.id && !!conn?.user_id;
     return createJsonResponse({ pending: !!pending?.id, claimed }, 200, origin);
-  }
-
-  if (action === "sso_create") {
-    const domain = normalizeDomain(String(body.domain ?? ""));
-    const memberId = String(body.member_id ?? body.memberId ?? "");
-    return await handleSsoCreate({
-      svc,
-      supabaseUrl,
-      anonKey,
-      serviceRoleKey,
-      jwtSecret: webhookSecret,
-      domain,
-      memberId,
-      origin,
-    });
-  }
-
-  if (action === "sso_verify") {
-    const token = String(body.token ?? "");
-    return await handleSsoVerify({ jwtSecret: webhookSecret, token, origin });
   }
 
   // ---- Authenticated API (UI -> Supabase)
@@ -826,33 +634,6 @@ Deno.serve(async (req) => {
         return createJsonResponse({ success: true, crm_connection_id: connRow.id }, 200, origin);
       }
 
-      case "get_projects": {
-        const { data, error } = await userClient
-          .from("projects")
-          .select("id,name,description,address,building_image_url,currency,slug")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        return createJsonResponse({ projects: data ?? [] }, 200, origin);
-      }
-
-      case "get_apartments": {
-        const projectId = String(body.project_id ?? body.projectId ?? "");
-        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
-
-        // Ensure project belongs to user
-        const { data: project } = await userClient.from("projects").select("id").eq("id", projectId).eq("user_id", user.id).maybeSingle();
-        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
-
-        const { data, error } = await userClient
-          .from("apartments")
-          .select("id,apartment_number,floor_number,rooms,area,price,status,type,custom_fields")
-          .eq("project_id", projectId)
-          .order("floor_number", { ascending: true });
-        if (error) throw error;
-        return createJsonResponse({ apartments: data ?? [] }, 200, origin);
-      }
-
       case "deal_context": {
         const dealId = toInt(body.bitrix_deal_id ?? body.dealId);
         if (!dealId) return createJsonResponse({ error: "Missing bitrix_deal_id" }, 400, origin);
@@ -929,6 +710,9 @@ Deno.serve(async (req) => {
 
         // Bitrix CRM deal userfields use UF_CRM_* prefix by convention.
         const ufField = settings?.deal_link_uf_field ?? "UF_CRM_GRIDIX_APARTMENT_ID";
+        const projectName = String((apartment as any)?.projects?.name ?? "Project");
+        const projectAddress = String((apartment as any)?.projects?.address ?? "");
+        const dealTitle = `Gridix: ${projectName} / ${apartment.apartment_number}`;
 
         // Update Bitrix deal fields + UF field
         await callBitrixRest({
@@ -938,6 +722,7 @@ Deno.serve(async (req) => {
           params: {
             id: dealId,
             fields: {
+              TITLE: dealTitle,
               OPPORTUNITY: Number(apartment.price ?? 0),
               CURRENCY_ID: String((apartment as any)?.projects?.currency ?? "RUB"),
               [ufField]: apartment.id,
@@ -946,7 +731,7 @@ Deno.serve(async (req) => {
         });
 
         // Add comment
-        const commentText = `✅ Связана квартира Gridix\n\n• Проект: ${(apartment as any)?.projects?.name ?? ""}\n• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${(apartment as any)?.projects?.currency ?? ""}\n• Площадь: ${apartment.area ?? ""} м²\n• Комнаты: ${apartment.rooms ?? ""}\n• Этаж: ${apartment.floor_number ?? ""}\n\nИсточник: Gridix`;
+        const commentText = `✅ Связана квартира Gridix\n\n• Проект: ${projectName}\n${projectAddress ? `• Адрес: ${projectAddress}\n` : ""}• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${(apartment as any)?.projects?.currency ?? ""}\n• Площадь: ${apartment.area ?? ""} м²\n• Комнаты: ${apartment.rooms ?? ""}\n• Этаж: ${apartment.floor_number ?? ""}\n\nИсточник: Gridix`;
         await callBitrixRest({
           domain: baseDomain,
           accessToken,
@@ -963,7 +748,7 @@ Deno.serve(async (req) => {
         // Create/update local lead placeholder
         const leadEmail = `bitrix-deal-${dealId}@gridix.local`;
         const leadPhone = `bitrix-deal-${dealId}`;
-        const leadName = `Bitrix deal #${dealId}: ${(apartment as any)?.projects?.name ?? "Project"} / ${apartment.apartment_number}`;
+        const leadName = dealTitle;
 
         let leadId: string | null = null;
         const { data: existingLead } = await svc
@@ -985,8 +770,8 @@ Deno.serve(async (req) => {
               project_id: projectId,
               apartment_id: apartment.id,
               status: "pending",
-              source: "website",
-              notes: "Created automatically from Bitrix deal link",
+              source: "bitrix",
+              notes: `Linked from Bitrix deal #${dealId}`,
             })
             .select("id")
             .single();
@@ -1062,7 +847,9 @@ Deno.serve(async (req) => {
 
         // Bitrix CRM deal userfields use UF_CRM_* prefix by convention.
         const ufField = settings?.deal_link_uf_field ?? "UF_CRM_GRIDIX_APARTMENT_ID";
-        const title = `Gridix: ${(apartment as any)?.projects?.name ?? "Project"} / ${apartment.apartment_number}`;
+        const projectName = String((apartment as any)?.projects?.name ?? "Project");
+        const projectAddress = String((apartment as any)?.projects?.address ?? "");
+        const title = `Gridix: ${projectName} / ${apartment.apartment_number}`;
 
         const addResp = await callBitrixRest({
           domain: baseDomain,
@@ -1084,7 +871,7 @@ Deno.serve(async (req) => {
         const dealId = toInt(addResp?.result) ?? toInt(addResp?.result?.ID);
         if (!dealId) return createJsonResponse({ error: "Failed to create deal" }, 500, origin);
 
-        const commentText = `🆕 Создана сделка из Gridix по квартире\n\n• Проект: ${(apartment as any)?.projects?.name ?? ""}\n• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${(apartment as any)?.projects?.currency ?? ""}\n\nИсточник: Gridix`;
+        const commentText = `🆕 Создана сделка из Gridix по квартире\n\n• Проект: ${projectName}\n${projectAddress ? `• Адрес: ${projectAddress}\n` : ""}• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${(apartment as any)?.projects?.currency ?? ""}\n• Площадь: ${apartment.area ?? ""} м²\n• Комнаты: ${apartment.rooms ?? ""}\n• Этаж: ${apartment.floor_number ?? ""}\n\nИсточник: Gridix`;
         await callBitrixRest({
           domain: baseDomain,
           accessToken,
@@ -1101,7 +888,7 @@ Deno.serve(async (req) => {
         // Local lead placeholder
         const leadEmail = `bitrix-deal-${dealId}@gridix.local`;
         const leadPhone = `bitrix-deal-${dealId}`;
-        const leadName = `Bitrix deal #${dealId}: ${(apartment as any)?.projects?.name ?? "Project"} / ${apartment.apartment_number}`;
+        const leadName = title;
 
         const { data: newLead } = await svc
           .from("leads")
@@ -1112,8 +899,8 @@ Deno.serve(async (req) => {
             project_id: projectId,
             apartment_id: apartment.id,
             status: "pending",
-            source: "website",
-            notes: "Created automatically from Bitrix deal creation",
+            source: "bitrix",
+            notes: `Created from Bitrix deal #${dealId}`,
           })
           .select("id")
           .single();
@@ -1137,7 +924,7 @@ Deno.serve(async (req) => {
 
         const { data: lead } = await svc
           .from("leads")
-          .select("id, project_id, pipeline_stage_id")
+          .select("id, project_id, pipeline_stage_id, name")
           .eq("id", leadId)
           .maybeSingle();
         if (!lead) return createJsonResponse({ error: "Lead not found" }, 404, origin);
@@ -1189,7 +976,7 @@ Deno.serve(async (req) => {
           method: "crm.deal.update",
           params: {
             id: link.bitrix_deal_id,
-            fields: { STAGE_ID: mapping.bitrix_stage_id },
+            fields: { STAGE_ID: mapping.bitrix_stage_id, ...(lead.name ? { TITLE: String(lead.name) } : {}) },
           },
         });
 

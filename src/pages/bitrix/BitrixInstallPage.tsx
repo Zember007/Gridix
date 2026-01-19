@@ -168,7 +168,7 @@ export default function BitrixInstallPage() {
                 <div className="text-sm">Готово. Интеграция привязана к вашему аккаунту.</div>
                 <div className="grid grid-cols-1 gap-2">
                   <Button
-                    onClick={() => (window.location.href = '/embed/bitrix/projects')}
+                    onClick={() => (window.location.href = '/embed/bitrix')}
                     className="w-full"
                   >
                     Открыть проекты

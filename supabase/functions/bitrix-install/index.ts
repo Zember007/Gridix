@@ -290,7 +290,8 @@ function htmlInstallFinish(opts: {
 }
 
 Deno.serve(async (req) => {
-  const siteUrl = Deno.env.get("SITE_URL") ?? "";
+  // Prefer production SITE_URL; keep SITE_DEV_URL for backwards compatibility.
+  const siteUrl = Deno.env.get("SITE_URL") ?? Deno.env.get("SITE_DEV_URL") ?? "";
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
@@ -428,36 +429,22 @@ Deno.serve(async (req) => {
     return new Response("Internal error", { status: 500 });
   }
 
-  // Bind UI placements (left menu + deal tab) + UF field + events (best effort)
+  // Bind UI placements (deal tab) + UF field + events (best effort)
   const setupResults: SetupResult[] = [];
   try {
-    const projectsHandler = `${baseSiteUrl}embed/bitrix/projects`;
-    const dealTabHandler = `${baseSiteUrl}embed/bitrix/deal-tab`;
+    // IMPORTANT:
+    // We bind Bitrix placements to the Edge Function handler, not directly to the frontend routes.
+    // The Edge Function performs SSO and redirects to the proper /embed/* page with ?sso=...
+    const edgeHandler = `${supabaseUrl}/functions/v1/bitrix-app`;
+
+    // LEFT_MENU entry is intentionally NOT bound (avoid extra menu item).
 
     try {
       await callBitrixRest({
         domain,
         accessToken,
         method: "placement.bind",
-        params: { PLACEMENT: "LEFT_MENU", HANDLER: projectsHandler, TITLE: "Проекты" },
-      });
-      setupResults.push({ title: "Размещение в левом меню (LEFT_MENU)", ok: true });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const already = /already binded/i.test(msg);
-      setupResults.push({
-        title: "Размещение в левом меню (LEFT_MENU)",
-        ok: already ? true : false,
-        details: already ? "Уже привязано (ok)" : msg,
-      });
-    }
-
-    try {
-      await callBitrixRest({
-        domain,
-        accessToken,
-        method: "placement.bind",
-        params: { PLACEMENT: "CRM_DEAL_DETAIL_TAB", HANDLER: dealTabHandler, TITLE: "Gridix" },
+        params: { PLACEMENT: "CRM_DEAL_DETAIL_TAB", HANDLER: edgeHandler, TITLE: "Gridix" },
       });
       setupResults.push({ title: "Вкладка в сделке (CRM_DEAL_DETAIL_TAB)", ok: true });
     } catch (e) {
