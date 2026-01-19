@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Loader } from '@/shared/ui/loader';
-import { Building2, Plus, Trash2, Eye, ExternalLink, Edit3, Building } from 'lucide-react';
+import { Building2, Plus, Trash2, Eye, Edit3, Building } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
 import { useWorkspaceProjects } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { useProjectCRUD } from '@/entities/project/queries/useProjects';
@@ -17,16 +17,37 @@ import { useAmoWidget } from '@/hooks/useAmoWidget';
 
 
 interface ProjectListProps {
-  onCreateNew: () => void;
-  onEditProject: (projectId: string, isNew: boolean) => void;
+  onCreateNew?: () => void;
+  onEditProject?: (projectId: string, isNew: boolean) => void;
+  /**
+   * CRM mode:
+   * - hides create/edit/delete actions
+   * - opens embed project in the current tab
+   * - can append query params (e.g. crm=bitrix&deal_id=123) to opened URLs
+   */
+  mode?: 'admin' | 'crm';
+  crmQueryParams?: Record<string, string | null | undefined>;
+  /**
+   * In admin we usually use `/${language}/embed/...`.
+   * For CRM embed pages we need `/embed/...`.
+   */
+  embedPathMode?: 'language' | 'root';
 }
 
-const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
+const ProjectList = ({
+  onCreateNew,
+  onEditProject,
+  mode = 'admin',
+  crmQueryParams,
+  embedPathMode = 'language',
+}: ProjectListProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { projects, loading, error, refresh, isManagerMode } = useWorkspaceProjects();
+  const { projects, loading, refresh, isManagerMode } = useWorkspaceProjects();
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
   const { amoWidget } = useAmoWidget();
+
+  const isCrmMode = mode === 'crm';
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -60,17 +81,30 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
     }
   };
 
-  const viewProject = (project: Project) => {
-    const url = project.slug 
-      ? `/${language}/project/${project.slug}` 
-      : `/${language}/project/id/${project.id}`;
-    window.open(url, '_blank');
+  const getEmbedProjectUrl = (project: Project) => {
+    const prefix = embedPathMode === 'root' ? '' : `/${language}`;
+    return project.slug
+      ? `${prefix}/embed/project/${project.slug}`
+      : `${prefix}/embed/project/id/${project.id}`;
   };
 
-  const getWidgetUrl = (project: Project) => {
-    return project.slug 
-      ? `/${language}/embed/project/${project.slug}`
-      : `/${language}/embed/project/id/${project.id}`;
+  const viewProject = (project: Project) => {
+    // CRM opens embed in the same tab; admin opens public page in new tab
+    const base =
+      isCrmMode
+        ? getEmbedProjectUrl(project)
+        : project.slug
+          ? `/${language}/project/${project.slug}`
+          : `/${language}/project/id/${project.id}`;
+
+    const url = new URL(base, window.location.origin);
+    if (isCrmMode && crmQueryParams) {
+      for (const [k, v] of Object.entries(crmQueryParams)) {
+        if (v === null || v === undefined || v === '') url.searchParams.delete(k);
+        else url.searchParams.set(k, v);
+      }
+    }
+    window.open(url.toString(), isCrmMode ? '_self' : '_blank');
   };
 
   if (loading) {
@@ -94,24 +128,26 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
             <p className=" text-center mb-6 max-w-md">
               {t('projectList.createFirstDescription')}
             </p>
-            <Button
-              onClick={onCreateNew}
-              size="lg"
-              className="create_project_usertour"
-              style={{
-                backgroundColor: ADMIN_THEME.primary,
-                color: ADMIN_THEME.textOnPrimary,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-              }}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              {t('projectList.createFirst')}
-            </Button>
+            {!isCrmMode && onCreateNew && (
+              <Button
+                onClick={onCreateNew}
+                size="lg"
+                className="create_project_usertour"
+                style={{
+                  backgroundColor: ADMIN_THEME.primary,
+                  color: ADMIN_THEME.textOnPrimary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                }}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                {t('projectList.createFirst')}
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -126,23 +162,25 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
               style={{ color: ADMIN_THEME.textSecondary }}
               >{t('projectList.manageDescription')}</p>
             </div>
-            <Button
-              onClick={onCreateNew}
-              className="create_project_usertour"
-              style={{
-                backgroundColor: ADMIN_THEME.primary,
-                color: ADMIN_THEME.textOnPrimary,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-              }}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              {t('projectList.createNew')}
-            </Button>
+            {!isCrmMode && onCreateNew && (
+              <Button
+                onClick={onCreateNew}
+                className="create_project_usertour"
+                style={{
+                  backgroundColor: ADMIN_THEME.primary,
+                  color: ADMIN_THEME.textOnPrimary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                }}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                {t('projectList.createNew')}
+              </Button>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -232,28 +270,30 @@ const ProjectList = ({ onCreateNew, onEditProject }: ProjectListProps) => {
                       {t('managerAccounts.openLink')}
                     </Button>
                     
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onEditProject(project.id, false)}
-                      className="edit_project_usertour"
-                      style={{
-                        borderColor: ADMIN_THEME.primary,
-                        color: ADMIN_THEME.primary,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </Button>
+                    {!isCrmMode && onEditProject && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onEditProject(project.id, false)}
+                        className="edit_project_usertour"
+                        style={{
+                          borderColor: ADMIN_THEME.primary,
+                          color: ADMIN_THEME.primary,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    )}
                  
                     
                     {/* Кнопка удаления скрыта для менеджеров */}
-                    {!isManagerMode && !amoWidget && (
+                    {!isCrmMode && !isManagerMode && !amoWidget && (
                       <Button
                         size="sm"
                         variant="ghost"

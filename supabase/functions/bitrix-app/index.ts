@@ -3,6 +3,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 // @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
+import { createOrUpdateBitrixProjectFunnel } from "../_shared/crm-funnel.ts";
 
 // TS in the web app workspace may not understand Supabase Edge runtime globals.
 // In Edge runtime, `Deno` exists.
@@ -215,12 +216,89 @@ async function getValidBitrixAccessToken(opts: {
   return nextAccess;
 }
 
+function normalizeBitrixCategory(raw: any): { id: number; name: string; sort: number } | null {
+  const idRaw = raw?.ID ?? raw?.id ?? raw?.Id;
+  const n = toInt(idRaw);
+  if (typeof n !== "number") return null;
+  const name = String(raw?.NAME ?? raw?.name ?? `Category ${n}`);
+  const sort = toInt(raw?.SORT ?? raw?.sort) ?? 0;
+  return { id: n, name, sort };
+}
+
+function normalizeBitrixStage(raw: any): { stageId: string; name: string; sort: number; color: string } | null {
+  const stageId = String(raw?.STATUS_ID ?? raw?.ID ?? raw?.id ?? "").trim();
+  if (!stageId) return null;
+  const name = String(raw?.NAME ?? raw?.name ?? stageId);
+  const sort = toInt(raw?.SORT ?? raw?.sort) ?? 0;
+  const color = String(raw?.COLOR ?? raw?.color ?? "#d5d8dd") || "#d5d8dd";
+  return { stageId, name, sort, color };
+}
+
+async function getUserBitrixConnection(opts: {
+  svc: any;
+  userId: string;
+  projectId?: string;
+}): Promise<{
+  id: string;
+  subdomain: string;
+  base_domain: string | null;
+  access_token: string | null;
+  refresh_token: string | null;
+  token_expires_at: string | null;
+} | null> {
+  if (opts.projectId) {
+    const { data: ps } = await opts.svc
+      .from("project_bitrix_settings")
+      .select("crm_connection_id")
+      .eq("project_id", opts.projectId)
+      .maybeSingle();
+    const cid = ps?.crm_connection_id ?? null;
+    if (cid) {
+      const { data: c } = await opts.svc
+        .from("crm_connections")
+        .select("id, subdomain, base_domain, access_token, refresh_token, token_expires_at")
+        .eq("id", cid)
+        .maybeSingle();
+      if (c?.id) return c as any;
+    }
+  }
+
+  const { data: conn } = await opts.svc
+    .from("crm_connections")
+    .select("id, subdomain, base_domain, access_token, refresh_token, token_expires_at")
+    .eq("user_id", opts.userId)
+    .eq("crm_type", "bitrix24")
+    .maybeSingle();
+  return (conn ?? null) as any;
+}
+
+async function bitrixCallCategories(opts: { domain: string; accessToken: string }) {
+  // Bitrix has two naming variants depending on environment.
+  try {
+    const r = await callBitrixRest({ domain: opts.domain, accessToken: opts.accessToken, method: "crm.dealcategory.list" });
+    return r;
+  } catch {
+    return await callBitrixRest({ domain: opts.domain, accessToken: opts.accessToken, method: "crm.deal.category.list" });
+  }
+}
+
+async function bitrixCallStages(opts: { domain: string; accessToken: string; categoryId: number }) {
+  const entityId = opts.categoryId === 0 ? "DEAL_STAGE" : `DEAL_STAGE_${opts.categoryId}`;
+  return await callBitrixRest({
+    domain: opts.domain,
+    accessToken: opts.accessToken,
+    method: "crm.status.entity.items",
+    params: { entityId },
+  });
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS") return createCorsResponse(origin);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const siteUrl = Deno.env.get("SITE_DEV_URL") ?? "";
+  // Prefer production SITE_URL; keep SITE_DEV_URL for local/backwards compatibility.
+  const siteUrl = Deno.env.get("SITE_DEV_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
@@ -619,11 +697,16 @@ Deno.serve(async (req) => {
           return createJsonResponse({ error: "Failed to create connection" }, 500, origin);
         }
 
-        const { error: attachErr } = await svc.from("project_bitrix_settings").upsert({
-          project_id: projectId,
-          crm_connection_id: connRow.id,
-          updated_at: new Date().toISOString(),
-        });
+        const { error: attachErr } = await svc
+          .from("project_bitrix_settings")
+          .upsert(
+            {
+              project_id: projectId,
+              crm_connection_id: connRow.id,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "project_id" }
+          );
         if (attachErr) {
           console.error("claim_install_by_token: attach failed", attachErr);
           return createJsonResponse({ error: "Failed to attach to project" }, 500, origin);
@@ -632,6 +715,154 @@ Deno.serve(async (req) => {
         await svc.from("bitrix_pending_installs").delete().eq("id", pending.id);
 
         return createJsonResponse({ success: true, crm_connection_id: connRow.id }, 200, origin);
+      }
+
+      case "bitrix_get_state": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        const overrideCategoryId = toInt(body.category_id ?? body.categoryId);
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+
+        // Ensure project belongs to user
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id,user_id")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const { data: ps } = await svc
+          .from("project_bitrix_settings")
+          .select("id, project_id, crm_connection_id, category_id, stage_id, assigned_by_id")
+          .eq("project_id", projectId)
+          .maybeSingle();
+
+        const conn = await getUserBitrixConnection({ svc, userId: user.id, projectId });
+
+        const connection =
+          conn?.id
+            ? {
+                id: conn.id,
+                crm_type: "bitrix24",
+                subdomain: conn.subdomain,
+                base_domain: conn.base_domain,
+                token_expires_at: conn.token_expires_at,
+              }
+            : null;
+
+        // If no connection -> return minimal state (UI can show instructions)
+        if (!conn) {
+          return createJsonResponse(
+            {
+              connection: null,
+              project_settings: ps ?? null,
+              categories: [],
+              stages: [],
+            },
+            200,
+            origin
+          );
+        }
+
+        const baseDomain = normalizeDomain(conn.base_domain ?? `${conn.subdomain}.bitrix24.ru`);
+        const accessToken = await getValidBitrixAccessToken({
+          svc,
+          crmConnectionId: conn.id,
+          baseDomain,
+          accessToken: conn.access_token,
+          refreshToken: conn.refresh_token,
+          tokenExpiresAt: conn.token_expires_at,
+        });
+
+        if (!accessToken) {
+          return createJsonResponse(
+            {
+              connection,
+              project_settings: ps ?? null,
+              categories: [],
+              stages: [],
+              token_valid: false,
+            },
+            200,
+            origin
+          );
+        }
+
+        // Categories
+        const catResp = await bitrixCallCategories({ domain: baseDomain, accessToken });
+        const itemsRaw = catResp?.result ?? catResp?._embedded?.items ?? [];
+        const items = Array.isArray(itemsRaw) ? itemsRaw.map(normalizeBitrixCategory).filter(Boolean) : [];
+        const hasZero = (items as any[]).some((c) => c.id === 0);
+        if (!hasZero) (items as any[]).unshift({ id: 0, name: "Default", sort: 0 });
+
+        // Stages for selected category (from settings unless overridden)
+        const selectedCategoryId = typeof overrideCategoryId === "number" ? overrideCategoryId : (ps?.category_id ?? null);
+        let stages: any[] = [];
+        if (typeof selectedCategoryId === "number") {
+          const stageResp = await bitrixCallStages({ domain: baseDomain, accessToken, categoryId: selectedCategoryId });
+          const raw = stageResp?.result ?? [];
+          stages = Array.isArray(raw) ? raw.map(normalizeBitrixStage).filter(Boolean) : [];
+          stages.sort((a: any, b: any) => (a.sort ?? 0) - (b.sort ?? 0));
+        }
+
+        return createJsonResponse(
+          {
+            connection,
+            project_settings: ps ?? null,
+            categories: items,
+            stages,
+            selected_category_id: selectedCategoryId,
+            token_valid: true,
+          },
+          200,
+          origin
+        );
+      }
+
+      case "bitrix_attach_project": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+
+        // Ensure project belongs to user
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const conn = await getUserBitrixConnection({ svc, userId: user.id });
+        if (!conn) return createJsonResponse({ error: "Bitrix connection not found" }, 404, origin);
+
+        const { error: psErr } = await svc
+          .from("project_bitrix_settings")
+          .upsert(
+            { project_id: projectId, crm_connection_id: conn.id, updated_at: new Date().toISOString() },
+            { onConflict: "project_id" }
+          );
+        if (psErr) return createJsonResponse({ error: "Failed to attach to project" }, 500, origin);
+
+        return createJsonResponse({ success: true }, 200, origin);
+      }
+
+      case "bitrix_detach_project": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+
+        // Ensure project belongs to user
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const { error } = await svc.from("project_bitrix_settings").delete().eq("project_id", projectId);
+        if (error) return createJsonResponse({ error: "Failed to detach from project" }, 500, origin);
+
+        return createJsonResponse({ success: true }, 200, origin);
       }
 
       case "deal_context": {
@@ -994,6 +1225,153 @@ Deno.serve(async (req) => {
         }).catch((e) => console.warn("timeline.comment.add failed:", e));
 
         return createJsonResponse({ success: true }, 200, origin);
+      }
+
+      case "bitrix_fetch_categories": {
+        const conn = await getUserBitrixConnection({ svc, userId: user.id });
+        if (!conn) return createJsonResponse({ error: "Bitrix connection not found" }, 404, origin);
+
+        const baseDomain = normalizeDomain(conn.base_domain ?? `${conn.subdomain}.bitrix24.ru`);
+        const accessToken = await getValidBitrixAccessToken({
+          svc,
+          crmConnectionId: conn.id,
+          baseDomain,
+          accessToken: conn.access_token,
+          refreshToken: conn.refresh_token,
+          tokenExpiresAt: conn.token_expires_at,
+        });
+        if (!accessToken) return createJsonResponse({ error: "Bitrix auth missing" }, 400, origin);
+
+        const resp = await bitrixCallCategories({ domain: baseDomain, accessToken });
+        const itemsRaw = resp?.result ?? resp?._embedded?.items ?? [];
+        const items = Array.isArray(itemsRaw) ? itemsRaw.map(normalizeBitrixCategory).filter(Boolean) : [];
+
+        // Ensure default category 0 exists in list (Bitrix sometimes omits it).
+        const hasZero = (items as any[]).some((c) => c.id === 0);
+        if (!hasZero) (items as any[]).unshift({ id: 0, name: "Default", sort: 0 });
+
+        return createJsonResponse({ categories: items }, 200, origin);
+      }
+
+      case "bitrix_fetch_stages": {
+        const categoryId = toInt(body.category_id ?? body.categoryId);
+        if (typeof categoryId !== "number") return createJsonResponse({ error: "Missing category_id" }, 400, origin);
+
+        const conn = await getUserBitrixConnection({ svc, userId: user.id });
+        if (!conn) return createJsonResponse({ error: "Bitrix connection not found" }, 404, origin);
+
+        const baseDomain = normalizeDomain(conn.base_domain ?? `${conn.subdomain}.bitrix24.ru`);
+        const accessToken = await getValidBitrixAccessToken({
+          svc,
+          crmConnectionId: conn.id,
+          baseDomain,
+          accessToken: conn.access_token,
+          refreshToken: conn.refresh_token,
+          tokenExpiresAt: conn.token_expires_at,
+        });
+        if (!accessToken) return createJsonResponse({ error: "Bitrix auth missing" }, 400, origin);
+
+        const resp = await bitrixCallStages({ domain: baseDomain, accessToken, categoryId });
+        const raw = resp?.result ?? [];
+        const stages = Array.isArray(raw) ? raw.map(normalizeBitrixStage).filter(Boolean) : [];
+        stages.sort((a: any, b: any) => (a.sort ?? 0) - (b.sort ?? 0));
+
+        return createJsonResponse({ category_id: categoryId, stages }, 200, origin);
+      }
+
+      case "bitrix_sync_funnel": {
+        const projectId = String(body.project_id ?? body.projectId ?? "");
+        const categoryId = toInt(body.category_id ?? body.categoryId);
+        if (!projectId) return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+        if (typeof categoryId !== "number") return createJsonResponse({ error: "Missing category_id" }, 400, origin);
+
+        // Ensure project belongs to user, also get owner user_id for crm_funnels
+        const { data: project } = await userClient
+          .from("projects")
+          .select("id,user_id,name")
+          .eq("id", projectId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+        const conn = await getUserBitrixConnection({ svc, userId: user.id, projectId });
+        if (!conn) return createJsonResponse({ error: "Bitrix connection not found" }, 404, origin);
+
+        const baseDomain = normalizeDomain(conn.base_domain ?? `${conn.subdomain}.bitrix24.ru`);
+        const accessToken = await getValidBitrixAccessToken({
+          svc,
+          crmConnectionId: conn.id,
+          baseDomain,
+          accessToken: conn.access_token,
+          refreshToken: conn.refresh_token,
+          tokenExpiresAt: conn.token_expires_at,
+        });
+        if (!accessToken) return createJsonResponse({ error: "Bitrix auth missing" }, 400, origin);
+
+        // Resolve category name
+        let categoryName = `Bitrix category ${categoryId}`;
+        try {
+          const catResp = await bitrixCallCategories({ domain: baseDomain, accessToken });
+          const itemsRaw = catResp?.result ?? [];
+          const items = Array.isArray(itemsRaw) ? itemsRaw.map(normalizeBitrixCategory).filter(Boolean) : [];
+          const found = (items as any[]).find((c) => c.id === categoryId);
+          if (found?.name) categoryName = String(found.name);
+          if (categoryId === 0 && !found) categoryName = "Default";
+        } catch {
+          // ignore
+        }
+
+        // Fetch stages for category
+        const stageResp = await bitrixCallStages({ domain: baseDomain, accessToken, categoryId });
+        const stageRaw = stageResp?.result ?? [];
+        const stages = Array.isArray(stageRaw) ? stageRaw.map(normalizeBitrixStage).filter(Boolean) : [];
+        if (!stages.length) return createJsonResponse({ error: "No stages returned from Bitrix" }, 400, origin);
+
+        const synced = await createOrUpdateBitrixProjectFunnel({
+          projectId,
+          userId: project.user_id,
+          categoryId,
+          categoryName,
+          stages: stages as any,
+          svc,
+        });
+
+        // Persist project settings (category+start stage)
+        const { error: psErr } = await svc
+          .from("project_bitrix_settings")
+          .upsert(
+            {
+              project_id: projectId,
+              crm_connection_id: conn.id,
+              category_id: categoryId,
+              stage_id: synced.firstStageId,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "project_id" }
+          );
+        if (psErr) {
+          console.error("bitrix_sync_funnel: project settings upsert failed", psErr);
+          return createJsonResponse({ error: "Failed to save project settings" }, 500, origin);
+        }
+
+        return createJsonResponse(
+          {
+            success: true,
+            funnel_id: synced.funnelId,
+            category_id: categoryId,
+            stage_id: synced.firstStageId,
+            stages_count: stages.length,
+            stages,
+            project_settings: {
+              project_id: projectId,
+              crm_connection_id: conn.id,
+              category_id: categoryId,
+              stage_id: synced.firstStageId,
+            },
+          },
+          200,
+          origin
+        );
       }
 
       default:

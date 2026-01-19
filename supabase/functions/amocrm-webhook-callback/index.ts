@@ -1,7 +1,15 @@
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
-import { createOrUpdateLocalFunnel, type AmoCRMPipeline, type AmoCRMStatus } from "../_shared/amocrm-funnel.ts";
+import { createOrUpdateLocalFunnel, type AmoCRMPipeline, type AmoCRMStatus } from "../_shared/crm-funnel.ts";
+
+// TS in the web app workspace may not understand Supabase Edge runtime globals.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const Deno: any;
 
 type AmoWebhookEventType = "update" | "status" | "add";
 
@@ -372,8 +380,8 @@ serve(async (req) => {
         .from("crm_funnels")
         .select("id")
         .eq("user_id", project.user_id)
-        // Prefer new column `amo_funnel_id`, fallback to legacy `amocrm_pipeline_id`
-        .or(`amo_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`)
+        // Prefer generic `crm_funnel_id` (migration 2026-01-19), fallback to legacy `amocrm_pipeline_id`
+        .or(`crm_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`)
         .limit(1)
         .maybeSingle();
 
@@ -383,7 +391,7 @@ serve(async (req) => {
           .from("crm_funnel_stages")
           .select("id, name")
           .eq("funnel_id", funnel.id)
-          .eq("amocrm_status_id", e.status_id)
+          .eq("crm_stage_id", String(e.status_id))
           .limit(1)
           .maybeSingle();
 

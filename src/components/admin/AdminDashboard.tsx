@@ -18,8 +18,9 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
-import { endAllFlows, isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
+import { isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
 import { getOnboardingState } from '@/integrations/onboarding';
+import { waitForSelectors } from '@/integrations/waitForSelectors';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -70,7 +71,19 @@ const AdminDashboard = () => {
     startedAdminTourRef.current = true;
     const run = async () => {
       try {
-        
+        // Wait until core tour anchors are present, otherwise the tour can start "into nothing".
+        // This is especially important on first load when ProjectList is still loading.
+        const anchorsReady = await waitForSelectors(
+          ['.sidebar_usertour', '.projects_list_usertour', '.create_project_usertour', '.support_usertour'],
+          { timeoutMs: 8000, intervalMs: 100, debugLabel: 'admin_onboarding' },
+        );
+
+        if (!anchorsReady && !devTour) {
+          // Don't mark as started/done; allow retry next visit.
+          startedAdminTourRef.current = false;
+          return;
+        }
+
         await startAdminOnboardingTour({
           userId: user.id,
           email: userProfile?.email ?? user.email ?? null,
@@ -92,18 +105,20 @@ const AdminDashboard = () => {
             (typeof user.user_metadata?.account_type === 'string'
               ? user.user_metadata.account_type
               : null),
+          onCompleted: async () => {
+            if (devTour) return;
+            await updateProfile({
+              onboarding: {
+                ...onboarding,
+                admin_main_done: true,
+              },
+            });
+          },
         });
-        if (!devTour) {
-          await updateProfile({
-            onboarding: {
-              ...onboarding,
-              admin_main_done: true,
-            },
-          });
-        }
       } catch (e) {
         // Don't block admin UX if onboarding SDK fails
         console.warn('Failed to start admin onboarding tour:', e);
+        startedAdminTourRef.current = false;
       }
     };
 

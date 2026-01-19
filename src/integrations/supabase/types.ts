@@ -656,9 +656,9 @@ export type Database = {
       }
       crm_funnel_stages: {
         Row: {
-          amo_funnel_id: number | null
-          amocrm_pipeline_id: number | null
-          amocrm_status_id: number | null
+          crm_funnel_id: number | null
+          crm_pipeline_id: number | null
+          crm_stage_id: string | null
           color: string
           created_at: string
           funnel_id: string
@@ -668,9 +668,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          amo_funnel_id?: number | null
-          amocrm_pipeline_id?: number | null
-          amocrm_status_id?: number | null
+          crm_funnel_id?: number | null
+          crm_pipeline_id?: number | null
+          crm_stage_id?: string | null
           color?: string
           created_at?: string
           funnel_id: string
@@ -680,9 +680,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          amo_funnel_id?: number | null
-          amocrm_pipeline_id?: number | null
-          amocrm_status_id?: number | null
+          crm_funnel_id?: number | null
+          crm_pipeline_id?: number | null
+          crm_stage_id?: string | null
           color?: string
           created_at?: string
           funnel_id?: string
@@ -760,7 +760,7 @@ export type Database = {
       }
       crm_funnels: {
         Row: {
-          amo_funnel_id: number | null
+          crm_funnel_id: number | null
           amocrm_pipeline_id: number | null
           created_at: string
           id: string
@@ -771,7 +771,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          amo_funnel_id?: number | null
+          crm_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string
@@ -782,7 +782,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          amo_funnel_id?: number | null
+          crm_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
           id?: string

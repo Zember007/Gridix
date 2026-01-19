@@ -1,9 +1,9 @@
 project_id = "ebonmrtmfopohayxfvdy"
 
-[functions.amocrm-webhook-callback]
+[functions.crm-webhook-callback]
 verify_jwt = false
 
-[functions.create-amocrm-lead]
+[functions.crm-create-lead]
 verify_jwt = false
 
 [functions.amocrm-oauth-callback]

@@ -2,23 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "@/shared/api/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import Loader from "@/shared/ui/loader";
 import { toast } from "sonner";
+import ProjectList from "@/components/projects/ProjectList";
+import { BitrixCrmTopBar } from "@/pages/bitrix/components/BitrixCrmTopBar";
+import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
 
 type BitrixAuth = { domain?: string; member_id?: string; memberId?: string } | null;
 
-type ProjectLite = {
-  id: string;
-  name: string;
-  slug: string | null;
-};
-
 function getBitrixDealIdFromPlacement(): number | null {
   try {
-    const info = (BX24 as any)?.placement?.info?.();
+    const info = (BX24 as unknown as { placement?: { info?: () => { options?: unknown } } })?.placement?.info?.();
     const opts = info?.options ?? null;
+
+    const optsObj: Record<string, unknown> | null =
+      typeof opts === "object" && opts !== null ? (opts as Record<string, unknown>) : null;
 
     const toDealId = (v: unknown): number | null => {
       const n = typeof v === "number" ? v : Number(String(v ?? ""));
@@ -27,14 +27,17 @@ function getBitrixDealIdFromPlacement(): number | null {
 
     // Common variants
     const direct =
-      toDealId(opts?.ENTITY_ID) ??
-      toDealId(opts?.entityId) ??
-      toDealId(opts?.ID) ??
+      toDealId(optsObj?.ENTITY_ID) ??
+      toDealId(optsObj?.entityId) ??
+      toDealId(optsObj?.ID) ??
       null;
     if (direct) return direct;
 
     // Some placements pass options as JSON string or nested PLACEMENT_OPTIONS
-    const raw = typeof opts === "string" ? opts : (opts?.PLACEMENT_OPTIONS as unknown);
+    const raw =
+      typeof opts === "string"
+        ? opts
+        : (optsObj?.PLACEMENT_OPTIONS as unknown);
     if (typeof raw === "string" && raw.trim()) {
       try {
         const parsed = JSON.parse(raw);
@@ -59,28 +62,30 @@ function normalizeDomain(raw: string | null | undefined): string {
 
 export default function BitrixPage() {
   const navigate = useNavigate();
+  const initialParams = useMemo(() => new URLSearchParams(window.location.search), []);
   const initialDealIdFromUrl = useMemo(() => {
     const sp = new URLSearchParams(window.location.search);
     const raw = sp.get("deal_id");
     const n = raw ? Number(raw) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
   }, []);
+  const initialDomainFromUrl = useMemo(() => {
+    const raw = initialParams.get("domain") ?? initialParams.get("DOMAIN") ?? "";
+    return normalizeDomain(raw);
+  }, [initialParams]);
+  const initialMemberIdFromUrl = useMemo(() => {
+    return initialParams.get("member_id") ?? initialParams.get("memberId") ?? initialParams.get("MEMBER_ID") ?? null;
+  }, [initialParams]);
 
   const [loading, setLoading] = useState(true);
-  const [bxDomain, setBxDomain] = useState<string | null>(null);
-  const [bxMemberId, setBxMemberId] = useState<string | null>(null);
+  const [bxDomain, setBxDomain] = useState<string | null>(initialDomainFromUrl || null);
+  const [bxMemberId, setBxMemberId] = useState<string | null>(initialMemberIdFromUrl || null);
   const [dealId, setDealId] = useState<number | null>(initialDealIdFromUrl);
 
   const [needsConnect, setNeedsConnect] = useState(false);
   const [connectUrl, setConnectUrl] = useState<string | null>(null);
 
-  const [projects, setProjects] = useState<ProjectLite[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-
-  const selectedProject = useMemo(
-    () => projects.find((p) => p.id === selectedProjectId) ?? null,
-    [projects, selectedProjectId]
-  );
+  const { projects, loading: projectsLoading } = useCrmProjectsLite(!loading && !needsConnect);
 
   const setSearchParams = (patch: Record<string, string | null>) => {
     const url = new URL(window.location.href);
@@ -92,43 +97,54 @@ export default function BitrixPage() {
   };
 
   useEffect(() => {
-    const init = async () => {
+    // Do not block page loading on BX24.init(). In some Bitrix contexts, init callback can be delayed.
+    if (typeof BX24 === "undefined") return;
+    try {
+      BX24.init(() => {
+        try {
+          BX24.fitWindow?.();
+          const auth: BitrixAuth =
+            (BX24 as unknown as { getAuth?: () => BitrixAuth })?.getAuth?.() ?? null;
+          const authDomain = normalizeDomain(auth?.domain ?? null);
+          const authMemberId = auth?.member_id ?? auth?.memberId ?? null;
+          if (authDomain) setBxDomain(authDomain);
+          if (authMemberId) setBxMemberId(String(authMemberId));
+
+          const placementDealId = getBitrixDealIdFromPlacement();
+          setDealId(placementDealId);
+        } catch {
+          // ignore
+        }
+      });
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    const run = async () => {
       try {
         setLoading(true);
         setNeedsConnect(false);
 
-        // Init BX24 if available (inside Bitrix iframe)
-        if (typeof BX24 !== "undefined") {
-          BX24.init(() => {
-            try {
-              BX24.fitWindow?.();
-              const auth: BitrixAuth = (BX24 as any)?.getAuth?.() ?? null;
-              const domain = normalizeDomain(auth?.domain ?? null);
-              const memberId = auth?.member_id ?? auth?.memberId ?? null;
-              if (domain) setBxDomain(domain);
-              if (memberId) setBxMemberId(String(memberId));
+        const domain = bxDomain;
+        const memberId = bxMemberId;
+        const dId = dealId;
 
-              const dId = getBitrixDealIdFromPlacement();
-              setDealId(dId);
-              // Propagate CRM context into URL so it survives navigation to project/apartment pages.
-              setSearchParams({
-                crm: "bitrix",
-                deal_id: dId ? String(dId) : null,
-              });
-            } catch {
-              // ignore
-            }
-          });
-        }
+        // Propagate CRM context into URL so it survives navigation to project/apartment pages.
+        setSearchParams({
+          crm: "bitrix",
+          deal_id: dId ? String(dId) : null,
+        });
 
         // Bitrix SSO: auto-login using Bitrix domain+member_id
         const { data: u0 } = await supabase.auth.getUser();
         let user = u0?.user ?? null;
 
-        if (!user && bxDomain && bxMemberId) {
+        if (!user && domain && memberId) {
           // Reuse shared SSO endpoint (CRM-neutral). It returns a short-lived signed token.
           const { data: ssoData, error: ssoErr } = await supabase.functions.invoke("amocrm-sso-login", {
-            body: { action: "bitrix24", domain: bxDomain, member_id: bxMemberId },
+            body: { action: "bitrix24", domain, member_id: memberId },
           });
 
           const sso = (ssoData as { sso?: unknown } | null)?.sso;
@@ -149,26 +165,13 @@ export default function BitrixPage() {
 
         if (!user) {
           setNeedsConnect(true);
-          if (bxDomain && bxMemberId) {
+          if (domain && memberId) {
             setConnectUrl(
-              `/embed/connect/bitrix24?domain=${encodeURIComponent(bxDomain)}&member_id=${encodeURIComponent(bxMemberId)}`
+              `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`
             );
           }
-          setProjects([]);
           return;
         }
-
-        // Load projects for current Gridix user using RLS
-        const { data: pData, error: pErr } = await supabase
-          .from("projects")
-          .select("id,name,slug")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-
-        if (pErr) throw pErr;
-        const list = (pData ?? []) as ProjectLite[];
-        setProjects(list);
-        if (!selectedProjectId && list[0]?.id) setSelectedProjectId(list[0].id);
       } catch (e) {
         console.error(e);
         toast.error("Не удалось загрузить Bitrix страницу");
@@ -177,18 +180,9 @@ export default function BitrixPage() {
       }
     };
 
-    void init();
+    void run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bxDomain, bxMemberId]);
-
-  const openSelectedProject = () => {
-    if (!selectedProject) return;
-    const base = selectedProject.slug ? `/embed/project/${selectedProject.slug}` : `/embed/project/id/${selectedProject.id}`;
-    const url = new URL(base, window.location.origin);
-    url.searchParams.set("crm", "bitrix");
-    if (dealId) url.searchParams.set("deal_id", String(dealId));
-    window.open(url.toString(), "_self");
-  };
+  }, [bxDomain, bxMemberId, dealId]);
 
   if (loading) {
     return (
@@ -206,6 +200,8 @@ export default function BitrixPage() {
           Обновить
         </Button>
       </div>
+
+      <BitrixCrmTopBar projects={projects} loading={projectsLoading} dealId={dealId} activeProjectId={null} />
 
       {needsConnect && (
         <Card>
@@ -226,51 +222,13 @@ export default function BitrixPage() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Контекст</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2">
-          <div>
-            Deal ID: <span className="font-mono">{dealId ?? "—"}</span>
-          </div>
-          <div className="text-muted-foreground">
-            Если страница открыта из сделки — Deal ID определится автоматически и будет доступен при привязке квартиры.
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Проекты</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {projects.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              Нет проектов. Войдите в Gridix под аккаунтом застройщика и создайте проект.
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {projects.map((p) => (
-                  <Button
-                    key={p.id}
-                    variant={p.id === selectedProjectId ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedProjectId(p.id)}
-                  >
-                    {p.name}
-                  </Button>
-                ))}
-              </div>
-
-              <Button className="w-full" onClick={openSelectedProject} disabled={!selectedProject}>
-                Открыть проект
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {!needsConnect && (
+        <ProjectList
+          mode="crm"
+          embedPathMode="root"
+          crmQueryParams={{ crm: "bitrix", deal_id: dealId ? String(dealId) : null }}
+        />
+      )}
     </div>
   );
 }

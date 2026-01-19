@@ -212,12 +212,12 @@ serve(async (req) => {
               // Map local stage -> AmoCRM status/pipeline
               const { data: stage, error: stageError } = await svc
                 .from('crm_funnel_stages')
-                .select('funnel_id, amocrm_status_id, amo_funnel_id, amocrm_pipeline_id')
+                .select('funnel_id, crm_stage_id, crm_funnel_id, crm_pipeline_id, amocrm_pipeline_id')
                 .eq('id', remoteStageId)
                 .single();
 
-              const stagePipelineId = stage?.amo_funnel_id ?? stage?.amocrm_pipeline_id ?? null;
-              if (!stageError && stage?.amocrm_status_id && stagePipelineId) {
+              const stagePipelineId = stage?.crm_funnel_id ?? stage?.crm_pipeline_id ?? stage?.amocrm_pipeline_id ?? null;
+              if (!stageError && stage?.crm_stage_id && stagePipelineId) {
                 // Ensure stage belongs to the same project funnel
                 const { data: funnel } = await svc
                   .from('crm_funnels')
@@ -227,7 +227,8 @@ serve(async (req) => {
 
                 // AmoCRM funnels can be shared across projects (project_id may be NULL).
                 if (!funnel?.project_id || funnel.project_id === lead.project_id) {
-                  amoPatch.status_id = stage.amocrm_status_id;
+                  const statusId = Number(String(stage.crm_stage_id));
+                  if (Number.isFinite(statusId)) amoPatch.status_id = statusId;
                   amoPatch.pipeline_id = stagePipelineId;
                 }
               }
@@ -776,8 +777,8 @@ async function disconnectAmoCRM(
           .from('crm_funnels')
           .delete()
           .eq('user_id', userId)
-          // Prefer new column `amo_funnel_id`, fallback to legacy `amocrm_pipeline_id`
-          .or(`amo_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`);
+          // Prefer generic `crm_funnel_id` (migration 2026-01-19), fallback to legacy `amocrm_pipeline_id`
+          .or(`crm_funnel_id.eq.${pipelineId},amocrm_pipeline_id.eq.${pipelineId}`);
       }
     }
 

@@ -116,14 +116,10 @@ async function callBitrixRest(opts: {
 type SetupResult = { title: string; ok: boolean; details?: string };
 
 function htmlInstallFinish(opts: {
-  claimToken: string | null;
   domain: string;
   memberId: string;
   siteUrl: string;
-  connectUrl: string;
   authUrl: string;
-  supabaseUrl: string;
-  initiallyClaimed?: boolean;
   note?: string;
   setupResults?: SetupResult[];
 }) {
@@ -147,9 +143,6 @@ function htmlInstallFinish(opts: {
       .bad { color: #dc2626; font-weight: 600; }
       .list { margin-top: 10px; padding-left: 18px; }
       .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-      .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid #e5e7eb; font-size: 12px; }
-      .pill.ok { border-color: rgba(22,163,74,.35); color: #16a34a; }
-      .pill.wait { border-color: rgba(245,158,11,.35); color: #b45309; }
     </style>
   </head>
   <body>
@@ -163,9 +156,6 @@ function htmlInstallFinish(opts: {
         <div class="muted" style="margin-top:6px">
           member_id: <span class="mono">${opts.memberId}</span>
         </div>
-        <div style="margin-top:10px">
-          <span id="claimStatus" class="pill wait">⏳ Ожидание привязки к аккаунту Gridix…</span>
-        </div>
         ${
           opts.note
             ? `<div class="muted" style="margin-top:8px">${opts.note}</div>`
@@ -176,14 +166,11 @@ function htmlInstallFinish(opts: {
 
         <div style="margin-top:12px; font-weight:600">Подключение</div>
         <div class="row">
-          <button onclick="openAuth()">Войти в Gridix и подключить</button>
-          <button class="secondary" onclick="openConnect()">Открыть страницу подключения</button>
+          <button onclick="openAuth()">Войти / зарегистрироваться в Gridix</button>
         </div>
         <div class="muted" style="margin-top:8px">
-          Если вы ещё не вошли в Gridix — используйте “Войти в Gridix и подключить”. Если уже вошли — достаточно “Открыть страницу подключения”.
+          После входа Gridix автоматически привяжет Bitrix24 к вашему аккаунту.
         </div>
-
-        <!-- claim_token is kept in DB for support/debug, but not shown to avoid confusion with Gridix JWT token -->
 
         ${
           Array.isArray(opts.setupResults) && opts.setupResults.length > 0
@@ -200,90 +187,19 @@ function htmlInstallFinish(opts: {
                </ul>`
             : ``
         }
-
-        <div class="row" style="margin-top:14px">
-          <button id="finishBtn" onclick="finish()" disabled>Завершить установку</button>
-          <button class="secondary" onclick="checkClaim(true)">Проверить привязку</button>
-        </div>
-        <div class="muted" style="margin-top:10px">
-          “Завершить установку” станет доступно автоматически, когда Bitrix будет привязан к аккаунту Gridix.
-        </div>
       </div>
     </div>
 
     <script>
-      var SUPABASE_URL = ${JSON.stringify(String(opts.supabaseUrl ?? ""))};
-      var DOMAIN = ${JSON.stringify(String(opts.domain ?? ""))};
-      var MEMBER_ID = ${JSON.stringify(String(opts.memberId ?? ""))};
-      var INITIALLY_CLAIMED = ${JSON.stringify(!!opts.initiallyClaimed)};
-
-      function setClaimUI(claimed) {
-        var el = document.getElementById('claimStatus');
-        var btn = document.getElementById('finishBtn');
-        if (claimed) {
-          if (el) { el.textContent = '✅ Bitrix привязан к аккаунту Gridix'; el.className = 'pill ok'; }
-          if (btn) { btn.disabled = false; }
-        } else {
-          if (el) { el.textContent = '⏳ Ожидание привязки к аккаунту Gridix…'; el.className = 'pill wait'; }
-          if (btn) { btn.disabled = true; }
-        }
-      }
-
-      // Make sure these functions are on window so inline onclick handlers can find them.
-      window.checkClaim = async function checkClaim(showAlert) {
-        try {
-          var base = (SUPABASE_URL || '');
-          while (base.length > 0 && base.charAt(base.length - 1) === '/') base = base.slice(0, -1);
-          var url = base + '/functions/v1/bitrix-app';
-          var resp = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'install_status', domain: DOMAIN, member_id: MEMBER_ID })
-          });
-          var json = await resp.json().catch(function(){ return null; });
-          if (!resp.ok) {
-            if (showAlert) {
-              alert('Не удалось проверить привязку (server error). Откройте “Войти в Gridix и подключить”, выполните привязку и повторите.');
-            }
-            return;
-          }
-          var claimed = !!(json && json.claimed);
-          setClaimUI(claimed);
-          if (showAlert && !claimed) {
-            alert('Пока не привязано. Откройте “Войти в Gridix и подключить”, выполните привязку и повторите.');
-          }
-          if (claimed) {
-            // Auto-finish once confirmed
-            finish();
-          }
-        } catch (e) {
-          if (showAlert) alert('Не удалось проверить привязку. Попробуйте ещё раз.');
-        }
-      };
-
       window.openAuth = function openAuth() {
         try { window.open(${JSON.stringify(String(opts.authUrl ?? ""))}, '_blank', 'noopener,noreferrer'); } catch (e) {}
       };
-      window.openConnect = function openConnect() {
-        try { window.open(${JSON.stringify(String(opts.connectUrl ?? ""))}, '_blank', 'noopener,noreferrer'); } catch (e) {}
-      };
-      window.finish = function finish() {
-        try {
-          if (typeof BX24 !== 'undefined' && BX24 && BX24.installFinish) {
-            BX24.installFinish();
-          }
-        } catch (e) {}
-      };
-
-      // Poll claim status while the installer page is open.
-      setClaimUI(INITIALLY_CLAIMED);
-      if (INITIALLY_CLAIMED) {
-        // If already claimed (e.g. reinstall), finish immediately.
-        setTimeout(function(){ window.finish(); }, 250);
-      } else {
-        setTimeout(function(){ window.checkClaim(false); }, 800);
-      }
-      setInterval(function(){ window.checkClaim(false); }, 4000);
+      // Finish installation immediately (binding happens later in Gridix after user auth).
+      try {
+        if (typeof BX24 !== 'undefined' && BX24 && BX24.installFinish) {
+          setTimeout(function(){ BX24.installFinish(); }, 150);
+        }
+      } catch (e) {}
     </script>
   </body>
 </html>`;
@@ -291,7 +207,7 @@ function htmlInstallFinish(opts: {
 
 Deno.serve(async (req) => {
   // Prefer production SITE_URL; keep SITE_DEV_URL for backwards compatibility.
-  const siteUrl = Deno.env.get("SITE_URL") ?? Deno.env.get("SITE_DEV_URL") ?? "";
+  const siteUrl = Deno.env.get("SITE_DEV_URL");
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const webhookSecret = Deno.env.get("JWT_SECRET") ?? "";
@@ -305,7 +221,6 @@ Deno.serve(async (req) => {
     });
     return new Response("Server configuration error", { status: 500 });
   }
-  console.log("req.method", req.method);
   if (req.method === "GET") {
     return Response.redirect(`${baseSiteUrl}embed/connect/bitrix24`, 302);
   }
@@ -346,9 +261,6 @@ Deno.serve(async (req) => {
   );
   const subdomain = extractSubdomain(domain);
 
-  console.log("Bitrix install query params:", Object.fromEntries(queryParams.entries()));
-  console.log("Bitrix install request:", params);
-
   const accessToken = params["AUTH_ID"];
   const refreshToken = params["REFRESH_ID"];
   const memberId = params["member_id"];
@@ -367,11 +279,10 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
-  const claimToken = generateClaimToken();
-  const connectUrl = `${baseSiteUrl}embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`;
-  const authUrl = `${baseSiteUrl}ru/auth?redirect=${encodeURIComponent(
-    `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`
-  )}`;
+  const redirect = `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`;
+  const authUrl = `${baseSiteUrl}ru/auth?redirect=${encodeURIComponent(redirect)}&bitrix_install=1&bitrix_domain=${encodeURIComponent(
+    domain
+  )}&bitrix_member_id=${encodeURIComponent(memberId)}`;
 
   // If a Bitrix portal was already connected earlier, try to update its tokens.
   // IMPORTANT: the DB may contain duplicates from older versions; never use maybeSingle() without limit(1).
@@ -407,8 +318,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Always keep a pending token record for the "email + token" claim flow (even if a connection exists),
-  // so the installer can copy the token and bind later in Gridix.
+  // Keep a pending install record for the login-based claim flow.
   const { error: pendingErr } = await supabase
     .from("bitrix_pending_installs")
     .upsert(
@@ -419,7 +329,7 @@ Deno.serve(async (req) => {
         access_token: accessToken,
         refresh_token: refreshToken,
         token_expires_at: tokenExpiresAt,
-        claim_token: claimToken,
+        claim_token: null,
       },
       { onConflict: "member_id,domain" }
     );
@@ -506,7 +416,7 @@ Deno.serve(async (req) => {
 
     // Bind events for deal changes (Bitrix -> Gridix sync)
     if (webhookSecret) {
-      const handlerUrl = `${supabaseUrl}/functions/v1/bitrix-app?event=deal_updated&secret=${encodeURIComponent(
+      const handlerUrl = `${supabaseUrl}/functions/v1/crm-webhook-callback/bitrix?event=deal_updated&secret=${encodeURIComponent(
         webhookSecret
       )}`;
 
@@ -563,32 +473,15 @@ Deno.serve(async (req) => {
     // We still finish install to avoid broken installs; user can re-install later
   }
 
-  // Confirm claim status using the same criteria as bitrix-app install_status.
-  const { data: claimedConn } = await supabase
-    .from("crm_connections")
-    .select("id,user_id,updated_at")
-    .eq("crm_type", "bitrix24")
-    .eq("base_domain", domain)
-    .eq("bitrix_member_id", memberId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const initiallyClaimed = !!claimedConn?.user_id;
-  const note = initiallyClaimed
-    ? "Эта установка уже привязана к аккаунту Gridix (токены обновлены). Установка будет завершена автоматически."
-    : undefined;
+  const note =
+    "Установка завершена. Следующий шаг — войти/зарегистрироваться в Gridix: привязка выполнится автоматически.";
 
   return new Response(
     htmlInstallFinish({
-      claimToken,
       domain,
       memberId,
       siteUrl: baseSiteUrl,
-      connectUrl,
       authUrl,
-      supabaseUrl,
-      initiallyClaimed,
       note,
       setupResults,
     }),
