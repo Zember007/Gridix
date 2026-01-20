@@ -5,8 +5,9 @@ type UsertourClient = {
   reset: () => void;
   endAll: () => Promise<void> | void;
   setBaseZIndex: (zIndex: number) => void;
-  on?: (eventName: string, listener: (...args: any[]) => void) => void;
-  off?: (eventName: string, listener: (...args: any[]) => void) => void;
+  on: (eventName: string, listener: (...args: unknown[]) => void) => void;
+  off: (eventName: string, listener: (...args: unknown[]) => void) => void;
+  track: (eventName: string, properties: Record<string, unknown>, option: Record<string, unknown>) => void;
 };
 
 type IdentifyPayload = {
@@ -17,17 +18,6 @@ type IdentifyPayload = {
   companyName?: string | null;
   phone?: string | null;
   accountType?: string | null;
-};
-
-type TourLifecycleCallbacks = {
-  /**
-   * Called only when the flow/content is completed (user reached the end).
-   */
-  onCompleted?: () => void | Promise<void>;
-  /**
-   * Called when the flow/content is dismissed/closed (not completed).
-   */
-  onDismissed?: () => void | Promise<void>;
 };
 
 let initialized = false;
@@ -49,9 +39,6 @@ async function nextAnimationFrame(): Promise<void> {
   if (typeof window === 'undefined') return;
   await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 }
-
-let activeContentId: string | null = null;
-let activeDetach: (() => void) | null = null;
 
 export function getUsertourUiBlocked(): boolean {
   return uiBlocked;
@@ -111,7 +98,7 @@ export function isDevTourMode(): boolean {
   } catch {
     // ignore
   }
-  
+
 
 
   const env = import.meta.env.VITE_USERTOUR_DEV_TOUR;
@@ -130,7 +117,7 @@ async function loadUsertourClient(): Promise<UsertourClient> {
   usertourImportPromise = import('usertour.js').then((mod) => {
     const client = ((mod as unknown as { default?: UsertourClient }).default ??
       (mod as unknown as UsertourClient)) as UsertourClient;
-    usertourClient = client;  
+    usertourClient = client;
     return client;
   });
 
@@ -144,6 +131,7 @@ async function getPreparedUsertourClient(): Promise<UsertourClient | null> {
   if (!initialized) {
     const token = getUsertourToken();
     if (!token) return client;
+
     client.init(token);
     client.setBaseZIndex(2000000);
     initialized = true;
@@ -178,7 +166,7 @@ async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): P
     name: payload.name ?? undefined,
     signed_up_at: payload.signedUpAt ?? undefined,
   });
-
+  
   lastIdentifiedUserId = userId;
 }
 
@@ -187,7 +175,6 @@ async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): P
  */
 export async function identifyUsertourUser(payload: IdentifyPayload): Promise<void> {
   if (!isBrowser()) return;
-  console.log('identifyUsertourUser');
   const client = await getPreparedUsertourClient();
   if (!client) return;
   await identifyImpl(client, payload);
@@ -200,110 +187,11 @@ export async function endAllFlows(): Promise<void> {
   await client.endAll?.();
 }
 
-function matchesActiveContentId(contentId: string, args: any[]): boolean {
-  if (!args.length) return activeContentId === contentId;
-
-  for (const arg of args) {
-    if (arg === contentId) return true;
-    if (typeof arg === 'string' && arg === contentId) return true;
-    if (arg && typeof arg === 'object') {
-      const maybe =
-        // common naming guesses
-        (arg as any).contentId ??
-        (arg as any).content_id ??
-        (arg as any).flowId ??
-        (arg as any).flow_id ??
-        (arg as any).id ??
-        (arg as any).content?.id ??
-        (arg as any).flow?.id;
-      if (typeof maybe === 'string' && maybe === contentId) return true;
-    }
-  }
-  return false;
-}
-
-function attachLifecycleListeners(
-  client: UsertourClient,
-  contentId: string,
-  callbacks: TourLifecycleCallbacks,
-): () => void {
-  const on = client.on?.bind(client);
-  const off = client.off?.bind(client);
-  if (!on || !off) return () => {};
-
-  let settled = false;
-  const settle = async (kind: 'completed' | 'dismissed') => {
-    if (settled) return;
-    settled = true;
-    try {
-      if (kind === 'completed') await callbacks.onCompleted?.();
-      else await callbacks.onDismissed?.();
-    } catch (e) {
-      console.warn(`Usertour ${kind} callback failed:`, e);
-    } finally {
-      cleanup();
-    }
-  };
-
-  // The loader package doesn't document actual event names; we support a small
-  // set of likely names (colon and dot variants).
-  const completedEvents = [
-    'flow:completed',
-    'flow.completed',
-    'content:completed',
-    'content.completed',
-    'tour:completed',
-    'tour.completed',
-  ];
-  const dismissedEvents = [
-    'flow:dismissed',
-    'flow.dismissed',
-    'content:dismissed',
-    'content.dismissed',
-    'tour:dismissed',
-    'tour.dismissed',
-    'flow:closed',
-    'flow.closed',
-    'content:closed',
-    'content.closed',
-    'tour:closed',
-    'tour.closed',
-  ];
-
-  const listeners: Array<{ event: string; fn: (...args: any[]) => void }> = [];
-
-  for (const event of completedEvents) {
-    const fn = (...args: any[]) => {
-      if (!matchesActiveContentId(contentId, args)) return;
-      void settle('completed');
-    };
-    on(event, fn);
-    listeners.push({ event, fn });
-  }
-
-  for (const event of dismissedEvents) {
-    const fn = (...args: any[]) => {
-      if (!matchesActiveContentId(contentId, args)) return;
-      void settle('dismissed');
-    };
-    on(event, fn);
-    listeners.push({ event, fn });
-  }
-
-  const cleanup = () => {
-    for (const { event, fn } of listeners) {
-      off(event, fn);
-    }
-  };
-
-  return cleanup;
-}
-
 /**
  * Start admin onboarding
  */
 export async function startAdminOnboardingTour(
-  payload: IdentifyPayload & TourLifecycleCallbacks,
+  payload: IdentifyPayload,
 ): Promise<void> {
 
   if (!isBrowser()) return;
@@ -315,24 +203,10 @@ export async function startAdminOnboardingTour(
     const client = await getPreparedUsertourClient();
     if (!client) return;
 
-    activeContentId = contentId;
-    activeDetach?.();
-    activeDetach = null;
-    const detach = attachLifecycleListeners(client, contentId, payload);
-    activeDetach = detach;
-
-    try {
-      await identifyImpl(client, payload);
-      console.log('startAdminOnboardingTour', contentId);
-      await client.start(contentId, { continue: true });
-      // Ensure our overlay doesn't disappear before the tour UI has a chance to paint.
-      await nextAnimationFrame();
-    } catch (e) {
-      // If the SDK failed to start, remove listeners to avoid leaks.
-      detach();
-      if (activeDetach === detach) activeDetach = null;
-      throw e;
-    }
+    await identifyImpl(client, payload);
+    await client.start(contentId, { continue: true, once: true });
+    // Ensure our overlay doesn't disappear before the tour UI has a chance to paint.
+    await nextAnimationFrame();
   });
 }
 
@@ -345,9 +219,6 @@ export async function startProjectCreationTour(payload: IdentifyPayload): Promis
   await withUiBlocked(async () => {
     const client = await getPreparedUsertourClient();
     if (!client) return;
-    activeContentId = contentId;
-    activeDetach?.();
-    activeDetach = null;
     await identifyImpl(client, payload);
     await client.start(contentId, { once: true, continue: true });
     await nextAnimationFrame();
@@ -363,9 +234,6 @@ export async function startProjectEditorTour(payload: IdentifyPayload): Promise<
   await withUiBlocked(async () => {
     const client = await getPreparedUsertourClient();
     if (!client) return;
-    activeContentId = contentId;
-    activeDetach?.();
-    activeDetach = null;
     await identifyImpl(client, payload);
     await client.start(contentId, { once: true, continue: true });
     await nextAnimationFrame();
@@ -381,9 +249,6 @@ export async function startPartnersTour(payload: IdentifyPayload): Promise<void>
   await withUiBlocked(async () => {
     const client = await getPreparedUsertourClient();
     if (!client) return;
-    activeContentId = contentId;
-    activeDetach?.();
-    activeDetach = null;
     await identifyImpl(client, payload);
     await client.start(contentId, { once: true, continue: true });
     await nextAnimationFrame();
@@ -399,9 +264,6 @@ export function resetUsertour(): void {
   } finally {
     initialized = false;
     lastIdentifiedUserId = null;
-    activeContentId = null;
-    activeDetach?.();
-    activeDetach = null;
     setUiBlocked(false);
   }
 }

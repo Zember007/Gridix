@@ -30,7 +30,6 @@ import { useSearchParams } from 'react-router-dom';
 import ProjectFloorsManager from '@/components/projects/ProjectFloorsManager';
 import { ProjectPriceManager } from '@/components/projects/ProjectPriceManager';
 import { isDevTourMode, startProjectEditorTour } from '@/integrations/usertour';
-import { getOnboardingState } from '@/integrations/onboarding';
 import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
@@ -55,7 +54,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
 
   const { navigate } = useLanguageNavigation();
-  const { user, userProfile, updateProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { isManager, developerIds } = useUserRole();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -139,27 +138,17 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, cachedProject?.id]);
 
-  // Project editor onboarding: once per project (tracked in user_profiles.onboarding.project_editor_done_ids)
+  // Project editor onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
 
     if (authLoading) return;
     const devTour = isDevTourMode();
 
     if (!user?.id) return;
-    if (!userProfile && !devTour) return;
     if (isNew) return;
     if (!project?.id) return;
     if (startedEditorTourRef.current) return;
 
-    const onboarding = getOnboardingState(userProfile);
-    const doneIds = onboarding.project_editor_done_ids ?? [];
-    const alreadyDone = doneIds.includes(project.id);
-
-    const shouldStartBecausePending =
-      onboarding.pending_next === 'project_editor' &&
-      onboarding.pending_project_id === project.id;
-      
-    if (!devTour && !shouldStartBecausePending && alreadyDone) return;
     startedEditorTourRef.current = true;
     const run = async () => {
       try {
@@ -185,25 +174,13 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
               ? user.user_metadata.account_type
               : null),
         });
-
-        if (!devTour) {
-          const nextDoneIds = alreadyDone ? doneIds : [...doneIds, project.id];
-          await updateProfile({
-            onboarding: {
-              ...onboarding,
-              project_editor_done_ids: nextDoneIds,
-              pending_next: null,
-              pending_project_id: null,
-            },
-          });
-        }
       } catch (e) {
         console.warn('Failed to start project editor onboarding tour:', e);
       }
     };
 
     void run();
-  }, [authLoading, isNew, project?.id, updateProfile, user, userProfile]);
+  }, [authLoading, isNew, project?.id, user, userProfile]);
 
   // Reset per-project guard when switching projects (and allow re-run on navigation)
   useEffect(() => {

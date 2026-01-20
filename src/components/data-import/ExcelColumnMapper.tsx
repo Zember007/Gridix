@@ -16,7 +16,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { adminThemeClasses as admin } from '@/shared/lib/admin-theme-config';
 import { Language } from '@/shared/lib/language-utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { getOnboardingState, setPendingNext } from '@/integrations/onboarding';
 import { isDevTourMode } from '@/integrations/usertour';
 
 interface ImportedRowData {
@@ -80,7 +79,7 @@ interface RoomsValidationResult {
 const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColumnMapperProps) => {
   const { createProject } = useProjectCRUD();
   const { t, language } = useLanguage();
-  const { userProfile, updateProfile } = useAuth();
+  const { userProfile } = useAuth();
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = useCallback((field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
@@ -453,18 +452,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
 
       if (!project) throw new Error('Failed to create project');
 
-      // Mark that the next screen should run the project editor onboarding for this project.
-      try {
-        if (!isDevTourMode()) {
-          const nextOnboarding = {
-            ...setPendingNext(userProfile, 'project_editor', project.id),
-            project_creation_done: true,
-          };
-          await updateProfile({ onboarding: nextOnboarding });
-        }
-      } catch (e) {
-        console.warn('Failed to set onboarding pending_next for project editor:', e);
-      }
+      // usertour uses `once: true` internally, so we don't persist onboarding state in Supabase.
 
       // Сохраняем кастомные поля в реальный проект
       if (customFields.length > 0) {

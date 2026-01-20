@@ -124,14 +124,6 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               account_type: 'developer',
               partner_id: partnerInfo?.id || null,
               marketing_emails_consent: marketingEmailsConsent,
-              onboarding: {
-                admin_main_done: false,
-                project_creation_done: false,
-                partners_done: false,
-                project_editor_done_ids: [],
-                pending_next: null,
-                pending_project_id: null,
-              },
             });
 
           if (profileError) {
