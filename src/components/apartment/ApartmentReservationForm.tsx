@@ -34,8 +34,8 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
         onSubmit({ name, email, phone, apartmentId, projectId });
       }
 
-      // Send lead to AmoCRM via Edge Function
-      const { data, error } = await supabase.functions.invoke('create-amocrm-lead', {
+      // Send lead to CRM(s) via Edge Function
+      const { data, error } = await supabase.functions.invoke('crm-create-lead', {
         body: {
           name,
           email,

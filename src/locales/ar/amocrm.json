@@ -45,6 +45,8 @@
   "disconnectError": "خطأ في قطع الاتصال",
   "settingsLoadError": "خطأ في تحميل إعدادات amoCRM",
   "dataFetchError": "خطأ في تحميل البيانات من amoCRM",
+  "disabled": "غير مفعل",
+  "configureProjectDesc": "قم بتكوين الأنبوب والمستخدم المسؤول لهذا المشروع.",
   "authStartError": "خطأ في بدء التفويض:",
   "authUrlError": "لم يتم استلام رابط التفويض",
   "globalConnectionInfo": "حسابك على amoCRM متصل بجميع المشاريع. يمكنك تكوين الأنبوب والإعدادات بشكل فردي لكل مشروع.",

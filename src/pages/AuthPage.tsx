@@ -18,6 +18,7 @@ const AuthPage = () => {
   const mode = searchParams.get('mode');
   const [isRecovery, setIsRecovery] = useState<boolean>(false);
   const linkingAmoRef = useRef(false);
+  const linkingBitrixRef = useRef(false);
   
   // Определяем режим на основе URL
   const isSignup = location.pathname.includes('/signup');
@@ -34,6 +35,37 @@ const AuthPage = () => {
       setIsRecovery(true);
     }
   }, [mode, hashIndicatesRecovery]);
+
+  // Capture Bitrix24 install params (Amo-style flow): we may arrive to /auth/* from Bitrix without SSO.
+  // Store them so after successful auth we can bind the installation to the Gridix account.
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const bitrixInstall = urlParams.get('bitrix_install') === '1';
+      const domain =
+        urlParams.get('bitrix_domain') ??
+        urlParams.get('domain') ??
+        urlParams.get('DOMAIN');
+      const memberId =
+        urlParams.get('bitrix_member_id') ??
+        urlParams.get('member_id') ??
+        urlParams.get('MEMBER_ID');
+
+      if ((bitrixInstall || domain || memberId) && domain && memberId) {
+        const payload = {
+          bitrix_install: bitrixInstall ? '1' : '0',
+          bitrix_domain: domain,
+          bitrix_member_id: memberId,
+          captured_at: new Date().toISOString(),
+        };
+        localStorage.setItem('pending_bitrix_install', JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.error('Failed to capture Bitrix install params:', e);
+    }
+  }, []);
 
    // Сохраняем реферальный код и UTM-метки сразу при заходе на /auth/signup (до авторизации)
   // и логируем клик по ссылке (учитываются все переходы, даже без регистрации)
@@ -174,16 +206,49 @@ const AuthPage = () => {
           // Не блокируем вход/редирект, даже если привязка не удалась (например, из-за RLS)
         }
 
-        // 2) Редирект после авторизации
-        // Если redirect содержит языковой префикс, используем его напрямую
-        // Иначе добавляем языковой префикс
-        if (redirectTo.match(/^\/(ru|en|ka)\//)) {
-          window.location.href = redirectTo;
-        } else {
-          // Все пользователи (и застройщики, и менеджеры) попадают в /admin
-          // Там уже будет определяться контекст на основе роли
-          navigate('/admin');
+        // 1.1) If we came from Bitrix install/connect flow (no SSO) — bind pending install to this user.
+        try {
+          if (!linkingBitrixRef.current) {
+            linkingBitrixRef.current = true;
+            const raw = localStorage.getItem('pending_bitrix_install');
+            if (raw) {
+              const parsed = JSON.parse(raw) as {
+                bitrix_install?: string;
+                bitrix_domain?: string | null;
+                bitrix_member_id?: string | null;
+              };
+
+              const domain = String(parsed?.bitrix_domain ?? '').trim();
+              const memberId = String(parsed?.bitrix_member_id ?? '').trim();
+
+              if (domain && memberId) {
+                // claim_install is authenticated and binds bitrix_pending_installs -> crm_connections(user_id,crm_type=bitrix24)
+                const { error } = await supabase.functions.invoke('bitrix-app', {
+                  body: { action: 'claim_install', domain, member_id: memberId },
+                });
+                if (!error) {
+                  localStorage.removeItem('pending_bitrix_install');
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to claim Bitrix install after auth:', e);
+          // Do not block redirect
         }
+
+        // 2) Редирект после авторизации
+        // Поддерживаем внутренние embed-страницы без языкового префикса (например, /embed/connect/bitrix24)
+        // и обычные языковые роуты (/ru/*, /en/*, /ka/*, /ar/*).
+        if (redirectTo && redirectTo.startsWith('/')) {
+          if (redirectTo.match(/^\/(ru|en|ka|ar)\//) || redirectTo.startsWith('/embed/')) {
+            window.location.href = redirectTo;
+            return;
+          }
+        }
+
+        // Фоллбек: все пользователи попадают в /admin (роль определит контекст)
+        navigate('/admin');
       };
 
       void run();
@@ -215,11 +280,13 @@ const AuthPage = () => {
         redirectTo={redirectTo}
         defaultMode={isSignup ? 'signup' : isSignin ? 'signin' : undefined}
         onSuccess={() => {
-          if (redirectTo.match(/^\/(ru|en|ka)\//)) {
-            window.location.href = redirectTo;
-          } else {
-            navigate('/admin');
+          if (redirectTo && redirectTo.startsWith('/')) {
+            if (redirectTo.match(/^\/(ru|en|ka|ar)\//) || redirectTo.startsWith('/embed/')) {
+              window.location.href = redirectTo;
+              return;
+            }
           }
+          navigate('/admin');
         }}
       />
     )

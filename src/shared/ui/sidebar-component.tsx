@@ -19,7 +19,7 @@ import {
   LogOut,
   Globe,
   BarChart3,
-  Zap as Integration,
+  Package as Integration,
   Building2,
   Code,
   Layers3,
@@ -59,6 +59,7 @@ const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, 
     ...(!amoWidget ? [{ id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') }] : []),
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
+    { id: "integrations", icon: <Integration size={20} />, label: t('admin.integrations') },
     { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics.title') },
     { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
   ];
@@ -79,7 +80,6 @@ const getProjectEditorNavItems = (t: (k: string) => string, projectType?: 'build
     { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
     { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
     { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
-    { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
     { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
   ];
 
@@ -160,9 +160,8 @@ function SimplifiedSidebar({
           {!isMobile && (
             <button
               onClick={onToggleCollapse}
-              className={`flex items-center justify-center rounded-lg transition-colors  duration-200 ${
-                isCollapsed ? " px-3 py-2" : "p-1"
-              }`}
+              className={`flex items-center justify-center rounded-lg transition-colors  duration-200 ${isCollapsed ? " px-3 py-2" : "p-1"
+                }`}
               style={{
                 color: ADMIN_THEME.sidebarText,
                 border: `1px solid transparent`,
@@ -182,10 +181,10 @@ function SimplifiedSidebar({
               />
             </button>
           )}
-        
+
         </div>
       </div>
-     
+
       {/* Workspace Switcher */}
       {showWorkspaceSwitcher && availableWorkspaces.length > 0 && !isCollapsed && (
         <div
@@ -276,7 +275,7 @@ function SimplifiedSidebar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-3 w-full ${isCollapsed ? "justify-center" : ""} rounded-md p-2 hover:bg-opacity-80 transition-colors`}
+                  className={`flex items-center  w-full ${isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"} rounded-md  hover:bg-opacity-80 transition-colors`}
                   style={{
                     backgroundColor: 'transparent',
                   }}
@@ -287,36 +286,41 @@ function SimplifiedSidebar({
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
-                  <div className="flex-shrink-0">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: ADMIN_THEME.primaryActive }}
-                    >
-                      <UserIcon
-                        className="h-4 w-4"
-                        style={{ color: ADMIN_THEME.textOnPrimary }}
-                      />
-                    </div>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+                  >
+                    <UserIcon
+                      className="h-4 w-4"
+                      style={{ color: ADMIN_THEME.textOnPrimary }}
+                    />
                   </div>
-                  {!isCollapsed && (
-                    <>
-                      <div className="min-w-0 flex-1 text-left ">
-                        <p
-                          className="text-sm font-medium truncate"
-                          style={{ color: ADMIN_THEME.sidebarText }}
-                        >
-                          {userEmail.split('@')[0]}
-                        </p>
+                  <>
+                    <div className="min-w-0 flex-1 text-left ">
+
+
+                      <p className={`font-medium text-sm ${isCollapsed ? "text-xs text-center break-words" : "whitespace-nowrap"}`} style={isCollapsed ? { lineHeight: '1.2', color: ADMIN_THEME.sidebarText } : { color: ADMIN_THEME.sidebarText }}>
+                        {userEmail.split('@')[0]}
+
+                      </p>
+
+                      {!isCollapsed && (
+
                         <p
                           className="text-xs truncate"
                           style={{ color: ADMIN_THEME.textMuted }}
                         >
                           {userEmail}
                         </p>
-                      </div>
-                      <ChevronUp className={`h-4 w-4 text-white`} />
-                    </>
-                  )}
+                      )}
+
+                    </div>
+                    {
+                      !isCollapsed && (
+                        <ChevronUp className={`h-4 w-4 text-white`} />
+                      )
+                    }
+                  </>
 
                 </button>
               </DropdownMenuTrigger>

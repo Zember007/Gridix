@@ -96,6 +96,23 @@
   "subscription": "الاشتراك",
   "widgets": "الودجات",
   "documentation": "التوثيق",
+  "integrations": "التكاملات",
+  "integrationsDescription": "قم بربط الخدمات الخارجية بمساحة العمل الخاصة بك.",
+  "projectsConfig": "إعدادات المشاريع",
+  "configureProjects": "إعداد المشاريع",
+  "bitrix24": {
+    "attached": "تم الاتصال",
+    "attachError": "فشل في الاتصال",
+    "detached": "تم قطع الاتصال",
+    "detachError": "فشل في قطع الاتصال",
+    "configureProjectDesc": "اختر مسار المبيعات (القمع) في Bitrix24 لهذا المشروع.",
+    "funnel": "القمع",
+    "selectFunnel": "اختر القمع",
+    "selectFunnelDesc": "اختر قمعًا لمزامنة المراحل.",
+    "statusesSynced": "مراحل تمت مزامنتها",
+    "funnelSynced": "تمت مزامنة القمع",
+    "syncError": "فشل في مزامنة القمع"
+  },
   "subscriptionPage": {
     "title": "اشتراكاتك",
     "description": "اختر الخطة المناسبة لعملك.",

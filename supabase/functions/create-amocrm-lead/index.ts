@@ -1,6 +1,8 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+
 
 interface LeadRequest {
   name: string;
@@ -71,6 +73,62 @@ function extractAmoComplexLeadIds(payload: any): { leadId: number | null; contac
     : null;
 
   return { leadId, contactId };
+}
+
+async function resolveLocalFunnelAndFirstStage(opts: {
+  svc: any;
+  userId: string;
+  externalFunnelId?: number | null;
+  preferDefault?: boolean;
+}): Promise<{ funnelId: string | null; firstStageId: string | null }> {
+  if (opts.preferDefault) {
+    const { data: df } = await opts.svc
+      .from("crm_funnels")
+      .select("id")
+      .eq("user_id", opts.userId)
+      .eq("is_default", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const funnelId = df?.id ? String(df.id) : null;
+    if (!funnelId) return { funnelId: null, firstStageId: null };
+
+    const { data: st } = await opts.svc
+      .from("crm_funnel_stages")
+      .select("id")
+      .eq("funnel_id", funnelId)
+      .order("order_index", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    return { funnelId, firstStageId: st?.id ? String(st.id) : null };
+  }
+
+  const extId = typeof opts.externalFunnelId === "number" ? opts.externalFunnelId : null;
+  if (!extId) return { funnelId: null, firstStageId: null };
+
+  const { data: funnel } = await opts.svc
+    .from("crm_funnels")
+    .select("id, crm_funnel_id, amocrm_pipeline_id")
+    .eq("user_id", opts.userId)
+    .or(`crm_funnel_id.eq.${extId},amocrm_pipeline_id.eq.${extId}`)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const funnelId = funnel?.id ? String(funnel.id) : null;
+  if (!funnelId) return { funnelId: null, firstStageId: null };
+
+  const { data: stage } = await opts.svc
+    .from("crm_funnel_stages")
+    .select("id")
+    .eq("funnel_id", funnelId)
+    .order("order_index", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return { funnelId, firstStageId: stage?.id ? String(stage.id) : null };
 }
 
 async function getValidAccessToken(connection: CRMConnection, supabase: any): Promise<string | null> {
@@ -250,7 +308,8 @@ serve(async (req) => {
         projects!inner (
           name,
           address,
-          currency
+          currency,
+          user_id
         )
       `)
       .eq('id', apartmentId)
@@ -263,326 +322,332 @@ serve(async (req) => {
 
     // Получение настроек AmoCRM ПЕРЕНЕСЕНО ниже после сохранения лида
 
-    // Check for duplicate leads (same email + apartment)
-    console.log('Checking for duplicate leads...');
-    const { data: existingLead, error: duplicateCheckError } = await svc
-      .from('leads')
-      .select('id, name, email, created_at')
-      .eq('email', email)
-      .eq('apartment_id', apartmentId)
-      .single();
+    const projectOwnerId = String(apartment.projects?.user_id || '');
 
-    if (existingLead && !duplicateCheckError) {
-      console.log('Duplicate lead found:', existingLead.id);
-      return createJsonResponse({
-        error: 'Заявка с таким email на эту квартиру уже существует',
-        existingLeadId: existingLead.id,
-        existingLeadDate: existingLead.created_at
-      }, 409, origin);
+    // Load all AmoCRM settings for the project (can be multiple integrations)
+    console.log('Fetching CRM settings for project:', projectId);
+    const { data: settingsRows, error: settingsError } = await svc
+      .from('project_crm_settings')
+      .select('*, crm_connections(*)')
+      .eq('project_id', projectId);
+
+    if (settingsError) console.error('Error fetching CRM settings:', settingsError);
+    const amoSettings = (Array.isArray(settingsRows) ? settingsRows : []) as unknown as ProjectCRMSettings[];
+
+    // Resolve local targets (one lead per integration funnel)
+    const targets: Array<{
+      key: string;
+      funnelId: string | null;
+      firstStageId: string | null;
+      settings: ProjectCRMSettings;
+      connection: CRMConnection;
+    }> = [];
+
+    for (const s of amoSettings) {
+      const conn = s.crm_connections as unknown as CRMConnection;
+      if (!conn || conn.crm_type !== 'amocrm' || !s.pipeline_id) continue;
+      const { funnelId, firstStageId } = await resolveLocalFunnelAndFirstStage({
+        svc,
+        userId: projectOwnerId,
+        externalFunnelId: s.pipeline_id,
+      });
+      targets.push({
+        key: `amo:${s.crm_connection_id}:${s.pipeline_id}`,
+        funnelId,
+        firstStageId,
+        settings: s,
+        connection: conn,
+      });
     }
 
-    // First, save the lead to our database
-    // The trigger set_default_pipeline_stage_for_new_lead will automatically:
-    // 1. Find CRM funnel for this project (if AmoCRM is configured)
-    // 2. Or use default funnel for the project owner
-    // 3. Set pipeline_stage_id to the first stage (by order_index)
-    console.log('Saving lead to database...');
-    const { data: savedLead, error: leadSaveError } = await svc
+    // If no AmoCRM targets found, create a single local lead in default funnel (if any)
+    if (targets.length === 0) {
+      const { funnelId, firstStageId } = await resolveLocalFunnelAndFirstStage({
+        svc,
+        userId: projectOwnerId,
+        preferDefault: true,
+      });
+
+      const { data: savedLead, error: leadSaveError } = await svc
+        .from('leads')
+        .insert({
+          name,
+          email,
+          phone,
+          project_id: projectId,
+          apartment_id: apartmentId,
+          status: 'saved_only',
+          source: 'website',
+          pipeline_stage_id: firstStageId || null,
+          amocrm_error: 'AmoCRM not configured for this project',
+        })
+        .select()
+        .single();
+
+      if (leadSaveError || !savedLead) {
+        console.error('Failed to save lead to database:', leadSaveError);
+        return createJsonResponse({ error: 'Failed to save lead. Please try again.', details: leadSaveError?.message }, 500, origin);
+      }
+
+      return createJsonResponse(
+        {
+          success: true,
+          leadId: savedLead.id,
+          leadIds: [savedLead.id],
+          message: 'Lead successfully saved to local funnel.',
+          crmIntegration: false,
+          results: [{ kind: 'default', leadId: savedLead.id, funnelId, crm: { ok: false } }],
+        },
+        200,
+        origin
+      );
+    }
+
+    // De-duplicate by funnelId to avoid double inserts into the same local funnel
+    const uniqueTargets: typeof targets = [];
+    const seen = new Set<string>();
+    for (const t of targets) {
+      const sig = t.funnelId ? `amo:${t.funnelId}` : t.key;
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      uniqueTargets.push(t);
+    }
+
+    // Fetch existing leads for this email+apartment and map their stage -> funnel
+    console.log('Checking for duplicate leads per funnel...');
+    const { data: existingLeads } = await svc
       .from('leads')
-      .insert({
+      .select('id, created_at, pipeline_stage_id')
+      .eq('email', email)
+      .eq('apartment_id', apartmentId);
+
+    const existingStageIds = (existingLeads || [])
+      .map((l: any) => (l?.pipeline_stage_id ? String(l.pipeline_stage_id) : null))
+      .filter(Boolean) as string[];
+
+    const stageToFunnel = new Map<string, string>();
+    if (existingStageIds.length > 0) {
+      const { data: stageRows } = await svc
+        .from('crm_funnel_stages')
+        .select('id, funnel_id')
+        .in('id', existingStageIds);
+      for (const r of stageRows || []) {
+        if (r?.id && r?.funnel_id) stageToFunnel.set(String(r.id), String(r.funnel_id));
+      }
+    }
+
+    const existingFunnels = new Set<string>();
+    for (const l of existingLeads || []) {
+      const st = l?.pipeline_stage_id ? String(l.pipeline_stage_id) : '';
+      const f = st ? stageToFunnel.get(st) : null;
+      if (f) existingFunnels.add(String(f));
+    }
+
+    // Insert missing leads (one per funnel)
+    const insertPayloads: Record<string, unknown>[] = [];
+    const targetByIndex: typeof uniqueTargets = [];
+    for (const t of uniqueTargets) {
+      if (t.funnelId && existingFunnels.has(t.funnelId)) continue;
+      insertPayloads.push({
         name,
         email,
         phone,
         project_id: projectId,
         apartment_id: apartmentId,
-        status: 'pending', // Technical status for CRM integration
-        source: 'website'
-        // pipeline_stage_id will be set automatically by trigger
-      })
-      .select()
-      .single();
-
-    if (leadSaveError || !savedLead) {
-      console.error('Failed to save lead to database:', leadSaveError);
-      return createJsonResponse({
-        error: 'Failed to save lead. Please try again.',
-        details: leadSaveError?.message
-      }, 500, origin);
+        status: 'pending',
+        source: 'website',
+        pipeline_stage_id: t.firstStageId || null,
+      });
+      targetByIndex.push(t);
     }
 
-    console.log('Lead saved to database with ID:', savedLead.id, 'pipeline_stage_id:', savedLead.pipeline_stage_id);
-
-    // Получение настроек AmoCRM (после сохранения лида)
-    // If project has AmoCRM configured, we also send the lead to AmoCRM
-    // The local funnel stage is already set by trigger (either from CRM funnel or default funnel)
-    console.log('Fetching CRM settings for project:', projectId);
-    const { data: projectCRMSettings, error: settingsError } = await svc
-      .from('project_crm_settings')
-      .select('*, crm_connections(*)')
-      .eq('project_id', projectId)
-      .maybeSingle();
-
-    if (settingsError) console.error('Error fetching CRM settings:', settingsError);
-    
-    // If no CRM settings found, the lead is already saved with pipeline_stage_id from default funnel
-    // Just mark as saved_only and return success
-    if (settingsError || !projectCRMSettings) {
-      console.log('CRM settings not found for project:', projectId, 'Lead saved with default funnel stage');
-
-      await svc
-        .from('leads')
-        .update({ status: 'saved_only', amocrm_error: 'AmoCRM not configured for this project' })
-        .eq('id', savedLead.id);
-
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved to local funnel.',
-        crmIntegration: false
-      }, 200, origin);
+    const createdLeads: any[] = [];
+    if (insertPayloads.length > 0) {
+      console.log('Saving leads to database (per integration)...');
+      const { data: createdRows, error: leadSaveError } = await svc.from('leads').insert(insertPayloads).select();
+      if (leadSaveError) {
+        console.error('Failed to save leads to database:', leadSaveError);
+        return createJsonResponse({ error: 'Failed to save lead(s). Please try again.', details: leadSaveError?.message }, 500, origin);
+      }
+      createdLeads.push(...(createdRows || []));
     }
 
-    const settings = projectCRMSettings as ProjectCRMSettings;
-    const connection = settings.crm_connections as unknown as CRMConnection;
-    
-    if (!connection || connection.crm_type !== 'amocrm') {
-      console.log('AmoCRM connection not found for project:', projectId);
-      await svc
-        .from('leads')
-        .update({ status: 'saved_only', amocrm_error: 'AmoCRM not configured for this project' })
-        .eq('id', savedLead.id);
-
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. AmoCRM integration not configured for this project.',
-        crmIntegration: false
-      }, 200, origin);
+    // If all funnels already had a lead, keep old behaviour: 409
+    if (createdLeads.length === 0 && (existingLeads || []).length > 0) {
+      const first = (existingLeads || [])[0] as any;
+      console.log('Duplicate lead found (all target funnels already have leads):', first?.id);
+      return createJsonResponse(
+        { error: 'Заявка с таким email на эту квартиру уже существует', existingLeadId: first?.id, existingLeadDate: first?.created_at },
+        409,
+        origin
+      );
     }
 
-    // Get valid access token for AmoCRM
-    const accessToken = await getValidAccessToken(connection, svc);
-    if (!accessToken) {
-      console.error('Unable to get valid access token');
-      // Update lead status to saved_only (not failed, since DB save was successful)
+    const results: any[] = [];
+    const leadIds: string[] = [];
+    let anyCrmOk = false;
+
+    for (let i = 0; i < createdLeads.length; i++) {
+      const localLead = createdLeads[i] as any;
+      const t = targetByIndex[i];
+      const localLeadId = String(localLead.id);
+      leadIds.push(localLeadId);
+
+      const settings = t.settings;
+      const connection = t.connection;
+
+      // Get valid access token for AmoCRM
+      const accessToken = await getValidAccessToken(connection, svc);
+      if (!accessToken) {
+        console.error('Unable to get valid access token for lead:', localLeadId);
+        await svc
+          .from('leads')
+          .update({ status: 'saved_only', amocrm_error: 'AmoCRM authorization failed. Please re-authorize the integration.' })
+          .eq('id', localLeadId);
+        results.push({ kind: 'amocrm', leadId: localLeadId, funnelId: t.funnelId, crm: { ok: false, error: 'auth_failed' } });
+        continue;
+      }
+
+      // Определение ответственного пользователя
+      let responsibleUserId = settings.responsible_user_id;
+      if (!responsibleUserId) {
+        try {
+          console.log('Fetching user info from AmoCRM...');
+          const userInfoResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/account`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+
+          if (userInfoResponse.ok) {
+            const userInfo = await userInfoResponse.json();
+            responsibleUserId = userInfo.current_user_id || userInfo._embedded?.users?.[0]?.id;
+            console.log('Got responsible user ID:', responsibleUserId);
+          } else {
+            console.error('Failed to get user info:', await userInfoResponse.text());
+          }
+        } catch (error) {
+          console.error('Error fetching user info:', error);
+        }
+      }
+
+      if (!responsibleUserId) {
+        console.error('Unable to determine responsible user ID for lead:', localLeadId);
+        await svc
+          .from('leads')
+          .update({
+            status: 'saved_only',
+            amocrm_error: 'Unable to determine responsible user for the lead. Please configure responsible_user_id in AmoCRM settings.'
+          })
+          .eq('id', localLeadId);
+
+        results.push({ kind: 'amocrm', leadId: localLeadId, funnelId: t.funnelId, crm: { ok: false, error: 'no_responsible_user' } });
+        continue;
+      }
+
+      // Получение полей для контактов
+      const { emailFieldId, phoneFieldId } = await getContactFields(connection, accessToken);
+      if (!emailFieldId || !phoneFieldId) {
+        console.error('Unable to get contact field IDs:', { emailFieldId, phoneFieldId });
+        await svc
+          .from('leads')
+          .update({ status: 'saved_only', amocrm_error: 'Unable to configure contact fields in AmoCRM' })
+          .eq('id', localLeadId);
+
+        results.push({ kind: 'amocrm', leadId: localLeadId, funnelId: t.funnelId, crm: { ok: false, error: 'no_contact_fields' } });
+        continue;
+      }
+
+      // Building lead payload
+      const leadData: AmoCRMLead = {
+        name: `Apartment inquiry ${apartment.apartment_number} - ${apartment.projects?.name || 'Project'}`,
+        pipeline_id: settings.pipeline_id || 0,
+        price: Number(apartment.price ?? 0),
+        ...(settings.status_id && { status_id: settings.status_id }),
+        responsible_user_id: responsibleUserId,
+        _embedded: {
+          contacts: [
+            {
+              name: name,
+              custom_fields_values: [
+                { field_id: emailFieldId, values: [{ value: email }] },
+                { field_id: phoneFieldId, values: [{ value: phone }] }
+              ]
+            }
+          ]
+        }
+      };
+
+      console.log('Creating lead in AmoCRM with data:', JSON.stringify(leadData, null, 2));
+      const amocrmUrl = `https://${connection.subdomain}.amocrm.ru/api/v4/leads/complex`;
+      const amocrmResponse = await fetch(amocrmUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify([leadData])
+      });
+
+      if (!amocrmResponse.ok) {
+        const errorText = await amocrmResponse.text();
+        console.error('AmoCRM API error:', { status: amocrmResponse.status, statusText: amocrmResponse.statusText, errorText });
+
+        let errorMessage = 'Failed to create lead in AmoCRM';
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.detail) errorMessage = errorData.detail;
+          else if (errorData.message) errorMessage = errorData.message;
+          if (errorData['validation-errors']) {
+            console.error('Validation errors:', JSON.stringify(errorData['validation-errors'], null, 2));
+            errorMessage += '. Validation errors: ' + JSON.stringify(errorData['validation-errors']);
+          }
+        } catch (e) {
+          console.error('Failed to parse error response');
+        }
+
+        await svc
+          .from('leads')
+          .update({ status: 'saved_only', amocrm_error: errorMessage, amocrm_retries: 1 })
+          .eq('id', localLeadId);
+
+        results.push({ kind: 'amocrm', leadId: localLeadId, funnelId: t.funnelId, crm: { ok: false, error: errorMessage } });
+        continue;
+      }
+
+      const amocrmResult = await amocrmResponse.json();
+      const { leadId: amocrmLeadId, contactId: amocrmContactId } = extractAmoComplexLeadIds(amocrmResult);
+
+      if (!amocrmLeadId) {
+        const diagnostic = `AmoCRM lead created but id not found in response. Response keys: ${Object.keys(amocrmResult || {}).join(',') || '(non-object)'}`;
+        console.error(diagnostic);
+        await svc
+          .from('leads')
+          .update({ status: 'saved_only', amocrm_error: diagnostic, amocrm_retries: 1 })
+          .eq('id', localLeadId);
+        results.push({ kind: 'amocrm', leadId: localLeadId, funnelId: t.funnelId, crm: { ok: false, error: diagnostic } });
+        continue;
+      }
+
+      // Update local lead with AmoCRM IDs
       await svc
         .from('leads')
         .update({
-          status: 'saved_only',
-          amocrm_error: 'AmoCRM authorization failed. Please re-authorize the integration.'
+          status: 'pending',
+          amocrm_lead_id: amocrmLeadId,
+          amocrm_contact_id: amocrmContactId,
+          amocrm_sent_at: new Date().toISOString(),
+          amocrm_error: null
         })
-        .eq('id', savedLead.id);
+        .eq('id', localLeadId);
 
-      // Return success since lead was saved to DB
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. AmoCRM authorization failed - please re-authorize the integration.',
-        crmIntegration: false
-      }, 200, origin);
-    }
-
-    // Определение ответственного пользователя
-    let responsibleUserId = settings.responsible_user_id;
-    if (!responsibleUserId) {
+      // Add a detailed note with apartment and client information
       try {
-        console.log('Fetching user info from AmoCRM...');
-        const userInfoResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/account`, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
+        const currentDate = new Date().toLocaleString('en-US', {
+          timeZone: 'Europe/Moscow',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
         });
 
-        if (userInfoResponse.ok) {
-          const userInfo = await userInfoResponse.json();
-          responsibleUserId = userInfo.current_user_id || userInfo._embedded?.users?.[0]?.id;
-          console.log('Got responsible user ID:', responsibleUserId);
-        } else {
-          console.error('Failed to get user info:', await userInfoResponse.text());
-        }
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    }
-
-    if (!responsibleUserId) {
-      console.error('Unable to determine responsible user ID');
-      // Update lead status to saved_only (not failed, since DB save was successful)
-      await svc
-        .from('leads')
-        .update({
-          status: 'saved_only',
-          amocrm_error: 'Unable to determine responsible user for the lead. Please configure responsible_user_id in AmoCRM settings.'
-        })
-        .eq('id', savedLead.id);
-
-      // Return success since lead was saved to DB
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. Unable to determine responsible user for AmoCRM - please configure responsible_user_id.',
-        crmIntegration: false
-      }, 200, origin);
-    }
-
-    // Получение полей для контактов
-    const { emailFieldId, phoneFieldId } = await getContactFields(connection, accessToken);
-
-    if (!emailFieldId || !phoneFieldId) {
-      console.error('Unable to get contact field IDs:', { emailFieldId, phoneFieldId });
-      // Update lead status to saved_only (not failed, since DB save was successful)
-      await svc
-        .from('leads')
-        .update({
-          status: 'saved_only',
-          amocrm_error: 'Unable to configure contact fields in AmoCRM'
-        })
-        .eq('id', savedLead.id);
-
-      // Return success since lead was saved to DB
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. Unable to configure contact fields in AmoCRM.',
-        crmIntegration: false
-      }, 200, origin);
-    }
-
-    // Building lead payload (simple structure without custom lead fields)
-    const leadData: AmoCRMLead = {
-      name: `Apartment inquiry ${apartment.apartment_number} - ${apartment.projects?.name || 'Project'}`,
-      pipeline_id: settings.pipeline_id || 0,
-      // Save price to AmoCRM main lead field (not only in a note)
-      price: Number(apartment.price ?? 0),
-      ...(settings.status_id && { status_id: settings.status_id }),
-      responsible_user_id: responsibleUserId,
-      _embedded: {
-        contacts: [
-          {
-            name: name,
-            custom_fields_values: [
-              {
-                field_id: emailFieldId,
-                values: [{ value: email }]
-              },
-              {
-                field_id: phoneFieldId,
-                values: [{ value: phone }]
-              }
-            ]
-          }
-        ]
-      }
-    };
-
-    console.log('Creating lead in AmoCRM with data:', JSON.stringify(leadData, null, 2));
-
-    // Отправка лида в AmoCRM
-    const amocrmUrl = `https://${connection.subdomain}.amocrm.ru/api/v4/leads/complex`;
-    const amocrmResponse = await fetch(amocrmUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: JSON.stringify([leadData])
-    });
-
-    if (!amocrmResponse.ok) {
-      const errorText = await amocrmResponse.text();
-      console.error('AmoCRM API error:', {
-        status: amocrmResponse.status,
-        statusText: amocrmResponse.statusText,
-        errorText
-      });
-
-      let errorMessage = 'Failed to create lead in AmoCRM';
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.detail) errorMessage = errorData.detail;
-        else if (errorData.message) errorMessage = errorData.message;
-
-        if (errorData['validation-errors']) {
-          console.error('Validation errors:', JSON.stringify(errorData['validation-errors'], null, 2));
-          errorMessage += '. Validation errors: ' + JSON.stringify(errorData['validation-errors']);
-        }
-      } catch (e) {
-        console.error('Failed to parse error response');
-      }
-
-      // Update lead status to saved_only with error details (not failed, since DB save was successful)
-      await svc
-        .from('leads')
-        .update({
-          status: 'saved_only',
-          amocrm_error: errorMessage,
-          amocrm_retries: 1
-        })
-        .eq('id', savedLead.id);
-
-      // Return success since lead was saved to DB
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. Failed to send to AmoCRM - you can copy the details and add manually.',
-        crmIntegration: false,
-        crmError: errorMessage
-      }, 200, origin);
-    }
-
-    const amocrmResult = await amocrmResponse.json();
-    console.log('AmoCRM lead created successfully:', amocrmResult);
-
-    const { leadId: amocrmLeadId, contactId: amocrmContactId } = extractAmoComplexLeadIds(amocrmResult);
-
-    if (!amocrmLeadId) {
-      const diagnostic = `AmoCRM lead created but id not found in response. Response keys: ${Object.keys(amocrmResult || {}).join(',') || '(non-object)'}`;
-      console.error(diagnostic);
-
-      await svc
-        .from('leads')
-        .update({
-          status: 'saved_only',
-          amocrm_error: diagnostic,
-          amocrm_retries: 1,
-        })
-        .eq('id', savedLead.id);
-
-      return createJsonResponse({
-        success: true,
-        leadId: savedLead.id,
-        message: 'Lead successfully saved. AmoCRM response did not contain lead id; please check integration logs.',
-        crmIntegration: false,
-      }, 200, origin);
-    }
-
-    // Update lead status in database with AmoCRM IDs (link local lead -> AmoCRM lead)
-    await svc
-      .from('leads')
-      .update({
-        status: 'pending',
-        amocrm_lead_id: amocrmLeadId,
-        amocrm_contact_id: amocrmContactId,
-        amocrm_sent_at: new Date().toISOString(),
-        amocrm_error: null
-      })
-      .eq('id', savedLead.id);
-
-    console.log('Lead status updated in database, linked AmoCRM lead id:', amocrmLeadId);
-
-    // Add a detailed note with apartment and client information
-    if (amocrmLeadId) {
-      const leadId = amocrmLeadId;
-
-      // Create a detailed note with all the information
-      const currentDate = new Date().toLocaleString('en-US', {
-        timeZone: 'Europe/Moscow',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      const noteText = `📋 APARTMENT INQUIRY | ${currentDate}
+        const noteText = `📋 APARTMENT INQUIRY | ${currentDate}
 
 👤 CLIENT:
 • Name: ${name}
@@ -600,44 +665,39 @@ ${apartment.projects?.address ? `• Address: ${apartment.projects.address}` : '
 
 💡 Inquiry created automatically via website`;
 
-      const noteData = {
-        entity_id: leadId,
-        note_type: "common",
-        params: {
-          text: noteText
-        }
-      };
-
-      try {
+        const noteData = { entity_id: amocrmLeadId, note_type: "common", params: { text: noteText } };
         const noteResponse = await fetch(`https://${connection.subdomain}.amocrm.ru/api/v4/leads/notes`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
           body: JSON.stringify([noteData])
         });
 
-        if (!noteResponse.ok) {
-          console.error('Failed to create note:', await noteResponse.text());
-        } else {
-          console.log('Note added successfully to lead');
-        }
+        if (!noteResponse.ok) console.error('Failed to create note:', await noteResponse.text());
       } catch (noteError) {
         console.error('Error adding note to lead:', noteError);
       }
+
+      anyCrmOk = true;
+      results.push({
+        kind: 'amocrm',
+        leadId: localLeadId,
+        funnelId: t.funnelId,
+        crm: { ok: true, amocrmLeadId, contactId: amocrmContactId, leadUrl: `https://${connection.subdomain}.amocrm.ru/leads/detail/${amocrmLeadId}` }
+      });
     }
 
-    // Возврат успешного результата
-    return createJsonResponse({
-      success: true,
-      leadId: savedLead.id, // Our internal lead ID
-      amocrmLeadId: amocrmLeadId, // AmoCRM lead ID
-      contactId: amocrmContactId,
-      message: 'Lead successfully created and sent to AmoCRM',
-      crmIntegration: true,
-      leadUrl: `https://${connection.subdomain}.amocrm.ru/leads/detail/${amocrmLeadId}`
-    }, 200, origin);
+    return createJsonResponse(
+      {
+        success: true,
+        leadId: leadIds[0] ?? null,
+        leadIds,
+        message: anyCrmOk ? 'Lead(s) successfully created and sent to AmoCRM' : 'Lead(s) successfully saved. AmoCRM sending failed for all integrations.',
+        crmIntegration: anyCrmOk,
+        results,
+      },
+      200,
+      origin
+    );
 
   } catch (error) {
     console.error('Unexpected error creating AmoCRM lead:', error);

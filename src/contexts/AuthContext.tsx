@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, supabaseAuthInitPromise } from '@/shared/api/supabase';
 import { processPendingReferralAfterAuth } from '@/features/partnerProgram/referralTracking';
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false);
 
   const loadingProfileRef = useRef<Set<string>>(new Set());
-  const profileLoadedRef = useRef<Set<string>>(new Set());
+  const currentUserIdRef = useRef<string | null>(null);
 
   const createFallbackProfile = (userId: string, currentUser: User): UserProfile => ({
     id: userId,
@@ -78,97 +78,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     updated_at: new Date().toISOString(),
   });
 
- 
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    const initializeAuth = async () => {
-      try {
-        // If this tab was opened via a partner "login as client" link (#access_token=...),
-        // initialize the tab-scoped session first so `getSession()` returns the right user.
-        await supabaseAuthInitPromise;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (abortController.signal.aborted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          // Проверяем, требуется ли установка пароля
-          const requiresPassword = session.user.user_metadata?.requires_password_setup === true;
-          setRequiresPasswordSetup(requiresPassword);
-
-          await loadUserProfile(session.user.id, session.user, session, abortController.signal);
-        } else {
-          setLoading(false);
-        }
-      } catch (error) {
-        if (abortController.signal.aborted) return;
-        console.error('Error initializing auth:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      if (abortController.signal.aborted) return;
-
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-
-      if (newSession?.user) {
-        // Проверяем, требуется ли установка пароля
-        const requiresPassword = newSession.user.user_metadata?.requires_password_setup === true;
-        console.log('requiresPassword', requiresPassword);
-        setRequiresPasswordSetup(requiresPassword);
-
-        await loadUserProfile(newSession.user.id, newSession.user, newSession, abortController.signal);
-      } else {
-        setUserProfile(null);
-
-        setRequiresPasswordSetup(false);
-        profileLoadedRef.current.clear();
-        loadingProfileRef.current.clear();
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      abortController.abort();
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Usertour: initialize/identify only after auth + profile are ready.
-  useEffect(() => {
-    if (loading) return;
-
-    if (!user) {
-      resetUsertour();
-      return;
-    } 
-  }, [loading, user, userProfile]);
-
-  const loadUserProfile = async (
+  const loadUserProfile = useCallback(async (
     userId: string,
     currentUser: User,
-    currentSession: Session,
     signal: AbortSignal
   ) => {
+    // Проверяем, что userId все еще актуален
+    if (currentUserIdRef.current !== userId) {
+      // Пользователь изменился, не загружаем профиль
+      return;
+    }
 
-    if (loadingProfileRef.current.has(userId) || profileLoadedRef.current.has(userId)) {
-      setLoading(false);
+    // Предотвращаем параллельные загрузки для одного пользователя
+    if (loadingProfileRef.current.has(userId)) {
       return;
     }
 
     loadingProfileRef.current.add(userId);
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
       await processPendingReferralAfterAuth();
+
+      // Проверяем еще раз после async операции
+      if (signal.aborted || currentUserIdRef.current !== userId) {
+        return;
+      }
 
       const queryPromise = supabase
         .from('user_profiles')
@@ -176,17 +111,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('id', userId)
         .single();
 
-      timeoutId = setTimeout(() => {
-        throw new Error('Query timeout');
-      }, QUERY_TIMEOUT);
+      // Race the request against a proper timeout Promise.
+      // NOTE: throwing inside setTimeout does NOT reject the awaiting Promise.
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Query timeout')), QUERY_TIMEOUT);
+      });
 
       // Define the expected Supabase response type
       const { data, error } = await Promise.race([
         queryPromise as unknown as Promise<{ data: UserProfile | null; error: unknown }>,
-        new Promise<never>((_, reject) => timeoutId && reject(new Error('Query timeout'))),
+        timeoutPromise,
       ]);
 
-      if (signal.aborted || currentSession !== session) return;
+      // Проверяем актуальность userId после запроса
+      if (signal.aborted || currentUserIdRef.current !== userId) {
+        return;
+      }
+
       if (error) {
         const errorCode =
           typeof error === 'object' && error !== null && 'code' in error
@@ -194,6 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             : undefined;
 
         if (errorCode === 'PGRST116') {
+          // Профиль не найден, создаем новый
           try {
             const { data: newProfile, error: createError } = await supabase
               .from('user_profiles')
@@ -219,41 +161,137 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               .select()
               .single();
 
-            // Профиль создан, логика обработки приглашений уже выполнена выше
-
-            if (signal.aborted || currentSession !== session) return;
+            // Проверяем актуальность после создания
+            if (signal.aborted || currentUserIdRef.current !== userId) {
+              return;
+            }
 
             if (createError) {
+              console.error('Error creating profile:', createError);
               setUserProfile(createFallbackProfile(userId, currentUser));
             } else {
               setUserProfile(newProfile);
             }
           } catch (createErr) {
-            if (signal.aborted || currentSession !== session) return;
+            if (signal.aborted || currentUserIdRef.current !== userId) {
+              return;
+            }
+            console.error('Error creating profile:', createErr);
             setUserProfile(createFallbackProfile(userId, currentUser));
           }
         } else {
+          console.error('Error loading profile:', error);
           setUserProfile(createFallbackProfile(userId, currentUser));
         }
       } else if (data) {
-        console.log('data', data);
+        // Успешно загружен профиль
         setUserProfile(data);
       } else {
+        // Данные не получены, используем fallback
         setUserProfile(createFallbackProfile(userId, currentUser));
       }
     } catch (error) {
-      if (signal.aborted || currentSession !== session) return;
+      if (signal.aborted || currentUserIdRef.current !== userId) {
+        return;
+      }
       console.error('Error loading user profile:', error);
       setUserProfile(createFallbackProfile(userId, currentUser));
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
       loadingProfileRef.current.delete(userId);
-      profileLoadedRef.current.add(userId);
-      if (!signal.aborted && currentSession === session) {
+      
+      // Устанавливаем loading в false только если это все еще актуальный пользователь
+      if (!signal.aborted && currentUserIdRef.current === userId) {
         setLoading(false);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    const initializeAuth = async () => {
+      try {
+        // If this tab was opened via a partner "login as client" link (#access_token=...),
+        // initialize the tab-scoped session first so `getSession()` returns the right user.
+        await supabaseAuthInitPromise;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (abortController.signal.aborted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          currentUserIdRef.current = session.user.id;
+          // Проверяем, требуется ли установка пароля
+          const requiresPassword = session.user.user_metadata?.requires_password_setup === true;
+          setRequiresPasswordSetup(requiresPassword);
+
+          await loadUserProfile(session.user.id, session.user, abortController.signal);
+        } else {
+          currentUserIdRef.current = null;
+          setLoading(false);
+        }
+      } catch (error) {
+        if (abortController.signal.aborted) return;
+        console.error('Error initializing auth:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (abortController.signal.aborted) return;
+
+      const newUserId = newSession?.user?.id ?? null;
+      const previousUserId = currentUserIdRef.current;
+
+      // Если пользователь изменился, очищаем профиль только после подтверждения
+      if (previousUserId !== null && previousUserId !== newUserId) {
+        // Не очищаем сразу - дождемся загрузки нового профиля
+        currentUserIdRef.current = newUserId;
+        loadingProfileRef.current.clear();
+      } else if (newUserId) {
+        currentUserIdRef.current = newUserId;
+      } else {
+        currentUserIdRef.current = null;
+      }
+
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        // Проверяем, требуется ли установка пароля
+        const requiresPassword = newSession.user.user_metadata?.requires_password_setup === true;
+        console.log('requiresPassword', requiresPassword);
+        setRequiresPasswordSetup(requiresPassword);
+
+        await loadUserProfile(newSession.user.id, newSession.user, abortController.signal);
+      } else {
+        // Очищаем только если точно нет пользователя
+        setUserProfile(null);
+        setRequiresPasswordSetup(false);
+        loadingProfileRef.current.clear();
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      abortController.abort();
+      subscription.unsubscribe();
+    };
+  }, [loadUserProfile]);
+
+  // Usertour: initialize/identify only after auth + profile are ready.
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      resetUsertour();
+      return;
+    } 
+  }, [loading, user, userProfile]);
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();

@@ -11,6 +11,7 @@ import SubscriptionTab from './SubscriptionTab';
 import PartnersPage from '../../pages/PartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { AdminAnalytics } from './AdminAnalytics';
+import { IntegrationsTab } from './IntegrationsTab';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -18,14 +19,14 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
-import { endAllFlows, isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
-import { getOnboardingState } from '@/integrations/onboarding';
+import { isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
+import { waitForSelectors } from '@/integrations/waitForSelectors';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const { user, userProfile, signOut, loading, updateProfile } = useAuth();
+  const { user, userProfile, signOut, loading } = useAuth();
   const startedAdminTourRef = useRef(false);
   const startedPartnersTourRef = useRef(false);
   const startedProjectCreationTourRef = useRef(false);
@@ -45,7 +46,7 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // Admin main onboarding: once per user (stored in user_profiles.onboarding.admin_main_done)
+  // Admin main onboarding: usertour tracks "once" internally (no Supabase tracking needed)
   useEffect(() => {
     if (loading) return;
 
@@ -53,24 +54,22 @@ const AdminDashboard = () => {
 
     if (startedAdminTourRef.current) return;
 
-    const devTour = isDevTourMode();
-    // In dev tour mode we allow starting even if profile isn't loaded yet.
-    if (!userProfile && !devTour) return;
-
-    const onboarding = userProfile ? getOnboardingState(userProfile) : {
-      admin_main_done: false,
-      project_creation_done: false,
-      partners_done: false,
-      project_editor_done_ids: [],
-      pending_next: null,
-      pending_project_id: null,
-    };
-    if (!devTour && onboarding.admin_main_done) return;
-
     startedAdminTourRef.current = true;
     const run = async () => {
       try {
-        
+        // Wait until core tour anchors are present, otherwise the tour can start "into nothing".
+        // This is especially important on first load when ProjectList is still loading.
+        const anchorsReady = await waitForSelectors(
+          ['.sidebar_usertour', '.projects_list_usertour', '.create_project_usertour', '.support_usertour'],
+          { timeoutMs: 8000, intervalMs: 100, debugLabel: 'admin_onboarding' },
+        );
+
+        if (!anchorsReady) {
+          // Don't mark as started/done; allow retry next visit.
+          startedAdminTourRef.current = false;
+          return;
+        }
+
         await startAdminOnboardingTour({
           userId: user.id,
           email: userProfile?.email ?? user.email ?? null,
@@ -93,22 +92,15 @@ const AdminDashboard = () => {
               ? user.user_metadata.account_type
               : null),
         });
-        if (!devTour) {
-          await updateProfile({
-            onboarding: {
-              ...onboarding,
-              admin_main_done: true,
-            },
-          });
-        }
       } catch (e) {
         // Don't block admin UX if onboarding SDK fails
         console.warn('Failed to start admin onboarding tour:', e);
+        startedAdminTourRef.current = false;
       }
     };
 
     void run();
-  }, [loading, user, userProfile, updateProfile]);
+  }, [loading, user, userProfile]);
 
   // Project creation onboarding: once per user, when opening creation modal
   useEffect(() => {
@@ -124,12 +116,7 @@ const AdminDashboard = () => {
 
     if (!showCreateModal) return;
     if (!user?.id) return;
-    if (!userProfile && !devTour) return;
     if (startedProjectCreationTourRef.current) return;
-
-
-    const onboarding = getOnboardingState(userProfile);
-    if (!devTour && onboarding.project_creation_done) return;
 
     startedProjectCreationTourRef.current = true;
     const run = async () => {
@@ -162,7 +149,7 @@ const AdminDashboard = () => {
     };
 
     void run();
-  }, [loading, showCreateModal, user, userProfile, updateProfile]);
+  }, [loading, showCreateModal, user, userProfile]);
   const { navigate } = useLanguageNavigation();
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
@@ -182,11 +169,7 @@ const AdminDashboard = () => {
     if (loading) return;
     if (activeTab !== 'partners') return;
     if (!user?.id) return;
-    if (!userProfile) return;
     if (startedPartnersTourRef.current) return;
-
-    const onboarding = getOnboardingState(userProfile);
-    if (!devTour && onboarding.partners_done) return;
 
     startedPartnersTourRef.current = true;
     const run = async () => {
@@ -213,22 +196,13 @@ const AdminDashboard = () => {
               ? user.user_metadata.account_type
               : null),
         });
-
-        if (!devTour) {
-          await updateProfile({
-            onboarding: {
-              ...onboarding,
-              partners_done: true,
-            },
-          });
-        }
       } catch (e) {
         console.warn('Failed to start partners onboarding tour:', e);
       }
     };
 
     void run();
-  }, [activeTab, loading, updateProfile, user, userProfile]);
+  }, [activeTab, loading, user, userProfile]);
 
   const handleCreateNew = () => {
     if (amoWidget) {
@@ -328,6 +302,12 @@ const AdminDashboard = () => {
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               <AdminAnalytics />
+            </div>
+          )}
+
+          {activeTab === 'integrations' && userRole.type !== 'manager' && (
+            <div className="space-y-6">
+              <IntegrationsTab />
             </div>
           )}
 

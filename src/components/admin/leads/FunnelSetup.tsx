@@ -5,7 +5,7 @@ import {
   Edit,
   GripVertical,
   ArrowRight,
-  Zap,
+  Package,
   Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -354,7 +354,7 @@ export const FunnelSetup: React.FC<FunnelSetupProps> = ({
                         !addingTriggerToStageId && (
                           <div className="text-center py-8 px-4 border-2 border-dashed border-slate-200 rounded-xl">
                             <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-slate-400">
-                              <Zap size={18} />
+                              <Package size={18} />
                             </div>
                             <p className="text-xs text-slate-500 font-medium">
                               Нет автоматизаций

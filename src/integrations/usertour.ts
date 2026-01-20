@@ -1,10 +1,13 @@
 type UsertourClient = {
   init: (token: string) => void;
   identify: (userId: string, traits?: Record<string, unknown>) => Promise<void> | void;
-  start: (contentId: string, options?: { continue?: boolean }) => void;
+  start: (contentId: string, options?: { once?: boolean; continue?: boolean }) => Promise<void> | void;
   reset: () => void;
-  endAll: () => void;
+  endAll: () => Promise<void> | void;
   setBaseZIndex: (zIndex: number) => void;
+  on: (eventName: string, listener: (...args: unknown[]) => void) => void;
+  off: (eventName: string, listener: (...args: unknown[]) => void) => void;
+  track: (eventName: string, properties: Record<string, unknown>, option: Record<string, unknown>) => void;
 };
 
 type IdentifyPayload = {
@@ -30,6 +33,11 @@ function setUiBlocked(next: boolean) {
   if (uiBlocked === next) return;
   uiBlocked = next;
   uiBlockedListeners.forEach((cb) => cb());
+}
+
+async function nextAnimationFrame(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 }
 
 export function getUsertourUiBlocked(): boolean {
@@ -90,7 +98,7 @@ export function isDevTourMode(): boolean {
   } catch {
     // ignore
   }
-  
+
 
 
   const env = import.meta.env.VITE_USERTOUR_DEV_TOUR;
@@ -109,29 +117,34 @@ async function loadUsertourClient(): Promise<UsertourClient> {
   usertourImportPromise = import('usertour.js').then((mod) => {
     const client = ((mod as unknown as { default?: UsertourClient }).default ??
       (mod as unknown as UsertourClient)) as UsertourClient;
-    usertourClient = client;  
+    usertourClient = client;
     return client;
   });
 
   return usertourImportPromise;
 }
 
-async function prepareUsertour(opts: { blockUi: boolean }): Promise<UsertourClient | null> {
+async function getPreparedUsertourClient(): Promise<UsertourClient | null> {
   if (!isBrowser()) return null;
 
-  if (opts.blockUi) setUiBlocked(true);
+  const client = await loadUsertourClient();
+  if (!initialized) {
+    const token = getUsertourToken();
+    if (!token) return client;
+
+    client.init(token);
+    client.setBaseZIndex(2000000);
+    initialized = true;
+  }
+  return client;
+}
+
+async function withUiBlocked<T>(fn: () => Promise<T>): Promise<T> {
+  setUiBlocked(true);
   try {
-    const client = await loadUsertourClient();
-    if (!initialized) {
-      const token = getUsertourToken();
-      if (!token) return client;
-      client.init(token);
-      client.setBaseZIndex(2000000);
-      initialized = true;
-    }
-    return client;
+    return await fn();
   } finally {
-    if (opts.blockUi) setUiBlocked(false);
+    setUiBlocked(false);
   }
 }
 
@@ -162,34 +175,39 @@ async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): P
  */
 export async function identifyUsertourUser(payload: IdentifyPayload): Promise<void> {
   if (!isBrowser()) return;
-  console.log('identifyUsertourUser');
-  const client = await prepareUsertour({ blockUi: false });
+  const client = await getPreparedUsertourClient();
   if (!client) return;
   await identifyImpl(client, payload);
 }
 
 export async function endAllFlows(): Promise<void> {
   if (!isBrowser()) return;
-  const client = await prepareUsertour({ blockUi: false });
+  const client = await getPreparedUsertourClient();
   if (!client) return;
-  client.endAll();
+  await client.endAll?.();
 }
 
 /**
  * Start admin onboarding
  */
-export async function startAdminOnboardingTour(payload: IdentifyPayload): Promise<void> {
+export async function startAdminOnboardingTour(
+  payload: IdentifyPayload,
+): Promise<void> {
 
   if (!isBrowser()) return;
 
   const contentId = getAdminOnboardingContentId();
   if (!contentId) return;
 
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
 
-  const client = await prepareUsertour({ blockUi: true });
-  if (!client) return;
-  await identifyImpl(client, payload);
-  client.start(contentId);
+    await identifyImpl(client, payload);
+    await client.start(contentId, { continue: true, once: true });
+    // Ensure our overlay doesn't disappear before the tour UI has a chance to paint.
+    await nextAnimationFrame();
+  });
 }
 
 export async function startProjectCreationTour(payload: IdentifyPayload): Promise<void> {
@@ -198,10 +216,13 @@ export async function startProjectCreationTour(payload: IdentifyPayload): Promis
   const contentId = getProjectCreationContentId();
   if (!contentId) return;
 
-  const client = await prepareUsertour({ blockUi: true });
-  if (!client) return;
-  await identifyImpl(client, payload);
-  client.start(contentId);
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+    await identifyImpl(client, payload);
+    await client.start(contentId, { once: true });
+    await nextAnimationFrame();
+  });
 }
 
 export async function startProjectEditorTour(payload: IdentifyPayload): Promise<void> {
@@ -210,10 +231,13 @@ export async function startProjectEditorTour(payload: IdentifyPayload): Promise<
   const contentId = getProjectEditorContentId();
   if (!contentId) return;
 
-  const client = await prepareUsertour({ blockUi: true });
-  if (!client) return;
-  await identifyImpl(client, payload);
-  client.start(contentId);
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+    await identifyImpl(client, payload);
+    await client.start(contentId, { once: true });
+    await nextAnimationFrame();
+  });
 }
 
 export async function startPartnersTour(payload: IdentifyPayload): Promise<void> {
@@ -222,10 +246,13 @@ export async function startPartnersTour(payload: IdentifyPayload): Promise<void>
   const contentId = getPartnersContentId();
   if (!contentId) return;
 
-  const client = await prepareUsertour({ blockUi: true });
-  if (!client) return;
-  await identifyImpl(client, payload);
-  client.start(contentId);
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+    await identifyImpl(client, payload);
+    await client.start(contentId, { once: true });
+    await nextAnimationFrame();
+  });
 }
 
 

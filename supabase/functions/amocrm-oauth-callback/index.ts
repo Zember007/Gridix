@@ -3,6 +3,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 import { createOrUpdateLocalFunnel, type AmoCRMPipeline } from '../_shared/amocrm-funnel.ts'
 
+function normalizeReturnTo(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  // Disallow absolute URLs / protocols (prevent open redirects)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) return null;
+  if (trimmed.startsWith('//')) return null;
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+}
+
+function getBaseSiteUrl(): string | null {
+  const raw =
+    (Deno.env.get('SITE_URL') || Deno.env.get('SITE_DEV_URL') || '').trim();
+  if (!raw) return null;
+  return raw.endsWith('/') ? raw : `${raw}/`;
+}
+
 async function hmacVerify(inputB64: string, signature: string, secret: string): Promise<boolean> {
   const enc = new TextEncoder()
   const cryptoKey = await crypto.subtle.importKey(
@@ -89,8 +106,7 @@ serve(async (req) => {
 
 
     if (!code || !signedState) {
-      /* return createJsonResponse({ error: 'missing_code_or_state' }, 400, origin); */
-      return createJsonResponse({ data: { status: 'OK' } }, 200, origin);
+      return createJsonResponse({ error: 'missing_code_or_state' }, 400, origin);
     }
 
     // Verify signed state
@@ -108,39 +124,68 @@ serve(async (req) => {
       return createJsonResponse({ error: 'invalid_state_signature' }, 400, origin);
     }
     const payloadJson = atob(payloadB64.replaceAll('-', '+').replaceAll('_', '/') + '==')
-    let stateObj: { project_id: string; exp: number }
+    let stateObj: { project_id?: string | null; user_id?: string | null; return_to?: string | null; exp: number }
     try {
       stateObj = JSON.parse(payloadJson)
     } catch {
       return createJsonResponse({ error: 'invalid_state_payload' }, 400, origin);
     }
-    if (!stateObj?.project_id || !stateObj?.exp || stateObj.exp < Math.floor(Date.now() / 1000)) {
+    if (!stateObj?.exp || stateObj.exp < Math.floor(Date.now() / 1000)) {
       return createJsonResponse({ error: 'state_expired' }, 400, origin);
     }
-    const state = stateObj.project_id
+    const projectIdFromState = (typeof stateObj.project_id === 'string' && stateObj.project_id.trim() !== '')
+      ? stateObj.project_id
+      : null;
+    const userIdFromState = (typeof stateObj.user_id === 'string' && stateObj.user_id.trim() !== '')
+      ? stateObj.user_id
+      : null;
+    const returnToFromState = normalizeReturnTo(stateObj.return_to);
 
     // Инициализация supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Получаем проект и user_id
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('user_id')
-      .eq('id', state)
-      .single()
+    // Determine target user_id:
+    // - If project_id is present: resolve owner from DB and (optionally) verify it matches state.user_id.
+    // - Else: require state.user_id.
+    let targetUserId: string | null = null;
+    let projectOwnerUserId: string | null = null;
+    if (projectIdFromState) {
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', projectIdFromState)
+        .single()
 
-    if (projectError || !project) {
-      console.error('Project not found:', state, projectError)
-      return createJsonResponse({ error: 'project_not_found' }, 404, origin);
+      if (projectError || !project) {
+        console.error('Project not found:', projectIdFromState, projectError)
+        return createJsonResponse({ error: 'project_not_found' }, 404, origin);
+      }
+
+      projectOwnerUserId = project.user_id ?? null;
+      targetUserId = projectOwnerUserId;
+
+      if (userIdFromState && projectOwnerUserId && userIdFromState !== projectOwnerUserId) {
+        return createJsonResponse({ error: 'state_user_mismatch' }, 400, origin);
+      }
+    } else {
+      if (!userIdFromState) {
+        return createJsonResponse({ error: 'missing_state_user_id' }, 400, origin);
+      }
+      targetUserId = userIdFromState;
     }
+
+    if (!targetUserId) {
+      return createJsonResponse({ error: 'missing_state_user_id' }, 400, origin);
+    }
+    const ensuredTargetUserId: string = targetUserId;
 
     // Проверяем, не использовался ли уже этот код авторизации
     const { data: existingConnection, error: checkError } = await supabase
       .from('crm_connections')
       .select('authorization_code, access_token')
-      .eq('user_id', project.user_id)
+      .eq('user_id', targetUserId)
       .eq('crm_type', 'amocrm')
       .single()
 
@@ -154,11 +199,15 @@ serve(async (req) => {
 
     // Если этот же код авторизации уже был использован, значит это повторный вызов
     if (existingConnection && existingConnection.authorization_code === code) {
-      console.log('Same authorization code already processed for user:', project.user_id)
+      console.log('Same authorization code already processed for user:', targetUserId)
 
       // Если уже есть access_token, значит авторизация завершена успешно
       if (existingConnection.access_token) {
-        return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
+        const base = getBaseSiteUrl();
+        if (!base) return new Response("Server configuration error (SITE_URL missing)", { status: 500 });
+        const fallback = projectIdFromState ? `admin/project/${projectIdFromState}?page=integrations` : `admin?page=integrations&crm=amocrm&auth=success`;
+        const targetPath = (returnToFromState ?? normalizeReturnTo(fallback) ?? `/${fallback}`).replace(/^\//, '');
+        return Response.redirect(`${base}${targetPath}`, 302);
       } else {
         return createJsonResponse({ error: 'authorization_code_already_used' }, 400, origin);
       }
@@ -190,7 +239,7 @@ serve(async (req) => {
       .select('id, user_id')
       .eq('crm_type', 'amocrm')
       .eq('subdomain', subdomain)
-      .neq('user_id', project.user_id)
+      .neq('user_id', targetUserId)
       .limit(1)
 
     if (sameSubdomainError) {
@@ -201,7 +250,7 @@ serve(async (req) => {
     if (sameSubdomainConnections && sameSubdomainConnections.length > 0) {
       console.warn('AmoCRM subdomain already connected to another account:', {
         subdomain,
-        currentUserId: project.user_id,
+        currentUserId: targetUserId,
         existingUserId: sameSubdomainConnections[0].user_id,
       })
 
@@ -352,7 +401,7 @@ serve(async (req) => {
     const { data: crmConnection, error: connectionError } = await supabase
       .from('crm_connections')
       .upsert({
-        user_id: project.user_id,
+        user_id: targetUserId,
         crm_type: 'amocrm',
         subdomain: subdomain,
         access_token: tokenResult.access_token,
@@ -371,30 +420,32 @@ serve(async (req) => {
     }
 
     // Сохраняем настройки проекта
-    const { error: projectSettingsError } = await supabase
-      .from('project_crm_settings')
-      .upsert({
-        project_id: state,
-        crm_connection_id: crmConnection.id,
-        pipeline_id: pipelineId,
-        pipeline_name: pipelineName,
-        responsible_user_id: responsibleUserId,
-        user_name: responsibleUserName,
-      }, {
-        onConflict: 'project_id,crm_connection_id'
-      })
+    if (projectIdFromState) {
+      const { error: projectSettingsError } = await supabase
+        .from('project_crm_settings')
+        .upsert({
+          project_id: projectIdFromState,
+          crm_connection_id: crmConnection.id,
+          pipeline_id: pipelineId,
+          pipeline_name: pipelineName,
+          responsible_user_id: responsibleUserId,
+          user_name: responsibleUserName,
+        }, {
+          onConflict: 'project_id,crm_connection_id'
+        })
 
-    if (projectSettingsError) {
-      console.error('Failed to save project CRM settings:', projectSettingsError)
-      return createJsonResponse({ error: 'save_project_settings_failed', details: projectSettingsError.message }, 500, origin);
+      if (projectSettingsError) {
+        console.error('Failed to save project CRM settings:', projectSettingsError)
+        return createJsonResponse({ error: 'save_project_settings_failed', details: projectSettingsError.message }, 500, origin);
+      }
     }
 
     // Создаем локальную воронку со статусами, если выбрана воронка
-    if (selectedPipeline && selectedPipeline.statuses && selectedPipeline.statuses.length > 0) {
+    if (projectIdFromState && selectedPipeline && selectedPipeline.statuses && selectedPipeline.statuses.length > 0) {
       try {
         await createOrUpdateLocalFunnel(
-          state,
-          project.user_id,
+          projectIdFromState,
+          projectOwnerUserId ?? ensuredTargetUserId,
           selectedPipeline,
           supabase
         )
@@ -407,9 +458,14 @@ serve(async (req) => {
       console.warn('Pipeline not selected or has no statuses, skipping local funnel creation')
     }
 
-    console.log(`✅ Успешная авторизация AmoCRM для пользователя ${project.user_id} и проекта ${state}`)
+    console.log(`✅ Успешная авторизация AmoCRM для пользователя ${targetUserId}${projectIdFromState ? ` и проекта ${projectIdFromState}` : ''}`)
 
-    return Response.redirect(`${Deno.env.get("SITE_URL")}admin/project/${state}?page=integrations`, 302);
+    const base = getBaseSiteUrl();
+    if (!base) return new Response("Server configuration error (SITE_URL missing)", { status: 500 });
+
+    const fallback = projectIdFromState ? `admin/project/${projectIdFromState}?page=integrations` : `admin?page=integrations&crm=amocrm&auth=success`;
+    const targetPath = (returnToFromState ?? normalizeReturnTo(fallback) ?? `/${fallback}`).replace(/^\//, '');
+    return Response.redirect(`${base}${targetPath}`, 302);
 
   } catch (error) {
     console.error('OAuth callback error:', error)

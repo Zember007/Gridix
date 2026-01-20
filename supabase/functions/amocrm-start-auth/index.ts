@@ -3,6 +3,19 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 import { getSupabaseUser } from '../_shared/auth.ts'
 
+function normalizeReturnTo(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // Disallow absolute URLs / protocols (prevent open redirects)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) return null;
+  if (trimmed.startsWith('//')) return null;
+
+  // Prefer absolute-path style
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+}
+
 async function hmacSign(input: string, secret: string): Promise<string> {
   const enc = new TextEncoder()
   const cryptoKey = await crypto.subtle.importKey(
@@ -40,11 +53,9 @@ serve(async (req) => {
       return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    const { project_id } = await req.json();
-
-    if (!project_id) {
-      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
-    }
+    const body = await req.json().catch(() => ({}));
+    const project_id = (body as any)?.project_id ?? null;
+    const return_to = normalizeReturnTo((body as any)?.return_to);
 
     // Initialize Supabase user client (RLS enforced)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -54,21 +65,27 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Check if project exists and user has access (via RLS)
-    const { data: project, error: projectError } = await userClient
-      .from('projects')
-      .select('id')
-      .eq('id', project_id)
-      .single();
+    const projectId = (typeof project_id === 'string' && project_id.trim() !== '' && project_id !== 'global-auth')
+      ? project_id
+      : null;
 
-    if (projectError || !project) {
-      return new Response(
-        JSON.stringify({ error: 'Project not found or access denied' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    // If a project_id is provided, validate access via RLS
+    if (projectId) {
+      const { data: project, error: projectError } = await userClient
+        .from('projects')
+        .select('id')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError || !project) {
+        return new Response(
+          JSON.stringify({ error: 'Project not found or access denied' }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
     }
 
     // AmoCRM OAuth настройки
@@ -81,7 +98,12 @@ serve(async (req) => {
     const redirectUri = `${supabaseUrl}/functions/v1/amocrm-oauth-callback`;
 
     // Build signed state with short expiration
-    const payload = JSON.stringify({ project_id, exp: Math.floor(Date.now() / 1000) + 10 * 60 })
+    const payload = JSON.stringify({
+      project_id: projectId,
+      user_id: user.id,
+      return_to: return_to,
+      exp: Math.floor(Date.now() / 1000) + 10 * 60
+    })
     const payloadB64 = btoa(payload).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
     const signature = await hmacSign(payloadB64, stateSecret)
     const signedState = `${payloadB64}.${signature}`

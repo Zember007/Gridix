@@ -45,6 +45,8 @@
   "disconnectError": "Error disconnecting",
   "settingsLoadError": "Error loading amoCRM settings",
   "dataFetchError": "Error loading data from amoCRM",
+  "disabled": "Disabled",
+  "configureProjectDesc": "Configure funnel and responsible user for this project.",
   "authStartError": "Error starting authorization:",
   "authUrlError": "Authorization URL not received",
   "globalConnectionInfo": "Your amoCRM account is connected to all projects. You can configure pipeline and settings for each project individually.",
