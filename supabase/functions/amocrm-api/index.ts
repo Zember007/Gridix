@@ -386,34 +386,84 @@ serve(async (req) => {
       return createJsonResponse(buildLeadBindingResponse(created), 200, origin);
     }
 
-    if (!project_id) {
-      return createJsonResponse({ error: 'project_id is required' }, 400, origin);
+    // Verify user is authenticated
+    if (!user || !user.id) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401, origin);
     }
 
-    // Check if project exists and user has access via RLS
-    const { data: project, error: projectError } = await userClient
-      .from('projects')
-      .select('id, user_id')
-      .eq('id', project_id)
-      .single();
+    // Special action: Disconnect entire user connection (Admin Panel)
+    if (action === 'disconnect_user_connection') {
+      const { data: connection } = await svc
+        .from('crm_connections')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('crm_type', 'amocrm')
+        .maybeSingle();
 
-    if (projectError || !project) {
-      return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
+      if (!connection) {
+        return createJsonResponse({ success: true, message: 'Already disconnected' }, 200, origin);
+      }
+
+      // Delete all settings linked to this connection
+      await svc.from('project_crm_settings').delete().eq('crm_connection_id', connection.id);
+
+      // Delete connection
+      await svc.from('crm_connections').delete().eq('id', connection.id);
+
+      return createJsonResponse({ success: true }, 200, origin);
     }
 
-    // Get AmoCRM connection on user level (shared across projects)
+    // Special action: Check connection status (Admin Panel)
+    if (action === 'get_connection') {
+      const { data: connection } = await svc
+        .from('crm_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('crm_type', 'amocrm')
+        .maybeSingle();
+
+      return createJsonResponse({ connection }, 200, origin);
+    }
+
+    // Determine target user based on project_id or current user
+    let targetUserId = user.id;
+
+    if (project_id) {
+      if (typeof project_id !== 'string') {
+        return createJsonResponse({ error: 'Invalid project_id' }, 400, origin);
+      }
+
+      // Check if project exists and user has access via RLS
+      const { data: project, error: projectError } = await userClient
+        .from('projects')
+        .select('id, user_id')
+        .eq('id', project_id)
+        .single();
+
+      if (projectError || !project) {
+        return createJsonResponse({ error: 'Project not found or access denied' }, 404, origin);
+      }
+      targetUserId = project.user_id;
+    }
+
+    // Get AmoCRM connection for the target user
     const { data: crmConnection, error: connectionError } = await svc
       .from('crm_connections')
       .select('*')
-      .eq('user_id', project.user_id)
+      .eq('user_id', targetUserId)
       .eq('crm_type', 'amocrm')
       .maybeSingle();
 
-    if (connectionError) {
-      throw connectionError;
-    }
+    if (connectionError) throw connectionError;
 
-    if (!crmConnection || crmConnection.crm_type !== 'amocrm') {
+    if (!crmConnection) {
+      // If we are just fetching data/settings and no connection exists, return appropriate response
+      if (action === 'fetch_data') {
+        return createJsonResponse({
+          error: 'not_connected',
+          data: null
+        }, 200, origin);
+      }
       return createJsonResponse({ error: 'AmoCRM connection not found' }, 404, origin);
     }
 
@@ -421,46 +471,57 @@ serve(async (req) => {
       return createJsonResponse({ error: 'AmoCRM not authorized' }, 401, origin);
     }
 
-    // Ensure we have a valid token (refresh if expired or close to expiry)
+    // Ensure we have a valid token
     const { accessToken, tokenExpiresAt } = await getValidAccessToken(crmConnection as CRMConnection, svc);
     if (!accessToken) {
       return createJsonResponse({ error: 'AmoCRM token refresh failed' }, 401, origin);
     }
 
-    // Handle different actions
+    // Handle actions
     switch (action) {
       case 'fetch_data':
         return await fetchAmoCRMData(crmConnection, accessToken, origin, tokenExpiresAt);
-      
-      case 'save_settings':
-        if (typeof project_id !== 'string' || !project_id) {
-          return createJsonResponse({ error: 'project_id is required for save_settings' }, 400, origin);
-        }
-        if (typeof pipeline_id !== 'number' || !Number.isFinite(pipeline_id)) {
-          return createJsonResponse({ error: 'pipeline_id is required for save_settings' }, 400, origin);
-        }
+
+      case 'initialize_project_settings':
+        if (!project_id) return createJsonResponse({ error: 'project_id required' }, 400, origin);
+        // Will fetch data and set defaults if missing
         return await saveAmoCRMSettings(
-          project_id, 
-          pipeline_id, 
-          status_id, 
-          responsible_user_id, 
-          crmConnection, 
-          accessToken, 
-          svc, 
+          project_id,
+          // Pass -1 or similar to indicate "pick default"
+          -1,
+          null,
+          null,
+          crmConnection,
+          accessToken,
+          svc,
+          userClient,
+          origin,
+          true // isInitialization flag
+        );
+
+      case 'save_settings':
+        if (!project_id) return createJsonResponse({ error: 'project_id required' }, 400, origin);
+        if (typeof pipeline_id !== 'number') return createJsonResponse({ error: 'pipeline_id required' }, 400, origin);
+
+        return await saveAmoCRMSettings(
+          project_id,
+          pipeline_id,
+          status_id,
+          responsible_user_id,
+          crmConnection,
+          accessToken,
+          svc,
           userClient,
           origin
         );
-      
+
       case 'disconnect':
-        if (typeof project_id !== 'string' || !project_id) {
-          return createJsonResponse({ error: 'project_id is required for disconnect' }, 400, origin);
-        }
+        if (!project_id) return createJsonResponse({ error: 'project_id required' }, 400, origin);
         return await disconnectAmoCRM(project_id, svc, origin);
-      
+
       default:
         return createJsonResponse({ error: 'Invalid action' }, 400, origin);
     }
-
   } catch (error) {
     console.error('AmoCRM API error:', error);
     return createJsonResponse({
@@ -533,7 +594,8 @@ async function saveAmoCRMSettings(
   accessToken: string,
   svc: any,
   userClient: any,
-  origin: string | null
+  origin: string | null,
+  isInitialization: boolean = false
 ): Promise<Response> {
   try {
     // Fetch AmoCRM data to get pipeline and status details
@@ -565,71 +627,88 @@ async function saveAmoCRMSettings(
     // Extract pipelines - statuses should be nested within each pipeline
     const rawPipelines = pipelinesData._embedded?.pipelines || pipelinesData || [];
     const pipelines: AmoCRMPipeline[] = Array.isArray(rawPipelines) ? rawPipelines : [];
-    
+
     // Ensure each pipeline has statuses array (might be missing or null)
     pipelines.forEach(pipeline => {
       if (!pipeline.statuses) {
         pipeline.statuses = [];
       }
     });
-    
+
     const users: AmoCRMUser[] = usersData._embedded?.users || [];
 
     console.log('Available pipelines:', pipelines.length);
     console.log('Looking for pipeline_id:', pipelineId);
-    
+
     if (pipelines.length > 0) {
       console.log('First pipeline structure:', JSON.stringify(pipelines[0], null, 2));
     }
 
+    // If initialization, verify project settings don't exist yet (or we just overwrite/fill missing)
+
     // Find selected pipeline and status
-    const selectedPipeline = pipelines.find(p => p.id === pipelineId);
+    // If initialization (pipelineId = -1), pick the first one
+    let targetPipelineId = pipelineId;
+    if (pipelineId === -1 && pipelines.length > 0) {
+      targetPipelineId = pipelines[0].id;
+    }
+
+    const selectedPipeline = pipelines.find(p => p.id === targetPipelineId);
+
     if (!selectedPipeline) {
-      console.error('Pipeline not found. Available pipeline IDs:', pipelines.map(p => p.id));
-      return createJsonResponse({ 
+      console.error('Pipeline not found. Available:', pipelines.map(p => p.id));
+      if (pipelineId === -1) {
+        return createJsonResponse({ error: 'No pipelines found in AmoCRM' }, 404, origin);
+      }
+      return createJsonResponse({
         error: 'Selected pipeline not found',
         available_pipelines: pipelines.map(p => ({ id: p.id, name: p.name }))
       }, 404, origin);
     }
 
-    console.log('Selected pipeline:', selectedPipeline.name, 'Statuses count:', selectedPipeline.statuses?.length || 0);
-    console.log('Selected pipeline full structure:', JSON.stringify(selectedPipeline, null, 2));
+    console.log('Selected pipeline:', selectedPipeline.name);
 
     // If statuses are missing, try to fetch them separately
     let pipelineStatuses = selectedPipeline.statuses || [];
-    
+
     if (pipelineStatuses.length === 0) {
       console.log('Statuses not found in pipeline response, attempting to fetch separately...');
       try {
-        const pipelineDetailResponse = await fetch(`${baseUrl}/leads/pipelines/${pipelineId}`, { headers });
+        const pipelineDetailResponse = await fetch(`${baseUrl}/leads/pipelines/${targetPipelineId}`, { headers });
         if (pipelineDetailResponse.ok) {
           const pipelineDetail = await pipelineDetailResponse.json();
           console.log('Pipeline detail response:', JSON.stringify(pipelineDetail, null, 2));
           pipelineStatuses = pipelineDetail._embedded?.statuses || pipelineDetail.statuses || [];
-          // Update the selectedPipeline with fetched statuses
           selectedPipeline.statuses = pipelineStatuses;
         }
-      } catch (fetchError) {
-        console.error('Error fetching pipeline details:', fetchError);
-      }
+      } catch (fetchError) { console.error('Error fetching pipeline details:', fetchError); }
     }
 
     // Check if pipeline has statuses after attempting to fetch separately
     if (!pipelineStatuses || pipelineStatuses.length === 0) {
       console.error('Pipeline has no statuses after fetch attempt:', selectedPipeline);
-      return createJsonResponse({ 
+      return createJsonResponse({
         error: 'Selected pipeline has no statuses. Please add at least one status to this pipeline in AmoCRM before configuring it.',
         pipeline: { id: selectedPipeline.id, name: selectedPipeline.name },
         suggestion: 'Go to your AmoCRM account and ensure the pipeline has at least one status configured.'
       }, 400, origin);
     }
 
-    const selectedStatus = statusId 
+    const selectedStatus = statusId
       ? selectedPipeline.statuses.find(s => s.id === statusId)
       : selectedPipeline.statuses[0]; // Default to first status
 
-    const selectedUser = responsibleUserId 
-      ? users.find(u => u.id === responsibleUserId)
+    // For initialization, pick first admin or any user if not specified
+    let targetUserId = responsibleUserId;
+    if (targetUserId === null && users.length > 0) {
+      // Prefer admin or first user
+      // const admin = users.find(u => u.is_admin); // AmoCRM users don't always expose is_admin in list easily without checking keys
+      // valid user is enough
+      targetUserId = users[0].id; // fallback
+    }
+
+    const selectedUser = targetUserId
+      ? users.find(u => u.id === targetUserId)
       : null;
 
     // Get project to find user_id
@@ -644,20 +723,27 @@ async function saveAmoCRMSettings(
     }
 
     // Update or create project CRM settings
-    const { data: existingSettings } = await svc
+    const { data: existingSettings, error: existingSettingsError } = await svc
       .from('project_crm_settings')
       .select('id')
       .eq('project_id', projectId)
-      .single();
+      .eq('crm_connection_id', connection.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingSettingsError && existingSettingsError.code !== 'PGRST116') {
+      throw existingSettingsError;
+    }
 
     const settingsData = {
       project_id: projectId,
       crm_connection_id: connection.id,
-      pipeline_id: pipelineId,
+      pipeline_id: targetPipelineId,
       pipeline_name: selectedPipeline.name,
       status_id: selectedStatus?.id || null,
       status_name: selectedStatus?.name || null,
-      responsible_user_id: responsibleUserId,
+      responsible_user_id: targetUserId,
       user_name: selectedUser?.name || null,
       updated_at: new Date().toISOString()
     };
@@ -689,7 +775,7 @@ async function saveAmoCRMSettings(
       svc
     );
 
-    return createJsonResponse({ 
+    return createJsonResponse({
       success: true,
       message: 'AmoCRM settings saved successfully',
       settings: settingsData
@@ -732,7 +818,7 @@ async function disconnectAmoCRM(
 
     if (!connection) {
       // Already disconnected
-      return createJsonResponse({ 
+      return createJsonResponse({
         success: true,
         message: 'AmoCRM already disconnected'
       }, 200, origin);
@@ -782,7 +868,7 @@ async function disconnectAmoCRM(
       }
     }
 
-    return createJsonResponse({ 
+    return createJsonResponse({
       success: true,
       message: 'AmoCRM disconnected successfully from all projects'
     }, 200, origin);
@@ -844,7 +930,7 @@ async function getValidAccessToken(connection: CRMConnection, svc: any): Promise
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Token refresh failed:', response.status, errorText);
-      
+
       // If 401, the refresh token is invalid/revoked - clear tokens in DB so UI knows to re-authorize
       if (response.status === 401) {
         console.log('Refresh token invalid/revoked - clearing tokens for connection:', connection.id);
@@ -857,7 +943,7 @@ async function getValidAccessToken(connection: CRMConnection, svc: any): Promise
           })
           .eq('id', connection.id);
       }
-      
+
       return { accessToken: null, tokenExpiresAt: null };
     }
 

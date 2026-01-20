@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { Badge } from '@/shared/ui/badge';
 import { Check, Crown, Zap } from 'lucide-react';
-import { useSubscription } from '../../hooks/useSubscription';
-import { cn } from '../../lib/utils';
+import { useSubscription } from '@/entities/subscription/queries/useSubscription';
+import { cn } from '@/shared/lib/cn';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 declare global {

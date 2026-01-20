@@ -94,6 +94,23 @@
   "projects": "პროექტები",
   "settings": "პარამეტრები",
   "subscription": "გამოწერა",
+  "integrations": "ინტეგრაციები",
+  "integrationsDescription": "დააკავშირეთ გარე სერვისები თქვენს სამუშაო სივრცესთან.",
+  "projectsConfig": "პროექტების კონფიგურაცია",
+  "configureProjects": "პროექტების კონფიგურაცია",
+  "bitrix24": {
+    "attached": "დაკავშირებულია",
+    "attachError": "ვერ მოხერხდა დაკავშირება",
+    "detached": "გამოირთო",
+    "detachError": "ვერ მოხერხდა გათიშვა",
+    "configureProjectDesc": "აირჩიეთ Bitrix24 ვორკფლოუ/ვоронка ამ პროექტისთვის.",
+    "funnel": "ვоронка",
+    "selectFunnel": "აირჩიეთ ვоронка",
+    "selectFunnelDesc": "აირჩიეთ ვоронка სტატუსების სინქრონიზაციისთვის.",
+    "statusesSynced": "სტატუსი სინქრონიზებულია",
+    "funnelSynced": "ვоронка სინქრონიზებულია",
+    "syncError": "ვერ მოხერხდა ვоронка-ს სინქრონიზაცია"
+  },
   "widgets": "ვიჯეტები",
   "documentation": "დოკუმენტაცია"
 }

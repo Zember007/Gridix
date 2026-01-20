@@ -22,8 +22,7 @@ import ProjectApartmentsManager from '@/components/projects/ProjectApartmentsMan
 import BuildingImageEditor from '@/components/visualization/BuildingImageEditor';
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
-import AmoCRMSettings from '@/components/admin/AmoCRMSettings';
-import Bitrix24Settings from '@/components/admin/Bitrix24Settings';
+
 import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { useSearchParams } from 'react-router-dom';
@@ -78,7 +77,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     const page = searchParams.get('page');
     if (page) {
       // Валидируем, что page является допустимой вкладкой
-      const validTabs = ['basic', 'building', 'apartments', 'floors', 'photos', 'fields', 'integrations', 'domains'];
+      const validTabs = ['basic', 'building', 'apartments', 'floors', 'photos', 'fields', 'domains'];
       if (validTabs.includes(page)) {
         setActiveTab(page);
       }
@@ -406,7 +405,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'floors': return 'floorplan';
       case 'photos': return 'photos';
       case 'fields': return 'fields';
-      case 'integrations': return 'integrations';
       case 'domains': return 'domains';
       default: return 'general';
     }
@@ -419,7 +417,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       case 'floorplan': setActiveTab('floors'); break;
       case 'photos': setActiveTab('photos'); break;
       case 'fields': setActiveTab('fields'); break;
-      case 'integrations': setActiveTab('integrations'); break;
       case 'domains': setActiveTab('domains'); break;
       default: setActiveTab('basic');
     }
@@ -884,12 +881,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
             <ProjectDomainSettings projectId={project.id} projectName={project.name} />
           )}
 
-          {activeTab === 'integrations' && (
-            <div className="space-y-4">
-              <AmoCRMSettings projectId={project.id} />
-              <Bitrix24Settings projectId={project.id} />
-            </div>
-          )}
+
         </div>
       </div>
     </div>

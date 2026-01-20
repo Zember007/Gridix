@@ -19,7 +19,7 @@ import {
   LogOut,
   Globe,
   BarChart3,
-  Zap as Integration,
+  Package as Integration,
   Building2,
   Code,
   Layers3,
@@ -59,6 +59,7 @@ const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, 
     ...(!amoWidget ? [{ id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') }] : []),
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
+    { id: "integrations", icon: <Integration size={20} />, label: t('admin.integrations') },
     { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics.title') },
     { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
   ];
@@ -79,7 +80,6 @@ const getProjectEditorNavItems = (t: (k: string) => string, projectType?: 'build
     { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
     { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
     { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
-    { id: "integrations", icon: <Integration size={20} />, label: t('projectEditor.integrations') },
     { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
   ];
 

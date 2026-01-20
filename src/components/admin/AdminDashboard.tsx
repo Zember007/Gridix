@@ -11,6 +11,7 @@ import SubscriptionTab from './SubscriptionTab';
 import PartnersPage from '../../pages/PartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { AdminAnalytics } from './AdminAnalytics';
+import { IntegrationsTab } from './IntegrationsTab';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -301,6 +302,12 @@ const AdminDashboard = () => {
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               <AdminAnalytics />
+            </div>
+          )}
+
+          {activeTab === 'integrations' && userRole.type !== 'manager' && (
+            <div className="space-y-6">
+              <IntegrationsTab />
             </div>
           )}
 

@@ -166,7 +166,7 @@ async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): P
     name: payload.name ?? undefined,
     signed_up_at: payload.signedUpAt ?? undefined,
   });
-  
+
   lastIdentifiedUserId = userId;
 }
 
@@ -220,7 +220,7 @@ export async function startProjectCreationTour(payload: IdentifyPayload): Promis
     const client = await getPreparedUsertourClient();
     if (!client) return;
     await identifyImpl(client, payload);
-    await client.start(contentId, { once: true, continue: true });
+    await client.start(contentId, { once: true });
     await nextAnimationFrame();
   });
 }
@@ -235,7 +235,7 @@ export async function startProjectEditorTour(payload: IdentifyPayload): Promise<
     const client = await getPreparedUsertourClient();
     if (!client) return;
     await identifyImpl(client, payload);
-    await client.start(contentId, { once: true, continue: true });
+    await client.start(contentId, { once: true });
     await nextAnimationFrame();
   });
 }
@@ -250,7 +250,7 @@ export async function startPartnersTour(payload: IdentifyPayload): Promise<void>
     const client = await getPreparedUsertourClient();
     if (!client) return;
     await identifyImpl(client, payload);
-    await client.start(contentId, { once: true, continue: true });
+    await client.start(contentId, { once: true });
     await nextAnimationFrame();
   });
 }
