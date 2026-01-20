@@ -39,6 +39,8 @@ const FavoritesTab = lazy(() => import('../FavoritesTab'))
 const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
 const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
 
+const enableSidePanel = false;
+
 const ProjectApartmentSelector = ({
   projectId,
   isWidget = false,
@@ -310,13 +312,18 @@ const ProjectApartmentSelector = ({
 
   const openFloorPreview = (floorNumber: number) => {
     setSelectedFloorForPlan(floorNumber);
+
+    if (!enableSidePanel) {
+      setViewMode('floor-plan');
+      return;
+    }
     setSidePanelState({ kind: 'floor', floorNumber });
     setSidePanelOpen(true);
   };
 
   const openApartmentPreview = (apartment: Apartment) => {
     // Widget keeps its modal-based UX
-    if (isWidget) {
+    if (isWidget || !enableSidePanel) {
       void openApartmentDetails(apartment);
       return;
     }
@@ -579,8 +586,7 @@ const ProjectApartmentSelector = ({
                       )}
                     </div>
 
-                    {/* Static right side panel (no overlay). Hidden by width=0 when closed */}
-                    {project && !isWidget && (
+                    {enableSidePanel && project && !isWidget && (
                       <ProjectSidePanel
                         open={sidePanelOpen}
                         onOpenChange={(open) => {
