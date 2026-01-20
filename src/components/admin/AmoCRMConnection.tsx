@@ -33,7 +33,7 @@ export const AmoCRMConnection = () => {
     const [showProjectsModal, setShowProjectsModal] = useState(false);
 
     const isAuthorized = connection?.access_token && connection?.refresh_token;
-    const tokenExpired = connection?.token_expires_at ? new Date(connection.token_expires_at) < new Date() : false;
+    const tokenExpired = connection?.token_expires_at && !connection.refresh_token ? new Date(connection.token_expires_at) < new Date() : false;
 
     const fetchConnection = useCallback(async () => {
         try {
@@ -149,7 +149,7 @@ export const AmoCRMConnection = () => {
                         )}
                         {(!isAuthorized || tokenExpired) && (
                             <Badge variant="outline" className="text-muted-foreground">
-                                {t('common.inactive') || 'Inactive'}
+                                {t('admin.common.inactive') || 'Inactive'}
                             </Badge>
                         )}
                     </div>
@@ -205,7 +205,7 @@ export const AmoCRMConnection = () => {
                             {tokenExpired && (
                                 <Alert variant="destructive" className="py-2">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>{t('amocrm.tokenExpired') || 'Token expired'}</AlertDescription>
+                                    <AlertDescription>{t('admin.amocrm.tokenExpired') || 'Token expired'}</AlertDescription>
                                 </Alert>
                             )}
                             <Button
