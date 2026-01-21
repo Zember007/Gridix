@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Package } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AmoCRMConnection } from './AmoCRMConnection';
-/* import { Bitrix24Connection } from './Bitrix24Connection'; */
+import { Bitrix24Connection } from './Bitrix24Connection';
 
 export const IntegrationsTab = () => {
     const { t } = useLanguage();
@@ -21,7 +21,7 @@ export const IntegrationsTab = () => {
                 <AmoCRMConnection />
 
                 {/* Bitrix24 Card */}
-                {/* <Bitrix24Connection /> */}
+                <Bitrix24Connection />
 
                 {/* Coming Soon Card */}
                 <Card className="opacity-60 border-dashed">

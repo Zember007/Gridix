@@ -458,7 +458,7 @@ const ProjectApartmentSelector = ({
       {project && (
         <>
           {/* Layout: left column (header + content) + right column (side panel) */}
-          <div className="flex grow overflow-hidden min-h-0">
+          <div className="flex grow min-h-0">
             <div className="flex flex-col flex-1 min-w-0 min-h-0">
               <ProjectHeader
                 filtersRef={filtersRef}
@@ -632,7 +632,7 @@ const ProjectApartmentSelector = ({
               <>
                 {/* Desktop push panel */}
                 <div
-                  className={`hidden md:block h-full bg-white border-l border-gray-100 shadow-2xl transition-[width] duration-300 ease-in-out overflow-hidden`}
+                  className={`hidden md:block bg-white border-l border-gray-100 shadow-2xl transition-[width] duration-300 ease-in-out`}
                   style={{ width: sidePanelOpen ? '35vw' : '0px' }}
                 >
                   {sidePanelOpen && (

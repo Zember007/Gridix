@@ -16,6 +16,8 @@ import {
   computePopupPositionForPolygon as computePopupPositionForPolygonUtil,
   getPolygonBoundsPct,
 } from "@/features/visualization/buildingFacade/lib/popupPosition";
+import { HandTap } from "@phosphor-icons/react";
+import InteractionHint from '@/components/visualization/InteractionHint';
 
 const COLLAPSED_HEIGHT = 280;
 
@@ -631,6 +633,7 @@ const BuildingFacadeView = ({
 
   return (
     <>
+
       <div
         ref={containerRef}
         className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg min-h-[200px] flex items-center justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
@@ -641,6 +644,7 @@ const BuildingFacadeView = ({
           boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
         }}
       >
+
         {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
         {project.building_image_url && (
           <>
@@ -788,50 +792,51 @@ const BuildingFacadeView = ({
         {showPopup && selectedFloor !== null && popupPosition && (
           <FloorPopup Number={selectedFloor} position={popupPosition} />
         )}
+        <InteractionHint />
         {isMobile && isExpanded && visibleFloors.length > 0 && (
-            <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
-              <div className={`flex flex-row items-center gap-4 w-full`}>
+          <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
+            <div className={`flex flex-row items-center gap-4 w-full`}>
 
 
-                {/* Floor Carousel */}
-                <div className={`flex-1 flex items-center justify-center min-h-0`}>
-                  <div className={`w-full max-w-[100vw] relative`}>
-                    <Carousel
-                      className="w-full h-full "
-                      orientation={isMobile ? "horizontal" : "vertical"}
-                      opts={{
-                        align: "center",
-                        loop: visibleFloors.length > 3,
-                      }}
-                      setApi={setCarouselApi}
-                    >
-                      <div className={`w-full h-full shadow-xl border-2 border-white bg-white backdrop-blur-sm flex flex-col justify-center`}>
-                        <CarouselContent>
-                          {visibleFloors.map((floor, index) => (
-                            <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
-                              <button
-                                className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl  ${selectedFloor === floor.floor_number
-                                  ? 'text-white'
-                                  : 'hover:bg-gray-100 text-gray-700'
-                                  }`}
-                                style={selectedFloor === floor.floor_number ? { backgroundColor: themeColor } : {}}
-                                onClick={() => handleSVGFloorHover(floor.floor_number)}
-                              >
-                                {floor.floor_number}
-                              </button>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                      </div>
+              {/* Floor Carousel */}
+              <div className={`flex-1 flex items-center justify-center min-h-0`}>
+                <div className={`w-full max-w-[100vw] relative`}>
+                  <Carousel
+                    className="w-full h-full "
+                    orientation={isMobile ? "horizontal" : "vertical"}
+                    opts={{
+                      align: "center",
+                      loop: visibleFloors.length > 3,
+                    }}
+                    setApi={setCarouselApi}
+                  >
+                    <div className={`w-full h-full shadow-xl border-2 border-white bg-white backdrop-blur-sm flex flex-col justify-center`}>
+                      <CarouselContent>
+                        {visibleFloors.map((floor, index) => (
+                          <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
+                            <button
+                              className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl  ${selectedFloor === floor.floor_number
+                                ? 'text-white'
+                                : 'hover:bg-gray-100 text-gray-700'
+                                }`}
+                              style={selectedFloor === floor.floor_number ? { backgroundColor: themeColor } : {}}
+                              onClick={() => handleSVGFloorHover(floor.floor_number)}
+                            >
+                              {floor.floor_number}
+                            </button>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </div>
 
-                
-                    </Carousel>
-                  </div>
+
+                  </Carousel>
                 </div>
-
-
               </div>
+
+
             </div>
+          </div>
         )}
       </div>
     </>

@@ -8,6 +8,7 @@ import ApartmentPopup from './ApartmentPopup';
 import { FieldSetting } from '@/hooks/useFields';
 import PolygonAnnotator from './polygon-editor/PolygonAnnotator';
 import type { Shape } from './polygon-editor/GeometryShapes';
+import InteractionHint from './InteractionHint';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -252,6 +253,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
               currency={currency || null}
             />
           )}
+          <InteractionHint />
         </div>
 
         {apartments?.length && onApartmentSelect && (

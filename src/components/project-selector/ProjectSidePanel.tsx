@@ -171,7 +171,7 @@ export const ProjectSidePanel = ({
     <aside
       aria-hidden={!open}
       className={cn(
-        'h-full bg-white overflow-hidden flex flex-col w-full',
+        'sticky top-0 bg-white overflow-y-auto flex flex-col w-full max-h-screen',
         open ? 'pointer-events-auto' : 'pointer-events-none',
       )}
     >
