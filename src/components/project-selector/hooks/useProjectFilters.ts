@@ -150,6 +150,22 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     return filteredApartments.filter(apt => apt.status === 'available').length;
   }, [filteredApartments]);
 
+  const resetFilters = useCallback(() => {
+    setSelectedFloor('all');
+    setSelectedRooms('all');
+    setSelectedType('all');
+    setSearchQuery('');
+    setShowOnlyAvailable(true);
+
+    // Reset currency to project currency when possible, otherwise RUB
+    const base = (project?.currency && isValidCurrency(project.currency)) ? project.currency : 'RUB';
+    setSelectedCurrency(base);
+
+    // Reset ranges to full allowed range for current currency/units
+    setPriceRange([minPrice, maxPrice]);
+    setAreaRange([minArea, maxArea]);
+  }, [maxArea, maxPrice, minArea, minPrice, project?.currency]);
+
   return {
     // State
     selectedFloor,
@@ -182,6 +198,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     maxPrice,
     minArea,
     maxArea,
+    resetFilters,
   };
 };
 

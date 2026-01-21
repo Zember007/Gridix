@@ -21,6 +21,7 @@
   "contactManagerNotConfigured": "Manager contact information not configured",
   "contactMessage": "Hello! I am interested in the {{projectName}} project. Can you provide additional information?",
   "currency": "Currency",
+  "chess": "Chess",
   "facade": "Facade",
   "finishing": "Finishing",
   "floor": "Floor",
@@ -63,5 +64,6 @@
   "table": "Table",
   "total": "Total",
   "type": "Type",
-  "viewApartments": "View {{count}} options"
+  "viewApartments": "View {{count}} options",
+  "plan_floor": "Floor {{floor}} plan"
 }

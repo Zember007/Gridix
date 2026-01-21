@@ -12,8 +12,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface FloorPlanViewProps {
   projectId: string;
   floorNumber: number;
-  apartments: Apartment[];
-  onApartmentSelect: (apartment: Apartment) => void;
+  apartments?: Apartment[];
+  onApartmentSelect?: (apartment: Apartment) => void;
   currency?: string | null;
   visibleFields?: FieldSetting[];
 }
@@ -208,9 +208,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   if (loading) {
     return (
       <Card
-        className='h-full grow min-h-[400px]'
+        className={`h-full grow ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex items-center justify-center min-h-96 h-full">
+        <CardContent className="flex items-center justify-center h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </CardContent>
       </Card>
@@ -220,9 +220,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   if (!floorPlan || !floorPlan.image_url) {
     return (
       <Card
-        className='h-full grow min-h-[400px]'
+        className={`h-full grow  ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex flex-col items-center justify-center min-h-96 h-full text-gray-500">
+        <CardContent className="flex flex-col items-center justify-center  h-full text-gray-500">
           <p>План {floorNumber} этажа не загружен</p>
           <p className="text-sm mt-1">Обратитесь к администратору для загрузки плана этажа</p>
         </CardContent>
@@ -231,7 +231,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   }
 
   return (
-    <Card className='h-full grow'>
+    <Card className='h-full grow rounded-none'>
       <CardContent className="flex flex-col h-full">
 
 
@@ -240,12 +240,12 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
             <img
               src={floorPlan.image_url}
               alt={`План ${floorNumber} этажа`}
-              className="w-auto mx-auto h-auto max-h-[600px] md:min-h-[400px]"
+              className={`w-auto mx-auto h-auto  ${apartments ? 'max-h-[600px] md:min-h-[400px]' : 'min-h-[100px]'}`}
               onLoad={handleImageLoad}
             />
 
             {/* Overlay с квартирами */}
-            {imageSize.width > 0 && (
+            {imageSize.width > 0 && onApartmentSelect && (
               <svg
                 viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -256,7 +256,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                 }}
                 preserveAspectRatio="none"
               >
-                {apartments.map((apartment) => {
+                {apartments?.map((apartment) => {
                   if (!apartment.polygon || apartment.polygon.length < 3) return null;
 
                   const convertedPolygon = convertToViewBox(apartment.polygon, imageSize.width, imageSize.height);
@@ -299,13 +299,13 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                         }}
                         onClick={() => onApartmentSelect(apartment)}
                         onMouseEnter={(e) => {
-                            if(isMobile) return;
-                            handleApartmentHover(apartment, e)
-                          }}
-                        onMouseLeave={() => {if(isMobile) return; handleApartmentLeave()}}
- /*                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
-                        onTouchEnd={() => {if(isMobile) handleApartmentLeave()}} */
-                        
+                          if (isMobile) return;
+                          handleApartmentHover(apartment, e)
+                        }}
+                        onMouseLeave={() => { if (isMobile) return; handleApartmentLeave() }}
+                      /*                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
+                                             onTouchEnd={() => {if(isMobile) handleApartmentLeave()}} */
+
                       />
                       {floorSettings?.display?.showNumbers !== false && (
                         <text
@@ -328,42 +328,46 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-6 md:text-sm text-[10px] flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded opacity-60"
-              style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
-            ></div>
-            <span>{t('project.available')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded opacity-60"
-              style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
-            ></div>
-            <span>{t('project.reserved')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded opacity-60"
-              style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
-            ></div>
-            <span>{t('project.sold')}</span>
-          </div>
-        </div>
+        {apartments?.length && onApartmentSelect && (
+          <>
+            <div className="mt-4 flex items-center gap-6 md:text-sm text-[10px] flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded opacity-60"
+                  style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
+                ></div>
+                <span>{t('project.available')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded opacity-60"
+                  style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
+                ></div>
+                <span>{t('project.reserved')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded opacity-60"
+                  style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
+                ></div>
+                <span>{t('project.sold')}</span>
+              </div>
+            </div>
 
-        {/* Apartment Popup */}
-        {showPopup && hoveredApartment && popupPosition && (
-          <ApartmentPopup
-            apartment={hoveredApartment}
-            position={popupPosition}
-            settings={{
-              showNumbers: floorSettings?.display?.showNumbers ?? true,
-              showTooltip: floorSettings?.display?.showTooltip ?? false,
-              showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
-              showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
-            }}
-            currency={currency || null}
-          />
+            {/* Apartment Popup */}
+            {showPopup && hoveredApartment && popupPosition && (
+              <ApartmentPopup
+                apartment={hoveredApartment}
+                position={popupPosition}
+                settings={{
+                  showNumbers: floorSettings?.display?.showNumbers ?? true,
+                  showTooltip: floorSettings?.display?.showTooltip ?? false,
+                  showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+                  showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
+                }}
+                currency={currency || null}
+              />
+            )}
+          </>
         )}
-        
+
       </CardContent>
     </Card>
   );

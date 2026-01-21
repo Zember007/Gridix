@@ -7,7 +7,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 
 
 
-type ViewMode = 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts';
+type ViewMode = 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess';
 
 interface ViewModeButtonsProps {
   viewMode: ViewMode;
@@ -27,10 +27,17 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const buttonClass = (mode: ViewMode) =>
-    `${viewMode === mode ? 'text-white' : 'border-gray-300'} ${isMobile ? 'text-xs px-2' : ''}`;
+    ` -mb-[2px] px-4 h-9 rounded-none bg-transparent hover:bg-transparent transition-all duration-200
+       ${viewMode === mode
+      ? 'text-gray-900 font-bold border-b-2'
+      : 'text-gray-500 font-medium border-b-2 border-transparent hover:text-gray-700'
+    }
+       ${isMobile ? 'text-xs' : 'text-sm'}`;
 
   const buttonStyle = (mode: ViewMode) =>
-    viewMode === mode ? { backgroundColor: themeColor } : {};
+    viewMode === mode
+      ? { borderColor: themeColor }
+      : {};
 
   const getModeLabel = (mode: ViewMode) => {
     switch (mode) {
@@ -42,8 +49,6 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         return t('project.listView'); // "Помещения" mapped to List
       case 'floor-plan':
         return t('project.floorPlan'); // "Этажи" mapped to Floor Plan
-      case 'layouts':
-        return t('project.layouts') || 'Планировки';
       case 'map':
         return t('embed.onMap');
       case 'favorites':
@@ -104,13 +109,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
             )}
 
             {projectType !== 'object' && (
-              <DropdownMenuItem
-                onClick={() => setViewMode('layouts')}
-                className={viewMode === 'layouts' ? 'bg-accent text-accent-foreground' : ''}
-              >
-                <Grid className="mr-2 h-4 w-4" />
-                <span>{getModeLabel('layouts')}</span>
-              </DropdownMenuItem>
+              null
             )}
 
             {mapVisible && (
@@ -147,10 +146,10 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   }
 
   return (
-    <div className="flex justify-center md:items-center gap-1 md:gap-2">
+    <div className="flex justify-center md:items-center  border-b-2 border-gray-200">
       {/* 1. Chess - Шахматка */}
       <Button
-        variant={viewMode === 'chess' ? 'default' : 'outline'}
+        variant="ghost"
         size="sm"
         className={buttonClass('chess')}
         style={buttonStyle('chess')}
@@ -162,7 +161,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
 
       {/* 2. Facade - Фасады */}
       <Button
-        variant={viewMode === 'facade' ? 'default' : 'outline'}
+        variant="ghost"
         size="sm"
         className={buttonClass('facade')}
         style={buttonStyle('facade')}
@@ -174,7 +173,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
 
       {/* 3. List - Помещения */}
       <Button
-        variant={viewMode === 'list' ? 'default' : 'outline'}
+        variant="ghost"
         size="sm"
         className={buttonClass('list')}
         style={buttonStyle('list')}
@@ -187,7 +186,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
       {/* 4. Floor Plan - Этажи */}
       {projectType !== 'object' && (
         <Button
-          variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
+          variant="ghost"
           size="sm"
           className={buttonClass('floor-plan')}
           style={buttonStyle('floor-plan')}
@@ -198,23 +197,9 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         </Button>
       )}
 
-      {/* 5. Layouts - Планировки */}
-      {projectType !== 'object' && (
-        <Button
-          variant={viewMode === 'layouts' ? 'default' : 'outline'}
-          size="sm"
-          className={buttonClass('layouts')}
-          style={buttonStyle('layouts')}
-          onClick={() => setViewMode('layouts')}
-        >
-          <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-          {!isMobile && getModeLabel('layouts')}
-        </Button>
-      )}
-
       {mapVisible && (
         <Button
-          variant={viewMode === 'map' ? 'default' : 'outline'}
+          variant="ghost"
           size="sm"
           className={buttonClass('map')}
           style={buttonStyle('map')}
@@ -225,7 +210,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         </Button>
       )}
       <Button
-        variant={viewMode === 'favorites' ? 'default' : 'outline'}
+        variant="ghost"
         size="sm"
         className={`${buttonClass('favorites')} relative`}
         style={buttonStyle('favorites')}
@@ -234,14 +219,12 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         <Heart className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
         {!isMobile && (t('favorites.title') || 'Избранное')}
         {favoritesCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] sm:text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center transform translate-x-1/2 -translate-y-1/2">
             {favoritesCount > 99 ? '99+' : favoritesCount}
           </span>
         )}
       </Button>
-      {isWidget ?
-        null
-        : <LanguageToggle />}
+     
     </div>
   );
 };

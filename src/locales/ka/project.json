@@ -21,6 +21,7 @@
   "contactManagerNotConfigured": "მენეჯერის საკონტაქტო ინფორმაცია არ არის კონფიგურირებული",
   "contactMessage": "გამარჯობა! მაინტერესებს {{projectName}} პროექტი. შეგიძლიათ დამატებითი ინფორმაცია მოგვაწოდოთ?",
   "currency": "ვალუტა",
+  "chess": "ჭადრაკი",
   "facade": "ფასადი",
   "finishing": "მოწყობა",
   "floor": "სართული",
@@ -63,5 +64,6 @@
   "table": "ცხრილი",
   "total": "სულ",
   "type": "ტიპი",
-  "viewApartments": "იხილე {{count}} ვარიანტი"
+  "viewApartments": "იხილე {{count}} ვარიანტი",
+  "plan_floor": "{{floor}} სართულის გეგმა"
 }

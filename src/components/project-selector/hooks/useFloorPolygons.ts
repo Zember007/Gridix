@@ -5,7 +5,7 @@ import type { Apartment } from '@/entities/apartment/model/types';
 export interface UseFloorPolygonsParams {
   // explicit union to work well with exactOptionalPropertyTypes
   projectId: string | undefined;
-  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts';
+  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess';
   selectedFloorForPlan: number | null;
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
 }

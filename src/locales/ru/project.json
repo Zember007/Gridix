@@ -21,6 +21,7 @@
   "contactManagerNotConfigured": "Контактная информация менеджера не настроена",
   "contactMessage": "Здравствуйте! Интересует проект {{projectName}}. Можете предоставить дополнительную информацию?",
   "currency": "Валюта",
+  "chess": "Шахматка",
   "facade": "Фасад",
   "finishing": "Отделка",
   "floor": "Этаж",
@@ -63,5 +64,6 @@
   "table": "Таблица",
   "total": "Всего",
   "type": "Тип",
-  "viewApartments": "Смотреть {{count}} вариантов"
+  "viewApartments": "Смотреть {{count}} вариантов",
+  "plan_floor": "План {{floor}} этажа"
 }

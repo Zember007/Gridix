@@ -13,6 +13,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { useProjectFilters } from './hooks/useProjectFilters';
+import { ChessView } from './views/ChessView';
 import { LayoutGallery } from './layouts/LayoutGallery';
 import { Project } from '@/entities/project/queries/useProjects';
 import LoaderView from './views/LoaderView';
@@ -53,13 +54,10 @@ const ProjectApartmentSelector = ({
   const { user } = useAuth();
 
   // State
-  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts'>('facade');
+  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess'>('facade');
   // const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid'); // Unused now
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
-  const [stagedPriceRange, setStagedPriceRange] = useState<number[] | null>(null);
-  const [stagedAreaRange, setStagedAreaRange] = useState<number[] | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -459,42 +457,34 @@ const ProjectApartmentSelector = ({
 
       {project && (
         <>
-          <ProjectHeader
-            filtersRef={filtersRef}
-            project={project as Project}
-            isWidget={isWidget}
-            isMobile={isMobile ?? false}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            favoritesCount={favoritesCount}
-            mapVisible={!!project?.latitude && !!project?.longitude}
-            projectType={project?.project_type as 'building' | 'object' | null}
-            themeColor={getThemeColor()}
-            filters={filters}
-            isFiltersOpen={isFiltersOpen}
-            setIsFiltersOpen={setIsFiltersOpen}
-            isDesktopFiltersExpanded={isDesktopFiltersExpanded}
-            setIsDesktopFiltersExpanded={setIsDesktopFiltersExpanded}
-            stagedPriceRange={stagedPriceRange}
-            setStagedPriceRange={setStagedPriceRange}
-            stagedAreaRange={stagedAreaRange}
-            setStagedAreaRange={setStagedAreaRange}
-          />
-          <div className="relative flex grow overflow-hidden">
-            {/* Content Container with Pan Effect */}
-            <div
-              className="flex-1 min-w-0 transition-transform duration-300 ease-in-out h-full"
-              style={{
-                transform: (sidePanelOpen && !isMobile && viewMode === 'facade') ? 'translateX(-200px)' : 'none',
-              }}
-            >
-              {showContent ? (
-                <>
-                  {viewMode === 'list' || viewMode === 'chess' ? (
+          {/* Layout: left column (header + content) + right column (side panel) */}
+          <div className="flex grow overflow-hidden min-h-0">
+            <div className="flex flex-col flex-1 min-w-0 min-h-0">
+              <ProjectHeader
+                filtersRef={filtersRef}
+                project={project as Project}
+                isWidget={isWidget}
+                isMobile={isMobile ?? false}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                favoritesCount={favoritesCount}
+                mapVisible={!!project?.latitude && !!project?.longitude}
+                projectType={project?.project_type as 'building' | 'object' | null}
+                themeColor={getThemeColor()}
+                filters={filters}
+                isFiltersOpen={isFiltersOpen}
+                setIsFiltersOpen={setIsFiltersOpen}
+              />
+
+              {/* Main content */}
+              <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
+                {showContent ? (
+                  <>
+                  {viewMode === 'list' ? (
                     <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
                       <ListView
                         filteredApartments={filters.filteredApartments}
-                        listViewMode={viewMode === 'chess' ? 'grid' : 'list'}
+                        listViewMode="list"
                         setListViewMode={(mode) => {
                           if (mode === 'grid') setViewMode('chess');
                           else setViewMode('list');
@@ -517,26 +507,17 @@ const ProjectApartmentSelector = ({
                         themeColor={getThemeColor()}
                       />
                     </Suspense>
-                  ) : viewMode === 'layouts' ? (
-                    <div className="w-full bg-white overflow-y-auto h-full">
-                      <LayoutGallery
-                        apartments={apartments}
-                        selectedRooms={filters.selectedRooms}
-                        selectedType={filters.selectedType}
-                        setSelectedRooms={filters.setSelectedRooms}
-                        setSelectedType={filters.setSelectedType}
-                        setViewMode={setViewMode}
-                        getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                        hasFreeLayout={filters.hasFreeLayout}
-                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                        project={project}
-                        formatPrice={formatPrice}
-                        selectedCurrency={filters.selectedCurrency}
-                        isMobile={isMobile ?? false}
+                  ) : viewMode === 'chess' ? (
+                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                      <ChessView
+                        project={project as Project}
+                        apartments={filters.filteredApartments}
+                        onApartmentSelect={openApartmentPreview}
+                        onOpenFloorPlan={openFloorPlanFromPanel}
                         themeColor={getThemeColor()}
-                        visibleFields={fieldSettings.filter(field => field.is_visible)}
+                        language={language}
                       />
-                    </div>
+                    </Suspense>
                   ) : viewMode === 'map' ? (
                     <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
                       <InteractiveProjectsMap
@@ -562,25 +543,50 @@ const ProjectApartmentSelector = ({
                     <div className="relative flex-1 min-w-0 h-full">
                       {viewMode === 'facade' ? (
                         // Building facade view with interactive floor polygons
-                        <div className="w-full bg-white h-full relative overflow-hidden">
-                          <BuildingFacadeView
-                            themeColor={getThemeColor()}
-                            projectId={project.id}
-                            project={project}
-                            apartments={filters.filteredApartments}
-                            onFloorSelect={floor => {
-                              openFloorPreview(floor);
-                            }}
-                            onApartmentSelect={openApartmentPreview}
-                            filtersRef={filtersRef}
-                            externalImageLoaded={buildingImageLoaded}
-                            externalImageNaturalSize={buildingImageNaturalSize}
-                            showOnlyAvailable={filters.showOnlyAvailable}
-                            visibleFields={fieldSettings.filter(field => field.is_visible)}
-                            buildingFloors={buildingFloors}
-                            facadeSettings={facadeSettings}
-                            loading={floorsLoading || settingsLoading}
-                          />
+                        <div className="w-full bg-white h-full relative overflow-hidden flex flex-col">
+                          <div className="flex-1 min-h-0 relative overflow-hidden">
+                            <BuildingFacadeView
+                              themeColor={getThemeColor()}
+                              projectId={project.id}
+                              project={project}
+                              apartments={filters.filteredApartments}
+                              onFloorSelect={floor => {
+                                openFloorPreview(floor);
+                              }}
+                              onApartmentSelect={openApartmentPreview}
+                              filtersRef={filtersRef}
+                              externalImageLoaded={buildingImageLoaded}
+                              externalImageNaturalSize={buildingImageNaturalSize}
+                              showOnlyAvailable={filters.showOnlyAvailable}
+                              visibleFields={fieldSettings.filter(field => field.is_visible)}
+                              buildingFloors={buildingFloors}
+                              facadeSettings={facadeSettings}
+                              loading={floorsLoading || settingsLoading}
+                            />
+                          </div>
+
+                          {/* Layouts are shown under the facade (instead of a separate tab) */}
+                          {project?.project_type !== 'object' && (
+                            <div className="border-t border-gray-100 bg-white overflow-y-auto max-h-[45vh]">
+                              <LayoutGallery
+                                apartments={apartments}
+                                selectedRooms={filters.selectedRooms}
+                                selectedType={filters.selectedType}
+                                setSelectedRooms={filters.setSelectedRooms}
+                                setSelectedType={filters.setSelectedType}
+                                setViewMode={setViewMode}
+                                getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                                hasFreeLayout={filters.hasFreeLayout}
+                                preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                                project={project}
+                                formatPrice={formatPrice}
+                                selectedCurrency={filters.selectedCurrency}
+                                isMobile={isMobile ?? false}
+                                themeColor={getThemeColor()}
+                                visibleFields={fieldSettings.filter(field => field.is_visible)}
+                              />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         // Floor plan view for specific floor with sidebar
@@ -619,28 +625,79 @@ const ProjectApartmentSelector = ({
 
                   )}
                 </>
-              ) : null}
+                ) : null}
+              </div>
             </div>
 
+            {/* Sidebar (desktop: pushes layout; mobile: remains overlay-ish) */}
             {enableSidePanel && project && !isWidget && (
-              <ProjectSidePanel
-                open={sidePanelOpen}
-                onOpenChange={(open) => {
-                  setSidePanelOpen(open);
-                  if (!open) setSidePanelState(null);
-                }}
-                state={sidePanelState}
-                project={project as Project}
-                language={language}
-                themeColor={getThemeColor()}
-                t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
-                preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                filteredApartments={filters.filteredApartments}
-                onSelectApartmentPreview={openApartmentPreview}
-                onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
-                onOpenFloorPlan={openFloorPlanFromPanel}
-              />
+              <>
+                {/* Desktop push panel */}
+                <div
+                  className={`hidden md:block h-full bg-white border-l border-gray-100 shadow-2xl transition-[width] duration-300 ease-in-out overflow-hidden`}
+                  style={{ width: sidePanelOpen ? '35vw' : '0px' }}
+                >
+                  {sidePanelOpen && (
+                    <ProjectSidePanel
+                      open={sidePanelOpen}
+                      onOpenChange={(open) => {
+                        setSidePanelOpen(open);
+                        if (!open) setSidePanelState(null);
+                      }}
+                      state={sidePanelState}
+                      project={project as Project}
+                      language={language}
+                      themeColor={getThemeColor()}
+                      t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
+                      preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                      filteredApartments={filters.filteredApartments}
+                      onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
+                      onOpenFloorPlan={openFloorPlanFromPanel}
+                      widthVw={35}
+                    />
+                  )}
+                </div>
+
+                {/* Mobile overlay panel */}
+                <div
+                  className={`md:hidden fixed right-0 top-0 h-full bg-white border-l border-gray-100 shadow-2xl z-50 transition-transform duration-300 ease-in-out ${sidePanelOpen ? 'translate-x-0' : 'translate-x-full'
+                    }`}
+                  style={{ width: '100vw' }}
+                >
+                  {sidePanelOpen && (
+                    <ProjectSidePanel
+                      open={sidePanelOpen}
+                      onOpenChange={(open) => {
+                        setSidePanelOpen(open);
+                        if (!open) setSidePanelState(null);
+                      }}
+                      state={sidePanelState}
+                      project={project as Project}
+                      language={language}
+                      themeColor={getThemeColor()}
+                      t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
+                      preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                      filteredApartments={filters.filteredApartments}
+                      onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
+                      onOpenFloorPlan={openFloorPlanFromPanel}
+                      widthPx={400}
+                    />
+                  )}
+                </div>
+              </>
             )}
+
+            {/* 
+              Note: We removed the conditional rendering logic inside ProjectSidePanel usage or wrapper? 
+              The wrapper `div` now handles the visibility via `translate-x`.
+              One detail: if `sidePanelState` is null, SidePanel might crash or show empty.
+              We should probably keep rendering SidePanel but maybe maintain the last state if closing?
+              For now, let's assume SidePanel handles null state gracefully or we conditionally render CONTENT inside SidePanel, 
+              but the drawer wrapper stays. 
+              Actually, if `sidePanelOpen` is false, `translate-x-full` hides it. The content inside doesn't matter much visually.
+              However, if we populate `sidePanelState` only when open, we are good.
+             */}
+
           </div>
 
         </>
