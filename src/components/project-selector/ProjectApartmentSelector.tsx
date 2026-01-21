@@ -651,7 +651,6 @@ const ProjectApartmentSelector = ({
                       filteredApartments={filters.filteredApartments}
                       onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
                       onOpenFloorPlan={openFloorPlanFromPanel}
-                      widthVw={35}
                     />
                   )}
                 </div>
@@ -678,7 +677,6 @@ const ProjectApartmentSelector = ({
                       filteredApartments={filters.filteredApartments}
                       onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
                       onOpenFloorPlan={openFloorPlanFromPanel}
-                      widthPx={400}
                     />
                   )}
                 </div>

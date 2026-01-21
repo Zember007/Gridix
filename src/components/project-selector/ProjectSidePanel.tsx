@@ -27,7 +27,6 @@ type Props = {
   // onSelectApartmentPreview removed as per instruction
   onOpenApartmentDetails: (apartment: Apartment) => void;
   onOpenFloorPlan: (floorNumber: number) => void;
-  widthVw?: number;
 };
 
 const statusBadgeClass = (status: Apartment['status']) => {
@@ -65,7 +64,6 @@ export const ProjectSidePanel = ({
   // onSelectApartmentPreview removed from destructuring
   onOpenApartmentDetails,
   onOpenFloorPlan,
-  widthVw = 35,
 }: Props) => {
   const { toggleFavorite, isFavorite } = useFavorites(project.id);
 
@@ -176,7 +174,6 @@ export const ProjectSidePanel = ({
         'h-full bg-white overflow-hidden flex flex-col w-full',
         open ? 'pointer-events-auto' : 'pointer-events-none',
       )}
-      style={{ width: `${ widthVw }vw` }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white shrink-0">
