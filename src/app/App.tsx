@@ -26,6 +26,13 @@ export default function App() {
       <BrowserRouter>
         <AuthProvider>
           <UsertourBlockingGate>
+            <button
+              onClick={() => {
+                throw new Error('This is your first error!');
+              }}
+            >
+              Break the world
+            </button>
             <Routes>
               <Route
                 path="/embed/*"

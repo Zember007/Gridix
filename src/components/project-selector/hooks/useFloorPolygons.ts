@@ -5,7 +5,7 @@ import type { Apartment } from '@/entities/apartment/model/types';
 export interface UseFloorPolygonsParams {
   // explicit union to work well with exactOptionalPropertyTypes
   projectId: string | undefined;
-  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites';
+  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts';
   selectedFloorForPlan: number | null;
   setApartments: React.Dispatch<React.SetStateAction<Apartment[]>>;
 }
@@ -37,7 +37,7 @@ export const useFloorPolygons = ({
                   found.polygon,
                 )
                   ? // @ts-expect-error polygon may come from raw supabase type
-                    (found.polygon as { x: number; y: number }[])
+                  (found.polygon as { x: number; y: number }[])
                   : apt.polygon,
               };
             }),
@@ -72,7 +72,7 @@ export const useFloorPolygons = ({
                   found.polygon,
                 )
                   ? // @ts-expect-error polygon is from supabase
-                    (found.polygon as { x: number; y: number }[])
+                  (found.polygon as { x: number; y: number }[])
                   : [],
               };
             }),

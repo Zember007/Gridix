@@ -7,7 +7,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 
 
 
-type ViewMode = 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites';
+type ViewMode = 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts';
 
 interface ViewModeButtonsProps {
   viewMode: ViewMode;
@@ -19,6 +19,8 @@ interface ViewModeButtonsProps {
   mapVisible?: boolean
   isWidget?: boolean;
 }
+
+
 
 export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
@@ -32,12 +34,16 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
 
   const getModeLabel = (mode: ViewMode) => {
     switch (mode) {
+      case 'chess':
+        return t('project.chess') || 'Шахматка';
       case 'facade':
         return t('project.facade');
-      case 'floor-plan':
-        return t('project.floorPlan');
       case 'list':
-        return t('project.listView');
+        return t('project.listView'); // "Помещения" mapped to List
+      case 'floor-plan':
+        return t('project.floorPlan'); // "Этажи" mapped to Floor Plan
+      case 'layouts':
+        return t('project.layouts') || 'Планировки';
       case 'map':
         return t('embed.onMap');
       case 'favorites':
@@ -51,9 +57,9 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   if (isMobile) {
     return (
       <nav
-      className="flex items-center justify-between gap-2">
+        className="flex items-center justify-between gap-2">
         <DropdownMenu
-        open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <DropdownMenuTrigger className='!border-none' asChild>
             <button
               aria-label={isMenuOpen ? 'Close Menu' : 'Open Menu'}
@@ -64,11 +70,27 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[10rem]">
             <DropdownMenuItem
+              onClick={() => setViewMode('chess')}
+              className={viewMode === 'chess' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <Grid className="mr-2 h-4 w-4" />
+              <span>{getModeLabel('chess')}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
               onClick={() => setViewMode('facade')}
               className={viewMode === 'facade' ? 'bg-accent text-accent-foreground' : ''}
             >
               <Building2 className="mr-2 h-4 w-4" />
               <span>{getModeLabel('facade')}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-accent text-accent-foreground' : ''}
+            >
+              <List className="mr-2 h-4 w-4" />
+              <span>{getModeLabel('list')}</span>
             </DropdownMenuItem>
 
             {projectType !== 'object' && (
@@ -81,13 +103,15 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
               </DropdownMenuItem>
             )}
 
-            <DropdownMenuItem
-              onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? 'bg-accent text-accent-foreground' : ''}
-            >
-              <List className="mr-2 h-4 w-4" />
-              <span>{getModeLabel('list')}</span>
-            </DropdownMenuItem>
+            {projectType !== 'object' && (
+              <DropdownMenuItem
+                onClick={() => setViewMode('layouts')}
+                className={viewMode === 'layouts' ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Grid className="mr-2 h-4 w-4" />
+                <span>{getModeLabel('layouts')}</span>
+              </DropdownMenuItem>
+            )}
 
             {mapVisible && (
               <DropdownMenuItem
@@ -124,6 +148,19 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
 
   return (
     <div className="flex justify-center md:items-center gap-1 md:gap-2">
+      {/* 1. Chess - Шахматка */}
+      <Button
+        variant={viewMode === 'chess' ? 'default' : 'outline'}
+        size="sm"
+        className={buttonClass('chess')}
+        style={buttonStyle('chess')}
+        onClick={() => setViewMode('chess')}
+      >
+        <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+        {!isMobile && (getModeLabel('chess'))}
+      </Button>
+
+      {/* 2. Facade - Фасады */}
       <Button
         variant={viewMode === 'facade' ? 'default' : 'outline'}
         size="sm"
@@ -132,9 +169,22 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         onClick={() => setViewMode('facade')}
       >
         <Building2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-        {!isMobile && t('project.facade')}
+        {!isMobile && getModeLabel('facade')}
       </Button>
 
+      {/* 3. List - Помещения */}
+      <Button
+        variant={viewMode === 'list' ? 'default' : 'outline'}
+        size="sm"
+        className={buttonClass('list')}
+        style={buttonStyle('list')}
+        onClick={() => setViewMode('list')}
+      >
+        <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+        {!isMobile && getModeLabel('list')}
+      </Button>
+
+      {/* 4. Floor Plan - Этажи */}
       {projectType !== 'object' && (
         <Button
           variant={viewMode === 'floor-plan' ? 'default' : 'outline'}
@@ -144,20 +194,24 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
           onClick={() => setViewMode('floor-plan')}
         >
           <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-          {!isMobile && t('project.floorPlan')}
+          {!isMobile && getModeLabel('floor-plan')}
         </Button>
       )}
 
-      <Button
-        variant={viewMode === 'list' ? 'default' : 'outline'}
-        size="sm"
-        className={buttonClass('list')}
-        style={buttonStyle('list')}
-        onClick={() => setViewMode('list')}
-      >
-        <List className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
-        {!isMobile && t('project.listView')}
-      </Button>
+      {/* 5. Layouts - Планировки */}
+      {projectType !== 'object' && (
+        <Button
+          variant={viewMode === 'layouts' ? 'default' : 'outline'}
+          size="sm"
+          className={buttonClass('layouts')}
+          style={buttonStyle('layouts')}
+          onClick={() => setViewMode('layouts')}
+        >
+          <Grid className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? 'mr-0' : 'mr-1'}`} />
+          {!isMobile && getModeLabel('layouts')}
+        </Button>
+      )}
+
       {mapVisible && (
         <Button
           variant={viewMode === 'map' ? 'default' : 'outline'}

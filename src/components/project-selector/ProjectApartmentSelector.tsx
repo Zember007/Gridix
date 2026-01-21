@@ -39,7 +39,7 @@ const FavoritesTab = lazy(() => import('../FavoritesTab'))
 const ListView = lazy(() => import('./views/ListView').then(module => ({ default: module.ListView })))
 const FloorSelector = lazy(() => import('./FloorSelector').then(module => ({ default: module.FloorSelector })))
 
-const enableSidePanel = false;
+const enableSidePanel = true;
 
 const ProjectApartmentSelector = ({
   projectId,
@@ -53,8 +53,8 @@ const ProjectApartmentSelector = ({
   const { user } = useAuth();
 
   // State
-  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites'>('facade');
-  const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid');
+  const [viewMode, setViewMode] = useState<'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts'>('facade');
+  // const [listViewMode, setListViewMode] = useState<'list' | 'grid'>('grid'); // Unused now
   const [selectedFloorForPlan, setSelectedFloorForPlan] = useState<number | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isDesktopFiltersExpanded, setIsDesktopFiltersExpanded] = useState(false);
@@ -480,63 +480,89 @@ const ProjectApartmentSelector = ({
             stagedAreaRange={stagedAreaRange}
             setStagedAreaRange={setStagedAreaRange}
           />
-
-          {/* Content based on view mode - show content as soon as apartments are loaded */}
-          {showContent ? (
-            <>
-              {viewMode === 'list' ? (
-                <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                  <ListView
-                    filteredApartments={filters.filteredApartments}
-                    listViewMode={listViewMode}
-                    setListViewMode={setListViewMode}
-                    selectedType={filters.selectedType}
-                    setSelectedType={filters.setSelectedType}
-                    openApartmentDetails={openApartmentPreview}
-                    preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                    getVisibleFields={getVisibleFields}
-                    getCustomFieldValue={getCustomFieldValue}
-                    formatFieldValue={formatFieldValue}
-                    getFieldLabel={getFieldLabel}
-                    groupApartmentsByFloor={groupApartmentsByFloor}
-                    convertPrice={filters.convertPrice}
-                    formatPrice={formatPrice}
-                    project={project}
-                    selectedCurrency={filters.selectedCurrency}
-                    isMobile={isMobile ?? false}
-                    themeColor={getThemeColor()}
-                  />
-                </Suspense>
-              ) : viewMode === 'map' ? (
-                <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                  <InteractiveProjectsMap
-                    project={project}
-                    onProjectSelect={() => {
-                      setViewMode('list');
-                    }}
-                  />
-                </Suspense>
-              ) : viewMode === 'favorites' ? (
-                <div className="container mx-auto py-8 grow">
-                  <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                    <FavoritesTab
-                      fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
-                      handleViewApartment={openApartmentPreview}
-                      projectId={project.id}
-                      projectCurrency={project?.currency}
-                    />
-                  </Suspense>
-                </div>
-              ) : (
-                // Facade and Floor Plan views with hero section
+          <div className="relative flex grow overflow-hidden">
+            {/* Content Container with Pan Effect */}
+            <div
+              className="flex-1 min-w-0 transition-transform duration-300 ease-in-out h-full"
+              style={{
+                transform: (sidePanelOpen && !isMobile && viewMode === 'facade') ? 'translateX(-200px)' : 'none',
+              }}
+            >
+              {showContent ? (
                 <>
-                  {/* Main visualization area */}
-                  <div className="relative grow flex">
-                    {/* Hero section with building visualization */}
-                    <div className="relative flex-1 min-w-0">
+                  {viewMode === 'list' || viewMode === 'chess' ? (
+                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                      <ListView
+                        filteredApartments={filters.filteredApartments}
+                        listViewMode={viewMode === 'chess' ? 'grid' : 'list'}
+                        setListViewMode={(mode) => {
+                          if (mode === 'grid') setViewMode('chess');
+                          else setViewMode('list');
+                        }}
+                        hideViewToggle={true}
+                        selectedType={filters.selectedType}
+                        setSelectedType={filters.setSelectedType}
+                        openApartmentDetails={openApartmentPreview}
+                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                        getVisibleFields={getVisibleFields}
+                        getCustomFieldValue={getCustomFieldValue}
+                        formatFieldValue={formatFieldValue}
+                        getFieldLabel={getFieldLabel}
+                        groupApartmentsByFloor={groupApartmentsByFloor}
+                        convertPrice={filters.convertPrice}
+                        formatPrice={formatPrice}
+                        project={project}
+                        selectedCurrency={filters.selectedCurrency}
+                        isMobile={isMobile ?? false}
+                        themeColor={getThemeColor()}
+                      />
+                    </Suspense>
+                  ) : viewMode === 'layouts' ? (
+                    <div className="w-full bg-white overflow-y-auto h-full">
+                      <LayoutGallery
+                        apartments={apartments}
+                        selectedRooms={filters.selectedRooms}
+                        selectedType={filters.selectedType}
+                        setSelectedRooms={filters.setSelectedRooms}
+                        setSelectedType={filters.setSelectedType}
+                        setViewMode={setViewMode}
+                        getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                        hasFreeLayout={filters.hasFreeLayout}
+                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                        project={project}
+                        formatPrice={formatPrice}
+                        selectedCurrency={filters.selectedCurrency}
+                        isMobile={isMobile ?? false}
+                        themeColor={getThemeColor()}
+                        visibleFields={fieldSettings.filter(field => field.is_visible)}
+                      />
+                    </div>
+                  ) : viewMode === 'map' ? (
+                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                      <InteractiveProjectsMap
+                        project={project}
+                        onProjectSelect={() => {
+                          setViewMode('list');
+                        }}
+                      />
+                    </Suspense>
+                  ) : viewMode === 'favorites' ? (
+                    <div className="container mx-auto py-8 grow">
+                      <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                        <FavoritesTab
+                          fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
+                          handleViewApartment={openApartmentPreview}
+                          projectId={project.id}
+                          projectCurrency={project?.currency}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : (
+                    // Facade and Floor Plan views
+                    <div className="relative flex-1 min-w-0 h-full">
                       {viewMode === 'facade' ? (
                         // Building facade view with interactive floor polygons
-                        <div className="w-full bg-white">
+                        <div className="w-full bg-white h-full relative overflow-hidden">
                           <BuildingFacadeView
                             themeColor={getThemeColor()}
                             projectId={project.id}
@@ -555,27 +581,6 @@ const ProjectApartmentSelector = ({
                             facadeSettings={facadeSettings}
                             loading={floorsLoading || settingsLoading}
                           />
-
-                          {/* Layout gallery below facade when not expanded - hide for project_type = object */}
-                          {project?.project_type !== 'object' && (
-                            <LayoutGallery
-                              apartments={apartments}
-                              selectedRooms={filters.selectedRooms}
-                              selectedType={filters.selectedType}
-                              setSelectedRooms={filters.setSelectedRooms}
-                              setSelectedType={filters.setSelectedType}
-                              setViewMode={setViewMode}
-                              getUniqueRoomCounts={filters.getUniqueRoomCounts}
-                              hasFreeLayout={filters.hasFreeLayout}
-                              preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                              project={project}
-                              formatPrice={formatPrice}
-                              selectedCurrency={filters.selectedCurrency}
-                              isMobile={isMobile ?? false}
-                              themeColor={getThemeColor()}
-                              visibleFields={fieldSettings.filter(field => field.is_visible)}
-                            />
-                          )}
                         </div>
                       ) : (
                         // Floor plan view for specific floor with sidebar
@@ -612,34 +617,38 @@ const ProjectApartmentSelector = ({
                       )}
                     </div>
 
-                    {enableSidePanel && project && !isWidget && (
-                      <ProjectSidePanel
-                        open={sidePanelOpen}
-                        onOpenChange={(open) => {
-                          setSidePanelOpen(open);
-                          if (!open) setSidePanelState(null);
-                        }}
-                        state={sidePanelState}
-                        project={project as Project}
-                        language={language}
-                        themeColor={getThemeColor()}
-                        t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
-                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                        filteredApartments={filters.filteredApartments}
-                        onSelectApartmentPreview={openApartmentPreview}
-                        onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
-                        onOpenFloorPlan={openFloorPlanFromPanel}
-                      />
-                    )}
-                  </div>
+                  )}
                 </>
-              )}
-            </>
-          ) : null}
+              ) : null}
+            </div>
+
+            {enableSidePanel && project && !isWidget && (
+              <ProjectSidePanel
+                open={sidePanelOpen}
+                onOpenChange={(open) => {
+                  setSidePanelOpen(open);
+                  if (!open) setSidePanelState(null);
+                }}
+                state={sidePanelState}
+                project={project as Project}
+                language={language}
+                themeColor={getThemeColor()}
+                t={t as unknown as (key: string, options?: Record<string, unknown>) => unknown}
+                preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                filteredApartments={filters.filteredApartments}
+                onSelectApartmentPreview={openApartmentPreview}
+                onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
+                onOpenFloorPlan={openFloorPlanFromPanel}
+              />
+            )}
+          </div>
+
         </>
       )}
 
- 
+
+
+
     </div>
   );
 };

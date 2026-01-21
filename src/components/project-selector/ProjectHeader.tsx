@@ -14,7 +14,7 @@ interface ProjectHeaderProps {
   filtersRef: React.RefObject<HTMLDivElement>;
   isWidget: boolean;
   isMobile: boolean;
-  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites';
+  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess' | 'layouts';
   setViewMode: (mode: ProjectHeaderProps['viewMode']) => void;
   favoritesCount: number;
   mapVisible: boolean;
@@ -33,7 +33,7 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader = ({
   project,
-  filtersRef, 
+  filtersRef,
   isWidget,
   isMobile,
   viewMode,
@@ -62,11 +62,11 @@ export const ProjectHeader = ({
       <div className="container mx-auto  md:px-6 md:py-4 py-2 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3 ">
           <h1 className={` font-bold text-gray-900 whitespace-nowrap`}
-          style={
-            {
-              fontSize: 'clamp(14px, 4vw, 18px)'
+            style={
+              {
+                fontSize: 'clamp(14px, 4vw, 18px)'
+              }
             }
-          }
           >
             {project?.name}
           </h1>
@@ -134,9 +134,8 @@ export const ProjectHeader = ({
             />
 
             <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-              }`}
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${isDesktopFiltersExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                }`}
             >
               <div className="pt-4 border-t border-gray-200">
                 <ExpandedFilters
