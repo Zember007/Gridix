@@ -3,7 +3,6 @@ import { Button } from '@/shared/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu';
 import { Building2, Grid, List, MapPin, Heart, Menu, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageToggle } from "@/components/LanguageToggle";
 
 
 
@@ -65,13 +64,15 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
         className="flex items-center justify-between gap-2">
         <DropdownMenu
           open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-          <DropdownMenuTrigger className='!border-none' asChild>
-            <button
+          <DropdownMenuTrigger className='!border-none ' asChild>
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label={isMenuOpen ? 'Close Menu' : 'Open Menu'}
-              className="relative z-20 block cursor-pointer p-2.5 lg:hidden focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0">
+              className="`h-9 w-9 p-0 relative z-20 block cursor-pointer lg:hidden focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0">
               <Menu className={`${isMenuOpen ? 'rotate-180 scale-0 opacity-0' : ''}   m-auto size-6 duration-200`} />
               <X className={`${isMenuOpen ? '!rotate-0 !scale-100 !opacity-100' : ''} absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200`} />
-            </button>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[10rem]">
             <DropdownMenuItem
@@ -140,7 +141,6 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {isWidget ? null : <LanguageToggle />}
       </nav>
     );
   }

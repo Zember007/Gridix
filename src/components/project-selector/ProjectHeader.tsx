@@ -123,6 +123,21 @@ export const ProjectHeader = ({
               </div>
             )}
 
+            {isMobile && <div className="flex md:justify-start justify-end ">
+
+              <ViewModeButtons
+                isWidget={isWidget}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                favoritesCount={favoritesCount}
+                isMobile={isMobile}
+                mapVisible={mapVisible}
+                projectType={projectType}
+                themeColor={themeColor}
+              />
+
+            </div>}
+
             {isWidget ?
               null
               : <LanguageToggle />}
@@ -131,23 +146,20 @@ export const ProjectHeader = ({
 
 
 
-        {/* Row 2: View mode toggles (like tabs) */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        {!isMobile && <div className="flex md:justify-start justify-end ">
 
-            <ViewModeButtons
-              isWidget={isWidget}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              favoritesCount={favoritesCount}
-              isMobile={isMobile}
-              mapVisible={mapVisible}
-              projectType={projectType}
-              themeColor={themeColor}
-            />
-          </div>
+          <ViewModeButtons
+            isWidget={isWidget}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            favoritesCount={favoritesCount}
+            isMobile={isMobile}
+            mapVisible={mapVisible}
+            projectType={projectType}
+            themeColor={themeColor}
+          />
 
-        </div>
+        </div>}
       </div>
     </div>
   );
