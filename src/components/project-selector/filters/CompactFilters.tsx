@@ -219,7 +219,7 @@ export const CompactFilters = ({
       )}
 
       {/* Type filter - only show if project has commercial or parking */}
-      {(project?.has_commercial || project?.has_parking) && (
+    {/*   {(project?.has_commercial || project?.has_parking) && (
         <Popover open={typeOpen} onOpenChange={setTypeOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -261,7 +261,7 @@ export const CompactFilters = ({
             </div>
           </PopoverContent>
         </Popover>
-      )}
+      )} */}
 
       {/* Price */}
       <Popover open={priceOpen} onOpenChange={setPriceOpenPopover}>

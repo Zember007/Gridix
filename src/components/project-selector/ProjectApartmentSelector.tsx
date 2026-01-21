@@ -567,7 +567,6 @@ const ProjectApartmentSelector = ({
 
                           {/* Layouts are shown under the facade (instead of a separate tab) */}
                           {project?.project_type !== 'object' && (
-                            <div className="border-t border-gray-100 bg-white overflow-y-auto max-h-[45vh]">
                               <LayoutGallery
                                 apartments={apartments}
                                 selectedRooms={filters.selectedRooms}
@@ -585,7 +584,6 @@ const ProjectApartmentSelector = ({
                                 themeColor={getThemeColor()}
                                 visibleFields={fieldSettings.filter(field => field.is_visible)}
                               />
-                            </div>
                           )}
                         </div>
                       ) : (

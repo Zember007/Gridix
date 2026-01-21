@@ -48,7 +48,7 @@ export const ProjectHeader = ({
   return (
     <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
       <div className="container mx-auto md:px-6 md:py-3 py-2 flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-4">
 
           <h1
             className="font-bold text-gray-900 whitespace-nowrap min-w-0 truncate"
@@ -57,6 +57,21 @@ export const ProjectHeader = ({
           >
             {project?.name}
           </h1>
+
+          {!isMobile && (
+            <div className="min-w-0 flex-1">
+              <CompactFilters
+                {...filters}
+                getUniqueRoomCounts={filters.getUniqueRoomCounts}
+                getUniqueFloors={filters.getUniqueFloors}
+                hasFreeLayout={filters.hasFreeLayout}
+                project={project}
+                viewMode={viewMode}
+                themeColor={themeColor}
+                formatPrice={formatPrice}
+              />
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             {isMobile && (
@@ -113,21 +128,7 @@ export const ProjectHeader = ({
               : <LanguageToggle />}
           </div>
         </div>
-        {/* Row 1: Compact filters (desktop) + mobile filters button */}
-        {!isMobile && (
-          <div className="min-w-0 flex-1">
-            <CompactFilters
-              {...filters}
-              getUniqueRoomCounts={filters.getUniqueRoomCounts}
-              getUniqueFloors={filters.getUniqueFloors}
-              hasFreeLayout={filters.hasFreeLayout}
-              project={project}
-              viewMode={viewMode}
-              themeColor={themeColor}
-              formatPrice={formatPrice}
-            />
-          </div>
-        )}
+
 
 
         {/* Row 2: View mode toggles (like tabs) */}

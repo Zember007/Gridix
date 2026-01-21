@@ -1,18 +1,20 @@
 import { useMemo, useEffect, useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
     Annotorious,
-    ImageAnnotation,
     OpenSeadragonAnnotator,
     OpenSeadragonViewer,
     useAnnotations,
     useAnnotator,
+    useViewer,
+    useHover,
     DrawingStyle,
-    Annotation
+    Annotation,
+    UserSelectAction
 } from '@annotorious/react';
 import '@annotorious/react/annotorious-react.css';
-import { Button } from '@/shared/ui/button';
 import { Shape, Point } from './GeometryShapes';
 import { getImageSize, shapeToPercents, shapeToPixels } from '@/hooks/use-polygon';
+import polylabel from 'polylabel';
 
 // Тип для selector с геометрией
 interface AnnotationSelector {
@@ -34,6 +36,14 @@ interface PolygonAnnotatorProps {
     currentShape?: Shape | null;
     onCurrentShapeUpdate?: (shape: Shape | null) => void;
     drawingEnabled?: boolean;
+    mode?: 'edit' | 'view';
+    onSelectAnnotationId?: (id: string | null) => void;
+    onHoverAnnotationId?: (id: string | null) => void;
+    zoomToSelection?: boolean;
+    getStyleById?: (id: string) => DrawingStyle;
+    showLabels?: boolean;
+    labelsById?: Record<string, string | number | null | undefined>;
+    className?: string;
 }
 
 export interface PolygonAnnotatorRef {
@@ -45,14 +55,34 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     shapes = [],
     currentShape,
     onCurrentShapeUpdate,
-    drawingEnabled = true
+    drawingEnabled = true,
+    mode = 'edit',
+    onSelectAnnotationId,
+    onHoverAnnotationId,
+    zoomToSelection = false,
+    getStyleById,
+    showLabels = false,
+    labelsById
 }, ref) => {
-    const annotations = useAnnotations();
+    const annotations = useAnnotations<Annotation>();
     const annotator = useAnnotator();
+    const viewer = useViewer();
+    const hovered = useHover<Annotation>();
     
-    const isInternalUpdate = useRef(false);
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
+    const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+    const labelOverlaysRef = useRef<HTMLElement[]>([]);
+    const prevHoverIdRef = useRef<string | null>(null);
+
+    // View mode: propagate hover changes (for external tooltips)
+    useEffect(() => {
+        if (mode !== 'view') return;
+        const nextId = hovered?.id ?? null;
+        if (prevHoverIdRef.current === nextId) return;
+        prevHoverIdRef.current = nextId;
+        onHoverAnnotationId?.(nextId);
+    }, [hovered, mode, onHoverAnnotationId]);
 
     const convertShapeToAnnotation = useCallback(async (shape: Shape): Promise<Annotation> => {
         const { width, height } = await getImageSize(imageUrl);
@@ -160,7 +190,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             if (!currentShape) {
                 // Пытаемся получить первую аннотацию, если currentShape нет
                 if (annotations.length > 0) {
-                    const shape = await annotationToShape(annotations[0] as ImageAnnotation);
+                    const shape = await annotationToShape(annotations[0] as Annotation);
                     return shape;
                 }
                 return null;
@@ -182,7 +212,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 
                 if (updatedAnnotation) {
                     // Конвертируем аннотацию в Shape с актуальными координатами
-                    const shape = await annotationToShape(updatedAnnotation as ImageAnnotation);
+                    const shape = await annotationToShape(updatedAnnotation as Annotation);
                     
                     // Восстанавливаем выделение
                     annotator.setSelected(currentShapeId);
@@ -210,7 +240,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         showNavigationControl: true,
         showNavigator: true,
         navigatorPosition: 'BOTTOM_RIGHT',
-        defaultZoomLevel: 1,
+        defaultZoomLevel: 0.5,
         minZoomLevel: 0.5,
         maxZoomLevel: 10,
         visibilityRatio: 1.0,
@@ -312,7 +342,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     useEffect(() => {
         if (!annotator) return;
 
-        const handleCreate = async (annotation: ImageAnnotation) => {
+        const handleCreate = async (annotation: Annotation) => {
             const shape = await annotationToShape(annotation);
             
             if (shape) {
@@ -325,7 +355,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             }
         };
 
-        const handleUpdate = async (annotation: ImageAnnotation) => {
+        const handleUpdate = async (annotation: Annotation) => {
             const shape = await annotationToShape(annotation);
             
             if (shape) {
@@ -338,7 +368,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             }
         };
 
-        const handleDelete = (annotation: ImageAnnotation) => {
+        const handleDelete = (annotation: Annotation) => {
             
             // Если удалили currentShape, сбрасываем его
             if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
@@ -346,50 +376,165 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             }
         };
 
-        const handleSelectionChanged = async (selected: ImageAnnotation[]) => {
+        const handleSelectionChanged = async (selected: Annotation[]) => {
             
             if (selected.length > 0) {
-                // Пользователь выделил аннотацию - делаем её currentShape
                 const annotation = selected[0];
-                const shape = await annotationToShape(annotation);
-                
-                if (shape && onCurrentShapeUpdate) {
-                    onCurrentShapeUpdate(shape);
+                const selectedId = annotation?.id ?? null;
+
+                // Viewer mode: selection only (+ optional zoom), no editing callbacks
+                if (mode === 'view') {
+                    setSelectedAnnotationId(selectedId);
+                    onSelectAnnotationId?.(selectedId);
+
+                    if (zoomToSelection && viewer && annotation) {
+                        const selector = annotation.target?.selector as AnnotationSelector | undefined;
+                        const bounds = selector?.geometry?.bounds;
+                        if (bounds) {
+                            const padFactor = 1.2;
+                            const cx = (bounds.minX + bounds.maxX) / 2;
+                            const cy = (bounds.minY + bounds.maxY) / 2;
+                            const w = Math.max(1, (bounds.maxX - bounds.minX) * padFactor);
+                            const h = Math.max(1, (bounds.maxY - bounds.minY) * padFactor);
+                            const minX = cx - w / 2;
+                            const minY = cy - h / 2;
+
+                            const rect = viewer.viewport.imageToViewportRectangle(minX, minY, w, h);
+                            viewer.viewport.fitBounds(rect, false);
+                        }
+                    }
+                    return;
                 }
+
+                // Edit mode: selecting sets currentShape (existing behavior)
+                const shape = await annotationToShape(annotation);
+                if (shape && onCurrentShapeUpdate) onCurrentShapeUpdate(shape);
             } else if (!drawingEnabled) {
                 // Снято выделение и мы не в режиме редактирования
-                if (onCurrentShapeUpdate) {
-                    onCurrentShapeUpdate(null);
+                if (mode === 'view') {
+                    setSelectedAnnotationId(null);
+                    onSelectAnnotationId?.(null);
+                } else {
+                    onCurrentShapeUpdate?.(null);
                 }
             }
         };
 
-        annotator.on('createAnnotation', handleCreate);
-        annotator.on('updateAnnotation', handleUpdate);
-        annotator.on('deleteAnnotation', handleDelete);
+        if (mode !== 'view') {
+            annotator.on('createAnnotation', handleCreate);
+            annotator.on('updateAnnotation', handleUpdate);
+            annotator.on('deleteAnnotation', handleDelete);
+        }
         annotator.on('selectionChanged', handleSelectionChanged);
         
         
 
         return () => {
-            annotator.off('createAnnotation', handleCreate);
-            annotator.off('updateAnnotation', handleUpdate);
-            annotator.off('deleteAnnotation', handleDelete);
+            if (mode !== 'view') {
+                annotator.off('createAnnotation', handleCreate);
+                annotator.off('updateAnnotation', handleUpdate);
+                annotator.off('deleteAnnotation', handleDelete);
+            }
             annotator.off('selectionChanged', handleSelectionChanged);
         };
-    }, [annotator, onCurrentShapeUpdate, annotationToShape, drawingEnabled, currentShape]);
+    }, [
+        annotator,
+        onCurrentShapeUpdate,
+        annotationToShape,
+        drawingEnabled,
+        currentShape,
+        mode,
+        onSelectAnnotationId,
+        zoomToSelection,
+        viewer
+    ]);
 
     // Стиль для аннотаций (используем функцию для динамического стиля)
-    const annotationStyle = useCallback((annotation: ImageAnnotation): DrawingStyle => {
-        // Если аннотация соответствует currentShape, выделяем её
-        const isEditing = currentShape && annotation.id === currentShape.id;
-        
+    const annotationStyle = useCallback((annotation: Annotation): DrawingStyle => {
+        const base = getStyleById?.(annotation.id) ?? {};
+        const isSelected =
+            (mode === 'view' && selectedAnnotationId && annotation.id === selectedAnnotationId) ||
+            (mode !== 'view' && currentShape && annotation.id === currentShape.id);
+
+        const baseFillOpacity = base.fillOpacity ?? (isSelected ? 0.5 : 0.25);
+        const baseStrokeWidth = base.strokeWidth ?? 2;
+
         return {
-            fill: isEditing ? '#3b82f688' : '#00ff0044',
-            stroke: isEditing ? '#3b82f6' : '#00ff00',
-            strokeWidth: isEditing ? 3 : 2
+            fill: base.fill ?? (isSelected ? '#3b82f6' : '#00ff00'),
+            fillOpacity: isSelected ? Math.min(1, baseFillOpacity + 0.15) : baseFillOpacity,
+            stroke: base.stroke ?? (isSelected ? '#3b82f6' : '#00ff00'),
+            strokeOpacity: base.strokeOpacity ?? 1,
+            strokeWidth: isSelected ? Math.max(baseStrokeWidth, 3) : baseStrokeWidth,
         };
-    }, [currentShape]);
+    }, [currentShape, getStyleById, mode, selectedAnnotationId]);
+
+    // Labels (viewer mode): render as OSD overlays anchored to polygon visual centers
+    useEffect(() => {
+        if (mode !== 'view') return;
+        if (!showLabels) return;
+        if (!viewer) return;
+        if (!labelsById) return;
+
+        let cancelled = false;
+
+        const clear = () => {
+            labelOverlaysRef.current.forEach((el) => {
+                try {
+                    viewer.removeOverlay(el);
+                } catch {
+                    // ignore
+                }
+            });
+            labelOverlaysRef.current = [];
+        };
+
+        const run = async () => {
+            clear();
+
+            const { width, height } = await getImageSize(imageUrl);
+            if (cancelled) return;
+
+            const overlays: HTMLElement[] = [];
+
+            for (const shape of shapes) {
+                const labelRaw = labelsById[shape.id];
+                const label = labelRaw === null || labelRaw === undefined ? '' : String(labelRaw);
+                if (!label) continue;
+                if (!shape.points || shape.points.length < 3) continue;
+
+                const inPixels = shapeToPixels(shape, width, height);
+                const center = polylabel([inPixels.points.map(p => [p.x, p.y])], 0.5);
+                const cx = center?.[0];
+                const cy = center?.[1];
+                if (typeof cx !== 'number' || typeof cy !== 'number') continue;
+
+                const el = document.createElement('div');
+                el.textContent = label;
+                el.style.transform = 'translate(-50%, -50%)';
+                el.style.color = '#ffffff';
+                el.style.fontWeight = '700';
+                el.style.fontSize = '12px';
+                el.style.lineHeight = '1';
+                el.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+                el.style.pointerEvents = 'none';
+                el.style.userSelect = 'none';
+                el.style.whiteSpace = 'nowrap';
+
+                const location = viewer.viewport.imageToViewportCoordinates(cx, cy);
+                viewer.addOverlay(el, location);
+                overlays.push(el);
+            }
+
+            labelOverlaysRef.current = overlays;
+        };
+
+        void run();
+
+        return () => {
+            cancelled = true;
+            clear();
+        };
+    }, [imageUrl, labelsById, mode, shapes, showLabels, viewer]);
 
 
 
@@ -403,9 +548,10 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             {/* Область аннотирования */}
             <div className="flex-1 border rounded-lg overflow-hidden">
                 <OpenSeadragonAnnotator
-                    tool={'polygon'}
+                    tool={mode === 'view' ? null : 'polygon'}
                     style={annotationStyle}
-                    drawingEnabled={drawingEnabled}
+                    drawingEnabled={mode === 'view' ? false : drawingEnabled}
+                    userSelectAction={mode === 'view' ? UserSelectAction.SELECT : undefined}
                 >
                     <OpenSeadragonViewer
                         options={options}
@@ -421,7 +567,7 @@ AnnotatorContent.displayName = 'AnnotatorContent';
 
 const PolygonAnnotator = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>((props, ref) => {
     return (
-        <div className="h-[600px] w-full">
+        <div className={props.className ?? "h-[600px] w-full"}>
             <Annotorious>
                 <AnnotatorContent {...props} ref={ref} />
             </Annotorious>

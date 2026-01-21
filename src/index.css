@@ -531,7 +531,8 @@ svg text {
 [title="Zoom in"]  {
   background: #fff !important;
   box-shadow: 0 0 10px 1px #000;
-display:block;
+  display:none !important;
+
   margin: 5px !important;
   border-radius: 4px
 }
@@ -539,7 +540,8 @@ display:block;
 [title="Zoom out"]  {
   background: #fff !important;
   box-shadow: 0 0 10px 1px #000;
-display:block;
+  display:none !important;
+
   margin: 5px !important;
   border-radius: 4px
 }
@@ -547,7 +549,8 @@ display:block;
 [title="Go home"]  {
   background: #fff !important;
   box-shadow: 0 0 10px 1px #000;
-display:block;
+  display:none !important;
+
   margin: 5px !important;
   border-radius: 4px
 }
@@ -555,7 +558,7 @@ display:block;
 [title="Toggle full page"]  {
   background: #fff !important;
   box-shadow: 0 0 10px 1px #000;
-display:block;
+display:none !important;
   margin: 5px !important;
   border-radius: 4px
 }

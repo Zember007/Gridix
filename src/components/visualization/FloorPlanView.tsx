@@ -1,13 +1,13 @@
 
-import { useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/shared/ui/card';
 import { supabase } from '@/shared/api/supabase';
 import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from './ApartmentPopup';
 import { FieldSetting } from '@/hooks/useFields';
-import polylabel from 'polylabel';
-import { useIsMobile } from '@/hooks/use-mobile';
+import PolygonAnnotator from './polygon-editor/PolygonAnnotator';
+import type { Shape } from './polygon-editor/GeometryShapes';
 
 interface FloorPlanViewProps {
   projectId: string;
@@ -25,7 +25,6 @@ interface FloorPlan {
 
 const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, currency, visibleFields = [] }: FloorPlanViewProps) => {
   const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
   type FloorSettings = {
@@ -38,9 +37,9 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
   const [hoveredApartment, setHoveredApartment] = useState<Apartment | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
-  const isMobile = useIsMobile();
+  const viewerWrapRef = useRef<HTMLDivElement>(null);
+  const lastMousePosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   useEffect(() => {
-    setImageSize({ width: 0, height: 0 });
     loadFloorPlan();
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,74 +97,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
     }
   };
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    setImageSize({ width: img.clientWidth, height: img.clientHeight });
-  };
-
-  // Geometry helpers for better label placement
-  type PointXY = { x: number; y: number };
-
-
-
-
-
-  // Approximate pole of inaccessibility (visual center) using iterative grid search
-  const computeVisualCenter = (polygon: PointXY[]): PointXY => {
-
-    const visualCenter = polylabel([polygon.map(p => [p.x, p.y])], 0.5);
-    return { x: visualCenter?.[0] ?? 0, y: visualCenter?.[1] ?? 0 };
-
-  };
-
-  // Intersections helpers to estimate available width/height at center
-  const intersectionsAtY = (polygon: PointXY[], y: number): number[] => {
-    if (polygon.length < 2) return [];
-    const xs: number[] = [];
-    for (let i = 0; i < polygon.length; i++) {
-      const a = polygon[i]!;
-      const b = polygon[(i + 1) % polygon.length]!;
-      if ((a.y <= y && b.y <= y) || (a.y >= y && b.y >= y) || a.y === b.y) continue;
-      const t = (y - a.y) / (b.y - a.y);
-      const x = a.x + t * (b.x - a.x);
-      xs.push(x);
-    }
-    return xs.sort((m, n) => m - n);
-  };
-
-  const intersectionsAtX = (polygon: PointXY[], x: number): number[] => {
-    if (polygon.length < 2) return [];
-    const ys: number[] = [];
-    for (let i = 0; i < polygon.length; i++) {
-      const a = polygon[i]!;
-      const b = polygon[(i + 1) % polygon.length]!;
-      if ((a.x <= x && b.x <= x) || (a.x >= x && b.x >= x) || a.x === b.x) continue;
-      const t = (x - a.x) / (b.x - a.x);
-      const y = a.y + t * (b.y - a.y);
-      ys.push(y);
-    }
-    return ys.sort((m, n) => m - n);
-  };
-
-  const segmentSpanContaining = (sorted: number[], coord: number): number => {
-    for (let i = 0; i + 1 < sorted.length; i += 2) {
-      const left = sorted[i];
-      const right = sorted[i + 1];
-      if (left === undefined || right === undefined) continue;
-      if (coord >= left && coord <= right) return Math.max(0, right - left);
-    }
-    return 0;
-  };
-
-  const estimateTextSize = (text: string): { w: number; h: number } => {
-    // Approximate font size: 12px base, 14px on md screens
-    const isMd = typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
-    const fontSize = isMd ? 14 : 12;
-    const charWidth = fontSize * 0.6;
-    return { w: text.length * charWidth, h: fontSize };
-  };
-
-  const getApartmentColor = (apartment: Apartment) => {
+  const getApartmentColor = useCallback((apartment: Apartment) => {
     const colors = floorSettings?.colors;
     if (colors) {
       switch (apartment.status) {
@@ -176,32 +108,59 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
       }
     }
     return '#6b7280';
-  };
+  }, [floorSettings]);
 
-  const convertToViewBox = (polygon: { x: number; y: number }[], imageWidth: number, imageHeight: number) => {
-    return polygon.map(point => ({
-      x: (point.x / 100) * imageWidth,
-      y: (point.y / 100) * imageHeight
-    }));
-  };
+  const apartmentById = useMemo(() => {
+    const map = new Map<string, Apartment>();
+    (apartments ?? []).forEach((a) => map.set(a.id, a));
+    return map;
+  }, [apartments]);
 
-  const handleApartmentHover = (apartment: Apartment, event: React.MouseEvent | React.TouchEvent) => {
-    if (!floorSettings?.display?.showTooltip) return;
+  const shapes: Shape[] = useMemo(() => {
+    return (apartments ?? [])
+      .filter((a) => Array.isArray(a.polygon) && a.polygon.length >= 3)
+      .map((a) => ({
+        id: a.id,
+        type: 'polygon',
+        points: a.polygon,
+        color: getApartmentColor(a),
+        isSelected: false,
+      }));
+  }, [apartments, getApartmentColor]);
 
-    setHoveredApartment(apartment);
-    const e = event;
-    if ('clientX' in e && 'clientY' in e) {
-      setPopupPosition({ x: e.clientX, y: e.clientY });
-    } else if ('touches' in e && e.touches?.[0]) {
-      setPopupPosition({ x: e.touches[0]?.clientX ?? 0, y: e.touches[0]?.clientY ?? 0 });
-    }
-    setShowPopup(true);
-  };
+  const labelsById = useMemo(() => {
+    const out: Record<string, string> = {};
+    (apartments ?? []).forEach((a) => {
+      out[a.id] = String(a.apartment_number ?? '');
+    });
+    return out;
+  }, [apartments]);
 
-  const handleApartmentLeave = () => {
+  const getStyleById = useCallback((id: string) => {
+    const apt = apartmentById.get(id);
+    const baseColor = apt ? getApartmentColor(apt) : '#6b7280';
+    return {
+      fill: baseColor,
+      fillOpacity: floorSettings?.opacity?.normal ?? 0.3,
+      stroke: baseColor,
+      strokeOpacity: 1,
+      strokeWidth: 2,
+    };
+  }, [apartmentById, floorSettings, getApartmentColor]);
+
+  const hidePopup = useCallback(() => {
     setHoveredApartment(null);
     setShowPopup(false);
-  };
+  }, []);
+
+  const updateMousePos = useCallback((e: React.MouseEvent) => {
+    const rect = viewerWrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    lastMousePosRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  }, []);
 
 
 
@@ -210,7 +169,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
       <Card
         className={`h-full grow ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex items-center justify-center h-full">
+        <CardContent className="flex items-center justify-center h-full pt-6">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </CardContent>
       </Card>
@@ -222,7 +181,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
       <Card
         className={`h-full grow  ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex flex-col items-center justify-center  h-full text-gray-500">
+        <CardContent className="flex flex-col items-center justify-center  h-full text-gray-500 pt-6">
           <p>План {floorNumber} этажа не загружен</p>
           <p className="text-sm mt-1">Обратитесь к администратору для загрузки плана этажа</p>
         </CardContent>
@@ -232,100 +191,67 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
 
   return (
     <Card className='h-full grow rounded-none'>
-      <CardContent className="flex flex-col h-full">
+      <CardContent className="flex flex-col h-full pt-6">
 
 
-        <div className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center">
-          <div className="relative">
-            <img
-              src={floorPlan.image_url}
-              alt={`План ${floorNumber} этажа`}
-              className={`w-auto mx-auto h-auto  ${apartments ? 'max-h-[600px] md:min-h-[400px]' : 'min-h-[100px]'}`}
-              onLoad={handleImageLoad}
+        <div
+          ref={viewerWrapRef}
+          className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center"
+          onMouseMove={updateMousePos}
+          onMouseLeave={hidePopup}
+        >
+          <PolygonAnnotator
+            imageUrl={floorPlan.image_url}
+            mode="view"
+            shapes={shapes}
+            showLabels={floorSettings?.display?.showNumbers !== false}
+            labelsById={labelsById}
+            getStyleById={getStyleById}
+            zoomToSelection={true}
+            onHoverAnnotationId={(id) => {
+              if (!(floorSettings?.display?.showTooltip ?? false)) return;
+              if (!id) {
+                hidePopup();
+                return;
+              }
+
+              const apt = apartmentById.get(id);
+              if (!apt) {
+                hidePopup();
+                return;
+              }
+
+              setHoveredApartment(apt);
+              setShowPopup(true);
+              setPopupPosition(lastMousePosRef.current);
+            }}
+            onSelectAnnotationId={(id) => {
+              // Always hide tooltip on click
+              hidePopup();
+
+              if (!id) {
+                return;
+              }
+
+              const apt = apartmentById.get(id);
+              if (apt && onApartmentSelect) onApartmentSelect(apt);
+            }}
+            className={`w-full ${apartments ? 'h-full' : 'min-h-[100px] h-[250px] md:h-[300px]'}`}
+          />
+
+          {showPopup && hoveredApartment && popupPosition && (
+            <ApartmentPopup
+              apartment={hoveredApartment}
+              position={popupPosition}
+              settings={{
+                showNumbers: floorSettings?.display?.showNumbers ?? true,
+                showTooltip: floorSettings?.display?.showTooltip ?? false,
+                showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+                showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
+              }}
+              currency={currency || null}
             />
-
-            {/* Overlay с квартирами */}
-            {imageSize.width > 0 && onApartmentSelect && (
-              <svg
-                viewBox={`0 0 ${imageSize.width} ${imageSize.height}`}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  width: imageSize.width,
-                  height: imageSize.height,
-
-                }}
-                preserveAspectRatio="none"
-              >
-                {apartments?.map((apartment) => {
-                  if (!apartment.polygon || apartment.polygon.length < 3) return null;
-
-                  const convertedPolygon = convertToViewBox(apartment.polygon, imageSize.width, imageSize.height);
-                  const points = convertedPolygon
-                    .map(point => `${point.x},${point.y}`)
-                    .join(' ');
-
-                  const visualCenter = computeVisualCenter(convertedPolygon);
-                  const centerX = visualCenter.x;
-                  const centerY = visualCenter.y;
-
-                  // Determine if text fits horizontally; if not and vertical fits, rotate 90deg
-                  const { w: textW, h: textH } = estimateTextSize(String(apartment.apartment_number ?? ''));
-                  const horizSpans = intersectionsAtY(convertedPolygon, centerY);
-                  const availW = segmentSpanContaining(horizSpans, centerX);
-                  const vertSpans = intersectionsAtX(convertedPolygon, centerX);
-                  const availH = segmentSpanContaining(vertSpans, centerY);
-                  const padding = 10; // px padding from edges
-                  const rotate = (textW + padding > availW) && (textH + padding <= availH);
-
-                  const isHovered = hoveredApartment?.id === apartment.id;
-                  const baseColor = getApartmentColor(apartment);
-                  const hoverColor = floorSettings?.hoverEffects?.colorChange ?
-                    (apartment.status === 'available' ? '#10b981' :
-                      apartment.status === 'reserved' ? '#f59e0b' : '#ef4444') : baseColor;
-
-                  return (
-                    <g key={apartment.id}>
-                      <polygon
-                        points={points}
-                        fill={isHovered ? hoverColor : baseColor}
-                        fillOpacity={isHovered ? (floorSettings?.opacity?.hover ?? 0.5) : (floorSettings?.opacity?.normal ?? 0.3)}
-                        stroke={isHovered ? hoverColor : baseColor}
-                        strokeWidth={isHovered ? 3 : 2}
-                        className={`cursor-pointer transition-all duration-200`}
-                        style={{
-                          filter: isHovered && floorSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.3))' : undefined,
-                          transform: isHovered && floorSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
-                          transformOrigin: 'center'
-                        }}
-                        onClick={() => onApartmentSelect(apartment)}
-                        onMouseEnter={(e) => {
-                          if (isMobile) return;
-                          handleApartmentHover(apartment, e)
-                        }}
-                        onMouseLeave={() => { if (isMobile) return; handleApartmentLeave() }}
-                      /*                        onTouchStart={(e) => {if(isMobile) handleApartmentHover(apartment, e)}}
-                                             onTouchEnd={() => {if(isMobile) handleApartmentLeave()}} */
-
-                      />
-                      {floorSettings?.display?.showNumbers !== false && (
-                        <text
-                          x={centerX}
-                          y={centerY}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          className="fill-white font-bold md:text-sm sm:text-xs text-[8px] text-center max-w-[100%] pointer-events-none"
-                          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
-                          transform={rotate ? `rotate(90 ${centerX} ${centerY})` : undefined}
-                        >
-                          {apartment.apartment_number}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
-            )}
-          </div>
+          )}
         </div>
 
         {apartments?.length && onApartmentSelect && (
@@ -350,21 +276,6 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
                 <span>{t('project.sold')}</span>
               </div>
             </div>
-
-            {/* Apartment Popup */}
-            {showPopup && hoveredApartment && popupPosition && (
-              <ApartmentPopup
-                apartment={hoveredApartment}
-                position={popupPosition}
-                settings={{
-                  showNumbers: floorSettings?.display?.showNumbers ?? true,
-                  showTooltip: floorSettings?.display?.showTooltip ?? false,
-                  showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
-                  showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
-                }}
-                currency={currency || null}
-              />
-            )}
           </>
         )}
 
