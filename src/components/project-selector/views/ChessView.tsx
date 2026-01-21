@@ -138,7 +138,7 @@ export const ChessView = ({
                                 </div>
 
                                 {/* Apartments Grid Row */}
-                                <div className="flex items-center flex-1 overflow-x-auto no-scrollbar max-w-[100vw]">
+                                <div className="flex items-center flex-1 overflow-x-auto no-scrollbar max-w-[calc(100vw-32px-100px-48px)]">
                                     {apartments.map((aptRaw, index) => {
                                         const apt = aptRaw as ApartmentWithSection;
                                         const prev = index > 0 ? (apartments[index - 1] as ApartmentWithSection) : undefined;
