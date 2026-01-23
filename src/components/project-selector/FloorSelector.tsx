@@ -100,13 +100,13 @@ export const FloorSelector = ({
                 <>
                   {isMobile ? (
                     <>
-                      <CarouselPrevious className="-left-12 h-8 w-8  border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                      <CarouselNext className="-right-12 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselPrevious className="-left-10 h-8 w-8  border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselNext className="-right-10 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
                     </>
                   ) : (
                     <>
-                      <CarouselPrevious className="-top-12 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                      <CarouselNext className="-bottom-12 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselPrevious className="-top-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselNext className="-bottom-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
                     </>
                   )}
                 </>

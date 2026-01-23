@@ -230,7 +230,7 @@ function SimplifiedSidebar({
       )}
 
       {/* Navigation */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-4 overflow-y-auto no-scrollbar">
         <nav className="space-y-2">
           {navItems.map((item) => (
             <SidebarButton

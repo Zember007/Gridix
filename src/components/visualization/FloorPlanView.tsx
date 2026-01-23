@@ -1,6 +1,5 @@
 
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/shared/ui/card';
 import { supabase } from '@/shared/api/supabase';
 import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -167,122 +166,116 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
 
   if (loading) {
     return (
-      <Card
-        className={`h-full grow ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
+      <div
+        className={`h-full grow flex items-center justify-center p-6 ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex items-center justify-center h-full pt-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </CardContent>
-      </Card>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   if (!floorPlan || !floorPlan.image_url) {
     return (
-      <Card
-        className={`h-full grow  ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
+      <div
+        className={`h-full grow flex flex-col items-center justify-center p-6 text-gray-500 ${apartments ? 'min-h-[400px]' : 'min-h-[100px]'}`}
       >
-        <CardContent className="flex flex-col items-center justify-center  h-full text-gray-500 pt-6">
-          <p>План {floorNumber} этажа не загружен</p>
-          <p className="text-sm mt-1">Обратитесь к администратору для загрузки плана этажа</p>
-        </CardContent>
-      </Card>
+        <p>План {floorNumber} этажа не загружен</p>
+        <p className="text-sm mt-1">Обратитесь к администратору для загрузки плана этажа</p>
+      </div>
     );
   }
 
   return (
-    <Card className='h-full grow rounded-none'>
-      <CardContent className="flex flex-col h-full pt-6">
+    <div className='h-full grow rounded-none flex flex-col p-6'>
 
 
-        <div
-          ref={viewerWrapRef}
-          className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center"
-          onMouseMove={updateMousePos}
-          onMouseLeave={hidePopup}
-        >
-          <PolygonAnnotator
-            imageUrl={floorPlan.image_url}
-            mode="view"
-            shapes={shapes}
-            showLabels={floorSettings?.display?.showNumbers !== false}
-            labelsById={labelsById}
-            getStyleById={getStyleById}
-            zoomToSelection={true}
-            onHoverAnnotationId={(id) => {
-              if (!(floorSettings?.display?.showTooltip ?? false)) return;
-              if (!id) {
-                hidePopup();
-                return;
-              }
-
-              const apt = apartmentById.get(id);
-              if (!apt) {
-                hidePopup();
-                return;
-              }
-
-              setHoveredApartment(apt);
-              setShowPopup(true);
-              setPopupPosition(lastMousePosRef.current);
-            }}
-            onSelectAnnotationId={(id) => {
-              // Always hide tooltip on click
+      <div
+        ref={viewerWrapRef}
+        className="relative bg-gray-50 rounded-lg  flex-1 flex items-center justify-center"
+        onMouseMove={updateMousePos}
+        onMouseLeave={hidePopup}
+      >
+        <PolygonAnnotator
+          imageUrl={floorPlan.image_url}
+          mode="view"
+          shapes={shapes}
+          showLabels={floorSettings?.display?.showNumbers !== false}
+          labelsById={labelsById}
+          getStyleById={getStyleById}
+          zoomToSelection={true}
+          onHoverAnnotationId={(id) => {
+            if (!(floorSettings?.display?.showTooltip ?? false)) return;
+            if (!id) {
               hidePopup();
+              return;
+            }
 
-              if (!id) {
-                return;
-              }
+            const apt = apartmentById.get(id);
+            if (!apt) {
+              hidePopup();
+              return;
+            }
 
-              const apt = apartmentById.get(id);
-              if (apt && onApartmentSelect) onApartmentSelect(apt);
+            setHoveredApartment(apt);
+            setShowPopup(true);
+            setPopupPosition(lastMousePosRef.current);
+          }}
+          onSelectAnnotationId={(id) => {
+            // Always hide tooltip on click
+            hidePopup();
+
+            if (!id) {
+              return;
+            }
+
+            const apt = apartmentById.get(id);
+            if (apt && onApartmentSelect) onApartmentSelect(apt);
+          }}
+          className={`w-full ${apartments ? 'h-full' : 'min-h-[100px] h-[250px] md:h-[300px]'}`}
+        />
+
+        {showPopup && hoveredApartment && popupPosition && (
+          <ApartmentPopup
+            apartment={hoveredApartment}
+            position={popupPosition}
+            settings={{
+              showNumbers: floorSettings?.display?.showNumbers ?? true,
+              showTooltip: floorSettings?.display?.showTooltip ?? false,
+              showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+              showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
             }}
-            className={`w-full ${apartments ? 'h-full' : 'min-h-[100px] h-[250px] md:h-[300px]'}`}
+            currency={currency || null}
           />
-
-          {showPopup && hoveredApartment && popupPosition && (
-            <ApartmentPopup
-              apartment={hoveredApartment}
-              position={popupPosition}
-              settings={{
-                showNumbers: floorSettings?.display?.showNumbers ?? true,
-                showTooltip: floorSettings?.display?.showTooltip ?? false,
-                showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
-                showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
-              }}
-              currency={currency || null}
-            />
-          )}
-          <InteractionHint storageKey="floor-plan" />
-        </div>
-
-        {apartments?.length && onApartmentSelect && (
-          <>
-            <div className="mt-4 flex items-center gap-6 md:text-sm text-[10px] flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded opacity-60"
-                  style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
-                ></div>
-                <span>{t('project.available')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded opacity-60"
-                  style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
-                ></div>
-                <span>{t('project.reserved')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded opacity-60"
-                  style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
-                ></div>
-                <span>{t('project.sold')}</span>
-              </div>
-            </div>
-          </>
         )}
+        <InteractionHint storageKey="floor-plan" />
+      </div>
 
-      </CardContent>
-    </Card>
+      {apartments?.length && onApartmentSelect && (
+        <>
+          <div className="mt-4 flex items-center gap-6 md:text-sm text-[10px] flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded opacity-60"
+                style={{ backgroundColor: floorSettings?.colors?.available ?? '#3b82f6' }}
+              ></div>
+              <span>{t('project.available')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded opacity-60"
+                style={{ backgroundColor: floorSettings?.colors?.reserved ?? '#f59e0b' }}
+              ></div>
+              <span>{t('project.reserved')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded opacity-60"
+                style={{ backgroundColor: floorSettings?.colors?.sold ?? '#ef4444' }}
+              ></div>
+              <span>{t('project.sold')}</span>
+            </div>
+          </div>
+        </>
+      )}
+
+    </div>
   );
 };
 
