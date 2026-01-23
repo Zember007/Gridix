@@ -46,7 +46,7 @@ export const ProjectHeader = ({
     new Intl.NumberFormat('en-US').format(Math.round(price));
 
   return (
-    <div ref={filtersRef} className="bg-white border-b sticky top-0 z-40">
+    <div ref={filtersRef} className="bg-white sticky top-0 z-40">
       <div className="container mx-auto md:px-6 md:py-3 py-2 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
 

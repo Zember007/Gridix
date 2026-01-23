@@ -60,7 +60,7 @@ export const FloorSelector = ({
   if (floors.length === 0) return null;
 
   return (
-    <div className={`${isMobile ? 'h-20 w-full border-t border-l-0' : 'w-15 border-l'} bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
+    <div className={`${isMobile ? 'h-20 w-full ' : 'w-15 '}  flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
       <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
 
 

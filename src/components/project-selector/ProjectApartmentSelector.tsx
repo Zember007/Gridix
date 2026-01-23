@@ -11,7 +11,6 @@ import BuildingFacadeView from '@/features/visualization/buildingFacade/ui/Build
 import { BuildingFloor, FacadeSettings } from '@/features/visualization/buildingFacade/model/types';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
-
 import { useProjectFilters } from './hooks/useProjectFilters';
 import { ChessView } from './views/ChessView';
 import { LayoutGallery } from './layouts/LayoutGallery';
@@ -689,8 +688,6 @@ const ProjectApartmentSelector = ({
                               />
                             </div>
 
-                            {/* Floor selector sidebar */}
-                            <Suspense fallback={<Loader color={getThemeColor()} size="sm" className="mx-auto" />}>
                               <FloorSelector
                                 selectedFloorForPlan={selectedFloorForPlan}
                                 setSelectedFloorForPlan={setSelectedFloorForPlan}
@@ -700,7 +697,6 @@ const ProjectApartmentSelector = ({
                                 showOnlyAvailable={filters.showOnlyAvailable}
                                 filteredApartments={filters.filteredApartments}
                               />
-                            </Suspense>
                           </div>
                         </div>
                       )}
