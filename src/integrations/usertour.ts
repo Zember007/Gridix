@@ -1,3 +1,5 @@
+import i18n from '@/shared/lib/i18n';
+
 type UsertourClient = {
   init: (token: string) => void;
   identify: (userId: string, traits?: Record<string, unknown>) => Promise<void> | void;
@@ -55,25 +57,46 @@ function getUsertourToken(): string | undefined {
     : undefined;
 }
 
+type UsertourContentIds = {
+  adminOnboarding: string;
+  projectCreation: string;
+  projectEditor: string;
+};
+
+const USERTOUR_CONTENT_IDS: { ru: UsertourContentIds; nonRu: UsertourContentIds } = {
+  ru: {
+    adminOnboarding: 'cmkcdaumb02t8a6t6f333mcva',
+    projectCreation: 'cmkdvb55y047exqpewbq40e7n',
+    projectEditor: 'cmkdzv67404dpxqpe9nubbaq0',
+  },
+  nonRu: {
+    adminOnboarding: 'cmkqppnk50f13a6t6nbbmxw75',
+    projectCreation: 'cmkqt5rdq0f43a6t6wxxiz7dd',
+    projectEditor: 'cmkqpp8yb0f06a6t6jjub9jyq',
+  },
+};
+
+function isRussianLanguage(): boolean {
+  const lng = (i18n.resolvedLanguage ?? i18n.language ?? '').toLowerCase();
+  return lng === 'ru' || lng.startsWith('ru-');
+}
+
 function getAdminOnboardingContentId(): string | undefined {
-  const contentId = import.meta.env.VITE_USERTOUR_ADMIN_ONBOARDING_CONTENT_ID;
-  return typeof contentId === 'string' && contentId.trim().length > 0
-    ? contentId.trim()
-    : undefined;
+  return isRussianLanguage()
+    ? USERTOUR_CONTENT_IDS.ru.adminOnboarding
+    : USERTOUR_CONTENT_IDS.nonRu.adminOnboarding;
 }
 
 function getProjectCreationContentId(): string | undefined {
-  const contentId = import.meta.env.VITE_USERTOUR_PROJECT_CREATION_CONTENT_ID;
-  return typeof contentId === 'string' && contentId.trim().length > 0
-    ? contentId.trim()
-    : undefined;
+  return isRussianLanguage()
+    ? USERTOUR_CONTENT_IDS.ru.projectCreation
+    : USERTOUR_CONTENT_IDS.nonRu.projectCreation;
 }
 
 function getProjectEditorContentId(): string | undefined {
-  const contentId = import.meta.env.VITE_USERTOUR_PROJECT_EDITOR_CONTENT_ID;
-  return typeof contentId === 'string' && contentId.trim().length > 0
-    ? contentId.trim()
-    : undefined;
+  return isRussianLanguage()
+    ? USERTOUR_CONTENT_IDS.ru.projectEditor
+    : USERTOUR_CONTENT_IDS.nonRu.projectEditor;
 }
 
 function getPartnersContentId(): string | undefined {
