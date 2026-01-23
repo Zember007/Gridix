@@ -1,4 +1,5 @@
 import { DEFAULT_CURRENCY, type CurrencyType } from "@/shared/lib/currency-utils";
+import { Language, SUPPORTED_LANGUAGES } from "@/shared/lib/language-utils";
 
 export interface ProjectEditorProject {
   id: string;
@@ -19,6 +20,7 @@ export interface ProjectEditorProject {
   theme_color: string;
   project_type?: "building" | "object" | null;
   facade_open: boolean;
+  available_languages: Language[];
 }
 
 export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
@@ -40,6 +42,7 @@ export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
   theme_color: "#000000",
   project_type: "building",
   facade_open: false,
+  available_languages: SUPPORTED_LANGUAGES,
 };
 
 

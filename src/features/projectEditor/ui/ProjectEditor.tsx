@@ -16,12 +16,14 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Switch } from '@/shared/ui/switch';
+import { Checkbox } from '@/shared/ui/checkbox';
 import { CURRENCIES, CurrencyType, DEFAULT_CURRENCY } from '@/shared/lib/currency-utils';
 import { useProject } from '@/entities/project/queries/useProjects';
 import ProjectApartmentsManager from '@/components/projects/ProjectApartmentsManager';
 import BuildingImageEditor from '@/components/visualization/BuildingImageEditor';
 import AllFieldsManager from '@/components/admin/AllFieldsManager';
 import ApartmentPhotosManager from '@/components/apartment/ApartmentPhotosManager';
+import { Language, LANGUAGE_CONFIG, SUPPORTED_LANGUAGES } from '@/shared/lib/language-utils';
 
 import ProjectDomainSettings from '@/components/admin/ProjectDomainSettings';
 import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
@@ -39,6 +41,14 @@ interface ProjectEditorProps {
   isNew: boolean;
   onBack: () => void;
 }
+
+const parseAvailableLanguages = (value: unknown): Language[] => {
+  if (!Array.isArray(value)) return SUPPORTED_LANGUAGES;
+  const filtered = value.filter(
+    (v): v is Language => typeof v === 'string' && v in LANGUAGE_CONFIG
+  );
+  return filtered.length > 0 ? filtered : SUPPORTED_LANGUAGES;
+};
 
 const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const [project, setProject] = useState<ProjectEditorProject>(
@@ -127,7 +137,10 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         pdf_presentation_url: cachedProject.pdf_presentation_url,
         theme_color: (cachedProject as unknown as Record<string, unknown>).theme_color as string || '#000000',
         project_type: (cachedProject as unknown as Record<string, unknown>).project_type as 'building' | 'object' | null || 'building',
-        facade_open: (cachedProject as unknown as Record<string, unknown>).facade_open as boolean || false
+        facade_open: (cachedProject as unknown as Record<string, unknown>).facade_open as boolean || false,
+        available_languages: parseAvailableLanguages(
+          (cachedProject as unknown as Record<string, unknown>).available_languages
+        ),
       });
       setLoading(false);
     } catch (error) {
@@ -301,6 +314,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
         theme_color: project.theme_color,
         project_type: project.project_type || 'building',
         facade_open: project.facade_open,
+        available_languages: project.available_languages,
         updated_at: new Date().toISOString(),
         ...(isNew && { user_id: user.id }) // Добавляем user_id только при создании
       };
@@ -652,6 +666,50 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                           onChange={(e) => setProject(prev => ({ ...prev, address: e.target.value }))}
                           placeholder={t('projectEditor.address')}
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('projectEditor.availableLanguages')}</Label>
+                        <p className="text-xs text-gray-500">{t('projectEditor.availableLanguagesDesc')}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {SUPPORTED_LANGUAGES.map((code) => {
+                            const checked = project.available_languages.includes(code);
+                            const id = `available-language-${code}`;
+                            return (
+                              <div key={code} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={id}
+                                  checked={checked}
+                                  onCheckedChange={(next) => {
+                                    const shouldEnable = next === true;
+                                    if (!shouldEnable && project.available_languages.length <= 1) {
+                                      toast.error(t('projectEditor.atLeastOneLanguage'));
+                                      return;
+                                    }
+
+                                    setProject((prev) => {
+                                      const current = prev.available_languages;
+                                      if (shouldEnable) {
+                                        if (current.includes(code)) return prev;
+                                        return { ...prev, available_languages: [...current, code] };
+                                      }
+
+                                      if (!current.includes(code)) return prev;
+                                      if (current.length <= 1) return prev;
+                                      return {
+                                        ...prev,
+                                        available_languages: current.filter((l) => l !== code),
+                                      };
+                                    });
+                                  }}
+                                />
+                                <Label htmlFor={id} className="cursor-pointer select-none">
+                                  <span className="mr-2">{LANGUAGE_CONFIG[code].flag}</span>
+                                  {LANGUAGE_CONFIG[code].name}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

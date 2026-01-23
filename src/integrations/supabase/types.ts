@@ -1822,6 +1822,7 @@ export type Database = {
       projects: {
         Row: {
           address: string | null
+          available_languages: string[]
           building_image_url: string | null
           created_at: string
           currency: Database["public"]["Enums"]["currency_type"] | null
@@ -1854,6 +1855,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          available_languages?: string[]
           building_image_url?: string | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_type"] | null
@@ -1886,6 +1888,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          available_languages?: string[]
           building_image_url?: string | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_type"] | null

@@ -10,9 +10,21 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Language, LANGUAGE_CONFIG } from '@/shared/lib/language-utils';
 
-export const LanguageToggle = ({ classNameButton = '' }: { classNameButton?: string }) => {
-  
+export const LanguageToggle = ({
+  classNameButton = '',
+  allowedLanguages,
+}: {
+  classNameButton?: string;
+  allowedLanguages?: Language[];
+}) => {
   const { language, setLanguage } = useLanguage();
+
+  const options = (
+    allowedLanguages?.length ? allowedLanguages : (Object.keys(LANGUAGE_CONFIG) as Language[])
+  ).filter((code): code is Language => code in LANGUAGE_CONFIG);
+
+  // If only one language is available, don't show the switcher.
+  if (options.length <= 1) return null;
 
   return (
     <DropdownMenu>
@@ -23,7 +35,9 @@ export const LanguageToggle = ({ classNameButton = '' }: { classNameButton?: str
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+        {options.map((code) => {
+          const config = LANGUAGE_CONFIG[code];
+          return (
           <DropdownMenuItem
             key={code}
             onClick={() => setLanguage(code as Language)}
@@ -32,7 +46,8 @@ export const LanguageToggle = ({ classNameButton = '' }: { classNameButton?: str
             <span className="mr-2">{config.flag}</span>
             {config.name}
           </DropdownMenuItem>
-        ))}
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

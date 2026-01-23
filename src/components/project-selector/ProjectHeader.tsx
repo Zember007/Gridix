@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
 import { Button } from '@/shared/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
@@ -8,6 +9,7 @@ import { AdvancedFilters } from './filters/AdvancedFilters';
 import type { Project } from '@/entities/project/queries/useProjects';
 import type { ProjectFilters } from './hooks/useProjectFilters';
 import { LanguageToggle } from '../LanguageToggle';
+import { Language, LANGUAGE_CONFIG } from '@/shared/lib/language-utils';
 
 interface ProjectHeaderProps {
   project: Project;
@@ -40,7 +42,21 @@ export const ProjectHeader = ({
   isFiltersOpen,
   setIsFiltersOpen,
 }: ProjectHeaderProps) => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+
+  const allowedLanguages: Language[] | null = Array.isArray(
+    (project as unknown as { available_languages?: unknown }).available_languages
+  )
+    ? ((project as unknown as { available_languages?: unknown }).available_languages as unknown[])
+        .filter((v): v is Language => typeof v === 'string' && v in LANGUAGE_CONFIG)
+    : null;
+
+  // If current language is not allowed for this project, redirect to the first allowed language.
+  useEffect(() => {
+    if (!allowedLanguages || allowedLanguages.length === 0) return;
+    if (allowedLanguages.includes(language)) return;
+    setLanguage(allowedLanguages[0]);
+  }, [allowedLanguages?.join(','), language, setLanguage]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US').format(Math.round(price));
@@ -138,9 +154,7 @@ export const ProjectHeader = ({
 
             </div>}
 
-            {isWidget ?
-              null
-              : <LanguageToggle />}
+            {isWidget ? null : <LanguageToggle allowedLanguages={allowedLanguages ?? undefined} />}
           </div>
         </div>
 
