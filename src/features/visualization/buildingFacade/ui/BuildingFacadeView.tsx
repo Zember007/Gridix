@@ -27,9 +27,9 @@ const BuildingFacadeView = ({
   apartments,
   onFloorSelect,
   onApartmentSelect,
-  filtersRef,
-  externalImageLoaded,
-  externalImageNaturalSize,
+  filtersRef: _filtersRef,
+  externalImageLoaded: _externalImageLoaded,
+  externalImageNaturalSize: _externalImageNaturalSize,
   showOnlyAvailable: _showOnlyAvailable = false,
   visibleFields,
   buildingFloors,
@@ -43,7 +43,9 @@ const BuildingFacadeView = ({
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
-  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+  const outerRef = useRef<HTMLDivElement>(null);
+  // This ref MUST point to the "image area" only (not including the bottom carousel),
+  // because popup positioning and svg overlay are relative to this container.
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -61,7 +63,6 @@ const BuildingFacadeView = ({
   const [mobilePopupDockPosition, setMobilePopupDockPosition] = useState<{ x: number; y: number } | null>(null);
   const [isTouchZooming] = useState(false);
   const [touchOrigin] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useLockBodyScroll(isTouchZooming);
 
@@ -180,147 +181,58 @@ const BuildingFacadeView = ({
     popupSize,
   ]);
 
-  const updateImageDimensionsRef = useRef<() => void>();
-
-  const updateImageDimensions = useCallback(() => {
-    const imgEl = imgRef.current;
-    const containerEl = containerRef.current;
-    if (!imgEl || !containerEl || imageNaturalSize.width === 0) return;
-
-    setImgDimensions(prev => {
-      let containerHeight: number;
-      if (isExpanded && filtersRef?.current) {
-        const filtersHeight = filtersRef.current.offsetHeight;
-        const margin = isMobile ? 10 : 20;
-        const newHeight = window.innerHeight - filtersHeight - margin;
-        const minHeight = isMobile ? 300 : 400;
-        containerHeight = Math.max(newHeight, minHeight);
-      } else {
-        containerHeight = isMobile ? 200 : COLLAPSED_HEIGHT;
-      }
-
-      const containerWidth = containerEl.clientWidth;
-      const aspect = imageNaturalSize.width / imageNaturalSize.height;
-
-      let width: number;
-      let height: number;
-
-      if (isExpanded) {
-        // В развернутом режиме - object-contain поведение
-        width = containerWidth;
-        height = containerWidth / aspect;
-
-        // Clamp height to available container height (prevents layout jumps when switching facades)
-        if (height > containerHeight) {
-          height = containerHeight;
-          width = height * aspect;
-        }
-      } else {
-        // В свернутом режиме - object-cover поведение
-        width = containerWidth;
-        height = containerWidth / aspect;
-
-        if (height < containerHeight) {
-          height = containerHeight;
-          width = height * aspect;
-        }
-      }
-
-      const newDims = { width: Math.round(width), height: Math.round(height) };
-      // Предотвращаем бесконечный цикл - обновляем только если размеры действительно изменились
-      if (prev.width === newDims.width && prev.height === newDims.height) {
-        return prev;
-      }
-      return newDims;
-    });
-  }, [imageNaturalSize.width, imageNaturalSize.height, isExpanded, isMobile, filtersRef]); // Убрали все изменяемые зависимости
-
-  // Сохраняем актуальную функцию в ref
-  updateImageDimensionsRef.current = updateImageDimensions;
-
-
-  useEffect(() => {
-    const handleResize = () => {
-      updateImageDimensionsRef.current?.();
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  const measureImageContainer = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    if (width <= 0 || height <= 0) return;
+    setImgDimensions(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
   }, []);
 
+  useLayoutEffect(() => {
+    // After any layout-affecting change, measure the real image-area container.
+    measureImageContainer();
+  }, [measureImageContainer, isExpanded, isMobile, facadeImageUrl]);
 
-
-  // Пересчет размеров при изменении размеров контейнера
   useEffect(() => {
-    if (!containerRef.current) return;
+    const el = containerRef.current;
+    if (!el) return;
     let frame: number | null = null;
     const observer = new ResizeObserver(() => {
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        updateImageDimensionsRef.current?.();
+        measureImageContainer();
       });
     });
-    observer.observe(containerRef.current);
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, []);
+    observer.observe(el);
 
-  // Пересчет при изменении высоты блока фильтров, влияющего на доступную высоту контейнера
-  useEffect(() => {
-    if (!filtersRef?.current) return;
-    let frame: number | null = null;
-    const observer = new ResizeObserver(() => {
-      if (frame) cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        updateImageDimensionsRef.current?.();
-      });
-    });
-    observer.observe(filtersRef.current);
+    // Fallback for viewport changes on some browsers.
+    window.addEventListener('resize', measureImageContainer);
+
     return () => {
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
+      window.removeEventListener('resize', measureImageContainer);
     };
-  }, [filtersRef]);
+  }, [measureImageContainer]);
 
   useEffect(() => {
     if (visibleFloors.length > 0) {
-      updateImageDimensionsRef.current?.();
       if (isExpanded && isMobile && imgDimensions.width > 0 && imgDimensions.height > 0) {
         handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
       }
     }
   }, [handleFloorHover, imgDimensions.height, imgDimensions.width, isExpanded, isMobile, visibleFloors]);
 
-
-
-
-
-
-
-  // Sync image loading state with parent when provided
-  useEffect(() => {
-    if (externalImageLoaded && externalImageNaturalSize && externalImageNaturalSize.width > 0) {
-      setImageNaturalSize(externalImageNaturalSize);
-      // Немедленный пересчет после синхронизации размеров изображения (двойной rAF, чтобы дождаться layout)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          updateImageDimensionsRef.current?.();
-        });
-      });
-    }
-  }, [externalImageLoaded, externalImageNaturalSize?.width, externalImageNaturalSize?.height, externalImageNaturalSize]);
-
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
-    setImageNaturalSize({ width: 0, height: 0 });
     setShowPopup(false);
     setPopupAnchor(null);
     setPopupPosition(null);
     setSelectedFloor(null);
     setHoveredFloor(null);
-    // Image natural size will be re-populated either by externalImageNaturalSize (preferred)
-    // or by the invisible <img onLoad> fallback below.
   }, [facadeImageUrl]);
 
   // Handle escape key to close popup
@@ -678,201 +590,173 @@ const BuildingFacadeView = ({
     <>
 
       <div
-        ref={containerRef}
-        className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg min-h-[200px] flex items-center justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
+        ref={outerRef}
+        className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg  flex items-stretch justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
         style={{
-          // Keep legacy sizing: mobile collapsed is compact, desktop collapsed matches COLLAPSED_HEIGHT.
-          height: isExpanded ? 'auto' : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),
+          minHeight: isExpanded ? (facadeImageUrl.height ?? 600) : 'auto',
+          height: isExpanded
+            ? (isMobile ? 'auto' : 'calc(100dvh - 200px)')
+            : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),
           width: isExpanded ? '100%' : '100%',
           maxWidth: isExpanded ? '100%' : undefined,
           boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
         }}
       >
 
-        {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
-        {facadeImageUrl && (
-          <>
-
-            <img
-              src={facadeImageUrl}
-              alt="Building"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
-              {...({ fetchpriority: 'high' } as React.ImgHTMLAttributes<HTMLImageElement> & { fetchpriority?: string })}
-            />
-            {/* Затемнение для лучшей читаемости */}
-            <div className="absolute inset-0 bg-black/20" />
-          </>
-        )}
-
-        {/* Показываем изображение только после загрузки для предотвращения скачков */}
-        {facadeImageUrl ? (
-          <div
-            ref={wrapperRef}
-            style={{
-              width: imgDimensions.width || 'auto',
-              height: imgDimensions.height || 'auto',
-              touchAction: isTouchZooming ? 'none' : 'manipulation'
-            }}
-
-          >
-            <div
-              style={{
-                transform: isTouchZooming ? `scale(2)` : 'scale(1)',
-                transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
-                touchAction: isTouchZooming ? 'none' : 'manipulation'
-              }}
-              className="w-full h-full">
+        {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
+        <div
+          ref={containerRef}
+          className="relative w-full flex-1 overflow-hidden flex items-center justify-center"
+          style={{ touchAction: isTouchZooming ? 'none' : 'manipulation' }}
+        >
+          {/* Размытый фон для заполнения пустых областей */}
+          {facadeImageUrl && (
+            <>
               <img
-                ref={imgRef}
                 src={facadeImageUrl}
-                alt={project.name}
-                className="block w-full h-full transition-all duration-500"
-                draggable={false}
+                alt="Building"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
+                {...({ fetchpriority: 'high' } as React.ImgHTMLAttributes<HTMLImageElement> & { fetchpriority?: string })}
               />
-              {visibleFloors.length > 0 && imgDimensions.width > 0 && (
-                <svg
-                  className="absolute inset-0 z-20"
-                  style={{ width: '100%', height: '100%' }}
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                >
-                  <rect x="0" y="0" width="100" height="100" fill="none" />
-                  {visibleFloors.map((floor) => {
-                    if (!floor.polygon || floor.polygon.length < 3) return null;
-                    const points = floor.polygon
-                      .map(point => `${point.x},${point.y}`)
-                      .join(' ');
-                    const baseColor = getFloorFillColor(floor);
-                    const isHovered = hoveredFloor === floor.floor_number;
-                    const isActive = hoveredFloor === floor.floor_number;
-                    return (
-                      <g key={floor.id}>
-                        <polygon
-                          points={points}
-                          fill={baseColor}
-                          fillOpacity={(isHovered || isActive) ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
-                          className="cursor-pointer transition-all duration-200"
-                          data-floor={floor.floor_number}
-                          onClick={() => handleSVGFloorClick(floor.floor_number)}
+              <div className="absolute inset-0 bg-black/20" />
+            </>
+          )}
 
-                          onMouseEnter={() => {
-                            if (isExpanded) {
-                              handleSVGFloorHover(floor.floor_number);
-                            }
-                          }}
-                          onMouseLeave={() => {
-                            if (isExpanded) {
-                              setHoveredFloor(null);
-                              handleFloorLeave();
-                            }
-                          }}
-                          style={{
-                            pointerEvents: 'auto',
-                            touchAction: 'none',
-                            filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
-                            transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
-                            transformOrigin: 'center'
-                          }}
-                        />
-                      </g>
-                    );
-                  })}
-                </svg>
-              )}
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Если родитель не предоставил состояние загрузки, используем локальную подгрузку */}
-            {!externalImageLoaded ? (
-              <>
-                <img
-                  ref={imgRef}
-                  src={facadeImageUrl}
-                  alt={project.name}
-                  className="invisible absolute"
-                  onLoad={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-                    // Двойной rAF для гарантии, что контейнер и изображение уже имеют корректные размеры
-                    requestAnimationFrame(() => {
-                      requestAnimationFrame(() => {
-                        updateImageDimensionsRef.current?.();
-                      });
-                    });
-                  }}
-                  draggable={false}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E1E1E]"></div>
-                </div>
-              </>
-            ) : null}
-          </>
-        )}
-
-        {showFacadeNav && (
-          <>
-            <button
-              type="button"
-              aria-label="Previous facade"
-              className={`absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
-              onClick={handlePrevFacade}
-              style={{ touchAction: 'manipulation' }}
-            >
-              <ChevronLeft className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next facade"
-              className={`absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
-              onClick={handleNextFacade}
-              style={{ touchAction: 'manipulation' }}
-            >
-              <ChevronRight className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            </button>
-          </>
-        )}
-
-        {!isExpanded && (
-          <button
-            className={` absolute ${showFacadeNav ? 'bottom-12' : 'bottom-4'} left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
-              }`}
-            onClick={() => setIsExpanded(true)}
-            style={{ touchAction: 'manipulation' }}
+          <div
+            className="relative w-full h-full"
+            style={{
+              transform: isTouchZooming ? `scale(2)` : 'scale(1)',
+              transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
+              touchAction: isTouchZooming ? 'none' : 'manipulation',
+            }}
           >
-            <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
-          </button>
-        )}
-
-        {showFacadeNav && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
-            <div className="flex items-end gap-3 bg-white/80 backdrop-blur px-3 py-2 rounded-full shadow-lg">
-              {facades!.map((f, idx) => {
-                const isActive = idx === activeFacadeIndex;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => onFacadeChange?.(idx)}
-                    className="flex flex-col items-center gap-1 max-w-[90px]"
-                    aria-label={f.name}
-                  >
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        isActive ? 'bg-gray-900' : 'bg-gray-400'
-                      }`}
-                    />
-                    <span className={`text-[10px] leading-none truncate ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
-                      {f.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <img
+              ref={imgRef}
+              src={facadeImageUrl}
+              alt={project.name}
+              className={`block h-full transition-all duration-500 w-auto mx-auto`}
+              draggable={false}
+            />
+            {visibleFloors.length > 0 && imgRef.current && (
+              <svg
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
+                style={{ width: imgRef.current?.width ?? '100%', height: imgRef.current?.height ?? '100%' }}
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <rect x="0" y="0" width="100" height="100" fill="none" />
+                {visibleFloors.map((floor) => {
+                  if (!floor.polygon || floor.polygon.length < 3) return null;
+                  const points = floor.polygon
+                    .map(point => `${point.x},${point.y}`)
+                    .join(' ');
+                  const baseColor = getFloorFillColor(floor);
+                  const isHovered = hoveredFloor === floor.floor_number;
+                  const isActive = hoveredFloor === floor.floor_number;
+                  return (
+                    <g key={floor.id}>
+                      <polygon
+                        points={points}
+                        fill={baseColor}
+                        fillOpacity={(isHovered || isActive) ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
+                        className="cursor-pointer transition-all duration-200"
+                        data-floor={floor.floor_number}
+                        onClick={() => handleSVGFloorClick(floor.floor_number)}
+                        onMouseEnter={() => {
+                          if (isExpanded) {
+                            handleSVGFloorHover(floor.floor_number);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (isExpanded) {
+                            setHoveredFloor(null);
+                            handleFloorLeave();
+                          }
+                        }}
+                        style={{
+                          pointerEvents: 'auto',
+                          touchAction: 'none',
+                          filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
+                          transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
+                          transformOrigin: 'center',
+                        }}
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
           </div>
-        )}
+
+          {showFacadeNav && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous facade"
+                className={`absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+                onClick={handlePrevFacade}
+                style={{ touchAction: 'manipulation' }}
+              >
+                <ChevronLeft className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              </button>
+              <button
+                type="button"
+                aria-label="Next facade"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+                onClick={handleNextFacade}
+                style={{ touchAction: 'manipulation' }}
+              >
+                <ChevronRight className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+              </button>
+            </>
+          )}
+
+          {!isExpanded && (
+            <button
+              className={` absolute ${showFacadeNav ? 'bottom-12' : 'bottom-4'} left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+                }`}
+              onClick={() => setIsExpanded(true)}
+              style={{ touchAction: 'manipulation' }}
+            >
+              <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
+            </button>
+          )}
+
+          {showFacadeNav && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+              <div className="flex items-end gap-3 bg-white/80 backdrop-blur px-3 py-2 rounded-full shadow-lg">
+                {facades!.map((f, idx) => {
+                  const isActive = idx === activeFacadeIndex;
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => onFacadeChange?.(idx)}
+                      className="flex flex-col items-center gap-1 max-w-[90px]"
+                      aria-label={f.name}
+                    >
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          isActive ? 'bg-gray-900' : 'bg-gray-400'
+                        }`}
+                      />
+                      <span className={`text-[10px] leading-none truncate ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
+                        {f.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {showPopup && selectedFloor !== null && popupPosition && (
+            <FloorPopup Number={selectedFloor} position={popupPosition} />
+          )}
+          <InteractionHint storageKey="building" />
+        </div>
+
         {/*    {isExpanded && (
           <button
             className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
@@ -884,10 +768,6 @@ const BuildingFacadeView = ({
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
         )} */}
-        {showPopup && selectedFloor !== null && popupPosition && (
-          <FloorPopup Number={selectedFloor} position={popupPosition} />
-        )}
-        <InteractionHint storageKey="building" />
         {isMobile && isExpanded && visibleFloors.length > 0 && (
           <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
             <div className={`flex flex-row items-center gap-4 w-full`}>
