@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from 'react';
-import { Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/shared/ui/carousel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,13 +16,14 @@ import {
   computePopupPositionForPolygon as computePopupPositionForPolygonUtil,
   getPolygonBoundsPct,
 } from "@/features/visualization/buildingFacade/lib/popupPosition";
-import { HandTap } from "@phosphor-icons/react";
+// import { HandTap } from "@phosphor-icons/react";
 import InteractionHint from '@/components/visualization/InteractionHint';
 
 const COLLAPSED_HEIGHT = 280;
 
 const BuildingFacadeView = ({
   project,
+  imageUrl,
   apartments,
   onFloorSelect,
   onApartmentSelect,
@@ -34,7 +35,10 @@ const BuildingFacadeView = ({
   buildingFloors,
   facadeSettings,
   loading,
-  themeColor
+  themeColor,
+  facades,
+  activeFacadeIndex,
+  onFacadeChange,
 }: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
@@ -61,21 +65,46 @@ const BuildingFacadeView = ({
 
   useLockBodyScroll(isTouchZooming);
 
+  const facadeImageUrl = imageUrl ?? project.building_image_url ?? null;
+
+  const showFacadeNav =
+    !!facades &&
+    facades.length > 1 &&
+    typeof activeFacadeIndex === 'number' &&
+    typeof onFacadeChange === 'function';
+
+  const handlePrevFacade = useCallback(() => {
+    if (!showFacadeNav) return;
+    const next = (activeFacadeIndex! - 1 + facades!.length) % facades!.length;
+    onFacadeChange?.(next);
+  }, [activeFacadeIndex, facades, onFacadeChange, showFacadeNav]);
+
+  const handleNextFacade = useCallback(() => {
+    if (!showFacadeNav) return;
+    const next = (activeFacadeIndex! + 1) % facades!.length;
+    onFacadeChange?.(next);
+  }, [activeFacadeIndex, facades, onFacadeChange, showFacadeNav]);
+
   const visibleFloors = useMemo(() => {
     if (project.project_type === 'object') {
       return buildingFloors;
     }
 
-    // Get unique floor numbers that have at least one available apartment
-    const floorsWithAvailable = new Set(
-      apartments
-        .filter(apt => apt.status === 'available')
-        .map(apt => apt.floor_number)
-    );
+    // When filter is enabled, show only floors with available apartments,
+    // but never hide ALL polygons (old projects often have 0 available).
+    if (_showOnlyAvailable) {
+      const floorsWithAvailable = new Set(
+        apartments
+          .filter(apt => apt.status === 'available')
+          .map(apt => apt.floor_number),
+      );
 
-    // Filter buildingFloors to only include floors with available apartments
-    return buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
-  }, [buildingFloors, apartments, project.project_type]);
+      const filtered = buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
+      return filtered.length > 0 ? filtered : buildingFloors;
+    }
+
+    return buildingFloors;
+  }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
 
   const computeMobileDockPosition = useCallback(
     (size: { width: number; height: number }) =>
@@ -86,7 +115,7 @@ const BuildingFacadeView = ({
         visibleFloors,
         size,
       }),
-    [imgDimensions.height, imgDimensions.width, isExpanded, visibleFloors]
+    [imgDimensions, isExpanded, visibleFloors]
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -101,7 +130,7 @@ const BuildingFacadeView = ({
         polygonBoundsPct,
         size,
       }),
-    [imgDimensions.height, imgDimensions.width, isExpanded]
+    [imgDimensions, isExpanded]
   );
 
   const handleFloorHover = useCallback((floorNumber: number) => {
@@ -181,7 +210,8 @@ const BuildingFacadeView = ({
         width = containerWidth;
         height = containerWidth / aspect;
 
-        if (height > containerHeight && !isMobile) {
+        // Clamp height to available container height (prevents layout jumps when switching facades)
+        if (height > containerHeight) {
           height = containerHeight;
           width = height * aspect;
         }
@@ -280,6 +310,18 @@ const BuildingFacadeView = ({
       });
     }
   }, [externalImageLoaded, externalImageNaturalSize?.width, externalImageNaturalSize?.height, externalImageNaturalSize]);
+
+  // When facade image changes, reset cached dimensions to force a clean recompute.
+  useEffect(() => {
+    setImageNaturalSize({ width: 0, height: 0 });
+    setShowPopup(false);
+    setPopupAnchor(null);
+    setPopupPosition(null);
+    setSelectedFloor(null);
+    setHoveredFloor(null);
+    // Image natural size will be re-populated either by externalImageNaturalSize (preferred)
+    // or by the invisible <img onLoad> fallback below.
+  }, [facadeImageUrl]);
 
   // Handle escape key to close popup
   useEffect(() => {
@@ -598,6 +640,7 @@ const BuildingFacadeView = ({
 
       return !noOverlap;
     };
+    void intersectsPolygons;
 
 
   }, [isMobile, isExpanded, visibleFloors, imgDimensions.width, imgDimensions.height]);
@@ -623,7 +666,7 @@ const BuildingFacadeView = ({
     );
   }
 
-  if (!project.building_image_url) {
+  if (!facadeImageUrl) {
     return null;
   }
 
@@ -638,7 +681,8 @@ const BuildingFacadeView = ({
         ref={containerRef}
         className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg min-h-[200px] flex items-center justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
         style={{
-          height: isExpanded ? 'auto' : '200px',
+          // Keep legacy sizing: mobile collapsed is compact, desktop collapsed matches COLLAPSED_HEIGHT.
+          height: isExpanded ? 'auto' : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),
           width: isExpanded ? '100%' : '100%',
           maxWidth: isExpanded ? '100%' : undefined,
           boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
@@ -646,11 +690,11 @@ const BuildingFacadeView = ({
       >
 
         {/* Размытый фон для заполнения пустых областей в развернутом режиме */}
-        {project.building_image_url && (
+        {facadeImageUrl && (
           <>
 
             <img
-              src={project.building_image_url}
+              src={facadeImageUrl}
               alt="Building"
               className="absolute inset-0 w-full h-full object-cover"
               style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
@@ -662,7 +706,7 @@ const BuildingFacadeView = ({
         )}
 
         {/* Показываем изображение только после загрузки для предотвращения скачков */}
-        {project.building_image_url ? (
+        {facadeImageUrl ? (
           <div
             ref={wrapperRef}
             style={{
@@ -681,12 +725,12 @@ const BuildingFacadeView = ({
               className="w-full h-full">
               <img
                 ref={imgRef}
-                src={project.building_image_url}
+                src={facadeImageUrl}
                 alt={project.name}
                 className="block w-full h-full transition-all duration-500"
                 draggable={false}
               />
-              {isExpanded && visibleFloors.length > 0 && imgDimensions.width > 0 && (
+              {visibleFloors.length > 0 && imgDimensions.width > 0 && (
                 <svg
                   className="absolute inset-0 z-20"
                   style={{ width: '100%', height: '100%' }}
@@ -745,7 +789,7 @@ const BuildingFacadeView = ({
               <>
                 <img
                   ref={imgRef}
-                  src={project.building_image_url}
+                  src={facadeImageUrl}
                   alt={project.name}
                   className="invisible absolute"
                   onLoad={(e) => {
@@ -768,15 +812,66 @@ const BuildingFacadeView = ({
           </>
         )}
 
+        {showFacadeNav && (
+          <>
+            <button
+              type="button"
+              aria-label="Previous facade"
+              className={`absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+              onClick={handlePrevFacade}
+              style={{ touchAction: 'manipulation' }}
+            >
+              <ChevronLeft className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next facade"
+              className={`absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+              onClick={handleNextFacade}
+              style={{ touchAction: 'manipulation' }}
+            >
+              <ChevronRight className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            </button>
+          </>
+        )}
+
         {!isExpanded && (
           <button
-            className={` absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+            className={` absolute ${showFacadeNav ? 'bottom-12' : 'bottom-4'} left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
               }`}
             onClick={() => setIsExpanded(true)}
             style={{ touchAction: 'manipulation' }}
           >
             <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
           </button>
+        )}
+
+        {showFacadeNav && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+            <div className="flex items-end gap-3 bg-white/80 backdrop-blur px-3 py-2 rounded-full shadow-lg">
+              {facades!.map((f, idx) => {
+                const isActive = idx === activeFacadeIndex;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => onFacadeChange?.(idx)}
+                    className="flex flex-col items-center gap-1 max-w-[90px]"
+                    aria-label={f.name}
+                  >
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        isActive ? 'bg-gray-900' : 'bg-gray-400'
+                      }`}
+                    />
+                    <span className={`text-[10px] leading-none truncate ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
+                      {f.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
         {/*    {isExpanded && (
           <button
@@ -792,7 +887,7 @@ const BuildingFacadeView = ({
         {showPopup && selectedFloor !== null && popupPosition && (
           <FloorPopup Number={selectedFloor} position={popupPosition} />
         )}
-        <InteractionHint />
+        <InteractionHint storageKey="building" />
         {isMobile && isExpanded && visibleFloors.length > 0 && (
           <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
             <div className={`flex flex-row items-center gap-4 w-full`}>

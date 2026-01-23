@@ -7,10 +7,10 @@ type UsertourClient = {
   setBaseZIndex: (zIndex: number) => void;
   on: (eventName: string, listener: (...args: unknown[]) => void) => void;
   off: (eventName: string, listener: (...args: unknown[]) => void) => void;
-  track: (eventName: string, properties: Record<string, unknown>, option: Record<string, unknown>) => void;
+  track: (eventName: string, properties?: Record<string, unknown>, option?: Record<string, unknown>) => void;
 };
 
-type IdentifyPayload = {
+export type IdentifyPayload = {
   userId: string;
   email?: string | null;
   name?: string | null;
@@ -21,7 +21,6 @@ type IdentifyPayload = {
 };
 
 let initialized = false;
-let lastIdentifiedUserId: string | null = null;
 
 let usertourClient: UsertourClient | null = null;
 let usertourImportPromise: Promise<UsertourClient> | null = null;
@@ -84,8 +83,40 @@ function getPartnersContentId(): string | undefined {
     : undefined;
 }
 
+function getAdminChecklistContentId(): string | undefined {
+  const contentId = import.meta.env.VITE_USERTOUR_ADMIN_CHECKLIST_CONTENT_ID;
+  return typeof contentId === 'string' && contentId.trim().length > 0
+    ? contentId.trim()
+    : undefined;
+}
+
+function getProjectChecklistContentId(): string | undefined {
+  const contentId = import.meta.env.VITE_USERTOUR_PROJECT_CHECKLIST_CONTENT_ID;
+  return typeof contentId === 'string' && contentId.trim().length > 0
+    ? contentId.trim()
+    : undefined;
+}
+
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
+}
+
+function safeLocalStorageGet(key: string): string | null {
+  if (!isBrowser()) return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
 }
 
 export function isDevTourMode(): boolean {
@@ -159,15 +190,22 @@ async function identifyImpl(client: UsertourClient, payload: IdentifyPayload): P
   const userId = payload.userId;
   if (!userId) return;
 
-  if (lastIdentifiedUserId === userId) return;
-
   await client.identify(userId, {
     email: payload.email ?? undefined,
     name: payload.name ?? undefined,
     signed_up_at: payload.signedUpAt ?? undefined,
   });
+}
 
-  lastIdentifiedUserId = userId;
+async function getAuthedUserId(): Promise<string | null> {
+  if (!isBrowser()) return null;
+  try {
+    const { supabase } = await import('@/shared/api/supabase');
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -178,6 +216,50 @@ export async function identifyUsertourUser(payload: IdentifyPayload): Promise<vo
   const client = await getPreparedUsertourClient();
   if (!client) return;
   await identifyImpl(client, payload);
+}
+
+export async function trackUsertourEvent(params: {
+  eventName: string;
+  properties?: Record<string, unknown>;
+  identify?: IdentifyPayload;
+  /**
+   * If provided, we will only emit this event once per browser (localStorage).
+   * This prevents spamming Usertour from effects and repeated renders.
+   */
+  onceKey?: string;
+}): Promise<void> {
+  if (!isBrowser()) return;
+
+  const { eventName, properties, identify, onceKey } = params;
+  if (!eventName) return;
+
+  const storageKey = onceKey ? `usertour_once:${onceKey}` : null;
+  if (storageKey && safeLocalStorageGet(storageKey) === '1') return;
+
+  try {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+
+    const userId = identify?.userId ?? (await getAuthedUserId());
+    if (userId) {
+      // Expose completion state to Usertour UI via user attributes (so checklist tasks can use "Attribute" conditions)
+      await client.identify(userId, {
+        [eventName]: true,
+        [`${eventName}_at`]: new Date().toISOString(),
+      });
+      // Best-effort: keep core traits updated when we have them
+      if (identify?.userId) {
+        await identifyImpl(client, identify);
+      }
+    }
+
+    client.track?.(eventName, properties ?? {}, {});
+
+    if (storageKey) safeLocalStorageSet(storageKey, '1');
+  } catch (e) {
+    // Don't block UX
+    console.warn('Failed to track usertour event:', eventName, e);
+  }
 }
 
 export async function endAllFlows(): Promise<void> {
@@ -255,6 +337,36 @@ export async function startPartnersTour(payload: IdentifyPayload): Promise<void>
   });
 }
 
+export async function startAdminChecklist(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+
+  const contentId = getAdminChecklistContentId();
+  if (!contentId) return;
+
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+    await identifyImpl(client, payload);
+    await client.start(contentId, { once: true, continue: true });
+    await nextAnimationFrame();
+  });
+}
+
+export async function startProjectChecklist(payload: IdentifyPayload): Promise<void> {
+  if (!isBrowser()) return;
+
+  const contentId = getProjectChecklistContentId();
+  if (!contentId) return;
+
+  await withUiBlocked(async () => {
+    const client = await getPreparedUsertourClient();
+    if (!client) return;
+    await identifyImpl(client, payload);
+    await client.start(contentId, { once: true, continue: true });
+    await nextAnimationFrame();
+  });
+}
+
 
 export function resetUsertour(): void {
   if (!isBrowser()) return;
@@ -263,7 +375,6 @@ export function resetUsertour(): void {
     usertourClient?.reset?.();
   } finally {
     initialized = false;
-    lastIdentifiedUserId = null;
     setUiBlocked(false);
   }
 }

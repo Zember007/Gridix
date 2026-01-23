@@ -22,6 +22,7 @@ import { getCurrencySymbolSafe } from '@/shared/lib/currency-utils';
 import { Apartment as GlobalApartment } from '@/entities/apartment/model/types';
 import type { Json, Tables } from '@/integrations/supabase/types';
 import { compressToWebP } from '@/hooks/use-upload';
+import { trackUsertourEvent } from '@/integrations/usertour';
 
 interface Point {
   x: number;
@@ -302,6 +303,11 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
       }
 
       toast.success(t('floorPlan.upload.success'));
+      void trackUsertourEvent({
+        eventName: 'gridix_project_floorplan_uploaded',
+        properties: { project_id: project?.id || projectId, floor_number: floorNumber },
+        onceKey: 'gridix_project_floorplan_uploaded',
+      });
     } catch (error) {
       console.error('Error uploading floor plan:', error);
       toast.error(t('floorPlan.upload.error'));

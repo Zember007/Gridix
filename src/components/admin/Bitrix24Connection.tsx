@@ -9,6 +9,7 @@ import { ExternalLink, CheckCircle, RefreshCw, Info, Settings } from 'lucide-rea
 import { toast } from 'sonner';
 import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { trackUsertourEvent } from '@/integrations/usertour';
 
 
 interface CRMConnection {
@@ -48,6 +49,15 @@ export const Bitrix24Connection = () => {
     useEffect(() => {
         checkConnection();
     }, []);
+
+    useEffect(() => {
+        if (!connection) return;
+        void trackUsertourEvent({
+            eventName: 'gridix_crm_connected',
+            properties: { crm: 'bitrix24' },
+            onceKey: 'gridix_crm_connected',
+        });
+    }, [connection]);
 
     const handleDisconnect = async () => {
         try {

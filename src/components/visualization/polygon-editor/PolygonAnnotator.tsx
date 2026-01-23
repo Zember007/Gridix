@@ -271,6 +271,13 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     // Синхронизируем shapes при изменении списка (не при каждом рендере)
     useEffect(() => {
         if (!annotator) return;
+
+        // In edit mode, currentShape effect is responsible for syncing annotations.
+        // If we also sync `shapes` while a currentShape exists, we can accidentally wipe
+        // the freshly drawn annotation (because `shapes` doesn't include it yet).
+        if (mode !== 'view' && currentShape) {
+            return;
+        }
         
         // Проверяем, изменились ли ID shapes
         const shapesIds = shapes.map(s => s.id).sort().join(',');

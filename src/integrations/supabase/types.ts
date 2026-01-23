@@ -365,6 +365,7 @@ export type Database = {
         Row: {
           color: string
           created_at: string
+          facade_id: string | null
           floor_number: number
           id: string
           polygon: Json
@@ -373,6 +374,7 @@ export type Database = {
         Insert: {
           color?: string
           created_at?: string
+          facade_id?: string | null
           floor_number: number
           id?: string
           polygon?: Json
@@ -381,12 +383,20 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string
+          facade_id?: string | null
           floor_number?: number
           id?: string
           polygon?: Json
           project_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "building_floors_facade_id_fkey"
+            columns: ["facade_id"]
+            isOneToOne: false
+            referencedRelation: "project_facades"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "building_floors_project_id_fkey"
             columns: ["project_id"]
@@ -1629,6 +1639,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_domains_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_facades: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          order_index: number
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          order_index?: number
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          order_index?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_facades_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"

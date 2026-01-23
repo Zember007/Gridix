@@ -17,6 +17,11 @@ export interface BuildingFloor {
   color: string;
 }
 
+export interface FacadeNavItem {
+  id: string;
+  name: string;
+}
+
 export interface FacadeSettings {
   colors: { building: string };
   opacity: { normal: number; hover: number };
@@ -33,6 +38,7 @@ export interface BuildingFacadeViewProps {
   projectId: string;
   themeColor: string;
   project: BuildingFacadeProject;
+  imageUrl?: string | null;
   apartments: Apartment[];
   onFloorSelect?: (floor: number) => void;
   onApartmentSelect: (apartment: Apartment) => void;
@@ -44,6 +50,9 @@ export interface BuildingFacadeViewProps {
   buildingFloors: BuildingFloor[];
   facadeSettings: FacadeSettings | null;
   loading: boolean;
+  facades?: FacadeNavItem[];
+  activeFacadeIndex?: number;
+  onFacadeChange?: (nextIndex: number) => void;
 }
 
 

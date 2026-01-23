@@ -28,7 +28,7 @@ import { ProjectEditorSidebar, ProjectEditorSidebarMenuButton } from '@/shared/u
 import { useSearchParams } from 'react-router-dom';
 import ProjectFloorsManager from '@/components/projects/ProjectFloorsManager';
 import { ProjectPriceManager } from '@/components/projects/ProjectPriceManager';
-import { isDevTourMode, startProjectEditorTour } from '@/integrations/usertour';
+import { isDevTourMode, startProjectChecklist, startProjectEditorTour, trackUsertourEvent } from '@/integrations/usertour';
 import {
   DEFAULT_PROJECT_EDITOR_PROJECT,
   type ProjectEditorProject,
@@ -60,6 +60,7 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
   const { project: cachedProject } = useProject(projectId);
   const [searchParams] = useSearchParams();
   const startedEditorTourRef = useRef(false);
+  const startedProjectChecklistRef = useRef(false);
 
   // Mobile menu state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -181,10 +182,93 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
     void run();
   }, [authLoading, isNew, project?.id, user, userProfile]);
 
+  // Project checklist: once per user (Usertour-side), open on first editor entry
+  useEffect(() => {
+    if (authLoading) return;
+
+    const devTour = isDevTourMode();
+    // allow re-opening in dev mode
+    if (devTour && (!project?.id || isNew)) {
+      startedProjectChecklistRef.current = false;
+      return;
+    }
+
+    if (!user?.id) return;
+    if (isNew) return;
+    if (!project?.id) return;
+    if (startedProjectChecklistRef.current) return;
+
+    startedProjectChecklistRef.current = true;
+    const run = async () => {
+      try {
+        await startProjectChecklist({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+      } catch (e) {
+        console.warn('Failed to start project checklist:', e);
+        startedProjectChecklistRef.current = false;
+      }
+    };
+
+    void run();
+  }, [authLoading, isNew, project?.id, user, userProfile]);
+
   // Reset per-project guard when switching projects (and allow re-run on navigation)
   useEffect(() => {
     startedEditorTourRef.current = false;
+    startedProjectChecklistRef.current = false;
   }, [project?.id]);
+
+  // Auto-complete signal for "basic info ready" (live and saved)
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user?.id) return;
+    if (isNew) return;
+
+    const hasAddress = typeof project.address === 'string' && project.address.trim().length > 0;
+    const hasLat = typeof project.latitude === 'number' && !Number.isNaN(project.latitude);
+    const hasLon = typeof project.longitude === 'number' && !Number.isNaN(project.longitude);
+    const hasPdf = typeof project.pdf_presentation_url === 'string' && project.pdf_presentation_url.length > 0;
+
+    if (!hasAddress || !hasLat || !hasLon || !hasPdf) return;
+
+    void trackUsertourEvent({
+      eventName: 'gridix_project_basic_info_ready',
+      properties: {
+        project_id: project.id || projectId,
+      },
+      onceKey: 'gridix_project_basic_info_ready',
+    });
+  }, [
+    authLoading,
+    isNew,
+    project.address,
+    project.latitude,
+    project.longitude,
+    project.pdf_presentation_url,
+    project.id,
+    projectId,
+    user?.id,
+  ]);
 
   const handleSave = async () => {
     if (!project.name.trim()) {
@@ -234,6 +318,11 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
 
         setProject(prev => ({ ...prev, id: data.id }));
         toast.success(t('projectEditor.projectCreated'));
+        void trackUsertourEvent({
+          eventName: 'gridix_project_created',
+          properties: { project_id: data.id },
+          onceKey: 'gridix_project_created',
+        });
         navigate(`/admin/project/${data.id}`);
       } else {
         const canEdit = user && (

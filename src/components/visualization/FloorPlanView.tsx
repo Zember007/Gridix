@@ -253,7 +253,7 @@ const FloorPlanView = ({ projectId, floorNumber, apartments, onApartmentSelect, 
               currency={currency || null}
             />
           )}
-          <InteractionHint />
+          <InteractionHint storageKey="floor-plan" />
         </div>
 
         {apartments?.length && onApartmentSelect && (

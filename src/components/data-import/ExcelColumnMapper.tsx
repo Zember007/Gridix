@@ -9,6 +9,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Check, ArrowRight, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/shared/api/supabase';
+import { trackUsertourEvent } from '@/integrations/usertour';
 import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
 import { useProjectCRUD } from '@/entities/project/queries/useProjects';
@@ -453,6 +454,11 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
       if (!project) throw new Error('Failed to create project');
 
       // usertour uses `once: true` internally, so we don't persist onboarding state in Supabase.
+      void trackUsertourEvent({
+        eventName: 'gridix_project_created',
+        properties: { project_id: project.id, source: 'excel_import' },
+        onceKey: 'gridix_project_created',
+      });
 
       // Сохраняем кастомные поля в реальный проект
       if (customFields.length > 0) {

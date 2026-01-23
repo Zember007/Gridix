@@ -33,6 +33,14 @@ interface ProjectApartmentSelectorProps {
   showFullProjectInWidget?: boolean;
 }
 
+interface ProjectFacade {
+  id: string;
+  project_id: string;
+  name: string;
+  image_url: string | null;
+  order_index: number;
+}
+
 // Lazy load components at module level (outside component)
 const ApartmentDetailsPage = lazy(() => import('@/pages/ApartmentDetailsPage'))
 const InteractiveProjectsMap = lazy(() => import('@/components/visualization/InteractiveProjectsMap'))
@@ -72,14 +80,23 @@ const ProjectApartmentSelector = ({
     preloadedLayoutPhotosByRooms,
   } = useApartmentsData({ projectId: project?.id });
 
-  const { buildingImageLoaded, buildingImageNaturalSize } = useBuildingImage(
-    project?.building_image_url,
+  // Facades (runtime facade switching)
+  const [facades, setFacades] = useState<ProjectFacade[]>([]);
+  const [facadesLoaded, setFacadesLoaded] = useState(false);
+  const [activeFacadeIndex, setActiveFacadeIndex] = useState(0);
+
+  const activeFacade = useMemo(
+    () => facades[activeFacadeIndex] ?? facades[0] ?? null,
+    [facades, activeFacadeIndex],
   );
+  const activeFacadeImageUrl = activeFacade?.image_url ?? project?.building_image_url ?? null;
+
+  const { buildingImageLoaded, buildingImageNaturalSize } = useBuildingImage(activeFacadeImageUrl);
 
   // Facade data (floors + settings), loaded only when facade view is active
-  const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
-  const [floorsLoading, setFloorsLoading] = useState(false);
-  const [floorsLoaded, setFloorsLoaded] = useState(false);
+  const [floorsByFacadeId, setFloorsByFacadeId] = useState<Record<string, BuildingFloor[]>>({});
+  const [floorsAllLoading, setFloorsAllLoading] = useState(false);
+  const [floorsAllLoaded, setFloorsAllLoaded] = useState(false);
 
   const [facadeSettings, setFacadeSettings] = useState<FacadeSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -88,21 +105,63 @@ const ProjectApartmentSelector = ({
   const shouldLoadFacadeData =
     viewMode === 'facade' &&
     !!project?.id &&
-    !!project?.building_image_url;
+    !!activeFacadeImageUrl;
 
   const { containerRef, scrollWidgetToTop } = useWidgetScroll(isWidget, [viewMode]);
 
-  // Load building floors only when facade view is active
+  // Load facades only when facade view is active
   useEffect(() => {
-    const loadBuildingFloors = async () => {
+    const loadFacades = async () => {
       if (!project?.id) {
-        setBuildingFloors([]);
-        setFloorsLoaded(false);
+        setFacades([]);
+        setFacadesLoaded(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          // Types are updated later; keep cast minimal for now.
+          .from('project_facades')
+          .select('*')
+          .eq('project_id', project.id)
+          .order('order_index');
+        if (error) throw error;
+
+        const list = (data as unknown as ProjectFacade[]) ?? [];
+        setFacades(list);
+        setFacadesLoaded(true);
+
+        // Clamp active index
+        setActiveFacadeIndex((prev) => {
+          if (list.length === 0) return 0;
+          if (prev < 0) return 0;
+          if (prev >= list.length) return 0;
+          return prev;
+        });
+      } catch (e) {
+        console.error('Error loading project facades:', e);
+        setFacades([]);
+        setFacadesLoaded(true);
+      } finally {
+        // no-op
+      }
+    };
+
+    if (viewMode === 'facade' && !!project?.id && !facadesLoaded) {
+      void loadFacades();
+    }
+  }, [viewMode, project?.id, facadesLoaded]);
+
+  // Load ALL building floors for ALL facades only once when facade view is active.
+  useEffect(() => {
+    const loadAllBuildingFloors = async () => {
+      if (!project?.id) {
+        setFloorsByFacadeId({});
+        setFloorsAllLoaded(false);
         return;
       }
 
       try {
-        setFloorsLoading(true);
+        setFloorsAllLoading(true);
         const { data, error } = await supabase
           .from('building_floors')
           .select('*')
@@ -111,35 +170,57 @@ const ProjectApartmentSelector = ({
 
         if (error) throw error;
 
-        const processedFloors: BuildingFloor[] = (data || []).map((floor: {
+        const rows: Array<{
           id: string;
           floor_number: number;
           polygon: unknown;
           color: string;
-        }) => ({
-          id: floor.id,
-          floor_number: floor.floor_number,
-          polygon: Array.isArray(floor.polygon)
-            ? (floor.polygon as { x: number; y: number }[])
-            : [],
-          color: floor.color,
-        }));
+          facade_id: string | null;
+        }> = (data || []) as unknown as Array<{
+          id: string;
+          floor_number: number;
+          polygon: unknown;
+          color: string;
+          facade_id: string | null;
+        }>;
 
-        setBuildingFloors(processedFloors);
-        setFloorsLoaded(true);
+        const grouped: Record<string, BuildingFloor[]> = {};
+        rows.forEach((floor) => {
+          const key = floor.facade_id ?? '__legacy__';
+          const entry: BuildingFloor = {
+            id: floor.id,
+            floor_number: floor.floor_number,
+            polygon: Array.isArray(floor.polygon)
+              ? (floor.polygon as { x: number; y: number }[])
+              : [],
+            color: floor.color,
+          };
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(entry);
+        });
+
+        setFloorsByFacadeId(grouped);
+        setFloorsAllLoaded(true);
       } catch (error) {
         console.error('Error loading building floors:', error);
-        setBuildingFloors([]);
-        setFloorsLoaded(true);
+        setFloorsByFacadeId({});
+        setFloorsAllLoaded(true);
       } finally {
-        setFloorsLoading(false);
+        setFloorsAllLoading(false);
       }
     };
 
-    if (shouldLoadFacadeData && !floorsLoaded) {
-      void loadBuildingFloors();
+    if (shouldLoadFacadeData && !floorsAllLoaded) {
+      void loadAllBuildingFloors();
     }
-  }, [shouldLoadFacadeData, project?.id, floorsLoaded]);
+  }, [shouldLoadFacadeData, project?.id, floorsAllLoaded]);
+
+  const buildingFloors = useMemo(() => {
+    if (!activeFacade?.id) return [];
+    return floorsByFacadeId[activeFacade.id] ?? [];
+  }, [activeFacade?.id, floorsByFacadeId]);
+
+  // (per-facade floors fetch removed; we load all once and switch from cache)
 
   // Load project-level facade settings only when facade view is active
   useEffect(() => {
@@ -238,7 +319,7 @@ const ProjectApartmentSelector = ({
   };
 
   const facadeDataLoaded =
-    !shouldLoadFacadeData || (floorsLoaded && settingsLoaded);
+    !shouldLoadFacadeData || (floorsAllLoaded && settingsLoaded && facadesLoaded);
 
   const getBaseDomain = async () => {
 
@@ -549,6 +630,7 @@ const ProjectApartmentSelector = ({
                               themeColor={getThemeColor()}
                               projectId={project.id}
                               project={project}
+                              imageUrl={activeFacadeImageUrl}
                               apartments={filters.filteredApartments}
                               onFloorSelect={floor => {
                                 openFloorPreview(floor);
@@ -561,7 +643,10 @@ const ProjectApartmentSelector = ({
                               visibleFields={fieldSettings.filter(field => field.is_visible)}
                               buildingFloors={buildingFloors}
                               facadeSettings={facadeSettings}
-                              loading={floorsLoading || settingsLoading}
+                              loading={floorsAllLoading || settingsLoading}
+                              facades={facades.map((f) => ({ id: f.id, name: f.name }))}
+                              activeFacadeIndex={activeFacadeIndex}
+                              onFacadeChange={(nextIndex) => setActiveFacadeIndex(nextIndex)}
                             />
                           </div>
 

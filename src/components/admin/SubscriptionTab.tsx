@@ -17,6 +17,7 @@ import { DurationSelector } from './subscription/DurationSelector';
 import { PricingPlans } from './subscription/PricingPlans';
 import { OrderHistory } from './subscription/OrderHistory';
 import { CheckoutModal } from './subscription/CheckoutModal';
+import { trackUsertourEvent } from '@/integrations/usertour';
 
 
 export default function SubscriptionTab() {
@@ -186,6 +187,15 @@ export default function SubscriptionTab() {
         }
 
         toast.success(t('admin.subscriptionPage.toasts.invoiceRequestedSingle'));
+        void trackUsertourEvent({
+          eventName: 'gridix_billing_invoice_requested',
+          properties: {
+            project_ids: projectIds,
+            plan_id: selectedPlanId,
+            duration_months: selectedDuration,
+          },
+          onceKey: 'gridix_billing_invoice_requested',
+        });
         await refreshProjectSubscriptions();
 
         const subscriptionId = result?.invoice?.subscription_id;
@@ -214,6 +224,15 @@ export default function SubscriptionTab() {
             count: projectIds.length,
           }),
         );
+        void trackUsertourEvent({
+          eventName: 'gridix_billing_invoice_requested',
+          properties: {
+            project_ids: projectIds,
+            plan_id: selectedPlanId,
+            duration_months: selectedDuration,
+          },
+          onceKey: 'gridix_billing_invoice_requested',
+        });
         await refreshProjectSubscriptions();
       }
 

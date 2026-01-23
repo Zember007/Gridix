@@ -19,7 +19,7 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { AdminSidebar, ProjectEditorSidebarMenuButton } from '@/shared/ui/sidebar-component';
 import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
-import { isDevTourMode, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
+import { isDevTourMode, startAdminChecklist, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
 import { waitForSelectors } from '@/integrations/waitForSelectors';
 
 const AdminDashboard = () => {
@@ -28,6 +28,7 @@ const AdminDashboard = () => {
 
   const { user, userProfile, signOut, loading } = useAuth();
   const startedAdminTourRef = useRef(false);
+  const startedAdminChecklistRef = useRef(false);
   const startedPartnersTourRef = useRef(false);
   const startedProjectCreationTourRef = useRef(false);
 
@@ -96,6 +97,46 @@ const AdminDashboard = () => {
         // Don't block admin UX if onboarding SDK fails
         console.warn('Failed to start admin onboarding tour:', e);
         startedAdminTourRef.current = false;
+      }
+    };
+
+    void run();
+  }, [loading, user, userProfile]);
+
+  // Admin checklist: once per user (Usertour-side), open on admin load
+  useEffect(() => {
+    if (loading) return;
+    if (!user?.id) return;
+    if (startedAdminChecklistRef.current) return;
+
+    startedAdminChecklistRef.current = true;
+    const run = async () => {
+      try {
+        await startAdminChecklist({
+          userId: user.id,
+          email: userProfile?.email ?? user.email ?? null,
+          name:
+            userProfile?.full_name ??
+            (typeof user.user_metadata?.full_name === 'string'
+              ? user.user_metadata.full_name
+              : null),
+          signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
+          companyName:
+            userProfile?.company_name ??
+            (typeof user.user_metadata?.company_name === 'string'
+              ? user.user_metadata.company_name
+              : null),
+          phone:
+            userProfile?.phone ??
+            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
+          accountType:
+            (typeof user.user_metadata?.account_type === 'string'
+              ? user.user_metadata.account_type
+              : null),
+        });
+      } catch (e) {
+        console.warn('Failed to start admin checklist:', e);
+        startedAdminChecklistRef.current = false;
       }
     };
 

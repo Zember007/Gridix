@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/shared/api/supabase';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLanguageNavigation } from '@/hooks/useLanguageNavigation';
+import { trackUsertourEvent } from '@/integrations/usertour';
 
 interface CRMConnection {
     id: string;
@@ -34,6 +35,7 @@ export const AmoCRMConnection = () => {
 
     const isAuthorized = connection?.access_token && connection?.refresh_token;
     const tokenExpired = connection?.token_expires_at && !connection.refresh_token ? new Date(connection.token_expires_at) < new Date() : false;
+    const isConnected = !!(isAuthorized && !tokenExpired);
 
     const fetchConnection = useCallback(async () => {
         try {
@@ -62,6 +64,15 @@ export const AmoCRMConnection = () => {
             fetchConnection();
         }
     }, [fetchConnection, t]);
+
+    useEffect(() => {
+        if (!isConnected) return;
+        void trackUsertourEvent({
+            eventName: 'gridix_crm_connected',
+            properties: { crm: 'amocrm' },
+            onceKey: 'gridix_crm_connected',
+        });
+    }, [isConnected]);
 
     const handleAuth = async () => {
         try {

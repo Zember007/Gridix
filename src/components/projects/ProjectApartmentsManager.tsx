@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useProject } from '@/entities/project/queries/useProjects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { ADMIN_THEME } from '@/shared/lib/admin-theme-config';
+import { trackUsertourEvent } from '@/integrations/usertour';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
@@ -130,6 +131,8 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
       return;
     }
 
+    const isFirstApartmentForProject = isNew && apartments.length === 0;
+
     try {
       const saveData = {
         apartment_number: apartmentData.apartment_number.trim(),
@@ -172,6 +175,14 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
           custom_fields: {}
         });
         toast.success(t('apartmentsManager.saveSuccess'));
+
+        if (isFirstApartmentForProject) {
+          void trackUsertourEvent({
+            eventName: 'gridix_project_first_apartment_created',
+            properties: { project_id: projectId, apartment_id: newApt.id },
+            onceKey: 'gridix_project_first_apartment_created',
+          });
+        }
       } else if (editingApartment) {
         const { data, error } = await supabase
           .from('apartments')
