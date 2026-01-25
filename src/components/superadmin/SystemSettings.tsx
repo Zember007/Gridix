@@ -661,6 +661,7 @@ export function SystemSettings() {
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="ka">ქართული</SelectItem>
                     <SelectItem value="ar">العربية</SelectItem>
+                    <SelectItem value="he">עברית</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

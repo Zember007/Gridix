@@ -33,7 +33,7 @@ const resources: Record<string, { translation: Record<string, string> }> = {};
 
 Object.entries(localeModules).forEach(([path, mod]) => {
   // Извлекаем язык и имя файла из пути: /locales/ru/common.json -> ru, common
-  const match = path.match(/\/locales\/(ru|en|ka|ar)\/(.+)\.json$/);
+  const match = path.match(/\/locales\/(ru|en|ka|ar|he)\/(.+)\.json$/);
   if (!match) return;
 
   const lng = match[1];

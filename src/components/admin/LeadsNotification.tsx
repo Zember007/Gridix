@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { useFailedLeads } from '@/entities/lead/queries/useLeads';
 import { useAllFailedLeadsStats } from '@/hooks/useAllFailedLeadsStats';
+import { t } from 'i18next';
 
 interface LeadsNotificationProps {
   projectId?: string;
@@ -70,7 +71,7 @@ export function LeadsStats({ projectId }: { projectId?: string }) {
   return (
     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
       <div className="flex items-center space-x-1">
-        <span>Лидов:</span>
+        <span>{t('admin.analytics.totalLeads')}:</span>
         <Badge variant="outline">{counts.total}</Badge>
       </div>
       {counts.failed > 0 && (

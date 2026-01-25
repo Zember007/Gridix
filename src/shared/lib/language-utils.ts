@@ -1,4 +1,4 @@
-export type Language = 'ru' | 'en' | 'ka' | 'ar';
+export type Language = 'ru' | 'en' | 'ka' | 'ar' | 'he';
 
 export const LANGUAGE_CONFIG = {
  
@@ -19,6 +19,12 @@ export const LANGUAGE_CONFIG = {
     urlPrefix: '/ar',
     name: 'العربية',
     flag: '🇸🇦'
+  },
+  he: {
+    code: 'he',
+    urlPrefix: '/he',
+    name: 'עברית',
+    flag: '🇮🇱'
   },
   ru: {
     code: 'ru',
