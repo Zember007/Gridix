@@ -1,0 +1,70 @@
+{
+  "apartments": {
+    "settings": "הגדרות מצולע",
+    "add": "הוסף דירה",
+    "area": "שטח (מ\"ר)",
+    "available": "זָמִין",
+    "deleteError": "שגיאה במחיקת דירה",
+    "deleteSuccess": "הדירה נמחקה",
+    "editApartment": "ערוך מצולע - דירה מס' {{number}}",
+    "fillAllFields": "מלא את כל השדות וצור מצולע (מינימום 3 נקודות)",
+    "list": "דירות בקומה:",
+    "loading": {
+      "error": "שגיאה בטעינת דירות"
+    },
+    "newApartment": "דירה חדשה",
+    "noPhotos": "אין תמונות",
+    "noPhotosDesc": "העלה תמונות דירה",
+    "number": "מספר דירה",
+    "numberPlaceholder": "דוגמה: 101",
+    "parameters": "פרמטרים של דירה",
+    "photoDeleteError": "שגיאה במחיקת תמונה",
+    "photoDeleteSuccess": "התמונה נמחקה",
+    "photos": "תמונות",
+    "photoUploadError": "שגיאה בהעלאת תמונות",
+    "photoUploadSuccess": "התמונות הועלו בהצלחה",
+    "price": "מְחִיר",
+    "reserved": "שָׁמוּר",
+    "rooms": "חדרים",
+    "roomsShort": "חדרים",
+    "saveError": "שגיאה בשמירת הדירה",
+    "saveSuccess": "דירה ניצלה",
+    "sold": "נמכר",
+    "status": "סטָטוּס",
+    "title": "ניהול דירה",
+    "uploadMultiplePhotos": "בחר מספר תמונות להעלאה"
+  },
+  "duplicate": {
+    "error": "שגיאה בשכפול לכל הקומות",
+    "noData": "אין נתונים לשכפול",
+    "success": "תוכנית ומצולעים משוכפלים לכל הקומות לפי אזור"
+  },
+  "duplicateToAllFloors": "שכפול לכל הקומות",
+  "image": {
+    "loadError": "טעינת תמונת התוכנית נכשלה"
+  },
+  "loading": {
+    "error": "שגיאה בטעינת תוכנית קומה"
+  },
+  "settings": {
+    "backToEditor": "חזרה לעורך",
+    "title": "קומה {{קומה}} הגדרות מצולע"
+  },
+  "title": "תוכנית קומה",
+  "upload": {
+    "authRequired": "נדרש אימות כדי להעלות תוכניות קומה",
+    "changeImage": "שנה תמונה",
+    "clickToChange": "לחץ כדי לשנות תמונה",
+    "dragDrop": "גרור ושחרר תמונה כאן",
+    "dropToReplace": "שחרר כדי להחליף תמונה",
+    "error": "שגיאה בהעלאת תוכנית קומה",
+    "floorPlan": "תוכנית קומה {{קומה}}",
+    "imageUploaded": "התמונה הועלתה",
+    "invalidFileType": "אנא בחר קובץ תמונה",
+    "loading": "טְעִינָה...",
+    "orClickToSelect": "או לחץ כדי לבחור קובץ",
+    "selectImage": "בחר תמונה",
+    "success": "הועלתה תוכנית קומה",
+    "title": "העלאת תכנית קומה"
+  }
+}

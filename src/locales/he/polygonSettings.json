@@ -1,0 +1,22 @@
+{
+  "buildingTitle": "בניית הגדרות מצולע",
+  "floorTitle": "הגדרות מצולע קומה",
+  "colors": "צבעים",
+  "buildingColor": "צבע בניין",
+  "hoverEffects": "אפקטי ריחוף",
+  "colorChange": "שינוי צבע",
+  "opacityChange": "שינוי אטימות",
+  "glow": "לַהַט",
+  "display": "לְהַצִיג",
+  "showNumbers": "הצג מספרים",
+  "showTooltip": "הצג עצות כלים",
+  "showArea": "הצג אזור",
+  "showPrice": "הצג מחיר",
+  "opacity": "אֲטִימוּת",
+  "normalOpacity": "מצב נורמלי",
+  "hoverOpacity": "על ריחוף",
+  "save": "שמור הגדרות",
+  "saving": "חִסָכוֹן...",
+  "saved": "ההגדרות נשמרו",
+  "saveError": "שגיאה בשמירת ההגדרות"
+}

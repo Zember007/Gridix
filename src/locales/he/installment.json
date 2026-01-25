@@ -1,0 +1,20 @@
+{
+  "apply": "הגש בקשה לתשלום",
+  "calculator": "מחשבון תשלומים",
+  "downPayment": "מקדמה",
+  "downPaymentFrom": "מקדמה מ",
+  "info": {
+    "contactManager": "פנה למנהל להגשת מועמדות",
+    "earlyPayment": "אפשרות תשלום מוקדם זמינה",
+    "noInterest": "תשלומים ללא ריבית"
+  },
+  "low": "תשלומים 0%",
+  "maximum": "מַקסִימוּם",
+  "minimum": "מִינִימוּם",
+  "month": "חוֹדֶשׁ",
+  "monthlyPayment": "תשלום חודשי",
+  "months": "חודשים",
+  "period": "עַל",
+  "perMonth": "חוֹדֶשׁ",
+  "remainingAmount": "כמות שנותרה"
+}

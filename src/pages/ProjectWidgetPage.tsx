@@ -30,24 +30,6 @@ const ProjectWidgetPage = ({ useId = false }: ProjectWidgetPageProps) => {
     return byId?.id ?? null;
   }, [isBitrixCrm, projectId, projectSlug, projects]);
 
-  useEffect(() => {
-    function sendHeight() {
-      const height = document.body.scrollHeight
-
-
-      window.parent.postMessage(
-        { type: "IFRAME_HEIGHT", height },
-        "*" // лучше вместо "*" указать точный origin родителя
-      );
-    }
-
-    window.onload = sendHeight;
-    window.onresize = sendHeight;
-
-    // На случай динамического контента
-    new ResizeObserver(sendHeight).observe(document.body);
-  }, []);
-
 
   if (!projectIdentifier) {
     return (

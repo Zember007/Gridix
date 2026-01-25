@@ -1,0 +1,21 @@
+{
+  "apartmentOption": "דירה {{number}} (קומה {{קומה}})",
+  "authRequired": "נדרש אימות כדי להעלות תמונות",
+  "deleteError": "שגיאה במחיקת תמונה",
+  "deleteSuccess": "התמונה נמחקה",
+  "description": "העלה תמונות בודדות עבור דירות ספציפיות",
+  "duplicateError": "שגיאה בשכפול תמונות",
+  "duplicateSuccess": "התמונות שוכפלו עבור {{count}} דירות דומות",
+  "duplicateToSimilar": "שכפול לדירות דומות",
+  "individualPhotos": "תמונות בודדות",
+  "layoutPhotos": "תמונות פריסה",
+  "noPhotos": "לא הועלו תמונות",
+  "noPhotosDesc": "העלה תמונות עבור הדירה שנבחרה",
+  "selectApartment": "בחר דירה",
+  "selectApartmentPlaceholder": "בחר דירה לעריכה",
+  "title": "ניהול תמונות דירה",
+  "uploadError": "שגיאה בהעלאת תמונות",
+  "uploadMultiple": "אתה יכול לבחור מספר קבצים בבת אחת",
+  "uploadPhotos": "העלה תמונות",
+  "uploadSuccess": "הועלו תמונות"
+}

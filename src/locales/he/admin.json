@@ -1,0 +1,306 @@
+{
+  "analytics": {
+    "title": "אנליטיקס",
+    "loading": "טוען ניתוח...",
+    "filters": "מסננים",
+    "period": "תְקוּפָה",
+    "periods": {
+      "7days": "7 ימים",
+      "30days": "30 ימים",
+      "90days": "90 ימים",
+      "all": "כל הזמן"
+    },
+    "dateFrom": "תאריך מ",
+    "dateTo": "תאריך ל",
+    "project": "פּרוֹיֶקט",
+    "allProjects": "כל הפרויקטים",
+    "totalViews": "סך כל הצפיות",
+    "totalLeads": "סך כל הפניות",
+    "conversionRate": "שיעור המרה",
+    "totalApartments": "סך הכל דירות",
+    "projectViews": "צפיות בפרויקט",
+    "projectViewsDescription": "צפיות בדינמיקה לפי ימים",
+    "leads": "לידים",
+    "leadsDescription": "מוביל דינמיקה לפי ימים",
+    "topProjects": "פרויקטים מובילים",
+    "topProjectsDescription": "10 הפרויקטים המובילים לפי צפיות",
+    "views": "צפיות",
+    "topApartments": "דירות מובילות לפי נוף",
+    "topApartmentsDescription": "10 הדירות המובילות לפי מספר הצפיות",
+    "apartment": "דִירָה",
+    "apartmentsStats": "סטטיסטיקת דירות",
+    "apartmentsStatsDescription": "חלוקת הדירות לפי סטטוס",
+    "apartments": {
+      "available": "זָמִין",
+      "sold": "נמכר",
+      "reserved": "שָׁמוּר"
+    },
+    "projectsTable": "סטטיסטיקה מפורטת לפי פרויקטים",
+    "projectsTableDescription": "מידע מפורט לכל פרויקט",
+    "conversion": "הֲמָרָה",
+    "noData": "אין נתונים"
+  },
+  "analyticsComingSoon": "תכונת Analytics תתווסף מאוחר יותר",
+  "analyticsDescription": "סטטיסטיקה על פרויקטים ודירות",
+  "back": "בְּחֲזָרָה",
+  "dashboard": "לוח המחוונים לניהול",
+  "dashboardDescription": "ניהול פרויקטים והגדרות",
+  "leads": "לידים",
+  "project": {
+    "create": {
+      "description": "בחר כיצד ליצור את הפרויקט",
+      "googleSheets": "Google Sheets:",
+      "import": {
+        "benefit": {
+          "fresh": "הנתונים תמיד מעודכנים",
+          "noReupload": "אין צורך להעלות את הקובץ מחדש",
+          "sync": "סנכרון אוטומטי כאשר הנתונים משתנים"
+        },
+        "benefitsTitle": "יתרונות היבוא באמצעות קישור:",
+        "byLink": "ייבוא ​​באמצעות קישור",
+        "description": "העלה קובץ אקסל עם נתוני דירה ליצירת פרויקט באופן אוטומטי",
+        "processing": "מעבד...",
+        "template": "הורד תבנית",
+        "title": "ייבוא ​​מאקסל",
+        "uploadButton": "העלה קובץ אקסל",
+        "uploadTab": "העלה קובץ",
+        "urlTab": "לפי קישור"
+      },
+      "infoText": "כל פורמט קישור, המרה אוטומטית וסנכרון",
+      "layout": {
+        "different": {
+          "help": "תצטרך להגדיר כל קומה בנפרד"
+        },
+        "question": "האם הפריסה זהה בכל הקומות?",
+        "same": {
+          "help": "ניתן לסמן דירות פעם אחת ולחול על כל הקומות באופן אוטומטי"
+        },
+        "title": "פריסת קומה"
+      },
+      "manual": {
+        "description": "צור פרויקט מאפס והגדר הכל בעצמך",
+        "start": "התחל יצירה ידנית",
+        "title": "הגדרה ידנית"
+      },
+      "requiredData": {
+        "title": "נתונים נדרשים:",
+        "fields": "מספרי דירות, קומות, חדרים, אזור, מחיר, סטטוס"
+      },
+      "supportedFormats": "פורמטים נתמכים:",
+      "title": "צור פרויקט חדש"
+    }
+  },
+  "partners": "שׁוּתָפוּת",
+  "projects": "פרויקטים",
+  "settings": "הגדרות",
+  "subscription": "מִנוּי",
+  "integrations": "אינטגרציות",
+  "integrationsDescription": "חבר שירותים חיצוניים לסביבת העבודה שלך.",
+  "projectsConfig": "תצורת פרויקטים",
+  "configureProjects": "הגדר פרויקטים",
+  "common": {
+    "active": "פָּעִיל",
+    "inactive": "לֹא פָּעִיל",
+    "comingSoon": "בקרוב",
+    "cancel": "לְבַטֵל",
+    "confirm": "לְאַשֵׁר"
+  },
+  "amocrm": {
+    "description": "אוטומציה של מכירות וניהול לידים עם שילוב AmoCRM.",
+    "connectedTo": "מחובר ל",
+    "disconnect": "לְנַתֵק",
+    "reconnect": "התחבר מחדש",
+    "tokenExpired": "פג תוקף האסימון",
+    "connectAmoCRM": "חבר את AmoCRM",
+    "disconnectWarningTitle": "לנתק אינטגרציה?",
+    "disconnectWarningMessage": "זה יעצור את כל תהליכי הסנכרון. אתה יכול להתחבר מחדש מאוחר יותר.",
+    "disconnectSuccess": "התנתק בהצלחה",
+    "disconnectError": "הניתוק נכשל",
+    "settingsLoadError": "טעינת ההגדרות נכשלה",
+    "authError": "האימות נכשל",
+    "saveSuccess": "ההגדרות נשמרו בהצלחה",
+    "saveError": "שמירת ההגדרות נכשלה",
+    "pipeline": "צינור",
+    "status": "סטָטוּס",
+    "responsible": "משתמש אחראי",
+    "selectPipeline": "בחר צינור",
+    "selectStatus": "בחר סטטוס",
+    "selectUser": "בחר משתמש",
+    "notConnected": "לא מחובר",
+    "connectInAdmin": "התחבר בלוח הניהול",
+    "connectInAdminDescription": "תחילה עליך לחבר את AmoCRM בלוח הניהול.",
+    "goToAdmin": "עבור ללוח הניהול"
+  },
+  "bitrix24": {
+    "description": "CRM, משימות וניהול פרויקטים במקום אחד.",
+    "connectedTo": "מחובר ל",
+    "disconnect": "לְנַתֵק",
+    "installApp": "התקן אפליקציה",
+    "howToConnect": "איך להתחבר:",
+    "step1": "פתח את Bitrix24 Marketplace",
+    "step2": "התקן את אפליקציית 'Gridix'",
+    "step3": "הזן קוד כאן",
+    "enterCode": "הזן קוד חיבור",
+    "connect": "לְחַבֵּר",
+    "checking": "בודק...",
+    "disconnectWarningTitle": "לנתק את Bitrix24?",
+    "disconnectWarningMessage": "פעולה זו תסיר את החיבור ותפסיק את הסנכרון.",
+    "disconnectSuccess": "התנתק בהצלחה",
+    "disconnectError": "הניתוק נכשל",
+    "connectError": "החיבור נכשל",
+    "invalidCode": "קוד לא חוקי או שפג תוקפו",
+    "settingsLoadError": "טעינת ההגדרות נכשלה",
+    "category": "קטגוריית העסקה",
+    "stage": "שלב העסקה",
+    "selectCategory": "בחר קטגוריה",
+    "selectStage": "בחר שלב",
+    "notConnected": "לא מחובר",
+    "connectInAdmin": "התחבר בלוח הניהול",
+    "connectInAdminDescription": "תחילה עליך לחבר את Bitrix24 בלוח הניהול.",
+    "attached": "מְחוּבָּר",
+    "attachError": "החיבור נכשל",
+    "detached": "מְנוּתָק",
+    "detachError": "הניתוק נכשל",
+    "configureProjectDesc": "בחר במשפך Bitrix24 עבור פרויקט זה.",
+    "funnel": "מַשׁפֵּך",
+    "selectFunnel": "בחר משפך",
+    "selectFunnelDesc": "בחר משפך לסנכרון שלבים.",
+    "statusesSynced": "שלבים מסונכרנים",
+    "funnelSynced": "המשפך מסונכרן",
+    "syncError": "סנכרון המשפך נכשל"
+  },
+  "widgets": "ווידג'טים",
+  "documentation": "תיעוד",
+  "subscriptionPage": {
+    "title": "המנויים שלך",
+    "description": "בחר תוכנית שמתאימה לעסק שלך.",
+    "refresh": "לְרַעֲנֵן",
+    "projects": {
+      "emptyTitle": "אין פרויקטים",
+      "emptyDescription": "צור את הפרויקט הראשון שלך בקטע \"פרויקטים\" כדי להפעיל מנוי ולבטל את הנעילה של כל התכונות.",
+      "tariff": "לְתַכְנֵן",
+      "expiresAt": "פג תוקף",
+      "notSelected": "לא נבחר",
+      "status": {
+        "active": "פָּעִיל",
+        "expired": "פג תוקף",
+        "inactive": "לא פעיל"
+      },
+      "buttons": {
+        "extend": "לְהַאֲרִיך",
+        "activate": "לְהַפְעִיל"
+      }
+    },
+    "durations": {
+      "1": "1 חודש",
+      "3": "3 חודשים",
+      "6": "6 חודשים",
+      "12": "12 חודשים"
+    },
+    "hints": {
+      "6": "💰 חיסכון טוב בתשלום עבור 6 חודשים.",
+      "12": "👍 בחירה מצוינת! התוכנית הפופולרית ביותר.",
+      "36": "🔥 סופר חיסכון! 50% הנחה לכל התקופה."
+    },
+    "pricing": {
+      "availablePlansTitle": "תוכניות זמינות",
+      "availablePlansDescription": "בחר את התוכנית המתאימה לך ביותר.",
+      "usdPerMonth": "דולר לחודש",
+      "perProject": "לכל פרויקט",
+      "billedEvery": "מחויב כל",
+      "monthsShort": "חוֹדֶשׁ",
+      "monthsShortPlural": "חודשים",
+      "savings": "חיסכון",
+      "choosePlan": "בחר {{name}}"
+    },
+    "history": {
+      "title": "היסטוריית הזמנות",
+      "filters": {
+        "all": "כֹּל",
+        "paid": "בתשלום",
+        "pending": "בתהליך"
+      },
+      "table": {
+        "date": "תאריך / תעודת זהות",
+        "projects": "פרויקטים",
+        "tariff": "לְתַכְנֵן",
+        "method": "שִׁיטָה",
+        "amount": "סְכוּם",
+        "status": "סטָטוּס",
+        "actions": "פעולות"
+      },
+      "status": {
+        "paid": "בתשלום",
+        "pending": "בתהליך",
+        "cancelled": "בּוּטלָה"
+      },
+      "unknownProject": "לא צוין",
+      "projectsCount": "{{count}} פרויקטים",
+      "downloadInvoice": "הורד חשבונית",
+      "empty": "לא נמצאו הזמנות"
+    },
+    "checkout": {
+      "title": "קופה",
+      "selectPlan": "בחר תוכנית",
+      "selectProjects": "בחר פרויקטים",
+      "projectsSelected": "נבחרו {{count}}",
+      "projectsHint": "מנוי מחויב לפי פרויקט. העלות הכוללת מחושבת כך: מחיר תכנית × מספר פרויקטים.",
+      "noProjects": "אין לך עדיין פרויקטים. צור פרויקט לפני התשלום.",
+      "payerType": {
+        "individual": "אִישִׁי",
+        "company": "חֶברָה"
+      },
+      "fields": {
+        "contactName": "שם מלא / איש קשר",
+        "email": "אֶלֶקטרוֹנִי",
+        "phone": "טֵלֵפוֹן",
+        "companyName": "שם החברה",
+        "taxId": "מזהה מס",
+        "address": "כתובת חוקית"
+      },
+      "placeholders": {
+        "contactName": "ג'ון סמית'",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "ACME LLC"
+      },
+      "errors": {
+        "enterName": "הזן שם",
+        "enterEmail": "הזן אימייל",
+        "invalidEmail": "אימייל לא חוקי",
+        "enterPhone": "הזן טלפון",
+        "shortPhone": "מספר הטלפון קצר מדי",
+        "enterCompanyName": "הזן את שם החברה",
+        "selectAtLeastOneProject": "אנא בחר לפחות פרויקט אחד לתשלום.",
+        "selectPlan": "אנא בחר תוכנית",
+        "noProjectsSelected": "אנא בחר פרויקט אחד לפחות"
+      },
+      "summary": {
+        "totalToPay": "סך הכל לשלם",
+        "plan": "לְתַכְנֵן",
+        "projects": "פרויקטים:",
+        "payer": "משלם:"
+      },
+      "methods": {
+        "card": {
+          "title": "כרטיס בנק",
+          "description": "ויזה, מאסטרקארד, אפל פיי",
+          "unavailable": "לא זמין"
+        },
+        "invoice": {
+          "title": "חֶשׁבּוֹנִית",
+          "description": "יצירת PDF (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "סַך הַכֹּל:",
+        "next": "הַבָּא",
+        "processing": "מעבד..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "התקבלה בקשה לחשבונית בהצלחה. אתה יכול להוריד אותו בהיסטוריית ההזמנות.",
+      "invoiceRequestedMultiple": "התבקשו חשבוניות עבור {{count}} פרויקטים"
+    }
+  }
+}

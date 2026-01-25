@@ -1,0 +1,16 @@
+{
+  "myWorkspace": "סביבת העבודה שלי",
+  "managerMode": "מְנַהֵל",
+  "switchWorkspace": "החלף סביבת עבודה",
+  "projectAccess": "גישה לפרויקט",
+  "selectProjects": "בחר פרויקטים",
+  "allProjects": "כל הפרויקטים",
+  "customAccess": "גישה מותאמת אישית",
+  "manageAccess": "נהל את הגישה",
+  "noProjectsSelected": "לא נבחרו פרויקטים",
+  "accessUpdated": "הגישה עודכנה",
+  "errorUpdatingAccess": "שגיאה בעדכון הגישה",
+  "grantAccessToProjects": "הענק גישה לפרויקטים",
+  "managerWillSeeProjects": "המנהל יראה רק פרויקטים נבחרים",
+  "leaveEmptyForAll": "השאר ריק לגישה לכל הפרויקטים"
+}

@@ -1,0 +1,9 @@
+{
+  "chooseMethod": "בחר שיטת יצירת פרויקט",
+  "createProject": "צור פרויקט חדש",
+  "importExcel": "ייבוא ​​מאקסל",
+  "importExcelDesc": "העלה קובץ אקסל עם נתוני דירה וצור פרויקט אוטומטית",
+  "manualSetup": "הגדרה ידנית",
+  "manualSetupDesc": "צור פרויקט מאפס והגדר הכל באופן ידני",
+  "startManual": "התחל יצירה ידנית"
+}

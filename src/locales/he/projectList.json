@@ -1,0 +1,23 @@
+{
+  "apartments": "דירות",
+  "authRequired": "נדרש אימות",
+  "copyWidgetCode": "העתק את קוד הווידג'ט",
+  "created": "נוצר",
+  "createFirst": "צור פרויקט ראשון",
+  "createFirstDescription": "צור את פרויקט הנדל\"ן הראשון שלך עם תוכניות רצפה ודירה אינטראקטיביות",
+  "createNew": "צור פרויקט",
+  "deleteConfirm": "האם אתה בטוח שברצונך למחוק את הפרויקט {{name}}?",
+  "deleteProject": "מחק את הפרויקט",
+  "editProject": "ערוך פרויקט",
+  "errorDeleting": "שגיאה במחיקת הפרויקט",
+  "errorLoading": "שגיאה בטעינת פרויקטים",
+  "floors": "קומות",
+  "manageDescription": "ניהול פרויקטים בתחום הנדל\"ן",
+  "noProjects": "אין פרויקטים",
+  "projectDeleted": "הפרויקט נמחק",
+  "projects": "פרויקטים",
+  "timeoutError": "טעינת פרויקטים ארכה יותר מדי זמן",
+  "updated": "מְעוּדכָּן",
+  "viewProject": "צפה בפרויקט",
+  "widgetCodeCopied": "קוד הווידג'ט הועתק"
+}

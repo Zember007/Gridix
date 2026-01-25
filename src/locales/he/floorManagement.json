@@ -1,0 +1,21 @@
+{
+  "add": "לְהוֹסִיף",
+  "addFloor": "הוסף קומה",
+  "addFloorError": "שגיאה בהוספת קומה",
+  "addFloorSuccess": "קומה {{קומה}} נוספה בהצלחה",
+  "apartment": "דִירָה",
+  "apartments": "דירות",
+  "deleteFloorConfirm": "האם אתה בטוח שברצונך למחוק את הקומה {{קומה}}?",
+  "deleteFloorError": "שגיאה במחיקת קומה",
+  "deleteFloorSuccess": "קומה {{קומה}} נמחקה בהצלחה",
+  "deleteFloorWithApartmentsConfirm": "האם אתה בטוח שברצונך למחוק את הקומה {{קומה}}? הוא מכיל {{count}} דירות שגם יימחקו.",
+  "description": "הוסף או הסר קומות בפרויקט",
+  "existingFloors": "קומות קיימות",
+  "floor": "קוֹמָה",
+  "floorAlreadyExists": "קומה {{קומה}} כבר קיימת",
+  "floorNumber": "מספר קומה",
+  "invalidFloorNumber": "מספר קומה לא חוקי",
+  "manageFloors": "ניהול קומות",
+  "noFloors": "לא נוצרו רצפות",
+  "title": "ניהול קומה"
+}

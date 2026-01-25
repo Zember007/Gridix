@@ -1,0 +1,116 @@
+{
+  "mapper": {
+    "actions": {
+      "createProject": "צור פרויקט עם נתונים"
+    },
+    "preview": {
+      "description": "כיצד ייבוא ​​הנתונים שלך ({{count}} רשומות)",
+      "title": "תצוגה מקדימה של נתונים",
+      "moreRecords": "... ועוד {{count}} רשומות"
+    },
+    "project": {
+      "description": "תֵאוּר",
+      "floors": {
+        "hint": "יותאם בהתאם לנתונים מהטבלה"
+      },
+      "name": "שם הפרויקט*",
+      "type": "סוג פרויקט*",
+      "types": {
+        "building": "בניין (דירות)",
+        "object": "חפץ (נדל\"ן מסחרי)"
+      }
+    },
+    "projectInfo": {
+      "description": "מידע בסיסי על הפרויקט שלך",
+      "title": "מידע על הפרויקט"
+    },
+    "validation": {
+      "description": "מיפוי ערכי Excel לפורמטים סטנדרטיים",
+      "rooms": {
+        "title": "הגדר מספר חדרים",
+        "distribution": "חלוקת החדרים בנתונים:",
+        "unknown": "לֹא יְדוּעַ",
+        "addMapping": "הוסף מיפוי חדרים חדשים:",
+        "warning": "אזהרה לגבי חדרים!",
+        "warningMessage": "נמצאו ערכי חדרים לא ידועים: {rooms}. דירות עם ערכים לא ידועים יובאו עם חדר אחד."
+      },
+      "status": {
+        "title": "הגדר סטטוסי דירה",
+        "distribution": "התפלגות סטטוס בנתונים:",
+        "addMapping": "הוסף מיפוי סטטוס חדש:",
+        "warning": "אזהרה לגבי סטטוסים!",
+        "warningMessage": "נמצאו סטטוסים לא ידועים: {statuses}. דירות עם סטטוסים לא ידועים יובאו בסטטוס \"זמין\"."
+      },
+      "title": "אימות נתונים",
+      "unknown": "לֹא יְדוּעַ",
+      "validValues": "ערכים חוקיים",
+      "invalidValues": "ערכים לא ידועים",
+      "uniqueValues": "ערכים ייחודיים",
+      "hideDetails": "הסתר פרטים",
+      "showDetails": "הצג פרטים",
+      "count": "פריטים",
+      "unknownValue": "לֹא יְדוּעַ",
+      "ignore": "לְהִתְעַלֵם",
+      "valueFromExcel": "ערך מאקסל"
+    },
+    "noData": "אין נתונים",
+    "required": "דָרוּשׁ",
+    "errors": {
+      "fillRequiredFields": "נא למלא את כל השדות הנדרשים",
+      "configureUnknownStatuses": "ולהגדיר את כל המצבים הלא ידועים",
+      "configureUnknownRooms": "ולהגדיר את כל ערכי החדר הלא ידועים",
+      "duplicateApartmentNumbers": "מספרי דירות כפולים שנמצאו בנתונים. אנא בדוק את קובץ האקסל עבור מספרי דירות ייחודיים."
+    },
+    "columns": {
+      "description": "ציין אילו עמודות מקובץ האקסל שלך מתאימות לשדות דירה",
+      "title": "מפה עמודות אקסל",
+      "selectColumn": "בחר עמודה",
+      "selectColumnPlaceholder": "-- בחר עמודה --"
+    }
+  },
+  "url": {
+    "autoConvert": "הקישור יומר אוטומטית לייבוא ​​נתונים",
+    "check": "לִבדוֹק",
+    "checking": "בודק...",
+    "desc": {
+      "googleSheets": "ייבא נתונים ישירות ממסמך Google Sheets",
+      "link": "ייבוא ​​נתונים מקובץ אקסל באמצעות קישור"
+    },
+    "detectedGs": "Google Sheets זוהה",
+    "howToSetup": "כיצד להגדיר גישה:",
+    "importData": "ייבוא ​​נתונים",
+    "importedCount": "יובאו {{count}} רשומות",
+    "importing": "מייבא...",
+    "input": {
+      "excel": "קישור לקובץ אקסל*",
+      "gs": "קישור ל-Google Sheets*"
+    },
+    "link": {
+      "fail": "✗ הקישור אינו נגיש",
+      "ok": "✓ הקישור נגיש"
+    },
+    "req": {
+      "p1": "הקובץ חייב להיות נגיש לציבור (ללא אישור)",
+      "p2": "נתמך: Excel (.xlsx, .xls) ו-Google Sheets",
+      "p3": "השורה הראשונה חייבת להכיל כותרות עמודות",
+      "p4": "לסנכרון אוטומטי אין להזיז את הקובץ",
+      "title": "דרישות הקובץ:"
+    },
+    "title": {
+      "googleSheets": "ייבא מ-Google Sheets",
+      "link": "ייבוא ​​באמצעות קישור"
+    },
+    "toast": {
+      "checkError": "שגיאה בבדיקת הקישור. ודא שהקובץ נגיש לציבור",
+      "enterLink": "הזן קישור לקובץ",
+      "fetchFailed": "טעינת הקובץ נכשלה",
+      "fileInaccessible": "הקובץ אינו נגיש דרך הקישור המצורף",
+      "gsAccessible": "Google Sheets נגיש לייבוא",
+      "invalidGs": "קישור Google Sheets לא חוקי",
+      "linkAccessible": "הקישור נגיש לייבוא",
+      "projectCreated": "פרויקט \"{{name}}\" נוצר עם {{count}} דירות ב-{{floors}} קומות",
+      "projectCreatedObjects": "הפרויקט \"{{name}}\" נוצר עם {{count}} אובייקטים",
+      "projectCreationError": "שגיאה ביצירת הפרויקט"
+    }
+  }
+}
