@@ -430,7 +430,7 @@ const ProjectApartmentSelector = ({
 
   const openApartmentPreview = (apartment: Apartment) => {
     // Widget keeps its modal-based UX
-    if (isWidget || !enableSidePanel) {
+    if (isWidget || !enableSidePanel || isMobile) {
       void openApartmentDetails(apartment);
       return;
     }
