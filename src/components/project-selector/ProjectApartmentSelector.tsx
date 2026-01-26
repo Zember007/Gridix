@@ -1,4 +1,10 @@
 import { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback } from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/shared/ui/sheet";
 import { supabase } from '@/shared/api/supabase';
 import { useProject } from '@/entities/project/queries/useProjects';
 import { Loader } from '@/shared/ui/loader';
@@ -67,6 +73,7 @@ const ProjectApartmentSelector = ({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
+  const [isApartmentDetailsOpen, setIsApartmentDetailsOpen] = useState(false); // New state for slide-over
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [sidePanelState, setSidePanelState] = useState<SidePanelState | null>(null);
 
@@ -364,55 +371,51 @@ const ProjectApartmentSelector = ({
       return;
     }
 
-    // Иначе открываем в новой вкладке (старая логика)
+    // New Slide-Over Logic
+    setSelectedApartment(apartment);
+    setIsApartmentDetailsOpen(true);
+
+    // Update URL without reload
     try {
-
-
-      const baseDomain = process.env.NODE_ENV === 'production' ? await getBaseDomain() : '';
-
-      // Формируем путь к проекту
+      // Construct URL (reusing logic mostly)
       const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
+      const base = `/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`;
 
-      // Формируем полный URL
-      const url = new URL(
-        `${baseDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`,
-        window.location.origin,
-      );
+      const currentUrl = new URL(window.location.href);
+      // Keep existing query params
+      const newUrl = new URL(base, window.location.origin);
+      currentUrl.searchParams.forEach((value, key) => {
+        newUrl.searchParams.set(key, value);
+      });
 
-      // Preserve CRM context in Bitrix embed flow
-      try {
-        const current = new URL(window.location.href);
-        const crm = current.searchParams.get('crm');
-        const dealId = current.searchParams.get('deal_id');
-        if (crm) url.searchParams.set('crm', crm);
-        if (dealId) url.searchParams.set('deal_id', dealId);
-      } catch {
-        // ignore
-      }
+      // Add tracking state
+      window.history.pushState({ apartmentId: apartment.id }, '', newUrl.toString());
 
-      // Открываем в новой вкладке
-      window.open(url.toString(), '_self');
-    } catch (error) {
-      console.error('Error opening apartment details:', error);
-      // В случае ошибки используем запасной вариант
-      const fallbackDomain = import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
-      const projectPath = project?.slug ? project.slug : `id/${project?.id || projectId}`;
-      const url = new URL(
-        `${fallbackDomain}/${language}/project/${projectPath}/apartment/${apartment.apartment_number}`,
-        window.location.origin,
-      );
-      try {
-        const current = new URL(window.location.href);
-        const crm = current.searchParams.get('crm');
-        const dealId = current.searchParams.get('deal_id');
-        if (crm) url.searchParams.set('crm', crm);
-        if (dealId) url.searchParams.set('deal_id', dealId);
-      } catch {
-        // ignore
-      }
-      window.open(url.toString(), '_self');
+    } catch (e) {
+      console.error('Error updating URL', e);
     }
   };
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If we navigate back, close the drawer
+      // We can check event.state but generally just closing is safe if we pushed state for the drawer
+      setIsApartmentDetailsOpen(false);
+      // Optional: setSelectedApartment(null) after animation or immediately
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleCloseApartmentDetails = useCallback(() => {
+    // If currently open and we have history, go back. 
+    // This assumes we pushed state securely.
+    // If user interacts with browser back, popstate handles it.
+    // If user clicks Close button, we call history.back().
+    window.history.back();
+  }, []);
 
   const openFloorPreview = (floorNumber: number) => {
     setSelectedFloorForPlan(floorNumber);
@@ -560,97 +563,97 @@ const ProjectApartmentSelector = ({
               <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
                 {showContent ? (
                   <>
-                  {viewMode === 'list' ? (
-                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                      <ListView
-                        filteredApartments={filters.filteredApartments}
-                        listViewMode="list"
-                        setListViewMode={(mode) => {
-                          if (mode === 'grid') setViewMode('chess');
-                          else setViewMode('list');
-                        }}
-                        hideViewToggle={true}
-                        selectedType={filters.selectedType}
-                        setSelectedType={filters.setSelectedType}
-                        openApartmentDetails={openApartmentPreview}
-                        preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
-                        getVisibleFields={getVisibleFields}
-                        getCustomFieldValue={getCustomFieldValue}
-                        formatFieldValue={formatFieldValue}
-                        getFieldLabel={getFieldLabel}
-                        groupApartmentsByFloor={groupApartmentsByFloor}
-                        convertPrice={filters.convertPrice}
-                        formatPrice={formatPrice}
-                        project={project}
-                        selectedCurrency={filters.selectedCurrency}
-                        isMobile={isMobile ?? false}
-                        themeColor={getThemeColor()}
-                      />
-                    </Suspense>
-                  ) : viewMode === 'chess' ? (
-                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                      <ChessView
-                        project={project as Project}
-                        apartments={filters.filteredApartments}
-                        onApartmentSelect={openApartmentPreview}
-                        onOpenFloorPlan={openFloorPlanFromPanel}
-                        themeColor={getThemeColor()}
-                        language={language}
-                      />
-                    </Suspense>
-                  ) : viewMode === 'map' ? (
-                    <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                      <InteractiveProjectsMap
-                        project={project}
-                        onProjectSelect={() => {
-                          setViewMode('list');
-                        }}
-                      />
-                    </Suspense>
-                  ) : viewMode === 'favorites' ? (
-                    <div className="container mx-auto py-8 grow">
+                    {viewMode === 'list' ? (
                       <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
-                        <FavoritesTab
-                          fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
-                          handleViewApartment={openApartmentPreview}
-                          projectId={project.id}
-                          projectCurrency={project?.currency}
+                        <ListView
+                          filteredApartments={filters.filteredApartments}
+                          listViewMode="list"
+                          setListViewMode={(mode) => {
+                            if (mode === 'grid') setViewMode('chess');
+                            else setViewMode('list');
+                          }}
+                          hideViewToggle={true}
+                          selectedType={filters.selectedType}
+                          setSelectedType={filters.setSelectedType}
+                          openApartmentDetails={openApartmentPreview}
+                          preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
+                          getVisibleFields={getVisibleFields}
+                          getCustomFieldValue={getCustomFieldValue}
+                          formatFieldValue={formatFieldValue}
+                          getFieldLabel={getFieldLabel}
+                          groupApartmentsByFloor={groupApartmentsByFloor}
+                          convertPrice={filters.convertPrice}
+                          formatPrice={formatPrice}
+                          project={project}
+                          selectedCurrency={filters.selectedCurrency}
+                          isMobile={isMobile ?? false}
+                          themeColor={getThemeColor()}
                         />
                       </Suspense>
-                    </div>
-                  ) : (
-                    // Facade and Floor Plan views
-                    <div className="relative flex-1 min-w-0 h-full">
-                      {viewMode === 'facade' ? (
-                        // Building facade view with interactive floor polygons
-                        <div className="w-full bg-white h-full relative overflow-hidden flex flex-col">
-                          <div className="flex-1 min-h-0 relative overflow-hidden">
-                            <BuildingFacadeView
-                              themeColor={getThemeColor()}
-                              projectId={project.id}
-                              project={project}
-                              imageUrl={activeFacadeImageUrl}
-                              apartments={filters.filteredApartments}
-                              onFloorSelect={floor => {
-                                openFloorPreview(floor);
-                              }}
-                              onApartmentSelect={openApartmentPreview}
-                              filtersRef={filtersRef}
-                              externalImageLoaded={buildingImageLoaded}
-                              externalImageNaturalSize={buildingImageNaturalSize}
-                              showOnlyAvailable={filters.showOnlyAvailable}
-                              visibleFields={fieldSettings.filter(field => field.is_visible)}
-                              buildingFloors={buildingFloors}
-                              facadeSettings={facadeSettings}
-                              loading={floorsAllLoading || settingsLoading}
-                              facades={facades.map((f) => ({ id: f.id, name: f.name }))}
-                              activeFacadeIndex={activeFacadeIndex}
-                              onFacadeChange={(nextIndex) => setActiveFacadeIndex(nextIndex)}
-                            />
-                          </div>
+                    ) : viewMode === 'chess' ? (
+                      <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                        <ChessView
+                          project={project as Project}
+                          apartments={filters.filteredApartments}
+                          onApartmentSelect={openApartmentPreview}
+                          onOpenFloorPlan={openFloorPlanFromPanel}
+                          themeColor={getThemeColor()}
+                          language={language}
+                        />
+                      </Suspense>
+                    ) : viewMode === 'map' ? (
+                      <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                        <InteractiveProjectsMap
+                          project={project}
+                          onProjectSelect={() => {
+                            setViewMode('list');
+                          }}
+                        />
+                      </Suspense>
+                    ) : viewMode === 'favorites' ? (
+                      <div className="container mx-auto py-8 grow">
+                        <Suspense fallback={<Loader color={getThemeColor()} size="lg" className="mx-auto" />}>
+                          <FavoritesTab
+                            fieldVisible={fieldSettings.filter(field => field.is_visible).map(field => field.field_name)}
+                            handleViewApartment={openApartmentPreview}
+                            projectId={project.id}
+                            projectCurrency={project?.currency}
+                          />
+                        </Suspense>
+                      </div>
+                    ) : (
+                      // Facade and Floor Plan views
+                      <div className="relative flex-1 min-w-0 h-full">
+                        {viewMode === 'facade' ? (
+                          // Building facade view with interactive floor polygons
+                          <div className="w-full bg-white h-full relative overflow-hidden flex flex-col">
+                            <div className="flex-1 min-h-0 relative overflow-hidden">
+                              <BuildingFacadeView
+                                themeColor={getThemeColor()}
+                                projectId={project.id}
+                                project={project}
+                                imageUrl={activeFacadeImageUrl}
+                                apartments={filters.filteredApartments}
+                                onFloorSelect={floor => {
+                                  openFloorPreview(floor);
+                                }}
+                                onApartmentSelect={openApartmentPreview}
+                                filtersRef={filtersRef}
+                                externalImageLoaded={buildingImageLoaded}
+                                externalImageNaturalSize={buildingImageNaturalSize}
+                                showOnlyAvailable={filters.showOnlyAvailable}
+                                visibleFields={fieldSettings.filter(field => field.is_visible)}
+                                buildingFloors={buildingFloors}
+                                facadeSettings={facadeSettings}
+                                loading={floorsAllLoading || settingsLoading}
+                                facades={facades.map((f) => ({ id: f.id, name: f.name }))}
+                                activeFacadeIndex={activeFacadeIndex}
+                                onFacadeChange={(nextIndex) => setActiveFacadeIndex(nextIndex)}
+                              />
+                            </div>
 
-                          {/* Layouts are shown under the facade (instead of a separate tab) */}
-                          {project?.project_type !== 'object' && (
+                            {/* Layouts are shown under the facade (instead of a separate tab) */}
+                            {project?.project_type !== 'object' && (
                               <LayoutGallery
                                 apartments={apartments}
                                 selectedRooms={filters.selectedRooms}
@@ -668,25 +671,25 @@ const ProjectApartmentSelector = ({
                                 themeColor={getThemeColor()}
                                 visibleFields={fieldSettings.filter(field => field.is_visible)}
                               />
-                          )}
-                        </div>
-                      ) : (
-                        // Floor plan view for specific floor with sidebar
-                        <div className="w-full bg-white min-h-[600px] h-full">
-                          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
-                            {/* Main floor plan area */}
-                            <div className="flex-1 relative">
-                              <ApartmentFloorPlan
-                                project={project}
-                                projectId={project.id}
-                                apartments={apartments.filter(apt =>
-                                  selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
-                                )}
-                                onApartmentSelect={openApartmentPreview}
-                                selectedFloorNumber={selectedFloorForPlan ?? 0}
-                                visibleFields={fieldSettings.filter(field => field.is_visible)}
-                              />
-                            </div>
+                            )}
+                          </div>
+                        ) : (
+                          // Floor plan view for specific floor with sidebar
+                          <div className="w-full bg-white min-h-[600px] h-full">
+                            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
+                              {/* Main floor plan area */}
+                              <div className="flex-1 relative">
+                                <ApartmentFloorPlan
+                                  project={project}
+                                  projectId={project.id}
+                                  apartments={apartments.filter(apt =>
+                                    selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
+                                  )}
+                                  onApartmentSelect={openApartmentPreview}
+                                  selectedFloorNumber={selectedFloorForPlan ?? 0}
+                                  visibleFields={fieldSettings.filter(field => field.is_visible)}
+                                />
+                              </div>
 
                               <FloorSelector
                                 selectedFloorForPlan={selectedFloorForPlan}
@@ -697,13 +700,13 @@ const ProjectApartmentSelector = ({
                                 showOnlyAvailable={filters.showOnlyAvailable}
                                 filteredApartments={filters.filteredApartments}
                               />
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
 
-                  )}
-                </>
+                    )}
+                  </>
                 ) : null}
               </div>
             </div>
@@ -777,6 +780,25 @@ const ProjectApartmentSelector = ({
 
           </div>
 
+          {/* Slide-over Apartment Details */}
+          {!isWidget && (
+            <Sheet open={isApartmentDetailsOpen} onOpenChange={(open) => {
+              if (!open) handleCloseApartmentDetails();
+            }}>
+              <SheetContent side="right" noCloseButton className="p-0 w-full !max-w-full z-[60] overflow-y-auto">
+                {selectedApartment && (
+                  <Suspense fallback={<div className="h-full flex items-center justify-center"><Loader /></div>}>
+                    <ApartmentDetailsPage
+                      useId={true}
+                      apartmentIdProp={selectedApartment.id}
+                      projectIdProp={project.id}
+                      onClose={handleCloseApartmentDetails}
+                    />
+                  </Suspense>
+                )}
+              </SheetContent>
+            </Sheet>
+          )}
         </>
       )}
 
@@ -786,5 +808,7 @@ const ProjectApartmentSelector = ({
     </div>
   );
 };
+
+
 
 export default ProjectApartmentSelector;

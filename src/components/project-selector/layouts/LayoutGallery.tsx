@@ -172,7 +172,7 @@ export const LayoutGallery = ({
         </div>
 
         {/* Layout cards grid */}
-        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}`}>
+        <div className={`flex flex-wrap md:gap-6 gap-4 `}>
           {(() => {
             // Group apartments by layout depending on type
             const layoutGroups: { [key: string]: Apartment[] } = {};
@@ -258,7 +258,7 @@ export const LayoutGallery = ({
               const isFreeLayout = representativeApt.type === 'apartment' && representativeApt.rooms === 'free_layout';
 
               return (
-                <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={key} className="overflow-hidden hover:shadow-lg transition-shadow max-w-full w-[318px]">
                   <div className="aspect-[4/3] bg-gray-100 relative">
                     {(() => {
                       let layoutKey: string;
