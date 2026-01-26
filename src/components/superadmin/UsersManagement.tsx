@@ -26,10 +26,10 @@ import { Badge } from '@/shared/ui/badge';
 
 interface UserProfile {
   id: string;
-  email: string;
-  full_name: string;
-  company_name: string;
-  phone: string;
+  email: string | null;
+  full_name: string | null;
+  company_name: string | null;
+  phone: string | null;
   created_at: string;
 }
 
@@ -102,10 +102,14 @@ export function UsersManagement() {
     if (!selectedUserId) return;
 
     try {
+      const bannedBy = (await supabase.auth.getUser()).data.user?.id;
+      if (!bannedBy) {
+        throw new Error('No authenticated user');
+      }
       const { error } = await supabase.from('banned_users').insert({
         user_id: selectedUserId,
-        banned_by: (await supabase.auth.getUser()).data.user?.id,
-        reason: banReason,
+        banned_by: bannedBy,
+        reason: banReason || null,
       });
 
       if (error) throw error;

@@ -15,10 +15,10 @@ export interface Invoice {
   payment_method: string | null;
   subscription_plans?: {
     name: string;
-  };
+  } | null;
   projects?: {
     name: string;
-  };
+  } | null;
 }
 
 export function useInvoices(projectId?: string) {

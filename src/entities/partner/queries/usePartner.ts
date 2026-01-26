@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/shared/api/supabase";
-import { PartnerProfile } from '../types/partner';
+import type { PartnerProfile } from '../model/types';
 
 export function usePartner() {
   const [isPartner, setIsPartner] = useState(false);

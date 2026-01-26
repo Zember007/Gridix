@@ -89,7 +89,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </div>
           <Slider
             value={[downPaymentPercent]}
-            onValueChange={(value) => setDownPaymentPercent(value[0])}
+            onValueChange={(value) => setDownPaymentPercent(value[0] ?? downPaymentPercent)}
             min={minDownPaymentPercent}
             max={100}
             step={5}
@@ -111,7 +111,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
           </div>
           <Slider
             value={[installmentMonths]}
-            onValueChange={(value) => setInstallmentMonths(value[0])}
+            onValueChange={(value) => setInstallmentMonths(value[0] ?? installmentMonths)}
             min={1}
             max={maxInstallmentMonths}
             step={1}

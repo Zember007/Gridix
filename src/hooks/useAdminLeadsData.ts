@@ -962,7 +962,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         });
 
         if (updates.length > 0) {
-          await supabase.from('crm_funnel_triggers').upsert(updates, {
+          await supabase.from('crm_funnel_triggers').upsert(updates as any, {
             onConflict: 'id',
           });
         }

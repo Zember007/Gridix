@@ -62,6 +62,10 @@ const FieldsOrderManager = ({ projectId, fields, onFieldsChange }: FieldsOrderMa
 
     const newFields = [...fields];
     const [draggedField] = newFields.splice(draggedIndex, 1);
+    if (!draggedField) {
+      setDraggedIndex(null);
+      return;
+    }
     newFields.splice(dropIndex, 0, draggedField);
 
     // Обновляем sort_order для всех полей
@@ -96,6 +100,7 @@ const FieldsOrderManager = ({ projectId, fields, onFieldsChange }: FieldsOrderMa
 
   const handleVisibilityToggle = async (field: CustomField) => {
     if (isSaving) return; // Запрещаем изменение во время сохранения
+    if (!field.id) return;
 
     setIsSaving(true);
     try {

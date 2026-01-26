@@ -62,6 +62,8 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
     },
   } as const;
 
+  const langKey = (language in t ? language : 'en') as keyof typeof t;
+
   useEffect(() => {
     const loadPurchaseLinks = async () => {
       try {
@@ -124,7 +126,7 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
     <div className={cn('space-y-8', className)}>
       {/* Header */}
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold tracking-tight">{t[language].title}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t[langKey].title}</h2>
       </div>
 
 
@@ -147,7 +149,7 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground px-3 py-1">
                     <Crown className="w-3 h-3 mr-1" />
-                    {t[language].recommended}
+                    {t[langKey].recommended}
                   </Badge>
                 </div>
               )}
@@ -188,7 +190,7 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
                   disabled={isCurrentUserPlan}
                   onClick={() => handlePlanSelect(plan.slug)}
                 >
-                  {isCurrentUserPlan ? t[language].currentPlan : t[language].choosePlan}
+                  {isCurrentUserPlan ? t[langKey].currentPlan : t[langKey].choosePlan}
                 </Button>
               </CardFooter>
             </Card>

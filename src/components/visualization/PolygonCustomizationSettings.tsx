@@ -199,10 +199,19 @@ const PolygonCustomizationSettings = ({
       let current: Record<string, unknown> = newSettings;
 
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]] as Record<string, unknown>;
+        const key = keys[i];
+        if (!key) continue;
+        const next = current[key];
+        if (!next || typeof next !== 'object') {
+          current[key] = {};
+        }
+        current = current[key] as Record<string, unknown>;
       }
 
-      current[keys[keys.length - 1]] = value;
+      const lastKey = keys[keys.length - 1];
+      if (lastKey) {
+        current[lastKey] = value;
+      }
       return newSettings;
     });
   };
@@ -350,7 +359,7 @@ const PolygonCustomizationSettings = ({
               <Label>{t('polygonSettings.normalOpacity')}: {Math.round(settings.opacity.normal * 100)}%</Label>
               <Slider
                 value={[settings.opacity.normal]}
-                onValueChange={([value]) => updateSettings('opacity.normal', value)}
+                onValueChange={([value]) => updateSettings('opacity.normal', value ?? settings.opacity.normal)}
                 max={1}
                 min={0}
                 step={0.1}
@@ -361,7 +370,7 @@ const PolygonCustomizationSettings = ({
               <Label>{t('polygonSettings.hoverOpacity')}: {Math.round(settings.opacity.hover * 100)}%</Label>
               <Slider
                 value={[settings.opacity.hover]}
-                onValueChange={([value]) => updateSettings('opacity.hover', value)}
+                onValueChange={([value]) => updateSettings('opacity.hover', value ?? settings.opacity.hover)}
                 max={1}
                 min={0}
                 step={0.1}

@@ -20,7 +20,7 @@ interface LayoutPhoto {
   project_id: string;
   layout_type: string;
   image_url: string;
-  description?: string;
+  description?: string | null;
   order_index: number;
 }
 
@@ -52,13 +52,13 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
       setApartments(normalizedApartments);
       
       // Определяем доступные типы планировок на основе квартир
-      const roomTypeMap = new Map<string, {rooms: number, type: string}>();
+      const roomTypeMap = new Map<string, { rooms: number; type: string; isFreeLayout?: boolean }>();
       
       normalizedApartments.forEach(apt => {
         const key = `${apt.rooms}-${apt.type}`;
         if (!roomTypeMap.has(key)) {
           const roomsValue = apt.rooms === 'free_layout' ? -1 : Number(apt.rooms);
-          roomTypeMap.set(key, {rooms: roomsValue, type: apt.type, isFreeLayout: apt.rooms === 'free_layout'});
+          roomTypeMap.set(key, { rooms: roomsValue, type: apt.type, isFreeLayout: apt.rooms === 'free_layout' });
         }
       });
       
@@ -98,7 +98,8 @@ const LayoutPhotosManager = ({ projectId }: LayoutPhotosManagerProps) => {
       
       // Автоматически выбираем первый тип планировки
       if (types.length > 0) {
-        setSelectedLayoutType(types[0].key);
+        const first = types[0];
+        if (first) setSelectedLayoutType(first.key);
       }
     } catch (error) {
       console.error('Error loading apartments:', error);

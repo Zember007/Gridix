@@ -74,9 +74,14 @@ export const useApartment = (projectIdentifier?: string, apartmentIdentifier?: s
 
   const updateApartment = async (apartmentId: string, updates: Partial<Apartment>) => {
     try {
+      const safeUpdates: Partial<Apartment> = {
+        ...updates,
+        ...(typeof updates.rooms === 'number' ? { rooms: String(updates.rooms) } : {}),
+      };
+
       const { data, error } = await supabase
         .from('apartments')
-        .update(updates)
+        .update(safeUpdates as any)
         .eq('id', apartmentId)
         .select()
         .single();

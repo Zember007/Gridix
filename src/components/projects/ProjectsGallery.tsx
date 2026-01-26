@@ -18,6 +18,7 @@ interface Project {
   name: string;
   description: string;
   address: string;
+  slug?: string | null;
   floors: number;
   building_image_url: string | null;
   latitude: number | null;
@@ -47,7 +48,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
   const [projects, setProjects] = useState<Project[]>([]);
 
   const processProjects = (rawProjects: BaseProject[]) => {
-    const processedProjects = rawProjects.map((project: BaseProject) => {
+    const processedProjects: Project[] = rawProjects.map((project: BaseProject) => {
       // Здесь можно добавить дополнительную логику обработки проектов
       // если нужно получить информацию об квартирах, это нужно делать отдельно
       return {
@@ -55,6 +56,7 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
         name: project.name,
         description: project.description || '',
         address: project.address || '',
+        slug: (project as any).slug ?? null,
         floors: project.floors,
         building_image_url: project.building_image_url,
         latitude: project.latitude,
@@ -104,10 +106,13 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
       // Пока оставляем как есть
     }
 
-    if (priceRange[0] > 0 || priceRange[1] < 10000000) {
+    const minSelectedPrice = priceRange[0] ?? 0;
+    const maxSelectedPrice = priceRange[1] ?? 10000000;
+
+    if (minSelectedPrice > 0 || maxSelectedPrice < 10000000) {
       filtered = filtered.filter(project => {
         const price = project.price_from || 0;
-        return price >= priceRange[0] && price <= priceRange[1];
+        return price >= minSelectedPrice && price <= maxSelectedPrice;
       });
     }
 
@@ -129,12 +134,15 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
     return new Intl.NumberFormat('en-US').format(price) + ' $';
   };
 
-  const cities = Array.from(new Set(
-    projects
-      .map(p => p.address)
-      .filter(addr => addr)
-      .map(addr => addr.split(',')[0])
-  ));
+  const cities = Array.from(
+    new Set(
+      projects
+        .map((p) => p.address)
+        .filter(Boolean)
+        .map((addr) => (addr.split(",")[0] ?? "").trim())
+        .filter(Boolean),
+    ),
+  );
 
   if (loading) {
     return (
@@ -220,7 +228,9 @@ const ProjectsGallery = ({ showHeader = true, embedMode = false, onProjectSelect
 
               {/* Ценовой диапазон */}
               <div className="space-y-2 md:col-span-2">
-                <Label>{t('gallery.priceRange')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}</Label>
+                <Label>
+                  {t('gallery.priceRange')}: {formatPrice(priceRange[0] ?? 0)} - {formatPrice(priceRange[1] ?? 10000000)}
+                </Label>
                 <Slider
                   value={priceRange}
                   onValueChange={setPriceRange}

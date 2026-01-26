@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Filter, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
 import { toast } from '@/shared/ui/sonner';
 import { supabase } from '@/shared/api/supabase';
-import { PartnerPayout } from '../../types/partner';
+import type { PartnerPayout } from '@/entities/partner/model/types';
 
 interface PayoutWithPartner extends PartnerPayout {
   contact_info?: string;

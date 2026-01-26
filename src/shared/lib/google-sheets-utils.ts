@@ -33,7 +33,9 @@ export function convertGoogleSheetsUrl(url: string): string {
   for (const pattern of patterns) {
     const match = cleanUrl.match(pattern);
     if (match) {
-      documentId = match[1];
+      const docId = match[1];
+      if (!docId) continue;
+      documentId = docId;
       sheetId = match[2] || '0'; // Используем первый лист по умолчанию
       break;
     }
@@ -81,8 +83,10 @@ export function parseGoogleSheetsUrl(url: string): {
     for (const pattern of patterns) {
       const match = cleanUrl.match(pattern);
       if (match) {
+        const docId = match[1];
+        if (!docId) continue;
         return {
-          documentId: match[1],
+          documentId: docId,
           sheetId: match[2] || '0',
           isValid: true
         };

@@ -6,11 +6,12 @@ import { useUserRole } from './useUserRole';
 export interface Project {
   id: string;
   name: string;
-  description: string;
-  user_id: string;
+  description: string | null;
+  user_id: string | null;
   floors: number;
-  building_image_url: string;
+  building_image_url: string | null;
   created_at: string;
+  slug?: string | null;
   developer_info?: {
     full_name: string;
     company_name: string;

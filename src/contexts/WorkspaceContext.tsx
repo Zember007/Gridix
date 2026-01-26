@@ -105,7 +105,8 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
     // Для менеджеров автоматически выбираем первый доступный workspace
     if (userRole.type === 'manager' && workspaces.length > 0 && !activeWorkspaceId) {
-      setActiveWorkspaceId(workspaces[0].id);
+      const first = workspaces[0];
+      if (first) setActiveWorkspaceId(first.id);
     } else {
       // Восстанавливаем workspace из localStorage, если он доступен
       const storedWorkspaceId = loadWorkspaceFromStorage();

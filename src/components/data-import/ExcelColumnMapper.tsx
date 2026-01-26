@@ -431,6 +431,7 @@ const ExcelColumnMapper = ({ excelColumns, importedData, onComplete }: ExcelColu
         longitude: null,
         slug: null,
         currency: 'USD' as const,
+        available_languages: ['ru', 'en'],
         is_public: true,
         is_featured: false,
         installment_enabled: false,

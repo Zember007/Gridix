@@ -23,7 +23,7 @@ interface ApartmentPhoto {
   id: string;
   apartment_id: string;
   image_url: string;
-  description?: string;
+  description?: string | null;
   order_index: number;
 }
 

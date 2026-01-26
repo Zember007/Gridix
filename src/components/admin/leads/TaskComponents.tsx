@@ -67,7 +67,7 @@ export const TaskComposer: React.FC<TaskComposerProps> = ({ onAdd }) => {
   const [date, setDate] = useState<Date>(new Date());
   const [showDate, setShowDate] = useState(false);
   const [time, setTime] = useState('09:00');
-  const [assignedUser, setAssignedUser] = useState<LeadUser>(MOCK_USERS[0]);
+  const [assignedUser, setAssignedUser] = useState<LeadUser>(MOCK_USERS[0]!);
   const [isUserOpen, setIsUserOpen] = useState(false);
 
   useEffect(() => {

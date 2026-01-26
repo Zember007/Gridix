@@ -103,7 +103,7 @@ export function ManagedClients() {
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = 
-      client.user_profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.user_profiles.full_name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFilter = filterType === 'all' || client.type === filterType;

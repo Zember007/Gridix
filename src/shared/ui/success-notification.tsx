@@ -16,13 +16,13 @@ export const SuccessNotification = ({
   duration = 2000 
 }: SuccessNotificationProps) => {
   useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      
-      return () => clearTimeout(timer);
-    }
+    if (!isVisible) return;
+
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+
+    return () => clearTimeout(timer);
   }, [isVisible, onClose, duration]);
 
   return (

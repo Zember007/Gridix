@@ -426,7 +426,7 @@ const CustomFieldsManager = ({
         {fields.map((field) => (
           <div key={field.id}>
             {editingField?.id === field.id ? (
-              renderFieldEditor(editingField)
+              renderFieldEditor(editingField!)
             ) : (
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">

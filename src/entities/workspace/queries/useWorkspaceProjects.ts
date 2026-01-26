@@ -8,12 +8,12 @@ import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
 export interface Project {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   floors: number;
-  slug: string;
-  building_image_url: string;
+  slug: string | null;
+  building_image_url: string | null;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
   developer_info?: {
     full_name: string;
     company_name: string;

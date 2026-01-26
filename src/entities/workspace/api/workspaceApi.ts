@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/api/supabase";
-import type { Project } from "./projectApi";
+import type { Project } from "@/entities/project/api/projectApi";
 
 export interface WorkspaceProjectsParams {
   userId: string;

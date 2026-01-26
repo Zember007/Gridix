@@ -83,16 +83,17 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
 
   const generatedSubtext = (() => {
     if (trigger.subtext) return trigger.subtext;
-    if (!trigger.config) return null;
+    const config = trigger.config;
+    if (!config) return null;
 
-    const assignedUser = users.find((u) => u.id === trigger.config.assignTo);
+    const assignedUser = users.find((u) => u.id === config.assignTo);
 
     switch (trigger.icon) {
       case 'task':
         return (
           <span className="flex flex-col">
             <span className="font-medium text-slate-900 truncate">
-              "{trigger.config.taskText || t('leads.tasks.task')}"
+              "{config.taskText || t('leads.tasks.task')}"
             </span>
             {assignedUser && (
               <span className="text-[10px] text-slate-400 mt-0.5">
@@ -105,7 +106,7 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
         return (
           <span className="flex flex-col">
             <span className="font-medium text-slate-900 truncate">
-              "{trigger.config.notificationText || t('leads.triggers.icons.notification')}"
+              "{config.notificationText || t('leads.triggers.icons.notification')}"
             </span>
             {assignedUser && (
               <span className="text-[10px] text-slate-400 mt-0.5">
@@ -116,7 +117,7 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
         );
       case 'status_change': {
         const targetStage = stages.find(
-          (s) => s.id === trigger.config.targetStageId,
+          (s) => s.id === config.targetStageId,
         );
         return (
           <span className="flex items-center gap-1 text-slate-700 font-medium">
@@ -126,10 +127,10 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
       }
       case 'add_tag':
         return (() => {
-          const tags = Array.isArray(trigger.config.tagsToAdd)
-            ? trigger.config.tagsToAdd
-            : typeof trigger.config.tagsToAdd === 'string'
-              ? trigger.config.tagsToAdd.split(',').map((s: string) => s.trim()).filter(Boolean)
+          const tags = Array.isArray(config.tagsToAdd)
+            ? config.tagsToAdd
+            : typeof config.tagsToAdd === 'string'
+              ? config.tagsToAdd.split(',').map((s: string) => s.trim()).filter(Boolean)
               : [];
           const preview = tags.length ? tags.map((t: string) => `#${t}`).join(' ') : '...';
           return (
@@ -139,7 +140,7 @@ export const FunnelTriggerCard: React.FC<FunnelTriggerCardProps> = ({
           );
         })();
       case 'apartment_status': {
-        const status = trigger.config.apartmentStatus || 'reserved';
+        const status = config.apartmentStatus || 'reserved';
         return (
           <span className="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
             {status}

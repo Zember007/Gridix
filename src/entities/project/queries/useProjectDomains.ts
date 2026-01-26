@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/shared/api/supabase";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 type ProjectDomain = Tables<'project_domains'>;
-type ProjectDomainInsert = Tables<'project_domains'>['Insert'];
-type ProjectDomainUpdate = Tables<'project_domains'>['Update'];
+type ProjectDomainInsert = TablesInsert<"project_domains">;
+type ProjectDomainUpdate = TablesUpdate<"project_domains">;
 
 export interface UseProjectDomainsResult {
   domains: ProjectDomain[];

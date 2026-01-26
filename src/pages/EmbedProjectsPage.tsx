@@ -23,7 +23,7 @@ interface Project {
   longitude: number | null;
   currency: string | null;
   min_price: number | null;
-  slug?: string;
+  slug?: string | null;
 }
 
 interface EmbedProjectsPageProps {

@@ -70,7 +70,7 @@ const ApartmentSyncDialog = ({
     try {
       // Подготовить данные для синхронизации (исключаем уникальные поля)
       const syncData = {
-        rooms: sourceApartment.rooms,
+        rooms: typeof sourceApartment.rooms === 'number' ? String(sourceApartment.rooms) : sourceApartment.rooms,
         area: sourceApartment.area,
         custom_fields: sourceApartment.custom_fields,
         updated_at: new Date().toISOString()

@@ -124,7 +124,13 @@ const ExcelUrlImporter = ({ onDataImported, onClose }: ExcelUrlImporterProps) =>
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
           
       const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) {
+        throw new Error(t('errors.file.noData'));
+      }
       const worksheet = workbook.Sheets[firstSheetName];
+      if (!worksheet) {
+        throw new Error(t('errors.file.noData'));
+      }
       
       // Читаем данные как JSON с первой строкой в качестве заголовков
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { 

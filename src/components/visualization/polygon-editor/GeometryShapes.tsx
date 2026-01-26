@@ -85,7 +85,9 @@ export const getPointDistance = (p1: Point, p2: Point): number => {
 
 export const findNearestPoint = (targetPoint: Point, points: Point[], threshold: number = 5): number | null => {
   for (let i = 0; i < points.length; i++) {
-    if (getPointDistance(targetPoint, points[i]) <= threshold) {
+    const p = points[i];
+    if (!p) continue;
+    if (getPointDistance(targetPoint, p) <= threshold) {
       return i;
     }
   }
@@ -93,11 +95,15 @@ export const findNearestPoint = (targetPoint: Point, points: Point[], threshold:
 };
 
 export const isPointInsidePolygon = (point: Point, polygon: Point[]): boolean => {
+  if (polygon.length < 3) return false;
   let inside = false;
   
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    if (((polygon[i].y > point.y) !== (polygon[j].y > point.y)) &&
-        (point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)) {
+    const pi = polygon[i];
+    const pj = polygon[j];
+    if (!pi || !pj) continue;
+    if (((pi.y > point.y) !== (pj.y > point.y)) &&
+        (point.x < (pj.x - pi.x) * (point.y - pi.y) / (pj.y - pi.y) + pi.x)) {
       inside = !inside;
     }
   }

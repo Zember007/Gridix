@@ -2,7 +2,6 @@ export { default as ApartmentCustomFields } from './ApartmentCustomFields';
 export { default as ApartmentDetailsWithFields } from './ApartmentDetailsWithFields';
 export { default as ApartmentFloorPlan } from './ApartmentFloorPlan';
 export { default as ApartmentList } from './ApartmentList';
-export { default as ApartmentListExample } from './ApartmentListExample';
 export { default as ApartmentPhotosManager } from './ApartmentPhotosManager';
 export { default as ApartmentPhotosViewer } from './ApartmentPhotosViewer';
 export { default as ApartmentReservationForm } from './ApartmentReservationForm';

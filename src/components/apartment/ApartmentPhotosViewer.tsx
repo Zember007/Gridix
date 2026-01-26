@@ -41,16 +41,80 @@ interface CombinedPhoto {
 }
 
 interface ApartmentPhotosViewerProps {
-
-  preloadedLayoutPhotos: CombinedPhoto[]; // если переданы, используем их без запросов
+  projectId?: string;
+  apartmentId?: string;
+  preloadedLayoutPhotos?: CombinedPhoto[]; // если переданы, используем их без запросов
 }
 
-const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerProps) => {
+const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }: ApartmentPhotosViewerProps) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [minPhotoHeight, setMinPhotoHeight] = useState<number | null>(null);
+  const [photos, setPhotos] = useState<CombinedPhoto[]>(preloadedLayoutPhotos ?? []);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (Array.isArray(preloadedLayoutPhotos)) {
+      setPhotos(preloadedLayoutPhotos);
+    }
+  }, [preloadedLayoutPhotos]);
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (preloadedLayoutPhotos) return;
+      if (!projectId && !apartmentId) return;
+
+      setLoading(true);
+      try {
+        const [layoutRes, apartmentRes] = await Promise.all([
+          projectId
+            ? supabase
+                .from("layout_photos")
+                .select("id, image_url, description, order_index")
+                .eq("project_id", projectId)
+                .order("order_index", { ascending: true })
+            : Promise.resolve({ data: [], error: null } as any),
+          apartmentId
+            ? supabase
+                .from("apartment_photos")
+                .select("id, image_url, description, order_index")
+                .eq("apartment_id", apartmentId)
+                .order("order_index", { ascending: true })
+            : Promise.resolve({ data: [], error: null } as any),
+        ]);
+
+        if (layoutRes.error) throw layoutRes.error;
+        if (apartmentRes.error) throw apartmentRes.error;
+
+        const layoutPhotos: CombinedPhoto[] = (layoutRes.data ?? []).map((p: any) => ({
+          id: p.id,
+          image_url: p.image_url,
+          description: p.description ?? null,
+          order_index: p.order_index ?? 0,
+          type: "layout",
+        }));
+
+        const apartmentPhotos: CombinedPhoto[] = (apartmentRes.data ?? []).map((p: any) => ({
+          id: p.id,
+          image_url: p.image_url,
+          description: p.description ?? null,
+          order_index: p.order_index ?? 0,
+          type: "apartment",
+        }));
+
+        setPhotos([...apartmentPhotos, ...layoutPhotos]);
+      } catch (e) {
+        console.error("Failed to load photos:", e);
+        setPhotos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchPhotos();
+  }, [apartmentId, projectId, preloadedLayoutPhotos]);
 
   useEffect(() => {
     const currentElement = document.getElementById('gridix-widget-root');
@@ -97,7 +161,20 @@ const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerPro
     setIsLightboxOpen(false);
   };
 
-  if (preloadedLayoutPhotos?.length === 0) {
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col items-center justify-center h-[340px] text-muted-foreground">
+            <ImageIcon className="h-12 w-12 mb-2" />
+            <p>Загрузка...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!photos || photos.length === 0) {
     return (
       <Card>
         <CardContent className="p-4">
@@ -120,12 +197,12 @@ const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerPro
             className="w-full"
             opts={{
               align: "start",
-              loop: preloadedLayoutPhotos.length > 1,
+              loop: photos.length > 1,
             }}
             setApi={setCarouselApi}
           >
             <CarouselContent>
-              {preloadedLayoutPhotos?.map((photo, index) => (
+              {photos.map((photo, index) => (
                 <CarouselItem key={photo.id}>
                   <img
                     src={photo.image_url}
@@ -149,13 +226,13 @@ const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerPro
               ))}
             </CarouselContent>
 
-            {preloadedLayoutPhotos.length > 1 && (
+            {photos.length > 1 && (
               <>
                 <CarouselPrevious className="bg-white/80 hover:bg-white shadow-md left-4 md:flex hidden" />
                 <CarouselNext className="bg-white/80 hover:bg-white shadow-md right-4 md:flex hidden" />
 
                 <div className="absolute lg:bottom-2 bottom-10 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
-                  {currentPhotoIndex + 1} / {preloadedLayoutPhotos.length}
+                  {currentPhotoIndex + 1} / {photos.length}
                 </div>
               </>
             )}
@@ -171,9 +248,9 @@ const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerPro
           </Button>
         </div>
         
-        {preloadedLayoutPhotos[currentPhotoIndex]?.description && (
+        {photos[currentPhotoIndex]?.description && (
           <p className="mt-2 text-sm text-muted-foreground">
-            {preloadedLayoutPhotos[currentPhotoIndex]?.description || ''}
+            {photos[currentPhotoIndex]?.description || ''}
           </p>
         )}
       </CardContent>
@@ -182,7 +259,7 @@ const ApartmentPhotosViewer = ({preloadedLayoutPhotos}: ApartmentPhotosViewerPro
         open={isLightboxOpen}
         close={closeLightbox}
         index={currentPhotoIndex}
-        slides={preloadedLayoutPhotos.map((photo) => ({
+        slides={photos.map((photo) => ({
           src: photo.image_url,
           alt: photo.description || 'Фото квартиры',
           title: photo.type === 'layout' ? 'Планировка' : 'Квартира',

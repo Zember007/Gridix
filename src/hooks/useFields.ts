@@ -86,6 +86,7 @@ export const useFields = (projectId: string | null) => {
     try {
       // Обновляем порядок в базе данных
       for (const field of updatedFields) {
+        if (!field.id) continue;
         if (field.is_custom) {
           // Обновляем кастомные поля
           await supabase
@@ -113,6 +114,7 @@ export const useFields = (projectId: string | null) => {
 
   const updateFieldVisibility = useCallback(async (field: FieldSetting) => {
     if (isSaving) return; // Запрещаем изменение во время сохранения
+    if (!field.id) return;
 
     setIsSaving(true);
     try {
@@ -151,6 +153,7 @@ export const useFields = (projectId: string | null) => {
       }
       return;
     }
+    if (!field.id) return;
 
     setIsSaving(true);
     try {

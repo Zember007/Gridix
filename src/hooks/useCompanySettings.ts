@@ -6,16 +6,16 @@ export interface CompanySettings {
   id?: string;
   user_id: string;
   company_name: string;
-  tax_id?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  bank_name?: string;
-  iban?: string;
-  currency: string;
-  vat_payer: boolean;
-  created_at?: string;
-  updated_at?: string;
+  tax_id?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  bank_name?: string | null;
+  iban?: string | null;
+  currency: string | null;
+  vat_payer: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export function useCompanySettings() {

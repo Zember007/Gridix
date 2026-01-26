@@ -7,8 +7,4 @@ export { default as InteractiveProjectsMap } from './InteractiveProjectsMap';
 export { default as LayoutPhotosManager } from './LayoutPhotosManager';
 export { default as PolygonCustomizationSettings } from './PolygonCustomizationSettings';
 
-// Re-export polygon editor components
 export * from './polygon-editor/GeometryShapes';
-export * from './polygon-editor/PolygonCanvas';
-export * from './polygon-editor/PolygonEditor';
-export * from './polygon-editor/PolygonToolbar';

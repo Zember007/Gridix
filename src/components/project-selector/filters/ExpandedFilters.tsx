@@ -41,7 +41,9 @@ export const ExpandedFilters = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Price range */}
       <div className="space-y-2">
-        <Label>{t('project.price')}: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} {getCurrencySymbolSafe(selectedCurrency)}</Label>
+        <Label>
+          {t('project.price')}: {formatPrice(priceRange[0] ?? minPrice)} - {formatPrice(priceRange[1] ?? maxPrice)} {getCurrencySymbolSafe(selectedCurrency)}
+        </Label>
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
@@ -55,7 +57,7 @@ export const ExpandedFilters = ({
 
       {/* Area range */}
       <div className="space-y-2">
-        <Label>{t('project.area')}: {areaRange[0]} - {areaRange[1]} м²</Label>
+        <Label>{t('project.area')}: {areaRange[0] ?? minArea} - {areaRange[1] ?? maxArea} м²</Label>
         <Slider
           value={areaRange}
           onValueChange={setAreaRange}

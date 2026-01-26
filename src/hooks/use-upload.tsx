@@ -17,11 +17,15 @@ async function compressToWebP(file: File): Promise<Blob> {
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
 
-  const blob = await new Promise<Blob>((resolve) =>
-    canvas.toBlob(resolve, 'image/webp', 0.8) // качество 0.8 (0–1)
-  );
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Failed to convert image to WebP"))),
+      "image/webp",
+      0.8, // качество 0.8 (0–1)
+    );
+  });
 
-  return blob!;
+  return blob;
 }
 
 export {compressToWebP}

@@ -17,15 +17,15 @@ import { Badge } from '@/shared/ui/badge';
 interface Project {
   id: string;
   name: string;
-  slug: string;
+  slug: string | null;
   is_public: boolean;
   is_featured: boolean;
   view_count: number;
   created_at: string;
   user_profiles: {
-    email: string;
-    full_name: string;
-  };
+    email: string | null;
+    full_name: string | null;
+  } | null;
 }
 
 export function ProjectsManagement() {

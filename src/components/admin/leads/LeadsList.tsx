@@ -23,6 +23,7 @@ const getTaskStatusInfo = (tasks?: LeadTask[]) => {
     if (activeTasks.length === 0) return null;
     
     const task = activeTasks[0];
+    if (!task) return null;
     const taskDate = new Date(task.date);
     const now = new Date();
     const isOverdue = taskDate.setHours(23,59,59,999) < now.getTime() && taskDate.toDateString() !== now.toDateString();

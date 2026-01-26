@@ -33,10 +33,10 @@ export const useFloorPolygons = ({
               return {
                 ...apt,
                 polygon: Array.isArray(
-                  // @ts-expect-error polygon may come from raw supabase type
+                  // @ts-ignore polygon may come from raw supabase type
                   found.polygon,
                 )
-                  ? // @ts-expect-error polygon may come from raw supabase type
+                  ? // @ts-ignore polygon may come from raw supabase type
                   (found.polygon as { x: number; y: number }[])
                   : apt.polygon,
               };
@@ -68,10 +68,10 @@ export const useFloorPolygons = ({
               return {
                 ...apt,
                 polygon: Array.isArray(
-                  // @ts-expect-error polygon is from supabase
+                  // @ts-ignore polygon is from supabase
                   found.polygon,
                 )
-                  ? // @ts-expect-error polygon is from supabase
+                  ? // @ts-ignore polygon is from supabase
                   (found.polygon as { x: number; y: number }[])
                   : [],
               };

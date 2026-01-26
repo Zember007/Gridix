@@ -1,7 +1,14 @@
 import { supabase } from "@/shared/api/supabase";
 import { Tables } from "@/integrations/supabase/types";
 
-export type Project = Tables<'projects'>;
+type ProjectRow = Tables<"projects">;
+
+// The generated Supabase `Tables<'projects'>` type in this repo is slightly out of sync
+// with the columns actually used in the app (e.g. `slug`, nullable `description`).
+export type Project = Omit<ProjectRow, "slug" | "description"> & {
+  slug?: string | null;
+  description?: string | null;
+};
 
 export interface ProjectFilters {
   userId?: string;

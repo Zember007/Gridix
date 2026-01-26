@@ -95,7 +95,7 @@ const KanbanCard: React.FC<{
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 {/* Source Icon (Requested Feature) */}
                                 <div className="p-0.5 bg-slate-100 rounded" title={`Source: ${lead.source || 'unknown'}`}>
-                                    {getSourceIcon(lead.source || 'website')}
+                                    {getSourceIcon((lead.source as LeadSource) || 'website')}
                                 </div>
                                 <div className="text-[10px] text-slate-400">{getRelativeDate(lead.date, t)}</div>
                             </div>

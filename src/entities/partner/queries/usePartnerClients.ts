@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/shared/api/supabase";
-import { PartnerClient } from '../types/partner';
+import type { PartnerClient } from '../model/types';
 
 export function usePartnerClients() {
   const [clients, setClients] = useState<PartnerClient[]>([]);

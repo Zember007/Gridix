@@ -55,7 +55,8 @@ export const ProjectHeader = ({
   useEffect(() => {
     if (!allowedLanguages || allowedLanguages.length === 0) return;
     if (allowedLanguages.includes(language)) return;
-    setLanguage(allowedLanguages[0]);
+    const first = allowedLanguages[0];
+    if (first) setLanguage(first);
   }, [allowedLanguages?.join(','), language, setLanguage]);
 
   const formatPrice = (price: number) =>

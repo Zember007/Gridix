@@ -69,16 +69,17 @@ const BuildingPolygonSettingsComponent = ({
 
   const loadSettings = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('projects')
         .select('building_polygon_settings')
         .eq('id', projectId)
-        .single();
+        .single() as any);
 
       if (error) throw error;
       
-      if (data?.building_polygon_settings) {
-        setSettings(data.building_polygon_settings as unknown as BuildingPolygonSettings);
+      const settingsFromDb = (data as any)?.building_polygon_settings;
+      if (settingsFromDb) {
+        setSettings(settingsFromDb as BuildingPolygonSettings);
       }
     } catch (error) {
       console.error('Error loading building polygon settings:', error);
@@ -88,9 +89,9 @@ const BuildingPolygonSettingsComponent = ({
   const saveSettings = async () => {
     setLoading(true);
     try {
-      const success = await updateProject(projectId, { 
-        building_polygon_settings: settings as unknown as any 
-      });
+      const success = await updateProject(projectId, {
+        building_polygon_settings: settings as unknown as any,
+      } as any);
 
       if (success) {
         toast.success('Настройки здания сохранены');
@@ -111,10 +112,16 @@ const BuildingPolygonSettingsComponent = ({
       let current = newSettings as any;
       
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
+        const key = keys[i];
+        if (!key) continue;
+        if (!current[key] || typeof current[key] !== 'object') {
+          current[key] = {};
+        }
+        current = current[key];
       }
       
-      current[keys[keys.length - 1]] = value;
+      const lastKey = keys[keys.length - 1];
+      if (lastKey) current[lastKey] = value;
       return newSettings;
     });
   };

@@ -666,11 +666,11 @@ export type Database = {
       }
       crm_funnel_stages: {
         Row: {
+          color: string
+          created_at: string
           crm_funnel_id: number | null
           crm_pipeline_id: number | null
           crm_stage_id: string | null
-          color: string
-          created_at: string
           funnel_id: string
           id: string
           name: string
@@ -678,11 +678,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          color?: string
+          created_at?: string
           crm_funnel_id?: number | null
           crm_pipeline_id?: number | null
           crm_stage_id?: string | null
-          color?: string
-          created_at?: string
           funnel_id: string
           id?: string
           name: string
@@ -690,11 +690,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          color?: string
+          created_at?: string
           crm_funnel_id?: number | null
           crm_pipeline_id?: number | null
           crm_stage_id?: string | null
-          color?: string
-          created_at?: string
           funnel_id?: string
           id?: string
           name?: string
@@ -770,9 +770,9 @@ export type Database = {
       }
       crm_funnels: {
         Row: {
-          crm_funnel_id: number | null
           amocrm_pipeline_id: number | null
           created_at: string
+          crm_funnel_id: number | null
           id: string
           is_default: boolean
           name: string
@@ -781,9 +781,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          crm_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
+          crm_funnel_id?: number | null
           id?: string
           is_default?: boolean
           name: string
@@ -792,9 +792,9 @@ export type Database = {
           user_id: string
         }
         Update: {
-          crm_funnel_id?: number | null
           amocrm_pipeline_id?: number | null
           created_at?: string
+          crm_funnel_id?: number | null
           id?: string
           is_default?: boolean
           name?: string

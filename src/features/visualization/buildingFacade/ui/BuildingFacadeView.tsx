@@ -593,7 +593,7 @@ const BuildingFacadeView = ({
         ref={outerRef}
         className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg  flex items-stretch justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
         style={{
-          minHeight: isExpanded ? (facadeImageUrl.height ?? 600) : 'auto',
+          minHeight: isExpanded ? 600 : 'auto',
           height: isExpanded
             ? (isMobile ? 'auto' : 'calc(100dvh - 200px)')
             : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { usePartnerStats } from './usePartnerStats';
+import type { PartnerTransaction } from '../model/types';
 
 export function usePartnerAccountData() {
   const { stats, loading, error } = usePartnerStats();
@@ -54,7 +55,7 @@ export function usePartnerAccountData() {
     return new Date(year, month - 1, day);
   };
 
-  const baseTransactions = stats?.transactions ?? [];
+  const baseTransactions: PartnerTransaction[] = stats?.transactions ?? [];
 
   // Реальный доступный баланс партнёра
   const accountBalance = stats?.available_for_withdrawal ?? 0;
@@ -69,7 +70,7 @@ export function usePartnerAccountData() {
 
   const filteredTransactions = useMemo(
     () =>
-      baseTransactions.filter((tx) => {
+      baseTransactions.filter((tx: PartnerTransaction) => {
         if (filterType === 'expense' && tx.sum >= 0) return false;
         if (
           filterType === 'income' &&

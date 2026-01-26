@@ -409,6 +409,23 @@ export function useSubscription(projectId?: string) {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
+  const getPurchaseLinks = async () => {
+    const session = await supabase.auth.getSession();
+    const headers: Record<string, string> = {};
+
+    if (session.data.session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.data.session.access_token}`;
+    }
+
+    const { data, error } = await supabase.functions.invoke("subscription-management", {
+      body: { action: "get-purchase-links" },
+      headers,
+    });
+
+    if (error) throw error;
+    return (data as any) ?? null;
+  };
+
   useEffect(() => {
     if (user) {
       if (projectId) {
@@ -433,6 +450,7 @@ export function useSubscription(projectId?: string) {
     error,
     billingDetails,
     billingLoading,
+    getPurchaseLinks,
     requestInvoice,
     requestInvoiceForMultiple,
     refreshSubscription: fetchSubscription,

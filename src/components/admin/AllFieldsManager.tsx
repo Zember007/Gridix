@@ -69,6 +69,10 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
 
     const newFields = [...fields];
     const [draggedField] = newFields.splice(draggedIndex, 1);
+    if (!draggedField) {
+      setDraggedIndex(null);
+      return;
+    }
     newFields.splice(dropIndex, 0, draggedField);
 
     const updatedFields = newFields.map((field, index) => ({
@@ -96,6 +100,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
       }
       return;
     }
+    if (!field.id) return;
 
     setEditingField({
       id: field.id,
