@@ -68,7 +68,7 @@ export function LeadsStats({ projectId }: { projectId?: string }) {
 
   const counts = getStatsForProject(projectId);
 
-  return (
+  return (  
     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
       <div className="flex items-center space-x-1">
         <span>{t('admin.analytics.totalLeads')}:</span>
@@ -77,7 +77,7 @@ export function LeadsStats({ projectId }: { projectId?: string }) {
       {counts.failed > 0 && (
         <div className="flex items-center space-x-1">
           <AlertTriangle className="h-3 w-3 text-red-500" />
-          <span className="text-red-600">Ошибок:</span>
+          <span className="text-red-600">Ошибок:</span> 
           <Badge variant="destructive" className="text-xs">
             {counts.failed}
           </Badge>

@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "build:widget": "WIDGET_BUILD=true vite build --outDir public/widget",
     "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
