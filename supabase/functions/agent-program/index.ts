@@ -3,7 +3,113 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
-import { getSupabaseUser } from "../_shared/auth.ts";
+import { isServiceRoleRequest } from "../_shared/auth.ts";
+import { getOneSignalAppId, oneSignalCreateOrUpdateUser, oneSignalSendEmail } from "../_shared/onesignal.ts";
+import { renderTemplate } from "../_shared/template.ts";
+
+declare const Deno: {
+    env: {
+        get(key: string): string | undefined;
+    };
+};
+
+type NotificationTemplateRow = {
+    key: string;
+    channel: "email";
+    locale: string;
+    subject_template: string;
+    html_template: string;
+    is_active: boolean;
+};
+
+async function loadEmailTemplate(params: {
+    supabaseAdmin: ReturnType<typeof createClient>;
+    templateKey: string;
+    locale: string;
+}): Promise<NotificationTemplateRow | null> {
+    const locale = (params.locale || "en").toLowerCase();
+
+    const { data: templateRow, error: templateErr } = await params.supabaseAdmin
+        .from("notification_templates")
+        .select("key, channel, locale, subject_template, html_template, is_active")
+        .eq("key", params.templateKey)
+        .eq("channel", "email")
+        .eq("locale", locale)
+        .eq("is_active", true)
+        .maybeSingle<NotificationTemplateRow>();
+
+    if (templateErr) throw new Error(`Failed to load template: ${templateErr.message}`);
+    if (templateRow) return templateRow;
+
+    if (locale !== "en") {
+        const { data: fallback, error: fallbackErr } = await params.supabaseAdmin
+            .from("notification_templates")
+            .select("key, channel, locale, subject_template, html_template, is_active")
+            .eq("key", params.templateKey)
+            .eq("channel", "email")
+            .eq("locale", "en")
+            .eq("is_active", true)
+            .maybeSingle<NotificationTemplateRow>();
+
+        if (fallbackErr) throw new Error(`Failed to load fallback template: ${fallbackErr.message}`);
+        return fallback ?? null;
+    }
+
+    return null;
+}
+
+async function sendAgentStatusEmail(params: {
+    supabaseAdmin: ReturnType<typeof createClient>;
+    templateKey: string;
+    locale: string;
+    agentApplicationId: string;
+    agentEmail: string;
+    payload: Record<string, unknown>;
+    emailPreheader?: string;
+    name?: string;
+}): Promise<{ onesignal_message_id: string; onesignal_response: unknown }> {
+    const tpl = await loadEmailTemplate({
+        supabaseAdmin: params.supabaseAdmin,
+        templateKey: params.templateKey,
+        locale: params.locale,
+    });
+
+    if (!tpl) {
+        throw new Error(`Template not found: ${params.templateKey} (email/${params.locale})`);
+    }
+
+    const subject = renderTemplate(tpl.subject_template, params.payload);
+    const html = renderTemplate(tpl.html_template, params.payload);
+
+    // Agents are not Supabase Auth users; we treat the application id as OneSignal external_id.
+    const appId = getOneSignalAppId();
+    await oneSignalCreateOrUpdateUser(appId, {
+        identity: { external_id: params.agentApplicationId },
+        properties: { language: params.locale },
+        subscriptions: [{ type: "Email", token: params.agentEmail, enabled: true }],
+    });
+
+    const idempotencyKey = crypto.randomUUID();
+    const oneSignalResp = await oneSignalSendEmail({
+        app_id: appId,
+        target_channel: "email",
+        include_aliases: { external_id: [params.agentApplicationId] },
+        email_subject: subject,
+        email_body: html,
+        email_preheader: params.emailPreheader,
+        name: params.name ?? params.templateKey,
+        idempotency_key: idempotencyKey,
+    });
+
+    const messageId = oneSignalResp?.id ?? "";
+    if (!messageId) {
+        throw new Error(
+            "OneSignal accepted request but returned empty message id (no valid email subscriptions?)"
+        );
+    }
+
+    return { onesignal_message_id: messageId, onesignal_response: oneSignalResp };
+}
 
 serve(async (req) => {
     const origin = req.headers.get("Origin");
@@ -87,18 +193,26 @@ serve(async (req) => {
             return createJsonResponse({ success: true, data }, 200, origin);
         }
 
-        const user = await getSupabaseUser(req);
-        if (!user) {
-            return createJsonResponse({ error: "Unauthorized" }, 401, origin);
-        }
-
         /**
-         * Auth: developer approves application -> activates + sends email with magic link redirect.
+         * Service-only: developer approves application -> activates + sends email via OneSignal.
+         *
+         * IMPORTANT:
+         * - No Supabase Auth invites/magic-links.
+         * - No Supabase JWT auth checks. Use service role for moderation actions.
          */
         if (action === "approve_application") {
+            if (!isServiceRoleRequest(req)) {
+                return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+            }
+
             const applicationId = body?.application_id;
             const lang = typeof body?.lang === "string" && body.lang ? body.lang : "en";
             const requestSiteUrl = typeof body?.site_url === "string" ? body.site_url : null;
+            const explicitTemplateKey =
+                typeof body?.template_key === "string" && body.template_key.trim()
+                    ? body.template_key.trim()
+                    : null;
+            const emailPreheader = typeof body?.email_preheader === "string" ? body.email_preheader : undefined;
 
             if (!applicationId || typeof applicationId !== "string") {
                 return createJsonResponse({ error: "Missing application_id" }, 400, origin);
@@ -106,7 +220,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabase
                 .from("agent_applications")
-                .select("id, developer_user_id, email, status")
+                .select("id, developer_user_id, email, full_name, status")
                 .eq("id", applicationId)
                 .single();
 
@@ -116,10 +230,6 @@ serve(async (req) => {
                     404,
                     origin
                 );
-            }
-
-            if (application.developer_user_id !== user.id) {
-                return createJsonResponse({ error: "Forbidden" }, 403, origin);
             }
 
             const { error: updateError } = await supabase
@@ -134,7 +244,7 @@ serve(async (req) => {
             const { data: developerProjects, error: projectsError } = await supabase
                 .from("projects")
                 .select("id")
-                .eq("user_id", user.id)
+                .eq("user_id", (application as any)?.developer_user_id)
                 .eq("is_public", true);
 
             if (projectsError) throw projectsError;
@@ -177,33 +287,92 @@ serve(async (req) => {
             const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
             const accessLink = `${siteUrl}/${lang}/projects/agent/${applicationId}`;
 
-            const { data: inviteLinkData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-                application.email,
-                { redirectTo: accessLink }
-            );
+            // Send email to agent with status + access link (via OneSignal templates)
+            const payload: Record<string, unknown> = {
+                app: { url: siteUrl },
+                agent: {
+                    id: applicationId,
+                    status: "approved",
+                    full_name: (application as any)?.full_name ?? "",
+                    email: (application as any)?.email ?? "",
+                    access_link: accessLink,
+                },
+                developer: { id: (application as any)?.developer_user_id ?? "" },
+            };
 
-            if (inviteError) {
-                console.error("approve_application inviteUserByEmail failed", inviteError);
-                return createJsonResponse(
-                    { error: "Failed to send email", details: inviteError.message, access_link: accessLink },
-                    500,
-                    origin
-                );
+            // If caller didn't specify a template, try known keys in order and use the first that exists.
+            // This keeps backward compatibility with environments that already have generic templates.
+            let templateKeyToUse: string | null = explicitTemplateKey;
+            if (templateKeyToUse) {
+                const exists = await loadEmailTemplate({ supabaseAdmin: supabase, templateKey: templateKeyToUse, locale: lang });
+                if (!exists) {
+                    return createJsonResponse(
+                        { error: "Template not found", template_key: templateKeyToUse, locale: lang },
+                        404,
+                        origin
+                    );
+                }
+            } else {
+                const candidates = ["agent_application_approved", "welcome_email", "test_welcome"];
+                for (const k of candidates) {
+                    const exists = await loadEmailTemplate({ supabaseAdmin: supabase, templateKey: k, locale: lang });
+                    if (exists) {
+                        templateKeyToUse = k;
+                        break;
+                    }
+                }
+                if (!templateKeyToUse) {
+                    return createJsonResponse(
+                        { error: "Template not found", tried: candidates, locale: lang },
+                        404,
+                        origin
+                    );
+                }
             }
 
+            const { onesignal_message_id, onesignal_response } = await sendAgentStatusEmail({
+                supabaseAdmin: supabase,
+                templateKey: templateKeyToUse,
+                locale: lang,
+                agentApplicationId: applicationId,
+                agentEmail: String((application as any)?.email ?? ""),
+                payload,
+                emailPreheader,
+                name: "agent-program:approve_application",
+            });
+
             return createJsonResponse(
-                { success: true, status: "approved", access_link: accessLink, invite: inviteLinkData ?? null },
+                {
+                    success: true,
+                    status: "approved",
+                    access_link: accessLink,
+                    template_key: templateKeyToUse,
+                    onesignal_message_id,
+                    onesignal_response,
+                },
                 200,
                 origin
             );
         }
 
         /**
-         * Auth: developer updates application status without sending email.
+         * Service-only: developer updates application status.
+         * Optionally sends OneSignal email using a template for the new status.
          */
         if (action === "update_application_status") {
+            if (!isServiceRoleRequest(req)) {
+                return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+            }
+
             const applicationId = body?.application_id;
             const status = body?.status;
+            const lang = typeof body?.lang === "string" && body.lang ? body.lang : "en";
+            const requestSiteUrl = typeof body?.site_url === "string" ? body.site_url : null;
+            const shouldSendEmail = body?.send_email === true;
+            const overrideTemplateKey =
+                typeof body?.template_key === "string" && body.template_key.trim()
+                    ? body.template_key.trim()
+                    : null;
 
             if (!applicationId || typeof applicationId !== "string") {
                 return createJsonResponse({ error: "Missing application_id" }, 400, origin);
@@ -216,7 +385,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabase
                 .from("agent_applications")
-                .select("id, developer_user_id")
+                .select("id, developer_user_id, email, full_name")
                 .eq("id", applicationId)
                 .single();
 
@@ -228,10 +397,6 @@ serve(async (req) => {
                 );
             }
 
-            if (application.developer_user_id !== user.id) {
-                return createJsonResponse({ error: "Forbidden" }, 403, origin);
-            }
-
             const { error: updateError } = await supabase
                 .from("agent_applications")
                 .update({ status, reviewed_at: new Date().toISOString() })
@@ -239,11 +404,75 @@ serve(async (req) => {
 
             if (updateError) throw updateError;
 
-            return createJsonResponse({ success: true, status }, 200, origin);
+            let emailResult: { template_key: string; onesignal_message_id: string } | null = null;
+            if (shouldSendEmail && (status === "approved" || status === "rejected")) {
+                const envSiteUrl = Deno.env.get("SITE_URL") || "";
+                const siteUrlRaw = requestSiteUrl || envSiteUrl || origin || "https://gridix.live";
+                const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+                const accessLink = `${siteUrl}/${lang}/projects/agent/${applicationId}`;
+
+                // Resolve template: if override provided -> must exist; else try known keys in order.
+                let templateKey: string | null = overrideTemplateKey;
+                if (templateKey) {
+                    const exists = await loadEmailTemplate({ supabaseAdmin: supabase, templateKey, locale: lang });
+                    if (!exists) {
+                        return createJsonResponse(
+                            { error: "Template not found", template_key: templateKey, locale: lang },
+                            404,
+                            origin
+                        );
+                    }
+                } else {
+                    const candidates =
+                        status === "approved"
+                            ? ["agent_application_approved", "welcome_email", "test_welcome"]
+                            : ["agent_application_rejected", "welcome_email", "test_welcome"];
+                    for (const k of candidates) {
+                        const exists = await loadEmailTemplate({ supabaseAdmin: supabase, templateKey: k, locale: lang });
+                        if (exists) {
+                            templateKey = k;
+                            break;
+                        }
+                    }
+                    if (!templateKey) {
+                        return createJsonResponse(
+                            { error: "Template not found", tried: candidates, locale: lang },
+                            404,
+                            origin
+                        );
+                    }
+                }
+
+                const payload: Record<string, unknown> = {
+                    app: { url: siteUrl },
+                    agent: {
+                        id: applicationId,
+                        status,
+                        full_name: (application as any)?.full_name ?? "",
+                        email: (application as any)?.email ?? "",
+                        access_link: accessLink,
+                    },
+                    developer: { id: (application as any)?.developer_user_id ?? "" },
+                };
+
+                const { onesignal_message_id } = await sendAgentStatusEmail({
+                    supabaseAdmin: supabase,
+                    templateKey,
+                    locale: lang,
+                    agentApplicationId: applicationId,
+                    agentEmail: String((application as any)?.email ?? ""),
+                    payload,
+                    name: "agent-program:update_application_status",
+                });
+
+                emailResult = { template_key: templateKey, onesignal_message_id };
+            }
+
+            return createJsonResponse({ success: true, status, email: emailResult }, 200, origin);
         }
 
         /**
-         * Auth: agent (or owning developer) lists accessible projects.
+         * Public: agent lists accessible projects by `agent_id` (link-based access).
          */
         if (action === "list_projects") {
             const url = new URL(req.url);
@@ -267,15 +496,6 @@ serve(async (req) => {
                     404,
                     origin
                 );
-            }
-
-            // Allow only the agent themselves OR the owning developer.
-            const userEmail = typeof user.email === "string" ? user.email : null;
-            const isAgent = !!userEmail && userEmail.toLowerCase() === String(application.email).toLowerCase();
-            const isOwnerDeveloper = application.developer_user_id === user.id;
-
-            if (!isAgent && !isOwnerDeveloper) {
-                return createJsonResponse({ error: "Forbidden" }, 403, origin);
             }
 
             if (String(application.status) !== "approved") {

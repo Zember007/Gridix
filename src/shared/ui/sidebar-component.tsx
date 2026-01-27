@@ -105,7 +105,7 @@ const getProjectEditorNavItems = (t: (k: string) => string, projectType?: 'build
 
 /* ---------------------------- Simplified Sidebar -------------------------- */
 
-function SimplifiedSidebar({
+export function SimplifiedSidebar({
   navItems,
   activeSection,
   onSectionChange,

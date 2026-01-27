@@ -43,13 +43,13 @@ export default function App() {
               <Route
                 path="/:lang/superadmin"
                 element={
-                  <LanguageProviders>
+                  <AdminProviders>
                     <ProtectedRoute>
                       <Suspense fallback={<PageLoader />}>
                         <SuperAdminPage />
                       </Suspense>
                     </ProtectedRoute>
-                  </LanguageProviders>
+                  </AdminProviders>
                 }
               />
 
