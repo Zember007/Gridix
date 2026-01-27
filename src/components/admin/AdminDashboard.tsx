@@ -1,7 +1,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
-import { MessageCircleQuestionMark } from 'lucide-react';
+import { MessageCircleQuestionMark, User as UserIcon } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from '@/shared/lib/admin-theme-config';
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
@@ -9,6 +9,7 @@ import AdminWidgets from './AdminWidgets';
 import { LeadsManager } from './LeadsManager';
 import SubscriptionTab from './SubscriptionTab';
 import PartnersPage from '../../pages/PartnersPage';
+import { AgencyPartnersPage } from '@/components/admin/partners/AgencyPartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import { AdminAnalytics } from './AdminAnalytics';
 import { IntegrationsTab } from './IntegrationsTab';
@@ -21,6 +22,7 @@ import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
 import { isDevTourMode, startAdminChecklist, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@/integrations/usertour';
 import { waitForSelectors } from '@/integrations/waitForSelectors';
+import { AdminContactsPage } from '@/components/admin/contacts/AdminContactsPage';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -332,6 +334,16 @@ const AdminDashboard = () => {
             <div className="space-y-6">
               <PartnersPage />
             </div>
+          )}
+
+          {activeTab === 'agent_network' && (
+            <div className="space-y-6">
+              <AgencyPartnersPage />
+            </div>
+          )}
+
+          {activeTab === 'contacts' && (
+            <AdminContactsPage />
           )}
 
           {activeTab === 'widgets' && (

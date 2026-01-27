@@ -31,6 +31,7 @@ import {
   Book,
   Menu,
   ChevronUp,
+  Briefcase,
 } from "lucide-react";
 import {
   Select,
@@ -56,7 +57,18 @@ import { Sheet, SheetContent } from "./sheet";
 const getAdminNavItems = (t: (k: string) => string, isManager: boolean = false, amoWidget: boolean = false) => {
   const items = [
     { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
-    ...(!amoWidget ? [{ id: "leads", icon: <UserCheck size={20} />, label: t('admin.leads') }] : []),
+    ...(!amoWidget ? [
+      {
+        id: "crm",
+        icon: <Briefcase size={20} />,
+        label: t('admin.crm') || 'CRM',
+        children: [
+          { id: "leads", icon: <UserCheck size={18} />, label: t('admin.leads') },
+          { id: "contacts", icon: <UserIcon size={18} />, label: t('admin.contacts') || 'Контакты' },
+          { id: "agent_network", icon: <Handshake size={18} />, label: t('admin.agent_network') || 'Агентская сеть' },
+        ]
+      }
+    ] : []),
     { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
     { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
     { id: "integrations", icon: <Integration size={20} />, label: t('admin.integrations') },
@@ -106,7 +118,7 @@ function SimplifiedSidebar({
   onMobileClose,
   onSignOut,
 }: {
-  navItems: Array<{ id: string; icon: React.ReactNode; label: string }>;
+  navItems: Array<{ id: string; icon: React.ReactNode; label: string; children?: Array<{ id: string; icon: React.ReactNode; label: string }> }>;
   activeSection: string;
   onSectionChange: (section: string) => void;
   userEmail?: string;
@@ -121,6 +133,26 @@ function SimplifiedSidebar({
   const { amoWidget } = useAmoWidget();
   const { t, language, setLanguage } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Auto-expand parent if child is active
+  useEffect(() => {
+    navItems.forEach(item => {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => child.id === activeSection);
+        if (hasActiveChild && !expandedItems.includes(item.id)) {
+          setExpandedItems(prev => [...prev, item.id]);
+        }
+      }
+    });
+  }, [activeSection, navItems]);
+
+  const toggleExpand = (id: string) => {
+    if (isCollapsed && onToggleCollapse) onToggleCollapse();
+    setExpandedItems(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
 
   // Применяем CSS переменные темы
   useEffect(() => {
@@ -232,17 +264,67 @@ function SimplifiedSidebar({
       {/* Navigation */}
       <div className="flex-1 p-4 overflow-y-auto no-scrollbar">
         <nav className="space-y-2">
-          {navItems.map((item) => (
-            <SidebarButton
-              key={item.id}
-              id={item.id}
-              icon={item.icon}
-              label={item.label}
-              isActive={activeSection === item.id}
-              isCollapsed={isCollapsed}
-              onClick={() => handleSectionChange(item.id)}
-            />
-          ))}
+          {navItems.map((item) => {
+            const hasChildren = item.children && item.children.length > 0;
+            const isExpanded = expandedItems.includes(item.id);
+            const isChildActive = hasChildren && item.children?.some(child => child.id === activeSection);
+
+            if (hasChildren) {
+              return (
+                <div key={item.id} className="mb-1">
+                  <button
+                    onClick={() => toggleExpand(item.id)}
+                    className={`w-full flex items-center rounded-lg font-medium transition-all duration-200 group relative
+                        ${isChildActive && !isExpanded ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800'}
+                        ${isCollapsed ? 'flex-col justify-center py-2 px-1 gap-1' : 'flex-row py-2 px-3 gap-3 text-sm'}
+                    `}
+                    style={isChildActive && !isExpanded ? { backgroundColor: ADMIN_THEME.sidebarActiveBackground, color: ADMIN_THEME.sidebarActiveText } : { color: ADMIN_THEME.sidebarText }}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className={`transition-opacity duration-200 ${isCollapsed ? 'text-[10px] text-center leading-tight' : 'flex-1 text-left truncate'}`}>
+                      {item.label}
+                    </span>
+                    {!isCollapsed && (
+                      <ChevronDownIcon size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    )}
+                  </button>
+
+                  {!isCollapsed && isExpanded && (
+                    <div className="mt-1 ml-4 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                      {item.children?.map(child => (
+                        <button
+                          key={child.id}
+                          onClick={() => handleSectionChange(child.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-1.5 text-xs font-medium rounded-md transition-all
+                              ${child.id === activeSection
+                              ? 'text-blue-600 bg-blue-50'
+                              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                            }
+                          `}
+                          style={child.id === activeSection ? { color: ADMIN_THEME.primary, backgroundColor: `${ADMIN_THEME.primary}10` } : { color: ADMIN_THEME.textMuted }}
+                        >
+                          <span className="opacity-70">{child.icon}</span>
+                          <span>{child.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <SidebarButton
+                key={item.id}
+                id={item.id}
+                icon={item.icon}
+                label={item.label}
+                isActive={activeSection === item.id}
+                isCollapsed={isCollapsed}
+                onClick={() => handleSectionChange(item.id)}
+              />
+            );
+          })}
         </nav>
       </div>
 

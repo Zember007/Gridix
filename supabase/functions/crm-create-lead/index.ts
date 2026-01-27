@@ -10,6 +10,7 @@ type LeadRequest = {
   phone: string;
   apartmentId: string;
   projectId: string;
+  agentId?: string;
 };
 
 type CRMConnection = {
@@ -453,6 +454,7 @@ serve(async (req) => {
         status,
         source: "website",
         pipeline_stage_id: t.firstStageId || null,
+        agent_id: body.agentId || null,
       };
       inserts.push(payload);
       targetByIndex.push(t);
@@ -463,6 +465,31 @@ serve(async (req) => {
       const { data: createdRows, error: insErr } = await svc.from("leads").insert(inserts).select();
       if (insErr) return createJsonResponse({ error: "Failed to save lead(s)", details: insErr?.message }, 500, origin);
       created.push(...(createdRows || []));
+
+      // ---- Lead Enhancements: Automatic Tagging and Activities
+      for (const lead of (createdRows || [])) {
+        const leadId = lead.id;
+
+        // 1. If agent_id is present, add the 'Partner' tag automatically
+        if (body.agentId) {
+          const currentTags = Array.isArray(lead.tags) ? lead.tags : [];
+          if (!currentTags.includes('Partner')) {
+            await svc
+              .from('leads')
+              .update({ tags: [...currentTags, 'Partner'] })
+              .eq('id', leadId);
+          }
+        }
+
+        // 2. Create 'creation' activity record
+        await svc.from('lead_activities').insert({
+          lead_id: leadId,
+          user_id: projectOwnerId,
+          type: 'creation',
+          description: body.agentId ? 'Заявка получена по партнерской ссылке' : 'Заявка получена с сайта',
+          metadata: { agent_id: body.agentId || null }
+        });
+      }
     }
 
     // If everything already exists (same funnels), return 409 for compatibility
@@ -626,11 +653,9 @@ serve(async (req) => {
 
           await svc.from("leads").update({ updated_at: new Date().toISOString(), status: "pending" }).eq("id", localLeadId);
 
-          const commentText = `🆕 Создана сделка из Gridix по квартире\n\n• Проект: ${projectName}\n${
-            projectAddress ? `• Адрес: ${projectAddress}\n` : ""
-          }• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${
-            (apartment as any)?.projects?.currency ?? ""
-          }\n\nИсточник: Gridix`;
+          const commentText = `🆕 Создана сделка из Gridix по квартире\n\n• Проект: ${projectName}\n${projectAddress ? `• Адрес: ${projectAddress}\n` : ""
+            }• Квартира: ${apartment.apartment_number}\n• Цена: ${Number(apartment.price ?? 0).toLocaleString("ru-RU")} ${(apartment as any)?.projects?.currency ?? ""
+            }\n\nИсточник: Gridix`;
           await callBitrixRest({
             domain: baseDomain,
             accessToken,

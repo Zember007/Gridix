@@ -9,6 +9,8 @@ const AuthPage = lazy(() => import("@/pages/AuthPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const PDFTemplatePage = lazy(() => import("@/pages/PDFTemplatePage"));
 const InvitationHandlerPage = lazy(() => import("@/pages/InvitationHandlerPage"));
+const AgentProjectsPage = lazy(() => import("@/pages/AgentProjectsPage"));
+const AgentApplicationPage = lazy(() => import("@/pages/AgentApplicationPage"));
 
 export function PublicRoutes() {
   return (
@@ -31,6 +33,10 @@ export function PublicRoutes() {
 
       {/* Invitation handler route - processes partner invitations */}
       <Route path="invitation" element={<InvitationHandlerPage />} />
+
+      {/* Agent routes */}
+      <Route path="projects/agent/:agentId" element={<AgentProjectsPage />} />
+      <Route path="agent/apply" element={<AgentApplicationPage />} />
     </Routes>
   );
 }

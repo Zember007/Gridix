@@ -47,6 +47,12 @@ export interface ExtendedLead extends DbLead {
   tasks?: LeadTask[];
   assignedTo?: string;
   tags?: string[];
+  partner?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 export interface Funnel {
@@ -67,13 +73,13 @@ export interface FunnelTrigger {
   stageId: string;
   event: FunnelTriggerEvent;
   icon:
-    | 'distribution'
-    | 'task'
-    | 'status_change'
-    | 'edit_field'
-    | 'add_tag'
-    | 'notification'
-    | 'apartment_status';
+  | 'distribution'
+  | 'task'
+  | 'status_change'
+  | 'edit_field'
+  | 'add_tag'
+  | 'notification'
+  | 'apartment_status';
   title: string;
   description: string;
   subtext?: string;

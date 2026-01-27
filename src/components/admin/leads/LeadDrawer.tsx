@@ -199,6 +199,17 @@ export const LeadDrawer: React.FC<Props> = ({ lead, funnelStages, onClose, onSta
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('leads.drawer.details')}</h4>
                                     {isEditing && <span className="text-[10px] text-blue-600 font-bold animate-pulse">{t('leads.drawer.editing')}</span>}
                                 </div>
+                                {lead.partner && (
+                                    <div className="mx-4 mt-4 bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                                        <div className="bg-blue-100 p-2 rounded-lg text-blue-600 h-fit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-blue-900">Партнер: {lead.partner.name}</h4>
+                                            <p className="text-xs text-blue-700 mt-1">{lead.partner.email} • {lead.partner.phone}</p>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="p-4 space-y-5">
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1">{t('leads.drawer.phone')}</label>

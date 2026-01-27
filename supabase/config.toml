@@ -54,3 +54,12 @@ verify_jwt = false
 
 [functions.update-project-prices]
 verify_jwt = false
+
+[functions.agent-program]
+verify_jwt = false
+
+[functions.onesignal-sync-user]
+verify_jwt = false
+
+[functions.notifications-send-email]
+verify_jwt = false

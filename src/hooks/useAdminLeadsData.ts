@@ -50,7 +50,6 @@ function mapDbLeadToExtended(dbLead: DbLead): ExtendedLead {
 
   return {
     ...dbLead,
-    // For UI, use pipeline stage id as status (separate from integration status in DB)
     status: pipelineStageId || dbLead.status || null,
     project: projectName,
     apartment,
@@ -152,7 +151,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
       return funnelIds
         .filter((id) => {
-          const entry = byFunnel.get(id); 
+          const entry = byFunnel.get(id);
           return !entry || !(entry.reserved && entry.sold);
         })
         .map((id) => ({ id, name: funnelNameById.get(id) || id }));
@@ -219,6 +218,73 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     load();
   }, [activeFunnelId]);
+
+  // Load Lead details (tasks, history) when a lead is selected
+  useEffect(() => {
+    if (!selectedLead?.id) return;
+
+    const loadLeadDetails = async () => {
+      try {
+        const [{ data: tasks }, { data: history }] = await Promise.all([
+          supabase
+            .from('lead_tasks')
+            .select('*')
+            .eq('lead_id', selectedLead.id)
+            .order('due_date', { ascending: true }),
+          supabase
+            .from('lead_activities')
+            .select('*')
+            .eq('lead_id', selectedLead.id)
+            .order('created_at', { ascending: false })
+        ]);
+
+        // Fetch partner info if agent_id is present
+        let partnerInfo = null;
+        if (selectedLead.agent_id) {
+          const { data: partner } = await supabase
+            .from('agent_applications')
+            .select('id, full_name, email, phone')
+            .eq('id', selectedLead.agent_id)
+            .maybeSingle();
+          if (partner) {
+            partnerInfo = {
+              id: partner.id,
+              name: partner.full_name,
+              email: partner.email,
+              phone: partner.phone
+            };
+          }
+        }
+
+        setSelectedLead(prev => {
+          if (!prev || prev.id !== selectedLead.id) return prev;
+          return {
+            ...prev,
+            tasks: (tasks || []).map(t => ({
+              id: t.id,
+              text: t.text,
+              date: t.due_date,
+              type: 'other', // Default type
+              completed: t.completed,
+              assignedTo: MOCK_USERS[0] // Default
+            })),
+            history: (history || []).map(h => ({
+              id: h.id,
+              type: h.type as any,
+              date: h.created_at,
+              text: h.description,
+              user: h.user_id || undefined
+            })),
+            partner: partnerInfo || undefined
+          };
+        });
+      } catch (err) {
+        console.error('Failed to load lead details', err);
+      }
+    };
+
+    loadLeadDetails();
+  }, [selectedLead?.id]);
 
   // Map DB leads to extended leads with computed fields
   const leads: ExtendedLead[] = useMemo(
@@ -505,7 +571,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   };
 
   const handleAddTask = useCallback(
-    (
+    async (
       leadId: string,
       text: string,
       type: TaskType,
@@ -513,35 +579,148 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       time: string,
       assignedTo: LeadUser,
     ) => {
-      // For now, client-side only; can be wired to lead_tasks later
-      // This keeps API compatible with existing UI
-      if (!selectedLead || selectedLead.id !== leadId) return;
-      const newTask: LeadTask = {
-        id: `t_${Date.now()}`,
-        text,
-        date,
-        time,
-        type,
-        completed: false,
-        assignedTo,
-      };
-      const updated = {
-        ...selectedLead,
-        tasks: [...(selectedLead.tasks || []), newTask],
-      };
-      setSelectedLead(updated);
+      try {
+        const { data, error } = await supabase
+          .from('lead_tasks')
+          .insert({
+            lead_id: leadId,
+            text: text,
+            due_date: new Date(`${date}T${time || '12:00'}:00`).toISOString(),
+            completed: false,
+            type: type
+          })
+          .select('*')
+          .single();
+
+        if (error) throw error;
+
+        // Add history entry
+        await handleAddNote(leadId, `Created task: ${text}`, 'task_creation');
+
+        // Refresh lead details if open
+        if (selectedLead?.id === leadId) {
+          const newTask: LeadTask = {
+            id: data.id,
+            text: data.text,
+            date: data.due_date,
+            time,
+            type,
+            completed: false,
+            assignedTo,
+          };
+          setSelectedLead({
+            ...selectedLead,
+            tasks: [...(selectedLead.tasks || []), newTask],
+            history: [
+              { id: `h_${Date.now()}`, type: 'note', date: new Date().toISOString(), text: `Created task: ${text}` },
+              ...(selectedLead.history || [])
+            ]
+          });
+        }
+      } catch (err) {
+        console.error('Failed to add task', err);
+        showToast('error', 'Failed to add task');
+      }
     },
-    [selectedLead]
+    [selectedLead, user?.id]
   );
 
-  const handleCompleteTask = () => {
-    /* placeholder – will be wired to lead_tasks table if needed */
-  };
-  const handleToggleTask = () => { };
-  const handleDeleteTask = () => { };
+  const handleCompleteTask = async (leadId: string, taskId: string, result: string) => {
+    try {
+      const { error } = await supabase
+        .from('lead_tasks')
+        .update({ completed: true })
+        .eq('id', taskId);
 
-  const handleAddNote = () => {
-    // UI-level only for now; server-side history can be added later
+      if (error) throw error;
+
+      await handleAddNote(leadId, `Completed task. Result: ${result}`, 'task_completion');
+
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({
+          ...selectedLead,
+          tasks: (selectedLead.tasks || []).map(t => t.id === taskId ? { ...t, completed: true, result } : t),
+          history: [
+            { id: `h_${Date.now()}`, type: 'task_completion', date: new Date().toISOString(), text: `Completed task. Result: ${result}` },
+            ...(selectedLead.history || [])
+          ]
+        });
+      }
+    } catch (err) {
+      console.error('Failed to complete task', err);
+    }
+  };
+
+  const handleToggleTask = async (leadId: string, taskId: string) => {
+    const task = selectedLead?.tasks?.find(t => t.id === taskId);
+    if (!task) return;
+
+    try {
+      const { error } = await supabase
+        .from('lead_tasks')
+        .update({ completed: !task.completed })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({
+          ...selectedLead,
+          tasks: (selectedLead.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to toggle task', err);
+    }
+  };
+
+  const handleDeleteTask = async (leadId: string, taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('lead_tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({
+          ...selectedLead,
+          tasks: (selectedLead.tasks || []).filter(t => t.id !== taskId)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to delete task', err);
+    }
+  };
+
+  const handleAddNote = async (leadId: string, note: string, type: string = 'note') => {
+    try {
+      const { data, error } = await supabase
+        .from('lead_activities')
+        .insert({
+          lead_id: leadId,
+          user_id: user?.id,
+          type,
+          description: note
+        })
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({
+          ...selectedLead,
+          history: [
+            { id: data.id, type: data.type as any, date: data.created_at, text: data.description },
+            ...(selectedLead.history || [])
+          ]
+        });
+      }
+    } catch (err) {
+      console.error('Failed to add note', err);
+    }
   };
 
   const handleAddTag = async (leadId: string, tag: string) => {

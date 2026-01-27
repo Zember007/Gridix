@@ -26,7 +26,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
-    
+
     setSubmitting(true);
     try {
       // Call the custom onSubmit if provided (for backward compatibility)
@@ -41,7 +41,9 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
           email,
           phone,
           apartmentId,
-          projectId
+          projectId,
+          agentId: (new URLSearchParams(window.location.search)).get('agent_id') ||
+            JSON.parse(localStorage.getItem(`agent_context:${projectId}`) || '{}')?.agent_id
         }
       });
 
@@ -59,7 +61,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
 
       // Show success notification
       setShowSuccess(true);
-      
+
       // Clear form
       setName('');
       setEmail('');
@@ -86,42 +88,42 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="reservation-name">{t('managerAccounts.fullName')}</Label>
-          <Input 
-            id="reservation-name" 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            placeholder={t('managerAccounts.fullNamePlaceholder')} 
-            required 
+          <Input
+            id="reservation-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('managerAccounts.fullNamePlaceholder')}
+            required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="reservation-email">{t('auth.email')}</Label>
-          <Input 
-            id="reservation-email" 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            placeholder={t('managerAccounts.emailPlaceholder')} 
-            required 
+          <Input
+            id="reservation-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t('managerAccounts.emailPlaceholder')}
+            required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="reservation-phone">{t('managerAccounts.phone')}</Label>
-          <Input 
+          <Input
             id="reservation-phone"
             type="tel"
-            value={phone} 
-            onChange={(e) => setPhone(e.target.value)} 
-            placeholder="+995 (999) 00-00-00" 
-            required    
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+995 (999) 00-00-00"
+            required
           />
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             {t('managerAccounts.cancel')}
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={submitting}
             className="text-white hover:opacity-90"
             style={{ backgroundColor: themeColor }}

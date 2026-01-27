@@ -119,6 +119,88 @@ serve(async (req) => {
       return null;
     };
 
+    const maybeAwardAgentCommissionOnSold = async (args: {
+      leadId: string;
+      agentId: string | null;
+      apartmentId: string | null;
+      oldStageId: string | null;
+      newStageId: string;
+    }) => {
+      try {
+        if (!args.agentId) return;
+        if (!args.apartmentId) return;
+        if (!args.newStageId) return;
+        if (args.oldStageId === args.newStageId) return;
+
+        // Check whether this stage has "apartment_status = sold" trigger.
+        const { data: triggers, error: triggersError } = await svc
+          .from('crm_funnel_triggers')
+          .select('id, icon, config')
+          .eq('stage_id', args.newStageId)
+          .eq('icon', 'apartment_status');
+        if (triggersError) throw triggersError;
+
+        const hasSoldTrigger = (triggers || []).some((t: any) => {
+          const cfg = (t?.config && typeof t.config === 'object') ? t.config : {};
+          return String((cfg as any).apartmentStatus || '').toLowerCase() === 'sold';
+        });
+        if (!hasSoldTrigger) return;
+
+        // Idempotency: one payout per lead sale.
+        const method = `sale:${args.leadId}`;
+        const { data: existing } = await svc
+          .from('agent_payouts')
+          .select('id')
+          .eq('agent_id', args.agentId)
+          .eq('method', method)
+          .limit(1)
+          .maybeSingle();
+        if (existing?.id) return;
+
+        const [{ data: agentApp }, { data: apartment }] = await Promise.all([
+          svc
+            .from('agent_applications')
+            .select('commission_rate')
+            .eq('id', args.agentId)
+            .maybeSingle(),
+          svc
+            .from('apartments')
+            .select('price')
+            .eq('id', args.apartmentId)
+            .maybeSingle(),
+        ]);
+
+        const rate = typeof agentApp?.commission_rate === 'number' ? agentApp.commission_rate : 4;
+        const price = typeof apartment?.price === 'number' ? apartment.price : null;
+        if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return;
+
+        const raw = (price * rate) / 100;
+        const amount = Math.round(raw * 100) / 100;
+        if (!Number.isFinite(amount) || amount <= 0) return;
+
+        const nowIso = new Date().toISOString();
+        const { error: insertError } = await svc.from('agent_payouts').insert({
+          agent_id: args.agentId,
+          amount,
+          status: 'pending',
+          method,
+          payout_date: nowIso,
+        });
+        if (insertError) throw insertError;
+
+        // Best-effort: add activity entry for visibility in UI.
+        await svc.from('lead_activities').insert({
+          lead_id: args.leadId,
+          user_id: null,
+          type: 'automation',
+          description: `Agent commission accrued: ${amount} (${rate}% of ${price})`,
+          metadata: { agent_id: args.agentId, apartment_id: args.apartmentId, stage_id: args.newStageId, method },
+        });
+      } catch (e) {
+        console.error('maybeAwardAgentCommissionOnSold failed:', e);
+      }
+    };
+
     const buildLeadBindingResponse = (row: any) => {
       const project = row?.projects;
       const apartment = row?.apartments;
@@ -175,7 +257,7 @@ serve(async (req) => {
       // Check lead access via RLS
       const { data: lead, error: leadError } = await userClient
         .from('leads')
-        .select('id, project_id, amocrm_lead_id')
+        .select('id, project_id, amocrm_lead_id, apartment_id, agent_id, pipeline_stage_id')
         .eq('id', lead_id)
         .single();
 
@@ -264,6 +346,17 @@ serve(async (req) => {
 
       if (updateError) {
         return createJsonResponse({ error: updateError.message }, 400, origin);
+      }
+
+      // Award agent commission when entering a stage with apartment_status=sold trigger.
+      if (typeof remoteStageId === 'string' && remoteStageId) {
+        await maybeAwardAgentCommissionOnSold({
+          leadId: lead.id,
+          agentId: (lead as any).agent_id ?? null,
+          apartmentId: (lead as any).apartment_id ?? null,
+          oldStageId: (lead as any).pipeline_stage_id ?? null,
+          newStageId: remoteStageId,
+        });
       }
 
       return createJsonResponse({ success: true }, 200, origin);

@@ -463,6 +463,20 @@ const ProjectApartmentSelector = ({
     }
   }, [apartments, filters, selectedFloorForPlan]);
 
+  // Persistence for agent_id
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlAgentId = params.get('agent_id');
+
+    if (urlAgentId && projectId) {
+      localStorage.setItem(`agent_context:${projectId}`, JSON.stringify({
+        agent_id: urlAgentId,
+        set_at: new Date().toISOString(),
+        source: 'link'
+      }));
+    }
+  }, [projectId]);
+
 
 
   const getVisibleFields = useCallback(

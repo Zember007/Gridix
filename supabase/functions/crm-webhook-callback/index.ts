@@ -149,6 +149,86 @@ function toInt(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+async function maybeAwardAgentCommissionOnSold(opts: {
+  svc: any;
+  leadId: string;
+  agentId: string | null;
+  apartmentId: string | null;
+  oldStageId: string | null;
+  newStageId: string | null;
+}) {
+  try {
+    if (!opts.newStageId) return;
+    if (!opts.agentId) return;
+    if (!opts.apartmentId) return;
+    if (opts.oldStageId === opts.newStageId) return;
+
+    const { data: triggers, error: triggersError } = await opts.svc
+      .from("crm_funnel_triggers")
+      .select("id, icon, config")
+      .eq("stage_id", opts.newStageId)
+      .eq("icon", "apartment_status");
+    if (triggersError) throw triggersError;
+
+    const hasSoldTrigger = (triggers || []).some((t: any) => {
+      const cfg = (t?.config && typeof t.config === "object") ? t.config : {};
+      return String((cfg as any).apartmentStatus || "").toLowerCase() === "sold";
+    });
+    if (!hasSoldTrigger) return;
+
+    const method = `sale:${opts.leadId}`;
+    const { data: existing } = await opts.svc
+      .from("agent_payouts")
+      .select("id")
+      .eq("agent_id", opts.agentId)
+      .eq("method", method)
+      .limit(1)
+      .maybeSingle();
+    if (existing?.id) return;
+
+    const [{ data: agentApp }, { data: apartment }] = await Promise.all([
+      opts.svc
+        .from("agent_applications")
+        .select("commission_rate")
+        .eq("id", opts.agentId)
+        .maybeSingle(),
+      opts.svc
+        .from("apartments")
+        .select("price")
+        .eq("id", opts.apartmentId)
+        .maybeSingle(),
+    ]);
+
+    const rate = typeof agentApp?.commission_rate === "number" ? agentApp.commission_rate : 4;
+    const price = typeof apartment?.price === "number" ? apartment.price : null;
+    if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) return;
+
+    const raw = (price * rate) / 100;
+    const amount = Math.round(raw * 100) / 100;
+    if (!Number.isFinite(amount) || amount <= 0) return;
+
+    const nowIso = new Date().toISOString();
+    const { error: insertError } = await opts.svc.from("agent_payouts").insert({
+      agent_id: opts.agentId,
+      amount,
+      status: "pending",
+      method,
+      payout_date: nowIso,
+    });
+    if (insertError) throw insertError;
+
+    await opts.svc.from("lead_activities").insert({
+      lead_id: opts.leadId,
+      user_id: null,
+      type: "automation",
+      description: `Agent commission accrued: ${amount} (${rate}% of ${price})`,
+      metadata: { agent_id: opts.agentId, apartment_id: opts.apartmentId, stage_id: opts.newStageId, method },
+    });
+  } catch (e) {
+    console.error("maybeAwardAgentCommissionOnSold failed:", e);
+  }
+}
+
 async function parseBody(req: Request): Promise<{ json: any | null; form: Record<string, string> }> {
   const contentType = req.headers.get("content-type") ?? "";
 
@@ -377,7 +457,7 @@ async function handleAmo(req: Request, origin: string | null): Promise<Response>
 
     const { data: localLead } = await svc
       .from("leads")
-      .select("id, project_id, apartment_id, name, pipeline_stage_id")
+      .select("id, project_id, apartment_id, agent_id, name, pipeline_stage_id")
       .eq("amocrm_lead_id", e.id)
       .maybeSingle();
     if (!localLead) continue;
@@ -438,11 +518,23 @@ async function handleAmo(req: Request, origin: string | null): Promise<Response>
     }
 
     const leadPatch: Record<string, unknown> = {};
-    if (stageId && stageId !== localLead.pipeline_stage_id) leadPatch.pipeline_stage_id = stageId;
+    const stageChanged = !!stageId && stageId !== localLead.pipeline_stage_id;
+    if (stageChanged) leadPatch.pipeline_stage_id = stageId;
     if (e.name && e.name !== localLead.name) leadPatch.name = e.name;
     if (Object.keys(leadPatch).length > 0) {
       leadPatch.updated_at = new Date().toISOString();
       await svc.from("leads").update(leadPatch).eq("id", localLead.id);
+    }
+
+    if (stageChanged) {
+      await maybeAwardAgentCommissionOnSold({
+        svc,
+        leadId: localLead.id,
+        agentId: (localLead as any).agent_id ?? null,
+        apartmentId: (localLead as any).apartment_id ?? null,
+        oldStageId: (localLead as any).pipeline_stage_id ?? null,
+        newStageId: stageId,
+      });
     }
   }
 
@@ -586,9 +678,26 @@ async function handleBitrix(req: Request, origin: string | null): Promise<Respon
     .maybeSingle();
   if (!mapping?.lead_pipeline_stage_id) return createJsonResponse({ status: "ok", skipped: true, reason: "no_mapping" }, 200, origin);
 
+  const { data: leadBefore } = await svc
+    .from("leads")
+    .select("id, agent_id, apartment_id, pipeline_stage_id")
+    .eq("id", link.lead_id)
+    .maybeSingle();
+
   const leadPatch: Record<string, unknown> = { updated_at: new Date().toISOString(), pipeline_stage_id: mapping.lead_pipeline_stage_id };
   if (dealTitle) leadPatch.name = dealTitle;
   await svc.from("leads").update(leadPatch).eq("id", link.lead_id);
+
+  if (leadBefore?.id && mapping.lead_pipeline_stage_id && mapping.lead_pipeline_stage_id !== leadBefore.pipeline_stage_id) {
+    await maybeAwardAgentCommissionOnSold({
+      svc,
+      leadId: leadBefore.id,
+      agentId: (leadBefore as any).agent_id ?? null,
+      apartmentId: (leadBefore as any).apartment_id ?? null,
+      oldStageId: (leadBefore as any).pipeline_stage_id ?? null,
+      newStageId: mapping.lead_pipeline_stage_id,
+    });
+  }
 
   return createJsonResponse({ status: "ok" }, 200, origin);
 }

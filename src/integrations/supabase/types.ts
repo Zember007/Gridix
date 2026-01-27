@@ -39,6 +39,125 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_access: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          project_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_access_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_access_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_applications: {
+        Row: {
+          agreement_signed: boolean | null
+          bank_details: Json | null
+          commission_rate: number | null
+          created_at: string
+          developer_user_id: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          reviewed_at: string | null
+          status: string
+          type: string | null
+        }
+        Insert: {
+          agreement_signed?: boolean | null
+          bank_details?: Json | null
+          commission_rate?: number | null
+          created_at?: string
+          developer_user_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          reviewed_at?: string | null
+          status?: string
+          type?: string | null
+        }
+        Update: {
+          agreement_signed?: boolean | null
+          bank_details?: Json | null
+          commission_rate?: number | null
+          created_at?: string
+          developer_user_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          reviewed_at?: string | null
+          status?: string
+          type?: string | null
+        }
+        Relationships: []
+      }
+      agent_payouts: {
+        Row: {
+          agent_id: string | null
+          amount: number
+          created_at: string
+          id: string
+          method: string | null
+          payout_date: string
+          status: string
+        }
+        Insert: {
+          agent_id?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          payout_date?: string
+          status?: string
+        }
+        Update: {
+          agent_id?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          payout_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_payouts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apartment_photos: {
         Row: {
           apartment_id: string
@@ -891,6 +1010,44 @@ export type Database = {
           },
         ]
       }
+      lead_activities: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_history: {
         Row: {
           created_at: string
@@ -922,6 +1079,39 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_tags: {
+        Row: {
+          created_at: string
+          lead_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          lead_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          lead_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -978,6 +1168,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          agent_id: string | null
           amocrm_contact_id: number | null
           amocrm_error: string | null
           amocrm_lead_id: number | null
@@ -999,6 +1190,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_id?: string | null
           amocrm_contact_id?: number | null
           amocrm_error?: string | null
           amocrm_lead_id?: number | null
@@ -1020,6 +1212,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_id?: string | null
           amocrm_contact_id?: number | null
           amocrm_error?: string | null
           amocrm_lead_id?: number | null
@@ -2111,6 +2304,30 @@ export type Database = {
           setting_key?: string
           setting_value?: Json
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string | null
         }
         Relationships: []
       }

@@ -20,6 +20,7 @@ export interface Lead {
   status: string | null;
   source: string | null;
   notes?: string | null;
+  agent_id?: string | null;
   // Relations
   projects?: {
     name: string;

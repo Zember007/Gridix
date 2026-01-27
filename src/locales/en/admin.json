@@ -46,6 +46,9 @@
   "dashboard": "Admin Dashboard",
   "dashboardDescription": "Manage projects and settings",
   "leads": "Leads",
+  "crm": "CRM",
+  "agent_network": "Agent Network",
+  "contacts": "Contacts",
   "project": {
     "create": {
       "description": "Choose how to create the project",

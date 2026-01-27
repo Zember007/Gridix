@@ -46,6 +46,9 @@
   "dashboard": "Панель управления",
   "dashboardDescription": "Управление проектами и настройками",
   "leads": "Лиды",
+  "crm": "CRM",
+  "agent_network": "Агентская сеть",
+  "contacts": "Контакты",
   "project": {
     "create": {
       "description": "Выберите способ создания проекта",
