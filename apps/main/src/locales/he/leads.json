@@ -1,0 +1,388 @@
+{
+  "actions": {
+    "cancel": "לְבַטֵל",
+    "copy": "לְהַעְתִיק",
+    "editNotes": "ערוך הערות",
+    "openInCrm": "פתח ב-CRM"
+  },
+  "cancel": "לְבַטֵל",
+  "crm": {
+    "notSent": "לא נשלח",
+    "connected": "מְחוּבָּר",
+    "lastSync": "סנכרון אחרון",
+    "systemName": "מַעֲרֶכֶת"
+  },
+  "description": "כל בקשות הלקוח עם סטטוס משלוח CRM",
+  "empty": "לא נמצאו לידים",
+  "error": "שְׁגִיאָה",
+  "filters": {
+    "dateFrom": "תאריך מ",
+    "dateTo": "תאריך ל",
+    "status": "סטָטוּס",
+    "title": "מסננים",
+    "search": "חפש וסנן",
+    "searchPlaceholder": "חפש לפי שם, כותרת...",
+    "source": "מָקוֹר",
+    "allSources": "כל המקורות",
+    "budgetFrom": "תקציב מ",
+    "budgetTo": "אֶל",
+    "stages": "שלבים",
+    "allStages": "כל השלבים",
+    "selectedStages": "נבחרו שלבים",
+    "managers": "מנהלים",
+    "allManagers": "כל המנהלים",
+    "selectedManagers": "נִבחָר",
+    "apply": "לִפְנוֹת",
+    "reset": "אִתחוּל",
+    "clearAll": "נקה הכל",
+    "found": "נמצא"
+  },
+  "loading": "טוען לידים...",
+  "notes": {
+    "client": "לָקוּחַ",
+    "placeholder": "הזן הערות...",
+    "title": "הערות מובילות"
+  },
+  "save": "לְהַצִיל",
+  "stats": {
+    "cancelled": "בּוּטלָה",
+    "failed": "נִכשָׁל",
+    "pending": "תָלוּי וְעוֹמֵד",
+    "savedOnly": "נשמר בלבד",
+    "sent": "נשלח ל-CRM",
+    "total": "סך כל הפניות",
+    "deals": "deals"
+  },
+  "status": {
+    "all": "כֹּל",
+    "cancelled": "בּוּטלָה",
+    "failed": "נִכשָׁל",
+    "pending": "תָלוּי וְעוֹמֵד",
+    "saved_only": "נשמר בלבד",
+    "sent_to_crm": "נשלח ל-CRM"
+  },
+  "table": {
+    "actions": "פעולות",
+    "apartment": "דִירָה",
+    "client": "לָקוּחַ",
+    "contacts": "אנשי קשר",
+    "crm": "CRM",
+    "date": "תַאֲרִיך",
+    "project": "פּרוֹיֶקט",
+    "status": "סטָטוּס"
+  },
+  "title": "לידים",
+  "toast": {
+    "cancelError": {
+      "desc": "ביטול ההפניה נכשל",
+      "title": "שְׁגִיאָה"
+    },
+    "cancelled": {
+      "desc": "הליד בוטל",
+      "title": "הַצלָחָה"
+    },
+    "copied": {
+      "desc": "מידע לידים הועתק ללוח",
+      "title": "מוּעֲתָק"
+    },
+    "copyError": {
+      "desc": "ההעתקה של המידע נכשלה",
+      "title": "שְׁגִיאָה"
+    },
+    "notesError": {
+      "desc": "עדכון ההערות נכשל",
+      "title": "שְׁגִיאָה"
+    },
+    "notesSaved": {
+      "desc": "הערות עודכנו",
+      "title": "הַצלָחָה"
+    },
+    "leadCreated": {
+      "title": "הַצלָחָה",
+      "desc": "נוצרה עסקה חדשה"
+    },
+    "leadUpdated": {
+      "title": "הַצלָחָה",
+      "desc": "העסקה עודכנה"
+    },
+    "statusChanged": {
+      "title": "הסטטוס השתנה",
+      "desc": "שלב העסקה עודכן"
+    },
+    "funnelSaved": {
+      "title": "הַצלָחָה",
+      "desc": "הגדרות המשפך נשמרו"
+    },
+    "exportDone": {
+      "title": "נַעֲשָׂה",
+      "desc": "הורד קובץ ייצוא"
+    },
+    "importDone": {
+      "title": "הייבוא ​​הושלם",
+      "desc": "אנשי הקשר נטענו"
+    },
+    "nothingToExport": {
+      "title": "אין נתונים",
+      "desc": "הרשימה ריקה, אין מה לייצא."
+    },
+    "duplicatesNotFound": {
+      "title": "לְנַקוֹת",
+      "desc": "No duplicates found"
+    }
+  },
+  "kanban": {
+    "noDeals": "אין עסקאות",
+    "dragHere": "גרור לכאן",
+    "createDeal": "צור עסקה",
+    "changeStage": "שנה שלב",
+    "budget": "תַקצִיב",
+    "noTasks": "אין משימות",
+    "empty": "רֵיק",
+    "moveHere": "תעבור לכאן",
+    "quickAdd": "+ הוספה מהירה..."
+  },
+  "list": {
+    "selectAll": "בחר הכל",
+    "selected": "נִבחָר",
+    "client": "לָקוּחַ",
+    "status": "סטָטוּס",
+    "task": "מְשִׁימָה",
+    "project": "פּרוֹיֶקט",
+    "budget": "תַקצִיב",
+    "unknown": "לֹא יְדוּעַ",
+    "noTasks": "אין משימות",
+    "call": "שִׂיחָה",
+    "whatsapp": "וואטסאפ",
+    "today": "הַיוֹם",
+    "yesterday": "אֶתמוֹל",
+    "daysAgo": "לפני ימים"
+  },
+  "drawer": {
+    "contact": "מַגָע",
+    "details": "פרטי העסקה",
+    "tasks": "משימות",
+    "history": "הִיסטוֹרִיָה",
+    "addTask": "הוסף משימה",
+    "addNote": "הוסף הערה",
+    "tags": "תגים",
+    "source": "מָקוֹר",
+    "budget": "תַקצִיב",
+    "apartment": "דִירָה",
+    "created": "נוצר",
+    "close": "לִסְגוֹר",
+    "edit": "לַעֲרוֹך",
+    "save": "לְהַצִיל",
+    "info": "מֵידָע",
+    "call": "שִׂיחָה",
+    "whatsapp": "וואטסאפ",
+    "editing": "עֲרִיכָה",
+    "phone": "טֵלֵפוֹן",
+    "project": "פּרוֹיֶקט",
+    "addTag": "+ הוסף תג",
+    "overdue": "באיחור",
+    "today": "הַיוֹם",
+    "future": "עָתִידִי",
+    "completed": "הושלם",
+    "noPlannedTasks": "אין משימות מתוכננות",
+    "writeNote": "כתוב הערה...",
+    "ctrlEnterToSend": "Ctrl+Enter כדי לשלוח"
+  },
+  "createModal": {
+    "title": "עסקה חדשה",
+    "name": "שם הלקוח",
+    "phone": "טֵלֵפוֹן",
+    "email": "אימייל (אופציונלי)",
+    "create": "לִיצוֹר",
+    "cancel": "לְבַטֵל",
+    "duplicateWarning": "נמצאו עופרת דומה!",
+    "duplicateDesc": "ליד עם מספר הטלפון הזה כבר קיים במערכת:",
+    "clientLabel": "לָקוּחַ",
+    "namePlaceholder": "שם פרטי ושם משפחה",
+    "phonePlaceholder": "+1 555 000 0000",
+    "duplicateFound": "נמצא כפיל",
+    "duplicateExists": "הלקוח {{name}} כבר קיים במסד הנתונים.",
+    "goToCard": "לך לכרטיס",
+    "budgetLabel": "תַקצִיב",
+    "sourceLabel": "מָקוֹר",
+    "tagsLabel": "תגים",
+    "tagPlaceholder": "הזן תג והקש על Enter",
+    "duplicateNotAllowed": "שכפול אסור",
+    "createDeal": "צור עסקה"
+  },
+  "funnel": {
+    "title": "הגדרת משפך",
+    "funnels": "משפכים",
+    "addFunnel": "הוסף משפך",
+    "archived": "משפכים בארכיון",
+    "addStage": "הוסף שלב",
+    "deleteStage": "מחק שלב",
+    "rename": "שנה שם",
+    "triggers": "אוטומציות",
+    "addTrigger": "הוסף טריגר",
+    "noAutomations": "אין אוטומציות",
+    "automationDesc": "הוסף פעולות בעת כניסה לשלב זה",
+    "back": "בְּחֲזָרָה",
+    "save": "לְהַצִיל",
+    "deleteAllTriggers": "מחק את כל הטריגרים",
+    "moveHere": "תעבור לכאן",
+    "doubleClickToEdit": "לחץ פעמיים כדי לשנות את השם",
+    "insertStage": "הכנס שלב"
+  },
+  "settings": {
+    "import": "יְבוּא",
+    "export": "ייצוא (CSV)",
+    "funnelSetup": "הגדרת משפך",
+    "cardAppearance": "הופעת כרטיס",
+    "findDuplicates": "מצא כפילויות",
+    "massActions": "פעולות המוניות"
+  },
+  "sources": {
+    "instagram": "אינסטגרם",
+    "website": "אֲתַר אִינטֶרנֶט",
+    "referral": "הפניה",
+    "walk_in": "כניסה",
+    "facebook": "פייסבוק",
+    "admin": "מנהל מערכת"
+  },
+  "toolbar": {
+    "selected": "נִבחָר",
+    "changeStatus": "שנה סטטוס",
+    "assign": "לְהַקְצוֹת",
+    "delete": "לִמְחוֹק",
+    "manager": "מְנַהֵל"
+  },
+  "emptyState": {
+    "notFound": "שום דבר לא נמצא",
+    "tryChangingFilters": "נסה לשנות פרמטרים או מסננים של חיפוש.",
+    "resetFilters": "אפס מסננים"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "אזהרה: חסרים טריגרים נדרשים של סטטוס דירה",
+    "funnelTriggersDesc": "כדי לטפל בצורה נכונה בהזמנות ובמכירות, הגדר טריגרים המשנים את סטטוס הדירה הכרוכה ל\"שמורה\" ו\"נמכר\" בכל משפך.",
+    "missingFunnels": "במשפכים חסרים טריגרים",
+    "funnelTriggersCta": "פתח את הגדרת המשפך"
+  },
+  "cardAppearance": {
+    "title": "הופעת כרטיס",
+    "options": "אפשרויות",
+    "showAvatar": "הצג דמות של איש קשר",
+    "showDate": "הצג את תאריך היצירה",
+    "fieldsInCard": "שדות בכרטיס",
+    "preview": "תצוגה מקדימה",
+    "today": "הַיוֹם",
+    "cancel": "לְבַטֵל",
+    "save": "לְהַצִיל"
+  },
+  "import": {
+    "title": "ייבוא ​​אנשי קשר",
+    "step": "שלב {שלב} מתוך 3",
+    "dragFile": "גרור את הקובץ לכאן",
+    "orClick": "או לחץ כדי לבחור",
+    "supportedFormats": "נתמך: .csv, .xlsx, .xls",
+    "important": "חָשׁוּב:",
+    "headersNote": "ודא שהקובץ מכיל כותרות בשורה הראשונה. זה יעזור לנו לזהות את הנתונים בצורה נכונה.",
+    "downloadTemplate": "הורד תבנית קובץ",
+    "fieldMapping": "מיפוי שדות",
+    "importing": "מייבא נתונים...",
+    "dontClose": "נא לא לסגור את החלון.",
+    "done": "נַעֲשָׂה!",
+    "successfullyAdded": "נוספו בהצלחה {count} אנשי קשר.",
+    "backToList": "חזרה לרשימה",
+    "cancel": "לְבַטֵל",
+    "next": "הַבָּא",
+    "startImport": "התחל לייבא",
+    "fields": {
+      "name": "שֵׁם",
+      "phone": "טֵלֵפוֹן",
+      "email": "אֶלֶקטרוֹנִי",
+      "price": "תַקצִיב",
+      "project": "פּרוֹיֶקט",
+      "source": "מָקוֹר",
+      "skip": "אין לייבא"
+    }
+  },
+  "duplicates": {
+    "title": "מצא ומיזוג כפילויות",
+    "scanning": "סורק מסד נתונים...",
+    "foundGroups": "נמצאו קבוצות כפולות: {{count}}",
+    "searching": "מחפש התאמות...",
+    "noDuplicates": "אין כפילויות",
+    "perfectOrder": "מסד הנתונים של אנשי הקשר שלך בסדר מושלם.",
+    "scanAgain": "סרוק שוב",
+    "selectMaster": "בחר את הכרטיס שיישאר הראשי (מאסטר). אחרים יימחקו וההיסטוריה שלהם תמזג.",
+    "created": "נוצר:",
+    "project": "פּרוֹיֶקט:",
+    "budget": "תַקצִיב:",
+    "keepThis": "שמור את זה (מיזוג)",
+    "selectGroup": "בחר קבוצה כפולה משמאל להשוואה"
+  },
+  "tasks": {
+    "types": {
+      "call": "מַגָע",
+      "meeting": "פְּגִישָׁה",
+      "message": "לִכתוֹב",
+      "payment": "תַשְׁלוּם",
+      "other": "אַחֵר"
+    },
+    "newTask": "משימה חדשה",
+    "example": "לדוגמא: צור קשר עם הלקוח ובירר תקציב...",
+    "today": "הַיוֹם",
+    "tomorrow": "מָחָר",
+    "plus3Days": "+3 ימים",
+    "addTask": "הוסף משימה",
+    "result": "תוצאת השלמה",
+    "whatHappened": "מה קרה? (לדוגמה: סוכם על פגישה)",
+    "completeTask": "השלם משימה",
+    "return": "לַחֲזוֹר",
+    "edit": "לַעֲרוֹך",
+    "delete": "לִמְחוֹק",
+    "responsible": "אַחֲרַאִי:",
+    "recipient": "מְקַבֵּל:",
+    "task": "מְשִׁימָה",
+    "noSettings": "אין הגדרות"
+  },
+  "triggers": {
+    "onStageEntry": "בכניסה לבמה",
+    "through": "ב-{delay} {unit}",
+    "tag": "תג: {tagName}",
+    "trigger": "לְהַפְעִיל",
+    "edit": "לַעֲרוֹך",
+    "delete": "לִמְחוֹק",
+    "whenToRun": "טריגר פועל כל דקה",
+    "whatToDo": "מה לעשות",
+    "description": "תיאור הפעולה",
+    "minutes": "פּרוֹטוֹקוֹל",
+    "hours": "שעות",
+    "days": "ימים",
+    "tagNamePlaceholder": "שם תג",
+    "willTrigger": "יופעל מיד כאשר ליד נכנס לשלב זה.",
+    "taskText": "טקסט משימה",
+    "notificationText": "טקסט הודעה",
+    "assignResponsible": "הקצה אחראי",
+    "selectStage": "בחר שלב לעבור אליו",
+    "noAdditionalSettings": "אין הגדרות נוספות עבור סוג פעולה זה.",
+    "descriptionRequired": "התיאור לא יכול להיות ריק.",
+    "tagsToAddPlaceholder": "תגים להוספה (מופרדים בפסיק)",
+    "apartmentStatusReserved": "שָׁמוּר",
+    "apartmentStatusSold": "נמכר",
+    "apartmentStatusAvailable": "זָמִין",
+    "icons": {
+      "clock": "לְעַכֵּב",
+      "distribution": "הֲפָצָה",
+      "task": "מְשִׁימָה",
+      "statusChange": "שינוי סטטוס",
+      "editField": "שדה ערוך",
+      "addTag": "הוסף תג",
+      "notification": "הוֹדָעָה",
+      "apartmentStatus": "מצב דירה"
+    }
+  },
+  "cardFields": {
+    "none": "אין ערך",
+    "name": "שם העסקה",
+    "project": "פּרוֹיֶקט",
+    "price": "תַקצִיב",
+    "tags": "תגים",
+    "assignedTo": "אַחֲרַאִי"
+  }
+}

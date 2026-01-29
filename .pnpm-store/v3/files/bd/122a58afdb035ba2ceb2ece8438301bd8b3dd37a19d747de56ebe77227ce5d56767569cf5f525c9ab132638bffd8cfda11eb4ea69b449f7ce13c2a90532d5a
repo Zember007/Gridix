@@ -1,0 +1,47 @@
+import { jsx as m } from "react/jsx-runtime";
+import { forwardRef as w, createContext as A, useState as S, useContext as c, useImperativeHandle as g, useEffect as n } from "react";
+import { createAnonymousGuest as h } from "@annotorious/core";
+import { createOSDAnnotator as x } from "@annotorious/openseadragon";
+import { AnnotoriousContext as y } from "./annotorious-react.es2.js";
+const d = A({ viewer: null, setViewer: null }), V = w((t, s) => {
+  const { children: v, tool: o, ...f } = t, [i, u] = S(), { anno: e, setAnno: a } = c(y);
+  return g(s, () => e, [e]), n(() => {
+    var l;
+    if (i != null && i.element)
+      try {
+        const r = x(i, f);
+        return a(r), () => {
+          r.destroy(), a(void 0);
+        };
+      } catch (r) {
+        (l = t.onInitError) == null || l.call(t, r);
+      }
+  }, [i]), n(() => {
+    e && e.setDrawingEnabled(t.drawingEnabled);
+  }, [e, t.drawingEnabled]), n(() => {
+    e && e.setDrawingMode(t.drawingMode);
+  }, [e, t.drawingMode]), n(() => {
+    e && e.setFilter(t.filter);
+  }, [e, t.filter]), n(() => {
+    e && e.setVisible(!t.hideAnnotations);
+  }, [e, t.hideAnnotations]), n(() => {
+    e && e.setStyle(t.style);
+  }, [e, t.style]), n(() => {
+    e && e.setDrawingTool(o || "rectangle");
+  }, [e, o]), n(() => {
+    e && e.setModalSelect(t.modalSelect);
+  }, [e, t.modalSelect]), n(() => {
+    e && (t.user ? e.setUser(t.user) : e.setUser(h()));
+  }, [e, t.user]), n(() => {
+    e && e.setUserSelectAction(t.userSelectAction);
+  }, [e, t.userSelectAction]), /* @__PURE__ */ m(d.Provider, { value: { viewer: i, setViewer: u }, children: t.children });
+}), O = () => {
+  const { viewer: t } = c(d);
+  return t;
+};
+export {
+  V as OpenSeadragonAnnotator,
+  d as OpenSeadragonAnnotatorContext,
+  O as useViewer
+};
+//# sourceMappingURL=annotorious-react.es8.js.map

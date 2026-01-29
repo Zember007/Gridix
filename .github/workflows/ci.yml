@@ -18,24 +18,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.15.4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
+          cache: 'pnpm'
 
       - name: Install
-        run: npm ci
+        run: pnpm install
 
       - name: Lint
-        run: npm run lint
+        run: pnpm turbo run lint
 
       - name: Typecheck
-        run: npm run typecheck
+        run: pnpm turbo run typecheck
 
       - name: Test (if present)
-        run: npm run test --if-present
+        run: pnpm run test --if-present
 
       - name: Build
-        run: npm run build
+        run: pnpm turbo run build

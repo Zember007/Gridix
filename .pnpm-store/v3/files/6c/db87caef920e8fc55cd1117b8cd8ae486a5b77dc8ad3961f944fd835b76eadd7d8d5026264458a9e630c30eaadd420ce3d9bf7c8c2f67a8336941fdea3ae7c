@@ -1,0 +1,883 @@
+var W = Object.prototype.hasOwnProperty;
+function V(e, t) {
+  var n, o;
+  if (e === t) return !0;
+  if (e && t && (n = e.constructor) === t.constructor) {
+    if (n === Date) return e.getTime() === t.getTime();
+    if (n === RegExp) return e.toString() === t.toString();
+    if (n === Array) {
+      if ((o = e.length) === t.length)
+        for (; o-- && V(e[o], t[o]); ) ;
+      return o === -1;
+    }
+    if (!n || typeof e == "object") {
+      o = 0;
+      for (n in e)
+        if (W.call(e, n) && ++o && !W.call(t, n) || !(n in t) || !V(e[n], t[n])) return !1;
+      return Object.keys(t).length === o;
+    }
+  }
+  return e !== e && t !== t;
+}
+let F = Symbol("clean"), I = [], z = 0;
+const $ = 4;
+let j = (e) => {
+  let t = [], n = {
+    get() {
+      return n.lc || n.listen(() => {
+      })(), n.value;
+    },
+    lc: 0,
+    listen(o) {
+      return n.lc = t.push(o), () => {
+        for (let f = z + $; f < I.length; )
+          I[f] === o ? I.splice(f, $) : f += $;
+        let s = t.indexOf(o);
+        ~s && (t.splice(s, 1), --n.lc || n.off());
+      };
+    },
+    notify(o, s) {
+      let f = !I.length;
+      for (let m of t)
+        I.push(m, n.value, o, s);
+      if (f) {
+        for (z = 0; z < I.length; z += $)
+          I[z](
+            I[z + 1],
+            I[z + 2],
+            I[z + 3]
+          );
+        I.length = 0;
+      }
+    },
+    /* It will be called on last listener unsubscribing.
+       We will redefine it in onMount and onStop. */
+    off() {
+    },
+    set(o) {
+      let s = n.value;
+      s !== o && (n.value = o, n.notify(s));
+    },
+    subscribe(o) {
+      let s = n.listen(o);
+      return o(n.value), s;
+    },
+    value: e
+  };
+  return process.env.NODE_ENV !== "production" && (n[F] = () => {
+    t = [], n.lc = 0, n.off();
+  }), n;
+};
+const Re = (e) => {
+  const t = j(null);
+  return e.observe(({ changes: n }) => {
+    const o = t.get();
+    if (o) {
+      (n.deleted || []).some((m) => m.id === o) && t.set(null);
+      const f = (n.updated || []).find(({ oldValue: m }) => m.id === o);
+      f && t.set(f.newValue.id);
+    }
+  }), {
+    get current() {
+      return t.get();
+    },
+    subscribe: t.subscribe.bind(t),
+    set: t.set.bind(t)
+  };
+};
+var K = /* @__PURE__ */ ((e) => (e.EDIT = "EDIT", e.SELECT = "SELECT", e.NONE = "NONE", e))(K || {});
+const Y = { selected: [] }, Be = (e, t, n) => {
+  const o = j(Y);
+  let s = t;
+  const f = () => {
+    V(o.get(), Y) || o.set(Y);
+  }, m = () => {
+    var g;
+    return ((g = o.get().selected) == null ? void 0 : g.length) === 0;
+  }, C = (g) => {
+    if (m())
+      return !1;
+    const b = typeof g == "string" ? g : g.id;
+    return o.get().selected.some((y) => y.id === b);
+  }, w = (g, b) => {
+    let y;
+    if (Array.isArray(g)) {
+      if (y = g.map((i) => e.getAnnotation(i)).filter(Boolean), y.length < g.length) {
+        console.warn("Invalid selection: " + g.filter((i) => !y.some((u) => u.id === i)));
+        return;
+      }
+    } else {
+      const i = e.getAnnotation(g);
+      if (!i) {
+        console.warn("Invalid selection: " + g);
+        return;
+      }
+      y = [i];
+    }
+    const D = y.reduce((i, u) => {
+      const h = v(u);
+      return h === "EDIT" ? [...i, { id: u.id, editable: !0 }] : h === "SELECT" ? [...i, { id: u.id }] : i;
+    }, []);
+    o.set({ selected: D, event: b });
+  }, A = (g, b) => {
+    const y = Array.isArray(g) ? g : [g], D = y.map((i) => e.getAnnotation(i)).filter((i) => !!i);
+    o.set({
+      selected: D.map((i) => {
+        const u = b === void 0 ? v(i) === "EDIT" : b;
+        return { id: i.id, editable: u };
+      })
+    }), D.length !== y.length && console.warn("Invalid selection", g);
+  }, T = (g) => {
+    if (m())
+      return !1;
+    const { selected: b } = o.get();
+    b.some(({ id: D }) => g.includes(D)) && o.set({ selected: b.filter(({ id: D }) => !g.includes(D)) });
+  }, l = (g) => {
+    s = g, A(o.get().selected.map(({ id: b }) => b));
+  }, v = (g) => ee(g, s, n);
+  return e.observe(
+    ({ changes: g }) => T((g.deleted || []).map((b) => b.id))
+  ), {
+    get event() {
+      const g = o.get();
+      return g ? g.event : null;
+    },
+    get selected() {
+      const g = o.get();
+      return g ? [...g.selected] : null;
+    },
+    get userSelectAction() {
+      return s;
+    },
+    clear: f,
+    evalSelectAction: v,
+    isEmpty: m,
+    isSelected: C,
+    setSelected: A,
+    setUserSelectAction: l,
+    subscribe: o.subscribe.bind(o),
+    userSelect: w
+  };
+}, ee = (e, t, n) => {
+  const o = n ? n.serialize(e) : e;
+  return typeof t == "function" ? t(o) : t || "EDIT";
+}, B = [];
+for (let e = 0; e < 256; ++e)
+  B.push((e + 256).toString(16).slice(1));
+function te(e, t = 0) {
+  return (B[e[t + 0]] + B[e[t + 1]] + B[e[t + 2]] + B[e[t + 3]] + "-" + B[e[t + 4]] + B[e[t + 5]] + "-" + B[e[t + 6]] + B[e[t + 7]] + "-" + B[e[t + 8]] + B[e[t + 9]] + "-" + B[e[t + 10]] + B[e[t + 11]] + B[e[t + 12]] + B[e[t + 13]] + B[e[t + 14]] + B[e[t + 15]]).toLowerCase();
+}
+let P;
+const ne = new Uint8Array(16);
+function oe() {
+  if (!P) {
+    if (typeof crypto > "u" || !crypto.getRandomValues)
+      throw new Error("crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported");
+    P = crypto.getRandomValues.bind(crypto);
+  }
+  return P(ne);
+}
+const se = typeof crypto < "u" && crypto.randomUUID && crypto.randomUUID.bind(crypto), G = { randomUUID: se };
+function ie(e, t, n) {
+  var s;
+  e = e || {};
+  const o = e.random ?? ((s = e.rng) == null ? void 0 : s.call(e)) ?? oe();
+  if (o.length < 16)
+    throw new Error("Random bytes length must be >= 16");
+  return o[6] = o[6] & 15 | 64, o[8] = o[8] & 63 | 128, te(o);
+}
+function q(e, t, n) {
+  return G.randomUUID && !e ? G.randomUUID() : ie(e);
+}
+const xe = (e) => {
+  const { creator: t, updatedBy: n } = e.target, o = e.bodies.reduce((s, f) => [...s, f.creator, f.updatedBy].filter(Boolean), []);
+  return [
+    t,
+    n,
+    ...o
+  ].filter((s) => s);
+}, M = (e) => {
+  const t = (n) => {
+    const o = { ...n };
+    return n.created && typeof n.created == "string" && (o.created = new Date(n.created)), n.updated && typeof n.updated == "string" && (o.updated = new Date(n.updated)), o;
+  };
+  return {
+    ...e,
+    bodies: (e.bodies || []).map(t),
+    target: t(e.target)
+  };
+}, Ie = (e, t, n, o) => ({
+  id: q(),
+  annotation: typeof e == "string" ? e : e.id,
+  created: n || /* @__PURE__ */ new Date(),
+  creator: o,
+  ...t
+}), de = (e, t) => {
+  const n = new Set(e.bodies.map((o) => o.id));
+  return t.bodies.filter((o) => !n.has(o.id));
+}, re = (e, t) => {
+  const n = new Set(t.bodies.map((o) => o.id));
+  return e.bodies.filter((o) => !n.has(o.id));
+}, ae = (e, t) => t.bodies.map((n) => {
+  const o = e.bodies.find((s) => s.id === n.id);
+  return { newBody: n, oldBody: o && !V(o, n) ? o : void 0 };
+}).filter(({ oldBody: n }) => n).map(({ oldBody: n, newBody: o }) => ({ oldBody: n, newBody: o })), ce = (e, t) => !V(e.target, t.target), Q = (e, t) => {
+  const n = de(e, t), o = re(e, t), s = ae(e, t);
+  return {
+    oldValue: e,
+    newValue: t,
+    bodiesCreated: n.length > 0 ? n : void 0,
+    bodiesDeleted: o.length > 0 ? o : void 0,
+    bodiesUpdated: s.length > 0 ? s : void 0,
+    targetUpdated: ce(e, t) ? { oldTarget: e.target, newTarget: t.target } : void 0
+  };
+};
+var le = /* @__PURE__ */ ((e) => (e.BODY_ONLY = "BODY_ONLY", e.TARGET_ONLY = "TARGET_ONLY", e))(le || {}), O = /* @__PURE__ */ ((e) => (e.LOCAL = "LOCAL", e.REMOTE = "REMOTE", e.SILENT = "SILENT", e))(O || {});
+const ue = (e, t) => {
+  var f, m;
+  const { changes: n, origin: o } = t;
+  if (!(e.options.origin ? e.options.origin === o : o !== "SILENT"))
+    return !1;
+  if (e.options.ignore) {
+    const { ignore: C } = e.options, w = (T) => T && T.length > 0;
+    if (!(w(n.created) || w(n.deleted))) {
+      const T = (f = n.updated) == null ? void 0 : f.some((v) => w(v.bodiesCreated) || w(v.bodiesDeleted) || w(v.bodiesUpdated)), l = (m = n.updated) == null ? void 0 : m.some((v) => v.targetUpdated);
+      if (C === "BODY_ONLY" && T && !l || C === "TARGET_ONLY" && l && !T)
+        return !1;
+    }
+  }
+  if (e.options.annotations) {
+    const C = /* @__PURE__ */ new Set([
+      ...(n.created || []).map((A) => A.id),
+      ...(n.deleted || []).map((A) => A.id),
+      ...(n.updated || []).map(({ oldValue: A }) => A.id)
+    ]);
+    return !!(Array.isArray(e.options.annotations) ? e.options.annotations : [e.options.annotations]).find((A) => C.has(A));
+  } else
+    return !0;
+}, fe = (e, t) => {
+  const n = new Set((e.created || []).map((l) => l.id)), o = new Set((e.updated || []).map(({ newValue: l }) => l.id)), s = new Set((t.created || []).map((l) => l.id)), f = new Set((t.deleted || []).map((l) => l.id)), m = new Set((t.updated || []).map(({ oldValue: l }) => l.id)), C = new Set((t.updated || []).filter(({ oldValue: l }) => n.has(l.id) || o.has(l.id)).map(({ oldValue: l }) => l.id)), w = [
+    ...(e.created || []).filter((l) => !f.has(l.id)).map((l) => m.has(l.id) ? t.updated.find(({ oldValue: v }) => v.id === l.id).newValue : l),
+    ...t.created || []
+  ], A = [
+    ...(e.deleted || []).filter((l) => !s.has(l.id)),
+    ...(t.deleted || []).filter((l) => !n.has(l.id))
+  ], T = [
+    ...(e.updated || []).filter(({ newValue: l }) => !f.has(l.id)).map((l) => {
+      const { oldValue: v, newValue: g } = l;
+      if (m.has(g.id)) {
+        const b = t.updated.find((y) => y.oldValue.id === g.id).newValue;
+        return Q(v, b);
+      } else
+        return l;
+    }),
+    ...(t.updated || []).filter(({ oldValue: l }) => !C.has(l.id))
+  ];
+  return { created: w, deleted: A, updated: T };
+}, _ = (e) => {
+  const t = e.id === void 0 ? q() : e.id;
+  return {
+    ...e,
+    id: t,
+    bodies: e.bodies === void 0 ? [] : e.bodies.map((n) => ({
+      ...n,
+      annotation: t
+    })),
+    target: {
+      ...e.target,
+      annotation: t
+    }
+  };
+}, pe = (e) => e.id !== void 0, Ne = () => {
+  const e = /* @__PURE__ */ new Map(), t = /* @__PURE__ */ new Map(), n = [], o = (d, r = {}) => {
+    n.push({ onChange: d, options: r });
+  }, s = (d) => {
+    const r = n.findIndex((c) => c.onChange == d);
+    r > -1 && n.splice(r, 1);
+  }, f = (d, r) => {
+    const c = {
+      origin: d,
+      changes: {
+        created: r.created || [],
+        updated: r.updated || [],
+        deleted: r.deleted || []
+      },
+      state: [...e.values()]
+    };
+    n.forEach((p) => {
+      ue(p, c) && p.onChange(c);
+    });
+  }, m = (d, r = O.LOCAL) => {
+    if (d.id && e.get(d.id))
+      throw Error(`Cannot add annotation ${d.id} - exists already`);
+    {
+      const p = _(d);
+      e.set(p.id, p), p.bodies.forEach((U) => t.set(U.id, p.id)), f(r, { created: [p] });
+    }
+  }, C = (d, r) => {
+    const c = _(typeof d == "string" ? r : d), p = typeof d == "string" ? d : d.id, U = p && e.get(p);
+    if (U) {
+      const L = Q(U, c);
+      return p === c.id ? e.set(p, c) : (e.delete(p), e.set(c.id, c)), U.bodies.forEach((R) => t.delete(R.id)), c.bodies.forEach((R) => t.set(R.id, c.id)), L;
+    } else
+      console.warn(`Cannot update annotation ${p} - does not exist`);
+  }, w = (d, r = O.LOCAL, c = O.LOCAL) => {
+    const p = pe(r) ? c : r, U = C(d, r);
+    U && f(p, { updated: [U] });
+  }, A = (d, r = O.LOCAL) => {
+    !!e.get(d.id) ? w(d, r) : m(d, r);
+  }, T = (d, r = O.LOCAL) => {
+    const c = d.reduce((p, U) => {
+      const L = C(U);
+      return L ? [...p, L] : p;
+    }, []);
+    c.length > 0 && f(r, { updated: c });
+  }, l = (d, r = O.LOCAL) => {
+    const c = d.map(_), { toAdd: p, toUpdate: U } = c.reduce((R, k) => e.get(k.id) ? { ...R, toUpdate: [...R.toUpdate, k] } : { ...R, toAdd: [...R.toAdd, k] }, { toAdd: [], toUpdate: [] }), L = U.map((R) => C(R, r)).filter(Boolean);
+    p.forEach((R) => {
+      e.set(R.id, R), R.bodies.forEach((k) => t.set(k.id, R.id));
+    }), f(r, { created: p, updated: L });
+  }, v = (d, r = O.LOCAL) => {
+    const c = e.get(d.annotation);
+    if (c) {
+      const p = {
+        ...c,
+        bodies: [...c.bodies, d]
+      };
+      e.set(c.id, p), t.set(d.id, p.id), f(r, { updated: [{
+        oldValue: c,
+        newValue: p,
+        bodiesCreated: [d]
+      }] });
+    } else
+      console.warn(`Attempt to add body to missing annotation: ${d.annotation}`);
+  }, g = () => [...e.values()], b = (d = O.LOCAL) => {
+    const r = [...e.values()];
+    e.clear(), t.clear(), f(d, { deleted: r });
+  }, y = (d, r = !0, c = O.LOCAL) => {
+    const p = d.map(_);
+    if (r) {
+      const U = [...e.values()];
+      e.clear(), t.clear(), p.forEach((L) => {
+        e.set(L.id, L), L.bodies.forEach((R) => t.set(R.id, L.id));
+      }), f(c, { created: p, deleted: U });
+    } else {
+      const U = d.reduce((L, R) => {
+        const k = R.id && e.get(R.id);
+        return k ? [...L, k] : L;
+      }, []);
+      if (U.length > 0)
+        throw Error(`Bulk insert would overwrite the following annotations: ${U.map((L) => L.id).join(", ")}`);
+      p.forEach((L) => {
+        e.set(L.id, L), L.bodies.forEach((R) => t.set(R.id, L.id));
+      }), f(c, { created: p });
+    }
+  }, D = (d) => {
+    const r = typeof d == "string" ? d : d.id, c = e.get(r);
+    if (c)
+      return e.delete(r), c.bodies.forEach((p) => t.delete(p.id)), c;
+    console.warn(`Attempt to delete missing annotation: ${r}`);
+  }, i = (d, r = O.LOCAL) => {
+    const c = D(d);
+    c && f(r, { deleted: [c] });
+  }, u = (d, r = O.LOCAL) => {
+    const c = d.reduce((p, U) => {
+      const L = D(U);
+      return L ? [...p, L] : p;
+    }, []);
+    c.length > 0 && f(r, { deleted: c });
+  }, h = (d) => {
+    const r = e.get(d.annotation);
+    if (r) {
+      const c = r.bodies.find((p) => p.id === d.id);
+      if (c) {
+        t.delete(c.id);
+        const p = {
+          ...r,
+          bodies: r.bodies.filter((L) => L.id !== d.id)
+        };
+        return e.set(r.id, p), {
+          oldValue: r,
+          newValue: p,
+          bodiesDeleted: [c]
+        };
+      } else
+        console.warn(`Attempt to delete missing body ${d.id} from annotation ${d.annotation}`);
+    } else
+      console.warn(`Attempt to delete body from missing annotation ${d.annotation}`);
+  }, E = (d, r = O.LOCAL) => {
+    const c = h(d);
+    c && f(r, { updated: [c] });
+  }, a = (d, r = O.LOCAL) => {
+    const c = d.map((p) => h(p)).filter(Boolean);
+    c.length > 0 && f(r, { updated: c });
+  }, S = (d) => {
+    const r = e.get(d);
+    return r ? { ...r } : void 0;
+  }, x = (d) => {
+    const r = t.get(d);
+    if (r) {
+      const p = S(r).bodies.find((U) => U.id === d);
+      if (p)
+        return p;
+      console.error(`Store integrity error: body ${d} in index, but not in annotation`);
+    } else
+      console.warn(`Attempt to retrieve missing body: ${d}`);
+  }, N = (d, r) => {
+    if (d.annotation !== r.annotation)
+      throw "Annotation integrity violation: annotation ID must be the same when updating bodies";
+    const c = e.get(d.annotation);
+    if (c) {
+      const p = c.bodies.find((L) => L.id === d.id), U = {
+        ...c,
+        bodies: c.bodies.map((L) => L.id === p.id ? r : L)
+      };
+      return e.set(c.id, U), p.id !== r.id && (t.delete(p.id), t.set(r.id, U.id)), {
+        oldValue: c,
+        newValue: U,
+        bodiesUpdated: [{ oldBody: p, newBody: r }]
+      };
+    } else
+      console.warn(`Attempt to add body to missing annotation ${d.annotation}`);
+  }, X = (d, r, c = O.LOCAL) => {
+    const p = N(d, r);
+    p && f(c, { updated: [p] });
+  }, Z = (d, r = O.LOCAL) => {
+    const c = d.map((p) => N({ id: p.id, annotation: p.annotation }, p)).filter(Boolean);
+    f(r, { updated: c });
+  }, H = (d) => {
+    const r = e.get(d.annotation);
+    if (r) {
+      const c = {
+        ...r,
+        target: {
+          ...r.target,
+          ...d
+        }
+      };
+      return e.set(r.id, c), {
+        oldValue: r,
+        newValue: c,
+        targetUpdated: {
+          oldTarget: r.target,
+          newTarget: d
+        }
+      };
+    } else
+      console.warn(`Attempt to update target on missing annotation: ${d.annotation}`);
+  };
+  return {
+    addAnnotation: m,
+    addBody: v,
+    all: g,
+    bulkAddAnnotations: y,
+    bulkDeleteAnnotations: u,
+    bulkDeleteBodies: a,
+    bulkUpdateAnnotations: T,
+    bulkUpdateBodies: Z,
+    bulkUpdateTargets: (d, r = O.LOCAL) => {
+      const c = d.map((p) => H(p)).filter(Boolean);
+      c.length > 0 && f(r, { updated: c });
+    },
+    bulkUpsertAnnotations: l,
+    clear: b,
+    deleteAnnotation: i,
+    deleteBody: E,
+    getAnnotation: S,
+    getBody: x,
+    observe: o,
+    unobserve: s,
+    updateAnnotation: w,
+    updateBody: X,
+    updateTarget: (d, r = O.LOCAL) => {
+      const c = H(d);
+      c && f(r, { updated: [c] });
+    },
+    upsertAnnotation: A
+  };
+};
+let J = () => ({
+  emit(e, ...t) {
+    for (let n = this.events[e] || [], o = 0, s = n.length; o < s; o++)
+      n[o](...t);
+  },
+  events: {},
+  on(e, t) {
+    var n;
+    return ((n = this.events)[e] || (n[e] = [])).push(t), () => {
+      var o;
+      this.events[e] = (o = this.events[e]) == null ? void 0 : o.filter((s) => t !== s);
+    };
+  }
+});
+const ge = 250, ke = (e, t) => {
+  const n = J(), o = (t == null ? void 0 : t.changes) || [];
+  let s = t ? t.pointer : -1, f = !1, m = 0;
+  const C = (a) => {
+    if (!f) {
+      const { changes: S } = a, x = performance.now();
+      if (x - m > ge)
+        o.splice(s + 1), o.push(S), s = o.length - 1;
+      else {
+        const N = o.length - 1;
+        o[N] = fe(o[N], S);
+      }
+      m = x;
+    }
+    f = !1;
+  };
+  e.observe(C, { origin: O.LOCAL });
+  const w = (a) => a && a.length > 0 && e.bulkDeleteAnnotations(a), A = (a) => a && a.length > 0 && e.bulkAddAnnotations(a, !1), T = (a) => a && a.length > 0 && e.bulkUpdateAnnotations(a.map(({ oldValue: S }) => S)), l = (a) => a && a.length > 0 && e.bulkUpdateAnnotations(a.map(({ newValue: S }) => S)), v = (a) => a && a.length > 0 && e.bulkAddAnnotations(a, !1), g = (a) => a && a.length > 0 && e.bulkDeleteAnnotations(a);
+  return {
+    canRedo: () => o.length - 1 > s,
+    canUndo: () => s > -1,
+    destroy: () => e.unobserve(C),
+    getHistory: () => ({ changes: [...o], pointer: s }),
+    on: (a, S) => n.on(a, S),
+    redo: () => {
+      if (o.length - 1 > s) {
+        f = !0;
+        const { created: a, updated: S, deleted: x } = o[s + 1];
+        A(a), l(S), g(x), n.emit("redo", o[s + 1]), s += 1;
+      }
+    },
+    undo: () => {
+      if (s > -1) {
+        f = !0;
+        const { created: a, updated: S, deleted: x } = o[s];
+        w(a), T(S), v(x), n.emit("undo", o[s]), s -= 1;
+      }
+    }
+  };
+}, ze = () => {
+  const e = j([]);
+  return {
+    subscribe: e.subscribe.bind(e),
+    set: e.set.bind(e)
+  };
+}, Ve = (e, t, n, o) => {
+  const { hover: s, selection: f, store: m, viewport: C } = e, w = /* @__PURE__ */ new Map();
+  let A = [], T, l;
+  const v = (i, u) => {
+    w.has(i) ? w.get(i).push(u) : w.set(i, [u]);
+  }, g = (i, u) => {
+    const h = w.get(i);
+    if (h) {
+      const E = h.indexOf(u);
+      E !== -1 && h.splice(E, 1);
+    }
+  }, b = (i, u, h) => {
+    w.has(i) && setTimeout(() => {
+      w.get(i).forEach((E) => {
+        if (n) {
+          const a = Array.isArray(u) ? u.map((x) => n.serialize(x)) : n.serialize(u), S = h ? h instanceof PointerEvent ? h : n.serialize(h) : void 0;
+          E(a, S);
+        } else
+          E(u, h);
+      });
+    }, 1);
+  }, y = () => {
+    const { selected: i } = f, u = (i || []).map(({ id: h }) => m.getAnnotation(h));
+    u.forEach((h) => {
+      const E = A.find((a) => a.id === h.id);
+      (!E || !V(E, h)) && b("updateAnnotation", h, E);
+    }), A = A.map((h) => {
+      const E = u.find(({ id: a }) => a === h.id);
+      return E || h;
+    });
+  };
+  f.subscribe(({ selected: i }) => {
+    if (!(A.length === 0 && i.length === 0)) {
+      if (A.length === 0 && i.length > 0)
+        A = i.map(({ id: u }) => m.getAnnotation(u));
+      else if (A.length > 0 && i.length === 0)
+        A.forEach((u) => {
+          const h = m.getAnnotation(u.id);
+          h && !V(h, u) && b("updateAnnotation", h, u);
+        }), A = [];
+      else {
+        const u = new Set(A.map((a) => a.id)), h = new Set(i.map(({ id: a }) => a));
+        A.filter((a) => !h.has(a.id)).forEach((a) => {
+          const S = m.getAnnotation(a.id);
+          S && !V(S, a) && b("updateAnnotation", S, a);
+        }), A = [
+          // Remove annotations that were deselected
+          ...A.filter((a) => h.has(a.id)),
+          // Add editable annotations that were selected
+          ...i.filter(({ id: a }) => !u.has(a)).map(({ id: a }) => m.getAnnotation(a))
+        ];
+      }
+      b("selectionChanged", A);
+    }
+  }), s.subscribe((i) => {
+    !T && i ? b("mouseEnterAnnotation", m.getAnnotation(i)) : T && !i ? b("mouseLeaveAnnotation", m.getAnnotation(T)) : T && i && (b("mouseLeaveAnnotation", m.getAnnotation(T)), b("mouseEnterAnnotation", m.getAnnotation(i))), T = i;
+  }), C == null || C.subscribe((i) => b("viewportIntersect", i.map((u) => m.getAnnotation(u)))), m.observe((i) => {
+    o && (l && clearTimeout(l), l = setTimeout(y, 1e3));
+    const { created: u, deleted: h } = i.changes;
+    (u || []).forEach((a) => b("createAnnotation", a)), (h || []).forEach((a) => b("deleteAnnotation", a)), (i.changes.updated || []).filter((a) => [
+      ...a.bodiesCreated || [],
+      ...a.bodiesDeleted || [],
+      ...a.bodiesUpdated || []
+    ].length > 0).forEach(({ oldValue: a, newValue: S }) => {
+      const x = A.find((N) => N.id === a.id) || a;
+      A = A.map((N) => N.id === a.id ? S : N), b("updateAnnotation", S, x);
+    });
+  }, { origin: O.LOCAL }), m.observe((i) => {
+    if (A) {
+      const u = new Set(A.map((E) => E.id)), h = (i.changes.updated || []).filter(({ newValue: E }) => u.has(E.id)).map(({ newValue: E }) => E);
+      h.length > 0 && (A = A.map((E) => {
+        const a = h.find((S) => S.id === E.id);
+        return a || E;
+      }));
+    }
+  }, { origin: O.REMOTE });
+  const D = (i) => (u) => {
+    const { updated: h } = u;
+    i ? (h || []).forEach((E) => b("updateAnnotation", E.oldValue, E.newValue)) : (h || []).forEach((E) => b("updateAnnotation", E.newValue, E.oldValue));
+  };
+  return t.on("undo", D(!0)), t.on("redo", D(!1)), { on: v, off: g, emit: b };
+}, _e = (e) => (t) => t.map((n) => e.serialize(n)), he = (e) => (t) => t.reduce((n, o) => {
+  const { parsed: s, error: f } = e.parse(o);
+  return f ? {
+    parsed: n.parsed,
+    failed: [...n.failed, o]
+  } : s ? {
+    parsed: [...n.parsed, s],
+    failed: n.failed
+  } : {
+    ...n
+  };
+}, { parsed: [], failed: [] }), $e = (e, t, n) => {
+  const { store: o, selection: s } = e, f = (i) => {
+    if (n) {
+      const { parsed: u, error: h } = n.parse(i);
+      u ? o.addAnnotation(u, O.REMOTE) : console.error(h);
+    } else
+      o.addAnnotation(M(i), O.REMOTE);
+  }, m = () => s.clear(), C = () => o.clear(), w = (i) => {
+    const u = o.getAnnotation(i);
+    return n && u ? n.serialize(u) : u;
+  }, A = () => n ? o.all().map(n.serialize) : o.all(), T = () => {
+    var h;
+    const u = (((h = s.selected) == null ? void 0 : h.map((E) => E.id)) || []).map((E) => o.getAnnotation(E)).filter(Boolean);
+    return n ? u.map(n.serialize) : u;
+  }, l = (i, u = !0) => fetch(i).then((h) => h.json()).then((h) => (g(h, u), h)), v = (i) => {
+    if (typeof i == "string") {
+      const u = o.getAnnotation(i);
+      if (o.deleteAnnotation(i), u)
+        return n ? n.serialize(u) : u;
+    } else {
+      const u = n ? n.parse(i).parsed : i;
+      if (u)
+        return o.deleteAnnotation(u), i;
+    }
+  }, g = (i, u = !0) => {
+    if (n) {
+      const h = n.parseAll || he(n), { parsed: E, failed: a } = h(i);
+      a.length > 0 && console.warn(`Discarded ${a.length} invalid annotations`, a), o.bulkAddAnnotations(E, u, O.REMOTE);
+    } else
+      o.bulkAddAnnotations(i.map(M), u, O.REMOTE);
+  }, b = (i, u) => {
+    i ? s.setSelected(i, u) : s.clear();
+  }, y = (i) => {
+    s.setUserSelectAction(i);
+  }, D = (i) => {
+    if (n) {
+      const u = n.parse(i).parsed, h = n.serialize(o.getAnnotation(u.id));
+      return o.updateAnnotation(u), h;
+    } else {
+      const u = o.getAnnotation(i.id);
+      return o.updateAnnotation(M(i)), u;
+    }
+  };
+  return {
+    addAnnotation: f,
+    cancelSelected: m,
+    canRedo: t.canRedo,
+    canUndo: t.canUndo,
+    clearAnnotations: C,
+    getAnnotationById: w,
+    getAnnotations: A,
+    getHistory: t.getHistory,
+    getSelected: T,
+    loadAnnotations: l,
+    redo: t.redo,
+    removeAnnotation: v,
+    setAnnotations: g,
+    setSelected: b,
+    setUserSelectAction: y,
+    undo: t.undo,
+    updateAnnotation: D
+  };
+}, Ye = (e, t, n) => typeof t == "function" ? t(e, n) : t, Pe = (e, t) => typeof e != "function" && typeof t != "function" ? {
+  ...e || {},
+  ...t || {}
+} : (n, o) => {
+  const s = typeof e == "function" ? e(n, o) : e, f = typeof t == "function" ? t(n, o) : t;
+  return {
+    ...s || {},
+    ...f || {}
+  };
+}, me = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
+let Ae = (e) => crypto.getRandomValues(new Uint8Array(e)), be = (e, t, n) => {
+  let o = (2 << Math.log2(e.length - 1)) - 1, s = -~(1.6 * o * t / e.length);
+  return (f = t) => {
+    let m = "";
+    for (; ; ) {
+      let C = n(s), w = s | 0;
+      for (; w--; )
+        if (m += e[C[w] & o] || "", m.length >= f) return m;
+    }
+  };
+}, ve = (e, t = 21) => be(e, t | 0, Ae), Ee = (e = 21) => {
+  let t = "", n = crypto.getRandomValues(new Uint8Array(e |= 0));
+  for (; e--; )
+    t += me[n[e] & 63];
+  return t;
+};
+const Me = () => ({ isGuest: !0, id: ve("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_", 20)() }), we = (e) => {
+  const t = JSON.stringify(e);
+  let n = 0;
+  for (let o = 0, s = t.length; o < s; o++) {
+    let f = t.charCodeAt(o);
+    n = (n << 5) - n + f, n |= 0;
+  }
+  return `${n}`;
+}, Ce = (e) => e ? typeof e == "object" ? { ...e } : e : void 0, je = (e, t) => (Array.isArray(e) ? e : [e]).map((n) => {
+  const { id: o, type: s, purpose: f, value: m, created: C, modified: w, creator: A, ...T } = n;
+  return {
+    id: o || `temp-${we(n)}`,
+    annotation: t,
+    type: s,
+    purpose: f,
+    value: m,
+    creator: Ce(A),
+    created: C ? new Date(C) : void 0,
+    updated: w ? new Date(w) : void 0,
+    ...T
+  };
+}), He = (e) => e.map((t) => {
+  var C;
+  const { annotation: n, created: o, updated: s, ...f } = t, m = {
+    ...f,
+    created: o == null ? void 0 : o.toISOString(),
+    modified: s == null ? void 0 : s.toISOString()
+  };
+  return (C = m.id) != null && C.startsWith("temp-") && delete m.id, m;
+}), We = (e) => "@context" in e && "creator" in e && "body" in e, ye = [
+  "#ff7c00",
+  // orange
+  "#1ac938",
+  // green
+  "#e8000b",
+  // red
+  "#8b2be2",
+  // purple
+  "#9f4800",
+  // brown
+  "#f14cc1",
+  // pink
+  "#ffc400",
+  // khaki
+  "#00d7ff",
+  // cyan
+  "#023eff"
+  // blue
+], Le = () => {
+  const e = [...ye];
+  return { assignRandomColor: () => {
+    const o = Math.floor(Math.random() * e.length), s = e[o];
+    return e.splice(o, 1), s;
+  }, releaseColor: (o) => e.push(o) };
+}, Ue = () => {
+  const e = Le();
+  return { addUser: (o, s) => {
+    const f = e.assignRandomColor();
+    return {
+      label: s.name || s.id,
+      avatar: s.avatar,
+      color: f
+    };
+  }, removeUser: (o) => e.releaseColor(o.appearance.color) };
+}, Se = (e, t) => e.every((n) => e.includes(n)) && t.every((n) => e.includes(n)), Ge = Ee(), qe = (e = Ue()) => {
+  const t = J(), n = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), s = (l, v) => {
+    if (n.has(l)) {
+      console.warn("Attempt to add user that is already present", l, v);
+      return;
+    }
+    const g = e.addUser(l, v);
+    n.set(l, {
+      ...v,
+      presenceKey: l,
+      appearance: g
+    });
+  }, f = (l) => {
+    const v = n.get(l);
+    if (!v) {
+      console.warn("Attempt to remove user that is not present", l);
+      return;
+    }
+    e.removeUser(v), n.delete(l);
+  }, m = (l) => {
+    const v = new Set(l.map((y) => y.presenceKey)), g = l.filter(({ presenceKey: y }) => !n.has(y)), b = Array.from(n.values()).filter((y) => !v.has(y.presenceKey));
+    g.forEach(({ presenceKey: y, user: D }) => s(y, D)), b.forEach((y) => {
+      const { presenceKey: D } = y;
+      o.has(D) && t.emit("selectionChange", y, null), f(D);
+    }), (g.length > 0 || b.length > 0) && t.emit("presence", A());
+  }, C = (l, v) => {
+    const g = n.get(l);
+    if (!g) {
+      console.warn("Activity notification from user that is not present");
+      return;
+    }
+    const b = o.get(l);
+    (!b || !Se(b, v)) && (o.set(l, v), t.emit("selectionChange", g, v));
+  }, w = (l, v) => {
+    const g = n.get(l);
+    if (!g) {
+      console.warn("Selection change for user that is not present", l);
+      return;
+    }
+    v ? o.set(l, v) : o.delete(l), t.emit("selectionChange", g, v);
+  }, A = () => [...Array.from(n.values())];
+  return {
+    getPresentUsers: A,
+    notifyActivity: C,
+    on: (l, v) => t.on(l, v),
+    syncUsers: m,
+    updateSelection: w
+  };
+};
+export {
+  le as Ignore,
+  O as Origin,
+  Ge as PRESENCE_KEY,
+  K as UserSelectAction,
+  Pe as chainStyles,
+  Ye as computeStyle,
+  Me as createAnonymousGuest,
+  $e as createBaseAnnotator,
+  Ie as createBody,
+  Ue as createDefaultAppearanceProvider,
+  Re as createHoverState,
+  Ve as createLifecycleObserver,
+  qe as createPresenceState,
+  Be as createSelectionState,
+  Ne as createStore,
+  ke as createUndoStack,
+  ze as createViewportState,
+  Le as defaultColorProvider,
+  Q as diffAnnotations,
+  xe as getContributors,
+  We as isW3CAnnotation,
+  fe as mergeChanges,
+  ee as onUserSelect,
+  he as parseAll,
+  je as parseW3CBodies,
+  Ce as parseW3CUser,
+  M as reviveDates,
+  _e as serializeAll,
+  He as serializeW3CBodies,
+  ue as shouldNotify
+};
+//# sourceMappingURL=annotorious-core.es.js.map

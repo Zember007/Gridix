@@ -1,104 +1,229 @@
-# Floorplan Wizard Builder
+# Инструкции по сборке приложения
 
-Система для создания и управления интерактивными планировками недвижимости с поддержкой кастомных доменов.
+## Локальная разработка
 
-## Ключевые функции
+### Запуск dev сервера
 
-- 🏢 **Управление проектами**: Создание и редактирование проектов недвижимости
-- 🏠 **Интерактивные планировки**: Визуальные планы этажей с квартирами
-- 🌐 **Кастомные домены**: Подключение собственных доменов к проектам
-- 📊 **Управление лидами**: Интеграция с AmoCRM / Bitrix24
-- 🎨 **Настройка полей**: Кастомные поля для квартир
-- 📱 **Адаптивный дизайн**: Работа на всех устройствах
+```bash
+# Из корня монорепозитория
+pnpm dev:main
 
-## Project info
-
-**URL**: https://lovable.dev/projects/2c952242-a330-4eed-983b-11a86698f6af
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/2c952242-a330-4eed-983b-11a86698f6af) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Или напрямую
+pnpm --filter @gridix/main dev
 ```
 
-**Edit a file directly in GitHub**
+Приложение будет доступно на `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Запуск agent-cabinet
 
-**Use GitHub Codespaces**
+```bash
+pnpm dev:agent
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Или
+pnpm --filter @gridix/agent-cabinet dev
+```
 
-## What technologies are used for this project?
+Приложение будет доступно на `http://localhost:8081`
 
-This project is built with:
+## Сборка для продакшена
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Основное приложение
 
-## How can I deploy this project?
+```bash
+# Установка зависимостей (если еще не установлены)
+pnpm install
 
-Simply open [Lovable](https://lovable.dev/projects/2c952242-a330-4eed-983b-11a86698f6af) and click on Share -> Publish.
+# Сборка основного приложения
+pnpm --filter @gridix/main build
 
-## Кастомные домены
+# Результат будет в apps/main/dist/
+```
 
-Приложение поддерживает подключение кастомных доменов для проектов. Клиенты могут подключить свой домен и при заходе на него автоматически попадать на страницу своего проекта.
+### Сборка виджета
 
-### Для разработчиков
-- Настройка системы: [docs/custom-domains-setup.md](docs/custom-domains-setup.md)
+```bash
+pnpm --filter @gridix/main build:widget
 
-### Для клиентов
-1. В админ панели откройте настройки проекта
-2. Перейдите на вкладку "Домены" 
-3. Добавьте ваш домен
-4. Настройте DNS записи согласно инструкции
-5. Дождитесь распространения DNS (до 24 часов)
+# Результат будет в public/widget/
+```
 
-Подробная инструкция: [docs/custom-domains-setup.md](docs/custom-domains-setup.md)
+### Сборка всех пакетов
 
-## Bitrix24 integration (dev notes)
+```bash
+# Сборка всех packages и apps
+pnpm turbo run build
 
-See `supabase/functions/bitrix-install/README.md`.
+# Или только packages
+pnpm turbo run build --filter='./packages/*'
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Структура после сборки
 
-Yes, you can!
+```
+gridix-app/
+├── apps/
+│   ├── main/
+│   │   └── dist/              # ← Продакшен сборка основного приложения
+│   │       ├── index.html
+│   │       └── assets/
+│   └── agent-cabinet/
+│       └── dist/              # ← Продакшен сборка agent-cabinet
+├── public/
+│   └── widget/                # ← Виджет (если собран)
+│       ├── index.js
+│       └── style.css
+└── packages/
+    ├── ui/
+    │   └── dist/              # ← Собранные UI компоненты (если настроено)
+    └── ...
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Проверка сборки
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Проверка структуры
+
+```bash
+# Проверка наличия файлов
+ls -la apps/main/dist/
+
+# Должны быть:
+# - index.html
+# - assets/ (папка с JS и CSS)
+```
+
+### Локальный preview
+
+```bash
+# После сборки можно запустить preview
+pnpm --filter @gridix/main preview
+
+# Или использовать serve
+npx serve apps/main/dist
+```
+
+## Типичные проблемы и решения
+
+### 1. Ошибка: "Cannot find module @gridix/ui"
+
+**Причина:** Workspace packages не установлены
+
+**Решение:**
+```bash
+pnpm install
+```
+
+### 2. Ошибка: "tsconfig extends not found"
+
+**Причина:** Неправильные пути в tsconfig.json
+
+**Решение:** Используйте относительные пути:
+```json
+{
+  "extends": "../../packages/config/typescript/tsconfig.base.json"
+}
+```
+
+### 3. Ошибка: "Module not found" для workspace packages
+
+**Причина:** Неправильные импорты
+
+**Решение:** Убедитесь, что используете правильные импорты:
+```typescript
+// ✅ Правильно
+import { Button } from '@gridix/ui';
+import { cn } from '@gridix/utils/lib';
+
+// ❌ Неправильно
+import { Button } from '/ui';
+import { Button } from '@/shared/ui/button';
+```
+
+### 4. Ошибка сборки: "Rollup failed to resolve import"
+
+**Причина:** Неправильные пути импортов или отсутствующие зависимости
+
+**Решение:**
+1. Проверьте все импорты в коде
+2. Убедитесь, что все workspace packages имеют правильные `package.json`
+3. Выполните `pnpm install` заново
+
+## Оптимизация сборки
+
+### Использование Turborepo кэша
+
+Turborepo автоматически кэширует результаты сборки:
+
+```bash
+# Первая сборка (медленнее)
+pnpm turbo run build
+
+# Последующие сборки (быстрее, использует кэш)
+pnpm turbo run build
+```
+
+### Очистка кэша
+
+```bash
+# Очистка кэша Turborepo
+pnpm turbo run clean
+
+# Очистка node_modules и переустановка
+rm -rf node_modules apps/*/node_modules packages/*/node_modules
+pnpm install
+```
+
+## Production Build Checklist
+
+Перед деплоем убедитесь:
+
+- [ ] `pnpm install` выполнен успешно
+- [ ] `pnpm turbo run typecheck` проходит без ошибок
+- [ ] `pnpm turbo run lint` проходит без ошибок
+- [ ] `pnpm --filter @gridix/main build` завершается успешно
+- [ ] `apps/main/dist/` содержит все необходимые файлы
+- [ ] `index.html` существует в `apps/main/dist/`
+- [ ] Все environment variables настроены
+- [ ] Тесты проходят (если есть)
+
+## Размер сборки
+
+Проверка размера сборки:
+
+```bash
+# Размер dist папки
+du -sh apps/main/dist/
+
+# Детальный размер файлов
+du -h apps/main/dist/**/* | sort -h
+```
+
+## Source Maps
+
+Source maps отключены в продакшен сборке (для безопасности и размера).
+
+Если нужны source maps для debugging:
+
+1. Откройте `apps/main/vite.config.ts`
+2. Измените `sourcemap: false` на `sourcemap: true`
+3. Пересоберите приложение
+
+## Команды для быстрого доступа
+
+Добавьте в `package.json` (root):
+
+```json
+{
+  "scripts": {
+    "dev": "pnpm turbo run dev",
+    "build": "pnpm turbo run build",
+    "build:main": "pnpm --filter @gridix/main build",
+    "build:agent": "pnpm --filter @gridix/agent-cabinet build",
+    "preview:main": "pnpm --filter @gridix/main preview",
+    "clean": "pnpm turbo run clean"
+  }
+}
+```
+
+Тогда можно использовать:
+- `pnpm build:main` - сборка основного приложения
+- `pnpm preview:main` - preview собранного приложения

@@ -1,0 +1,437 @@
+{
+  "actions": {
+    "cancel": "Отменить",
+    "copy": "Копировать",
+    "editNotes": "Редактировать заметки",
+    "openInCrm": "Открыть в CRM"
+  },
+  "cancel": "Отмена",
+  "crm": {
+    "notSent": "Не отправлен",
+    "connected": "Подключен",
+    "lastSync": "Последняя синхронизация",
+    "systemName": "Система"
+  },
+  "description": "Все заявки от клиентов с информацией о статусе отправки в CRM",
+  "empty": "Лиды не найдены",
+  "error": "Ошибка",
+  "filters": {
+    "dateFrom": "Дата от",
+    "dateTo": "Дата до",
+    "status": "Статус",
+    "title": "Фильтры",
+    "search": "Поиск и фильтр",
+    "searchPlaceholder": "Поиск по названию, имени...",
+    "source": "Источник",
+    "allSources": "Все источники",
+    "budgetFrom": "Бюджет от",
+    "budgetTo": "до",
+    "stages": "Этапы",
+    "allStages": "Все этапы",
+    "selectedStages": "Выбрано этапов",
+    "managers": "Менеджеры",
+    "allManagers": "Все менеджеры",
+    "selectedManagers": "Выбрано",
+    "apply": "Применить",
+    "reset": "Сбросить",
+    "clearAll": "Очистить все",
+    "found": "Найдено"
+  },
+  "loading": "Загрузка лидов...",
+  "notes": {
+    "client": "Клиент",
+    "placeholder": "Введите заметки...",
+    "title": "Заметки к лиду"
+  },
+  "save": "Сохранить",
+  "stats": {
+    "cancelled": "Отменены",
+    "failed": "С ошибками",
+    "pending": "Ожидают",
+    "savedOnly": "Только в БД",
+    "sent": "В CRM",
+    "total": "Всего лидов",
+    "deals": "сделок"
+  },
+  "status": {
+    "all": "Все",
+    "cancelled": "Отменен",
+    "failed": "Ошибка",
+    "pending": "Ожидает",
+    "saved_only": "Только в БД",
+    "sent_to_crm": "Отправлен"
+  },
+  "table": {
+    "actions": "Действия",
+    "apartment": "Квартира",
+    "client": "Клиент",
+    "contacts": "Контакты",
+    "crm": "CRM",
+    "date": "Дата",
+    "project": "Проект",
+    "status": "Статус"
+  },
+  "title": "Лиды",
+  "toast": {
+    "cancelError": {
+      "desc": "Не удалось отменить лид",
+      "title": "Ошибка"
+    },
+    "cancelled": {
+      "desc": "Лид отменен",
+      "title": "Успешно"
+    },
+    "copied": {
+      "desc": "Информация о лиде скопирована в буфер обмена",
+      "title": "Copied"
+    },
+    "copyError": {
+      "desc": "Не удалось скопировать информацию",
+      "title": "Ошибка"
+    },
+    "notesError": {
+      "desc": "Не удалось обновить заметки",
+      "title": "Ошибка"
+    },
+    "notesSaved": {
+      "desc": "Заметки обновлены",
+      "title": "Успешно"
+    },
+    "leadCreated": {
+      "title": "Успешно",
+      "desc": "Новая сделка создана"
+    },
+    "leadUpdated": {
+      "title": "Успешно",
+      "desc": "Сделка обновлена"
+    },
+    "statusChanged": {
+      "title": "Статус изменен",
+      "desc": "Этап сделки обновлен"
+    },
+    "funnelSaved": {
+      "title": "Успешно",
+      "desc": "Настройки воронки сохранены"
+    },
+    "exportDone": {
+      "title": "Готово",
+      "desc": "Файл экспорта скачан"
+    },
+    "importDone": {
+      "title": "Импорт завершен",
+      "desc": "Загружено контактов"
+    },
+    "nothingToExport": {
+      "title": "Нет данных",
+      "desc": "Список пуст, нечего экспортировать."
+    },
+    "duplicatesNotFound": {
+      "title": "Чисто",
+      "desc": "Дублей не найдено"
+    }
+  },
+  "kanban": {
+    "noDeals": "Нет сделок",
+    "dragHere": "Перетащите сюда",
+    "createDeal": "Создать сделку"
+  },
+  "list": {
+    "selectAll": "Выбрать все",
+    "selected": "выбрано"
+  },
+  "drawer": {
+    "contact": "Контакт",
+    "details": "Детали сделки",
+    "tasks": "Задачи",
+    "history": "История",
+    "addTask": "Добавить задачу",
+    "addNote": "Добавить заметку",
+    "tags": "Теги",
+    "source": "Источник",
+    "budget": "Бюджет",
+    "apartment": "Квартира",
+    "created": "Создан",
+    "close": "Закрыть"
+  },
+  "createModal": {
+    "title": "Новая сделка",
+    "name": "Имя клиента",
+    "phone": "Телефон",
+    "email": "Email (необязательно)",
+    "create": "Создать",
+    "cancel": "Отмена",
+    "duplicateWarning": "Найден похожий лид!",
+    "duplicateDesc": "В системе уже есть лид с таким номером телефона:"
+  },
+  "funnel": {
+    "title": "Настройка воронки",
+    "funnels": "Воронки",
+    "addFunnel": "Добавить воронку",
+    "archived": "Архивные воронки",
+    "addStage": "Добавить этап",
+    "deleteStage": "Удалить этап",
+    "rename": "Переименовать",
+    "triggers": "Автоматизации",
+    "addTrigger": "Добавить триггер",
+    "noAutomations": "Нет автоматизаций",
+    "automationDesc": "Добавьте действия при переходе на этот этап",
+    "back": "Назад",
+    "save": "Сохранить",
+    "deleteAllTriggers": "Удалить все триггеры"
+  },
+  "settings": {
+    "import": "Импорт",
+    "export": "Экспорт (CSV)",
+    "funnelSetup": "Настройка воронки",
+    "cardAppearance": "Внешний вид карточки",
+    "findDuplicates": "Поиск дублей",
+    "massActions": "Массовые действия"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "Сайт",
+    "referral": "Рекомендация",
+    "walk_in": "Входящий",
+    "facebook": "Facebook",
+    "admin": "Админка"
+  },
+  "toolbar": {
+    "selected": "выбрано",
+    "changeStatus": "Сменить статус",
+    "assign": "Назначить",
+    "delete": "Удалить",
+    "manager": "Менеджер"
+  },
+  "emptyState": {
+    "notFound": "Ничего не найдено",
+    "tryChangingFilters": "Попробуйте изменить параметры поиска или фильтры.",
+    "resetFilters": "Сбросить фильтры"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "Внимание: не настроены обязательные триггеры по статусу квартиры",
+    "funnelTriggersDesc": "Для корректной работы резервов и продаж нужно настроить триггеры, которые меняют статус привязанной квартиры на «Резерв» и «Продажа» в каждой воронке.",
+    "missingFunnels": "Проблемные воронки",
+    "funnelTriggersCta": "Открыть настройку воронки"
+  },
+  "list": {
+    "selectAll": "Выбрать все",
+    "selected": "выбрано",
+    "client": "Клиент",
+    "status": "Статус",
+    "task": "Задача",
+    "project": "Проект",
+    "budget": "Бюджет",
+    "unknown": "Неизвестно",
+    "noTasks": "Нет задач",
+    "call": "Позвонить",
+    "whatsapp": "WhatsApp",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "daysAgo": "дн. назад"
+  },
+  "kanban": {
+    "noDeals": "Нет сделок",
+    "dragHere": "Перетащите сюда",
+    "createDeal": "Создать сделку",
+    "changeStage": "Сменить этап",
+    "budget": "Бюджет",
+    "noTasks": "Нет задач",
+    "empty": "Пусто",
+    "moveHere": "Переместить сюда",
+    "quickAdd": "+ Быстрое добавление..."
+  },
+  "drawer": {
+    "contact": "Контакт",
+    "details": "Детали сделки",
+    "tasks": "Задачи",
+    "history": "История",
+    "addTask": "Добавить задачу",
+    "addNote": "Добавить заметку",
+    "tags": "Теги",
+    "source": "Источник",
+    "budget": "Бюджет",
+    "apartment": "Квартира",
+    "created": "Создан",
+    "close": "Закрыть",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "info": "Информация",
+    "call": "Позвонить",
+    "whatsapp": "WhatsApp",
+    "editing": "Редактирование",
+    "phone": "Телефон",
+    "project": "Проект",
+    "addTag": "+ Добавить тег",
+    "overdue": "Просрочено",
+    "today": "На сегодня",
+    "future": "Будущие",
+    "completed": "Завершенные",
+    "noPlannedTasks": "Нет запланированных задач",
+    "writeNote": "Написать примечание...",
+    "ctrlEnterToSend": "Ctrl+Enter для отправки"
+  },
+  "createModal": {
+    "title": "Новая сделка",
+    "name": "Имя клиента",
+    "phone": "Телефон",
+    "email": "Email (необязательно)",
+    "create": "Создать",
+    "cancel": "Отмена",
+    "duplicateWarning": "Найден похожий лид!",
+    "duplicateDesc": "В системе уже есть лид с таким номером телефона:",
+    "clientLabel": "Клиент",
+    "namePlaceholder": "Имя и Фамилия",
+    "phonePlaceholder": "+995 555 00 00 00",
+    "duplicateFound": "Найден дубль",
+    "duplicateExists": "Клиент {{name}} уже есть в базе.",
+    "goToCard": "Перейти к карточке",
+    "budgetLabel": "Бюджет",
+    "sourceLabel": "Источник",
+    "tagsLabel": "Теги",
+    "tagPlaceholder": "Введите тег и нажмите Enter",
+    "duplicateNotAllowed": "Дубль невозможен",
+    "createDeal": "Создать сделку"
+  },
+  "funnel": {
+    "title": "Настройка воронки",
+    "funnels": "Воронки",
+    "addFunnel": "Добавить воронку",
+    "archived": "Архивные воронки",
+    "addStage": "Добавить этап",
+    "deleteStage": "Удалить этап",
+    "rename": "Переименовать",
+    "triggers": "Автоматизации",
+    "addTrigger": "Добавить триггер",
+    "noAutomations": "Нет автоматизаций",
+    "automationDesc": "Добавьте действия при переходе на этот этап",
+    "back": "Назад",
+    "save": "Сохранить",
+    "deleteAllTriggers": "Удалить все триггеры",
+    "moveHere": "Переместить сюда",
+    "doubleClickToEdit": "Дважды кликните, чтобы изменить название",
+    "insertStage": "Вставить этап"
+  },
+  "cardAppearance": {
+    "title": "Внешний вид карточки",
+    "options": "Опции",
+    "showAvatar": "Показывать аватарку контакта",
+    "showDate": "Показывать дату создания",
+    "fieldsInCard": "Поля в карточке",
+    "preview": "Предпросмотр",
+    "today": "Сегодня",
+    "cancel": "Отменить",
+    "save": "Сохранить"
+  },
+  "import": {
+    "title": "Импорт контактов",
+    "step": "Шаг {step} из 3",
+    "dragFile": "Перетащите файл сюда",
+    "orClick": "или нажмите для выбора",
+    "supportedFormats": "Поддерживаются: .csv, .xlsx, .xls",
+    "important": "Важно:",
+    "headersNote": "Убедитесь, что файл содержит заголовки в первой строке. Это поможет нам правильно распознать данные.",
+    "downloadTemplate": "Скачать шаблон файла",
+    "fieldMapping": "Сопоставление полей",
+    "importing": "Импортируем данные...",
+    "dontClose": "Пожалуйста, не закрывайте окно.",
+    "done": "Готово!",
+    "successfullyAdded": "Успешно добавлено {count} контактов.",
+    "backToList": "Вернуться к списку",
+    "cancel": "Отмена",
+    "next": "Далее",
+    "startImport": "Начать импорт",
+    "fields": {
+      "name": "Имя",
+      "phone": "Телефон",
+      "email": "Email",
+      "price": "Бюджет",
+      "project": "Проект",
+      "source": "Источник",
+      "skip": "Не импортировать"
+    }
+  },
+  "duplicates": {
+    "title": "Поиск и слияние дублей",
+    "scanning": "Сканирование базы...",
+    "foundGroups": "Найдено групп дублей: {{count}}",
+    "searching": "Ищем совпадения...",
+    "noDuplicates": "Дубликатов нет",
+    "perfectOrder": "Ваша база контактов в идеальном порядке.",
+    "scanAgain": "Сканировать снова",
+    "selectMaster": "Выберите карточку, которая останется основной (Master). Остальные будут удалены, а их история объединена.",
+    "created": "Создан:",
+    "project": "Проект:",
+    "budget": "Бюджет:",
+    "keepThis": "Оставить эту (Объединить)",
+    "selectGroup": "Выберите группу дублей слева для сравнения"
+  },
+  "tasks": {
+    "types": {
+      "call": "Связаться",
+      "meeting": "Встреча",
+      "message": "Написать",
+      "payment": "Оплата",
+      "other": "Другое"
+    },
+    "newTask": "Новая задача",
+    "example": "Например: Связаться с клиентом и уточнить бюджет...",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "plus3Days": "+3 дня",
+    "addTask": "Поставить задачу",
+    "result": "Результат выполнения",
+    "whatHappened": "Что произошло? (например: договорились о встрече)",
+    "completeTask": "Завершить задачу",
+    "return": "Вернуть",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "responsible": "Ответственный:",
+    "recipient": "Получатель:",
+    "task": "Задача",
+    "noSettings": "Нет настроек"
+  },
+  "triggers": {
+    "onStageEntry": "При входе в этап",
+    "through": "Через {delay} {unit}",
+    "tag": "Тег: {tagName}",
+    "trigger": "Триггер",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "whenToRun": "Триггер запускается раз в минуту",
+    "whatToDo": "Что сделать",
+    "description": "Описание действия",
+    "minutes": "минут",
+    "hours": "часов",
+    "days": "дней",
+    "tagNamePlaceholder": "Название тега",
+    "willTrigger": "Сработает сразу при попадании лида на этот этап.",
+    "taskText": "Текст задачи",
+    "notificationText": "Текст уведомления",
+    "assignResponsible": "Назначить ответственного",
+    "selectStage": "Выбрать этап для перевода",
+    "noAdditionalSettings": "Для этого типа действия нет дополнительных настроек.",
+    "descriptionRequired": "Описание не может быть пустым.",
+    "tagsToAddPlaceholder": "Теги для добавления (через запятую)",
+    "apartmentStatusReserved": "Резерв",
+    "apartmentStatusSold": "Продажа",
+    "apartmentStatusAvailable": "Доступно",
+    "icons": {
+      "clock": "Задержка",
+      "distribution": "Распределение",
+      "task": "Задача",
+      "statusChange": "Смена статуса",
+      "editField": "Изменить поле",
+      "addTag": "Добавить тег",
+      "notification": "Уведомление",
+      "apartmentStatus": "Статус квартиры"
+    }
+  },
+  "cardFields": {
+    "none": "Без значения",
+    "name": "Название сделки",
+    "project": "Проект",
+    "price": "Бюджет",
+    "tags": "Теги",
+    "assignedTo": "Ответственный"
+  }
+}

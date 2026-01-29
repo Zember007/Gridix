@@ -1,0 +1,14 @@
+{
+    "name": "@gridix/config",
+    "version": "0.0.0",
+    "private": true,
+    "exports": {
+        "./tailwind": "./tailwind/tailwind.config.ts",
+        "./typescript": "./typescript/tsconfig.base.json",
+        "./eslint": "./eslint/eslint.config.js"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.4.11",
+        "typescript": "^5.9.3"
+    }
+}

@@ -1,0 +1,122 @@
+import { useIsMobile } from '@gridix/ui';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@gridix/ui";
+import { useEffect, useState, useMemo } from 'react';
+import { Apartment } from '@/entities/apartment/model/types';
+
+interface FloorSelectorProps {
+  selectedFloorForPlan: number | null;
+  setSelectedFloorForPlan: (floor: number) => void;
+  getUniqueFloors: () => number[];
+  themeColor: string;
+  apartments: Apartment[];
+  showOnlyAvailable: boolean;
+  filteredApartments: Apartment[];
+}
+
+export const FloorSelector = ({
+  selectedFloorForPlan,
+  setSelectedFloorForPlan,
+  getUniqueFloors,
+  themeColor,
+  apartments,
+  showOnlyAvailable,
+  filteredApartments
+}: FloorSelectorProps) => {
+  const isMobile = useIsMobile();
+
+  // Filter floors based on:
+  // 1. If showOnlyAvailable is true, only show floors with at least one available apartment (from filteredApartments)
+  // 2. Always show only floors with at least one apartment that has a polygon
+  const floors = useMemo(() => {
+    const allFloors = getUniqueFloors();
+    
+    return allFloors.filter(floor => {
+      
+      if (showOnlyAvailable) {
+        const hasAvailable = filteredApartments.some(apt => 
+          apt.floor_number === floor && 
+          apt.status === 'available'
+        );
+        return hasAvailable;
+      }
+      
+      return true;
+    });
+  }, [getUniqueFloors, apartments, showOnlyAvailable, filteredApartments]);
+
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    if (selectedFloorForPlan == null) return;
+
+    const index = floors.findIndex((f) => f === selectedFloorForPlan);
+    if (index >= 0) {
+      carouselApi.scrollTo(index, true);
+    }
+  }, [carouselApi, selectedFloorForPlan, floors]);
+
+
+  if (floors.length === 0) return null;
+
+  return (
+    <div className={`${isMobile ? 'h-20 w-full ' : 'w-15 '}  flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
+      <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
+
+
+        {/* Floor Carousel */}
+        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
+          <div className={`${isMobile ? ' w-full max-w-[60vw]' : 'w-12 h-full'} relative`}>
+            <Carousel
+              className="w-full h-full "
+              orientation={isMobile ? "horizontal" : "vertical"}
+              opts={{
+                align: "center",
+                loop: floors.length > 3,
+              }}
+              setApi={setCarouselApi}
+            >
+              <div className={`${isMobile ? ' w-full' : 'w-12 h-full'}  flex flex-col justify-center`}>
+                <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
+                  {floors.map((floor) => (
+                    <CarouselItem key={floor} className={`${isMobile ? 'basis-1/5' : 'basis-1/3'} flex items-center justify-center`}>
+                      <button
+                        className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
+                          ? 'text-white'
+                          : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                        style={selectedFloorForPlan === floor ? { backgroundColor: themeColor } : {}}
+                        onClick={() => setSelectedFloorForPlan(floor)}
+                      >
+                        {floor}
+                      </button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </div>
+
+              {/* Navigation buttons */}
+              {floors.length > 3 && (
+                <>
+                  {isMobile ? (
+                    <>
+                      <CarouselPrevious className="-left-10 h-8 w-8  border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselNext className="-right-10 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                    </>
+                  ) : (
+                    <>
+                      <CarouselPrevious className="-top-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselNext className="-bottom-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                    </>
+                  )}
+                </>
+              )}
+            </Carousel>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,123 @@
+import { jsxs as E, jsx as h } from "react/jsx-runtime";
+import { useState as O, useRef as P, useMemo as A, useEffect as L } from "react";
+import { createPortal as D } from "react-dom";
+import f from "openseadragon";
+import { useAnnotator as S, useSelection as b } from "./annotorious-react.es2.js";
+/* empty css                      */
+/* empty css                      */
+import "@annotorious/core";
+import "@annotorious/annotorious";
+import { toClientRects as M } from "./annotorious-react.es15.js";
+import { useFloating as U, FloatingArrow as F } from "./annotorious-react.es14.js";
+import { useViewer as V } from "./annotorious-react.es8.js";
+import { inline as j, offset as z, flip as H, shift as I, arrow as T } from "./annotorious-react.es17.js";
+import { autoUpdate as X } from "./annotorious-react.es16.js";
+import g from "./annotorious-react.es18.js";
+const Y = (t, r) => {
+  const { minX: d, minY: a, maxX: n, maxY: m } = r.bounds, { top: s, left: c } = t.element.getBoundingClientRect(), o = t.viewport.imageToViewerElementCoordinates(new f.Point(d, a)), l = t.viewport.imageToViewerElementCoordinates(new f.Point(n, m));
+  return new DOMRect(
+    o.x + c,
+    o.y + s,
+    l.x - o.x,
+    l.y - o.y
+  );
+}, k = (t) => {
+  var r;
+  return ((r = t == null ? void 0 : t.target) == null ? void 0 : r.selector) && "geometry" in t.target.selector;
+}, ie = (t) => {
+  var u;
+  const r = S(), [d, a] = O(!1), n = V(), m = P(null), { selected: s, event: c } = b(), [o, l] = A(() => {
+    const e = s[0];
+    return k(e == null ? void 0 : e.annotation) ? [e.annotation, e.editable] : [void 0, void 0];
+  }, [s]), { refs: p, floatingStyles: w, context: v } = U({
+    open: d,
+    onOpenChange: a,
+    placement: t.placement,
+    middleware: [
+      j(),
+      z(10),
+      H({ crossAxis: !0 }),
+      I({
+        crossAxis: !0,
+        boundary: n == null ? void 0 : n.element,
+        padding: { right: 5, left: 5, top: 10, bottom: 10 }
+      }),
+      T({
+        element: m,
+        padding: ((u = t.arrowProps) == null ? void 0 : u.padding) || 5
+      })
+    ],
+    whileElementsMounted: X
+  });
+  L(() => {
+    if (s.length === 0 || !o)
+      a(!1);
+    else {
+      const e = () => {
+        if (!n.element) return;
+        const i = Y(n, o.target.selector.geometry);
+        p.setReference({
+          getBoundingClientRect: () => i,
+          getClientRects: () => M(i)
+        });
+      };
+      return window.addEventListener("scroll", e, !0), window.addEventListener("resize", e), n.addHandler("update-viewport", e), e(), a(!0), () => {
+        window.removeEventListener("scroll", e, !0), window.removeEventListener("resize", e), n.removeHandler("update-viewport", e);
+      };
+    }
+  }, [t.popup, s, n]);
+  const y = (e) => {
+    const i = e.id || g();
+    r.state.store.addBody({
+      ...e,
+      id: i,
+      annotation: o.id,
+      created: e.created || /* @__PURE__ */ new Date(),
+      creator: r.getUser()
+    });
+  }, x = (e) => {
+    r.state.store.deleteBody({ id: e, annotation: o.id });
+  }, R = (e, i) => {
+    const B = i.id || g(), C = {
+      updated: /* @__PURE__ */ new Date(),
+      updatedBy: r.getUser(),
+      ...i,
+      id: B,
+      annotation: o.id
+    };
+    r.state.store.updateBody(e, C);
+  };
+  return d && o ? D(
+    /* @__PURE__ */ E(
+      "div",
+      {
+        className: "a9s-popup a9s-image-popup",
+        ref: p.setFloating,
+        style: w,
+        children: [
+          t.arrow && /* @__PURE__ */ h(
+            F,
+            {
+              ref: m,
+              context: v,
+              ...t.arrowProps || {}
+            }
+          ),
+          t.popup({
+            annotation: o,
+            editable: l,
+            event: c,
+            onCreateBody: y,
+            onDeleteBody: x,
+            onUpdateBody: R
+          })
+        ]
+      }
+    ),
+    n.element
+  ) : null;
+};
+export {
+  ie as OpenSeadragonAnnotationPopup
+};
+//# sourceMappingURL=annotorious-react.es9.js.map
