@@ -11,6 +11,7 @@ node_modules
 dist
 dist-widget
 public/widget
+apps/main/public/widget
 dist-ssr
 *.local
 

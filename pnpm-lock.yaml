@@ -39,6 +39,9 @@ importers:
         specifier: ^6.26.2
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
+      '@gridix/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.27
@@ -57,6 +60,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.19)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -283,12 +289,30 @@ importers:
 
   packages/config:
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.9.0
+        version: 9.39.2
+      eslint:
+        specifier: ^9.9.0
+        version: 9.39.2(jiti@1.21.7)
+      eslint-plugin-react-hooks:
+        specifier: ^5.1.0-rc.0
+        version: 5.2.0(eslint@9.39.2(jiti@1.21.7))
+      eslint-plugin-react-refresh:
+        specifier: ^0.4.9
+        version: 0.4.26(eslint@9.39.2(jiti@1.21.7))
+      globals:
+        specifier: ^15.9.0
+        version: 15.15.0
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.0.1
+        version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
 
   packages/types:
     devDependencies:

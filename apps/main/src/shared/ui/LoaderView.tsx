@@ -44,9 +44,6 @@ export const LoaderView = ({
       )}
     >
       <Loader color={color} size="lg" className="mx-auto" />
-      {label ? (
-        <div className="text-sm text-muted-foreground text-center px-6">{label}</div>
-      ) : null}
     </div>
   );
 };
