@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
+import { sendEmailNotificationIfEnabled } from "../_shared/user-notifications.ts";
 
 
 interface LeadRequest {
@@ -389,6 +390,41 @@ serve(async (req) => {
         return createJsonResponse({ error: 'Failed to save lead. Please try again.', details: leadSaveError?.message }, 500, origin);
       }
 
+      // ---- Email notification (best-effort): "new lead"
+      try {
+        const siteUrlRaw = (Deno.env.get("SITE_URL") || origin || "https://gridix.live").toString();
+        const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+
+        await sendEmailNotificationIfEnabled({
+          svc,
+          recipientUserId: projectOwnerId,
+          event: "new_lead",
+          templateKey: "new_lead_created",
+          name: "create-amocrm-lead:new_lead",
+          payload: {
+            app: { url: siteUrl },
+            source: "website",
+            lead: { name, email, phone, source: "website", agent_id: null },
+            project: {
+              id: (apartment as any)?.projects?.id ?? null,
+              name: (apartment as any)?.projects?.name ?? null,
+              address: (apartment as any)?.projects?.address ?? null,
+              currency: (apartment as any)?.projects?.currency ?? null,
+            },
+            apartment: {
+              id: (apartment as any)?.id ?? null,
+              number: (apartment as any)?.apartment_number ?? null,
+              floor_number: (apartment as any)?.floor_number ?? null,
+              rooms: (apartment as any)?.rooms ?? null,
+              area: (apartment as any)?.area ?? null,
+              price: (apartment as any)?.price ?? null,
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("new lead email notification skipped/failed", e);
+      }
+
       return createJsonResponse(
         {
           success: true,
@@ -470,6 +506,41 @@ serve(async (req) => {
         return createJsonResponse({ error: 'Failed to save lead(s). Please try again.', details: leadSaveError?.message }, 500, origin);
       }
       createdLeads.push(...(createdRows || []));
+
+      // ---- Email notification (best-effort): "new lead"
+      try {
+        const siteUrlRaw = (Deno.env.get("SITE_URL") || origin || "https://gridix.live").toString();
+        const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+
+        await sendEmailNotificationIfEnabled({
+          svc,
+          recipientUserId: projectOwnerId,
+          event: "new_lead",
+          templateKey: "new_lead_created",
+          name: "create-amocrm-lead:new_lead",
+          payload: {
+            app: { url: siteUrl },
+            source: "website",
+            lead: { name, email, phone, source: "website", agent_id: null },
+            project: {
+              id: (apartment as any)?.projects?.id ?? null,
+              name: (apartment as any)?.projects?.name ?? null,
+              address: (apartment as any)?.projects?.address ?? null,
+              currency: (apartment as any)?.projects?.currency ?? null,
+            },
+            apartment: {
+              id: (apartment as any)?.id ?? null,
+              number: (apartment as any)?.apartment_number ?? null,
+              floor_number: (apartment as any)?.floor_number ?? null,
+              rooms: (apartment as any)?.rooms ?? null,
+              area: (apartment as any)?.area ?? null,
+              price: (apartment as any)?.price ?? null,
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("new lead email notification skipped/failed", e);
+      }
     }
 
     // If all funnels already had a lead, keep old behaviour: 409

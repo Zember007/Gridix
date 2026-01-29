@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gridix/config": "workspace:*",
     "@gridix/ui": "workspace:*",
     "@gridix/utils": "workspace:*",
     "@gridix/types": "workspace:*",

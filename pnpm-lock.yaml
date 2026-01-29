@@ -14,6 +14,9 @@ importers:
 
   apps/agent-cabinet:
     dependencies:
+      '@gridix/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@gridix/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -39,9 +42,6 @@ importers:
         specifier: ^6.26.2
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
-      '@gridix/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.27
@@ -60,9 +60,6 @@ importers:
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.19)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -543,6 +540,9 @@ importers:
       '@gridix/types':
         specifier: workspace:*
         version: link:../types
+      '@gridix/ui':
+        specifier: ../ui
+        version: link:../ui
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.27

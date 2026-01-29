@@ -77,7 +77,7 @@ export function SidebarButton({
   const content = (
     <>
       <div className="flex-shrink-0 relative">
-        <span className={isChildSize ? "inline-flex scale-90 origin-center" : "inline-flex"}>
+        <span className={isChildSize ? "scale-90 origin-center" : ""}>
           {icon}
         </span>
         {badge && hasChildren && (

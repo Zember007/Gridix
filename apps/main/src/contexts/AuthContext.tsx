@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useRef, useC
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import { processPendingReferralAfterAuth } from '@/features/partnerProgram/referralTracking';
-import { resetUsertour } from '@gridix/utils/integrations';
+import { preloadUsertour, resetUsertour } from '@gridix/utils/integrations';
 
 export interface UserProfile {
   id: string;
@@ -58,6 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const loadingProfileRef = useRef<Set<string>>(new Set());
   const currentUserIdRef = useRef<string | null>(null);
+  const didPreloadUsertourRef = useRef(false);
 
   const createFallbackProfile = (userId: string, currentUser: User): UserProfile => ({
     id: userId,
@@ -289,8 +290,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     if (!user) {
       resetUsertour();
+      didPreloadUsertourRef.current = false;
       return;
     } 
+
+    // Pre-warm SDK in the background so starting the first tour is faster.
+    if (!didPreloadUsertourRef.current) {
+      didPreloadUsertourRef.current = true;
+      preloadUsertour();
+    }
   }, [loading, user, userProfile]);
 
   const signOut = async () => {

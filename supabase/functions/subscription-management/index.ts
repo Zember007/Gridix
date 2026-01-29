@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, createCorsResponse, createJsonResponse } from '../_shared/cors.ts';
 import { getSupabaseUser } from "../_shared/auth.ts";
+import { sendEmailNotificationIfEnabled } from "../_shared/user-notifications.ts";
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -455,6 +456,55 @@ async function handleConfirmPayment(req: Request, body: any) {
 
     if (updateError) {
       return createJsonResponse({ error: "Failed to activate subscription", message: updateError }, 500, origin);
+    }
+
+    // ---- Email notification (best-effort): "payment received"
+    try {
+      const siteUrlRaw = (Deno.env.get("SITE_URL") || origin || "https://gridix.live").toString();
+      const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+
+      const [{ data: project }, { data: plan }] = await Promise.all([
+        subscription.project_id
+          ? supabase.from("projects").select("id, name, currency").eq("id", subscription.project_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        subscription.plan_id
+          ? supabase.from("subscription_plans").select("id, name, slug").eq("id", subscription.plan_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      await sendEmailNotificationIfEnabled({
+        svc: supabase,
+        recipientUserId: String(subscription.user_id),
+        event: "payment_received",
+        templateKey: "subscription_payment_success",
+        name: "subscription-management:confirm-payment",
+        payload: {
+          app: { url: siteUrl },
+          amount: `${(subscription as any)?.final_price ?? ""} ${(project as any)?.currency ?? ""}`.trim(),
+          project: {
+            id: project?.id ?? subscription.project_id ?? null,
+            name: (project as any)?.name ?? null,
+            currency: (project as any)?.currency ?? null,
+          },
+          plan: {
+            id: plan?.id ?? subscription.plan_id ?? null,
+            name: (plan as any)?.name ?? null,
+            slug: (plan as any)?.slug ?? null,
+          },
+          subscription: {
+            id: subscription.id,
+            status: "active",
+            duration_months: (subscription as any)?.duration_months ?? null,
+            final_price: (subscription as any)?.final_price ?? null,
+            invoice_number: (subscription as any)?.invoice_number ?? null,
+            invoice_paid_at: new Date().toISOString(),
+            current_period_start: startDate.toISOString(),
+            current_period_end: endDate.toISOString(),
+          },
+        },
+      });
+    } catch (e) {
+      console.warn("payment received email notification skipped/failed", e);
     }
 
     return createJsonResponse({

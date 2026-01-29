@@ -1,38 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@gridix/utils/react";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@gridix/ui";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
+import { supabase } from "@gridix/utils/api";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import {
-
-  Folder,
-
-  FileText as DocumentAdd,
-  Settings as SettingsIcon,
-  User as UserIcon,
-  ChevronDown as ChevronDownIcon,
-  LogOut,
-  Globe,
-  BarChart3,
-  Package as Integration,
-  Building2,
-  Code,
-  Layers3,
-  Camera,
-  UserCheck,
-  Crown,
-  Handshake,
-  Building,
   Book,
-  Menu,
-  ChevronUp,
   Briefcase,
-} from "lucide-react";
+  Building,
+  Buildings as Building2,
+  Camera,
+  CaretDown as ChevronDownIcon,
+  CaretUp as ChevronUp,
+  ChartBar as BarChart3,
+  Code,
+  FileText as DocumentAdd,
+  FolderSimple as Folder,
+  Gear as SettingsIcon,
+  Globe,
+  Handshake,
+  List as Menu,
+  Package as Integration,
+  SignOut as LogOut,
+  Stack as Layers3,
+  UserCheck,
+  UserCircle as UserIcon,
+  Crown,
+} from "@phosphor-icons/react";
 import {
   Select,
   SelectContent,
@@ -40,17 +39,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gridix/ui";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { SidebarButton } from "@gridix/ui";
 import { Sheet, SheetContent } from "@gridix/ui";
 import { UnreadBadge } from "@/shared/ui/UnreadBadge";
+
+const normalizePreferredLanguage = (value: unknown): Language | null => {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+  return raw in LANGUAGE_CONFIG ? (raw as Language) : null;
+};
 
 const getQueryPage = (): string | null => {
   if (typeof window === "undefined") return null;
@@ -66,6 +66,236 @@ const setQueryPage = (page: string) => {
 };
 
 
+
+const ProfileMenuItem = ({
+  icon,
+  label,
+  onClick,
+  isDanger,
+  isIndented,
+  isActive,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  isDanger?: boolean;
+  isIndented?: boolean;
+  isActive?: boolean;
+}) => {
+  const baseColor = isDanger ? "#dc2626" : ADMIN_THEME.sidebarText;
+  const bg = isActive ? "var(--admin-sidebar-active-background)" : "transparent";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center gap-2 text-sm transition-colors rounded-md ${
+        isIndented ? "pl-8 pr-3" : "px-3"
+      } py-2 hover:!bg-[var(--admin-sidebar-active-background)]`}
+      style={{
+        color: baseColor,
+        backgroundColor: bg,
+      }}
+    >
+      {icon ? <span className="shrink-0">{icon}</span> : null}
+      <span className="flex-1 text-left">{label}</span>
+    </button>
+  );
+};
+
+const ProfileFooterMenu = ({
+  userEmail,
+  isCollapsed,
+  onSignOut,
+  language,
+  setLanguage,
+  docsUrl,
+  t,
+}: {
+  userEmail: string;
+  isCollapsed: boolean;
+  onSignOut?: () => void;
+  language: string;
+  setLanguage: (l: Language) => void;
+  docsUrl?: string;
+  t: (k: string) => string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) setIsLanguageOpen(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const username = userEmail.split("@")[0] ?? userEmail;
+
+  const handleSelectLanguage = async (nextLanguage: Language) => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (!userError && user?.id) {
+        await supabase
+          .from("user_profiles")
+          .update({ preferred_locale: nextLanguage })
+          .eq("id", user.id);
+      }
+    } catch (e) {
+      console.error("Failed to persist preferred locale", e);
+    } finally {
+      setLanguage(nextLanguage);
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      {isOpen && (
+        <div
+          className={`absolute bottom-full ${
+            isCollapsed ? "left-full ml-4 mb-0" : "left-0 right-0 mb-2"
+          } rounded-lg shadow-xl border z-30 overflow-hidden py-1.5 w-56 animate-in fade-in zoom-in-95 duration-150`}
+          style={{
+            backgroundColor: ADMIN_THEME.sidebarBackground,
+            borderColor: ADMIN_THEME.sidebarBorder,
+          }}
+        >
+          <div
+            className="px-3 py-2 border-b"
+            style={{ borderColor: ADMIN_THEME.sidebarBorder }}
+          >
+            <p
+              className="text-sm font-semibold truncate"
+              style={{ color: ADMIN_THEME.sidebarText }}
+            >
+              {username}
+            </p>
+            <p className="text-xs truncate" style={{ color: ADMIN_THEME.textMuted }}>
+              {userEmail}
+            </p>
+          </div>
+
+          <div className="py-1">
+            <ProfileMenuItem
+              icon={<Globe className="h-4 w-4" />}
+              label={t("common.language") || "Language"}
+              onClick={() => setIsLanguageOpen((v) => !v)}
+            />
+
+            {isLanguageOpen && (
+              <div className="pt-1">
+                {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                  <ProfileMenuItem
+                    key={code}
+                    label={`${config.flag} ${config.name}`}
+                    isIndented
+                    isActive={language === code}
+                    onClick={() => {
+                      void handleSelectLanguage(code as Language);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {docsUrl ? (
+              <ProfileMenuItem
+                icon={<Book className="h-4 w-4" />}
+                label={t("admin.documentation")}
+                onClick={() => {
+                  window.open(docsUrl, "_blank", "noopener,noreferrer");
+                  setIsOpen(false);
+                }}
+              />
+            ) : null}
+          </div>
+
+          <div
+            className="py-1 border-t"
+            style={{ borderColor: ADMIN_THEME.sidebarBorder }}
+          >
+            <ProfileMenuItem
+              icon={<LogOut className="h-4 w-4" />}
+              label={t("auth.signOut")}
+              isDanger
+              onClick={() => onSignOut?.()}
+            />
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className={`flex items-center w-full ${
+          isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"
+        } rounded-md hover:bg-opacity-80 transition-colors`}
+        style={{
+          backgroundColor: "transparent",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+        }}
+      >
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: ADMIN_THEME.primaryActive }}
+        >
+          <UserIcon className="h-4 w-4" style={{ color: ADMIN_THEME.textOnPrimary }} />
+        </div>
+
+        <>
+          <div className="min-w-0 flex-1 text-left">
+            <p
+              className={`font-medium text-sm ${
+                isCollapsed ? "text-xs text-center break-words" : "whitespace-nowrap"
+              }`}
+              style={
+                isCollapsed
+                  ? { lineHeight: "1.2", color: ADMIN_THEME.sidebarText }
+                  : { color: ADMIN_THEME.sidebarText }
+              }
+            >
+              {username}
+            </p>
+
+            {!isCollapsed && (
+              <p className="text-xs truncate" style={{ color: ADMIN_THEME.textMuted }}>
+                {userEmail}
+              </p>
+            )}
+          </div>
+
+          {!isCollapsed && (
+            <ChevronUp
+              className={`h-4 w-4 transition-transform duration-200 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+              style={{ color: ADMIN_THEME.sidebarText }}
+            />
+          )}
+        </>
+      </button>
+    </div>
+  );
+};
 
 // Simplified admin navigation items
 const getAdminNavItems = (
@@ -168,12 +398,58 @@ export function SimplifiedSidebar({
   const { t, language, setLanguage } = useLanguage();
   const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const languageRef = useRef(language);
+  const settingsNavItem = navItems.find((item) => item.id === "settings");
+  const primaryNavItems = navItems.filter((item) => item.id !== "settings");
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  // Initialize language from user profile preferred_locale
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPreferredLocale = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (cancelled || userError || !user?.id) return;
+
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("preferred_locale")
+          .eq("id", user.id)
+          .single();
+
+        if (cancelled || error) return;
+
+        const preferred = normalizePreferredLanguage(
+          (data as { preferred_locale?: unknown } | null)?.preferred_locale,
+        );
+        if (preferred && preferred !== languageRef.current) {
+          setLanguage(preferred);
+        }
+      } catch (e) {
+        // Non-blocking: keep current language if profile load fails
+        console.error("Failed to load preferred locale", e);
+      }
+    };
+
+    void loadPreferredLocale();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Auto-expand parent if child is active
   useEffect(() => {
     setExpandedItems((prev) => {
       let next = prev;
-      navItems.forEach((item) => {
+      primaryNavItems.forEach((item) => {
         if (!item.children) return;
         const hasActiveChild = item.children.some((child) => child.id === activeSection);
         if (!hasActiveChild) return;
@@ -182,7 +458,7 @@ export function SimplifiedSidebar({
       });
       return next;
     });
-  }, [activeSection, navItems]);
+  }, [activeSection, primaryNavItems]);
 
   const toggleExpand = (id: string) => {
     if (isCollapsed && onToggleCollapse) onToggleCollapse();
@@ -302,7 +578,7 @@ export function SimplifiedSidebar({
       {/* Navigation */}
       <div className="flex-1 p-4 overflow-y-auto no-scrollbar">
         <nav className="space-y-2">
-          {navItems.map((item) => {
+          {primaryNavItems.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isExpanded = expandedItems.includes(item.id);
             const isChildActive = hasChildren && item.children?.some(child => child.id === activeSection);
@@ -316,7 +592,7 @@ export function SimplifiedSidebar({
                 label={item.label}
                 isActive={hasChildren ? Boolean(isChildActive && !isExpanded) : activeSection === item.id}
                 isCollapsed={isCollapsed}
-                onClick={hasChildren ? undefined : () => handleSectionChange(item.id)}
+                onClick={hasChildren ? () => toggleExpand(item.id) : () => handleSectionChange(item.id)}
                 items={hasChildren ? item.children : undefined}
                 activeItemId={activeSection}
                 onItemClick={(id) => handleSectionChange(id)}
@@ -328,135 +604,43 @@ export function SimplifiedSidebar({
         </nav>
       </div>
 
+      {/* Pinned Settings (always visible) */}
+      {settingsNavItem ? (
+        <div
+          className="p-4"
+          style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+        >
+          <SidebarButton
+            id={settingsNavItem.id}
+            icon={settingsNavItem.icon}
+            badge={settingsNavItem.badge}
+            label={settingsNavItem.label}
+            isActive={activeSection === settingsNavItem.id}
+            isCollapsed={isCollapsed}
+            onClick={() => handleSectionChange(settingsNavItem.id)}
+          />
+        </div>
+      ) : null}
+
       {/* Footer */}
       {userEmail && (
         <div>
-          <div className="flex flex-col gap-2 p-4">
-            <SidebarButton
-              id="partners"
-              icon={<Handshake size={20} />}
-              label={t('admin.partners')}
-              isActive={activeSection === 'partners'}
-              isCollapsed={isCollapsed}
-              onClick={() => handleSectionChange('partners')}
-              href={`/${language}/admin?page=partners`}
-            />
-            <SidebarButton
-              id="documentation"
-              icon={<Book size={20} />}
-              label={t('admin.documentation')}
-              isCollapsed={isCollapsed}
-              href={`https://docs.gridix.live/${language === 'ru' ? 'ru' : 'en'}`}
-            />
-
-          </div>
-          {!amoWidget && <div
-            className="p-4"
-            style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
-          >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`flex items-center  w-full ${isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"} rounded-md  hover:bg-opacity-80 transition-colors`}
-                  style={{
-                    backgroundColor: 'transparent',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: ADMIN_THEME.primaryActive }}
-                  >
-                    <UserIcon
-                      className="h-4 w-4"
-                      style={{ color: ADMIN_THEME.textOnPrimary }}
-                    />
-                  </div>
-                  <>
-                    <div className="min-w-0 flex-1 text-left ">
-
-
-                      <p className={`font-medium text-sm ${isCollapsed ? "text-xs text-center break-words" : "whitespace-nowrap"}`} style={isCollapsed ? { lineHeight: '1.2', color: ADMIN_THEME.sidebarText } : { color: ADMIN_THEME.sidebarText }}>
-                        {userEmail.split('@')[0]}
-
-                      </p>
-
-                      {!isCollapsed && (
-
-                        <p
-                          className="text-xs truncate"
-                          style={{ color: ADMIN_THEME.textMuted }}
-                        >
-                          {userEmail}
-                        </p>
-                      )}
-
-                    </div>
-                    {
-                      !isCollapsed && (
-                        <ChevronUp className={`h-4 w-4 text-white`} />
-                      )
-                    }
-                  </>
-
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align={isCollapsed ? "center" : "end"}
-                side={isCollapsed ? "right" : "top"}
-                className="w-48"
-                style={{
-                  backgroundColor: ADMIN_THEME.sidebarBackground,
-                  borderColor: ADMIN_THEME.sidebarBorder,
-                }}
-              >
-                <DropdownMenuItem
-                  className="flex items-center gap-2 cursor-pointer hover:!bg-transparent"
-                  style={{
-                    color: ADMIN_THEME.sidebarText,
-                  }}
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  <Globe className="h-4 w-4" />
-                  <span className="flex-1">{t('common.language') || 'Language'}</span>
-                </DropdownMenuItem>
-                {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
-                  <DropdownMenuItem
-                    key={code}
-                    onClick={() => setLanguage(code as Language)}
-                    className={`cursor-pointer pl-8 ${language === code ? '!bg-[var(--admin-sidebar-active-background)]' : 'hover:!bg-[var(--admin-sidebar-active-background)]'}`}
-                    style={{
-                      color: ADMIN_THEME.sidebarText,
-
-                    }}
-                  >
-                    <span className="mr-2">{config.flag}</span>
-                    {config.name}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator
-                  style={{
-                    backgroundColor: ADMIN_THEME.sidebarBorder
-                  }}
-                />
-                <DropdownMenuItem
-                  onClick={() => onSignOut?.()}
-                  className="flex items-center gap-2 cursor-pointer text-red-600"
-                  style={{
-                    color: '#dc2626',
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>{t('auth.signOut')}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>}
+          {!amoWidget && (
+            <div
+              className="p-4"
+              style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+            >
+              <ProfileFooterMenu
+                userEmail={userEmail}
+                isCollapsed={isCollapsed}
+                onSignOut={onSignOut}
+                language={language}
+                setLanguage={setLanguage}
+                docsUrl={`https://docs.gridix.live/${language === "ru" ? "ru" : "en"}`}
+                t={t}
+              />
+            </div>
+          )}
         </div>
       )}
     </>

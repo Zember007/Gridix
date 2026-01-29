@@ -1,6 +1,7 @@
 import { type ReactNode, useSyncExternalStore } from "react"
 
 import { getUsertourUiBlocked, subscribeUsertourUiBlocked } from "./usertour"
+/* import { FullPageLoaderView } from "@gridix/ui"; */
 
 function useUsertourUiBlocked(): boolean {
   return useSyncExternalStore(subscribeUsertourUiBlocked, getUsertourUiBlocked, () => false)

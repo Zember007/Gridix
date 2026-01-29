@@ -25,7 +25,16 @@
    cd gridix-app
    supabase functions deploy onesignal-sync-user
    supabase functions deploy notifications-send-email
+   supabase functions deploy notifications-task-due
    supabase functions deploy onesignal-webhook
+   ```
+
+4. **Ручной запуск дайджеста задач (service-only):**
+   ```bash
+   curl -i "https://<SUPABASE_PROJECT_REF>.supabase.co/functions/v1/notifications-task-due" \
+     -H "Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{"window_hours":24,"include_overdue":true,"max_users":200,"max_tasks_per_user":10}'
    ```
 
 ---

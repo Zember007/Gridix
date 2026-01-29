@@ -565,14 +565,19 @@ export type Database = {
           company_name: string
           created_at: string | null
           currency: string | null
+          description: string | null
           email: string | null
           iban: string | null
           id: string
+          industry: string | null
+          logo_url: string | null
           phone: string | null
+          system_domain: string | null
           tax_id: string | null
           updated_at: string | null
           user_id: string
           vat_payer: boolean | null
+          website: string | null
         }
         Insert: {
           address?: string | null
@@ -580,14 +585,19 @@ export type Database = {
           company_name: string
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           email?: string | null
           iban?: string | null
           id?: string
+          industry?: string | null
+          logo_url?: string | null
           phone?: string | null
+          system_domain?: string | null
           tax_id?: string | null
           updated_at?: string | null
           user_id: string
           vat_payer?: boolean | null
+          website?: string | null
         }
         Update: {
           address?: string | null
@@ -595,14 +605,19 @@ export type Database = {
           company_name?: string
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           email?: string | null
           iban?: string | null
           id?: string
+          industry?: string | null
+          logo_url?: string | null
           phone?: string | null
+          system_domain?: string | null
           tax_id?: string | null
           updated_at?: string | null
           user_id?: string
           vat_payer?: boolean | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -2396,6 +2411,103 @@ export type Database = {
         }
         Relationships: []
       }
+      user_message_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          variables: string[]
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          variables?: string[]
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          variables?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_message_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notification_preferences: {
+        Row: {
+          channel_email: boolean
+          channel_push: boolean
+          channel_telegram: boolean
+          created_at: string
+          notify_new_lead: boolean
+          notify_payment_received: boolean
+          notify_system_update: boolean
+          notify_task_due: boolean
+          telegram_last_checked_at: string | null
+          telegram_last_error: string | null
+          telegram_username: string | null
+          telegram_verified: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_email?: boolean
+          channel_push?: boolean
+          channel_telegram?: boolean
+          created_at?: string
+          notify_new_lead?: boolean
+          notify_payment_received?: boolean
+          notify_system_update?: boolean
+          notify_task_due?: boolean
+          telegram_last_checked_at?: string | null
+          telegram_last_error?: string | null
+          telegram_username?: string | null
+          telegram_verified?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_email?: boolean
+          channel_push?: boolean
+          channel_telegram?: boolean
+          created_at?: string
+          notify_new_lead?: boolean
+          notify_payment_received?: boolean
+          notify_system_update?: boolean
+          notify_task_due?: boolean
+          telegram_last_checked_at?: string | null
+          telegram_last_error?: string | null
+          telegram_username?: string | null
+          telegram_verified?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           account_type: string
@@ -2412,6 +2524,7 @@ export type Database = {
           legal_address: string | null
           partner_id: string | null
           phone: string | null
+          preferred_locale: string
           tax_id: string | null
           updated_at: string
         }
@@ -2430,6 +2543,7 @@ export type Database = {
           legal_address?: string | null
           partner_id?: string | null
           phone?: string | null
+          preferred_locale?: string
           tax_id?: string | null
           updated_at?: string
         }
@@ -2448,6 +2562,7 @@ export type Database = {
           legal_address?: string | null
           partner_id?: string | null
           phone?: string | null
+          preferred_locale?: string
           tax_id?: string | null
           updated_at?: string
         }

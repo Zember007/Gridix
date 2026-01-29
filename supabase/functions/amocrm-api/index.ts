@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createCorsResponse, createJsonResponse } from '../_shared/cors.ts'
 import { createOrUpdateLocalFunnel, type AmoCRMPipeline } from '../_shared/amocrm-funnel.ts'
 import { getSupabaseUser } from '../_shared/auth.ts'
+import { sendEmailNotificationIfEnabled } from "../_shared/user-notifications.ts";
 
 interface CRMConnection {
   id: string;
@@ -405,7 +406,7 @@ serve(async (req) => {
       // Access check via RLS
       const { data: project, error: projectError } = await userClient
         .from('projects')
-        .select('id, slug, name, project_type')
+        .select('id, slug, name, project_type, user_id')
         .eq('id', project_id)
         .single();
 
@@ -474,6 +475,43 @@ serve(async (req) => {
 
       if (createError || !created) {
         return createJsonResponse({ error: createError?.message || 'Failed to create lead' }, 500, origin);
+      }
+
+      // ---- Email notification (best-effort): "new lead" (AmoCRM widget binding)
+      try {
+        const siteUrlRaw = (Deno.env.get("SITE_URL") || origin || "https://gridix.live").toString();
+        const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+
+        await sendEmailNotificationIfEnabled({
+          svc,
+          recipientUserId: String((project as any)?.user_id ?? ""),
+          event: "new_lead",
+          templateKey: "new_lead_created",
+          name: "amocrm-api:bind_lead_to_apartment",
+          payload: {
+            app: { url: siteUrl },
+            source: "amocrm_widget",
+            lead: {
+              name: placeholderName,
+              email: placeholderEmail,
+              phone: placeholderPhone,
+              source: "amocrm_widget",
+              amocrm_lead_id: amoLeadId,
+            },
+            project: {
+              id: project.id,
+              name: (project as any)?.name ?? null,
+              slug: (project as any)?.slug ?? null,
+              project_type: (project as any)?.project_type ?? null,
+            },
+            apartment: {
+              id: apartment.id,
+              number: (apartment as any)?.apartment_number ?? null,
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("new lead email notification skipped/failed", e);
       }
 
       return createJsonResponse(buildLeadBindingResponse(created), 200, origin);

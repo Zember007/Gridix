@@ -56,6 +56,15 @@ Body:
 }
 ```
 
+### 3) Send task due digest (service-only)
+
+Call the Edge Function:
+- `POST /functions/v1/notifications-task-due`
+
+Notes:
+- This endpoint is **service-only**: send `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`.
+- It uses user preferences (`user_notification_preferences.channel_email` + `notify_task_due`) and user locale (`user_profiles.preferred_locale`, default `en`).
+
 ### Template syntax
 
 Templates are stored in `public.notification_templates`:

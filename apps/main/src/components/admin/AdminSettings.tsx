@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect, type ChangeEvent } from 'react';
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
@@ -7,8 +7,9 @@ import { Textarea } from "@gridix/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
 import { Checkbox } from "@gridix/ui";
+import { Switch } from "@gridix/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
-import { Save, User, Building, CreditCard, KeyRound } from 'lucide-react';
+import { Save, User, Building, CreditCard, KeyRound, Bell, MessageSquare, Database, Upload, Link as LinkIcon, Globe, Trash2, Edit2, X } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { toast } from 'sonner';
 import { supabase } from "@gridix/utils/api";
@@ -18,19 +19,33 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import ManagerAccountsManager from '@/components/admin/ManagerAccountsManager';
 import { ManagerRole } from '@/hooks/useUserRole';
-import { Tables } from '@gridix/types/database';
+import { Tables, TablesInsert } from '@gridix/types/database';
 import { Spinner } from "@/shared/ui/Spinner";
+import { AdminSettingsCompanyTab } from "@/components/admin/settings/AdminSettingsCompanyTab";
+import { AdminSettingsDataTab } from "@/components/admin/settings/AdminSettingsDataTab";
+import { AdminSettingsNotificationsTab } from "@/components/admin/settings/AdminSettingsNotificationsTab";
+import { AdminSettingsTemplatesTab } from "@/components/admin/settings/AdminSettingsTemplatesTab";
 
 
 interface AdminSettings {
   id?: string;
   user_id: string;
   company_name: string;
+  full_name: string;
+  phone: string;
   created_at?: string;
   updated_at?: string;
 }
 
 type CompanySettings = Tables<'company_settings'>;
+type NotificationPreferencesRow = Tables<'user_notification_preferences'>;
+type MessageTemplateRow = Tables<'user_message_templates'>;
+
+type NotificationPreferencesForm = Omit<NotificationPreferencesRow, 'created_at' | 'updated_at'>;
+
+const TELEGRAM_BOT_USERNAME = 'gridix_bot';
+const SUPPORTED_LOCALES = ['en', 'ru', 'ka', 'he', 'ar'] as const;
+type SupportedLocale = typeof SUPPORTED_LOCALES[number];
 
 interface AdminSettingsProps {
   userProfile: SupabaseUser;
@@ -46,7 +61,10 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
   const [settings, setSettings] = useState<AdminSettings>({
     user_id: userProfile?.id || '',
     company_name: '',
+    full_name: '',
+    phone: '',
   });
+  const [preferredLocale, setPreferredLocale] = useState<SupportedLocale>('en');
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     id: '',
     user_id: userProfile?.id || '',
@@ -59,9 +77,42 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
     iban: null,
     currency: 'GEL',
     vat_payer: false,
+    website: null,
+    industry: null,
+    description: null,
+    logo_url: null,
+    system_domain: null,
     created_at: null,
     updated_at: null,
   });
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferencesForm>({
+    user_id: userProfile?.id || '',
+    channel_email: true,
+    channel_push: false,
+    channel_telegram: false,
+    telegram_username: null,
+    telegram_verified: false,
+    telegram_last_checked_at: null,
+    telegram_last_error: null,
+    notify_new_lead: true,
+    notify_task_due: true,
+    notify_payment_received: true,
+    notify_system_update: false,
+  });
+  const [loadingNotificationPreferences, setLoadingNotificationPreferences] = useState(false);
+
+  const [messageTemplates, setMessageTemplates] = useState<MessageTemplateRow[]>([]);
+  const [loadingMessageTemplates, setLoadingMessageTemplates] = useState(false);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateTitle, setTemplateTitle] = useState('');
+  const [templateContent, setTemplateContent] = useState('');
+
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const [exportingBackup, setExportingBackup] = useState(false);
+  const [resettingSettings, setResettingSettings] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
@@ -85,7 +136,7 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         try {
           const { data, error } = await supabase
             .from('user_profiles')
-            .select('company_name')
+            .select('company_name, full_name, phone, preferred_locale')
             .eq('id', userProfile.id)
             .single();
 
@@ -95,12 +146,23 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
             setSettings({
               user_id: userProfile.id,
               company_name: userProfile.user_metadata.company_name || '',
+              full_name: userProfile.user_metadata.full_name || '',
+              phone: userProfile.user_metadata.phone || '',
             });
           } else {
             setSettings({
               user_id: userProfile.id,
               company_name: data?.company_name || '',
+              full_name: data?.full_name || '',
+              phone: data?.phone || '',
             });
+
+            const rawLocale = String((data as any)?.preferred_locale ?? '').trim().toLowerCase();
+            if ((SUPPORTED_LOCALES as readonly string[]).includes(rawLocale)) {
+              setPreferredLocale(rawLocale as SupportedLocale);
+            } else {
+              setPreferredLocale('en');
+            }
           }
         } catch (error) {
           console.error('Error in loadProfileData:', error);
@@ -108,7 +170,10 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
           setSettings({
             user_id: userProfile.id,
             company_name: userProfile.user_metadata.company_name || '',
+            full_name: userProfile.user_metadata.full_name || '',
+            phone: userProfile.user_metadata.phone || '',
           });
+          setPreferredLocale('en');
         }
       };
 
@@ -136,6 +201,11 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               iban: null,
               currency: 'GEL',
               vat_payer: false,
+              website: null,
+              industry: null,
+              description: null,
+              logo_url: null,
+              system_domain: null,
               created_at: null,
               updated_at: null,
             });
@@ -152,6 +222,11 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               iban: data?.iban || null,
               currency: data?.currency || 'GEL',
               vat_payer: data?.vat_payer || false,
+              website: data?.website || null,
+              industry: data?.industry || null,
+              description: data?.description || null,
+              logo_url: data?.logo_url || null,
+              system_domain: data?.system_domain || null,
               created_at: data?.created_at || null,
               updated_at: data?.updated_at || null,
             });
@@ -171,14 +246,83 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
             iban: null,
             currency: 'GEL',
             vat_payer: false,
+            website: null,
+            industry: null,
+            description: null,
+            logo_url: null,
+            system_domain: null,
             created_at: null,
             updated_at: null,
           });
         }
       };
 
+      const loadNotificationPrefs = async () => {
+        setLoadingNotificationPreferences(true);
+        try {
+          const { data, error } = await supabase
+            .from('user_notification_preferences')
+            .select('*')
+            .eq('user_id', userProfile.id)
+            .maybeSingle();
+
+          // PGRST116 = no rows returned
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error loading notification preferences:', error);
+          }
+
+          if (!data) {
+            setNotificationPreferences(prev => ({
+              ...prev,
+              user_id: userProfile.id,
+            }));
+            return;
+          }
+
+          setNotificationPreferences({
+            user_id: userProfile.id,
+            channel_email: data.channel_email,
+            channel_push: data.channel_push,
+            channel_telegram: data.channel_telegram,
+            telegram_username: data.telegram_username,
+            telegram_verified: data.telegram_verified,
+            telegram_last_checked_at: data.telegram_last_checked_at,
+            telegram_last_error: data.telegram_last_error,
+            notify_new_lead: data.notify_new_lead,
+            notify_task_due: data.notify_task_due,
+            notify_payment_received: data.notify_payment_received,
+            notify_system_update: data.notify_system_update,
+          });
+        } catch (e) {
+          console.error('Error in loadNotificationPrefs:', e);
+        } finally {
+          setLoadingNotificationPreferences(false);
+        }
+      };
+
+      const loadTemplates = async () => {
+        setLoadingMessageTemplates(true);
+        try {
+          const { data, error } = await supabase
+            .from('user_message_templates')
+            .select('*')
+            .eq('user_id', userProfile.id)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setMessageTemplates(data ?? []);
+        } catch (e) {
+          console.error('Error loading message templates:', e);
+          setMessageTemplates([]);
+        } finally {
+          setLoadingMessageTemplates(false);
+        }
+      };
+
       loadProfileData();
       loadCompanySettings();
+      loadNotificationPrefs();
+      loadTemplates();
     }
   }, [userProfile]);
 
@@ -252,6 +396,278 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
     }
   };
 
+  const generateDomainSlug = (name: string) => {
+    if (!name) return 'your-company';
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const getSystemDomain = () => {
+    // If already stored in DB, keep it stable; otherwise derive from brand name.
+    return companySettings.system_domain || `${generateDomainSlug(settings.company_name)}.gridix.live`;
+  };
+
+  const handleLogoFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userProfile?.id) return;
+
+    setUploadingLogo(true);
+    try {
+      const safeName = file.name
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/_+/g, '_');
+
+      const bucket = 'project-images';
+      const path = `company-logos/${userProfile.id}/${Date.now()}_${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl || null;
+
+      // Save immediately so the logo does not get lost.
+      const nowIso = new Date().toISOString();
+      const companyData: TablesInsert<'company_settings'> = {
+        user_id: userProfile.id,
+        company_name: companySettings.company_name || settings.company_name || '',
+        tax_id: companySettings.tax_id ?? null,
+        address: companySettings.address ?? null,
+        phone: companySettings.phone ?? null,
+        email: companySettings.email ?? null,
+        bank_name: companySettings.bank_name ?? null,
+        iban: companySettings.iban ?? null,
+        currency: companySettings.currency ?? 'GEL',
+        vat_payer: companySettings.vat_payer ?? false,
+        website: companySettings.website ?? null,
+        industry: companySettings.industry ?? null,
+        description: companySettings.description ?? null,
+        logo_url: publicUrl,
+        system_domain: getSystemDomain(),
+        updated_at: nowIso,
+      };
+
+      const { data: saved, error: saveError } = await supabase
+        .from('company_settings')
+        .upsert(companyData, { onConflict: 'user_id' })
+        .select()
+        .single();
+
+      if (saveError) throw saveError;
+      setCompanySettings(prev => ({ ...prev, ...(saved ?? {}), user_id: userProfile.id }));
+      toast.success(t('adminSettings.logoUploaded'));
+    } catch (err) {
+      console.error('Failed to upload logo', err);
+      toast.error(t('adminSettings.logoUploadError'));
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleNotificationPreferenceChange = (
+    field: keyof Omit<NotificationPreferencesForm, 'user_id'>,
+    value: boolean | string | null
+  ) => {
+    setNotificationPreferences(prev => ({ ...prev, [field]: value } as NotificationPreferencesForm));
+  };
+
+  const handleTelegramUsernameChange = (value: string) => {
+    const next = value.startsWith('@') ? value : `@${value.replace(/^@+/, '')}`;
+    handleNotificationPreferenceChange('telegram_username', next === '@' ? null : next);
+  };
+
+  const verifyTelegramOnBlur = async () => {
+    const username = notificationPreferences.telegram_username?.trim() ?? '';
+    if (!notificationPreferences.channel_telegram || !username) return;
+
+    // ensure leading @
+    const normalized = username.startsWith('@') ? username : `@${username}`;
+    if (normalized !== username) {
+      setNotificationPreferences(prev => ({ ...prev, telegram_username: normalized }));
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('developer-settings', {
+        body: { action: 'telegram_verify_username', username: normalized },
+      });
+      if (error) throw error;
+
+      const ok = !!(data as { ok?: unknown })?.ok;
+      const nowIso = new Date().toISOString();
+      setNotificationPreferences(prev => ({
+        ...prev,
+        telegram_verified: ok,
+        telegram_last_checked_at: nowIso,
+        telegram_last_error: ok ? null : JSON.stringify(data ?? null),
+      }));
+
+      if (!ok) {
+        toast.error(t('adminSettings.telegramNeedsStart'), {
+          description: t('adminSettings.telegramNeedsStartDesc', { bot: `@${TELEGRAM_BOT_USERNAME}` }),
+        });
+      }
+    } catch (e) {
+      console.error('Failed to verify telegram username', e);
+      setNotificationPreferences(prev => ({
+        ...prev,
+        telegram_verified: false,
+        telegram_last_checked_at: new Date().toISOString(),
+        telegram_last_error: e instanceof Error ? e.message : 'unknown',
+      }));
+      toast.error(t('adminSettings.telegramVerifyError'));
+    }
+  };
+
+  const startCreateTemplate = () => {
+    setIsCreatingTemplate(true);
+    setEditingTemplateId(null);
+    setTemplateTitle('');
+    setTemplateContent('');
+  };
+
+  const startEditTemplate = (tpl: MessageTemplateRow) => {
+    setIsCreatingTemplate(false);
+    setEditingTemplateId(tpl.id);
+    setTemplateTitle(tpl.title);
+    setTemplateContent(tpl.content);
+  };
+
+  const cancelTemplateEditor = () => {
+    setIsCreatingTemplate(false);
+    setEditingTemplateId(null);
+    setTemplateTitle('');
+    setTemplateContent('');
+  };
+
+  const saveTemplate = async () => {
+    if (!userProfile?.id) return;
+    if (!templateTitle.trim() || !templateContent.trim()) return;
+
+    try {
+      const nowIso = new Date().toISOString();
+      if (editingTemplateId) {
+        const { error } = await supabase
+          .from('user_message_templates')
+          .update({
+            title: templateTitle.trim(),
+            content: templateContent,
+            variables: ['name'],
+            updated_at: nowIso,
+          })
+          .eq('id', editingTemplateId)
+          .eq('user_id', userProfile.id);
+
+        if (error) throw error;
+        toast.success(t('adminSettings.templateUpdated'));
+      } else {
+        const { error } = await supabase.from('user_message_templates').insert({
+          user_id: userProfile.id,
+          title: templateTitle.trim(),
+          content: templateContent,
+          variables: ['name'],
+          updated_at: nowIso,
+        });
+        if (error) throw error;
+        toast.success(t('adminSettings.templateCreated'));
+      }
+
+      // reload
+      const { data, error: loadErr } = await supabase
+        .from('user_message_templates')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .order('created_at', { ascending: false });
+      if (loadErr) throw loadErr;
+      setMessageTemplates(data ?? []);
+      cancelTemplateEditor();
+    } catch (e) {
+      console.error('Failed to save template', e);
+      toast.error(t('adminSettings.templateSaveError'));
+    }
+  };
+
+  const deleteTemplate = async (tpl: MessageTemplateRow) => {
+    if (!userProfile?.id) return;
+    if (!confirm(t('adminSettings.templateDeleteConfirm'))) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_message_templates')
+        .delete()
+        .eq('id', tpl.id)
+        .eq('user_id', userProfile.id);
+
+      if (error) throw error;
+      setMessageTemplates(prev => prev.filter(tpl2 => tpl2.id !== tpl.id));
+      toast.success(t('adminSettings.templateDeleted'));
+      if (editingTemplateId === tpl.id) cancelTemplateEditor();
+    } catch (e) {
+      console.error('Failed to delete template', e);
+      toast.error(t('adminSettings.templateDeleteError'));
+    }
+  };
+
+  const handleExportBackup = async () => {
+    setExportingBackup(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('developer-settings', {
+        body: { action: 'export_backup' },
+      });
+      if (error) throw error;
+
+      const content = JSON.stringify(data ?? {}, null, 2);
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gridix_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(t('adminSettings.backupDownloaded'));
+    } catch (e) {
+      console.error('Failed to export backup', e);
+      toast.error(t('adminSettings.backupError'));
+    } finally {
+      setExportingBackup(false);
+    }
+  };
+
+  const handleResetSettings = async () => {
+    if (!confirm(t('adminSettings.resetConfirm'))) return;
+    setResettingSettings(true);
+    try {
+      const { error } = await supabase.functions.invoke('developer-settings', {
+        body: { action: 'reset_settings' },
+      });
+      if (error) throw error;
+
+      // Clear local caches (without forcing logout) + reload
+      try {
+        localStorage.removeItem('gridix_lang');
+      } catch {
+        // ignore
+      }
+      toast.success(t('adminSettings.resetSuccess'));
+      window.location.reload();
+    } catch (e) {
+      console.error('Failed to reset settings', e);
+      toast.error(t('adminSettings.resetError'));
+    } finally {
+      setResettingSettings(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!userProfile) {
       toast.error(t('adminSettings.authRequired'));
@@ -263,6 +679,9 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
       // Save user profile data
       const profileData = {
         company_name: settings.company_name,
+        full_name: settings.full_name,
+        phone: settings.phone,
+        preferred_locale: preferredLocale,
         updated_at: new Date().toISOString()
       };
 
@@ -279,8 +698,9 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         throw profileError;
       }
 
-      // Save company settings data
-      const companyData = {
+      // Save company settings data (billing + brand settings)
+      const companyData: TablesInsert<'company_settings'> = {
+        user_id: userProfile.id,
         company_name: companySettings.company_name,
         tax_id: companySettings.tax_id,
         address: companySettings.address,
@@ -290,36 +710,75 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
         iban: companySettings.iban,
         currency: companySettings.currency,
         vat_payer: companySettings.vat_payer,
+        website: companySettings.website,
+        industry: companySettings.industry,
+        description: companySettings.description,
+        logo_url: companySettings.logo_url,
+        system_domain: getSystemDomain(),
         updated_at: new Date().toISOString()
       };
 
-
       const { data: companyResult, error: companyError } = await supabase
         .from('company_settings')
-        .update(companyData)
-        .eq('user_id', userProfile.id)
-        .select();
-
+        .upsert(companyData, { onConflict: 'user_id' })
+        .select()
+        .single();
 
       if (companyError) {
         console.error('Supabase company settings error:', companyError);
         throw companyError;
       }
 
+      const notifData = {
+        ...notificationPreferences,
+        user_id: userProfile.id,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: notifResult, error: notifError } = await supabase
+        .from('user_notification_preferences')
+        .upsert(notifData, { onConflict: 'user_id' })
+        .select()
+        .single();
+
+      if (notifError) {
+        console.error('Supabase notification preferences error:', notifError);
+        throw notifError;
+      }
+
       // Update local state with the saved data
       if (profileResult && profileResult.length > 0) {
         setSettings(prev => ({
           ...prev,
-          company_name: profileResult[0]?.company_name || ''
+          company_name: profileResult[0]?.company_name || '',
+          full_name: profileResult[0]?.full_name || '',
+          phone: profileResult[0]?.phone || ''
         }));
       }
 
-      if (companyResult && companyResult.length > 0) {
+      if (companyResult) {
         setCompanySettings(prev => ({
           ...prev,
-          ...(companyResult[0]),
+          ...(companyResult),
           user_id: userProfile.id
         }));
+      }
+
+      if (notifResult) {
+        setNotificationPreferences({
+          user_id: userProfile.id,
+          channel_email: notifResult.channel_email,
+          channel_push: notifResult.channel_push,
+          channel_telegram: notifResult.channel_telegram,
+          telegram_username: notifResult.telegram_username,
+          telegram_verified: notifResult.telegram_verified,
+          telegram_last_checked_at: notifResult.telegram_last_checked_at,
+          telegram_last_error: notifResult.telegram_last_error,
+          notify_new_lead: notifResult.notify_new_lead,
+          notify_task_due: notifResult.notify_task_due,
+          notify_payment_received: notifResult.notify_payment_received,
+          notify_system_update: notifResult.notify_system_update,
+        });
       }
 
       toast.success(t('adminSettings.settingsSaved'));
@@ -398,6 +857,18 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
             <User className="h-4 w-4" />
             {t('adminSettings.contacts')}
           </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            {t('adminSettings.notifications')}
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            {t('adminSettings.templates')}
+          </TabsTrigger>
+          <TabsTrigger value="data" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            {t('adminSettings.data')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="company">
@@ -409,16 +880,17 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="company_name">{t('adminSettings.companyName')}</Label>
-                <Input
-                  id="company_name"
-                  value={settings.company_name}
-                  onChange={(e) => handleInputChange('company_name', e.target.value)}
-                  placeholder={t('adminSettings.companyNamePlaceholder')}
-                />
-              </div>
-
+              <AdminSettingsCompanyTab
+                settingsCompanyName={settings.company_name}
+                onBrandNameChange={(value) => handleInputChange('company_name', value)}
+                companySettings={companySettings}
+                onCompanyFieldChange={handleCompanyInputChange}
+                systemDomain={getSystemDomain()}
+                logoInputRef={logoInputRef}
+                uploadingLogo={uploadingLogo}
+                onLogoFileChange={handleLogoFileChange}
+                t={t}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -540,6 +1012,56 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
 
         <TabsContent value="account">
           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('adminSettings.profileInfo')}</CardTitle>
+                <CardDescription>{t('adminSettings.profileInfoDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="full_name">{t('adminSettings.fullName')}</Label>
+                    <Input
+                      id="full_name"
+                      value={settings.full_name}
+                      onChange={(e) => handleInputChange('full_name', e.target.value)}
+                      placeholder={t('adminSettings.fullNamePlaceholder')}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="profile_phone">{t('adminSettings.phone')}</Label>
+                    <Input
+                      id="profile_phone"
+                      value={settings.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder={t('adminSettings.phonePlaceholder')}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_locale">Language</Label>
+                    <Select value={preferredLocale} onValueChange={(v) => setPreferredLocale(v as SupportedLocale)}>
+                      <SelectTrigger id="preferred_locale">
+                        <SelectValue placeholder="en" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUPPORTED_LOCALES.map((loc) => (
+                          <SelectItem key={loc} value={loc}>
+                            {loc.toUpperCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="text-xs text-muted-foreground">
+                      Used for emails and default UI language.
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>{t('adminSettings.changeEmail')}</CardTitle>
@@ -667,6 +1189,76 @@ const AdminSettings = ({ userProfile, loading, developerId, managerData }: Admin
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.notificationPreferences')}</CardTitle>
+              <CardDescription>{t('adminSettings.notificationPreferencesDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminSettingsNotificationsTab
+                loading={loadingNotificationPreferences}
+                channelEmail={notificationPreferences.channel_email}
+                channelPush={notificationPreferences.channel_push}
+                channelTelegram={notificationPreferences.channel_telegram}
+                telegramUsername={notificationPreferences.telegram_username || ""}
+                telegramVerified={notificationPreferences.telegram_verified}
+                notifyNewLead={notificationPreferences.notify_new_lead}
+                notifyTaskDue={notificationPreferences.notify_task_due}
+                notifyPaymentReceived={notificationPreferences.notify_payment_received}
+                notifySystemUpdate={notificationPreferences.notify_system_update}
+                userEmail={userProfile?.email || ""}
+                onToggle={(field, checked) => handleNotificationPreferenceChange(field as any, checked)}
+                onTelegramUsernameChange={handleTelegramUsernameChange}
+                onTelegramUsernameBlur={verifyTelegramOnBlur}
+                t={t}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <Card>
+            <CardContent>
+              <AdminSettingsTemplatesTab
+                templates={messageTemplates}
+                loading={loadingMessageTemplates}
+                isEditorOpen={isCreatingTemplate || !!editingTemplateId}
+                isCreating={isCreatingTemplate}
+                editingId={editingTemplateId}
+                title={templateTitle}
+                content={templateContent}
+                onCreate={startCreateTemplate}
+                onEdit={startEditTemplate}
+                onDelete={deleteTemplate}
+                onCloseEditor={cancelTemplateEditor}
+                onTitleChange={setTemplateTitle}
+                onContentChange={setTemplateContent}
+                onSave={saveTemplate}
+                t={t}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="data">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('adminSettings.dataManagement')}</CardTitle>
+              <CardDescription>{t('adminSettings.dataManagementDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminSettingsDataTab
+                exportingBackup={exportingBackup}
+                resettingSettings={resettingSettings}
+                onExportBackup={handleExportBackup}
+                onResetSettings={handleResetSettings}
+                t={t}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

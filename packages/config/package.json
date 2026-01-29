@@ -2,13 +2,20 @@
     "name": "@gridix/config",
     "version": "0.0.0",
     "private": true,
+    "type": "module",
     "exports": {
         "./tailwind": "./tailwind/tailwind.config.ts",
         "./typescript": "./typescript/tsconfig.base.json",
         "./eslint": "./eslint/eslint.config.js"
     },
     "devDependencies": {
+        "@eslint/js": "^9.9.0",
+        "eslint": "^9.9.0",
+        "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+        "eslint-plugin-react-refresh": "^0.4.9",
+        "globals": "^15.9.0",
         "tailwindcss": "^3.4.11",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.0.1"
     }
 }

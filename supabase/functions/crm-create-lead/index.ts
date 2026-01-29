@@ -3,6 +3,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
+import { sendEmailNotificationIfEnabled } from "../_shared/user-notifications.ts";
 
 type LeadRequest = {
   name: string;
@@ -489,6 +490,41 @@ serve(async (req) => {
           description: body.agentId ? 'Заявка получена по партнерской ссылке' : 'Заявка получена с сайта',
           metadata: { agent_id: body.agentId || null }
         });
+      }
+
+      // ---- Email notification (best-effort): "new lead"
+      try {
+        const siteUrlRaw = (Deno.env.get("SITE_URL") || origin || "https://gridix.live").toString();
+        const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
+
+        await sendEmailNotificationIfEnabled({
+          svc,
+          recipientUserId: projectOwnerId,
+          event: "new_lead",
+          templateKey: "new_lead_created",
+          name: "crm-create-lead:new_lead",
+          payload: {
+            app: { url: siteUrl },
+            source: "website",
+            lead: { name, email, phone, source: "website", agent_id: body.agentId || null },
+            project: {
+              id: (apartment as any)?.projects?.id ?? null,
+              name: (apartment as any)?.projects?.name ?? null,
+              address: (apartment as any)?.projects?.address ?? null,
+              currency: (apartment as any)?.projects?.currency ?? null,
+            },
+            apartment: {
+              id: (apartment as any)?.id ?? null,
+              number: (apartment as any)?.apartment_number ?? null,
+              floor_number: (apartment as any)?.floor_number ?? null,
+              rooms: (apartment as any)?.rooms ?? null,
+              area: (apartment as any)?.area ?? null,
+              price: (apartment as any)?.price ?? null,
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("new lead email notification skipped/failed", e);
       }
     }
 

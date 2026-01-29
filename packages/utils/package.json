@@ -30,6 +30,7 @@
     "devDependencies": {
         "@gridix/config": "workspace:*",
         "@gridix/types": "workspace:*",
+        "@gridix/ui": "../ui",
         "@types/react": "^18.3.3",
         "react-router-dom": "^6.26.2",
         "react": "^18.3.1",

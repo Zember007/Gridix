@@ -27,6 +27,8 @@ let initialized = false
 let usertourClient: UsertourClient | null = null
 let usertourImportPromise: Promise<UsertourClient> | null = null
 
+let preloadStarted = false
+
 let uiBlocked = false
 const uiBlockedListeners = new Set<() => void>()
 
@@ -150,6 +152,33 @@ export function isDevTourMode(): boolean {
   return env === "true" || env === "1"
 }
 
+/**
+ * Warm up Usertour SDK (import + init) in the background.
+ * Helps avoid slow "cold start" when starting the first tour.
+ */
+export function preloadUsertour(): void {
+  if (!isBrowser()) return
+  if (preloadStarted) return
+  preloadStarted = true
+
+  // If there's no token configured, there's nothing to init.
+  if (!getUsertourToken()) return
+
+  const run = () => {
+    void getPreparedUsertourClient().catch(() => {
+      // ignore: preload should never break the app
+    })
+  }
+
+  // Prefer idle time so we don't compete with critical app rendering.
+  const w = window as Window & typeof globalThis & { requestIdleCallback?: (cb: () => void) => void }
+  if (typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(run)
+    return
+  }
+  setTimeout(run, 1)
+}
+
 async function loadUsertourClient(): Promise<UsertourClient> {
   if (!isBrowser()) {
     throw new Error("Usertour can only be loaded in the browser")
@@ -184,10 +213,26 @@ async function getPreparedUsertourClient(): Promise<UsertourClient | null> {
 }
 
 async function withUiBlocked<T>(fn: () => Promise<T>): Promise<T> {
-  setUiBlocked(true)
+  // Usertour SDK (and `client.start`) can be slow to load/initialize (network, cold cache).
+  // Blocking the whole app UI for seconds feels like a freeze, so we:
+  // - delay the block (no "flash" for fast paths)
+  // - enforce a max block duration (UI always becomes interactive)
+  const BLOCK_DELAY_MS = 200
+  const MAX_BLOCK_MS = 700
+
+  let delayTimer: ReturnType<typeof setTimeout> | null = null
+  let maxTimer: ReturnType<typeof setTimeout> | null = null
+
+  delayTimer = setTimeout(() => {
+    setUiBlocked(true)
+    maxTimer = setTimeout(() => setUiBlocked(false), MAX_BLOCK_MS)
+  }, BLOCK_DELAY_MS)
+
   try {
     return await fn()
   } finally {
+    if (delayTimer) clearTimeout(delayTimer)
+    if (maxTimer) clearTimeout(maxTimer)
     setUiBlocked(false)
   }
 }
