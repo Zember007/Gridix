@@ -12,6 +12,11 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        // Cursor/ESLint can lint from different working directories in this monorepo.
+        // Setting an explicit root avoids ts-eslint ambiguity errors.
+        tsconfigRootDir: process.cwd(),
+      },
     },
     plugins: {
       "react-hooks": reactHooks,
