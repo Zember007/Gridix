@@ -278,6 +278,7 @@ export const ProjectSidePanel = ({
         <div className="flex items-center gap-2">
           {state.kind === 'apartment' && (
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-gray-600"
@@ -287,6 +288,7 @@ export const ProjectSidePanel = ({
             </Button>
           )}
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-gray-400 hover:text-gray-600"
@@ -312,6 +314,7 @@ export const ProjectSidePanel = ({
 
             <div className="flex justify-center">
               <Button
+                type="button"
                 variant="link"
                 className="text-blue-600 font-medium"
                 onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
@@ -426,6 +429,7 @@ export const ProjectSidePanel = ({
           {/* Actions */}
           <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
             <Button
+              type="button"
               variant="outline"
               size="icon"
               className={cn("h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50 hover:text-red-500", isFavorite(state.apartment.id) && "border-red-200 bg-red-50 text-red-500")}
@@ -434,6 +438,7 @@ export const ProjectSidePanel = ({
               <Heart className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")} />
             </Button>
             <Button
+              type="button"
               className="h-12 text-lg font-semibold rounded-xl w-full text-white shadow-lg transition-all active:scale-[0.98]"
               style={{ backgroundColor: themeColor }}
               onClick={() => onOpenApartmentDetails(state.apartment)}

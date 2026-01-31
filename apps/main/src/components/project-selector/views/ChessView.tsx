@@ -24,8 +24,7 @@ type Props = {
     themeColor: string;
     // Extra props can be passed from parent; keep them optional for TS safety
     language?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t?: (key: string, options?: Record<string, any>) => string;
+    t?: (key: string, options?: Record<string, unknown>) => string;
 };
 
 // Helper to determine text/hover classes based on status
@@ -198,6 +197,7 @@ export const ChessView = ({
                                         hoveredFloor === floor ? "opacity-100 z-10" : "opacity-0"
                                     )}>
                                         <Button
+                                            type="button"
                                             variant="link"
                                             className="text-blue-600 h-8 px-0 text-sm font-normal whitespace-nowrap"
                                             onClick={() => onOpenFloorPlan(floor)}
