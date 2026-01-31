@@ -1,7 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
-import { i18n, LANGUAGE_CONFIG } from "@gridix/utils/lib";
+import { LANGUAGE_CONFIG } from "@gridix/utils/lib";
+import i18n from '@/shared/lib/i18n';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ProjectApartmentSelector from '@/widgets/projectApartmentSelector';
 import '@/index.css';
@@ -28,6 +29,47 @@ type InitOptions = {
 };
 
 const DEFAULT_CONTAINER_ID = 'gridix-widget-root';
+
+function getWidgetScriptSrc(): string | null {
+  // Best case: during script execution, currentScript points to the widget script.
+  const current = document.currentScript;
+  if (current && current instanceof HTMLScriptElement && current.src) {
+    return current.src;
+  }
+
+  const scripts = Array.from(document.getElementsByTagName('script')) as HTMLScriptElement[];
+
+  // Prefer the known embed URL shape from admin panel: /widget/index.js
+  const exact = scripts
+    .slice()
+    .reverse()
+    .find((s) => s.src && /\/widget\/index\.js(\?.*)?$/.test(s.src));
+  if (exact?.src) return exact.src;
+
+  // Next best: any script served from a /widget/ folder and ending in .js
+  const widgetFolder = scripts
+    .slice()
+    .reverse()
+    .find((s) => s.src && /\/widget\/.+\.js(\?.*)?$/.test(s.src));
+  if (widgetFolder?.src) return widgetFolder.src;
+
+  // If the file name or path includes "gridix", prefer that over generic "widget" scripts.
+  const gridix = scripts
+    .slice()
+    .reverse()
+    .find((s) => s.src && /gridix/i.test(s.src) && /\.js(\?.*)?$/.test(s.src));
+  if (gridix?.src) return gridix.src;
+
+  // Last resort: old heuristic (can match 3rd-party widgets).
+  const anyWidget = scripts
+    .slice()
+    .reverse()
+    .find((s) => s.src && /widget/i.test(s.src) && /\.js(\?.*)?$/.test(s.src));
+  return anyWidget?.src ?? null;
+}
+
+const WIDGET_SCRIPT_SRC =
+  typeof document !== 'undefined' ? getWidgetScriptSrc() : null;
 
 function buildInitOptions(options: InitOptions = {}): InitOptions {
   const url = new URL(window.location.href);
@@ -95,36 +137,14 @@ function ensureStylesInShadow(shadowRoot: ShadowRoot): Promise<void> {
 
     let cssHref = '';
 
-    // Пытаемся найти скрипт widget.js и построить путь к style.css
-    const scripts = Array.from(
-      document.getElementsByTagName('script')
-    ) as HTMLScriptElement[];
-    const widgetScript = scripts
-      .reverse()
-      .find((s) => s.src && /widget\.js(\?.*)?$/.test(s.src));
-    if (widgetScript && widgetScript.src) {
-      cssHref = widgetScript.src.replace(
-        /widget\.js(\?.*)?$/,
-        `style.css?v=${widgetVersion}`
+    // Prefer the widget script URL we detected at load time (robust against other 3rd-party "*widget*.js").
+    if (WIDGET_SCRIPT_SRC) {
+      const scriptUrl = new URL(WIDGET_SCRIPT_SRC);
+      const basePath = scriptUrl.pathname.substring(
+        0,
+        scriptUrl.pathname.lastIndexOf('/')
       );
-    }
-
-    // Фоллбек: ищем любой скрипт с "widget" в пути
-    if (!cssHref) {
-      const scriptsFallback = Array.from(
-        document.getElementsByTagName('script')
-      ) as HTMLScriptElement[];
-      const widgetScriptFallback = scriptsFallback
-        .reverse()
-        .find((s) => s.src && /widget/.test(s.src));
-      if (widgetScriptFallback && widgetScriptFallback.src) {
-        const scriptUrl = new URL(widgetScriptFallback.src);
-        const basePath = scriptUrl.pathname.substring(
-          0,
-          scriptUrl.pathname.lastIndexOf('/')
-        );
-        cssHref = `${scriptUrl.origin}${basePath}/style.css?v=${widgetVersion}`;
-      }
+      cssHref = `${scriptUrl.origin}${basePath}/style.css?v=${widgetVersion}`;
     }
 
     if (!cssHref) {
