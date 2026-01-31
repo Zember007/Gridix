@@ -77,44 +77,74 @@ export type Database = {
       }
       agent_applications: {
         Row: {
+          agent_user_id: string | null
           agreement_signed: boolean | null
+          agreement_signed_at: string | null
           bank_details: Json | null
           commission_rate: number | null
+          contract_template_path: string | null
           created_at: string
           developer_user_id: string | null
           email: string
           full_name: string
           id: string
           phone: string
+          rejection_reason: string | null
           reviewed_at: string | null
+          signature_meta: Json
+          signature_method: string | null
+          signature_path: string | null
+          signed_contract_created_at: string | null
+          signed_contract_mime: string | null
+          signed_contract_path: string | null
           status: string
           type: string | null
         }
         Insert: {
+          agent_user_id?: string | null
           agreement_signed?: boolean | null
+          agreement_signed_at?: string | null
           bank_details?: Json | null
           commission_rate?: number | null
+          contract_template_path?: string | null
           created_at?: string
           developer_user_id?: string | null
           email: string
           full_name: string
           id?: string
           phone: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
+          signature_meta?: Json
+          signature_method?: string | null
+          signature_path?: string | null
+          signed_contract_created_at?: string | null
+          signed_contract_mime?: string | null
+          signed_contract_path?: string | null
           status?: string
           type?: string | null
         }
         Update: {
+          agent_user_id?: string | null
           agreement_signed?: boolean | null
+          agreement_signed_at?: string | null
           bank_details?: Json | null
           commission_rate?: number | null
+          contract_template_path?: string | null
           created_at?: string
           developer_user_id?: string | null
           email?: string
           full_name?: string
           id?: string
           phone?: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
+          signature_meta?: Json
+          signature_method?: string | null
+          signature_path?: string | null
+          signed_contract_created_at?: string | null
+          signed_contract_mime?: string | null
+          signed_contract_path?: string | null
           status?: string
           type?: string | null
         }
@@ -157,6 +187,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_program_settings: {
+        Row: {
+          created_at: string
+          default_commission_rate: number
+          developer_user_id: string
+          developer_signature_path: string | null
+          developer_stamp_path: string | null
+          lead_lock_days: number
+          payout_terms: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_commission_rate?: number
+          developer_user_id: string
+          developer_signature_path?: string | null
+          developer_stamp_path?: string | null
+          lead_lock_days?: number
+          payout_terms?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_commission_rate?: number
+          developer_user_id?: string
+          developer_signature_path?: string | null
+          developer_stamp_path?: string | null
+          lead_lock_days?: number
+          payout_terms?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       apartment_photos: {
         Row: {

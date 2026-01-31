@@ -57,7 +57,7 @@ export const useWorkspaceProjects = () => {
           }
 
           // Загружаем проекты застройщика, ограниченные списком доступных проектов
-          let query = supabase
+          const query = supabase
             .from('projects')
             .select(`
               *,

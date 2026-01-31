@@ -1,0 +1,46 @@
+{
+  "app": {
+    "title": "Кабинет агента"
+  },
+  "nav": {
+    "dashboard": "Главная",
+    "application": "Заявка",
+    "projects": "Каталог",
+    "contacts": "Контакты",
+    "leads": "Лиды",
+    "payouts": "Выплаты"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "continue": "Продолжить"
+  },
+  "auth": {
+    "email": "Email",
+    "sendLink": "Отправить magic link",
+    "signOut": "Выйти"
+  },
+  "agent": {
+    "selectDeveloper": "ID застройщика (из ссылки приглашения)",
+    "application": {
+      "title": "Заявка в агентскую сеть",
+      "fullName": "ФИО",
+      "phone": "Телефон",
+      "bankDetails": "Реквизиты",
+      "agreements": "Договоры",
+      "signature": "Подпись",
+      "drawSignature": "Нарисовать",
+      "uploadSignature": "Загрузить",
+      "clear": "Очистить",
+      "sign": "Подписать договор",
+      "submit": "Отправить заявку"
+    },
+    "status": {
+      "pending": "На проверке",
+      "approved": "Одобрено",
+      "rejected": "Отклонено"
+    }
+  }
+}
+

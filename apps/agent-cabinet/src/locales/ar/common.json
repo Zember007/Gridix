@@ -1,0 +1,31 @@
+{
+  "app": { "title": "Agent Cabinet" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "application": "Application",
+    "projects": "Catalog",
+    "contacts": "Contacts",
+    "leads": "Leads",
+    "payouts": "Payouts"
+  },
+  "common": { "loading": "Loading...", "save": "Save", "cancel": "Cancel", "continue": "Continue" },
+  "auth": { "email": "Email", "sendLink": "Send magic link", "signOut": "Sign out" },
+  "agent": {
+    "selectDeveloper": "Developer ID",
+    "application": {
+      "title": "Apply to developer",
+      "fullName": "Full name",
+      "phone": "Phone",
+      "bankDetails": "Bank details",
+      "agreements": "Agreements",
+      "signature": "Signature",
+      "drawSignature": "Draw",
+      "uploadSignature": "Upload",
+      "clear": "Clear",
+      "sign": "Sign agreement",
+      "submit": "Submit application"
+    },
+    "status": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" }
+  }
+}
+

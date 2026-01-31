@@ -10,7 +10,15 @@ import type { Database } from '@gridix/types/database';
 export function useAgencyPartners() {
     const [partners, setPartners] = useState<AgencyPartner[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState<PartnerFilter>({ search: '', status: 'all', type: 'all' });
+    const [filters, setFilters] = useState<PartnerFilter>({
+        search: '',
+        status: 'all',
+        type: 'all',
+        minCommission: undefined,
+        maxCommission: undefined,
+        dateFrom: undefined,
+        dateTo: undefined,
+    });
     const { language } = useLanguage();
     const { user } = useAuth();
     const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -41,7 +49,8 @@ export function useAgencyPartners() {
                 const dbStatus = String(item.status || 'pending');
                 const uiStatus: AgencyPartner['status'] =
                     dbStatus === 'approved' ? 'active' :
-                        dbStatus === 'rejected' ? 'blocked' :
+                        dbStatus === 'needs_correction' ? 'needs_correction' :
+                        (dbStatus === 'blocked' || dbStatus === 'rejected') ? 'blocked' :
                             // fallback for unexpected values
                             'pending';
 
@@ -53,6 +62,7 @@ export function useAgencyPartners() {
                 phone: item.phone,
                 email: item.email,
                 status: uiStatus,
+                rejectionReason: item.rejection_reason ?? undefined,
                 commissionRate: item.commission_rate || 4,
                 source: 'website',
                 joinedAt: item.created_at,
@@ -140,7 +150,23 @@ export function useAgencyPartners() {
             const matchesStatus = filters.status === 'all' || p.status === filters.status;
             const matchesType = filters.type === 'all' || p.type === filters.type;
 
-            return matchesSearch && matchesStatus && matchesType;
+            const min = typeof filters.minCommission === 'number' ? filters.minCommission : null;
+            const max = typeof filters.maxCommission === 'number' ? filters.maxCommission : null;
+            const matchesCommission =
+                (min === null || p.commissionRate >= min) &&
+                (max === null || p.commissionRate <= max);
+
+            const from = typeof filters.dateFrom === 'string' && filters.dateFrom ? new Date(filters.dateFrom) : null;
+            const to = typeof filters.dateTo === 'string' && filters.dateTo ? new Date(filters.dateTo) : null;
+            // inclusive: [from, to+1day)
+            const joinedAt = new Date(p.joinedAt);
+            const toEnd = to ? new Date(to) : null;
+            if (toEnd) toEnd.setDate(toEnd.getDate() + 1);
+            const matchesDate =
+                (!from || joinedAt >= from) &&
+                (!toEnd || joinedAt < toEnd);
+
+            return matchesSearch && matchesStatus && matchesType && matchesCommission && matchesDate;
         });
     }, [partners, filters]);
 
@@ -167,11 +193,12 @@ export function useAgencyPartners() {
         }
     };
 
-    const updatePartnerStatus = async (id: string, status: AgencyPartner['status']) => {
+    const updatePartnerStatus = async (id: string, status: AgencyPartner['status'], rejectionReason?: string) => {
         try {
             const dbStatus =
                 status === 'active' ? 'approved' :
-                    status === 'blocked' ? 'rejected' :
+                    status === 'needs_correction' ? 'needs_correction' :
+                        status === 'blocked' ? 'blocked' :
                         'pending';
 
             const { data, error } = await supabase.functions.invoke('agent-program', {
@@ -179,13 +206,14 @@ export function useAgencyPartners() {
                     action: 'update_application_status',
                     application_id: id,
                     status: dbStatus,
+                    rejection_reason: status === 'needs_correction' ? rejectionReason : undefined,
                 },
             });
 
             if (error) throw error;
             if (!data?.success) throw new Error(data?.error || 'Status update failed');
 
-            setPartners(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+            setPartners(prev => prev.map(p => p.id === id ? { ...p, status, rejectionReason } : p));
             toast.success('Статус обновлен');
         } catch (error: unknown) {
             console.error('updatePartnerStatus error:', error);
@@ -232,12 +260,13 @@ export function useAgencyPartners() {
             totalPartners: partners.length,
             activePartners: partners.filter(p => p.status === 'active').length,
             totalSalesVolume: partners.reduce((acc, p) => acc + p.stats.totalRevenue, 0),
-            pendingRequests: partners.filter(p => p.status === 'pending').length,
+            pendingRequests: partners.filter(p => p.status === 'pending' || p.status === 'needs_correction').length,
             totalPendingCommission: partners.reduce((acc, p) => acc + p.stats.commissionPending, 0)
         };
     }, [partners]);
 
     return {
+        developerId,
         partners: filteredPartners,
         loading,
         filters,

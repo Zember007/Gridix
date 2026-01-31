@@ -323,7 +323,7 @@ const getAdminNavItems = (
               ) : undefined,
           },
           { id: "contacts", icon: <UserIcon size={18} />, label: t('admin.contacts') || 'Контакты' },
-          /* { id: "agent_network", icon: <Handshake size={18} />, label: t('admin.agent_network') || 'Агентская сеть' }, */
+          { id: "agent_network", icon: <Handshake size={18} />, label: t('admin.agent_network') || 'Агентская сеть' },
         ]
       }
     ] : []),

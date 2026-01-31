@@ -1,247 +1,354 @@
-import React, { useState } from 'react';
-import { Search, Building2, User, CheckCircle2, Clock, Link as LinkIcon, DollarSign, Handshake, LayoutList, ShieldCheck, MoreVertical, Ban } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Search, Link as LinkIcon, Handshake, ShieldCheck, LayoutList, Users, DollarSign, Building2, TrendingUp, Filter, ArrowUpDown } from 'lucide-react';
 import { useAgencyPartners } from './useAgencyPartners';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { PartnerDrawer } from './PartnerDrawer';
+import { PartnerPayoutModal } from './PartnerPayoutModal';
 import { AgencyGeneralConditions } from './AgencyGeneralConditions';
+import { PartnerFiltersPanel } from './PartnerFiltersPanel';
 import { AgencyPartner } from './types';
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
+import { Popover, PopoverTrigger } from "@gridix/ui";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@gridix/ui";
+import { UserAvatar } from '@/components/admin/UserAvatar';
 
 export const AgencyPartnersPage: React.FC = () => {
-    const { partners, filters, setFilters, approvePartner, updatePartnerStatus, updatePartnerCommission, markPaid, stats, loading } = useAgencyPartners();
+    const { partners, filters, setFilters, approvePartner, updatePartnerStatus, updatePartnerCommission, markPaid, stats, loading, developerId } = useAgencyPartners();
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [selectedPartner, setSelectedPartner] = useState<AgencyPartner | null>(null);
+    const [payoutTarget, setPayoutTarget] = useState<AgencyPartner | null>(null);
     const [activeTab, setActiveTab] = useState<'list' | 'conditions'>('list');
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
-    const handleAction = (partner: AgencyPartner, action: 'approve' | 'block') => {
-        if (action === 'approve') {
-            approvePartner(partner.id);
-        } else if (action === 'block') {
-            updatePartnerStatus(partner.id, partner.status === 'blocked' ? 'active' : 'blocked');
-        }
+    const handleStatusFilterCycle = () => {
+        const cycle: Array<NonNullable<typeof filters.status>> = ['all', 'pending', 'needs_correction', 'active', 'blocked'];
+        const current = (filters.status ?? 'all') as NonNullable<typeof filters.status>;
+        const currentIndex = cycle.indexOf(current);
+        const next = cycle[(currentIndex + 1) % cycle.length] ?? 'all';
+        setFilters((prev) => ({ ...prev, status: next }));
     };
+
+    const StatusBadge = ({ status }: { status: string }) => {
+        const styles =
+            {
+                active: 'bg-green-50 text-green-700 ring-green-600/20',
+                pending: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+                blocked: 'bg-red-50 text-red-700 ring-red-600/20',
+                needs_correction: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+            }[status] || 'bg-slate-50 text-slate-700 ring-slate-600/20';
+        const label =
+            status === 'active'
+                ? 'Активен'
+                : status === 'pending'
+                    ? 'Новый'
+                    : status === 'needs_correction'
+                        ? 'Доработка'
+                        : status === 'blocked'
+                            ? 'Блок'
+                            : status;
+        return (
+            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${styles}`}>
+                {label}
+            </span>
+        );
+    };
+
+    const activeFiltersCount = useMemo(() => {
+        return [
+            filters.status !== 'all',
+            filters.type !== 'all',
+            typeof filters.minCommission === 'number',
+            typeof filters.maxCommission === 'number',
+            Boolean(filters.dateFrom),
+            Boolean(filters.dateTo),
+        ].filter(Boolean).length;
+    }, [filters]);
 
     const handlePartnerUpdate = (id: string, data: Partial<AgencyPartner>) => {
         if (data.commissionRate) updatePartnerCommission(id, data.commissionRate);
         if (data.status) {
             const nextStatus = data.status as AgencyPartner['status'];
             const current = selectedPartner?.id === id ? selectedPartner : null;
-            if (nextStatus === 'active' && current?.status === 'pending') {
+            if (nextStatus === 'active' && (current?.status === 'pending' || current?.status === 'needs_correction')) {
                 approvePartner(id);
             } else {
-                updatePartnerStatus(id, nextStatus);
+                updatePartnerStatus(
+                    id,
+                    nextStatus,
+                    nextStatus === 'needs_correction' ? data.rejectionReason : undefined,
+                );
             }
         }
     };
 
     return (
-        <div className="flex flex-col ">
+        <div className="flex flex-col h-full bg-[#F8FAFC]">
             <PartnerInviteModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
+            <PartnerPayoutModal
+                isOpen={!!payoutTarget}
+                onClose={() => setPayoutTarget(null)}
+                partner={payoutTarget}
+                onPayout={async (_amount) => {
+                    // MVP: we mark all pending payouts as paid (existing behavior)
+                    if (!payoutTarget) return;
+                    await markPaid(payoutTarget.id);
+                }}
+            />
 
             <PartnerDrawer
                 partner={selectedPartner}
                 onClose={() => setSelectedPartner(null)}
                 onUpdate={handlePartnerUpdate}
-                onPayout={(partner: AgencyPartner) => markPaid(partner.id)}
+                onPayout={(partner: AgencyPartner) => {
+                    setSelectedPartner(null);
+                    setPayoutTarget(partner);
+                }}
+                developerId={developerId}
             />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Агентская сеть</h1>
-                    <p className="text-slate-500 text-sm mt-1">Управление внешними продажами и партнерами</p>
+            <div className="relative">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 md:px-6 pt-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900">Агентская сеть</h1>
+                        <p className="text-slate-500 text-sm mt-1">Управление внешними продажами и партнерами</p>
+                    </div>
+
+                    {activeTab === 'list' ? (
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="relative w-full md:w-[340px]">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <Input
+                                    placeholder="Поиск по имени, телефону или email..."
+                                    value={filters.search}
+                                    onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                                    className="pl-10 h-10 bg-white border-slate-200"
+                                />
+                            </div>
+
+                            <Popover open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="font-bold flex items-center gap-2">
+                                        <Filter size={16} />
+                                        Фильтры
+                                        {activeFiltersCount > 0 ? (
+                                            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white">
+                                                {activeFiltersCount}
+                                            </span>
+                                        ) : null}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PartnerFiltersPanel
+                                    filters={filters}
+                                    setFilters={setFilters}
+                                    onClose={() => setIsFilterPanelOpen(false)}
+                                />
+                            </Popover>
+
+                            <Button
+                                onClick={() => setIsInviteModalOpen(true)}
+                                className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] text-[var(--admin-text-on-primary)] font-bold h-10 px-4 shadow-sm flex items-center gap-2"
+                            >
+                                <LinkIcon size={18} /> Пригласить
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <Button
+                                onClick={() => setIsInviteModalOpen(true)}
+                                className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] text-[var(--admin-text-on-primary)] font-bold h-10 px-4 shadow-sm flex items-center gap-2"
+                            >
+                                <LinkIcon size={18} /> Пригласить
+                            </Button>
+                        </div>
+                    )}
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button
-                        onClick={() => setIsInviteModalOpen(true)}
-                        className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] text-[var(--admin-text-on-primary)] font-bold h-11 px-6 shadow-sm flex items-center gap-2"
+            </div>
+
+            <div className="px-4 md:px-6 bg-white border-b border-slate-200 sticky top-[72px] z-10 mt-6">
+                <div className="flex gap-6 overflow-x-auto no-scrollbar">
+                    <button
+                        onClick={() => {
+                            setActiveTab('list');
+                            setFilters((f) => ({ ...f, status: 'all' }));
+                        }}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'list' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <LinkIcon size={18} /> Пригласить
-                    </Button>
+                        <LayoutList size={16} /> Список партнеров
+                        {stats.pendingRequests > 0 && (
+                            <span
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFilters((prev) => ({ ...prev, status: prev.status === 'pending' ? 'all' : 'pending' }));
+                                    setActiveTab('list');
+                                }}
+                                className={`text-[10px] px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${filters.status === 'pending' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700'}`}
+                                title="Показать только новые заявки"
+                            >
+                                {stats.pendingRequests}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('conditions')}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'conditions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                    >
+                        <ShieldCheck size={16} /> Условия сотрудничества
+                    </button>
                 </div>
             </div>
 
-            <div className="flex gap-6 mt-6">
-                <button
-                    onClick={() => setActiveTab('list')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'list' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
-                >
-                    <LayoutList size={16} /> Список партнеров
-                </button>
-                <button
-                    onClick={() => setActiveTab('conditions')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'conditions' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
-                >
-                    <ShieldCheck size={16} /> Условия сотрудничества
-                </button>
-            </div>
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+                <div className="max-w-[1600px] mx-auto pb-20">
 
-            <div className="flex flex-col gap-4 mt-6 flex-1">
+                    {activeTab === 'list' && (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Users size={20} /></div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">Всего партнеров</p>
+                                        <p className="text-xl font-bold text-slate-900">{stats.totalPartners}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div className="p-3 bg-green-50 text-green-600 rounded-lg"><Handshake size={20} /></div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">Активные</p>
+                                        <p className="text-xl font-bold text-slate-900">{stats.activePartners}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div className="p-3 bg-purple-50 text-purple-600 rounded-lg"><TrendingUp size={20} /></div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">Объем продаж</p>
+                                        <p className="text-xl font-bold text-slate-900">${(stats.totalSalesVolume / 1000000).toFixed(1)}M</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                    <div className="p-3 bg-amber-50 text-amber-600 rounded-lg"><DollarSign size={20} /></div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">К выплате</p>
+                                        <p className="text-xl font-bold text-slate-900">${stats.totalPendingCommission.toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                {activeTab === 'conditions' ? (
-                    <AgencyGeneralConditions />
-                ) : (
-                    <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Всего партнеров</p>
-                                        <h3 className="text-2xl font-black text-slate-900 mt-1">{stats.totalPartners}</h3>
-                                    </div>
-                                    <div className="p-2 bg-[var(--admin-background-secondary)] text-[var(--admin-primary)] rounded-lg"><Handshake size={20} /></div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Заявки</p>
-                                        <h3 className="text-2xl font-black text-slate-900 mt-1">{stats.pendingRequests}</h3>
-                                    </div>
-                                    <div className={`p-2 rounded-lg ${stats.pendingRequests > 0 ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400'}`}><Clock size={20} /></div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">К выплате</p>
-                                        <h3 className="text-2xl font-black text-amber-600 mt-1">${stats.totalPendingCommission.toLocaleString()}</h3>
-                                    </div>
-                                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><DollarSign size={20} /></div>
-                                </div>
-                            </div>
-                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Объем продаж</p>
-                                        <h3 className="text-2xl font-black text-slate-900 mt-1">${(stats.totalSalesVolume / 1000).toFixed(0)}k</h3>
-                                    </div>
-                                    <div className="p-2 bg-green-50 text-green-600 rounded-lg"><DollarSign size={20} /></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="p-4 border-b border-slate-100 flex items-center gap-4">
-                                <div className="relative flex-1 max-w-md">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    <Input
-                                        placeholder="Поиск по имени, телефону или email..."
-                                        value={filters.search}
-                                        onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                                        className="pl-10 h-10 bg-slate-50 border-slate-200"
-                                    />
-                                </div>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-6 py-4">Партнер</th>
-                                            <th className="px-6 py-4 text-center">Статус</th>
-                                            <th className="px-6 py-4 text-center">Ставка (%)</th>
-                                            <th className="px-6 py-4 text-right">Лиды / Сделки</th>
-                                            <th className="px-6 py-4 text-right">К выплате</th>
-                                            <th className="px-6 py-4 w-12"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                        {partners.map(partner => (
-                                            <tr
-                                                key={partner.id}
-                                                onClick={() => setSelectedPartner(partner)}
-                                                className="group hover:bg-slate-50 transition-colors cursor-pointer"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${partner.type === 'agency' ? 'bg-purple-100 text-purple-600' : 'bg-[var(--admin-background-secondary)] text-[var(--admin-primary)]'}`}>
-                                                            {partner.type === 'agency' ? <Building2 size={18} /> : <User size={18} />}
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold text-slate-900 text-sm">{partner.name}</div>
-                                                            <div className="text-xs text-slate-500 truncate max-w-[200px]">{partner.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${partner.status === 'active' ? 'bg-green-50 text-green-700 border-green-100' : partner.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                                        {partner.status === 'active' ? 'Активен' : partner.status === 'pending' ? 'Новый' : 'Блок'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg text-sm border border-slate-200">
-                                                        {partner.commissionRate}%
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-mono text-sm">
-                                                    <span className="text-slate-900 font-bold">{partner.stats.closedDeals}</span>
-                                                    <span className="text-slate-400 ml-1">/ {partner.stats.totalLeads}</span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className={`font-mono font-bold ${partner.stats.commissionPending > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
-                                                        ${partner.stats.commissionPending.toLocaleString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
-                                                                <MoreVertical size={16} />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-56">
-                                                            {partner.status === 'pending' && (
-                                                                <DropdownMenuItem onClick={() => handleAction(partner, 'approve')} className="text-green-600 font-bold">
-                                                                    <CheckCircle2 className="mr-2 h-4 w-4" /> Одобрить партнера
-                                                                </DropdownMenuItem>
+                            {partners.length > 0 ? (
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                                <tr>
+                                                    <th className="px-6 py-4">Агент</th>
+                                                    <th
+                                                        className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group"
+                                                        onClick={handleStatusFilterCycle}
+                                                        title="Нажмите для фильтрации"
+                                                    >
+                                                        <div className="flex items-center gap-1">
+                                                            Статус
+                                                            <ArrowUpDown
+                                                                size={12}
+                                                                className={`text-slate-400 ${filters.status !== 'all' ? 'text-blue-500' : 'opacity-0 group-hover:opacity-100'}`}
+                                                            />
+                                                            {filters.status !== 'all' && (
+                                                                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 rounded">
+                                                                    {String(filters.status).slice(0, 3)}
+                                                                </span>
                                                             )}
-                                                            <DropdownMenuItem onClick={() => markPaid(partner.id)}>
-                                                                <DollarSign className="mr-2 h-4 w-4" /> Отметить как выплачено
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleAction(partner, 'block')} className="text-red-600">
-                                                                <Ban className="mr-2 h-4 w-4" /> {partner.status === 'blocked' ? 'Разблокировать' : 'Заблокировать'}
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {partners.length === 0 && !loading && (
-                                            <tr>
-                                                <td colSpan={6} className="px-6 py-12 text-center">
-                                                    <div className="flex flex-col items-center gap-2 text-slate-400">
-                                                        <Users size={32} className="opacity-20" />
-                                                        <p className="text-sm font-medium">Нет зарегистрированных партнеров</p>
-                                                        <Button
-                                                            variant="link"
-                                                            onClick={() => setIsInviteModalOpen(true)}
-                                                            className="text-[var(--admin-primary)] hover:text-[var(--admin-primary-hover)]"
-                                                        >
-                                                            Пригласить первого партнера
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </>
-                )}
+                                                        </div>
+                                                    </th>
+                                                    <th className="px-6 py-4 text-center">Ставка</th>
+                                                    <th className="px-6 py-4 text-right">Лиды</th>
+                                                    <th className="px-6 py-4 text-right">Баланс</th>
+                                                    <th className="px-6 py-4 w-12"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 text-sm">
+                                                {partners.map((p) => (
+                                                    <tr
+                                                        key={p.id}
+                                                        onClick={() => setSelectedPartner(p)}
+                                                        className="hover:bg-slate-50 cursor-pointer group transition-colors"
+                                                    >
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <UserAvatar name={p.name} className="w-9 h-9 text-xs" />
+                                                                <div className="min-w-0">
+                                                                    <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                                                        {p.name}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-500 truncate">{p.email}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <StatusBadge status={p.status} />
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded font-mono font-bold text-xs">
+                                                                {p.commissionRate}%
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="font-medium text-slate-900">{p.stats.totalLeads}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="font-mono font-bold text-slate-900">${p.stats.commissionPending.toLocaleString()}</div>
+                                                            <div className="text-[10px] text-slate-400">Начислено</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                                                                        <span className="sr-only">Actions</span>
+                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full mr-0.5" />
+                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full mr-0.5" />
+                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full" />
+                                                                    </button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-56">
+                                                                    {(p.status === 'pending' || p.status === 'needs_correction') && (
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => approvePartner(p.id)}
+                                                                            className="text-green-600 font-bold"
+                                                                        >
+                                                                            Одобрить партнера
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                    <DropdownMenuItem onClick={() => { setPayoutTarget(p); }}>
+                                                                        Выплата комиссии
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => updatePartnerStatus(p.id, p.status === 'blocked' ? 'pending' : 'blocked')}
+                                                                        className="text-red-600"
+                                                                    >
+                                                                        {p.status === 'blocked' ? 'Разблокировать' : 'Заблокировать'}
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-slate-500">Нет партнеров</div>
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === 'conditions' && <AgencyGeneralConditions />}
+                </div>
             </div>
         </div>
     );
 };
-
-const Users = ({ size, className }: { size: number, className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-);

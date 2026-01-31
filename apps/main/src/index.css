@@ -40,6 +40,24 @@
   scrollbar-width: none;
 }
 
+/* Quill Editor Overrides */
+.ql-toolbar {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff;
+}
+.ql-container {
+  border: none !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+}
+.ql-editor {
+  min-height: 100%;
+  padding: 2rem !important; /* A4 padding */
+}
+
 /* Custom styles for project markers */
 .project-marker {
   border-radius: 50%;

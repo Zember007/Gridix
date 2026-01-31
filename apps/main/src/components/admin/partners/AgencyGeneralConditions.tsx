@@ -1,21 +1,283 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Clock, Download, FileText, Percent, Trash2, Upload } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, Check, Clock, Download, FileText, PenTool, Percent, ShieldCheck, Trash2, Upload, FileEdit, ExternalLink, Printer, Link as LinkIcon, MoreVertical, File, GripVertical, Braces, Save } from 'lucide-react';
 import { toast } from "sonner";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import mammoth from 'mammoth';
+import * as HtmlDocx from 'html-docx-js-typescript';
+
+// Available variables for the contract
+const CONTRACT_VARIABLES = [
+    { key: '{{partner_name}}', label: 'Имя Партнера' },
+    { key: '{{partner_id}}', label: 'ID Партнера' },
+    { key: '{{company_name}}', label: 'Название Компании' },
+    { key: '{{tax_id}}', label: 'ИНН / Tax ID' },
+    { key: '{{address}}', label: 'Адрес' },
+    { key: '{{date}}', label: 'Текущая Дата' },
+    { key: '{{commission_rate}}', label: 'Ставка комиссии (%)' },
+    { key: '{{sign_image}}', label: 'Подпись (Картинка)' },
+];
+
+type Template = {
+    id: number;
+    name: string;
+    lang: string;
+    content_html: string | null;
+    storage_path: string;
+    created_at: string;
+    updated_at: string;
+    url: string | null;
+    date: string;
+};
+
+const GoogleDocsImportModal: React.FC<{ isOpen: boolean; onClose: () => void; onImport: (url: string, name: string) => void }> = ({ isOpen, onClose, onImport }) => {
+    const [url, setUrl] = useState('');
+    const [name, setName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleImport = () => {
+        if (!url || !name) return;
+        setIsLoading(true);
+        // Simulate API call to fetch Google Doc content
+        setTimeout(() => {
+            onImport(url, name);
+            setIsLoading(false);
+            onClose();
+            setUrl('');
+            setName('');
+        }, 1500);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Импорт из Google Docs</DialogTitle>
+                </DialogHeader>
+                <div className="p-6 space-y-4">
+                    <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm border border-blue-100 flex gap-2">
+                        <AlertCircle size={16} className="shrink-0 mt-0.5"/>
+                        <p>Убедитесь, что в настройках доступа Google Doc установлено "Читатель" (Viewer) для всех, у кого есть ссылка.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Название шаблона</label>
+                        <input 
+                            type="text" 
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            placeholder="Например: Агентский договор 2025" 
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 text-sm"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Ссылка на документ</label>
+                        <div className="relative">
+                            <LinkIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                            <input 
+                                type="url" 
+                                value={url}
+                                onChange={e => setUrl(e.target.value)}
+                                placeholder="https://docs.google.com/document/d/..." 
+                                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 text-sm"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={onClose}>Отмена</Button>
+                    <Button 
+                        onClick={handleImport} 
+                        disabled={!url || !name || isLoading}
+                    >
+                        {isLoading ? 'Загрузка...' : 'Импортировать'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const TemplateEditorModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    template: Template | null;
+    onSave: (id: number, content: string) => void;
+    isLoading: boolean;
+}> = ({ isOpen, onClose, template, onSave, isLoading }) => {
+    const [content, setContent] = useState('');
+    const quillRef = useRef<ReactQuill>(null);
+
+    useEffect(() => {
+        if (isOpen && template?.content_html) {
+            setContent(template.content_html);
+        } else if (isOpen) {
+            setContent('');
+        }
+    }, [isOpen, template]);
+
+    // Setup drag & drop handlers on Quill editor
+    useEffect(() => {
+        if (!isOpen || !quillRef.current) return;
+        
+        const quill = quillRef.current.getEditor();
+        const editorElement = quill.root;
+        
+        const handleDrop = (e: DragEvent) => {
+            e.preventDefault();
+            const variable = e.dataTransfer?.getData('text/plain');
+            if (variable) {
+                const range = quill.getSelection(true);
+                const index = range ? range.index : quill.getLength();
+                quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
+                quill.setSelection({ index: index + variable.length, length: 0 });
+            }
+        };
+
+        const handleDragOver = (e: DragEvent) => {
+            e.preventDefault();
+            if (e.dataTransfer) {
+                e.dataTransfer.dropEffect = 'copy';
+            }
+        };
+
+        editorElement.addEventListener('drop', handleDrop);
+        editorElement.addEventListener('dragover', handleDragOver);
+
+        return () => {
+            editorElement.removeEventListener('drop', handleDrop);
+            editorElement.removeEventListener('dragover', handleDragOver);
+        };
+    }, [isOpen]);
+
+    const insertVariable = (variable: string) => {
+        const quill = quillRef.current?.getEditor();
+        if (!quill) return;
+        
+        const range = quill.getSelection(true);
+        const index = range ? range.index : quill.getLength();
+        quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
+        quill.setSelection({ index: index + variable.length, length: 0 } as any);
+    };
+
+    const handleSave = () => {
+        if (template) {
+            onSave(template.id, content);
+        }
+        onClose();
+    };
+
+    const handleDragStart = (e: React.DragEvent, variable: string) => {
+        e.dataTransfer.setData('text/plain', variable);
+        e.dataTransfer.effectAllowed = 'copy';
+    };
+
+
+    if (!isOpen) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-6xl h-[85vh] flex flex-col bg-[#F0F2F5] p-0">
+                <DialogHeader className="px-6 pt-6 pb-0">
+                    <DialogTitle>Редактор: {template?.name || 'Новый шаблон'}</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 flex overflow-hidden">
+                    {/* Editor Canvas */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex justify-center bg-[#F0F2F5]">
+                        <div className="w-[210mm] min-h-[297mm] bg-white shadow-lg relative flex flex-col p-8">
+                            {isLoading ? (
+                                <div className="flex-1 flex items-center justify-center text-sm text-slate-400">
+                                    Загрузка документа...
+                                </div>
+                            ) : (
+                                <ReactQuill
+                                    ref={quillRef}
+                                    theme="snow"
+                                    value={content}
+                                    onChange={setContent}
+                                    modules={{
+                                        toolbar: [
+                                            [{ 'header': [1, 2, 3, false] }],
+                                            ['bold', 'italic', 'underline', 'strike'],
+                                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                            [{ 'align': [] }],
+                                            ['clean']
+                                        ]
+                                    }}
+                                    placeholder="Начните вводить текст договора..."
+                                    className="flex-1"
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Sidebar Variables */}
+                    <div className="w-72 bg-white border-l border-slate-200 p-0 flex flex-col z-10 shadow-xl">
+                        <div className="p-4 border-b border-slate-100 bg-slate-50">
+                            <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <Braces size={16} className="text-blue-600"/>
+                                Переменные
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-1">Перетащите или кликните</p>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                            {CONTRACT_VARIABLES.map(v => (
+                                <button
+                                    key={v.key}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, v.key)}
+                                    onClick={() => insertVariable(v.key)}
+                                    className="w-full text-left p-3 rounded-xl bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group relative overflow-hidden cursor-grab active:cursor-grabbing"
+                                >
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 opacity-0 group-hover:opacity-100">
+                                        <GripVertical size={14} />
+                                    </div>
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
+                                    <div className="text-xs font-bold text-slate-700 group-hover:text-blue-700">{v.label}</div>
+                                    <div className="text-[10px] font-mono text-slate-400 mt-1 bg-slate-50 px-1.5 py-0.5 rounded w-fit">{v.key}</div>
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <div className="p-4 border-t border-slate-200 bg-slate-50">
+                             <div className="text-[10px] text-slate-400 mb-2 text-center flex items-center justify-center gap-1">
+                                <GripVertical size={12}/> Можно перетаскивать (Drag&Drop)
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter className="p-4 border-t border-slate-200 bg-white shrink-0">
+                    <Button variant="ghost" onClick={onClose}>Отмена</Button>
+                    <Button onClick={handleSave} className="flex items-center gap-2" disabled={isLoading}>
+                        <Save size={18}/> Сохранить и закрыть
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 
 export const AgencyGeneralConditions: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<'rules' | 'templates' | 'signature'>('rules');
     const [settings, setSettings] = useState({
         defaultCommission: 4,
         leadLockDays: 30,
         payoutTerms: 'Выплата вознаграждения производится в течение 10 рабочих дней после поступления средств от клиента на счет застройщика. Валюта выплаты соответствует валюте договора.',
+        developerSignaturePath: null as string | null,
+        developerStampPath: null as string | null,
     });
 
     const [isEditing, setIsEditing] = useState(false);
+    const [loadingSettings, setLoadingSettings] = useState(false);
 
     const { user } = useAuth();
     const { activeWorkspaceId, isManagerMode } = useWorkspace();
@@ -25,8 +287,20 @@ export const AgencyGeneralConditions: React.FC = () => {
     const [contracts, setContracts] = useState<Array<{ name: string; path: string; url: string }>>([]);
     const [loadingContracts, setLoadingContracts] = useState(false);
     const [uploading, setUploading] = useState(false);
+    
+    // Templates state
+    const [templates, setTemplates] = useState<Template[]>([]);
+    const [loadingTemplates, setLoadingTemplates] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+    const [isEditorLoading, setIsEditorLoading] = useState(false);
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+    const [isGoogleImportOpen, setIsGoogleImportOpen] = useState(false);
 
-    const bucket = 'project-images';
+    const bucket = 'project-files';
+    const imagesBucket = 'project-images';
+    const signatureInputRef = useRef<HTMLInputElement>(null);
+    const stampInputRef = useRef<HTMLInputElement>(null);
+    const [savingImages, setSavingImages] = useState<{ signature: boolean; stamp: boolean }>({ signature: false, stamp: false });
 
     const basePath = useMemo(() => {
         if (!developerId) return null;
@@ -34,26 +308,18 @@ export const AgencyGeneralConditions: React.FC = () => {
     }, [developerId]);
 
     const loadContracts = async () => {
-        if (!basePath) {
+        if (!developerId) {
             setContracts([]);
             return;
         }
 
         setLoadingContracts(true);
         try {
-            const { data, error } = await supabase.storage
-                .from(bucket)
-                .list(basePath, { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' } });
-
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: { action: 'list_developer_contracts', developer_user_id: developerId },
+            });
             if (error) throw error;
-
-            const items = (data ?? [])
-                .filter((f) => f.name.toLowerCase().endsWith('.pdf'))
-                .map((f) => {
-                    const path = `${basePath}/${f.name}`;
-                    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-                    return { name: f.name, path, url: urlData.publicUrl };
-                });
+            const items = (data?.contracts ?? []) as Array<{ name: string; path: string; url: string }>;
 
             setContracts(items);
         } catch (e) {
@@ -65,51 +331,133 @@ export const AgencyGeneralConditions: React.FC = () => {
         }
     };
 
+    const loadTemplates = async () => {
+        if (!developerId) {
+            setTemplates([]);
+            return;
+        }
+
+        setLoadingTemplates(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: { action: 'list_contract_templates', developer_user_id: developerId },
+            });
+            if (error) throw error;
+            const items = (data?.templates ?? []) as Template[];
+            setTemplates(items);
+        } catch (e) {
+            console.error('Failed to load templates', e);
+            toast.error('Ошибка при загрузке шаблонов');
+            setTemplates([]);
+        } finally {
+            setLoadingTemplates(false);
+        }
+    };
+
     useEffect(() => {
         void loadContracts();
+        void loadTemplates();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [basePath]);
+    }, [developerId]);
 
-    const handleSave = () => {
-        setIsEditing(false);
-        toast.success('Условия обновлены', {
-            description: 'Новые правила применятся к новым партнерам'
+    // Close menus on click outside
+    useEffect(() => {
+        const closeMenu = () => setMenuOpenId(null);
+        window.addEventListener('click', closeMenu);
+        return () => window.removeEventListener('click', closeMenu);
+    }, []);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            if (!developerId) return;
+            setLoadingSettings(true);
+            try {
+                const { data, error } = await supabase.functions.invoke('agent-program', {
+                    body: { action: 'get_agent_program_settings', developer_user_id: developerId },
+                });
+                if (error) throw error;
+                const s = data?.settings ?? null;
+                if (s) {
+                    setSettings((prev) => ({
+                        ...prev,
+                        defaultCommission: typeof s.default_commission_rate === 'number' ? s.default_commission_rate : prev.defaultCommission,
+                        leadLockDays: typeof s.lead_lock_days === 'number' ? s.lead_lock_days : prev.leadLockDays,
+                        payoutTerms: typeof s.payout_terms === 'string' && s.payout_terms ? s.payout_terms : prev.payoutTerms,
+                        developerSignaturePath: typeof s.developer_signature_path === 'string' ? s.developer_signature_path : null,
+                        developerStampPath: typeof s.developer_stamp_path === 'string' ? s.developer_stamp_path : null,
+                    }));
+                }
+            } catch (e) {
+                console.error('Failed to load agent program settings', e);
+                toast.error('Ошибка при загрузке условий');
+            } finally {
+                setLoadingSettings(false);
+            }
+        };
+        void loadSettings();
+    }, [developerId]);
+
+    const saveSettingsPatch = useCallback(async (patch: Record<string, unknown>) => {
+        if (!developerId) return;
+        const { data, error } = await supabase.functions.invoke('agent-program', {
+            body: {
+                action: 'update_agent_program_settings',
+                developer_user_id: developerId,
+                ...patch,
+            },
         });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || 'Failed to save settings');
+    }, [developerId]);
+
+    const handleSave = async () => {
+        if (!developerId) return;
+        try {
+            setLoadingSettings(true);
+            await saveSettingsPatch({
+                default_commission_rate: settings.defaultCommission,
+                lead_lock_days: settings.leadLockDays,
+                payout_terms: settings.payoutTerms,
+            });
+            setIsEditing(false);
+            toast.success('Условия обновлены', { description: 'Новые правила применятся к новым партнерам' });
+        } catch (e: any) {
+            console.error('Failed to save agent program settings', e);
+            toast.error(e?.message || 'Ошибка при сохранении условий');
+        } finally {
+            setLoadingSettings(false);
+        }
     };
 
     const handleUploadContracts = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0) return;
-        if (!basePath) {
+        if (!developerId) {
             toast.error('Не удалось определить застройщика (workspace)');
             return;
         }
 
         setUploading(true);
         try {
-            const safeName = (name: string) =>
-                name
-                    .trim()
-                    .replace(/\s+/g, '_')
-                    .replace(/[^a-zA-Z0-9._-]/g, '_')
-                    .replace(/_+/g, '_');
-
-            await Promise.all(
-                Array.from(files).map(async (file) => {
-                    if (!file.name.toLowerCase().endsWith('.pdf')) {
-                        throw new Error('Только PDF файлы');
-                    }
-                    const fileName = safeName(file.name);
-                    const path = `${basePath}/${fileName}`;
-                    const { error: uploadError } = await supabase.storage
-                        .from(bucket)
-                        .upload(path, file, { upsert: true, contentType: 'application/pdf' });
-                    if (uploadError) throw uploadError;
-                }),
-            );
+            for (const file of Array.from(files)) {
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    toast.error('Поддерживаются только DOCX файлы');
+                    continue;
+                }
+                const fd = new FormData();
+                fd.set('action', 'upload_developer_contract');
+                fd.set('developer_user_id', developerId);
+                fd.set('file', file);
+                const { data, error } = await supabase.functions.invoke('agent-program', {
+                    body: fd,
+                });
+                if (error) throw error;
+                if (!data?.success) throw new Error(data?.error || 'Upload failed');
+            }
 
             toast.success('Договоры загружены');
             await loadContracts();
+            await loadTemplates();
         } catch (e) {
             console.error('Failed to upload contracts', e);
             toast.error(e instanceof Error ? e.message : 'Ошибка при загрузке договоров');
@@ -122,18 +470,197 @@ export const AgencyGeneralConditions: React.FC = () => {
     const handleDeleteContract = async (path: string) => {
         if (!confirm('Удалить договор?')) return;
         try {
-            const { error } = await supabase.storage.from(bucket).remove([path]);
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: { action: 'delete_developer_contract', developer_user_id: developerId, path },
+            });
             if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Delete failed');
             toast.success('Договор удалён');
             await loadContracts();
+            await loadTemplates();
         } catch (e) {
             console.error('Failed to delete contract', e);
             toast.error('Ошибка при удалении договора');
         }
     };
 
+    const assetsBasePath = useMemo(() => {
+        if (!developerId) return null;
+        return `agency-assets/${developerId}`;
+    }, [developerId]);
+
+    const signatureUrl = useMemo(() => {
+        if (!settings.developerSignaturePath) return null;
+        return supabase.storage.from(imagesBucket).getPublicUrl(settings.developerSignaturePath).data.publicUrl;
+    }, [settings.developerSignaturePath]);
+
+    const stampUrl = useMemo(() => {
+        if (!settings.developerStampPath) return null;
+        return supabase.storage.from(imagesBucket).getPublicUrl(settings.developerStampPath).data.publicUrl;
+    }, [settings.developerStampPath]);
+
+    const handleUploadImage = async (type: 'signature' | 'stamp', file: File) => {
+        if (!assetsBasePath) throw new Error('Не удалось определить застройщика (workspace)');
+        if (file.type !== 'image/png') throw new Error('Только PNG (желательно с прозрачным фоном)');
+
+        const path = `${assetsBasePath}/${type}.png`;
+
+        setSavingImages((prev) => ({ ...prev, [type]: true }));
+        try {
+            const fd = new FormData();
+            fd.set('action', 'upload_developer_asset');
+            fd.set('developer_user_id', String(developerId ?? ''));
+            fd.set('asset_type', type);
+            fd.set('file', file);
+            const { data, error } = await supabase.functions.invoke('agent-program', { body: fd });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Upload failed');
+
+            setSettings((prev) =>
+                type === 'signature'
+                    ? { ...prev, developerSignaturePath: String(data?.path ?? path) }
+                    : { ...prev, developerStampPath: String(data?.path ?? path) },
+            );
+            toast.success(type === 'signature' ? 'Подпись сохранена' : 'Печать сохранена');
+        } finally {
+            setSavingImages((prev) => ({ ...prev, [type]: false }));
+        }
+    };
+
+    const handleClearImage = async (type: 'signature' | 'stamp') => {
+        setSavingImages((prev) => ({ ...prev, [type]: true }));
+        try {
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: { action: 'clear_developer_asset', developer_user_id: developerId, asset_type: type },
+            });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Clear failed');
+            setSettings((prev) =>
+                type === 'signature'
+                    ? { ...prev, developerSignaturePath: null }
+                    : { ...prev, developerStampPath: null },
+            );
+            toast.success(type === 'signature' ? 'Подпись удалена' : 'Печать удалена');
+        } finally {
+            setSavingImages((prev) => ({ ...prev, [type]: false }));
+        }
+    };
+
+    const handleTemplateSave = async (id: number, content: string) => {
+        if (!developerId) return;
+        const template = templates.find((t) => t.id === id);
+        if (!template) {
+            toast.error('Шаблон не найден');
+            return;
+        }
+        if (!template.name.toLowerCase().endsWith('.docx')) {
+            toast.error('Редактор поддерживает только DOCX');
+            return;
+        }
+        try {
+            const htmlDoc = `<!doctype html><html><head><meta charset="utf-8"></head><body>${content}</body></html>`;
+            const docxBlob = await HtmlDocx.asBlob(htmlDoc);
+            const file = new File([docxBlob], template.name, {
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            });
+
+            const fd = new FormData();
+            fd.set('action', 'upload_developer_contract');
+            fd.set('developer_user_id', String(developerId));
+            fd.set('file', file);
+            const uploadResp = await supabase.functions.invoke('agent-program', { body: fd });
+            if (uploadResp.error) throw uploadResp.error;
+            if (!uploadResp.data?.success) throw new Error(uploadResp.data?.error || 'Upload failed');
+
+            const storagePath = String(uploadResp.data?.contract?.path ?? template.storage_path);
+
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: {
+                    action: 'save_contract_template',
+                    developer_user_id: developerId,
+                    id,
+                    content_html: content,
+                    name: template.name,
+                    lang: template.lang,
+                    storage_path: storagePath,
+                },
+            });
+            if (error) throw error;
+            toast.success('Шаблон обновлен');
+            await loadTemplates();
+        } catch (e) {
+            console.error('Failed to save template', e);
+            toast.error('Ошибка при сохранении шаблона');
+        }
+    };
+
+    const handleDeleteTemplate = async (id: number) => {
+        if (!confirm('Удалить шаблон?')) return;
+        if (!developerId) return;
+        try {
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: { action: 'delete_contract_template', developer_user_id: developerId, id },
+            });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Delete failed');
+            toast.success('Шаблон удалён');
+            await loadTemplates();
+        } catch (e) {
+            console.error('Failed to delete template', e);
+            toast.error('Ошибка при удалении шаблона');
+        }
+    };
+
+    const handleDownload = async (template: Template) => {
+        if (!template.url) {
+            toast.error('URL шаблона не найден');
+            return;
+        }
+        window.open(template.url, '_blank');
+    };
+
+    const handleGoogleDocsImport = async (url: string, name: string) => {
+        // TODO: Implement Google Docs import
+        toast.info('Импорт из Google Docs будет реализован позже');
+    };
+
+    const openTemplateEditor = async (template: Template) => {
+        if (!template.name.toLowerCase().endsWith('.docx')) {
+            toast.error('Редактор поддерживает только DOCX');
+            return;
+        }
+        setEditingTemplate(template);
+        setIsEditorLoading(true);
+        try {
+            if (!template.url) throw new Error('URL шаблона не найден');
+            const response = await fetch(template.url);
+            if (!response.ok) throw new Error('Не удалось загрузить файл');
+            const arrayBuffer = await response.arrayBuffer();
+            const result = await mammoth.convertToHtml({ arrayBuffer });
+            setEditingTemplate((prev) => (prev ? { ...prev, content_html: result.value } : prev));
+        } catch (e) {
+            console.error('Failed to open template editor', e);
+            toast.error('Ошибка при открытии шаблона');
+        } finally {
+            setIsEditorLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            <TemplateEditorModal 
+                isOpen={!!editingTemplate} 
+                onClose={() => setEditingTemplate(null)} 
+                template={editingTemplate}
+                onSave={handleTemplateSave}
+                isLoading={isEditorLoading}
+            />
+
+            <GoogleDocsImportModal 
+                isOpen={isGoogleImportOpen}
+                onClose={() => setIsGoogleImportOpen(false)}
+                onImport={handleGoogleDocsImport}
+            />
 
             {/* Header Banner */}
             <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
@@ -147,10 +674,32 @@ export const AgencyGeneralConditions: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="px-4 md:px-0">
+                <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-slate-200 bg-white rounded-xl px-4">
+                    <button
+                        onClick={() => setActiveTab('rules')}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'rules' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                    >
+                        <ShieldCheck size={16} /> Правила
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('templates')}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                    >
+                        <FileText size={16} /> Шаблоны договоров
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('signature')}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'signature' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                    >
+                        <PenTool size={16} /> Подпись и печать
+                    </button>
+                </div>
+            </div>
 
-                {/* Left Column: Rules */}
-                <div className="lg:col-span-2 space-y-6">
+            {activeTab === 'rules' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-slate-900 text-lg">Базовые параметры</h3>
@@ -218,74 +767,227 @@ export const AgencyGeneralConditions: React.FC = () => {
                         <AlertCircle size={20} className="shrink-0 mt-0.5" />
                         <p>Изменение базовой комиссии не повлияет на уже подписанные индивидуальные договоры с партнерами.</p>
                     </div>
+                    </div>
+                    <div className="space-y-6" />
                 </div>
+            )}
 
-                {/* Right Column: Documents */}
-                <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-full flex flex-col">
-                        <h3 className="font-bold text-slate-900 text-lg mb-4">Документооборот</h3>
+            {activeTab === 'templates' && (
+                <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                        <AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5"/>
+                        <div className="text-xs text-blue-800">
+                            <p className="font-bold mb-1">Как работают шаблоны?</p>
+                            <p>Вы можете редактировать текст шаблона и вставлять динамические переменные (имя партнера, дату, ставку комиссии). Сейчас поддерживаются только DOCX.</p>
+                        </div>
+                    </div>
 
-                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mb-4 flex-1">
-                            <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Договоры (PDF)</h4>
-
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="application/pdf"
-                                multiple
-                                className="hidden"
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
+                                <tr>
+                                    <th className="px-6 py-4">Имя файла</th>
+                                    <th className="px-6 py-4">Язык</th>
+                                    <th className="px-6 py-4">Дата</th>
+                                    <th className="px-6 py-4 text-right">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {loadingTemplates ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">Загрузка...</td>
+                                    </tr>
+                                ) : templates.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">Нет шаблонов</td>
+                                    </tr>
+                                ) : (
+                                    templates.map(t => (
+                                        <tr key={t.id} className="hover:bg-slate-50 group">
+                                            <td className="px-6 py-4 flex items-center gap-3">
+                                                <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
+                                                    <FileText size={18}/>
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-slate-900">{t.name}</div>
+                                                    <div className="text-xs text-slate-400">Word Document (.docx)</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4"><span className="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600">{t.lang}</span></td>
+                                            <td className="px-6 py-4 text-slate-500">{t.date}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2 relative">
+                                                <button 
+                                                    onClick={() => void openTemplateEditor(t)} 
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                                                        title="Редактировать в редакторе"
+                                                    >
+                                                        <FileEdit size={16}/>
+                                                    </button>
+                                                    
+                                                    {/* Actions Dropdown */}
+                                                    <div className="relative">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === t.id ? null : t.id); }}
+                                                            className={`p-2 rounded-lg transition-colors ${menuOpenId === t.id ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            <MoreVertical size={16}/>
+                                                        </button>
+                                                        {menuOpenId === t.id && (
+                                                            <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in zoom-in-95">
+                                                                <button onClick={() => void handleDownload(t)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
+                                                                    <Download size={14} className="text-blue-500"/> Скачать DOCX
+                                                                </button>
+                                                                <div className="h-px bg-slate-100 my-1"></div>
+                                                                <button onClick={() => handleDeleteTemplate(t.id)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-red-600 hover:bg-red-50">
+                                                                    <Trash2 size={14}/> Удалить
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                        
+                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                accept=".docx" 
                                 onChange={handleUploadContracts}
                             />
-
-                            {loadingContracts ? (
-                                <div className="text-xs text-slate-400">Загрузка...</div>
-                            ) : contracts.length > 0 ? (
-                                <div className="space-y-2">
-                                    {contracts.map((c) => (
-                                        <div key={c.path} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg group">
-                                            <div className="p-2 bg-red-50 text-red-600 rounded-lg">
-                                                <FileText size={20} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-bold text-slate-900 truncate">{c.name}</div>
-                                                <div className="text-xs text-slate-400">PDF</div>
-                                            </div>
-                                            <button
-                                                onClick={() => window.open(c.url, '_blank')}
-                                                className="p-1.5 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                                title="Скачать"
-                                            >
-                                                <Download size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteContract(c.path)}
-                                                className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                                title="Удалить"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-                                    <Upload size={24} className="text-slate-300 mb-2" />
-                                    <span className="text-xs text-slate-400">Загрузите PDF файлы договоров</span>
-                                </div>
-                            )}
+                            
+                            <button 
+                                onClick={() => setIsGoogleImportOpen(true)}
+                                className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                            >
+                                <ExternalLink size={16}/> Импорт из Google Docs
+                            </button>
+                            
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-sm"
+                            >
+                                <File size={16}/> Загрузить файл
+                            </button>
                         </div>
-
-                        <Button
-                            variant="outline"
-                            className="w-full h-11 transition-colors flex items-center justify-center gap-2"
-                            disabled={!developerId || uploading}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <Upload size={16} /> {uploading ? 'Загрузка...' : 'Загрузить'}
-                        </Button>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {activeTab === 'signature' && (
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                        <PenTool size={18} className="text-purple-600" /> Подпись и печать
+                    </h3>
+
+                    <input
+                        ref={signatureInputRef}
+                        type="file"
+                        accept="image/png,.png"
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                                await handleUploadImage('signature', file);
+                            } catch (err) {
+                                console.error('signature upload failed', err);
+                                toast.error(err instanceof Error ? err.message : 'Ошибка при загрузке подписи');
+                            } finally {
+                                if (signatureInputRef.current) signatureInputRef.current.value = '';
+                            }
+                        }}
+                    />
+                    <input
+                        ref={stampInputRef}
+                        type="file"
+                        accept="image/png,.png"
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                                await handleUploadImage('stamp', file);
+                            } catch (err) {
+                                console.error('stamp upload failed', err);
+                                toast.error(err instanceof Error ? err.message : 'Ошибка при загрузке печати');
+                            } finally {
+                                if (stampInputRef.current) stampInputRef.current.value = '';
+                            }
+                        }}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
+                                <PenTool size={14} /> Подпись директора (PNG)
+                            </div>
+                            <div className="aspect-video bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden group">
+                                {signatureUrl ? (
+                                    <>
+                                        <img src={signatureUrl} alt="Signature" className="h-full object-contain p-4 mix-blend-multiply" />
+                                        <button
+                                            onClick={() => void handleClearImage('signature')}
+                                            disabled={savingImages.signature}
+                                            className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                            title="Удалить"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => signatureInputRef.current?.click()}
+                                        disabled={savingImages.signature}
+                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                    >
+                                        <Upload size={24} />
+                                        <span className="text-xs font-bold uppercase">Загрузить PNG</span>
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">Используется для автоматического подписания договоров.</p>
+                        </div>
+
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
+                                <Check size={14} /> Печать компании (PNG)
+                            </div>
+                            <div className="aspect-video bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden group">
+                                {stampUrl ? (
+                                    <>
+                                        <img src={stampUrl} alt="Stamp" className="h-full object-contain p-4 mix-blend-multiply opacity-80" />
+                                        <button
+                                            onClick={() => void handleClearImage('stamp')}
+                                            disabled={savingImages.stamp}
+                                            className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                            title="Удалить"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => stampInputRef.current?.click()}
+                                        disabled={savingImages.stamp}
+                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                    >
+                                        <Upload size={24} />
+                                        <span className="text-xs font-bold uppercase">Загрузить PNG</span>
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">Будет наложена поверх подписи в документах.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
