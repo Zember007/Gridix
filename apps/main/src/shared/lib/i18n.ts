@@ -63,11 +63,7 @@ Object.entries(localeModules).forEach(([path, mod]) => {
   Object.assign(resources[lng].translation, flat);
 });
 
-// Отладочная информация о загруженных ресурсах
-console.log('[i18n] Загружено языков:', Object.keys(resources));
-console.log('[i18n] Количество ключей по языкам:', 
-  Object.entries(resources).map(([lang, res]) => `${lang}: ${Object.keys(res.translation).length}`).join(', ')
-);
+
 
 // Инициализация i18next
 void i18n

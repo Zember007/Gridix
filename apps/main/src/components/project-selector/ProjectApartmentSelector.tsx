@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback, startTransition } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -421,7 +421,10 @@ const ProjectApartmentSelector = ({
     setSelectedFloorForPlan(floorNumber);
 
     if (!enableSidePanel) {
-      setViewMode('floor-plan');
+      // Switching to floor plan can suspend (lazy chunks). Wrap in transition to avoid React #426 in production.
+      startTransition(() => {
+        setViewMode('floor-plan');
+      });
       return;
     }
     setSidePanelState({ kind: 'floor', floorNumber });
@@ -440,8 +443,11 @@ const ProjectApartmentSelector = ({
 
   const openFloorPlanFromPanel = (floorNumber: number) => {
     setSelectedFloorForPlan(floorNumber);
-    setViewMode('floor-plan');
-    setSidePanelOpen(false);
+    // Switching view can suspend (lazy chunks). Wrap in transition to avoid React #426 in production.
+    startTransition(() => {
+      setViewMode('floor-plan');
+      setSidePanelOpen(false);
+    });
   };
 
   // Full project page is now handled by separate FloatingProjectButton in widget context
@@ -705,15 +711,17 @@ const ProjectApartmentSelector = ({
                                 />
                               </div>
 
-                              <FloorSelector
-                                selectedFloorForPlan={selectedFloorForPlan}
-                                setSelectedFloorForPlan={setSelectedFloorForPlan}
-                                getUniqueFloors={filters.getUniqueFloors}
-                                themeColor={getThemeColor()}
-                                apartments={apartments}
-                                showOnlyAvailable={filters.showOnlyAvailable}
-                                filteredApartments={filters.filteredApartments}
-                              />
+                              <Suspense fallback={null}>
+                                <FloorSelector
+                                  selectedFloorForPlan={selectedFloorForPlan}
+                                  setSelectedFloorForPlan={setSelectedFloorForPlan}
+                                  getUniqueFloors={filters.getUniqueFloors}
+                                  themeColor={getThemeColor()}
+                                  apartments={apartments}
+                                  showOnlyAvailable={filters.showOnlyAvailable}
+                                  filteredApartments={filters.filteredApartments}
+                                />
+                              </Suspense>
                             </div>
                           </div>
                         )}
