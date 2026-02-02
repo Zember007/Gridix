@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@gridix/utils/api";
 import { useLanguageNavigation } from "@gridix/utils/react";
@@ -51,9 +51,21 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
 
   if (safe) {
     const u = new URL(safe);
-    const base = `${u.origin}${u.pathname}${u.search}`;
-    window.location.href = `${base}#${hash}`;
-    return;
+    const mainOrigin = new URL(mainAppUrl).origin;
+    const agentOrigin = new URL(agentCabinetUrl).origin;
+
+    // Guard: developer/manager must NOT be redirected into agent-cabinet even if redirect_to points there.
+    // (and vice-versa for agent -> main app)
+    const isAgentTarget = u.origin === agentOrigin;
+    const isMainTarget = u.origin === mainOrigin;
+
+    if ((isAgentTarget && accountType !== "agent") || (isMainTarget && accountType === "agent")) {
+      // ignore redirect_to, use default landing below
+    } else {
+      const base = `${u.origin}${u.pathname}${u.search}`;
+      window.location.href = `${base}#${hash}`;
+      return;
+    }
   }
 
   // Default landing
@@ -70,8 +82,7 @@ export default function AuthPage() {
   const mode = searchParams.get("mode");
   const [isRecovery, setIsRecovery] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [userReady, setUserReady] = useState(false);
+  const [loading] = useState(false);
 
   const isSignup = location.pathname.includes("/signup");
   const isSignin = location.pathname.includes("/signin");
@@ -86,42 +97,7 @@ export default function AuthPage() {
     if (mode === "recovery" || hashIndicatesRecovery) setIsRecovery(true);
   }, [mode, hashIndicatesRecovery]);
 
-  // Observe session and redirect after login.
-  useEffect(() => {
-    let mounted = true;
-    const init = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!mounted) return;
-        if (data.session?.user) {
-          setUserReady(true);
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    void init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
-      if (nextSession?.user) setUserReady(true);
-    });
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  const redirectingRef = useRef(false);
-  useEffect(() => {
-    if (!userReady || isRecovery) return;
-    if (redirectingRef.current) return;
-    redirectingRef.current = true;
-    void redirectByAccountType({ redirectToUrl, lang: (window.location.pathname.split("/")[1] || "en") });
-  }, [userReady, redirectToUrl, isRecovery]);
-
   if (loading) return <FullPageLoaderView />;
-  if (userReady && !isRecovery) return null;
 
   return isRecovery ? (
     <ResetPasswordForm

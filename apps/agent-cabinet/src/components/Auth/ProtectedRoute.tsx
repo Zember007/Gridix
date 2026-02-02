@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getLanguageFromPath, addLanguageToPath, removeLanguageFromPath } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@gridix/utils/api";
-import { hasUserPassword } from "@gridix/utils";
+import { hasAuthTokensInHash, hasUserPassword } from "@gridix/utils";
 
 export function ProtectedRoute({
   children,
@@ -16,6 +16,13 @@ export function ProtectedRoute({
   const { user, loading } = useAuth();
   const location = useLocation();
   const lang = useMemo(() => getLanguageFromPath(location.pathname), [location.pathname]);
+  const hasCodeInUrl = useMemo(() => {
+    try {
+      return new URLSearchParams(location.search).has("code");
+    } catch {
+      return false;
+    }
+  }, [location.search]);
 
   const [passwordGateLoading, setPasswordGateLoading] = useState(false);
   const [needsPasswordSet, setNeedsPasswordSet] = useState(false);
@@ -62,6 +69,16 @@ export function ProtectedRoute({
       );
     }
     return <>{children}</>;
+  }
+
+  // Not authenticated but URL contains auth tokens/code:
+  // don't hard-redirect to SSO yet — allow app init to consume session first.
+  if (typeof window !== "undefined" && (hasAuthTokensInHash() || hasCodeInUrl)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="text-sm text-slate-600">Processing login…</div>
+      </div>
+    );
   }
 
   // Not authenticated -> redirect to global SSO.

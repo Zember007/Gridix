@@ -2819,6 +2819,7 @@ export type Database = {
           id: string
           is_vat_payer: boolean | null
           legal_address: string | null
+          marketing_emails_consent: boolean
           partner_id: string | null
           password_set_at: string | null
           phone: string | null
@@ -2839,6 +2840,7 @@ export type Database = {
           id: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          marketing_emails_consent?: boolean
           partner_id?: string | null
           password_set_at?: string | null
           phone?: string | null
@@ -2859,6 +2861,7 @@ export type Database = {
           id?: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          marketing_emails_consent?: boolean
           partner_id?: string | null
           password_set_at?: string | null
           phone?: string | null

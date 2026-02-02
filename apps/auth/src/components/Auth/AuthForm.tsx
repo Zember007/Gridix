@@ -31,7 +31,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -108,22 +108,15 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
               company_name: formData.companyName,
               phone: formData.phone,
               account_type: accountType,
+              partner_id: partnerInfo?.id || null,
+              marketing_emails_consent: marketingEmailsConsent,
+              preferred_locale: language,
             },
           },
         });
         if (error) throw error;
 
         if (authData.user) {
-          const { error: profileError } = await supabase.from("user_profiles").insert({
-            id: authData.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            account_type: accountType,
-            partner_id: partnerInfo?.id || null,
-            marketing_emails_consent: marketingEmailsConsent,
-          } as any);
-          if (profileError) console.error("Error creating user profile:", profileError);
-
           if (refCode && partnerInfo) {
             const { error: linkError } = await supabase.from("partner_links").insert({
               partner_id: partnerInfo.id,

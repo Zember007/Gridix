@@ -79,12 +79,14 @@ export default function SetPasswordPage() {
 
                 // Password presence is now detected via RPC check_if_user_has_password().
                 // Keep password_set_at update as a best-effort compatibility field (non-blocking).
-                await supabase
-                  .from("user_profiles")
-                  .update({ password_set_at: new Date().toISOString() })
-                  .eq("id", user.id)
-                  .throwOnError()
-                  .catch(() => null);
+                try {
+                  await supabase
+                    .from("user_profiles")
+                    .update({ password_set_at: new Date().toISOString() })
+                    .eq("id", user.id);
+                } catch {
+                  // ignore (best-effort)
+                }
 
                 toast.success("Password updated");
                 navigate(addLanguageToPath(nextPath, language), { replace: true });

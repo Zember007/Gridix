@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
 import { supabase } from "@gridix/utils/api";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
-import { hasUserPassword } from "@gridix/utils";
+import { hasUserPassword, hasAuthTokensInHash } from "@gridix/utils";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -75,12 +75,13 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
     return <FullPageLoaderView />;
   }
 
-  // Редиректим на /auth только если:
-  // 1. Требуется авторизация
-  // 2. Пользователь не авторизован
-  // 3. НЕТ SSO токена в URL (или он уже обработан)
-  // 4. Обработка SSO не идет
+  // Редиректим на отдельное приложение авторизации (VITE_SSO_URL) или на локальный /auth.
   if (requireAuth && !user) {
+    // В URL уже есть токены (hash или ?code=) — не редиректим на SSO, даём время применить сессию.
+    if (typeof window !== "undefined" && (hasAuthTokensInHash() || new URLSearchParams(location.search).get("code"))) {
+      return <FullPageLoaderView />;
+    }
+
     const amoParams = new URLSearchParams(location.search);
     const hasAmoInstall =
       amoParams.get('amo_install') === '1' ||
@@ -89,33 +90,29 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
       amoParams.has('amo_subdomain');
 
     const ssoBase = (import.meta as any).env?.VITE_SSO_URL as string | undefined;
-    if (typeof ssoBase === 'string' && ssoBase) {
-      const base = ssoBase.endsWith('/') ? ssoBase.slice(0, -1) : ssoBase;
+    if (typeof ssoBase === 'string' && ssoBase.trim()) {
+      const base = ssoBase.trim().endsWith('/') ? ssoBase.trim().slice(0, -1) : ssoBase.trim();
       const fullCurrent = window.location.origin + location.pathname + (location.search || '');
 
-      // If amo SSO token exists, let the central auth callback consume it.
+      // Полный редирект на другое приложение (не Navigate — иначе остаёмся на том же origin).
       const ssoToken = amoParams.get("sso");
       if (ssoToken) {
         const withoutSso = new URL(fullCurrent);
         withoutSso.searchParams.delete("sso");
-        return (
-          <Navigate
-            to={`${base}/${currentLanguage}/auth/callback?sso=${encodeURIComponent(ssoToken)}&redirect_to=${encodeURIComponent(withoutSso.toString())}`}
-            replace
-          />
+        window.location.replace(
+          `${base}/${currentLanguage}/auth/callback?sso=${encodeURIComponent(ssoToken)}&redirect_to=${encodeURIComponent(withoutSso.toString())}`
         );
+        return <FullPageLoaderView />;
       }
 
       const authPath = hasAmoInstall ? "auth/signup" : "auth";
-      return (
-        <Navigate
-          to={`${base}/${currentLanguage}/${authPath}?redirect_to=${encodeURIComponent(fullCurrent)}`}
-          replace
-        />
+      window.location.replace(
+        `${base}/${currentLanguage}/${authPath}?redirect_to=${encodeURIComponent(fullCurrent)}`
       );
+      return <FullPageLoaderView />;
     }
 
-    // No SSO configured: fall back to local auth pages in main app (legacy).
+    // VITE_SSO_URL не задан: редирект на локальные страницы авторизации в main (legacy).
     const authPath = addLanguageToPath(hasAmoInstall ? "/auth/signup" : "/auth", currentLanguage);
     const redirectValue = location.pathname + (location.search || "");
     return <Navigate to={`${authPath}?redirect=${encodeURIComponent(redirectValue)}`} replace />;

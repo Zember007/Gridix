@@ -12,7 +12,6 @@ function getEnv(name: string, fallback: string) {
 
 export default function CallbackPage() {
   const [sp] = useSearchParams();
-  const role = sp.get("role"); // optional: 'agent'
   const redirectToUrl = sp.get("redirect_to"); // optional full URL
   const ssoToken = sp.get("sso"); // optional: amo SSO token
 
@@ -28,22 +27,6 @@ export default function CallbackPage() {
         if (!session?.user?.id) throw new Error("No session after callback");
 
         const userId = session.user.id;
-
-        // If callback was invoked for agent onboarding, ensure account_type=agent.
-        if (role === "agent") {
-          await supabase
-            .from("user_profiles")
-            .upsert(
-              {
-                id: userId,
-                email: session.user.email ?? null,
-                account_type: "agent",
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "id" },
-            )
-            .throwOnError();
-        }
 
         const { data: profile } = await supabase
           .from("user_profiles")
@@ -62,6 +45,14 @@ export default function CallbackPage() {
             const u = new URL(redirectToUrl);
             const allow = new Set([new URL(agentCabinet).origin, new URL(mainApp).origin]);
             if (allow.has(u.origin)) {
+              const isAgentTarget = u.origin === new URL(agentCabinet).origin;
+              const isMainTarget = u.origin === new URL(mainApp).origin;
+
+              // Guard: developer must not be redirected into agent-cabinet via redirect_to.
+              // (and vice-versa for agent -> main)
+              if ((isAgentTarget && accountType !== "agent") || (isMainTarget && accountType === "agent")) {
+                // ignore redirect_to and fall back to default landing below
+              } else {
               const access_token = session.access_token;
               const refresh_token = session.refresh_token;
               const hash = new URLSearchParams({
@@ -73,6 +64,7 @@ export default function CallbackPage() {
               const base = `${u.origin}${u.pathname}${u.search}`;
               window.location.replace(`${base}#${hash}`);
               return;
+              }
             }
           } catch {
             // ignore
@@ -99,7 +91,7 @@ export default function CallbackPage() {
       }
     };
     void run();
-  }, [role, redirectToUrl, ssoToken]);
+  }, [redirectToUrl, ssoToken]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">

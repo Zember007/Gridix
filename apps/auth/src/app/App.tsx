@@ -1,9 +1,8 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import AuthPage from "@/pages/AuthPage";
 import CallbackPage from "@/pages/CallbackPage";
-import NotFound from "@/pages/NotFound";
 
 export default function App() {
   return (
@@ -15,7 +14,7 @@ export default function App() {
             <Route path="/:lang/auth/signin" element={<AuthPage />} />
             <Route path="/:lang/auth/signup" element={<AuthPage />} />
             <Route path="/:lang/auth/callback" element={<CallbackPage />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate replace to="/auth" />} />
           </Routes>
         </LanguageWrapper>
       </BrowserRouter>
