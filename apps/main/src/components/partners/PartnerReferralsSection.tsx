@@ -19,7 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { useToast } from '@gridix/ui';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@gridix/utils/react';
 import { usePartner } from '@/entities/partner/queries/usePartner';
 import { usePartnerStats } from '@/entities/partner/queries/usePartnerStats';
 import type { PartnerClient } from '@/entities/partner/model/types';
@@ -41,7 +41,9 @@ export const PartnerReferralsSection: React.FC = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const referralCode = partnerProfile?.partner_code || '5cac1e45';
-  const baseUrl = `${window.location.origin}/${language}/auth/signup`;
+  const ssoBase = (import.meta as any).env?.VITE_SSO_URL as string | undefined;
+  const baseOrigin = ssoBase && typeof ssoBase === 'string' && ssoBase.length > 0 ? ssoBase.replace(/\/$/, '') : window.location.origin;
+  const baseUrl = `${baseOrigin}/${language}/auth/signup`;
 
   const [generatedLink, setGeneratedLink] = useState(
     `${baseUrl}?ref=${referralCode}`,

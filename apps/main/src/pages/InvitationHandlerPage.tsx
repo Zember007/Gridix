@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from "@gridix/utils/api"
 import { FullPageLoaderView } from "@/shared/ui/LoaderView"
+import { hasUserPassword } from "@gridix/utils"
+import { getLanguageFromPath, addLanguageToPath } from "@gridix/utils/lib"
 
 export default function InvitationHandlerPage() {
   const [searchParams] = useSearchParams()
@@ -43,12 +45,17 @@ export default function InvitationHandlerPage() {
 
         if (data.success) {
           setStatus('success')
-
-          localStorage.setItem('password_set_required', 'true')
-
-          setTimeout(() => {
-            navigate('/en/set-password')
-          }, 1000)
+          // If user still has no password, redirect to set-password.
+          try {
+            const hasPassword = await hasUserPassword(supabase as any)
+            if (!hasPassword) {
+              const lang = getLanguageFromPath(window.location.pathname) || 'en'
+              const setPasswordPath = addLanguageToPath('/set-password', lang)
+              setTimeout(() => navigate(setPasswordPath), 500)
+            }
+          } catch {
+            // Best effort; do not block.
+          }
         } else {
           setErrorMessage(data.error || 'Failed to process invitation')
           setStatus('error')

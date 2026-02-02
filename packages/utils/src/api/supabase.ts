@@ -8,6 +8,7 @@
 //   That keeps the partner's main session intact in other tabs.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@gridix/types/database';
+import { consumeSupabaseSessionFromUrl, hasAuthTokensInHash } from '../auth/session';
 
 // Get Supabase configuration from environment variables
 // Uses import.meta.env (Vite) for browser environments
@@ -28,26 +29,20 @@ export type SupabaseClientType = SupabaseClient<Database>;
 
 export let supabase: SupabaseClientType = rawSupabase;
 
-function parseHashParams(hash: string) {
-  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
-  return new URLSearchParams(raw);
-}
-
-function replaceUrlHash(params: URLSearchParams) {
-  const newHash = params.toString();
-  const nextUrl = window.location.pathname + window.location.search + (newHash ? `#${newHash}` : '');
-  window.history.replaceState({}, '', nextUrl);
-}
-
-function getPartnerTabTokensFromHash(): { access_token: string; refresh_token: string } | null {
+function hasExistingLocalSession(): boolean {
   try {
-    const params = parseHashParams(window.location.hash);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (!access_token || !refresh_token) return null;
-    return { access_token, refresh_token };
+    // Supabase stores session under keys like: sb-<project-ref>-auth-token
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const v = localStorage.getItem(k);
+        if (v) return true;
+      }
+    }
+    return false;
   } catch {
-    return null;
+    return false;
   }
 }
 
@@ -66,35 +61,20 @@ export const supabaseAuthInitPromise: Promise<void> = (async () => {
   // Only run in browser
   if (typeof window === 'undefined') return;
 
-  const tokens = getPartnerTabTokensFromHash();
-  if (!tokens) return;
-
-  // Switch to tab-scoped client BEFORE any AuthProvider reads the session.
-  supabase = createTabScopedSupabaseClient();
-
   try {
-    const { error } = await supabase.auth.setSession(tokens);
-    if (error) {
-      console.error('Failed to set tab-scoped session from hash tokens:', error);
-      return;
+    // If URL contains hash tokens and there is already a local session:
+    // - default behavior: overwrite session (re-login) so that new tokens always win.
+    // - preserve legacy "login as client" behavior only when explicitly requested by URL param.
+    const sp = new URLSearchParams(window.location.search);
+    const preserveLocalSession = sp.get('tab_session') === '1';
+
+    if (hasAuthTokensInHash() && hasExistingLocalSession() && preserveLocalSession) {
+      supabase = createTabScopedSupabaseClient();
     }
 
-    // Remove tokens from URL hash to avoid leaking them into history/screen recordings.
-    const params = parseHashParams(window.location.hash);
-    const keysToRemove = [
-      'access_token',
-      'refresh_token',
-      'expires_at',
-      'expires_in',
-      'token_type',
-      'type',
-      'provider_token',
-      'provider_refresh_token',
-    ];
-    keysToRemove.forEach((k) => params.delete(k));
-    replaceUrlHash(params);
+    await consumeSupabaseSessionFromUrl(supabase as unknown as SupabaseClient);
   } catch (e) {
-    console.error('Unexpected error while initializing tab-scoped auth:', e);
+    console.error('Unexpected error while initializing auth from URL:', e);
   }
 })();
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Check, Clock, Download, FileText, PenTool, Percent, ShieldCheck, Trash2, Upload, FileEdit, ExternalLink, Printer, Link as LinkIcon, MoreVertical, File, GripVertical, Braces, Save } from 'lucide-react';
+import { AlertCircle, Check, Clock, Download, FileText, PenTool, Percent, ShieldCheck, Trash2, Upload, FileEdit, ExternalLink, Printer, Link as LinkIcon, MoreVertical, File as FileIcon, GripVertical, Braces, Save } from 'lucide-react';
 import { toast } from "sonner";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
@@ -11,7 +11,12 @@ import { useWorkspace } from '@/contexts/WorkspaceContext';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import mammoth from 'mammoth';
-import * as HtmlDocx from 'html-docx-js-typescript';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+// Vite: import worker as URL
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import type { FunctionsError } from '@supabase/supabase-js';
+
+GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 // Available variables for the contract
 const CONTRACT_VARIABLES = [
@@ -36,6 +41,64 @@ type Template = {
     url: string | null;
     date: string;
 };
+
+const escapeHtml = (s: string) =>
+    s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+async function extractPdfToHtml(arrayBuffer: ArrayBuffer): Promise<string> {
+    const pdf = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    const pages: string[] = [];
+
+    // Group text items into lines by Y coordinate, then join by X order.
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const items = (textContent.items as Array<any>)
+            .map((it) => {
+                const str = String(it.str ?? '').trimEnd();
+                const t = Array.isArray(it.transform) ? it.transform : null;
+                // transform: [a, b, c, d, e, f] where e=x, f=y
+                const x = t ? Number(t[4]) : 0;
+                const y = t ? Number(t[5]) : 0;
+                return { str, x, y };
+            })
+            .filter((it) => it.str.length > 0);
+
+        // Sort by y desc, then x asc
+        items.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+
+        const lines: Array<{ y: number; parts: Array<{ x: number; str: string }> }> = [];
+        const yTolerance = 2.5;
+
+        for (const it of items) {
+            const last = lines[lines.length - 1];
+            if (!last || Math.abs(last.y - it.y) > yTolerance) {
+                lines.push({ y: it.y, parts: [{ x: it.x, str: it.str }] });
+            } else {
+                last.parts.push({ x: it.x, str: it.str });
+            }
+        }
+
+        const htmlLines = lines
+            .map((ln) => {
+                ln.parts.sort((a, b) => a.x - b.x);
+                // Join with spaces; collapse multi-spaces later
+                const text = ln.parts.map((p) => p.str).join(' ').replace(/\s{2,}/g, ' ').trim();
+                return text ? `<p>${escapeHtml(text)}</p>` : `<p><br/></p>`;
+            })
+            .join('');
+
+        pages.push(htmlLines || `<p><br/></p>`);
+    }
+
+    // Separate pages
+    return pages.join('<hr/>');
+}
 
 const GoogleDocsImportModal: React.FC<{ isOpen: boolean; onClose: () => void; onImport: (url: string, name: string) => void }> = ({ isOpen, onClose, onImport }) => {
     const [url, setUrl] = useState('');
@@ -109,10 +172,11 @@ const TemplateEditorModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     template: Template | null;
-    onSave: (id: number, content: string) => void;
+    onSave: (id: number, content: string, lang: string) => void;
     isLoading: boolean;
 }> = ({ isOpen, onClose, template, onSave, isLoading }) => {
     const [content, setContent] = useState('');
+    const [lang, setLang] = useState<string>('RU');
     const quillRef = useRef<ReactQuill>(null);
 
     useEffect(() => {
@@ -121,6 +185,7 @@ const TemplateEditorModal: React.FC<{
         } else if (isOpen) {
             setContent('');
         }
+        if (isOpen && template?.lang) setLang(template.lang);
     }, [isOpen, template]);
 
     // Setup drag & drop handlers on Quill editor
@@ -129,6 +194,12 @@ const TemplateEditorModal: React.FC<{
         
         const quill = quillRef.current.getEditor();
         const editorElement = quill.root;
+
+        const syncContentFromQuill = () => {
+            // Keep React state in sync after programmatic edits (insertText via API)
+            // This fixes "variables visible but not saved/exported".
+            setContent(quill.root.innerHTML);
+        };
         
         const handleDrop = (e: DragEvent) => {
             e.preventDefault();
@@ -138,6 +209,8 @@ const TemplateEditorModal: React.FC<{
                 const index = range ? range.index : quill.getLength();
                 quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
                 quill.setSelection({ index: index + variable.length, length: 0 });
+                // Quill API edits don't always propagate to controlled ReactQuill value automatically
+                requestAnimationFrame(syncContentFromQuill);
             }
         };
 
@@ -165,11 +238,12 @@ const TemplateEditorModal: React.FC<{
         const index = range ? range.index : quill.getLength();
         quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
         quill.setSelection({ index: index + variable.length, length: 0 } as any);
+        requestAnimationFrame(() => setContent(quill.root.innerHTML));
     };
 
     const handleSave = () => {
         if (template) {
-            onSave(template.id, content);
+            onSave(template.id, content, lang);
         }
         onClose();
     };
@@ -186,12 +260,25 @@ const TemplateEditorModal: React.FC<{
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-6xl h-[85vh] flex flex-col bg-[#F0F2F5] p-0">
                 <DialogHeader className="px-6 pt-6 pb-0">
-                    <DialogTitle>Редактор: {template?.name || 'Новый шаблон'}</DialogTitle>
+                    <div className="flex items-center justify-between gap-4">
+                        <DialogTitle>Редактор: {template?.name || 'Новый шаблон'}</DialogTitle>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-500">Язык</span>
+                            <select
+                                value={lang}
+                                onChange={(e) => setLang(e.target.value)}
+                                className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm font-bold text-slate-700"
+                            >
+                                <option value="RU">RU</option>
+                                <option value="EN">EN</option>
+                            </select>
+                        </div>
+                    </div>
                 </DialogHeader>
                 <div className="flex-1 flex overflow-hidden">
                     {/* Editor Canvas */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex justify-center bg-[#F0F2F5]">
-                        <div className="w-[210mm] min-h-[297mm] bg-white shadow-lg relative flex flex-col p-8">
+                    <div className="flex-1 p-8 flex justify-center">
+                        <div className="w-[210mm] h-full bg-white shadow-lg relative flex flex-col p-8 overflow-hidden">
                             {isLoading ? (
                                 <div className="flex-1 flex items-center justify-center text-sm text-slate-400">
                                     Загрузка документа...
@@ -212,7 +299,18 @@ const TemplateEditorModal: React.FC<{
                                         ]
                                     }}
                                     placeholder="Начните вводить текст договора..."
-                                    className="flex-1"
+                                    className="flex-1 w-full flex flex-col min-h-0
+                                      [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-20
+                                      [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:px-0 [&_.ql-toolbar]:bg-white
+                                      [&_.ql-toolbar]:pb-3 [&_.ql-toolbar]:mb-3 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200
+                                      [&_.ql-container]:border-0 [&_.ql-container]:flex-1 [&_.ql-container]:min-h-0 [&_.ql-container]:overflow-hidden
+                                      [&_.ql-editor]:p-0 [&_.ql-editor]:w-full [&_.ql-editor]:max-w-full
+                                      [&_.ql-editor]:overflow-y-auto [&_.ql-editor]:overflow-x-hidden
+                                      [&_.ql-editor]:whitespace-normal [&_.ql-editor]:break-words [&_.ql-editor]:[overflow-wrap:anywhere]
+                                      [&_.ql-editor_img]:max-w-full [&_.ql-editor_img]:h-auto
+                                      [&_.ql-editor_table]:w-full [&_.ql-editor_table]:max-w-full [&_.ql-editor_table]:table-fixed
+                                      [&_.ql-editor_td]:break-words [&_.ql-editor_th]:break-words
+                                      [&_.ql-editor_pre]:whitespace-pre-wrap"
                                 />
                             )}
                         </div>
@@ -440,8 +538,9 @@ export const AgencyGeneralConditions: React.FC = () => {
         setUploading(true);
         try {
             for (const file of Array.from(files)) {
-                if (!file.name.toLowerCase().endsWith('.docx')) {
-                    toast.error('Поддерживаются только DOCX файлы');
+                const lower = file.name.toLowerCase();
+                if (!lower.endsWith('.docx') && !lower.endsWith('.pdf')) {
+                    toast.error('Поддерживаются только DOCX или PDF файлы');
                     continue;
                 }
                 const fd = new FormData();
@@ -499,7 +598,7 @@ export const AgencyGeneralConditions: React.FC = () => {
         return supabase.storage.from(imagesBucket).getPublicUrl(settings.developerStampPath).data.publicUrl;
     }, [settings.developerStampPath]);
 
-    const handleUploadImage = async (type: 'signature' | 'stamp', file: File) => {
+    const handleUploadImage = async (type: 'signature' | 'stamp', file: globalThis.File) => {
         if (!assetsBasePath) throw new Error('Не удалось определить застройщика (workspace)');
         if (file.type !== 'image/png') throw new Error('Только PNG (желательно с прозрачным фоном)');
 
@@ -546,34 +645,14 @@ export const AgencyGeneralConditions: React.FC = () => {
         }
     };
 
-    const handleTemplateSave = async (id: number, content: string) => {
+    const handleTemplateSave = async (id: number, content: string, lang: string) => {
         if (!developerId) return;
         const template = templates.find((t) => t.id === id);
         if (!template) {
             toast.error('Шаблон не найден');
             return;
         }
-        if (!template.name.toLowerCase().endsWith('.docx')) {
-            toast.error('Редактор поддерживает только DOCX');
-            return;
-        }
         try {
-            const htmlDoc = `<!doctype html><html><head><meta charset="utf-8"></head><body>${content}</body></html>`;
-            const docxBlob = await HtmlDocx.asBlob(htmlDoc);
-            const file = new File([docxBlob], template.name, {
-                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            });
-
-            const fd = new FormData();
-            fd.set('action', 'upload_developer_contract');
-            fd.set('developer_user_id', String(developerId));
-            fd.set('file', file);
-            const uploadResp = await supabase.functions.invoke('agent-program', { body: fd });
-            if (uploadResp.error) throw uploadResp.error;
-            if (!uploadResp.data?.success) throw new Error(uploadResp.data?.error || 'Upload failed');
-
-            const storagePath = String(uploadResp.data?.contract?.path ?? template.storage_path);
-
             const { data, error } = await supabase.functions.invoke('agent-program', {
                 body: {
                     action: 'save_contract_template',
@@ -581,11 +660,11 @@ export const AgencyGeneralConditions: React.FC = () => {
                     id,
                     content_html: content,
                     name: template.name,
-                    lang: template.lang,
-                    storage_path: storagePath,
+                    lang,
                 },
             });
             if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Failed to save template');
             toast.success('Шаблон обновлен');
             await loadTemplates();
         } catch (e) {
@@ -611,12 +690,25 @@ export const AgencyGeneralConditions: React.FC = () => {
         }
     };
 
-    const handleDownload = async (template: Template) => {
-        if (!template.url) {
-            toast.error('URL шаблона не найден');
-            return;
+    const handleDownload = async (template: Template, format?: 'docx' | 'pdf') => {
+        if (!developerId) return;
+        try {
+            const { data, error } = await supabase.functions.invoke('agent-program', {
+                body: {
+                    action: 'get_contract_template_download_url',
+                    developer_user_id: developerId,
+                    id: template.id,
+                    format,
+                },
+            });
+            if (error) throw error;
+            if (!data?.success || !data?.url) throw new Error(data?.error || 'Не удалось получить ссылку скачивания');
+            window.open(String(data.url), '_blank');
+        } catch (e) {
+            console.error('Failed to get download url', e);
+            const maybe = e as FunctionsError | Error;
+            toast.error(maybe?.message || 'Ошибка при скачивании');
         }
-        window.open(template.url, '_blank');
     };
 
     const handleGoogleDocsImport = async (url: string, name: string) => {
@@ -625,19 +717,58 @@ export const AgencyGeneralConditions: React.FC = () => {
     };
 
     const openTemplateEditor = async (template: Template) => {
-        if (!template.name.toLowerCase().endsWith('.docx')) {
-            toast.error('Редактор поддерживает только DOCX');
-            return;
-        }
         setEditingTemplate(template);
         setIsEditorLoading(true);
         try {
-            if (!template.url) throw new Error('URL шаблона не найден');
-            const response = await fetch(template.url);
-            if (!response.ok) throw new Error('Не удалось загрузить файл');
-            const arrayBuffer = await response.arrayBuffer();
-            const result = await mammoth.convertToHtml({ arrayBuffer });
-            setEditingTemplate((prev) => (prev ? { ...prev, content_html: result.value } : prev));
+            if (!developerId) throw new Error('Не удалось определить застройщика (workspace)');
+
+            // If we already have editable HTML saved, use it as the source of truth.
+            if (template.content_html) {
+                setEditingTemplate((prev) => (prev ? { ...prev, content_html: template.content_html } : prev));
+                return;
+            }
+
+            const lower = template.name.toLowerCase();
+            if (lower.endsWith('.docx')) {
+                // Fetch fresh DOCX and convert to HTML for editing.
+                const { data: urlData, error: urlErr } = await supabase.functions.invoke('agent-program', {
+                    body: {
+                        action: 'get_contract_template_download_url',
+                        developer_user_id: developerId,
+                        id: template.id,
+                        format: 'docx',
+                    },
+                });
+                if (urlErr) throw urlErr;
+                const url = String(urlData?.url ?? '');
+                if (!url) throw new Error('URL шаблона не найден');
+
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Не удалось загрузить файл');
+                const arrayBuffer = await response.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer });
+                setEditingTemplate((prev) => (prev ? { ...prev, content_html: result.value } : prev));
+            } else if (lower.endsWith('.pdf')) {
+                const { data: urlData, error: urlErr } = await supabase.functions.invoke('agent-program', {
+                    body: {
+                        action: 'get_contract_template_download_url',
+                        developer_user_id: developerId,
+                        id: template.id,
+                        format: 'pdf',
+                    },
+                });
+                if (urlErr) throw urlErr;
+                const url = String(urlData?.url ?? '');
+                if (!url) throw new Error('URL шаблона не найден');
+
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Не удалось загрузить PDF');
+                const arrayBuffer = await response.arrayBuffer();
+                const html = await extractPdfToHtml(arrayBuffer);
+                setEditingTemplate((prev) => (prev ? { ...prev, content_html: html } : prev));
+            } else {
+                throw new Error('Неподдерживаемый формат шаблона');
+            }
         } catch (e) {
             console.error('Failed to open template editor', e);
             toast.error('Ошибка при открытии шаблона');
@@ -675,7 +806,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             </div>
 
             <div className="px-4 md:px-0">
-                <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-slate-200 bg-white rounded-xl px-4">
+                <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-slate-200 bg-white ">
                     <button
                         onClick={() => setActiveTab('rules')}
                         className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'rules' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -698,8 +829,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             </div>
 
             {activeTab === 'rules' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
+                <div className="flex flex-col gap-6">
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-slate-900 text-lg">Базовые параметры</h3>
@@ -767,8 +897,6 @@ export const AgencyGeneralConditions: React.FC = () => {
                         <AlertCircle size={20} className="shrink-0 mt-0.5" />
                         <p>Изменение базовой комиссии не повлияет на уже подписанные индивидуальные договоры с партнерами.</p>
                     </div>
-                    </div>
-                    <div className="space-y-6" />
                 </div>
             )}
 
@@ -778,11 +906,11 @@ export const AgencyGeneralConditions: React.FC = () => {
                         <AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5"/>
                         <div className="text-xs text-blue-800">
                             <p className="font-bold mb-1">Как работают шаблоны?</p>
-                            <p>Вы можете редактировать текст шаблона и вставлять динамические переменные (имя партнера, дату, ставку комиссии). Сейчас поддерживаются только DOCX.</p>
+                            <p>Вы можете редактировать текст шаблона и вставлять динамические переменные (имя партнера, дату, ставку комиссии). Поддерживаются DOCX и PDF (PDF не конвертируем в текст автоматически — после первого сохранения можно скачивать и DOCX и PDF).</p>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm ">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
                                 <tr>
@@ -810,7 +938,9 @@ export const AgencyGeneralConditions: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <div className="font-bold text-slate-900">{t.name}</div>
-                                                    <div className="text-xs text-slate-400">Word Document (.docx)</div>
+                                                    <div className="text-xs text-slate-400">
+                                                        {t.name.toLowerCase().endsWith('.pdf') ? 'PDF Document (.pdf)' : 'Word Document (.docx)'}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4"><span className="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600">{t.lang}</span></td>
@@ -835,8 +965,11 @@ export const AgencyGeneralConditions: React.FC = () => {
                                                         </button>
                                                         {menuOpenId === t.id && (
                                                             <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in zoom-in-95">
-                                                                <button onClick={() => void handleDownload(t)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
+                                                                <button onClick={() => void handleDownload(t, 'docx')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
                                                                     <Download size={14} className="text-blue-500"/> Скачать DOCX
+                                                                </button>
+                                                                <button onClick={() => void handleDownload(t, 'pdf')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
+                                                                    <Printer size={14} className="text-red-500"/> Скачать PDF
                                                                 </button>
                                                                 <div className="h-px bg-slate-100 my-1"></div>
                                                                 <button onClick={() => handleDeleteTemplate(t.id)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-red-600 hover:bg-red-50">
@@ -858,7 +991,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 type="file" 
                                 ref={fileInputRef} 
                                 className="hidden" 
-                                accept=".docx" 
+                                accept=".docx,.pdf"
                                 onChange={handleUploadContracts}
                             />
                             
@@ -873,7 +1006,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 onClick={() => fileInputRef.current?.click()}
                                 className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-sm"
                             >
-                                <File size={16}/> Загрузить файл
+                                <FileIcon size={16}/> Загрузить файл
                             </button>
                         </div>
                     </div>

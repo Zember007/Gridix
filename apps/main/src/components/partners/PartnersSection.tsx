@@ -36,8 +36,13 @@ export function PartnersSection() {
 
   const copyReferralLink = async () => {
     if (!partnerProfile) return;
-    
-    const referralLink = `${window.location.origin}/${language}/auth/signup?ref=${partnerProfile.partner_code}`;
+
+    const ssoBase = (import.meta as any).env?.VITE_SSO_URL as string | undefined;
+    const baseOrigin =
+      ssoBase && typeof ssoBase === "string" && ssoBase.length > 0
+        ? ssoBase.replace(/\/$/, "")
+        : window.location.origin;
+    const referralLink = `${baseOrigin}/${language}/auth/signup?ref=${partnerProfile.partner_code}`;
     
     try {
       await navigator.clipboard.writeText(referralLink);

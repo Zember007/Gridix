@@ -9,7 +9,8 @@
     "typecheck": "pnpm turbo run typecheck",
     "clean": "pnpm turbo run clean",
     "dev:main": "pnpm --filter @gridix/main dev",
-    "dev:agent": "pnpm --filter @gridix/agent-cabinet dev"
+    "dev:agent": "pnpm --filter @gridix/agent-cabinet dev",
+    "dev:auth": "pnpm --filter @gridix/auth dev"
   },
   "devDependencies": {
     "turbo": "^2.3.3"

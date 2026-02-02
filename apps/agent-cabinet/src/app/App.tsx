@@ -9,6 +9,7 @@ import AuthPage from "@/pages/AuthPage";
 import ApplicationPage from "@/pages/ApplicationPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ContactsPage from "@/pages/ContactsPage";
+import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
 
 export default function App() {
@@ -36,6 +37,16 @@ export default function App() {
                   <ProtectedRoute>
                     <AppShell>
                       <ApplicationPage />
+                    </AppShell>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/:lang/set-password"
+                element={
+                  <ProtectedRoute>
+                    <AppShell>
+                      <SetPasswordPage />
                     </AppShell>
                   </ProtectedRoute>
                 }

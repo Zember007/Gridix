@@ -48,6 +48,7 @@
     "next-themes": "^0.4.6",
     "openseadragon": "^5.0.1",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.624",
     "polylabel": "^2.0.1",
     "quill": "^2.0.3",
     "react": "^18.3.1",

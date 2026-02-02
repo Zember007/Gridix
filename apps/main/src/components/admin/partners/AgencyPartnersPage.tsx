@@ -88,7 +88,7 @@ export const AgencyPartnersPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#F8FAFC]">
+        <div className="flex flex-col">
             <PartnerInviteModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
             <PartnerPayoutModal
                 isOpen={!!payoutTarget}
@@ -113,7 +113,7 @@ export const AgencyPartnersPage: React.FC = () => {
             />
 
             <div className="relative">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 md:px-6 pt-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900">Агентская сеть</h1>
                         <p className="text-slate-500 text-sm mt-1">Управление внешними продажами и партнерами</p>
@@ -170,7 +170,7 @@ export const AgencyPartnersPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="px-4 md:px-6 bg-white border-b border-slate-200 sticky top-[72px] z-10 mt-6">
+            <div className=" bg-white border-b border-slate-200 sticky top-[72px] z-10 mt-6">
                 <div className="flex gap-6 overflow-x-auto no-scrollbar">
                     <button
                         onClick={() => {
@@ -203,8 +203,8 @@ export const AgencyPartnersPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
-                <div className="max-w-[1600px] mx-auto pb-20">
+            <div className="flex-1">
+                <div className="py-6">
 
                     {activeTab === 'list' && (
                         <>

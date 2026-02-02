@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X, User, Phone, Mail, Clock, CheckCircle2, Ban, Search, FileText, Save, AlertTriangle } from 'lucide-react';
+import { X, User, Phone, Mail, Clock, CheckCircle2, Ban, Search, FileText, AlertTriangle } from 'lucide-react';
 import { AgencyPartner } from './types';
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
@@ -20,8 +20,6 @@ type Tab = 'overview' | 'leads' | 'finance' | 'settings';
 export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onPayout, developerId }) => {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [leadsSearch, setLeadsSearch] = useState('');
-    const [accessDraft, setAccessDraft] = useState<Set<string> | null>(null);
-    const [savingAccess, setSavingAccess] = useState(false);
     const [rejectionReasonDraft, setRejectionReasonDraft] = useState('');
     const partnerId = partner?.id ?? null;
 
@@ -90,39 +88,6 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
         if (!path) return null;
         return supabase.storage.from('project-images').getPublicUrl(String(path)).data.publicUrl;
     }, [applicationDetailsQuery.data]);
-
-    const developerProjectsQuery = useQuery({
-        queryKey: ['developer_projects', developerId],
-        enabled: !!developerId,
-        queryFn: async () => {
-            const devId = developerId;
-            if (!devId) return [];
-            const { data, error } = await supabase
-                .from('projects')
-                .select('id, name, slug, is_public')
-                .eq('user_id', devId)
-                .order('created_at', { ascending: false });
-            if (error) throw error;
-            return (data ?? []) as Array<{ id: string; name: string; slug: string | null; is_public: boolean }>;
-        },
-    });
-
-    const accessQuery = useQuery({
-        queryKey: ['agent_access', partnerId],
-        enabled: !!partnerId,
-        queryFn: async () => {
-            if (!partnerId) return new Set<string>();
-            const { data, error } = await supabase
-                .from('agent_access')
-                .select('project_id')
-                .eq('agent_id', partnerId);
-            if (error) throw error;
-            const ids = (data ?? []).map((r: any) => String(r.project_id)).filter(Boolean);
-            return new Set(ids);
-        },
-    });
-
-    const effectiveAccess = accessDraft ?? accessQuery.data ?? new Set<string>();
 
     if (!partner) return null;
 
@@ -437,7 +402,7 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
                             </div>
 
                             <div className="pt-6 border-t border-slate-100">
-                                <h4 className="text-sm font-bold text-slate-900 mb-4">Управление доступом</h4>
+                                <h4 className="text-sm font-bold text-slate-900 mb-4">Управление агентом</h4>
                                 <div className="flex gap-3">
                                     <Button
                                         variant="outline"
@@ -454,75 +419,11 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-slate-100 space-y-4">
-                                <div className="flex items-center justify-between gap-3">
-                                    <h4 className="text-sm font-bold text-slate-900">Доступ к проектам</h4>
-                                    <Button
-                                        disabled={savingAccess || !developerId}
-                                        onClick={async () => {
-                                            if (!developerId) return;
-                                            try {
-                                                setSavingAccess(true);
-                                                const projectIds = Array.from(effectiveAccess);
-                                                const { data, error } = await supabase.functions.invoke('agent-program', {
-                                                    body: {
-                                                        action: 'set_agent_access',
-                                                        application_id: partner.id,
-                                                        project_ids: projectIds,
-                                                    },
-                                                });
-                                                if (error) throw error;
-                                                if (!data?.success) throw new Error(data?.error || 'Failed to save access');
-                                                setAccessDraft(null);
-                                                await accessQuery.refetch();
-                                                toast.success('Доступ к проектам обновлён');
-                                            } catch (e: any) {
-                                                console.error('set_agent_access failed', e);
-                                                toast.error(e?.message || 'Ошибка при сохранении доступа');
-                                            } finally {
-                                                setSavingAccess(false);
-                                            }
-                                        }}
-                                        className="font-bold flex items-center gap-2"
-                                    >
-                                        <Save size={16} /> {savingAccess ? 'Сохранение...' : 'Сохранить'}
-                                    </Button>
+                            <div className="pt-6 border-t border-slate-100">
+                                <h4 className="text-sm font-bold text-slate-900 mb-2">Доступ к проектам</h4>
+                                <div className="text-sm text-slate-600">
+                                    Доступ больше не настраивается вручную. Агент получает доступ ко всем проектам застройщика автоматически.
                                 </div>
-
-                                {!developerId ? (
-                                    <div className="text-xs text-slate-500">Не удалось определить застройщика (workspace).</div>
-                                ) : developerProjectsQuery.isLoading ? (
-                                    <div className="text-xs text-slate-500">Загрузка проектов...</div>
-                                ) : (developerProjectsQuery.data ?? []).length === 0 ? (
-                                    <div className="text-xs text-slate-500">У застройщика нет проектов.</div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {(developerProjectsQuery.data ?? []).map((p) => {
-                                            const checked = effectiveAccess.has(p.id);
-                                            return (
-                                                <label key={p.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
-                                                    <div className="min-w-0">
-                                                        <div className="text-sm font-bold text-slate-900 truncate">{p.name}</div>
-                                                        <div className="text-xs text-slate-500 truncate">
-                                                            {p.slug ? `/${p.slug}` : '—'} {p.is_public ? '• public' : '• private'}
-                                                        </div>
-                                                    </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={checked}
-                                                        onChange={(e) => {
-                                                            const next = new Set(effectiveAccess);
-                                                            if (e.target.checked) next.add(p.id);
-                                                            else next.delete(p.id);
-                                                            setAccessDraft(next);
-                                                        }}
-                                                        className="h-5 w-5"
-                                                    />
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                )}
                             </div>
 
                             <div className="pt-6 border-t border-slate-100 space-y-3">

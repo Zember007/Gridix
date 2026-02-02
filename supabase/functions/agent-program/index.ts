@@ -3,6 +3,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1?target=es2022";
+import { PDFDocument, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1?target=es2022";
+// @ts-ignore - resolved in Supabase Edge (Deno) runtime
+import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1?target=es2022";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
 import { getSupabaseUser, isServiceRoleRequest } from "../_shared/auth.ts";
 import { getOneSignalAppId, oneSignalCreateOrUpdateUser, oneSignalSendEmail } from "../_shared/onesignal.ts";
@@ -138,6 +141,276 @@ function parseDataUrlImage(input: string): { mime: string; bytes: Uint8Array; ex
 
 function bytesFromBlob(blob: Blob): Promise<Uint8Array> {
     return blob.arrayBuffer().then((b) => new Uint8Array(b));
+}
+
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const PDF_MIME = "application/pdf";
+
+const SUPPORTED_TEMPLATE_LANGS = ["EN", "RU"] as const;
+type TemplateLang = (typeof SUPPORTED_TEMPLATE_LANGS)[number];
+
+function normalizeTemplateLang(input: unknown): TemplateLang | null {
+    if (typeof input !== "string") return null;
+    const v = input.trim().toUpperCase();
+    return (SUPPORTED_TEMPLATE_LANGS as readonly string[]).includes(v) ? (v as TemplateLang) : null;
+}
+
+function guessTemplateLangFromName(name: string): TemplateLang {
+    const m = String(name ?? "").match(/[._-](EN|RU)[._-]/i);
+    const g = m ? m[1]!.toUpperCase() : "";
+    return normalizeTemplateLang(g) ?? "EN";
+}
+
+function getFileExtLower(nameOrPath: string): string {
+    const s = String(nameOrPath ?? "").toLowerCase();
+    if (s.endsWith(".docx")) return "docx";
+    if (s.endsWith(".pdf")) return "pdf";
+    return "";
+}
+
+function u8ToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    // TS in some setups treats Uint8Array as ArrayBufferLike (incl SharedArrayBuffer),
+    // while BlobPart expects ArrayBuffer. Slice produces a real ArrayBuffer.
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+function assertNonEmptyBytes(bytes: Uint8Array, label: string): void {
+    if (!(bytes instanceof Uint8Array)) throw new Error(`${label}: expected Uint8Array`);
+    if (bytes.byteLength <= 0) throw new Error(`${label}: empty output (refusing to overwrite storage object)`);
+}
+
+function decodeBasicHtmlEntities(input: string): string {
+    return input
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+}
+
+function htmlToPlainText(html: string): string {
+    const s = String(html ?? "");
+    // Preserve structure with newlines
+    let out = s
+        .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|tr)>/gi, "\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/(ul|ol|table)>/gi, "\n")
+        .replace(/<li[^>]*>/gi, "- ")
+        .replace(/<[^>]+>/g, "");
+
+    out = decodeBasicHtmlEntities(out);
+    // Normalize whitespace
+    out = out.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    out = out.replace(/[ \t]+\n/g, "\n");
+    out = out.replace(/\n{3,}/g, "\n\n");
+    return out.trim();
+}
+
+function escapeXml(text: string): string {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+}
+
+function extractSectPr(existingDocumentXml: string): string | null {
+    const m = existingDocumentXml.match(/<w:sectPr[\s\S]*?<\/w:sectPr>/);
+    return m ? m[0] : null;
+}
+
+function defaultSectPr(): string {
+    // A4 defaults
+    return (
+        `<w:sectPr>` +
+        `<w:pgSz w:w="11906" w:h="16838"/>` +
+        `<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/>` +
+        `</w:sectPr>`
+    );
+}
+
+function buildDocumentXmlFromPlainText(text: string, sectPr: string | null): string {
+    const lines = String(text ?? "").split("\n");
+    const bodyParts: string[] = [];
+
+    for (const line of lines) {
+        const trimmed = line; // keep spaces; Word needs xml:space preserve
+        if (!trimmed) {
+            bodyParts.push(`<w:p/>`);
+            continue;
+        }
+        bodyParts.push(
+            `<w:p><w:r><w:t xml:space="preserve">${escapeXml(trimmed)}</w:t></w:r></w:p>`
+        );
+    }
+
+    const sect = sectPr ?? defaultSectPr();
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ` +
+        `xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
+        `<w:body>` +
+        bodyParts.join("") +
+        sect +
+        `</w:body></w:document>`;
+}
+
+async function applyHtmlToExistingDocx(params: { templateBytes: Uint8Array; html: string }): Promise<Uint8Array> {
+    const zip = await JSZip.loadAsync(params.templateBytes);
+    const docPath = "word/document.xml";
+    const docFile = zip.file(docPath);
+    if (!docFile) throw new Error("Invalid DOCX: missing word/document.xml");
+
+    const existingXml = await docFile.async("string");
+    const sectPr = extractSectPr(existingXml);
+    const plain = htmlToPlainText(params.html);
+    const newXml = buildDocumentXmlFromPlainText(plain, sectPr);
+    zip.file(docPath, newXml);
+
+    return await zip.generateAsync({ type: "uint8array" });
+}
+
+async function createDocxFromHtml(params: { html: string }): Promise<Uint8Array> {
+    const plain = htmlToPlainText(params.html);
+    const docXml = buildDocumentXmlFromPlainText(plain, null);
+
+    const zip = new JSZip();
+    zip.file("[Content_Types].xml",
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+        `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+        `<Default Extension="xml" ContentType="application/xml"/>` +
+        `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+        `</Types>`
+    );
+    zip.folder("_rels")?.file(".rels",
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+        `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+        `</Relationships>`
+    );
+    zip.folder("word")?.file("document.xml", docXml);
+    zip.folder("word")?.folder("_rels")?.file("document.xml.rels",
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>`
+    );
+
+    return await zip.generateAsync({ type: "uint8array" });
+}
+
+function wrapTextToLines(text: string, maxWidth: number, measure: (s: string) => number): string[] {
+    const out: string[] = [];
+    const paragraphs = String(text ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    for (const p of paragraphs) {
+        const words = p.split(/\s+/).filter(Boolean);
+        if (words.length === 0) {
+            out.push("");
+            continue;
+        }
+        let line = "";
+        for (const w of words) {
+            const candidate = line ? `${line} ${w}` : w;
+            if (measure(candidate) <= maxWidth) {
+                line = candidate;
+                continue;
+            }
+            if (line) out.push(line);
+            // If single word doesn't fit, hard-break it.
+            if (measure(w) > maxWidth) {
+                let cur = "";
+                for (const ch of w) {
+                    const cand2 = cur + ch;
+                    if (measure(cand2) <= maxWidth) {
+                        cur = cand2;
+                    } else {
+                        if (cur) out.push(cur);
+                        cur = ch;
+                    }
+                }
+                line = cur;
+            } else {
+                line = w;
+            }
+        }
+        if (line) out.push(line);
+    }
+    return out;
+}
+
+let cachedUnicodeFontBytes: Uint8Array | null = null;
+async function fetchFirstOk(urls: string[]): Promise<ArrayBuffer> {
+    let lastErr: unknown = null;
+    for (const url of urls) {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.arrayBuffer();
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+    throw new Error(`Failed to fetch Unicode font: ${String((lastErr as any)?.message ?? lastErr ?? "unknown error")}`);
+}
+
+async function getUnicodeFontBytes(): Promise<Uint8Array> {
+    if (cachedUnicodeFontBytes) return cachedUnicodeFontBytes;
+    const urls = [
+        // Noto Sans Regular (supports Cyrillic)
+        "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+        "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+    ];
+    const ab = await fetchFirstOk(urls);
+    cachedUnicodeFontBytes = new Uint8Array(ab);
+    return cachedUnicodeFontBytes;
+}
+
+async function createPdfFromHtml(params: { html: string }): Promise<Uint8Array> {
+    const plain = htmlToPlainText(params.html);
+    const pdfDoc = await PDFDocument.create();
+    // StandardFonts use WinAnsi and can't encode Cyrillic ("Т", etc).
+    // Use a Unicode TTF via fontkit.
+    // @ts-ignore - pdf-lib types don't include registerFontkit in some setups
+    pdfDoc.registerFontkit(fontkit);
+    let font: any;
+    try {
+        const fontBytes = await getUnicodeFontBytes();
+        font = await pdfDoc.embedFont(fontBytes, { subset: true });
+    } catch (e) {
+        // Fallback to Helvetica for Latin-only text; otherwise surface a clear error.
+        const hasNonAscii = /[^\x00-\x7F]/.test(plain);
+        if (hasNonAscii) {
+            throw new Error(`PDF export failed: Unicode font unavailable (${String((e as any)?.message ?? e)})`);
+        }
+        font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+
+    // A4 in points: 595.28 × 841.89
+    const pageSize = { width: 595.28, height: 841.89 };
+    const margin = 48;
+    const fontSize = 11;
+    const lineHeight = 14;
+    const maxWidth = pageSize.width - margin * 2;
+
+    let page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+    let y = pageSize.height - margin;
+
+    const lines = wrapTextToLines(plain, maxWidth, (s) => font.widthOfTextAtSize(s, fontSize));
+    for (const line of lines) {
+        if (y - lineHeight < margin) {
+            page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+            y = pageSize.height - margin;
+        }
+        page.drawText(line, { x: margin, y: y - fontSize, size: fontSize, font });
+        y -= lineHeight;
+    }
+
+    const bytes = await pdfDoc.save();
+    return new Uint8Array(bytes);
+}
+
+function templateGeneratedPath(params: { developerUserId: string; templateId: number; ext: "docx" | "pdf" }): string {
+    return `agent-contracts/${params.developerUserId}/generated/templates/${params.templateId}.${params.ext}`;
 }
 
 function buildContractPayload(params: { application: any; developerId: string | null }): Record<string, unknown> {
@@ -277,6 +550,106 @@ serve(async (req) => {
         }
 
         /**
+         * Public: list developer contract templates + assets for the invite wizard (no auth required).
+         *
+         * Body: { action: 'list_contract_templates_public', developer_id }
+         *
+         * Returns:
+         * - templates: [{ id, name, lang, storage_path, content_html, url, created_at, updated_at }]
+         * - developer_assets: { signature_path, signature_url, stamp_path, stamp_url }
+         */
+        if (action === "list_contract_templates_public") {
+            if (!developer_id || typeof developer_id !== "string") {
+                return createJsonResponse({ error: "Missing developer_id" }, 400, origin);
+            }
+
+            const developerUserId = developer_id;
+
+            const { data: templates, error: tplErr } = await supabaseAdmin
+                .from("agent_contract_templates")
+                .select("id, name, lang, content_html, storage_path, created_at, updated_at")
+                .eq("developer_user_id", developerUserId)
+                .order("created_at", { ascending: false });
+            if (tplErr) throw tplErr;
+
+            const expectedPrefix = `agent-contracts/${developerUserId}/`;
+            const templatesWithUrls = (templates ?? [])
+                .filter((t: any) => typeof t?.storage_path === "string" && String(t.storage_path).startsWith(expectedPrefix))
+                .map((t: any) => {
+                    const storagePath = String(t.storage_path);
+                    const { data: urlData } = supabaseAdmin.storage.from(contractsBucket).getPublicUrl(storagePath);
+                    return { ...t, url: urlData?.publicUrl ?? null };
+                });
+
+            const { data: settings, error: settingsErr } = await supabaseAdmin
+                .from("agent_program_settings")
+                .select("developer_signature_path, developer_stamp_path")
+                .eq("developer_user_id", developerUserId)
+                .maybeSingle();
+            if (settingsErr) throw settingsErr;
+
+            const signaturePath = settings ? String((settings as any)?.developer_signature_path ?? "") : "";
+            const stampPath = settings ? String((settings as any)?.developer_stamp_path ?? "") : "";
+            const signatureUrl = signaturePath
+                ? supabaseAdmin.storage.from(signaturesBucket).getPublicUrl(signaturePath).data.publicUrl
+                : null;
+            const stampUrl = stampPath
+                ? supabaseAdmin.storage.from(signaturesBucket).getPublicUrl(stampPath).data.publicUrl
+                : null;
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    templates: templatesWithUrls,
+                    developer_assets: {
+                        signature_path: signaturePath || null,
+                        signature_url: signatureUrl,
+                        stamp_path: stampPath || null,
+                        stamp_url: stampUrl,
+                    },
+                },
+                200,
+                origin
+            );
+        }
+
+        /**
+         * Public: check whether a Supabase Auth user exists for an email.
+         * Used by the invite wizard: onBlur(email) -> if exists, ask password.
+         *
+         * Body: { action: 'check_auth_user_exists', email }
+         * Returns: { success: true, exists: boolean }
+         */
+        if (action === "check_auth_user_exists") {
+            const rawEmail = (safeBody as any)?.email;
+            if (!rawEmail || typeof rawEmail !== "string") {
+                return createJsonResponse({ error: "Missing email" }, 400, origin);
+            }
+            const emailNorm = rawEmail.trim().toLowerCase();
+            if (!emailNorm) return createJsonResponse({ error: "Missing email" }, 400, origin);
+
+            // Can't query auth.users via PostgREST (auth schema not exposed).
+            // Use Auth Admin API instead.
+            const { data: usersData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            if (listErr) throw listErr;
+            const user = (usersData?.users ?? []).find((u: any) => String(u?.email ?? "").toLowerCase() === emailNorm) ?? null;
+            if (!user?.id) {
+                return createJsonResponse({ success: true, exists: false, account_type: null }, 200, origin);
+            }
+
+            const userId = String(user.id);
+            const { data: profile, error: profileErr } = await supabaseAdmin
+                .from("user_profiles")
+                .select("account_type")
+                .eq("id", userId)
+                .maybeSingle();
+            if (profileErr) throw profileErr;
+
+            const accountType = profile && typeof (profile as any).account_type === "string" ? String((profile as any).account_type) : null;
+            return createJsonResponse({ success: true, exists: true, account_type: accountType }, 200, origin);
+        }
+
+        /**
          * Auth (agent): render a contract template with variables for preview.
          * Body: { action: 'render_contract', application_id, contract_path }
          *
@@ -341,7 +714,7 @@ serve(async (req) => {
             const previewPath = `agent-contracts-rendered/${applicationId}/preview.docx`;
             const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
                 previewPath,
-                new Blob([renderedBytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }),
+                new Blob([u8ToArrayBuffer(renderedBytes)], { type: DOCX_MIME }),
                 { upsert: true, contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }
             );
             if (upErr) throw upErr;
@@ -426,9 +799,7 @@ serve(async (req) => {
             const basePath = `agent-contracts/${developerUserId}`;
             const path = `${basePath}/${safeName}`;
 
-            const contentType = isDocx
-                ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                : "application/pdf";
+            const contentType = isDocx ? DOCX_MIME : PDF_MIME;
 
             const { error: uploadError } = await supabaseAdmin.storage
                 .from(contractsBucket)
@@ -437,8 +808,8 @@ serve(async (req) => {
 
             // Create or update template metadata
             const nowIso = new Date().toISOString();
-            const langMatch = safeName.match(/[._-](RU|EN|ru|en)[._-]/i);
-            const lang = langMatch ? langMatch[1]!.toUpperCase() : "RU";
+            const langFromForm = normalizeTemplateLang(form.get("lang"));
+            const lang = langFromForm ?? guessTemplateLangFromName(safeName);
 
             const { data: existingTemplate } = await supabaseAdmin
                 .from("agent_contract_templates")
@@ -637,19 +1008,21 @@ serve(async (req) => {
 
             const templateId = typeof (safeBody as any)?.id === "number" ? Number((safeBody as any).id) : null;
             const name = typeof (safeBody as any)?.name === "string" ? String((safeBody as any).name) : null;
-            const lang = typeof (safeBody as any)?.lang === "string" ? String((safeBody as any).lang) : "RU";
+            const lang = normalizeTemplateLang((safeBody as any)?.lang);
             const contentHtml = typeof (safeBody as any)?.content_html === "string" ? String((safeBody as any).content_html) : null;
             const storagePath = typeof (safeBody as any)?.storage_path === "string" ? String((safeBody as any).storage_path) : null;
 
             if (!name) return createJsonResponse({ error: "Missing name" }, 400, origin);
+            const nameExt = getFileExtLower(name);
+            if (nameExt !== "docx" && nameExt !== "pdf") return createJsonResponse({ error: "Template name must end with .docx or .pdf" }, 400, origin);
 
             const nowIso = new Date().toISOString();
             const payload: any = {
                 developer_user_id: developerUserId,
                 name,
-                lang,
                 updated_at: nowIso,
             };
+            if (lang) payload.lang = lang;
 
             if (contentHtml !== null) payload.content_html = contentHtml;
             if (storagePath !== null) payload.storage_path = storagePath;
@@ -669,10 +1042,81 @@ serve(async (req) => {
             } else {
                 // Create new
                 if (!storagePath) return createJsonResponse({ error: "Missing storage_path for new template" }, 400, origin);
+                if (!payload.lang) payload.lang = guessTemplateLangFromName(name);
                 payload.created_at = nowIso;
                 const { data, error } = await supabaseAdmin.from("agent_contract_templates").insert(payload).select().single();
                 if (error) throw error;
                 result = data;
+            }
+
+            // Keep Storage in sync: if content_html updated, overwrite the stored file,
+            // and also generate the other format under /generated/.
+            if (contentHtml !== null) {
+                const finalStoragePath = String((result as any)?.storage_path ?? storagePath ?? "").trim();
+                if (!finalStoragePath) throw new Error("Missing storage_path for template");
+
+                const expectedPrefix = `agent-contracts/${developerUserId}/`;
+                if (!finalStoragePath.startsWith(expectedPrefix)) {
+                    return createJsonResponse({ error: "Invalid storage_path" }, 400, origin);
+                }
+
+                const originalExt = getFileExtLower(finalStoragePath) || nameExt;
+                const idForGen = Number((result as any)?.id);
+                const genDocxPath = Number.isFinite(idForGen) ? templateGeneratedPath({ developerUserId, templateId: idForGen, ext: "docx" }) : null;
+                const genPdfPath = Number.isFinite(idForGen) ? templateGeneratedPath({ developerUserId, templateId: idForGen, ext: "pdf" }) : null;
+
+                // DOCX bytes (either update existing docx to keep layout, or create from scratch for PDF-origin templates)
+                let docxBytes: Uint8Array | null = null;
+                if (originalExt === "docx") {
+                    const { data: tplBlob, error: dlErr } = await supabaseAdmin.storage
+                        .from(contractsBucket)
+                        .download(finalStoragePath);
+                    if (dlErr) throw dlErr;
+                    if (!tplBlob) throw new Error("Failed to download template DOCX");
+                    docxBytes = await applyHtmlToExistingDocx({ templateBytes: await bytesFromBlob(tplBlob), html: contentHtml });
+                } else {
+                    docxBytes = await createDocxFromHtml({ html: contentHtml });
+                }
+                assertNonEmptyBytes(docxBytes, "Template DOCX bytes");
+
+                // PDF bytes (always generated from HTML)
+                const pdfBytes = await createPdfFromHtml({ html: contentHtml });
+                assertNonEmptyBytes(pdfBytes, "Template PDF bytes");
+
+                // Overwrite original stored file with its own type
+                if (originalExt === "docx") {
+                    const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        finalStoragePath,
+                        docxBytes,
+                        { upsert: true, contentType: DOCX_MIME }
+                    );
+                    if (upErr) throw upErr;
+                } else if (originalExt === "pdf") {
+                    const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        finalStoragePath,
+                        pdfBytes,
+                        { upsert: true, contentType: PDF_MIME }
+                    );
+                    if (upErr) throw upErr;
+                }
+
+                // Always keep generated exports in sync too (so UI can download both formats)
+                if (genDocxPath) {
+                    const { error: genErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        genDocxPath,
+                        docxBytes,
+                        { upsert: true, contentType: DOCX_MIME }
+                    );
+                    if (genErr) throw genErr;
+                }
+                if (genPdfPath) {
+                    const { error: genErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        genPdfPath,
+                        pdfBytes,
+                        { upsert: true, contentType: PDF_MIME }
+                    );
+                    if (genErr) throw genErr;
+                }
             }
 
             const { data: urlData } = supabaseAdmin.storage.from(contractsBucket).getPublicUrl(result.storage_path);
@@ -688,6 +1132,98 @@ serve(async (req) => {
                 200,
                 origin
             );
+        }
+
+        /**
+         * Auth (developer/manager): get a fresh download URL for a contract template.
+         * Ensures the stored DOCX matches latest `content_html` (if present).
+         * Body: { action: 'get_contract_template_download_url', developer_user_id?, id }
+         */
+        if (action === "get_contract_template_download_url") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const developerUserId =
+                typeof (safeBody as any)?.developer_user_id === "string" && (safeBody as any).developer_user_id
+                    ? String((safeBody as any).developer_user_id)
+                    : user.id;
+
+            const allowed = await canManageDeveloper({ supabaseAdmin, userId: user.id, developerId: developerUserId });
+            if (!allowed) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+
+            const templateId = typeof (safeBody as any)?.id === "number" ? Number((safeBody as any).id) : null;
+            if (!templateId) return createJsonResponse({ error: "Missing id" }, 400, origin);
+            const format = typeof (safeBody as any)?.format === "string" ? String((safeBody as any).format).toLowerCase() : null;
+            if (format && format !== "docx" && format !== "pdf") return createJsonResponse({ error: "Invalid format (expected docx|pdf)" }, 400, origin);
+
+            const { data: template, error: tplErr } = await supabaseAdmin
+                .from("agent_contract_templates")
+                .select("id, name, content_html, storage_path")
+                .eq("id", templateId)
+                .eq("developer_user_id", developerUserId)
+                .maybeSingle();
+            if (tplErr) throw tplErr;
+            if (!template) return createJsonResponse({ error: "Template not found" }, 404, origin);
+
+            const storagePath = String((template as any)?.storage_path ?? "").trim();
+            if (!storagePath) return createJsonResponse({ error: "Template has no storage_path" }, 400, origin);
+
+            const expectedPrefix = `agent-contracts/${developerUserId}/`;
+            if (!storagePath.startsWith(expectedPrefix)) return createJsonResponse({ error: "Invalid storage_path" }, 400, origin);
+
+            const contentHtml = typeof (template as any)?.content_html === "string" ? String((template as any).content_html) : null;
+            const name = String((template as any)?.name ?? "");
+            const originalExt = getFileExtLower(storagePath) || getFileExtLower(name);
+            const targetExt = (format as "docx" | "pdf" | null) ?? (originalExt === "pdf" ? "pdf" : "docx");
+            const targetPath =
+                targetExt === originalExt
+                    ? storagePath
+                    : templateGeneratedPath({ developerUserId, templateId, ext: targetExt });
+
+            if (contentHtml !== null) {
+                if (targetExt === "docx") {
+                    let docxBytes: Uint8Array;
+                    if (originalExt === "docx" && targetPath === storagePath) {
+                        const { data: tplBlob, error: dlErr } = await supabaseAdmin.storage.from(contractsBucket).download(storagePath);
+                        if (dlErr) throw dlErr;
+                        if (!tplBlob) throw new Error("Failed to download template DOCX");
+                        docxBytes = await applyHtmlToExistingDocx({ templateBytes: await bytesFromBlob(tplBlob), html: contentHtml });
+                    } else {
+                        docxBytes = await createDocxFromHtml({ html: contentHtml });
+                    }
+                    assertNonEmptyBytes(docxBytes, "Template DOCX bytes");
+                    const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        targetPath,
+                        docxBytes,
+                        { upsert: true, contentType: DOCX_MIME }
+                    );
+                    if (upErr) throw upErr;
+                } else {
+                    const pdfBytes = await createPdfFromHtml({ html: contentHtml });
+                    assertNonEmptyBytes(pdfBytes, "Template PDF bytes");
+                    const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                        targetPath,
+                        pdfBytes,
+                        { upsert: true, contentType: PDF_MIME }
+                    );
+                    if (upErr) throw upErr;
+                }
+            } else {
+                // No edited content: only allow downloading the original file type.
+                if (targetPath !== storagePath) {
+                    return createJsonResponse({ error: "Template has no editable content to export into another format" }, 400, origin);
+                }
+            }
+
+            const { data: signed, error: signedErr } = await supabaseAdmin.storage
+                .from(contractsBucket)
+                .createSignedUrl(targetPath, 60 * 10);
+            if (!signedErr && signed?.signedUrl) {
+                return createJsonResponse({ success: true, url: signed.signedUrl, path: targetPath, format: targetExt }, 200, origin);
+            }
+
+            const { data: urlData } = supabaseAdmin.storage.from(contractsBucket).getPublicUrl(targetPath);
+            return createJsonResponse({ success: true, url: urlData?.publicUrl ?? null, path: targetPath, format: targetExt }, 200, origin);
         }
 
         /**
@@ -829,6 +1365,184 @@ serve(async (req) => {
         }
 
         /**
+         * Public (preferred for invite wizard): sign multiple agreements for an application.
+         *
+         * For new agents without Supabase Auth session:
+         * - allowed only if application.agent_user_id is NULL and the provided email matches application.email.
+         *
+         * For existing agents (application.agent_user_id is set):
+         * - requires Supabase Auth session and the user must match agent_user_id (or email match fallback).
+         */
+        if (action === "sign_agreements_public") {
+            const applicationId = (body as any)?.application_id;
+            const signatureDataUrl = (body as any)?.signature_data_url;
+            const method = (body as any)?.signature_method;
+            const accepted = (body as any)?.accepted === true;
+            const contractTemplatePaths = (body as any)?.contract_template_paths;
+            const requestEmailRaw = (body as any)?.email;
+
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+            if (!signatureDataUrl || typeof signatureDataUrl !== "string") {
+                return createJsonResponse({ error: "Missing signature_data_url" }, 400, origin);
+            }
+            if (method !== "draw" && method !== "upload") {
+                return createJsonResponse({ error: "Invalid signature_method" }, 400, origin);
+            }
+            if (!accepted) {
+                return createJsonResponse({ error: "Must accept agreement" }, 400, origin);
+            }
+            if (!Array.isArray(contractTemplatePaths) || contractTemplatePaths.length === 0) {
+                return createJsonResponse({ error: "Missing contract_template_paths" }, 400, origin);
+            }
+            const requestedPaths = contractTemplatePaths.map((p: any) => String(p)).filter(Boolean);
+            if (requestedPaths.length === 0) {
+                return createJsonResponse({ error: "Missing contract_template_paths" }, 400, origin);
+            }
+
+            const requestEmail = typeof requestEmailRaw === "string" ? requestEmailRaw.trim().toLowerCase() : "";
+
+            const { data: application, error: appError } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, agreement_signed, developer_user_id, full_name, phone, created_at")
+                .eq("id", applicationId)
+                .single();
+            if (appError || !application) {
+                return createJsonResponse({ error: "Application not found", details: appError?.message }, 404, origin);
+            }
+
+            const claimedAgentUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : null;
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+
+            // If application is already linked to an auth user, require auth.
+            if (claimedAgentUserId) {
+                const user = await getSupabaseUser(req);
+                if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+                const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+                const canSign = claimedAgentUserId === user.id || (!!userEmail && userEmail === appEmail);
+                if (!canSign) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+            } else {
+                // No linked auth user yet -> allow only if email matches the application.
+                if (!requestEmail || requestEmail !== appEmail) {
+                    return createJsonResponse({ error: "Forbidden" }, 403, origin);
+                }
+            }
+
+            const { mime, bytes, ext } = parseDataUrlImage(signatureDataUrl);
+            const signaturePath = `agent-signatures/${applicationId}/signature.${ext}`;
+            const signatureBlob = new Blob([u8ToArrayBuffer(bytes)], { type: mime });
+
+            const { error: uploadError } = await supabaseAdmin.storage.from(signaturesBucket).upload(signaturePath, signatureBlob, {
+                upsert: true,
+                contentType: mime,
+            });
+            if (uploadError) throw uploadError;
+
+            const nowIso = new Date().toISOString();
+            const signatureMeta = {
+                signed_at: nowIso,
+                ip: getRequestIp(req),
+                user_agent: req.headers.get("user-agent") ?? null,
+                accepted: true,
+                contract_template_paths: requestedPaths,
+            };
+
+            // Snapshot filled contracts at signing time (DOCX supported; PDF copied as-is).
+            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
+            const expectedPrefix = `agent-contracts/${developerUserId ?? ""}/`;
+            if (!developerUserId) {
+                return createJsonResponse({ error: "Invalid developer_user_id" }, 400, origin);
+            }
+
+            const signedContracts: Array<{ contract_template_path: string; signed_contract_path: string; signed_contract_mime: string; signed_contract_url: string | null }> = [];
+
+            for (let i = 0; i < requestedPaths.length; i++) {
+                const contractTemplatePath = requestedPaths[i]!;
+                if (!contractTemplatePath.startsWith(expectedPrefix)) {
+                    return createJsonResponse({ error: "Invalid contract_template_path" }, 400, origin);
+                }
+                const lower = contractTemplatePath.toLowerCase();
+                const isDocx = lower.endsWith(".docx");
+                const isPdf = lower.endsWith(".pdf");
+                if (!isDocx && !isPdf) return createJsonResponse({ error: "Only PDF or DOCX allowed" }, 400, origin);
+
+                const { data: tplBlob, error: dlErr } = await supabaseAdmin.storage.from(contractsBucket).download(contractTemplatePath);
+                if (dlErr) throw dlErr;
+                if (!tplBlob) throw new Error("Failed to download contract template");
+
+                const payload = buildContractPayload({ application, developerId: developerUserId });
+                const outBytes = isDocx ? await renderDocx(await bytesFromBlob(tplBlob), payload) : await bytesFromBlob(tplBlob);
+
+                const extOut = isDocx ? "docx" : "pdf";
+                const signedContractMime = isDocx ? DOCX_MIME : PDF_MIME;
+                const signedContractPath = `agent-signed-contracts/${applicationId}/contract-${String(i + 1).padStart(2, "0")}-${nowIso.replace(/[:.]/g, "-")}.${extOut}`;
+
+                const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
+                    signedContractPath,
+                    new Blob([u8ToArrayBuffer(outBytes)], { type: signedContractMime }),
+                    { upsert: true, contentType: signedContractMime }
+                );
+                if (upErr) throw upErr;
+
+                // Best-effort per-contract row (table may be added later by migration).
+                const insertPayload: Record<string, unknown> = {
+                    application_id: applicationId,
+                    contract_template_path: contractTemplatePath,
+                    signed_contract_path: signedContractPath,
+                    signed_contract_mime: signedContractMime,
+                    signed_at: nowIso,
+                    signature_path: signaturePath,
+                    signature_meta: signatureMeta,
+                };
+                const { error: perErr } = await supabaseAdmin.from("agent_application_contracts").insert(insertPayload).select("id").maybeSingle();
+                if (perErr) {
+                    const msg = String((perErr as any)?.message ?? perErr);
+                    // Allow running before migration is applied.
+                    if (!msg.toLowerCase().includes("does not exist")) throw perErr;
+                }
+
+                const signedContractUrl = supabaseAdmin.storage.from(contractsBucket).getPublicUrl(signedContractPath).data.publicUrl;
+                signedContracts.push({
+                    contract_template_path: contractTemplatePath,
+                    signed_contract_path: signedContractPath,
+                    signed_contract_mime: signedContractMime,
+                    signed_contract_url: signedContractUrl,
+                });
+            }
+
+            const first = signedContracts[0] ?? null;
+            const updatePayload: Record<string, unknown> = {
+                agreement_signed: true,
+                agreement_signed_at: nowIso,
+                signature_path: signaturePath,
+                signature_method: method,
+                signature_meta: signatureMeta,
+            };
+            if (first) {
+                updatePayload.contract_template_path = first.contract_template_path;
+                updatePayload.signed_contract_path = first.signed_contract_path;
+                updatePayload.signed_contract_mime = first.signed_contract_mime;
+                updatePayload.signed_contract_created_at = nowIso;
+            }
+
+            const { data: updated, error: updateErr } = await supabaseAdmin
+                .from("agent_applications")
+                .update(updatePayload)
+                .eq("id", applicationId)
+                .select()
+                .single();
+            if (updateErr) throw updateErr;
+
+            const signatureUrl = supabaseAdmin.storage.from(signaturesBucket).getPublicUrl(signaturePath).data.publicUrl;
+            return createJsonResponse(
+                { success: true, data: updated, signature_url: signatureUrl, signed_contracts: signedContracts },
+                200,
+                origin
+            );
+        }
+
+        /**
          * Auth (agent): sign agreement with drawn/uploaded signature image.
          */
         if (action === "sign_agreement") {
@@ -877,7 +1591,7 @@ serve(async (req) => {
 
             const { mime, bytes, ext } = parseDataUrlImage(signatureDataUrl);
             const path = `agent-signatures/${applicationId}/signature.${ext}`;
-            const blob = new Blob([bytes], { type: mime });
+            const blob = new Blob([u8ToArrayBuffer(bytes)], { type: mime });
 
             const { error: uploadError } = await supabaseAdmin.storage.from(signaturesBucket).upload(path, blob, {
                 upsert: true,
@@ -932,7 +1646,7 @@ serve(async (req) => {
 
                 const { error: upErr } = await supabaseAdmin.storage.from(contractsBucket).upload(
                     signedContractPath,
-                    new Blob([outBytes], { type: signedContractMime }),
+                    new Blob([u8ToArrayBuffer(outBytes)], { type: signedContractMime }),
                     { upsert: true, contentType: signedContractMime }
                 );
                 if (upErr) throw upErr;
@@ -1046,58 +1760,16 @@ serve(async (req) => {
          * Auth (developer/manager): replace agent project access list.
          */
         if (action === "set_agent_access") {
-            const user = await getSupabaseUser(req);
-            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
-
-            const applicationId = (body as any)?.application_id;
-            const projectIds = (body as any)?.project_ids;
-            if (!applicationId || typeof applicationId !== "string") {
-                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
-            }
-            if (!Array.isArray(projectIds)) {
-                return createJsonResponse({ error: "Missing project_ids" }, 400, origin);
-            }
-
-            const { data: application, error: appError } = await supabaseAdmin
-                .from("agent_applications")
-                .select("id, developer_user_id")
-                .eq("id", applicationId)
-                .single();
-            if (appError || !application) {
-                return createJsonResponse({ error: "Application not found", details: appError?.message }, 404, origin);
-            }
-
-            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
-            const allowed = await canManageDeveloper({ supabaseAdmin, userId: user.id, developerId: developerUserId });
-            if (!allowed) return createJsonResponse({ error: "Forbidden" }, 403, origin);
-
-            const requestedIds = projectIds.map((x: any) => String(x)).filter(Boolean);
-            const { data: ownedProjects, error: ownedErr } = await supabaseAdmin
-                .from("projects")
-                .select("id")
-                .eq("user_id", developerUserId)
-                .in("id", requestedIds);
-            if (ownedErr) throw ownedErr;
-
-            const validIds = (ownedProjects ?? []).map((p: any) => String(p.id));
-
-            const { error: delErr } = await supabaseAdmin.from("agent_access").delete().eq("agent_id", applicationId);
-            if (delErr) throw delErr;
-
-            if (validIds.length > 0) {
-                const rows = validIds.map((pid) => ({ agent_id: applicationId, project_id: pid }));
-                const { error: insErr } = await supabaseAdmin.from("agent_access").insert(rows);
-                if (insErr) throw insErr;
-            }
-
-            return createJsonResponse({ success: true, project_ids: validIds }, 200, origin);
+            // Legacy endpoint: explicit per-project access was removed.
+            // Agents have access to all projects for the developer linked to their approved application.
+            return createJsonResponse({ error: "agent_access_removed" }, 410, origin);
         }
 
         /**
          * Developer/manager: approve application -> activates + sends email via OneSignal.
          *
          * IMPORTANT:
-         * - No Supabase Auth invites/magic-links.
+         * - We generate a Supabase magic link to agent-cabinet (temporary flow; SSO will be reworked later).
          * - We still allow service-role calls for internal operations.
          */
         if (action === "approve_application") {
@@ -1157,56 +1829,73 @@ serve(async (req) => {
 
             if (updateError) throw updateError;
 
-            // Grant access to developer's projects by default (MVP)
-            const { data: developerProjects, error: projectsError } = await supabaseAdmin
-                .from("projects")
-                .select("id")
-                .eq("user_id", developerUserId)
-                .eq("is_public", true);
+            // Ensure agent has Supabase Auth user and user_profiles record.
+            const nowIso = new Date().toISOString();
+            const agentEmailRaw = String((application as any)?.email ?? "");
+            const agentEmail = agentEmailRaw.trim().toLowerCase();
+            if (!agentEmail) return createJsonResponse({ error: "Application email is missing" }, 400, origin);
 
-            if (projectsError) throw projectsError;
+            // Find existing auth user by email
+            const { data: usersData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            if (listErr) throw listErr;
+            const existingUser = (usersData?.users ?? []).find((u: any) => String(u?.email ?? "").toLowerCase() === agentEmail) ?? null;
 
-            const projectIds: string[] = (developerProjects ?? [])
-                .map((p: any) => p?.id)
-                .filter((id: any) => typeof id === "string");
-
-            if (projectIds.length > 0) {
-                const { data: existingAccess, error: accessError } = await supabaseAdmin
-                    .from("agent_access")
-                    .select("project_id")
-                    .eq("agent_id", applicationId);
-
-                if (accessError) throw accessError;
-
-                const existingIds = new Set(
-                    (existingAccess ?? [])
-                        .map((r: any) => r?.project_id)
-                        .filter((id: any) => typeof id === "string")
-                );
-
-                const rowsToInsert = projectIds
-                    .filter((projectId) => !existingIds.has(projectId))
-                    .map((projectId) => ({
-                        agent_id: applicationId,
-                        project_id: projectId,
-                    }));
-
-                if (rowsToInsert.length > 0) {
-                    const { error: insertError } = await supabaseAdmin
-                        .from("agent_access")
-                        .insert(rowsToInsert);
-                    if (insertError) throw insertError;
-                }
+            let agentAuthUserId: string | null = existingUser?.id ? String(existingUser.id) : null;
+            if (!agentAuthUserId) {
+                // Create user WITHOUT password so encrypted_password stays NULL until first password setup.
+                const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+                    email: agentEmail,
+                    email_confirm: true,
+                    user_metadata: { account_type: "agent", requires_password_setup: true },
+                });
+                if (createErr) throw createErr;
+                agentAuthUserId = created?.user?.id ? String(created.user.id) : null;
             }
+            if (!agentAuthUserId) throw new Error("Failed to resolve agent auth user id");
 
-            const envSiteUrl = Deno.env.get("SITE_URL") || "";
-            const siteUrlRaw = requestSiteUrl || envSiteUrl || origin || "https://gridix.live";
-            const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
-            const accessLink = `${siteUrl}/${lang}/projects/agent/${applicationId}`;
+            // Link application to auth user (so agent-cabinet can load it after login)
+            await supabaseAdmin
+                .from("agent_applications")
+                .update({ agent_user_id: agentAuthUserId })
+                .eq("id", applicationId)
+                .is("agent_user_id", null);
+
+            // Ensure user_profiles row exists
+            const { error: profileErr } = await supabaseAdmin
+                .from("user_profiles")
+                .upsert(
+                    {
+                        id: agentAuthUserId,
+                        email: agentEmail,
+                        full_name: (application as any)?.full_name ?? null,
+                        account_type: "agent",
+                        updated_at: nowIso,
+                    },
+                    { onConflict: "id" }
+                );
+            if (profileErr) throw profileErr;
+
+            // Build agent-cabinet access link
+            const agentCabinetEnv = Deno.env.get("AGENT_CABINET_URL") || "";
+            const agentCabinetBaseRaw = agentCabinetEnv || requestSiteUrl || origin || "";
+            const agentCabinetBase = agentCabinetBaseRaw.endsWith("/") ? agentCabinetBaseRaw.slice(0, -1) : agentCabinetBaseRaw;
+            if (!agentCabinetBase) throw new Error("Missing AGENT_CABINET_URL");
+
+            const redirectTo = `${agentCabinetBase}/${lang}/application?application_id=${encodeURIComponent(applicationId)}`;
+            const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+                type: "magiclink",
+                email: agentEmail,
+                options: { redirectTo },
+            });
+            if (linkErr) throw linkErr;
+            const accessLink =
+                (linkData as any)?.properties?.action_link
+                    ? String((linkData as any).properties.action_link)
+                    : redirectTo;
 
             // Send email to agent with status + access link (via OneSignal templates)
             const payload: Record<string, unknown> = {
-                app: { url: siteUrl },
+                app: { url: agentCabinetBase },
                 agent: {
                     id: applicationId,
                     status: "approved",
@@ -1345,10 +2034,10 @@ serve(async (req) => {
 
             let emailResult: { template_key: string; onesignal_message_id: string } | null = null;
             if (shouldSendEmail && (status === "approved" || status === "rejected")) {
-                const envSiteUrl = Deno.env.get("SITE_URL") || "";
-                const siteUrlRaw = requestSiteUrl || envSiteUrl || origin || "https://gridix.live";
-                const siteUrl = siteUrlRaw.endsWith("/") ? siteUrlRaw.slice(0, -1) : siteUrlRaw;
-                const accessLink = `${siteUrl}/${lang}/projects/agent/${applicationId}`;
+                const agentCabinetEnv = Deno.env.get("AGENT_CABINET_URL") || "";
+                const baseRaw = agentCabinetEnv || requestSiteUrl || origin || "";
+                const base = baseRaw.endsWith("/") ? baseRaw.slice(0, -1) : baseRaw;
+                const accessLink = base ? `${base}/${lang}/application?application_id=${encodeURIComponent(applicationId)}` : "";
 
                 // Resolve template: if override provided -> must exist; else try known keys in order.
                 let templateKey: string | null = overrideTemplateKey;
@@ -1383,7 +2072,7 @@ serve(async (req) => {
                 }
 
                 const payload: Record<string, unknown> = {
-                    app: { url: siteUrl },
+                    app: { url: base || "" },
                     agent: {
                         id: applicationId,
                         status,
@@ -1411,7 +2100,8 @@ serve(async (req) => {
         }
 
         /**
-         * Public: agent lists accessible projects by `agent_id` (link-based access).
+         * Public: agent lists projects for the developer linked to the application.
+         * agent_access table is removed; access is implicit to all developer projects.
          */
         if (action === "list_projects") {
             const url = new URL(req.url);
@@ -1441,24 +2131,19 @@ serve(async (req) => {
                 return createJsonResponse({ error: "Agent not approved" }, 403, origin);
             }
 
-            const { data, error } = await supabaseAdmin
-                .from("agent_access")
-                .select(`
-          project_id,
-          projects (
-            id,
-            name,
-            slug,
-            address,
-            building_image_url
-          )
-        `)
-                .eq("agent_id", agentId);
+            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
+            if (!developerUserId) {
+                return createJsonResponse({ error: "Invalid developer_user_id" }, 400, origin);
+            }
+
+            const { data: projects, error } = await supabaseAdmin
+                .from("projects")
+                .select("id, name, slug, address, building_image_url")
+                .eq("user_id", developerUserId)
+                .eq("is_public", true);
 
             if (error) throw error;
-
-            const projects = data.map((item: any) => item.projects).filter(Boolean);
-            return createJsonResponse({ success: true, projects }, 200, origin);
+            return createJsonResponse({ success: true, projects: projects ?? [] }, 200, origin);
         }
 
         return createJsonResponse({ error: "Invalid action" }, 400, origin);
