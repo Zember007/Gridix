@@ -1,39 +1,71 @@
 import React from 'react';
 import { Apartment } from '@/entities/apartment/model/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPriceWithCurrency } from "@gridix/utils/lib";
+import { cn, formatPriceWithCurrency } from "@gridix/utils/lib";
 
-interface ApartmentPopupProps {
+type PopupSettings = {
+  showNumbers: boolean;
+  showTooltip: boolean;
+  showArea: boolean;
+  showPrice: boolean;
+};
+
+type CommonProps = {
   apartment: Apartment;
-  position: { x: number; y: number };
-  settings: {
-    showNumbers: boolean;
-    showTooltip: boolean;
-    showArea: boolean;
-    showPrice: boolean;
-  };
+  settings: PopupSettings;
   currency?: string | null;
   selectedCurrency?: string;
-}
+  className?: string;
+  /**
+   * Controls absolute positioning for "floating" mode.
+   * - `absolute` (default): requires `position`
+   * - `static`: renders as a normal block (e.g. inside TooltipContent)
+   */
+  variant?: 'absolute' | 'static';
+  /** Optional visibility toggles for compact contexts (e.g. chess tooltip) */
+  showStatus?: boolean;
+  showFloor?: boolean;
+};
+
+type AbsoluteVariantProps = CommonProps & {
+  variant?: 'absolute';
+  position: { x: number; y: number };
+};
+
+type StaticVariantProps = CommonProps & {
+  variant: 'static';
+  position?: never;
+};
+
+type ApartmentPopupProps = AbsoluteVariantProps | StaticVariantProps;
 
 const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
   apartment,
-  position,
   settings,
   currency,
+  className,
+  variant = 'absolute',
+  showStatus = true,
+  showFloor = true,
+  ...rest
 }, ref) => {
   const { t } = useLanguage();
 
   if (!settings.showTooltip) return null;
 
+  const isAbsolute = variant !== 'static';
+  const position = isAbsolute ? (rest as AbsoluteVariantProps).position : undefined;
+
   return (
     <div
       ref={ref}
-      className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs"
-      style={{
-        left: position.x,
-        top: position.y,
-      }}
+      className={cn(
+        isAbsolute
+          ? 'absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs'
+          : 'bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs',
+        className,
+      )}
+      style={isAbsolute && position ? { left: position.x, top: position.y } : undefined}
       onClick={(e) => e.stopPropagation()}
     >
 
@@ -46,18 +78,22 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
             </div>
           )}
 
-          <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
-            apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
-            {t(`project.${apartment.status}`)}
-          </span>
+          {showStatus && (
+            <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
+              apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+              {t(`project.${apartment.status}`)}
+            </span>
+          )}
         </div>
 
         {/* Floor */}
-        <div className="text-sm text-gray-600">
-          {t('project.floor')}: {apartment.floor_number}
-        </div>
+        {showFloor && (
+          <div className="text-sm text-gray-600">
+            {t('project.floor')}: {apartment.floor_number}
+          </div>
+        )}
 
         {/* Area */}
         {settings.showArea && (
@@ -74,9 +110,9 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
         )}
 
         {/* Rooms */}
-        {apartment.rooms && (
+        {apartment.rooms !== null && apartment.rooms !== undefined && (
           <div className="text-sm text-gray-600">
-            {t('project.rooms')}: {apartment.rooms}
+            {t('project.rooms')}: {apartment.rooms === 0 ? 'S' : apartment.rooms}
           </div>
         )}
       </div>

@@ -9,8 +9,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@gridix/ui";
-import { Badge } from "@gridix/ui";
 import { useLanguage } from '@/contexts/LanguageContext';
+import ApartmentPopup from '@/components/visualization/ApartmentPopup';
 
 type ApartmentWithSection = Apartment & {
     section_number?: number | null;
@@ -31,7 +31,7 @@ type Props = {
 const getStatusColorClass = (status: Apartment['status']) => {
     switch (status) {
         case 'available':
-            return 'text-white hover:scale-110';
+            return 'text-white';
         case 'reserved':
             return 'text-gray-800';
         case 'sold':
@@ -96,8 +96,8 @@ export const ChessView = ({
 
 
     return (
-        <div className="flex flex-col h-full w-full bg-white overflow-hidden select-none">
-            <div className="px-6 py-4 flex gap-4 shrink-0 border-b border-gray-50">
+        <div className="flex flex-col  bg-white overflow-hidden select-none container mx-auto md:px-6 py-8 grow flex">
+            <div className="pb-4 flex gap-4 shrink-0 border-b border-gray-50">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                     <div
                         className="w-4 h-4 rounded"
@@ -121,13 +121,13 @@ export const ChessView = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-20 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar">
                 <TooltipProvider delayDuration={100}>
                     <div className="flex flex-col gap-1 min-w-max py-4">
                         {floorsData.map(({ floor, apartments }) => (
                             <div
                                 key={floor}
-                                className="flex items-center hover:bg-slate-50 transition-colors rounded-lg gap-4 px-2 py-0.5 group min-h-[40px]"
+                                className="flex items-center hover:bg-slate-50 transition-colors rounded-lg gap-4 py-0.5 group min-h-[40px]"
                                 onMouseEnter={() => setHoveredFloor(floor)}
                                 onMouseLeave={() => setHoveredFloor(null)}
                             >
@@ -137,7 +137,7 @@ export const ChessView = ({
                                 </div>
 
                                 {/* Apartments Grid Row */}
-                                <div className="flex items-center flex-1 overflow-x-auto no-scrollbar max-w-[calc(100vw-32px-100px-48px)]">
+                                <div className="flex items-center flex-1 overflow-x-auto no-scrollbarmd:max-w-[calc(100vw-32px-100px-48px)] max-w-[calc(100vw-32px-100px)]">
                                     {apartments.map((aptRaw, index) => {
                                         const apt = aptRaw as ApartmentWithSection;
                                         const prev = index > 0 ? (apartments[index - 1] as ApartmentWithSection) : undefined;
@@ -159,29 +159,29 @@ export const ChessView = ({
                                                         <button
                                                             onClick={() => onApartmentSelect(apt)}
                                                             className={cn(
-                                                                'w-8 h-8 rounded shrink-0 flex items-center justify-center text-xs font-bold transition-all shadow-sm mx-[2px]',
+                                                                'w-8 h-8 rounded shrink-0 flex group/number items-center justify-center text-xs font-bold transition-all shadow-sm mx-[2px]',
                                                                 getStatusColorClass(apt.status),
                                                             )}
                                                             style={{ backgroundColor: fillColor }}
                                                         >
-                                                            {apt.rooms == 0 ? 'S' : apt.rooms}
+                                                            <span className="group-hover/number:scale-140 transition-all block">{apt.type !== 'apartment' ? apt.apartment_number.slice(0, 2) : apt.rooms == 0 ? 'S' : apt.rooms}</span>
                                                         </button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" className="p-0 border-none shadow-xl rounded-xl">
-                                                        <div className="bg-white p-4 rounded-xl border border-gray-100 min-w-[200px]">
-                                                            <div className="flex justify-between items-start mb-2">
-                                                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px] uppercase font-bold px-1.5 h-5">
-                                                                    {apt.rooms} Квартира
-                                                                </Badge>
-                                                                <span className="text-sm font-bold text-gray-900">№{apt.apartment_number}</span>
-                                                            </div>
-                                                            <div className="font-bold text-lg mb-1">
-                                                                {Number(apt.price).toLocaleString('ru-RU')} ₽
-                                                            </div>
-                                                            <div className="text-xs text-gray-500 font-medium">
-                                                                {apt.area} м² • {Math.round(Number(apt.price) / Number(apt.area)).toLocaleString('ru-RU')} ₽/м²
-                                                            </div>
-                                                        </div>
+                                                    <TooltipContent side="top" className="p-0 border-none bg-transparent shadow-none">
+                                                        <ApartmentPopup
+                                                            apartment={apt}
+                                                            variant="static"
+                                                            showFloor={false}
+                                                            showStatus={false}
+                                                            settings={{
+                                                                showNumbers: true,
+                                                                showTooltip: true,
+                                                                showArea: true,
+                                                                showPrice: true,
+                                                            }}
+                                                            className="min-w-[200px]"
+                                                            currency={project.currency || null}
+                                                        />
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </div>
@@ -190,7 +190,7 @@ export const ChessView = ({
                                 </div>
 
                                 {/* Right Interactions (Hover) */}
-                                <div className=" flex items-center shrink-0 justify-end relative">
+                                <div className=" hidden md:flex items-center shrink-0 justify-end relative">
                                     {/* "Plan X floor" - Visible on Hover */}
                                     <div className={cn(
                                         "absolute right-0 transition-opacity duration-200 flex items-center justify-end",
