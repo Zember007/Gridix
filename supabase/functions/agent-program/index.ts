@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1?target=es2022";
 import { PDFDocument, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1?target=es2022";
+import * as mammoth from "https://esm.sh/mammoth@1.11.0?target=es2022";
 // @ts-ignore - resolved in Supabase Edge (Deno) runtime
 import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1?target=es2022";
 import { createCorsResponse, createJsonResponse } from "../_shared/cors.ts";
@@ -413,13 +414,18 @@ function templateGeneratedPath(params: { developerUserId: string; templateId: nu
     return `agent-contracts/${params.developerUserId}/generated/templates/${params.templateId}.${params.ext}`;
 }
 
-function buildContractPayload(params: { application: any; developerId: string | null }): Record<string, unknown> {
+function buildContractPayload(params: { application: any; developerId: string | null; developerProfile?: any | null }): Record<string, unknown> {
     const app = params.application ?? {};
     const agent = {
         id: String(app.id ?? ""),
         full_name: String(app.full_name ?? ""),
+        company_name: String(app.company_name ?? ""),
+        person_type: String(app.type ?? ""),
+        tax_id: String(app.tax_id ?? ""),
+        legal_address: String(app.legal_address ?? ""),
         email: String(app.email ?? ""),
         phone: String(app.phone ?? ""),
+        bank_details: (app.bank_details && typeof app.bank_details === "object") ? app.bank_details : null,
     };
 
     const now = new Date();
@@ -427,15 +433,72 @@ function buildContractPayload(params: { application: any; developerId: string | 
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
 
+    const today = `${yyyy}-${mm}-${dd}`;
+
+    // Backward-compatible aliases (older templates may use these)
+    const commissionRate =
+        app && (typeof app.commission_rate === "number" || typeof app.commission_rate === "string")
+            ? String(app.commission_rate)
+            : "";
+
     return {
         agent,
         application: {
             id: String(app.id ?? ""),
             created_at: String(app.created_at ?? ""),
         },
-        developer: { id: params.developerId ? String(params.developerId) : "" },
-        date: { today: `${yyyy}-${mm}-${dd}` },
+        developer: {
+            id: params.developerId ? String(params.developerId) : "",
+            full_name: params.developerProfile ? String(params.developerProfile?.full_name ?? "") : "",
+            company_name: params.developerProfile ? String(params.developerProfile?.company_name ?? "") : "",
+            tax_id: params.developerProfile ? String(params.developerProfile?.tax_id ?? "") : "",
+            legal_address: params.developerProfile ? String(params.developerProfile?.legal_address ?? "") : "",
+            phone: params.developerProfile ? String(params.developerProfile?.phone ?? "") : "",
+            email: params.developerProfile ? String(params.developerProfile?.email ?? "") : "",
+        },
+        date: { today },
+        // Aliases
+        partner_id: String(app.id ?? ""),
+        partner_name: agent.full_name,
+        company_name: agent.company_name,
+        tax_id: agent.tax_id,
+        address: agent.legal_address,
+        commission_rate: commissionRate,
+        date_text: today,
     };
+}
+
+async function verifyPasswordWithAuth(params: {
+    supabaseUrl: string;
+    serviceKey: string;
+    email: string;
+    password: string;
+}): Promise<{ ok: true; user_id: string } | { ok: false; error: string }> {
+    const email = params.email.trim().toLowerCase();
+    if (!email) return { ok: false, error: "Missing email" };
+    if (!params.password) return { ok: false, error: "Missing password" };
+
+    // Intentionally DO NOT return access/refresh tokens to avoid creating a client session.
+    const res = await fetch(`${params.supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+            apikey: params.serviceKey,
+            authorization: `Bearer ${params.serviceKey}`,
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ email, password: params.password }),
+    });
+
+    if (!res.ok) {
+        // Avoid leaking details (e.g. "email not confirmed") in public flows.
+        return { ok: false, error: "Invalid email or password" };
+    }
+
+    const data = (await res.json().catch(() => null)) as any;
+    const userId = data?.user?.id ? String(data.user.id) : "";
+    if (!userId) return { ok: false, error: "Invalid email or password" };
+
+    return { ok: true, user_id: userId };
 }
 
 async function renderDocx(templateBytes: Uint8Array, payload: Record<string, unknown>): Promise<Uint8Array> {
@@ -588,6 +651,13 @@ serve(async (req) => {
                 .maybeSingle();
             if (settingsErr) throw settingsErr;
 
+            const { data: developerProfile, error: devProfileErr } = await supabaseAdmin
+                .from("user_profiles")
+                .select("full_name, company_name, tax_id, legal_address, phone, email")
+                .eq("id", developerUserId)
+                .maybeSingle();
+            if (devProfileErr) throw devProfileErr;
+
             const signaturePath = settings ? String((settings as any)?.developer_signature_path ?? "") : "";
             const stampPath = settings ? String((settings as any)?.developer_stamp_path ?? "") : "";
             const signatureUrl = signaturePath
@@ -601,6 +671,7 @@ serve(async (req) => {
                 {
                     success: true,
                     templates: templatesWithUrls,
+                    developer_profile: developerProfile ?? null,
                     developer_assets: {
                         signature_path: signaturePath || null,
                         signature_url: signatureUrl,
@@ -650,6 +721,55 @@ serve(async (req) => {
         }
 
         /**
+         * Public: verify password for an existing auth user WITHOUT creating a browser session.
+         * Used by invite wizard: if email exists -> show password -> verify -> proceed.
+         *
+         * Body: { action: 'verify_auth_user_password', email, password }
+         * Returns: { success: true, valid: boolean }
+         */
+        if (action === "verify_auth_user_password") {
+            const rawEmail = (safeBody as any)?.email;
+            const rawPassword = (safeBody as any)?.password;
+            if (!rawEmail || typeof rawEmail !== "string") {
+                return createJsonResponse({ error: "Missing email" }, 400, origin);
+            }
+            if (!rawPassword || typeof rawPassword !== "string") {
+                return createJsonResponse({ error: "Missing password" }, 400, origin);
+            }
+            const emailNorm = rawEmail.trim().toLowerCase();
+            if (!emailNorm) return createJsonResponse({ error: "Missing email" }, 400, origin);
+
+            // Same guard as check_auth_user_exists: prevent verifying passwords for other account types.
+            const { data: usersData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            if (listErr) throw listErr;
+            const user = (usersData?.users ?? []).find((u: any) => String(u?.email ?? "").toLowerCase() === emailNorm) ?? null;
+            if (!user?.id) return createJsonResponse({ success: true, valid: false }, 200, origin);
+
+            const userId = String(user.id);
+            const { data: profile, error: profileErr } = await supabaseAdmin
+                .from("user_profiles")
+                .select("account_type")
+                .eq("id", userId)
+                .maybeSingle();
+            if (profileErr) throw profileErr;
+
+            const accountType = profile && typeof (profile as any).account_type === "string" ? String((profile as any).account_type) : null;
+            if (accountType && accountType !== "agent") {
+                return createJsonResponse({ success: true, valid: false }, 200, origin);
+            }
+
+            const verify = await verifyPasswordWithAuth({
+                supabaseUrl,
+                serviceKey,
+                email: emailNorm,
+                password: rawPassword,
+            });
+            if (!verify.ok) return createJsonResponse({ success: true, valid: false }, 200, origin);
+
+            return createJsonResponse({ success: true, valid: true }, 200, origin);
+        }
+
+        /**
          * Auth (agent): render a contract template with variables for preview.
          * Body: { action: 'render_contract', application_id, contract_path }
          *
@@ -673,7 +793,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabaseAdmin
                 .from("agent_applications")
-                .select("id, agent_user_id, email, developer_user_id, full_name, phone, created_at, status")
+                .select("id, agent_user_id, email, developer_user_id, full_name, company_name, type, tax_id, legal_address, phone, bank_details, created_at, status")
                 .eq("id", applicationId)
                 .single();
             if (appError || !application) {
@@ -708,7 +828,13 @@ serve(async (req) => {
             if (dlErr) throw dlErr;
             if (!tplBlob) throw new Error("Failed to download DOCX template");
 
-            const payload = buildContractPayload({ application, developerId: developerUserId });
+            const { data: developerProfile } = await supabaseAdmin
+                .from("user_profiles")
+                .select("full_name, company_name, tax_id, legal_address, phone, email")
+                .eq("id", developerUserId)
+                .maybeSingle();
+
+            const payload = buildContractPayload({ application, developerId: developerUserId, developerProfile });
             const renderedBytes = await renderDocx(await bytesFromBlob(tplBlob), payload);
 
             const previewPath = `agent-contracts-rendered/${applicationId}/preview.docx`;
@@ -806,6 +932,21 @@ serve(async (req) => {
                 .upload(path, file, { upsert: true, contentType });
             if (uploadError) throw uploadError;
 
+            // Auto-generate editable HTML (so it exists immediately after upload).
+            // - DOCX: convert via mammoth
+            // - PDF: skip (too lossy); can still be converted client-side when opening the editor
+            let autoContentHtml: string | null = null;
+            if (isDocx) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+                    const value = typeof (result as any)?.value === "string" ? String((result as any).value) : "";
+                    autoContentHtml = value || null;
+                } catch (_e) {
+                    autoContentHtml = null;
+                }
+            }
+
             // Create or update template metadata
             const nowIso = new Date().toISOString();
             const langFromForm = normalizeTemplateLang(form.get("lang"));
@@ -813,7 +954,7 @@ serve(async (req) => {
 
             const { data: existingTemplate } = await supabaseAdmin
                 .from("agent_contract_templates")
-                .select("id")
+                .select("id, content_html")
                 .eq("developer_user_id", developerUserId)
                 .eq("name", safeName)
                 .maybeSingle();
@@ -822,7 +963,12 @@ serve(async (req) => {
                 // Update existing template
                 await supabaseAdmin
                     .from("agent_contract_templates")
-                    .update({ storage_path: path, updated_at: nowIso })
+                    .update({
+                        storage_path: path,
+                        updated_at: nowIso,
+                        // Only populate content_html if it's empty (don't override user's edited content).
+                        content_html: (existingTemplate as any)?.content_html ? (existingTemplate as any).content_html : autoContentHtml,
+                    })
                     .eq("id", existingTemplate.id);
             } else {
                 // Create new template
@@ -831,7 +977,7 @@ serve(async (req) => {
                     name: safeName,
                     lang,
                     storage_path: path,
-                    content_html: null,
+                    content_html: autoContentHtml,
                 });
             }
 
@@ -1278,7 +1424,77 @@ serve(async (req) => {
             if (!devId || typeof devId !== "string") {
                 return createJsonResponse({ error: "Missing developer_id" }, 400, origin);
             }
-            if (!full_name || typeof full_name !== "string" || !email || typeof email !== "string" || !phone || typeof phone !== "string") {
+            const emailNorm = typeof email === "string" ? email.trim().toLowerCase() : "";
+            if (!emailNorm) {
+                return createJsonResponse({ error: "Missing required fields" }, 400, origin);
+            }
+
+            const personType =
+                typeof (safeBody as any)?.person_type === "string" ? String((safeBody as any).person_type) : null; // company|individual
+            const companyName =
+                typeof (safeBody as any)?.company_name === "string" ? String((safeBody as any).company_name).trim() : null;
+            const taxId =
+                typeof (safeBody as any)?.tax_id === "string" ? String((safeBody as any).tax_id).trim() : null;
+            const legalAddress =
+                typeof (safeBody as any)?.legal_address === "string" ? String((safeBody as any).legal_address).trim() : null;
+            const useProfileDefaults = (safeBody as any)?.use_profile_defaults === true;
+            const passwordMaybe =
+                typeof (safeBody as any)?.password === "string" ? String((safeBody as any).password) : null;
+
+            let resolvedFullName = typeof full_name === "string" ? full_name.trim() : "";
+            let resolvedPhone = typeof phone === "string" ? phone.trim() : "";
+            let resolvedPersonType = personType;
+            let resolvedCompanyName = companyName;
+            let resolvedTaxId = taxId;
+            let resolvedLegalAddress = legalAddress;
+
+            // If email belongs to an existing auth user and the UI hides other fields,
+            // allow submitting using profile defaults (password required).
+            if (useProfileDefaults || !resolvedFullName || !resolvedPhone) {
+                if (!passwordMaybe) {
+                    return createJsonResponse({ error: "Missing password" }, 400, origin);
+                }
+
+                const verify = await verifyPasswordWithAuth({
+                    supabaseUrl,
+                    serviceKey,
+                    email: emailNorm,
+                    password: passwordMaybe,
+                });
+                if (!verify.ok) {
+                    return createJsonResponse({ error: "Invalid email or password" }, 403, origin);
+                }
+
+                const { data: profile, error: profileErr } = await supabaseAdmin
+                    .from("user_profiles")
+                    .select("full_name, company_name, phone, tax_id, legal_address, person_type, account_type")
+                    .eq("id", verify.user_id)
+                    .maybeSingle();
+                if (profileErr) throw profileErr;
+                if (profile && typeof (profile as any).account_type === "string" && String((profile as any).account_type) !== "agent") {
+                    return createJsonResponse({ error: "Forbidden" }, 403, origin);
+                }
+
+                const pfFullName = typeof (profile as any)?.full_name === "string" ? String((profile as any).full_name) : "";
+                const pfCompanyName = typeof (profile as any)?.company_name === "string" ? String((profile as any).company_name) : "";
+                const pfPhone = typeof (profile as any)?.phone === "string" ? String((profile as any).phone) : "";
+                const pfTaxId = typeof (profile as any)?.tax_id === "string" ? String((profile as any).tax_id) : "";
+                const pfLegalAddress = typeof (profile as any)?.legal_address === "string" ? String((profile as any).legal_address) : "";
+                const pfPersonType = typeof (profile as any)?.person_type === "string" ? String((profile as any).person_type) : null;
+
+                resolvedPersonType = resolvedPersonType ?? pfPersonType;
+                resolvedCompanyName = resolvedCompanyName ?? (pfCompanyName || null);
+                resolvedTaxId = resolvedTaxId ?? (pfTaxId || null);
+                resolvedLegalAddress = resolvedLegalAddress ?? (pfLegalAddress || null);
+                resolvedPhone = resolvedPhone || pfPhone || "";
+
+                if (!resolvedFullName) {
+                    const isCompany = resolvedPersonType === "company";
+                    resolvedFullName = (isCompany ? pfCompanyName : pfFullName) || pfFullName || pfCompanyName || "";
+                }
+            }
+
+            if (!resolvedFullName || !resolvedPhone) {
                 return createJsonResponse({ error: "Missing required fields" }, 400, origin);
             }
 
@@ -1300,9 +1516,13 @@ serve(async (req) => {
                     const { data: updated, error: updErr } = await supabaseAdmin
                         .from("agent_applications")
                         .update({
-                            full_name,
-                            email,
-                            phone,
+                            full_name: resolvedFullName,
+                            email: emailNorm,
+                            phone: resolvedPhone,
+                            type: resolvedPersonType,
+                            company_name: resolvedCompanyName,
+                            tax_id: resolvedTaxId,
+                            legal_address: resolvedLegalAddress,
                             bank_details: (bank_details && typeof bank_details === "object") ? bank_details : (bank_details ? { details: bank_details } : {}),
                         })
                         .eq("id", existing.id)
@@ -1313,11 +1533,48 @@ serve(async (req) => {
                 }
             }
 
+            // If NOT authenticated, de-duplicate by (developer_user_id, email) for public invite flow.
+            if (!agentUserId) {
+                const { data: existingByEmail, error: existingEmailErr } = await supabaseAdmin
+                    .from("agent_applications")
+                    .select("id, status")
+                    .eq("developer_user_id", devId)
+                    .eq("email", emailNorm)
+                    .is("agent_user_id", null)
+                    .limit(1)
+                    .maybeSingle();
+                if (existingEmailErr) throw existingEmailErr;
+
+                if (existingByEmail?.id) {
+                    const { data: updated, error: updErr } = await supabaseAdmin
+                        .from("agent_applications")
+                        .update({
+                            full_name: resolvedFullName,
+                            email: emailNorm,
+                            phone: resolvedPhone,
+                            type: resolvedPersonType,
+                            company_name: resolvedCompanyName,
+                            tax_id: resolvedTaxId,
+                            legal_address: resolvedLegalAddress,
+                            bank_details: (bank_details && typeof bank_details === "object") ? bank_details : (bank_details ? { details: bank_details } : {}),
+                        })
+                        .eq("id", existingByEmail.id)
+                        .select()
+                        .single();
+                    if (updErr) throw updErr;
+                    return createJsonResponse({ success: true, data: updated }, 200, origin);
+                }
+            }
+
             const insertPayload: Record<string, unknown> = {
                 developer_user_id: devId,
-                full_name,
-                email,
-                phone,
+                full_name: resolvedFullName,
+                email: emailNorm,
+                phone: resolvedPhone,
+                type: resolvedPersonType,
+                company_name: resolvedCompanyName,
+                tax_id: resolvedTaxId,
+                legal_address: resolvedLegalAddress,
                 bank_details: (bank_details && typeof bank_details === "object") ? bank_details : (bank_details ? { details: bank_details } : {}),
                 status: "pending",
             };
@@ -1339,7 +1596,7 @@ serve(async (req) => {
             const userEmail = typeof user.email === "string" ? user.email : null;
             let q = supabaseAdmin
                 .from("agent_applications")
-                .select("id, developer_user_id, status, rejection_reason, full_name, email, phone, bank_details, type, commission_rate, agreement_signed, agreement_signed_at, signature_path, signature_method, contract_template_path, signed_contract_path, signed_contract_mime, signed_contract_created_at, created_at, reviewed_at")
+                .select("id, developer_user_id, status, rejection_reason, full_name, company_name, email, phone, tax_id, legal_address, bank_details, type, commission_rate, agreement_signed, agreement_signed_at, signature_path, signature_method, contract_template_path, signed_contract_path, signed_contract_mime, signed_contract_created_at, created_at, reviewed_at")
                 .order("created_at", { ascending: false });
 
             if (userEmail) {
@@ -1405,7 +1662,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabaseAdmin
                 .from("agent_applications")
-                .select("id, agent_user_id, email, agreement_signed, developer_user_id, full_name, phone, created_at")
+                .select("id, agent_user_id, email, agreement_signed, developer_user_id, full_name, company_name, type, tax_id, legal_address, phone, bank_details, created_at")
                 .eq("id", applicationId)
                 .single();
             if (appError || !application) {
@@ -1455,6 +1712,12 @@ serve(async (req) => {
                 return createJsonResponse({ error: "Invalid developer_user_id" }, 400, origin);
             }
 
+            const { data: developerProfile } = await supabaseAdmin
+                .from("user_profiles")
+                .select("full_name, company_name, tax_id, legal_address, phone, email")
+                .eq("id", developerUserId)
+                .maybeSingle();
+
             const signedContracts: Array<{ contract_template_path: string; signed_contract_path: string; signed_contract_mime: string; signed_contract_url: string | null }> = [];
 
             for (let i = 0; i < requestedPaths.length; i++) {
@@ -1471,7 +1734,7 @@ serve(async (req) => {
                 if (dlErr) throw dlErr;
                 if (!tplBlob) throw new Error("Failed to download contract template");
 
-                const payload = buildContractPayload({ application, developerId: developerUserId });
+                const payload = buildContractPayload({ application, developerId: developerUserId, developerProfile });
                 const outBytes = isDocx ? await renderDocx(await bytesFromBlob(tplBlob), payload) : await bytesFromBlob(tplBlob);
 
                 const extOut = isDocx ? "docx" : "pdf";
@@ -1573,7 +1836,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabaseAdmin
                 .from("agent_applications")
-                .select("id, agent_user_id, email, agreement_signed, developer_user_id, full_name, phone, created_at")
+                .select("id, agent_user_id, email, agreement_signed, developer_user_id, full_name, company_name, type, tax_id, legal_address, phone, bank_details, created_at")
                 .eq("id", applicationId)
                 .single();
             if (appError || !application) {
@@ -1635,7 +1898,13 @@ serve(async (req) => {
                 if (dlErr) throw dlErr;
                 if (!tplBlob) throw new Error("Failed to download contract template");
 
-                const payload = buildContractPayload({ application, developerId: developerUserId });
+                const { data: developerProfile } = await supabaseAdmin
+                    .from("user_profiles")
+                    .select("full_name, company_name, tax_id, legal_address, phone, email")
+                    .eq("id", developerUserId)
+                    .maybeSingle();
+
+                const payload = buildContractPayload({ application, developerId: developerUserId, developerProfile });
                 const outBytes = isDocx ? await renderDocx(await bytesFromBlob(tplBlob), payload) : await bytesFromBlob(tplBlob);
 
                 const extOut = isDocx ? "docx" : "pdf";
@@ -1792,7 +2061,7 @@ serve(async (req) => {
 
             const { data: application, error: appError } = await supabaseAdmin
                 .from("agent_applications")
-                .select("id, developer_user_id, email, full_name, status, commission_rate")
+                .select("id, developer_user_id, email, full_name, company_name, type, tax_id, legal_address, phone, status, commission_rate")
                 .eq("id", applicationId)
                 .single();
 
@@ -1868,6 +2137,11 @@ serve(async (req) => {
                         id: agentAuthUserId,
                         email: agentEmail,
                         full_name: (application as any)?.full_name ?? null,
+                        company_name: (application as any)?.company_name ?? null,
+                        phone: (application as any)?.phone ?? null,
+                        tax_id: (application as any)?.tax_id ?? null,
+                        legal_address: (application as any)?.legal_address ?? null,
+                        person_type: (application as any)?.type ?? null,
                         account_type: "agent",
                         updated_at: nowIso,
                     },

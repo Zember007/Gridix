@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Textarea } from "@gridix/ui";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Building2, User } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 type Step = "details" | "signature" | "contracts" | "success";
 
@@ -26,6 +29,56 @@ type DeveloperAssets = {
     stamp_url: string | null;
 };
 
+type DeveloperProfile = {
+    full_name: string | null;
+    company_name: string | null;
+    tax_id: string | null;
+    legal_address: string | null;
+    phone: string | null;
+    email: string | null;
+};
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function resolvePath(obj: unknown, path: string): unknown {
+    if (!path) return undefined;
+    const parts = path.split(".");
+    let cur: unknown = obj;
+    for (const p of parts) {
+        if (cur && typeof cur === "object" && p in (cur as Record<string, unknown>)) {
+            cur = (cur as Record<string, unknown>)[p];
+        } else {
+            return undefined;
+        }
+    }
+    return cur;
+}
+
+function renderHtmlTemplate(template: string, payload: Record<string, unknown>): string {
+    if (!template) return "";
+
+    // Raw: triple braces
+    const withRaw = template.replace(/\{\{\{\s*([\w.]+)\s*\}\}\}/g, (_m: string, key: string) => {
+        const v = resolvePath(payload, key);
+        if (v === null || v === undefined) return "";
+        return String(v);
+    });
+
+    // Escaped: double braces
+    return withRaw.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m: string, key: string) => {
+        const v = resolvePath(payload, key);
+        if (v === null || v === undefined) return "";
+        return escapeHtml(String(v));
+    });
+}
+
 export default function AgentApplicationPage() {
     const [searchParams] = useSearchParams();
     const developerId = searchParams.get("developer_id");
@@ -42,21 +95,29 @@ export default function AgentApplicationPage() {
         stamp_path: null,
         stamp_url: null,
     });
+    const [developerProfile, setDeveloperProfile] = useState<DeveloperProfile | null>(null);
 
     const [formData, setFormData] = useState({
-        full_name: "",
         email: "",
+        full_name: "",
+        company_name: "",
+        tax_id: "",
         phone: "",
+        legal_address: "",
         bank_details: "",
     });
 
+    const [personType, setPersonType] = useState<"company" | "individual">("company");
+
     // Existing user check (email onBlur) + password sign-in (only if user exists)
     const [authUserExists, setAuthUserExists] = useState<boolean | null>(null);
-    const [authUserAccountType, setAuthUserAccountType] = useState<string | null>(null);
     const [password, setPassword] = useState("");
+    const [passwordVerified, setPasswordVerified] = useState(false);
     const [authLoading, setAuthLoading] = useState(false);
     const [emailCheckLoading, setEmailCheckLoading] = useState(false);
     const [emailBlocked, setEmailBlocked] = useState(false);
+    const lastEmailCheckRef = useRef<string>("");
+    const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Signature state (draw/upload)
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,6 +150,7 @@ export default function AgentApplicationPage() {
                 );
                 setTemplates(nextTemplates);
                 setDeveloperAssets((data?.developer_assets ?? null) as DeveloperAssets);
+                setDeveloperProfile((data?.developer_profile ?? null) as DeveloperProfile | null);
 
                 // Initialize selection: pick 1 template per lang and preselect all langs
                 const langs = Array.from(
@@ -117,6 +179,7 @@ export default function AgentApplicationPage() {
                 console.error("Error loading contract templates:", e);
                 setTemplates([]);
                 setDeveloperAssets({ signature_path: null, signature_url: null, stamp_path: null, stamp_url: null });
+                setDeveloperProfile(null);
             } finally {
                 setTemplatesLoading(false);
             }
@@ -127,6 +190,8 @@ export default function AgentApplicationPage() {
     const checkExistingUserByEmail = async (emailValue: string) => {
         const emailNorm = emailValue.trim().toLowerCase();
         if (!emailNorm) return;
+        if (lastEmailCheckRef.current === emailNorm) return;
+        lastEmailCheckRef.current = emailNorm;
         try {
             setEmailCheckLoading(true);
             setEmailBlocked(false);
@@ -136,7 +201,6 @@ export default function AgentApplicationPage() {
             if (error) throw error;
             setAuthUserExists(!!data?.exists);
             const at = typeof data?.account_type === "string" ? String(data.account_type) : null;
-            setAuthUserAccountType(at);
             if (data?.exists === true && at && at !== "agent") {
                 setEmailBlocked(true);
                 toast.error("Этот email уже принадлежит другому типу аккаунта. Используйте другой email.");
@@ -145,11 +209,54 @@ export default function AgentApplicationPage() {
             console.error("check_auth_user_exists failed", e);
             // Don't block the user; treat as unknown.
             setAuthUserExists(null);
-            setAuthUserAccountType(null);
             setEmailBlocked(false);
         }
         finally {
             setEmailCheckLoading(false);
+        }
+    };
+
+    const scheduleEmailCheck = (rawValue: string) => {
+        const v = String(rawValue ?? "").trim().toLowerCase();
+        // Cheap guard to avoid spamming the edge function on every keystroke.
+        if (!v || !v.includes("@") || v.length < 6) return;
+        if (emailCheckTimerRef.current) clearTimeout(emailCheckTimerRef.current);
+        emailCheckTimerRef.current = setTimeout(() => {
+            void checkExistingUserByEmail(v);
+        }, 450);
+    };
+
+    const verifyExistingUserPassword = async () => {
+        const emailNorm = formData.email.trim().toLowerCase();
+        if (!emailNorm) {
+            toast.error("Введите email.");
+            return false;
+        }
+        if (!password) {
+            toast.error("Введите пароль.");
+            return false;
+        }
+        try {
+            setAuthLoading(true);
+            const { data, error } = await supabase.functions.invoke("agent-program", {
+                body: { action: "verify_auth_user_password", email: emailNorm, password },
+            });
+            if (error) throw error;
+            const valid = data?.valid === true;
+            if (!valid) {
+                toast.error("Неверный пароль.");
+                setPasswordVerified(false);
+                return false;
+            }
+            setPasswordVerified(true);
+            return true;
+        } catch (e: any) {
+            console.error("verify_auth_user_password failed", e);
+            toast.error(e?.message || "Не удалось проверить пароль.");
+            setPasswordVerified(false);
+            return false;
+        } finally {
+            setAuthLoading(false);
         }
     };
 
@@ -172,7 +279,58 @@ export default function AgentApplicationPage() {
     const finalSignatureDataUrl =
         signatureMethod === "draw" ? signatureDataUrl : uploadedSignatureDataUrl;
 
-    const detailsValid = !!(formData.full_name && formData.email && formData.phone);
+    const displayName = personType === "company" ? formData.company_name : formData.full_name;
+    const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+    const contractPayload = useMemo(() => {
+        const agent = {
+            id: "",
+            full_name: displayName || "",
+            company_name: formData.company_name || "",
+            person_type: personType,
+            tax_id: formData.tax_id || "",
+            legal_address: formData.legal_address || "",
+            email: formData.email || "",
+            phone: formData.phone || "",
+            bank_details: formData.bank_details ? { details: formData.bank_details } : null,
+        };
+
+        const developer = {
+            id: developerId || "",
+            full_name: developerProfile?.full_name ?? null,
+            company_name: developerProfile?.company_name ?? null,
+            tax_id: developerProfile?.tax_id ?? null,
+            legal_address: developerProfile?.legal_address ?? null,
+            phone: developerProfile?.phone ?? null,
+            email: developerProfile?.email ?? null,
+        };
+
+        const signImageHtml = finalSignatureDataUrl
+            ? `<img src="${escapeHtml(finalSignatureDataUrl)}" alt="signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
+            : "";
+
+        return {
+            agent,
+            application: { id: "", created_at: "" },
+            developer,
+            date: { today: todayStr },
+
+            // Backward-compatible aliases
+            partner_id: "",
+            partner_name: agent.full_name,
+            company_name: agent.company_name,
+            tax_id: agent.tax_id,
+            address: agent.legal_address,
+            date_text: todayStr,
+            commission_rate: "",
+            sign_image: signImageHtml,
+        } satisfies Record<string, unknown>;
+    }, [developerId, developerProfile, displayName, finalSignatureDataUrl, formData.bank_details, formData.company_name, formData.email, formData.legal_address, formData.phone, formData.tax_id, personType, todayStr]);
+
+    const detailsValid =
+        authUserExists === true
+            ? !!(formData.email && password)
+            : !!(formData.email && displayName && formData.tax_id && formData.phone && formData.legal_address);
     const signatureValid = !!(finalSignatureDataUrl && finalSignatureDataUrl.startsWith("data:image/"));
     const contractsValid = selectedTemplates.length > 0 && acceptedAgreements;
 
@@ -214,10 +372,21 @@ export default function AgentApplicationPage() {
                 body: {
                     action: "submit_application",
                     developer_id: developerId,
-                    full_name: formData.full_name,
                     email: formData.email,
-                    phone: formData.phone,
-                    bank_details: { details: formData.bank_details },
+                    ...(authUserExists === true
+                        ? {
+                            use_profile_defaults: true,
+                            password,
+                        }
+                        : {
+                            person_type: personType,
+                            full_name: displayName,
+                            company_name: formData.company_name || null,
+                            tax_id: formData.tax_id || null,
+                            phone: formData.phone,
+                            legal_address: formData.legal_address || null,
+                            bank_details: { details: formData.bank_details },
+                        }),
                 },
             });
 
@@ -311,9 +480,13 @@ export default function AgentApplicationPage() {
             clientY = (e as React.MouseEvent).clientY;
         }
 
+        // Scale from CSS pixels (rect) to canvas pixel coordinates (width/height)
+        const scaleX = rect.width ? canvas.width / rect.width : 1;
+        const scaleY = rect.height ? canvas.height / rect.height : 1;
+
         return {
-            offsetX: clientX - rect.left,
-            offsetY: clientY - rect.top,
+            offsetX: (clientX - rect.left) * scaleX,
+            offsetY: (clientY - rect.top) * scaleY,
         };
     };
 
@@ -326,6 +499,379 @@ export default function AgentApplicationPage() {
             setSignatureMethod("upload");
         };
         reader.readAsDataURL(file);
+    };
+
+    const ContractPreview = (props: {
+        template: ContractTemplate;
+        renderedHtml: string | null;
+        label: string;
+    }) => {
+        const A4_W = 794; // px @ 96dpi
+        const A4_H = 1123;
+        const PAGE_PAD = 40; // similar to `p-10`
+        const FOOTER_PAD_BOTTOM = 40; // similar to `bottom-10`
+        const FOOTER_H = 170; // reserved space for signature blocks
+        const COLUMN_GAP = 48; // px between pages in column layout
+
+        const containerRef = useRef<HTMLDivElement>(null);
+        const [containerWidth, setContainerWidth] = useState<number>(0);
+        const measureRef = useRef<HTMLDivElement>(null);
+        const exportRef = useRef<HTMLDivElement>(null);
+        const [pageIndex, setPageIndex] = useState(0);
+        const [pageCount, setPageCount] = useState(1);
+        const [exportPageIndex, setExportPageIndex] = useState(0);
+        const [downloading, setDownloading] = useState(false);
+
+        useEffect(() => {
+            const el = containerRef.current;
+            if (!el) return;
+            const ro = new ResizeObserver((entries) => {
+                const w = entries[0]?.contentRect?.width ?? 0;
+                setContainerWidth(w);
+            });
+            ro.observe(el);
+            return () => ro.disconnect();
+        }, []);
+
+        const contentViewportH = A4_H - PAGE_PAD - (FOOTER_H + FOOTER_PAD_BOTTOM) - PAGE_PAD;
+        const contentViewportW = A4_W - PAGE_PAD * 2;
+
+        useLayoutEffect(() => {
+            // Reset & measure pages whenever html changes
+            setPageIndex(0);
+            if (!props.renderedHtml) {
+                setPageCount(1);
+                return;
+            }
+
+            const el = measureRef.current;
+            if (!el) return;
+
+            // Use CSS multi-column layout to flow content into pages (columns).
+            const sw = el.scrollWidth || 0;
+            const denom = contentViewportW + COLUMN_GAP;
+            const nextCount = Math.max(1, Math.ceil((sw + COLUMN_GAP) / denom));
+            setPageCount(nextCount);
+        }, [COLUMN_GAP, contentViewportH, contentViewportW, props.renderedHtml]);
+
+        const targetWidth = Math.min(containerWidth || 520, 520);
+        const scale = targetWidth > 0 ? targetWidth / A4_W : 1;
+        const scaledHeight = Math.round(A4_H * scale);
+
+        useEffect(() => {
+            setPageIndex((p) => Math.min(Math.max(p, 0), Math.max(0, pageCount - 1)));
+        }, [pageCount]);
+
+        const visibleShiftX = pageIndex * (contentViewportW + COLUMN_GAP);
+        const exportShiftX = exportPageIndex * (contentViewportW + COLUMN_GAP);
+
+        const downloadPdf = async () => {
+            if (!exportRef.current) return;
+            if (!props.renderedHtml) {
+                toast.error("Нет HTML-версии договора для скачивания.");
+                return;
+            }
+            try {
+                setDownloading(true);
+                const pdf = new jsPDF({ unit: "px", format: [A4_W, A4_H] });
+
+                for (let p = 0; p < pageCount; p++) {
+                    setExportPageIndex(p);
+                    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+                    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+                    const canvas = await html2canvas(exportRef.current, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: "#ffffff",
+                        width: A4_W,
+                        height: A4_H,
+                    });
+                    const imgData = canvas.toDataURL("image/png");
+                    if (p > 0) pdf.addPage([A4_W, A4_H], "portrait");
+                    pdf.addImage(imgData, "PNG", 0, 0, A4_W, A4_H);
+                }
+
+                const safeName = String(props.template.name || "contract")
+                    .trim()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-zA-Z0-9._-]/g, "_")
+                    .replace(/_+/g, "_")
+                    .replace(/\.(pdf|docx)$/i, "");
+
+                pdf.save(`${safeName}.pdf`);
+            } catch (e: any) {
+                console.error("downloadPdf failed", e);
+                toast.error(e?.message || "Не удалось скачать договор.");
+            } finally {
+                setDownloading(false);
+            }
+        };
+
+        return (
+            <div ref={containerRef} className="shrink-0 w-[92vw] max-w-[520px]">
+                <div className="relative" style={{ height: scaledHeight || 0 }}>
+                    <div
+                        className="absolute left-0 top-0 bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200"
+                        style={{
+                            width: A4_W,
+                            height: A4_H,
+                            transform: `scale(${scale})`,
+                            transformOrigin: "top left",
+                        }}
+                    >
+                        {/* Hidden measure strip: multi-column flow */}
+                        <div
+                            ref={measureRef}
+                            className={[
+                                "absolute -left-[9999px] top-0 text-[10px] text-slate-800",
+                                // Restore rich typography
+                                "[&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight [&_h1]:my-3",
+                                "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:my-3",
+                                "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2",
+                                "[&_strong]:font-bold",
+                                "[&_em]:italic",
+                                "[&_u]:underline",
+                                "[&_p]:my-2 [&_p]:leading-relaxed",
+                                "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2",
+                                "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2",
+                                "[&_li]:my-1",
+                                "[&_table]:w-full [&_table]:table-fixed [&_table]:my-2",
+                                "[&_th]:bg-slate-50 [&_th]:font-bold [&_th]:border [&_th]:border-slate-200 [&_th]:p-1",
+                                "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
+                                "[&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_blockquote]:my-2",
+                            ].join(" ")}
+                            style={{
+                                width: contentViewportW,
+                                height: contentViewportH,
+                                columnWidth: contentViewportW,
+                                columnGap: COLUMN_GAP,
+                                columnFill: "auto",
+                            }}
+                            dangerouslySetInnerHTML={{ __html: props.renderedHtml ?? "" }}
+                        />
+
+                        {/* Page body (clipped viewport) */}
+                        <div
+                            className="absolute left-10 top-10 text-[10px] text-slate-800 overflow-hidden"
+                            style={{ width: contentViewportW, height: contentViewportH }}
+                        >
+                            {props.renderedHtml ? (
+                                <div
+                                    className={[
+                                        "h-full",
+                                        // Restore rich typography
+                                        "[&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight [&_h1]:my-3",
+                                        "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:my-3",
+                                        "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2",
+                                        "[&_strong]:font-bold",
+                                        "[&_em]:italic",
+                                        "[&_u]:underline",
+                                        "[&_p]:my-2 [&_p]:leading-relaxed",
+                                        "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2",
+                                        "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2",
+                                        "[&_li]:my-1",
+                                        "[&_table]:w-full [&_table]:table-fixed [&_table]:my-2",
+                                        "[&_th]:bg-slate-50 [&_th]:font-bold [&_th]:border [&_th]:border-slate-200 [&_th]:p-1",
+                                        "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
+                                        "[&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_blockquote]:my-2",
+                                    ].join(" ")}
+                                    style={{
+                                        width: contentViewportW,
+                                        height: contentViewportH,
+                                        columnWidth: contentViewportW,
+                                        columnGap: COLUMN_GAP,
+                                        columnFill: "auto",
+                                        transform: `translateX(-${visibleShiftX}px)`,
+                                        transformOrigin: "top left",
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: props.renderedHtml }}
+                                />
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-center p-10">
+                                    <div className="text-lg font-black text-slate-900">Договор</div>
+                                    <div className="text-sm text-slate-500 mt-2">
+                                        HTML-версия не задана. Откройте файл договора.
+                                    </div>
+                                    {props.template.url && (
+                                        <a
+                                            href={props.template.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="mt-4 text-sm font-bold underline"
+                                        >
+                                            Открыть {props.template.name}
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Signature area: developer + agent */}
+                        <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
+                            <div className="w-48 relative">
+                                <div className="border-b border-slate-900 mb-2" />
+                                <div className="font-extrabold uppercase text-[11px]">Developer</div>
+                                {developerAssets.stamp_url && (
+                                    <img
+                                        src={developerAssets.stamp_url}
+                                        alt="developer-stamp"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
+                                    />
+                                )}
+                                {developerAssets.signature_url && (
+                                    <img
+                                        src={developerAssets.signature_url}
+                                        alt="developer-signature"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
+                                    />
+                                )}
+                            </div>
+
+                            <div className="w-48 relative">
+                                {finalSignatureDataUrl && (
+                                    <img
+                                        src={finalSignatureDataUrl}
+                                        alt="agent-signature"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
+                                        style={{ filter: "contrast(1.35)" }}
+                                    />
+                                )}
+                                <div className="border-b border-slate-900 mb-2" />
+                                <div className="font-extrabold uppercase text-[11px]">Agent</div>
+                                <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Controls under the document */}
+                <div className="mt-3 text-xs font-bold text-slate-600 text-center">{props.label}</div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                    {pageCount > 1 ? (
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                                disabled={pageIndex <= 0}
+                                className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-white text-slate-800 disabled:opacity-40"
+                            >
+                                ← Назад
+                            </button>
+                            <div className="text-xs font-extrabold text-slate-700 tabular-nums">
+                                Стр. {pageIndex + 1} / {pageCount}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
+                                disabled={pageIndex >= pageCount - 1}
+                                className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-white text-slate-800 disabled:opacity-40"
+                            >
+                                Далее →
+                            </button>
+                        </div>
+                    ) : (
+                        <div />
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={() => void downloadPdf()}
+                        disabled={downloading || !props.renderedHtml}
+                        className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-slate-900 text-white disabled:opacity-50"
+                    >
+                        {downloading ? "Скачиваем..." : "Скачать PDF"}
+                    </button>
+                </div>
+
+                {/* Offscreen export A4 (scale=1) */}
+                <div className="fixed left-[-10000px] top-0">
+                    <div
+                        ref={exportRef}
+                        className="bg-white"
+                        style={{ width: A4_W, height: A4_H, position: "relative" }}
+                    >
+                        <div
+                            className="absolute left-10 top-10 text-[10px] text-slate-800 overflow-hidden"
+                            style={{ width: contentViewportW, height: contentViewportH }}
+                        >
+                            {props.renderedHtml ? (
+                                <div
+                                    className={[
+                                        "h-full",
+                                        "[&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight [&_h1]:my-3",
+                                        "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:my-3",
+                                        "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2",
+                                        "[&_strong]:font-bold",
+                                        "[&_em]:italic",
+                                        "[&_u]:underline",
+                                        "[&_p]:my-2 [&_p]:leading-relaxed",
+                                        "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2",
+                                        "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2",
+                                        "[&_li]:my-1",
+                                        "[&_table]:w-full [&_table]:table-fixed [&_table]:my-2",
+                                        "[&_th]:bg-slate-50 [&_th]:font-bold [&_th]:border [&_th]:border-slate-200 [&_th]:p-1",
+                                        "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
+                                        "[&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_blockquote]:my-2",
+                                    ].join(" ")}
+                                    style={{
+                                        width: contentViewportW,
+                                        height: contentViewportH,
+                                        columnWidth: contentViewportW,
+                                        columnGap: COLUMN_GAP,
+                                        columnFill: "auto",
+                                        transform: `translateX(-${exportShiftX}px)`,
+                                        transformOrigin: "top left",
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: props.renderedHtml }}
+                                />
+                            ) : null}
+                        </div>
+
+                        <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
+                            <div className="w-48 relative">
+                                <div className="border-b border-slate-900 mb-2" />
+                                <div className="font-extrabold uppercase text-[11px]">Developer</div>
+                                {developerAssets.stamp_url && (
+                                    <img
+                                        src={developerAssets.stamp_url}
+                                        alt="developer-stamp"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
+                                    />
+                                )}
+                                {developerAssets.signature_url && (
+                                    <img
+                                        src={developerAssets.signature_url}
+                                        alt="developer-signature"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
+                                    />
+                                )}
+                            </div>
+
+                            <div className="w-48 relative">
+                                {finalSignatureDataUrl && (
+                                    <img
+                                        src={finalSignatureDataUrl}
+                                        alt="agent-signature"
+                                        crossOrigin="anonymous"
+                                        className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
+                                        style={{ filter: "contrast(1.35)" }}
+                                    />
+                                )}
+                                <div className="border-b border-slate-900 mb-2" />
+                                <div className="font-extrabold uppercase text-[11px]">Agent</div>
+                                <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     if (step === "success") {
@@ -416,77 +962,152 @@ export default function AgentApplicationPage() {
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="full_name">ФИО</Label>
-                                                <Input
-                                                    id="full_name"
-                                                    value={formData.full_name}
-                                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                                    placeholder="Иван Иванов"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="email">Email</Label>
-                                                <Input
-                                                    id="email"
+                                        <div className="space-y-4">
+                                            {/* Email is always first */}
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Email</label>
+                                                <input
                                                     type="email"
                                                     value={formData.email}
-                                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        onBlur={() => void checkExistingUserByEmail(formData.email)}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setPasswordVerified(false);
+                                                        setPassword("");
+                                                        setAuthUserExists(null);
+                                                        setEmailBlocked(false);
+                                                        setFormData({ ...formData, email: v });
+                                                        // Lightweight "oninput" check with debounce below is also active,
+                                                        // but we keep immediate check for autofill/paste scenarios.
+                                                    }}
+                                                    onBlur={(e) => void checkExistingUserByEmail(e.target.value)}
+                                                    onInput={(e) => scheduleEmailCheck((e.target as HTMLInputElement).value)}
                                                     placeholder="ivan@example.com"
+                                                    className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
                                                 />
-                                                {emailCheckLoading && (
-                                                    <p className="text-xs text-slate-500">Проверяем email...</p>
-                                                )}
+                                                {emailCheckLoading && <p className="text-xs text-slate-500 mt-1">Проверяем email...</p>}
                                                 {emailBlocked && (
-                                                    <p className="text-xs text-red-600 font-semibold">
+                                                    <p className="text-xs text-red-600 font-semibold mt-1">
                                                         Этот email нельзя использовать для регистрации агента.
                                                     </p>
                                                 )}
                                                 {authUserExists === true && (
-                                                    <p className="text-xs text-slate-500">
+                                                    <p className="text-xs text-slate-500 mt-1">
                                                         Пользователь уже зарегистрирован. Введите пароль для продолжения.
                                                     </p>
                                                 )}
-                                                {authUserExists === false && (
-                                                    <p className="text-xs text-slate-500">
-                                                        Пользователь не найден. Вы сможете продолжить без пароля.
-                                                    </p>
-                                                )}
                                             </div>
-                                            {authUserExists === true && (
-                                                <div className="space-y-2 md:col-span-2">
-                                                    <Label htmlFor="password">Пароль</Label>
-                                                    <Input
-                                                        id="password"
+
+                                            {/* Existing user: hide all fields, show only password */}
+                                            {authUserExists === true ? (
+                                                <div>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Пароль</label>
+                                                    <input
                                                         type="password"
                                                         value={password}
-                                                        onChange={(e) => setPassword(e.target.value)}
+                                                        onChange={(e) => {
+                                                            setPasswordVerified(false);
+                                                            setPassword(e.target.value);
+                                                        }}
                                                         placeholder="Введите пароль"
+                                                        className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
                                                     />
+                                                    {passwordVerified && (
+                                                        <div className="text-xs text-green-700 font-semibold mt-1">Пароль подтвержден.</div>
+                                                    )}
                                                 </div>
+                                            ) : (
+                                                <>
+                                                    {/* Person type toggle */}
+                                                    <div className="grid grid-cols-2 gap-4 p-1 bg-white rounded-xl border border-slate-200">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPersonType("company")}
+                                                            className={`py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${personType === "company"
+                                                                    ? "bg-slate-900 text-white shadow-md"
+                                                                    : "text-slate-500 hover:bg-slate-50"
+                                                                }`}
+                                                        >
+                                                            <Building2 size={16} /> Компания (ООО)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPersonType("individual")}
+                                                            className={`py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${personType === "individual"
+                                                                    ? "bg-slate-900 text-white shadow-md"
+                                                                    : "text-slate-500 hover:bg-slate-50"
+                                                                }`}
+                                                        >
+                                                            <User size={16} /> Физ. лицо / ИП
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Partner-like fields */}
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                            {personType === "company" ? "Название компании" : "ФИО"}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={displayName}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value;
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    ...(personType === "company" ? { company_name: v } : { full_name: v }),
+                                                                });
+                                                            }}
+                                                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                                ID / Tax Number
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.tax_id}
+                                                                onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Телефон</label>
+                                                            <input
+                                                                type="tel"
+                                                                value={formData.phone}
+                                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                            Юридический адрес
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={formData.legal_address}
+                                                            onChange={(e) => setFormData({ ...formData, legal_address: e.target.value })}
+                                                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                            Банковские реквизиты (опционально)
+                                                        </label>
+                                                        <textarea
+                                                            value={formData.bank_details}
+                                                            onChange={(e) => setFormData({ ...formData, bank_details: e.target.value })}
+                                                            placeholder="IBAN / SWIFT / ..."
+                                                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all min-h-[96px]"
+                                                        />
+                                                    </div>
+                                                </>
                                             )}
-                                            <div className="space-y-2">
-                                                <Label htmlFor="phone">Телефон</Label>
-                                                <Input
-                                                    id="phone"
-                                                    type="tel"
-                                                    value={formData.phone}
-                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                    placeholder="+995..."
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="bank_details">Банковские реквизиты (опционально)</Label>
-                                                <Textarea
-                                                    id="bank_details"
-                                                    value={formData.bank_details}
-                                                    onChange={(e) => setFormData({ ...formData, bank_details: e.target.value })}
-                                                    placeholder="IBAN / SWIFT / ..."
-                                                    className="min-h-[96px]"
-                                                />
-                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -633,72 +1254,16 @@ export default function AgentApplicationPage() {
                                         <div className="rounded-2xl bg-slate-200 p-4 md:p-8 overflow-x-auto">
                                             <div className="flex gap-6 items-start">
                                                 {selectedTemplates.map((t) => (
-                                                    <div key={t.storage_path} className="shrink-0">
-                                                        <div className="bg-white shadow-2xl w-[210mm] h-[297mm] p-10 text-[10px] text-slate-800 relative">
-                                                            {t.content_html ? (
-                                                                <div
-                                                                    className="h-full overflow-hidden"
-                                                                    dangerouslySetInnerHTML={{ __html: t.content_html }}
-                                                                />
-                                                            ) : (
-                                                                <div className="h-full flex flex-col items-center justify-center text-center p-10">
-                                                                    <div className="text-lg font-black text-slate-900">Договор</div>
-                                                                    <div className="text-sm text-slate-500 mt-2">
-                                                                        HTML-версия не задана. Откройте файл договора.
-                                                                    </div>
-                                                                    {t.url && (
-                                                                        <a
-                                                                            href={t.url}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
-                                                                            className="mt-4 text-sm font-bold underline"
-                                                                        >
-                                                                            Открыть {t.name}
-                                                                        </a>
-                                                                    )}
-                                                                </div>
-                                                            )}
-
-                                                            {/* Signature area: developer + agent */}
-                                                            <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
-                                                                <div className="w-48 relative">
-                                                                    <div className="border-b border-slate-900 mb-2" />
-                                                                    <div className="font-extrabold uppercase text-[11px]">Developer</div>
-                                                                    {developerAssets.stamp_url && (
-                                                                        <img
-                                                                            src={developerAssets.stamp_url}
-                                                                            alt="developer-stamp"
-                                                                            className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
-                                                                        />
-                                                                    )}
-                                                                    {developerAssets.signature_url && (
-                                                                        <img
-                                                                            src={developerAssets.signature_url}
-                                                                            alt="developer-signature"
-                                                                            className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
-                                                                        />
-                                                                    )}
-                                                                </div>
-
-                                                                <div className="w-48 relative">
-                                                                    {finalSignatureDataUrl && (
-                                                                        <img
-                                                                            src={finalSignatureDataUrl}
-                                                                            alt="agent-signature"
-                                                                            className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
-                                                                            style={{ filter: "contrast(1.35)" }}
-                                                                        />
-                                                                    )}
-                                                                    <div className="border-b border-slate-900 mb-2" />
-                                                                    <div className="font-extrabold uppercase text-[11px]">Agent</div>
-                                                                    <div className="text-slate-500 text-[10px]">{formData.full_name || "—"}</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="mt-3 text-xs font-bold text-slate-600 text-center">
-                                                            {t.lang ?? "—"} · {t.name}
-                                                        </div>
-                                                    </div>
+                                                    <ContractPreview
+                                                        key={t.storage_path}
+                                                        template={t}
+                                                        renderedHtml={
+                                                            t.content_html
+                                                                ? renderHtmlTemplate(t.content_html, contractPayload)
+                                                                : null
+                                                        }
+                                                        label={`${t.lang ?? "—"} · ${t.name}`}
+                                                    />
                                                 ))}
                                             </div>
                                         </div>
@@ -766,25 +1331,9 @@ export default function AgentApplicationPage() {
                                                     return;
                                                 }
                                                 if (authUserExists === true) {
-                                                    if (!password) {
-                                                        toast.error("Введите пароль.");
-                                                        return;
-                                                    }
                                                     void (async () => {
-                                                        try {
-                                                            setAuthLoading(true);
-                                                            const { error } = await supabase.auth.signInWithPassword({
-                                                                email: formData.email.trim(),
-                                                                password,
-                                                            });
-                                                            if (error) throw error;
-                                                            setStep("signature");
-                                                        } catch (e: any) {
-                                                            console.error("signInWithPassword failed", e);
-                                                            toast.error(e?.message || "Не удалось войти. Проверьте пароль.");
-                                                        } finally {
-                                                            setAuthLoading(false);
-                                                        }
+                                                        const ok = await verifyExistingUserPassword();
+                                                        if (ok) setStep("signature");
                                                     })();
                                                     return;
                                                 }

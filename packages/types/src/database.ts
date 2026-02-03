@@ -77,6 +77,7 @@ export type Database = {
           agreement_signed: boolean | null
           agreement_signed_at: string | null
           bank_details: Json | null
+          company_name: string | null
           commission_rate: number | null
           contract_template_path: string | null
           created_at: string
@@ -84,6 +85,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          legal_address: string | null
           phone: string
           rejection_reason: string | null
           reviewed_at: string | null
@@ -94,6 +96,7 @@ export type Database = {
           signed_contract_mime: string | null
           signed_contract_path: string | null
           status: string
+          tax_id: string | null
           type: string | null
         }
         Insert: {
@@ -101,6 +104,7 @@ export type Database = {
           agreement_signed?: boolean | null
           agreement_signed_at?: string | null
           bank_details?: Json | null
+          company_name?: string | null
           commission_rate?: number | null
           contract_template_path?: string | null
           created_at?: string
@@ -108,6 +112,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          legal_address?: string | null
           phone: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -118,6 +123,7 @@ export type Database = {
           signed_contract_mime?: string | null
           signed_contract_path?: string | null
           status?: string
+          tax_id?: string | null
           type?: string | null
         }
         Update: {
@@ -125,6 +131,7 @@ export type Database = {
           agreement_signed?: boolean | null
           agreement_signed_at?: string | null
           bank_details?: Json | null
+          company_name?: string | null
           commission_rate?: number | null
           contract_template_path?: string | null
           created_at?: string
@@ -132,6 +139,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          legal_address?: string | null
           phone?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -142,6 +150,7 @@ export type Database = {
           signed_contract_mime?: string | null
           signed_contract_path?: string | null
           status?: string
+          tax_id?: string | null
           type?: string | null
         }
         Relationships: []
@@ -2822,6 +2831,7 @@ export type Database = {
           marketing_emails_consent: boolean
           partner_id: string | null
           password_set_at: string | null
+          person_type: string | null
           phone: string | null
           preferred_locale: string
           tax_id: string | null
@@ -2843,6 +2853,7 @@ export type Database = {
           marketing_emails_consent?: boolean
           partner_id?: string | null
           password_set_at?: string | null
+          person_type?: string | null
           phone?: string | null
           preferred_locale?: string
           tax_id?: string | null
@@ -2864,6 +2875,7 @@ export type Database = {
           marketing_emails_consent?: boolean
           partner_id?: string | null
           password_set_at?: string | null
+          person_type?: string | null
           phone?: string | null
           preferred_locale?: string
           tax_id?: string | null

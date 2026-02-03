@@ -20,14 +20,34 @@ GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 // Available variables for the contract
 const CONTRACT_VARIABLES = [
-    { key: '{{partner_name}}', label: 'Имя Партнера' },
-    { key: '{{partner_id}}', label: 'ID Партнера' },
-    { key: '{{company_name}}', label: 'Название Компании' },
-    { key: '{{tax_id}}', label: 'ИНН / Tax ID' },
-    { key: '{{address}}', label: 'Адрес' },
-    { key: '{{date}}', label: 'Текущая Дата' },
+    // Preferred (new): matches `agent-program` payload paths
+    { key: '{{agent.full_name}}', label: 'Агент: ФИО / Название компании' },
+    { key: '{{agent.person_type}}', label: 'Агент: Тип (company|individual)' },
+    { key: '{{agent.company_name}}', label: 'Агент: Название компании' },
+    { key: '{{agent.tax_id}}', label: 'Агент: Tax ID' },
+    { key: '{{agent.legal_address}}', label: 'Агент: Юридический адрес' },
+    { key: '{{agent.email}}', label: 'Агент: Email' },
+    { key: '{{agent.phone}}', label: 'Агент: Телефон' },
+    { key: '{{date.today}}', label: 'Дата (YYYY-MM-DD)' },
     { key: '{{commission_rate}}', label: 'Ставка комиссии (%)' },
-    { key: '{{sign_image}}', label: 'Подпись (Картинка)' },
+
+    { key: '{{developer.company_name}}', label: 'Застройщик: Компания' },
+    { key: '{{developer.full_name}}', label: 'Застройщик: Контактное лицо' },
+    { key: '{{developer.tax_id}}', label: 'Застройщик: Tax ID' },
+    { key: '{{developer.legal_address}}', label: 'Застройщик: Юр. адрес' },
+    { key: '{{developer.email}}', label: 'Застройщик: Email' },
+    { key: '{{developer.phone}}', label: 'Застройщик: Телефон' },
+
+    // Backward-compatible aliases (older templates)
+    { key: '{{partner_name}}', label: 'Партнер (alias): Имя' },
+    { key: '{{partner_id}}', label: 'Партнер (alias): ID' },
+    { key: '{{company_name}}', label: 'Партнер (alias): Компания' },
+    { key: '{{tax_id}}', label: 'Партнер (alias): Tax ID' },
+    { key: '{{address}}', label: 'Партнер (alias): Адрес' },
+    { key: '{{date_text}}', label: 'Дата (alias)' },
+
+    // HTML-only (preview): insert raw HTML via triple braces
+    { key: '{{{sign_image}}}', label: 'Подпись (HTML, raw)' },
 ];
 
 type Template = {
