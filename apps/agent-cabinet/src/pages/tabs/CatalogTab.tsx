@@ -309,7 +309,6 @@ export function CatalogTab() {
         <SharedProjectDrawer
           project={drawerProject ?? toSharedProject(selectedProject)}
           mode="agent"
-          onLock={(project) => {}}
           onClose={handleCloseDrawer}
           onShare={handleShareProject}
           onOpenPublicPage={handleOpenPublicPage}
