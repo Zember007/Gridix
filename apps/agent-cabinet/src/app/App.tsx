@@ -1,16 +1,46 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AgentWorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
-import { AppShell } from "@/components/layout/AppShell";
+import { AgentCabinetLayout, useAgentCabinetPageRouting } from "@/components/layout/AgentCabinetLayout";
 
 import AuthPage from "@/pages/AuthPage";
-import ApplicationPage from "@/pages/ApplicationPage";
-import ProjectsPage from "@/pages/ProjectsPage";
-import ContactsPage from "@/pages/ContactsPage";
 import SetPasswordPage from "@/pages/SetPasswordPage";
 import NotFound from "@/pages/NotFound";
+import { DashboardTab } from "@/pages/tabs/DashboardTab";
+import { AnalyticsTab } from "@/pages/tabs/AnalyticsTab";
+import { ContactsTab } from "@/pages/tabs/ContactsTab";
+import { CatalogTab } from "@/pages/tabs/CatalogTab";
+
+function AgentCabinetRouter() {
+  const { activePage, setActivePage } = useAgentCabinetPageRouting();
+
+  const content = (() => {
+    switch (activePage) {
+      case "dashboard":
+        return <DashboardTab />;
+      case "analytics":
+        return <AnalyticsTab />;
+      case "contacts":
+        return <ContactsTab />;
+      case "catalog":
+        return <CatalogTab />;
+    }
+  })();
+
+  return (
+    <AgentCabinetLayout activePage={activePage} onChangePage={setActivePage}>
+      {content}
+    </AgentCabinetLayout>
+  );
+}
+
+function LegacyRedirect({ page }: { page: string }) {
+  const { lang } = useParams();
+  return <Navigate to={`/${lang ?? "ru"}/?page=${encodeURIComponent(page)}`} replace />;
+}
 
 export default function App() {
   return (
@@ -25,9 +55,9 @@ export default function App() {
                 path="/:lang/"
                 element={
                   <ProtectedRoute>
-                    <AppShell>
-                      <ProjectsPage />
-                    </AppShell>
+                    <AgentWorkspaceProvider>
+                      <AgentCabinetRouter />
+                    </AgentWorkspaceProvider>
                   </ProtectedRoute>
                 }
               />
@@ -35,9 +65,7 @@ export default function App() {
                 path="/:lang/application"
                 element={
                   <ProtectedRoute>
-                    <AppShell>
-                      <ApplicationPage />
-                    </AppShell>
+                    <LegacyRedirect page="dashboard" />
                   </ProtectedRoute>
                 }
               />
@@ -45,9 +73,7 @@ export default function App() {
                 path="/:lang/set-password"
                 element={
                   <ProtectedRoute>
-                    <AppShell>
-                      <SetPasswordPage />
-                    </AppShell>
+                    <SetPasswordPage />
                   </ProtectedRoute>
                 }
               />
@@ -55,9 +81,7 @@ export default function App() {
                 path="/:lang/projects"
                 element={
                   <ProtectedRoute>
-                    <AppShell>
-                      <ProjectsPage />
-                    </AppShell>
+                    <LegacyRedirect page="catalog" />
                   </ProtectedRoute>
                 }
               />
@@ -65,9 +89,7 @@ export default function App() {
                 path="/:lang/contacts"
                 element={
                   <ProtectedRoute>
-                    <AppShell>
-                      <ContactsPage />
-                    </AppShell>
+                    <LegacyRedirect page="contacts" />
                   </ProtectedRoute>
                 }
               />

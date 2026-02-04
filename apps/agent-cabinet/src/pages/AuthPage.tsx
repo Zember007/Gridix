@@ -26,13 +26,18 @@ export default function AuthPage() {
             className="w-full"
             disabled={loading}
             onClick={async () => {
+              const cleaned = email.trim();
+              if (!cleaned) {
+                toast.error(t("common.errors.emailRequired"));
+                return;
+              }
               try {
                 setLoading(true);
-                await signInWithOtp(email);
-                toast.success("Check your email", { description: "Magic link has been sent." });
+                await signInWithOtp(cleaned);
+                toast.success(t("common.auth.checkEmailTitle"), { description: t("common.auth.magicLinkSent") });
               } catch (e: any) {
                 console.error(e);
-                toast.error(e?.message || "Failed to send link");
+                toast.error(e?.message || t("common.errors.failedToSendLink"));
               } finally {
                 setLoading(false);
               }

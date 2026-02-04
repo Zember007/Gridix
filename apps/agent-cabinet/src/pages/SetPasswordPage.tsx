@@ -31,15 +31,14 @@ export default function SetPasswordPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-none shadow-xl bg-white">
         <CardHeader>
-          <CardTitle className="text-2xl font-black">{t("common.auth.setPasswordTitle") ?? "Set password"}</CardTitle>
+          <CardTitle className="text-2xl font-black">{t("common.auth.setPasswordTitle")}</CardTitle>
           <CardDescription>
-            {t("common.auth.setPasswordDescription") ??
-              "Your password is not set yet. Please create a password to continue."}
+            {t("common.auth.setPasswordDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password">{t("common.auth.password") ?? "Password"}</Label>
+            <Label htmlFor="password">{t("common.auth.password")}</Label>
             <Input
               id="password"
               type="password"
@@ -49,7 +48,7 @@ export default function SetPasswordPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm">{t("common.auth.confirmPassword") ?? "Confirm password"}</Label>
+            <Label htmlFor="confirm">{t("common.auth.confirmPassword")}</Label>
             <Input
               id="confirm"
               type="password"
@@ -65,11 +64,11 @@ export default function SetPasswordPage() {
             onClick={async () => {
               if (!user?.id) return;
               if (!password || password.length < 8) {
-                toast.error("Password must be at least 8 characters.");
+                toast.error(t("common.errors.passwordMinLength"));
                 return;
               }
               if (password !== confirm) {
-                toast.error("Passwords do not match.");
+                toast.error(t("common.errors.passwordsDontMatch"));
                 return;
               }
               try {
@@ -88,17 +87,17 @@ export default function SetPasswordPage() {
                   // ignore (best-effort)
                 }
 
-                toast.success("Password updated");
+                toast.success(t("common.auth.passwordUpdated"));
                 navigate(addLanguageToPath(nextPath, language), { replace: true });
               } catch (e: any) {
                 console.error(e);
-                toast.error(e?.message || "Failed to update password");
+                toast.error(e?.message || t("common.errors.failedToUpdatePassword"));
               } finally {
                 setLoading(false);
               }
             }}
           >
-            {loading ? t("common.common.loading") : t("common.auth.savePassword") ?? "Save password"}
+            {loading ? t("common.common.loading") : t("common.auth.savePassword")}
           </Button>
         </CardContent>
       </Card>

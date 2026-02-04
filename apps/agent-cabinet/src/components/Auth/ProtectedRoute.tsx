@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getLanguageFromPath, addLanguageToPath, removeLanguageFromPath } from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@gridix/utils/api";
 import { hasAuthTokensInHash, hasUserPassword } from "@gridix/utils";
 
@@ -14,6 +15,7 @@ export function ProtectedRoute({
   requireAuth?: boolean;
 }) {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const lang = useMemo(() => getLanguageFromPath(location.pathname), [location.pathname]);
   const hasCodeInUrl = useMemo(() => {
@@ -76,7 +78,7 @@ export function ProtectedRoute({
   if (typeof window !== "undefined" && (hasAuthTokensInHash() || hasCodeInUrl)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="text-sm text-slate-600">Processing login…</div>
+        <div className="text-sm text-slate-600">{t("common.auth.processingLogin")}</div>
       </div>
     );
   }

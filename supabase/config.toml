@@ -75,3 +75,6 @@ verify_jwt = false
 
 [functions.notifications-task-due]
 verify_jwt = false
+
+[functions.project-drawer]
+verify_jwt = false

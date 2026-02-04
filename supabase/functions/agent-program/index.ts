@@ -1622,6 +1622,441 @@ serve(async (req) => {
         }
 
         /**
+         * Auth (agent): list my workspaces (signed/approved applications).
+         *
+         * Workspace ID for agent cabinet = agent_applications.id (application_id).
+         */
+        if (action === "list_my_workspaces") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const userEmail = typeof user.email === "string" ? user.email : null;
+            let q = supabaseAdmin
+                .from("agent_applications")
+                .select("id, developer_user_id, status, agreement_signed, agreement_signed_at, commission_rate, created_at")
+                .order("created_at", { ascending: false });
+
+            if (userEmail) {
+                q = q.or(`agent_user_id.eq.${user.id},email.eq.${userEmail}`);
+            } else {
+                q = q.eq("agent_user_id", user.id);
+            }
+
+            const { data, error } = await q;
+            if (error) throw error;
+
+            const apps = (data ?? [])
+                .filter((r: any) => String(r?.status) === "approved" && r?.agreement_signed === true)
+                .filter((r: any) => !!r?.developer_user_id);
+
+            const developerUserIds = Array.from(
+                new Set(
+                    apps
+                        .map((r: any) => (r?.developer_user_id ? String(r.developer_user_id) : ""))
+                        .filter(Boolean),
+                ),
+            );
+
+            const developerProfilesById = new Map<string, any>();
+            if (developerUserIds.length > 0) {
+                const { data: devProfiles, error: devErr } = await supabaseAdmin
+                    .from("user_profiles")
+                    .select("id, full_name, company_name, email")
+                    .in("id", developerUserIds);
+                if (devErr) throw devErr;
+                for (const p of devProfiles ?? []) {
+                    if (p?.id) developerProfilesById.set(String(p.id), p);
+                }
+            }
+
+            const workspaces = apps.map((a: any) => {
+                const developerUserId = String(a.developer_user_id);
+                return {
+                    application_id: String(a.id),
+                    developer_user_id: developerUserId,
+                    developer_profile: developerProfilesById.get(developerUserId) ?? null,
+                    commission_rate: a.commission_rate ?? null,
+                    agreement_signed_at: a.agreement_signed_at ?? null,
+                };
+            });
+
+            return createJsonResponse({ success: true, workspaces }, 200, origin);
+        }
+
+        /**
+         * Auth (agent): lightweight analytics for a single workspace (application_id).
+         * Single edge call intended for dashboards/analytics pages.
+         *
+         * Body: { action: 'get_agent_analytics', application_id }
+         */
+        if (action === "get_agent_analytics") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+
+            // Authorization: application must belong to current user (agent_user_id) OR email match fallback.
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            // Leads: count + last activity timestamp (cheap).
+            const { count: leadsCount, error: leadsCountErr } = await supabaseAdmin
+                .from("leads")
+                .select("id", { count: "exact", head: true })
+                .eq("agent_id", applicationId);
+            if (leadsCountErr) throw leadsCountErr;
+
+            const { data: lastLeadRow, error: lastLeadErr } = await supabaseAdmin
+                .from("leads")
+                .select("created_at")
+                .eq("agent_id", applicationId)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (lastLeadErr) throw lastLeadErr;
+
+            // Payouts: fetch list (expected to be small) and aggregate in JS.
+            const { data: payouts, error: payoutsErr } = await supabaseAdmin
+                .from("agent_payouts")
+                .select("amount, status, payout_date")
+                .eq("agent_id", applicationId)
+                .order("payout_date", { ascending: false });
+            if (payoutsErr) throw payoutsErr;
+
+            const payoutAgg = (payouts ?? []).reduce(
+                (acc: any, p: any) => {
+                    const amt = typeof p?.amount === "number" ? p.amount : Number(p?.amount ?? 0);
+                    const status = String(p?.status ?? "");
+                    acc.total += Number.isFinite(amt) ? amt : 0;
+                    acc.count += 1;
+                    if (status === "paid") acc.paid += Number.isFinite(amt) ? amt : 0;
+                    if (status === "pending") acc.pending += Number.isFinite(amt) ? amt : 0;
+                    return acc;
+                },
+                { total: 0, paid: 0, pending: 0, count: 0 },
+            );
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    application_id: applicationId,
+                    leads: {
+                        count: leadsCount ?? 0,
+                        last_created_at: (lastLeadRow as any)?.created_at ?? null,
+                    },
+                    payouts: payoutAgg,
+                },
+                200,
+                origin,
+            );
+        }
+
+        /**
+         * Auth (agent): analytics page payload (CRM + Finance) for a workspace.
+         * Single edge call to avoid multiple client queries and RLS issues.
+         *
+         * Body: { action: 'get_agent_analytics_page', application_id, period?: '7'|'30'|'90'|'year' }
+         */
+        if (action === "get_agent_analytics_page") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+
+            const periodRaw = String((body as any)?.period ?? "30");
+            const period = periodRaw === "7" || periodRaw === "30" || periodRaw === "90" || periodRaw === "year" ? periodRaw : "30";
+            const now = new Date();
+            const from = (() => {
+                const d = new Date(now);
+                if (period === "7") d.setDate(d.getDate() - 7);
+                else if (period === "30") d.setDate(d.getDate() - 30);
+                else if (period === "90") d.setDate(d.getDate() - 90);
+                else if (period === "year") d.setFullYear(d.getFullYear() - 1);
+                return d.toISOString();
+            })();
+
+            // Authorization: application must belong to current user (agent_user_id) OR email match fallback.
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            // Leads (CRM): by stage + by source + total count (period-limited).
+            const { data: leads, error: leadsErr } = await supabaseAdmin
+                .from("leads")
+                .select("id, created_at, status, source, pipeline_stage_id")
+                .eq("agent_id", applicationId)
+                .gte("created_at", from)
+                .order("created_at", { ascending: false });
+            if (leadsErr) throw leadsErr;
+
+            const leadRows = leads ?? [];
+            const stageCounts = new Map<string, number>();
+            const sourceCounts = new Map<string, number>();
+            for (const l of leadRows as any[]) {
+                const st = typeof l?.pipeline_stage_id === "string" ? l.pipeline_stage_id : String(l?.pipeline_stage_id ?? "");
+                if (st) stageCounts.set(st, (stageCounts.get(st) ?? 0) + 1);
+                const src = String(l?.source ?? "");
+                if (src) sourceCounts.set(src, (sourceCounts.get(src) ?? 0) + 1);
+            }
+
+            const stageIds = Array.from(stageCounts.keys());
+            const { data: stages, error: stagesErr } = stageIds.length
+                ? await supabaseAdmin
+                    .from("crm_funnel_stages")
+                    .select("id, name, color, order_index")
+                    .in("id", stageIds)
+                : { data: [], error: null };
+            if (stagesErr) throw stagesErr;
+
+            // Finance: payouts list (period-limited) + totals.
+            const { data: payouts, error: payoutsErr } = await supabaseAdmin
+                .from("agent_payouts")
+                .select("id, amount, status, payout_date, method, created_at")
+                .eq("agent_id", applicationId)
+                .gte("payout_date", from)
+                .order("payout_date", { ascending: false });
+            if (payoutsErr) throw payoutsErr;
+
+            const payoutAgg = (payouts ?? []).reduce(
+                (acc: any, p: any) => {
+                    const amt = typeof p?.amount === "number" ? p.amount : Number(p?.amount ?? 0);
+                    const status = String(p?.status ?? "");
+                    const safeAmt = Number.isFinite(amt) ? amt : 0;
+                    acc.total += safeAmt;
+                    acc.count += 1;
+                    if (status === "paid") acc.paid += safeAmt;
+                    if (status === "pending") acc.pending += safeAmt;
+                    return acc;
+                },
+                { total: 0, paid: 0, pending: 0, count: 0 },
+            );
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    application_id: applicationId,
+                    period,
+                    sales: {
+                        leads_count: leadRows.length,
+                        by_stage: (stages ?? [])
+                            .map((s: any) => ({
+                                id: String(s.id),
+                                name: String(s.name ?? "Stage"),
+                                color: s.color ?? null,
+                                order_index: typeof s.order_index === "number" ? s.order_index : null,
+                                count: stageCounts.get(String(s.id)) ?? 0,
+                            }))
+                            .sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0)),
+                        by_source: Array.from(sourceCounts.entries())
+                            .map(([source, count]) => ({ source, count }))
+                            .sort((a, b) => b.count - a.count),
+                    },
+                    finance: {
+                        payouts: payouts ?? [],
+                        stats: payoutAgg,
+                    },
+                },
+                200,
+                origin,
+            );
+        }
+
+        /**
+         * Auth (agent): list leads for a workspace (application_id).
+         * Intended to be used by agent cabinet UI to avoid RLS issues.
+         *
+         * Body: { action: 'list_agent_leads', application_id }
+         */
+        if (action === "list_agent_leads") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            const { data: leads, error } = await supabaseAdmin
+                .from("leads")
+                .select("id, created_at, name, phone, email, status, source, pipeline_stage_id, project_id, projects(name)")
+                .eq("agent_id", applicationId)
+                .order("created_at", { ascending: false });
+            if (error) throw error;
+
+            return createJsonResponse({ success: true, leads: leads ?? [] }, 200, origin);
+        }
+
+        /**
+         * Auth (agent): dashboard summary for a workspace (application_id).
+         * Single edge call intended to feed "точь-в-точь" dashboard widgets without multiple client queries.
+         *
+         * Body: { action: 'get_agent_dashboard', application_id }
+         */
+        if (action === "get_agent_dashboard") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed, developer_user_id")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            // Leads list (needed for contact aggregation). For current scale it's acceptable; can be optimized to SQL aggregation later.
+            const { data: leads, error: leadsErr } = await supabaseAdmin
+                .from("leads")
+                .select("id, created_at, email, phone")
+                .eq("agent_id", applicationId)
+                .order("created_at", { ascending: false });
+            if (leadsErr) throw leadsErr;
+
+            const leadRows = leads ?? [];
+            const leadsCount = leadRows.length;
+            const lastLeadAt = leadRows[0]?.created_at ?? null;
+
+            const contactKeys = new Set<string>();
+            for (const l of leadRows as any[]) {
+                const email = typeof l?.email === "string" ? l.email.trim().toLowerCase() : "";
+                if (email) {
+                    contactKeys.add(`email:${email}`);
+                    continue;
+                }
+                const phone = typeof l?.phone === "string" ? l.phone.trim() : "";
+                if (phone) contactKeys.add(`phone:${phone}`);
+            }
+            const contactsCount = contactKeys.size;
+
+            // Payouts aggregation.
+            const { data: payouts, error: payoutsErr } = await supabaseAdmin
+                .from("agent_payouts")
+                .select("amount, status")
+                .eq("agent_id", applicationId);
+            if (payoutsErr) throw payoutsErr;
+
+            const payoutAgg = (payouts ?? []).reduce(
+                (acc: any, p: any) => {
+                    const amt = typeof p?.amount === "number" ? p.amount : Number(p?.amount ?? 0);
+                    const status = String(p?.status ?? "");
+                    const safeAmt = Number.isFinite(amt) ? amt : 0;
+                    acc.total += safeAmt;
+                    acc.count += 1;
+                    if (status === "paid") acc.paid += safeAmt;
+                    if (status === "pending") acc.pending += safeAmt;
+                    return acc;
+                },
+                { total: 0, paid: 0, pending: 0, count: 0 },
+            );
+
+            // Projects count for developer of the application.
+            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
+            let projectsCount = 0;
+            if (developerUserId) {
+                const { count: c, error: cErr } = await supabaseAdmin
+                    .from("projects")
+                    .select("id", { count: "exact", head: true })
+                    .eq("user_id", developerUserId)
+                    .eq("is_public", true);
+                if (cErr) throw cErr;
+                projectsCount = c ?? 0;
+            }
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    application_id: applicationId,
+                    leads: { count: leadsCount, last_created_at: lastLeadAt },
+                    contacts: { count: contactsCount },
+                    payouts: payoutAgg,
+                    projects: { count: projectsCount },
+                },
+                200,
+                origin,
+            );
+        }
+
+        /**
          * Public (preferred for invite wizard): sign multiple agreements for an application.
          *
          * For new agents without Supabase Auth session:
@@ -2412,12 +2847,288 @@ serve(async (req) => {
 
             const { data: projects, error } = await supabaseAdmin
                 .from("projects")
-                .select("id, name, slug, address, building_image_url")
+                .select("id, name, slug, address, building_image_url, latitude, longitude")
                 .eq("user_id", developerUserId)
                 .eq("is_public", true);
 
             if (error) throw error;
-            return createJsonResponse({ success: true, projects: projects ?? [] }, 200, origin);
+
+            const rows = projects ?? [];
+            const ids = rows.map((p: any) => String(p.id)).filter(Boolean);
+
+            // Optional: apply per-project partnership settings (catalog visibility + commission).
+            let settingsByProject = new Map<string, any>();
+            if (ids.length > 0) {
+                const { data: settings, error: sErr } = await supabaseAdmin
+                    .from("project_partnership_settings")
+                    .select("project_id, is_enabled, allow_partner_connect, commission_type, commission_value, payout_condition")
+                    .in("project_id", ids);
+                // If table is not present yet, don't block catalog (backward compatibility).
+                if (!sErr && settings) {
+                    for (const s of settings as any[]) {
+                        settingsByProject.set(String(s.project_id), s);
+                    }
+                }
+            }
+
+            const enriched = rows
+                .filter((p: any) => {
+                    const s = settingsByProject.get(String(p.id));
+                    // If settings exist and disabled -> hide from partner catalog.
+                    if (s && (s as any).is_enabled === false) return false;
+                    return true;
+                })
+                .map((p: any) => {
+                    const s = settingsByProject.get(String(p.id));
+                    const commissionType = s?.commission_type === "fixed" ? "fixed" : "percent";
+                    const commissionValue = typeof s?.commission_value === "number" ? s.commission_value : Number(s?.commission_value ?? null);
+                    return {
+                        ...p,
+                        commission_percent: commissionType === "percent" && Number.isFinite(commissionValue) ? commissionValue : null,
+                        commission_condition: s?.payout_condition ? String(s.payout_condition) : null,
+                        allow_partner_connect: s?.allow_partner_connect === false ? false : true,
+                    };
+                });
+
+            return createJsonResponse({ success: true, projects: enriched }, 200, origin);
+        }
+
+        /**
+         * Auth (agent): project drawer data for a specific project.
+         * Body: { action: 'get_project_drawer', application_id, project_id }
+         */
+        if (action === "get_project_drawer") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            const projectId = (body as any)?.project_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+            if (!projectId || typeof projectId !== "string") {
+                return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+            }
+
+            // Authorization: application must belong to current user OR email match fallback; must be approved & signed.
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed, developer_user_id")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
+            if (!developerUserId) return createJsonResponse({ error: "Invalid developer_user_id" }, 400, origin);
+
+            // Ensure project belongs to the developer and is public.
+            const { data: project, error: pErr } = await supabaseAdmin
+                .from("projects")
+                .select("*")
+                .eq("id", projectId)
+                .eq("user_id", developerUserId)
+                .eq("is_public", true)
+                .maybeSingle();
+            if (pErr) throw pErr;
+            if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+            // Partnership settings (optional).
+            const { data: settings } = await supabaseAdmin
+                .from("project_partnership_settings")
+                .select("*")
+                .eq("project_id", projectId)
+                .maybeSingle();
+
+            // Media & construction (optional).
+            const { data: mediaItems } = await supabaseAdmin
+                .from("project_media_items")
+                .select("id, kind, title, url, thumbnail_url, created_at, sort_index")
+                .eq("project_id", projectId)
+                .order("kind", { ascending: true })
+                .order("sort_index", { ascending: true })
+                .order("created_at", { ascending: false });
+
+            const { data: construction } = await supabaseAdmin
+                .from("project_construction_updates")
+                .select("id, date, title, description, images, created_at")
+                .eq("project_id", projectId)
+                .order("date", { ascending: false })
+                .order("created_at", { ascending: false });
+
+            const { data: apartments } = await supabaseAdmin
+                .from("apartments")
+                .select("status, area")
+                .eq("project_id", projectId);
+
+            const stats = (apartments ?? []).reduce(
+                (acc: any, row: any) => {
+                    acc.totalUnits += 1;
+                    const st = String(row?.status ?? "");
+                    if (st === "available") acc.availableUnits += 1;
+                    if (st === "reserved" || st === "booked") acc.bookedUnits += 1;
+                    if (st === "sold") acc.soldUnits += 1;
+                    const area = typeof row?.area === "number" ? row.area : Number(row?.area ?? 0);
+                    acc.totalArea += Number.isFinite(area) ? area : 0;
+                    return acc;
+                },
+                { totalUnits: 0, availableUnits: 0, soldUnits: 0, bookedUnits: 0, totalArea: 0 },
+            );
+
+            const media = {
+                renders: (mediaItems ?? []).filter((i: any) => i.kind === "render").map((i: any) => String(i.url)),
+                videos: (mediaItems ?? [])
+                    .filter((i: any) => i.kind === "video")
+                    .map((i: any) => ({
+                        url: String(i.url),
+                        title: String(i.title ?? "Video"),
+                        thumbnail: i.thumbnail_url ? String(i.thumbnail_url) : undefined,
+                    })),
+                presentations: (mediaItems ?? [])
+                    .filter((i: any) => i.kind === "presentation")
+                    .map((i: any) => ({
+                        id: String(i.id),
+                        title: String(i.title ?? "Document"),
+                        url: String(i.url),
+                        uploadedAt: i.created_at ? String(i.created_at) : undefined,
+                    })),
+            };
+
+            const partnershipSettings = settings
+                ? {
+                    isEnabled: Boolean((settings as any).is_enabled),
+                    commissionType: ((settings as any).commission_type === "fixed" ? "fixed" : "percent") as "fixed" | "percent",
+                    commissionValue: Number((settings as any).commission_value ?? 5),
+                    payoutCondition: (settings as any).payout_condition ? String((settings as any).payout_condition) : undefined,
+                    contractUrl: (settings as any).contract_url ? String((settings as any).contract_url) : undefined,
+                    allowPartnerConnect: Boolean((settings as any).allow_partner_connect ?? true),
+                }
+                : {
+                    isEnabled: true,
+                    commissionType: "percent" as const,
+                    commissionValue: 5,
+                    payoutCondition: undefined,
+                    contractUrl: undefined,
+                    allowPartnerConnect: true,
+                };
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    project: {
+                        id: String((project as any).id),
+                        name: String((project as any).name ?? ""),
+                        slug: (project as any).slug ? String((project as any).slug) : null,
+                        location: (project as any).address ? String((project as any).address) : null,
+                        imageUrl: (project as any).building_image_url ? String((project as any).building_image_url) : null,
+                        description: (project as any).description ? String((project as any).description) : null,
+                        floors: typeof (project as any).floors === "number" ? (project as any).floors : null,
+                        minPrice: (project as any).min_price ?? null,
+                        yield: (project as any).yield_percent ?? null,
+                        stats,
+                        media,
+                        constructionProgress: (construction ?? []).map((u: any) => ({
+                            id: String(u.id),
+                            date: String(u.date),
+                            title: String(u.title ?? ""),
+                            description: String(u.description ?? ""),
+                            images: Array.isArray(u.images) ? (u.images as any[]).map((x) => String(x)) : undefined,
+                        })),
+                        partnershipSettings,
+                    },
+                },
+                200,
+                origin,
+            );
+        }
+
+        /**
+         * Auth (agent): list project units (apartments) for chessboard.
+         * Body: { action: 'list_project_units', application_id, project_id }
+         */
+        if (action === "list_project_units") {
+            const user = await getSupabaseUser(req);
+            if (!user?.id) return createJsonResponse({ error: "Unauthorized" }, 401, origin);
+
+            const applicationId = (body as any)?.application_id;
+            const projectId = (body as any)?.project_id;
+            if (!applicationId || typeof applicationId !== "string") {
+                return createJsonResponse({ error: "Missing application_id" }, 400, origin);
+            }
+            if (!projectId || typeof projectId !== "string") {
+                return createJsonResponse({ error: "Missing project_id" }, 400, origin);
+            }
+
+            const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+            const { data: application, error: appErr } = await supabaseAdmin
+                .from("agent_applications")
+                .select("id, agent_user_id, email, status, agreement_signed, developer_user_id")
+                .eq("id", applicationId)
+                .maybeSingle();
+            if (appErr) throw appErr;
+            if (!application) return createJsonResponse({ error: "Application not found" }, 404, origin);
+
+            const appEmail = String((application as any)?.email ?? "").trim().toLowerCase();
+            const appUserId = (application as any)?.agent_user_id ? String((application as any).agent_user_id) : "";
+            const canAccess = appUserId === user.id || (!!userEmail && userEmail === appEmail);
+            if (!canAccess) return createJsonResponse({ error: "Forbidden" }, 403, origin);
+            if (String((application as any)?.status ?? "") !== "approved") {
+                return createJsonResponse({ error: "Agent not approved" }, 403, origin);
+            }
+            if ((application as any)?.agreement_signed !== true) {
+                return createJsonResponse({ error: "Agreement not signed" }, 403, origin);
+            }
+
+            const developerUserId = (application as any)?.developer_user_id ? String((application as any).developer_user_id) : null;
+            if (!developerUserId) return createJsonResponse({ error: "Invalid developer_user_id" }, 400, origin);
+
+            const { data: project, error: pErr } = await supabaseAdmin
+                .from("projects")
+                .select("id, slug, user_id, is_public")
+                .eq("id", projectId)
+                .eq("user_id", developerUserId)
+                .eq("is_public", true)
+                .maybeSingle();
+            if (pErr) throw pErr;
+            if (!project) return createJsonResponse({ error: "Project not found" }, 404, origin);
+
+            const { data: apartments, error: aErr } = await supabaseAdmin
+                .from("apartments")
+                .select("id, apartment_number, floor_number, rooms, area, price, status")
+                .eq("project_id", projectId);
+            if (aErr) throw aErr;
+
+            const units = (apartments ?? []).map((a: any) => ({
+                id: String(a.id),
+                apartment_number: a.apartment_number ? String(a.apartment_number) : null,
+                floor_number: typeof a.floor_number === "number" ? a.floor_number : Number(a.floor_number ?? 0),
+                rooms: a.rooms ? String(a.rooms) : null,
+                area: a.area ?? null,
+                price: a.price ?? null,
+                status: a.status ? String(a.status) : null,
+            }));
+
+            return createJsonResponse(
+                {
+                    success: true,
+                    project: { id: String((project as any).id), slug: (project as any).slug ? String((project as any).slug) : null },
+                    units,
+                },
+                200,
+                origin,
+            );
         }
 
         return createJsonResponse({ error: "Invalid action" }, 400, origin);

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Search, Link as LinkIcon, Handshake, ShieldCheck, LayoutList, Users, DollarSign, Building2, TrendingUp, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, Link as LinkIcon, Handshake, ShieldCheck, LayoutList, Users, DollarSign, TrendingUp, Filter, ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { useAgencyPartners } from './useAgencyPartners';
 import { PartnerInviteModal } from './PartnerInviteModal';
 import { PartnerDrawer } from './PartnerDrawer';
@@ -17,8 +17,10 @@ import {
     DropdownMenuTrigger,
 } from "@gridix/ui";
 import { UserAvatar } from '@/components/admin/UserAvatar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const AgencyPartnersPage: React.FC = () => {
+    const { t } = useLanguage();
     const { partners, filters, setFilters, approvePartner, updatePartnerStatus, updatePartnerCommission, markPaid, stats, loading, developerId } = useAgencyPartners();
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [selectedPartner, setSelectedPartner] = useState<AgencyPartner | null>(null);
@@ -44,13 +46,13 @@ export const AgencyPartnersPage: React.FC = () => {
             }[status] || 'bg-slate-50 text-slate-700 ring-slate-600/20';
         const label =
             status === 'active'
-                ? 'Активен'
+                ? t('partners.status.active')
                 : status === 'pending'
-                    ? 'Новый'
+                    ? t('partners.status.pending')
                     : status === 'needs_correction'
-                        ? 'Доработка'
+                        ? t('partners.status.needsCorrection')
                         : status === 'blocked'
-                            ? 'Блок'
+                            ? t('partners.status.blocked')
                             : status;
         return (
             <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${styles}`}>
@@ -115,8 +117,8 @@ export const AgencyPartnersPage: React.FC = () => {
             <div className="relative">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Агентская сеть</h1>
-                        <p className="text-slate-500 text-sm mt-1">Управление внешними продажами и партнерами</p>
+                        <h1 className="text-2xl font-bold text-slate-900">{t('partners.title')}</h1>
+                        <p className="text-slate-500 text-sm mt-1">{t('partners.subtitle')}</p>
                     </div>
 
                     {activeTab === 'list' ? (
@@ -124,7 +126,7 @@ export const AgencyPartnersPage: React.FC = () => {
                             <div className="relative w-full md:w-[340px]">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <Input
-                                    placeholder="Поиск по имени, телефону или email..."
+                                    placeholder={t('partners.searchPlaceholder')}
                                     value={filters.search}
                                     onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                                     className="pl-10 h-10 bg-white border-slate-200"
@@ -135,9 +137,9 @@ export const AgencyPartnersPage: React.FC = () => {
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" className="font-bold flex items-center gap-2">
                                         <Filter size={16} />
-                                        Фильтры
+                                        {t('partners.filters')}
                                         {activeFiltersCount > 0 ? (
-                                            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white">
+                                            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)]">
                                                 {activeFiltersCount}
                                             </span>
                                         ) : null}
@@ -154,7 +156,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                 onClick={() => setIsInviteModalOpen(true)}
                                 className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] text-[var(--admin-text-on-primary)] font-bold h-10 px-4 shadow-sm flex items-center gap-2"
                             >
-                                <LinkIcon size={18} /> Пригласить
+                                <LinkIcon size={18} /> {t('partners.invite')}
                             </Button>
                         </div>
                     ) : (
@@ -163,7 +165,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                 onClick={() => setIsInviteModalOpen(true)}
                                 className="bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] active:bg-[var(--admin-primary-active)] text-[var(--admin-text-on-primary)] font-bold h-10 px-4 shadow-sm flex items-center gap-2"
                             >
-                                <LinkIcon size={18} /> Пригласить
+                                <LinkIcon size={18} /> {t('partners.invite')}
                             </Button>
                         </div>
                     )}
@@ -177,9 +179,9 @@ export const AgencyPartnersPage: React.FC = () => {
                             setActiveTab('list');
                             setFilters((f) => ({ ...f, status: 'all' }));
                         }}
-                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'list' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'list' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <LayoutList size={16} /> Список партнеров
+                        <LayoutList size={16} /> {t('partners.tabs.list')}
                         {stats.pendingRequests > 0 && (
                             <span
                                 onClick={(e) => {
@@ -188,7 +190,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                     setActiveTab('list');
                                 }}
                                 className={`text-[10px] px-1.5 py-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform ${filters.status === 'pending' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700'}`}
-                                title="Показать только новые заявки"
+                                title={t('partners.showPendingOnly')}
                             >
                                 {stats.pendingRequests}
                             </span>
@@ -196,9 +198,9 @@ export const AgencyPartnersPage: React.FC = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('conditions')}
-                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'conditions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'conditions' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <ShieldCheck size={16} /> Условия сотрудничества
+                        <ShieldCheck size={16} /> {t('partners.tabs.conditions')}
                     </button>
                 </div>
             </div>
@@ -210,30 +212,30 @@ export const AgencyPartnersPage: React.FC = () => {
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Users size={20} /></div>
+                                    <div className="p-3 bg-slate-100 text-[var(--admin-primary)] rounded-lg"><Users size={20} /></div>
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Всего партнеров</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">{t('partners.stats.totalPartners')}</p>
                                         <p className="text-xl font-bold text-slate-900">{stats.totalPartners}</p>
                                     </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                                     <div className="p-3 bg-green-50 text-green-600 rounded-lg"><Handshake size={20} /></div>
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Активные</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">{t('partners.stats.active')}</p>
                                         <p className="text-xl font-bold text-slate-900">{stats.activePartners}</p>
                                     </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                                     <div className="p-3 bg-purple-50 text-purple-600 rounded-lg"><TrendingUp size={20} /></div>
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Объем продаж</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">{t('partners.stats.salesVolume')}</p>
                                         <p className="text-xl font-bold text-slate-900">${(stats.totalSalesVolume / 1000000).toFixed(1)}M</p>
                                     </div>
                                 </div>
                                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                                     <div className="p-3 bg-amber-50 text-amber-600 rounded-lg"><DollarSign size={20} /></div>
                                     <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">К выплате</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase">{t('partners.stats.pendingPayout')}</p>
                                         <p className="text-xl font-bold text-slate-900">${stats.totalPendingCommission.toLocaleString()}</p>
                                     </div>
                                 </div>
@@ -245,28 +247,28 @@ export const AgencyPartnersPage: React.FC = () => {
                                         <table className="w-full text-left border-collapse">
                                             <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                                 <tr>
-                                                    <th className="px-6 py-4">Агент</th>
+                                                    <th className="px-6 py-4">{t('partners.table.agent')}</th>
                                                     <th
                                                         className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group"
                                                         onClick={handleStatusFilterCycle}
-                                                        title="Нажмите для фильтрации"
+                                                        title={t('partners.clickToFilter')}
                                                     >
                                                         <div className="flex items-center gap-1">
-                                                            Статус
+                                                            {t('partners.table.status')}
                                                             <ArrowUpDown
                                                                 size={12}
-                                                                className={`text-slate-400 ${filters.status !== 'all' ? 'text-blue-500' : 'opacity-0 group-hover:opacity-100'}`}
+                                                                className={`text-slate-400 ${filters.status !== 'all' ? 'text-[var(--admin-primary)]' : 'opacity-0 group-hover:opacity-100'}`}
                                                             />
                                                             {filters.status !== 'all' && (
-                                                                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 rounded">
+                                                                <span className="text-[9px] bg-slate-200 text-slate-700 px-1.5 rounded">
                                                                     {String(filters.status).slice(0, 3)}
                                                                 </span>
                                                             )}
                                                         </div>
                                                     </th>
-                                                    <th className="px-6 py-4 text-center">Ставка</th>
-                                                    <th className="px-6 py-4 text-right">Лиды</th>
-                                                    <th className="px-6 py-4 text-right">Баланс</th>
+                                                    <th className="px-6 py-4 text-center">{t('partners.table.rate')}</th>
+                                                    <th className="px-6 py-4 text-right">{t('partners.table.leads')}</th>
+                                                    <th className="px-6 py-4 text-right">{t('partners.table.balance')}</th>
                                                     <th className="px-6 py-4 w-12"></th>
                                                 </tr>
                                             </thead>
@@ -281,7 +283,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                                             <div className="flex items-center gap-3">
                                                                 <UserAvatar name={p.name} className="w-9 h-9 text-xs" />
                                                                 <div className="min-w-0">
-                                                                    <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                                                    <div className="font-bold text-slate-900 group-hover:text-[var(--admin-primary)] transition-colors truncate">
                                                                         {p.name}
                                                                     </div>
                                                                     <div className="text-xs text-slate-500 truncate">{p.email}</div>
@@ -301,16 +303,14 @@ export const AgencyPartnersPage: React.FC = () => {
                                                         </td>
                                                         <td className="px-6 py-4 text-right">
                                                             <div className="font-mono font-bold text-slate-900">${p.stats.commissionPending.toLocaleString()}</div>
-                                                            <div className="text-[10px] text-slate-400">Начислено</div>
+                                                            <div className="text-[10px] text-slate-400">{t('partners.table.accrued')}</div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
                                                                     <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
                                                                         <span className="sr-only">Actions</span>
-                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full mr-0.5" />
-                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full mr-0.5" />
-                                                                        <span className="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full" />
+                                                                        <MoreHorizontal className="size-5" aria-hidden />
                                                                     </button>
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end" className="w-56">
@@ -319,17 +319,17 @@ export const AgencyPartnersPage: React.FC = () => {
                                                                             onClick={() => approvePartner(p.id)}
                                                                             className="text-green-600 font-bold"
                                                                         >
-                                                                            Одобрить партнера
+                                                                            {t('partners.actions.approve')}
                                                                         </DropdownMenuItem>
                                                                     )}
                                                                     <DropdownMenuItem onClick={() => { setPayoutTarget(p); }}>
-                                                                        Выплата комиссии
+                                                                        {t('partners.actions.payout')}
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuItem
                                                                         onClick={() => updatePartnerStatus(p.id, p.status === 'blocked' ? 'pending' : 'blocked')}
                                                                         className="text-red-600"
                                                                     >
-                                                                        {p.status === 'blocked' ? 'Разблокировать' : 'Заблокировать'}
+                                                                        {p.status === 'blocked' ? t('partners.actions.unblock') : t('partners.actions.block')}
                                                                     </DropdownMenuItem>
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
@@ -341,7 +341,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-sm text-slate-500">Нет партнеров</div>
+                                <div className="text-sm text-slate-500">{t('partners.noPartners')}</div>
                             )}
                         </>
                     )}
