@@ -221,7 +221,7 @@ const OverviewTab: React.FC<{
    {/*    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
           <div className="text-xs font-bold text-slate-400 uppercase mb-1">{t("drawer.stats.roi")}</div>
-          <div className="text-lg font-bold text-blue-600">{project.yield ? `${project.yield}%` : "—"}</div>
+          <div className="text-lg font-bold text-[var(--admin-primary)]">{project.yield ? `${project.yield}%` : "—"}</div>
         </div>
         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
           <div className="text-xs font-bold text-slate-400 uppercase mb-1">{t("drawer.stats.completion")}</div>
@@ -257,11 +257,11 @@ const OverviewTab: React.FC<{
             href="#"
             className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group"
           >
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100">
+            <div className="p-2 bg-[var(--admin-background-secondary)] text-[var(--admin-primary)] rounded-lg group-hover:bg-[var(--admin-background-hover)]">
               <FileText size={18} />
             </div>
             <span className="text-sm font-medium text-slate-700">{project.media.presentations[0]?.title}</span>
-            <Download size={16} className="ml-auto text-slate-400 group-hover:text-blue-600" />
+            <Download size={16} className="ml-auto text-slate-400 group-hover:text-[var(--admin-primary)]" />
           </a>
         </div>
       )}
@@ -325,7 +325,7 @@ const MediaTab: React.FC<{
           <button
             type="button"
             onClick={() => onConnect?.(project)}
-            className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg font-bold"
+            className="text-xs bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] text-[var(--admin-text-on-primary)] px-4 py-2 rounded-lg font-bold"
           >
             {t("drawer.media.connect")}
           </button>
@@ -415,7 +415,7 @@ const MediaTab: React.FC<{
                 type="button"
                 key={`render-${i}`}
                 onClick={() => handleDownloadRender(url, i)}
-                className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2"
               >
                 <img
                   src={url}
@@ -444,7 +444,7 @@ const MediaTab: React.FC<{
                 type="button"
                 key={`video-${i}`}
                 onClick={() => handleDownloadVideo(vid)}
-                className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative bg-black group cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative bg-black group cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[var(--admin-primary)] focus:ring-offset-2"
               >
                 <img
                   src={vid.thumbnail ?? ""}
@@ -474,7 +474,7 @@ const MediaTab: React.FC<{
             {presentations.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-300 transition-all group"
+                className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-[var(--admin-primary)]/30 transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-red-50 text-red-600 rounded-lg">
@@ -489,7 +489,7 @@ const MediaTab: React.FC<{
                   type="button"
                   onClick={() => handleDownloadPresentation(doc)}
                   disabled={!doc.url}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 text-slate-400 hover:text-[var(--admin-primary)] hover:bg-[var(--admin-background-hover)] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={doc.url ? "Download" : undefined}
                 >
                   <Download size={16} />
@@ -520,7 +520,7 @@ const ConstructionTab: React.FC<{
         <div className="relative pl-4 border-l border-slate-200 space-y-8">
           {updates.map((update) => (
             <div key={update.id} className="relative pl-6">
-              <div className="absolute -left-[21px] top-1 w-3 h-3 bg-blue-500 rounded-full ring-4 ring-white" />
+              <div className="absolute -left-[21px] top-1 w-3 h-3 bg-[var(--admin-primary)] rounded-full ring-4 ring-white" />
               <div className="text-xs font-bold text-slate-400 mb-1">
                 {new Date(update.date).toLocaleDateString()}
               </div>
@@ -651,7 +651,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               onClick={() => setActiveTab(tab.id)}
               className={`py-4 px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? "border-blue-600 text-blue-600"
+                  ? "border-[var(--admin-primary)] text-[var(--admin-primary)]"
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
@@ -706,7 +706,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => onLock?.(project)}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] text-[var(--admin-text-on-primary)] font-bold rounded-xl shadow-md shadow-slate-200 transition-all flex items-center justify-center gap-2"
                 >
                   <Lock size={16} />
                   {t("drawer.actions.lock")}
@@ -746,7 +746,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenPublicPage?.(project)}
-                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] text-[var(--admin-text-on-primary)] font-bold rounded-xl shadow-md shadow-slate-200 transition-all flex items-center justify-center gap-2"
               >
                 <ExternalLink size={16} />
                 {t("drawer.actions.openPage")}
