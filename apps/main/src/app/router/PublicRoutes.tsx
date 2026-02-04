@@ -5,7 +5,7 @@ import Index from "@/pages/Index";
 // Lazy load pages
 const ApartmentDetailsPage = lazy(() => import("@/pages/ApartmentDetailsPage"));
 const ProjectWidgetPage = lazy(() => import("@/pages/ProjectWidgetPage"));
-const AuthPage = lazy(() => import("@/pages/AuthPage"));
+const AuthRedirectPage = lazy(() => import("@/pages/AuthRedirectPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const PDFTemplatePage = lazy(() => import("@/pages/PDFTemplatePage"));
 const InvitationHandlerPage = lazy(() => import("@/pages/InvitationHandlerPage"));
@@ -24,9 +24,9 @@ export function PublicRoutes() {
       <Route path="project/:projectSlug/apartment/:apartmentNumber/pdf" element={<PDFTemplatePage />} />
 
       {/* Auth routes */}
-      <Route path="auth" element={<AuthPage />} />
-      <Route path="auth/signin" element={<AuthPage />} />
-      <Route path="auth/signup" element={<AuthPage />} />
+      <Route path="auth" element={<AuthRedirectPage />} />
+      <Route path="auth/signin" element={<AuthRedirectPage />} />
+      <Route path="auth/signup" element={<AuthRedirectPage />} />
 
       {/* Set password */}
       <Route path="set-password" element={<SetPasswordPage />} />

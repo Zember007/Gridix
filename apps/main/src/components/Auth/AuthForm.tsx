@@ -19,7 +19,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -106,7 +106,10 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               full_name: formData.fullName,
               company_name: formData.companyName,
               phone: formData.phone,
-              account_type: 'developer'
+              account_type: 'developer',
+              partner_id: partnerInfo?.id || null,
+              marketing_emails_consent: marketingEmailsConsent,
+              preferred_locale: language,
             }
           }
         });
@@ -114,22 +117,6 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
         if (error) throw error;
 
         if (authData.user) {
-          // Создаем профиль пользователя
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: authData.user.id,
-              email: formData.email,
-              full_name: formData.fullName,
-              account_type: 'developer',
-              partner_id: partnerInfo?.id || null,
-              marketing_emails_consent: marketingEmailsConsent,
-            });
-
-          if (profileError) {
-            console.error('Error creating user profile:', profileError);
-          }
-
           // Если есть реферальный код, создаем связь с партнером
           if (refCode && partnerInfo) {
             const { error: linkError } = await supabase

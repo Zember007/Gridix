@@ -419,7 +419,6 @@ export function SystemSettings() {
     try {
       if (editingTier) {
         // Обновление существующего tier
-        // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
         const { error } = await supabase
           .from('commission_tiers')
           .update({
@@ -438,7 +437,6 @@ export function SystemSettings() {
         });
       } else {
         // Создание нового tier
-        // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
         const { error } = await supabase
           .from('commission_tiers')
           .insert({
@@ -480,7 +478,6 @@ export function SystemSettings() {
     }
 
     try {
-      // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
       const { error } = await supabase
         .from('commission_tiers')
         .delete()
@@ -504,7 +501,6 @@ export function SystemSettings() {
 
   const handleToggleTierActive = async (tier: CommissionTier) => {
     try {
-      // @ts-ignore: commission_tiers таблица есть в БД, но ещё не описана в сгенерированных типах
       const { error } = await supabase
         .from('commission_tiers')
         .update({

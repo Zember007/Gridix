@@ -311,5 +311,34 @@
   "moreProjects": "and {{count}} more projects",
   "integratorCabinetTitle": "Integrator dashboard",
   "integratorCabinetText": "Here you only see managed clients. For each client you have quick notes and login to configure projects and subscriptions.",
-  "qrShow": "Show QR Code"
+  "qrShow": "Show QR Code",
+  "tabs": {
+    "list": "Partner list",
+    "conditions": "Partnership conditions"
+  },
+  "stats": {
+    "totalPartners": "Total partners",
+    "active": "Active",
+    "salesVolume": "Sales volume",
+    "pendingPayout": "Pending payout"
+  },
+  "table": {
+    "agent": "Agent",
+    "status": "Status",
+    "rate": "Rate",
+    "leads": "Leads",
+    "balance": "Balance",
+    "accrued": "Accrued"
+  },
+  "actions": {
+    "approve": "Approve partner",
+    "payout": "Commission payout",
+    "block": "Block",
+    "unblock": "Unblock"
+  },
+  "filters": "Filters",
+  "invite": "Invite",
+  "showPendingOnly": "Show pending only",
+  "clickToFilter": "Click to filter",
+  "noPartners": "No partners"
 }

@@ -58,7 +58,7 @@ export const useAllFailedLeadsStats = () => {
         }
 
         // Загружаем все лиды для доступных проектов одним запросом
-        let query = supabase
+        const query = supabase
           .from('leads')
           .select('project_id, status')
           .in('project_id', projectIds);

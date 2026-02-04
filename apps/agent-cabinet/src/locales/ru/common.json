@@ -1,0 +1,261 @@
+{
+  "app": {
+    "title": "Кабинет агента"
+  },
+  "nav": {
+    "dashboard": "Главная",
+    "application": "Заявка",
+    "projects": "Каталог",
+    "contacts": "Контакты",
+    "leads": "Лиды",
+    "payouts": "Выплаты",
+    "analytics": "Аналитика"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "continue": "Продолжить",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "Email",
+    "sendLink": "Отправить magic link",
+    "signOut": "Выйти",
+    "checkEmailTitle": "Проверьте почту",
+    "magicLinkSent": "Magic link отправлен.",
+    "processingLogin": "Входим…",
+    "setPasswordTitle": "Установить пароль",
+    "setPasswordDescription": "Пароль ещё не установлен. Пожалуйста, создайте пароль, чтобы продолжить.",
+    "password": "Пароль",
+    "confirmPassword": "Повторите пароль",
+    "savePassword": "Сохранить пароль",
+    "passwordUpdated": "Пароль обновлён"
+  },
+  "errors": {
+    "emailRequired": "Введите email.",
+    "failedToSendLink": "Не удалось отправить ссылку.",
+    "passwordMinLength": "Пароль должен быть не короче 8 символов.",
+    "passwordsDontMatch": "Пароли не совпадают.",
+    "failedToUpdatePassword": "Не удалось обновить пароль."
+  },
+  "notFound": {
+    "title": "Страница не найдена",
+    "goHome": "На главную"
+  },
+  "workspace": {
+    "noActiveTitle": "Нет активного воркспейса",
+    "pickInSidebar": "Выберите воркспейс в сайдбаре."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "Поиск…",
+    "financeTitle": "Финансы",
+    "balanceLabel": "Ваш счёт",
+    "create": "Создать"
+  },
+  "dashboard": {
+    "title": "Мой кабинет",
+    "subtitleWorkspace": "Воркспейс: {{workspace}}",
+    "subtitleNoWorkspace": "Выберите воркспейс",
+    "metrics": {
+      "leads": "Лиды",
+      "contactsSubtext": "Контактов: {{count}}",
+      "commissionPaid": "Комиссия получено",
+      "commissionPending": "Комиссия к выплате",
+      "projectsSubtext": "Проектов: {{count}}",
+      "catalog": "Каталог",
+      "availableProjects": "Доступные проекты"
+    },
+    "blocks": {
+      "dynamicsTitle": "Динамика",
+      "inProgress": "В разработке",
+      "pulseTitle": "Пульс",
+      "latestEvents": "Последние события",
+      "pulseLeads": "Лиды: {{count}}",
+      "pulsePayouts": "Выплаты:"
+    },
+    "chart": {
+      "title": "Динамика выручки",
+      "subtitle": "Комиссионный доход за 6 месяцев"
+    },
+    "activity": {
+      "title": "Пульс компании",
+      "empty": "Нет недавних событий",
+      "system": "Система",
+      "newLead": "новый лид",
+      "leadsLabel": "лидов",
+      "commissionPaid": "выплачена комиссия",
+      "pendingPayout": "к выплате",
+      "recent": "недавно",
+      "thisMonth": "этот месяц",
+      "inPipeline": "в работе"
+    }
+  },
+  "catalog": {
+    "title": "Каталог",
+    "subtitle": "Единая база новостроек",
+    "subtitleWithWorkspace": "Единая база новостроек • {{workspace}}",
+    "searchPlaceholder": "Поиск по названию ЖК…",
+    "filtersPlaceholder": "Фильтры будут перенесены 1:1 из `gridix-visual` (локация/цены/статусы).",
+    "noProjects": "Для выбранного воркспейса пока нет публичных проектов.",
+    "open": "Открыть",
+    "details": "Детали",
+    "share": "Поделиться",
+    "clientLinkPrompt": "Ссылка для клиента"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "Обзор",
+      "units": "Шахматка",
+      "construction": "Стройка",
+      "media": "Материалы",
+      "partners": "Партнёры",
+      "settings": "Настройки"
+    },
+    "commission": {
+      "title": "Ваша комиссия",
+      "active": "Активно",
+      "requiresContract": "Требуется договор",
+      "condition": "Условия выплаты",
+      "signOffer": "Чтобы зафиксировать клиента и получить комиссию, необходимо подписать оферту с застройщиком."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "Срок сдачи",
+      "priceFrom": "Цена от",
+      "units": "Юнитов"
+    },
+    "about": {
+      "title": "О проекте",
+      "description": "Современный жилой комплекс в престижном районе. Идеально подходит для проживания и инвестиций."
+    },
+    "quickAccess": "Быстрый доступ",
+    "media": {
+      "title": "Медиа-банк проекта",
+      "downloadAll": "Скачать все (ZIP)",
+      "renders": "Рендеры",
+      "videos": "Видео",
+      "presentations": "Презентации",
+      "noMaterials": "Нет материалов",
+      "restricted": "Доступ ограничен",
+      "signToAccess": "Подпишите договор с застройщиком, чтобы получить доступ к медиа-банку.",
+      "connect": "Подключить"
+    },
+    "construction": {
+      "title": "Ход строительства",
+      "noUpdates": "Нет обновлений"
+    },
+    "units": {
+      "legend": {
+        "available": "Свободно",
+        "booked": "Бронь",
+        "sold": "Продано"
+      },
+      "downloadPdf": "Скачать PDF"
+    },
+    "actions": {
+      "lock": "Фиксация",
+      "favorite": "В подборку",
+      "share": "Поделиться",
+      "becomePartner": "Стать партнером",
+      "pendingConfirmation": "Ожидает подтверждения",
+      "partnershipUnavailable": "Партнёрство недоступно",
+      "openPage": "Открыть страницу"
+    }
+  },
+  "contacts": {
+    "title": "Контакты",
+    "subtitle": "{{count}} контактов",
+    "subtitleWithWorkspace": "{{count}} контактов • {{workspace}}",
+    "searchPlaceholder": "Поиск и фильтр",
+    "notFound": "Контакты не найдены.",
+    "columns": {
+      "contact": "Контакт"
+    },
+    "drawer": {
+      "leadsAndLast": "Лидов: {{count}} • Последний: {{last}}",
+      "contactsSection": "Контакты",
+      "projectsSection": "Проекты",
+      "notSelected": "Контакт не выбран."
+    }
+  },
+  "analytics": {
+    "title": "Аналитика",
+    "subtitle": "Обзор ключевых метрик эффективности",
+    "subtitleWithWorkspace": "Обзор ключевых метрик • {{workspace}}",
+    "export": "Экспорт",
+    "views": {
+      "sales": "Продажи",
+      "finance": "Финансы",
+      "crm": "CRM"
+    },
+    "period": {
+      "last7": "Последние 7 дней",
+      "last30": "Последние 30 дней",
+      "quarter": "Текущий квартал",
+      "year": "Текущий год"
+    },
+    "loadError": "Не удалось загрузить аналитику.",
+    "sales": {
+      "totalLeads": "Лидов всего",
+      "funnelByStage": "Воронка (по стадиям)",
+      "noStageData": "Нет данных по стадиям.",
+      "sources": "Источники",
+      "noSourceData": "Нет данных по источникам."
+    },
+    "crm": {
+      "totalLeads": "Лидов всего",
+      "inFunnel": "В воронке",
+      "conversion": "Конверсия",
+      "sources": "Источников",
+      "funnelTitle": "Воронка продаж",
+      "sourceBreakdown": "Источники лидов"
+    },
+    "finance": {
+      "paid": "Получено",
+      "pending": "К выплате",
+      "payoutsCount": "Выплат",
+      "registry": "Реестр выплат",
+      "registryTitle": "Реестр комиссий",
+      "registryDescription": "Отслеживание статусов выплат вознаграждений от застройщиков. Данные обновляются автоматически при смене статуса сделки.",
+      "noPayouts": "Выплат нет.",
+      "pipeline": "К выплате (Pipeline)",
+      "inProgress": "В работе",
+      "dealsInWork": "сделок в работе",
+      "received": "Получено",
+      "success": "Успех",
+      "successDeals": "Успешные сделки",
+      "total": "Итого",
+      "allTime": "За всё время",
+      "export": "Экспорт",
+      "colAmount": "Сумма",
+      "colProject": "Проект",
+      "colDate": "Дата",
+      "colStatus": "Статус",
+      "statusPaid": "Выплачено",
+      "statusPending": "Ожидает"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "ID застройщика (из ссылки приглашения)",
+    "application": {
+      "title": "Заявка в агентскую сеть",
+      "fullName": "ФИО",
+      "phone": "Телефон",
+      "bankDetails": "Реквизиты",
+      "agreements": "Договоры",
+      "signature": "Подпись",
+      "drawSignature": "Нарисовать",
+      "uploadSignature": "Загрузить",
+      "clear": "Очистить",
+      "sign": "Подписать договор",
+      "submit": "Отправить заявку"
+    },
+    "status": {
+      "pending": "На проверке",
+      "approved": "Одобрено",
+      "rejected": "Отклонено"
+    }
+  }
+}
+

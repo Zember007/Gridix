@@ -1011,7 +1011,9 @@ async function handleImpersonate(supabaseClient: any, userId: string, clientId?:
       type: 'magiclink',
       email: clientUser.user.email!,
       options: {
-        redirectTo: `${Deno.env.get('SITE_URL')}admin`
+        // Preserve partner's own session in other tabs:
+        // the app will switch to a tab-scoped auth storage when `tab_session=1` is present.
+        redirectTo: `${Deno.env.get('SITE_URL')}admin?tab_session=1`
       }
     })
 

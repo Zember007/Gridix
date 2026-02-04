@@ -1,29 +1,37 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X, User, Phone, Mail, Clock, CheckCircle2, Ban, Search } from 'lucide-react';
+import { X, User, Phone, Mail, Clock, CheckCircle2, Ban, Search, FileText, AlertTriangle } from 'lucide-react';
 import { AgencyPartner } from './types';
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
+import { toast } from "sonner";
 
 interface Props {
     partner: AgencyPartner | null;
     onClose: () => void;
     onUpdate: (id: string, data: Partial<AgencyPartner>) => void;
     onPayout: (partner: AgencyPartner) => void;
+    developerId?: string | null;
 }
 
 type Tab = 'overview' | 'leads' | 'finance' | 'settings';
 
-export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onPayout }) => {
+export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onPayout, developerId }) => {
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [leadsSearch, setLeadsSearch] = useState('');
+    const [rejectionReasonDraft, setRejectionReasonDraft] = useState('');
+    const partnerId = partner?.id ?? null;
+
+    useEffect(() => {
+        setRejectionReasonDraft(partner?.rejectionReason ?? '');
+    }, [partnerId, partner?.rejectionReason]);
 
     const partnerLeadsQuery = useQuery({
-        queryKey: ['partner_leads', partner?.id],
-        enabled: activeTab === 'leads' && !!partner?.id,
+        queryKey: ['partner_leads', partnerId],
+        enabled: activeTab === 'leads' && !!partnerId,
         queryFn: async () => {
-            if (!partner?.id) return [];
+            if (!partnerId) return [];
             const { data, error } = await supabase
                 .from('leads')
                 .select(
@@ -39,7 +47,7 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
           apartments ( apartment_number, area, price )
         `,
                 )
-                .eq('agent_id', partner.id)
+                .eq('agent_id', partnerId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -60,18 +68,41 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
         });
     }, [leadsSearch, partnerLeadsQuery.data]);
 
+    const applicationDetailsQuery = useQuery({
+        queryKey: ['agent_application', partnerId],
+        enabled: !!partnerId,
+        queryFn: async () => {
+            if (!partnerId) return null;
+            const { data, error } = await supabase
+                .from('agent_applications')
+                .select('id, developer_user_id, agreement_signed, agreement_signed_at, signature_path, signature_method, commission_rate')
+                .eq('id', partnerId)
+                .single();
+            if (error) throw error;
+            return data as any;
+        },
+    });
+
+    const signatureUrl = useMemo(() => {
+        const path = (applicationDetailsQuery.data as any)?.signature_path;
+        if (!path) return null;
+        return supabase.storage.from('project-images').getPublicUrl(String(path)).data.publicUrl;
+    }, [applicationDetailsQuery.data]);
+
     if (!partner) return null;
 
     const statusColors = {
         active: 'bg-green-100 text-green-700',
         pending: 'bg-amber-100 text-amber-700',
-        blocked: 'bg-red-100 text-red-700'
+        needs_correction: 'bg-orange-100 text-orange-700',
+        blocked: 'bg-red-100 text-red-700',
     };
 
     const StatusIcon = {
         active: CheckCircle2,
         pending: Clock,
-        blocked: Ban
+        needs_correction: AlertTriangle,
+        blocked: Ban,
     }[partner.status];
 
     return (
@@ -133,6 +164,22 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
                                     <div className="text-2xl font-black text-amber-600 font-mono">${partner.stats.commissionPending.toLocaleString()}</div>
                                 </div>
                             </div>
+
+                            {partner.status === 'needs_correction' && (
+                                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="text-orange-700 mt-0.5">
+                                            <AlertTriangle size={18} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-bold text-orange-900">Требуется доработка</div>
+                                            <div className="text-xs text-orange-800 mt-1 whitespace-pre-wrap">
+                                                {partner.rejectionReason ? partner.rejectionReason : '—'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                                 <h3 className="font-bold text-slate-900 mb-4">Контакты и Реквизиты</h3>
@@ -294,6 +341,52 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
                     {activeTab === 'settings' && (
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
                             <div>
+                                <h4 className="text-sm font-bold text-slate-900 mb-3">Проверка анкеты</h4>
+                                <div className="flex flex-wrap gap-3 items-center">
+                                    <Button
+                                        onClick={() => onUpdate(partner.id, { status: 'active' })}
+                                        className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                                    >
+                                        <CheckCircle2 size={16} /> Активировать
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => onUpdate(partner.id, { status: 'pending', rejectionReason: undefined })}
+                                        className="font-bold"
+                                    >
+                                        <Clock size={16} /> Вернуть в ожидание
+                                    </Button>
+                                </div>
+
+                                <div className="mt-4">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                                        Причина доработки (видит агент)
+                                    </label>
+                                    <textarea
+                                        value={rejectionReasonDraft}
+                                        onChange={(e) => setRejectionReasonDraft(e.target.value)}
+                                        rows={3}
+                                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                                        placeholder="Например: приложите подпись, уточните реквизиты..."
+                                    />
+                                    <div className="mt-2 flex gap-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                onUpdate(partner.id, {
+                                                    status: 'needs_correction',
+                                                    rejectionReason: rejectionReasonDraft,
+                                                })
+                                            }
+                                            className="font-bold"
+                                        >
+                                            <AlertTriangle size={16} /> Отправить на доработку
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Размер комиссии (%)</label>
                                 <div className="flex gap-2">
                                     {[3, 4, 5, 6].map(rate => (
@@ -309,16 +402,55 @@ export const PartnerDrawer: React.FC<Props> = ({ partner, onClose, onUpdate, onP
                             </div>
 
                             <div className="pt-6 border-t border-slate-100">
-                                <h4 className="text-sm font-bold text-slate-900 mb-4">Управление доступом</h4>
+                                <h4 className="text-sm font-bold text-slate-900 mb-4">Управление агентом</h4>
                                 <div className="flex gap-3">
                                     <Button
                                         variant="outline"
-                                        onClick={() => onUpdate(partner.id, { status: partner.status === 'blocked' ? 'active' : 'blocked' })}
+                                        onClick={() =>
+                                            onUpdate(partner.id, {
+                                                status: partner.status === 'blocked' ? 'pending' : 'blocked',
+                                                rejectionReason: partner.status === 'blocked' ? undefined : partner.rejectionReason,
+                                            })
+                                        }
                                         className="font-bold flex items-center gap-2"
                                     >
                                         <Ban size={16} /> {partner.status === 'blocked' ? 'Разблокировать' : 'Заблокировать доступ'}
                                     </Button>
                                 </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-100">
+                                <h4 className="text-sm font-bold text-slate-900 mb-2">Доступ к проектам</h4>
+                                <div className="text-sm text-slate-600">
+                                    Доступ больше не настраивается вручную. Агент получает доступ ко всем проектам застройщика автоматически.
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-100 space-y-3">
+                                <h4 className="text-sm font-bold text-slate-900">Подпись и договор</h4>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${partner.agreementSigned ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                                        <FileText size={18} />
+                                    </div>
+                                    <div className="text-sm">
+                                        <div className="font-bold text-slate-900">
+                                            {partner.agreementSigned ? 'Договор принят' : 'Договор не принят'}
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            {applicationDetailsQuery.data?.agreement_signed_at
+                                                ? `Дата: ${new Date(String((applicationDetailsQuery.data as any).agreement_signed_at)).toLocaleString()}`
+                                                : '—'}
+                                        </div>
+                                    </div>
+                                </div>
+                                {signatureUrl ? (
+                                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                                        <div className="text-xs text-slate-500 mb-2">Подпись</div>
+                                        <img src={signatureUrl} alt="Signature" className="max-h-32 w-auto" />
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-slate-500">Подпись не загружена.</div>
+                                )}
                             </div>
                         </div>
                     )}

@@ -12,111 +12,179 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
-      agent_access: {
+      agent_application_contracts: {
         Row: {
-          agent_id: string | null
+          application_id: string
+          contract_template_path: string
           created_at: string
           id: string
-          project_id: string | null
+          signature_meta: Json | null
+          signature_path: string
+          signed_at: string
+          signed_contract_mime: string
+          signed_contract_path: string
+          template_id: number | null
+          template_lang: string | null
         }
         Insert: {
-          agent_id?: string | null
+          application_id: string
+          contract_template_path: string
           created_at?: string
           id?: string
-          project_id?: string | null
+          signature_meta?: Json | null
+          signature_path: string
+          signed_at?: string
+          signed_contract_mime: string
+          signed_contract_path: string
+          template_id?: number | null
+          template_lang?: string | null
         }
         Update: {
-          agent_id?: string | null
+          application_id?: string
+          contract_template_path?: string
           created_at?: string
           id?: string
-          project_id?: string | null
+          signature_meta?: Json | null
+          signature_path?: string
+          signed_at?: string
+          signed_contract_mime?: string
+          signed_contract_path?: string
+          template_id?: number | null
+          template_lang?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "agent_access_agent_id_fkey"
-            columns: ["agent_id"]
+            foreignKeyName: "agent_application_contracts_application_id_fkey"
+            columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "agent_applications"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "agent_access_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "agent_application_contracts_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "agent_contract_templates"
             referencedColumns: ["id"]
           },
         ]
       }
       agent_applications: {
         Row: {
+          agent_user_id: string | null
           agreement_signed: boolean | null
+          agreement_signed_at: string | null
           bank_details: Json | null
+          company_name: string | null
           commission_rate: number | null
+          contract_template_path: string | null
           created_at: string
           developer_user_id: string | null
           email: string
           full_name: string
           id: string
+          legal_address: string | null
           phone: string
+          rejection_reason: string | null
           reviewed_at: string | null
+          signature_meta: Json
+          signature_method: string | null
+          signature_path: string | null
+          signed_contract_created_at: string | null
+          signed_contract_mime: string | null
+          signed_contract_path: string | null
           status: string
+          tax_id: string | null
           type: string | null
         }
         Insert: {
+          agent_user_id?: string | null
           agreement_signed?: boolean | null
+          agreement_signed_at?: string | null
           bank_details?: Json | null
+          company_name?: string | null
           commission_rate?: number | null
+          contract_template_path?: string | null
           created_at?: string
           developer_user_id?: string | null
           email: string
           full_name: string
           id?: string
+          legal_address?: string | null
           phone: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
+          signature_meta?: Json
+          signature_method?: string | null
+          signature_path?: string | null
+          signed_contract_created_at?: string | null
+          signed_contract_mime?: string | null
+          signed_contract_path?: string | null
           status?: string
+          tax_id?: string | null
           type?: string | null
         }
         Update: {
+          agent_user_id?: string | null
           agreement_signed?: boolean | null
+          agreement_signed_at?: string | null
           bank_details?: Json | null
+          company_name?: string | null
           commission_rate?: number | null
+          contract_template_path?: string | null
           created_at?: string
           developer_user_id?: string | null
           email?: string
           full_name?: string
           id?: string
+          legal_address?: string | null
           phone?: string
+          rejection_reason?: string | null
           reviewed_at?: string | null
+          signature_meta?: Json
+          signature_method?: string | null
+          signature_path?: string | null
+          signed_contract_created_at?: string | null
+          signed_contract_mime?: string | null
+          signed_contract_path?: string | null
           status?: string
+          tax_id?: string | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      agent_contract_templates: {
+        Row: {
+          content_html: string | null
+          created_at: string
+          developer_user_id: string
+          id: number
+          lang: string
+          name: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          content_html?: string | null
+          created_at?: string
+          developer_user_id: string
+          id?: number
+          lang?: string
+          name: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          content_html?: string | null
+          created_at?: string
+          developer_user_id?: string
+          id?: number
+          lang?: string
+          name?: string
+          storage_path?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -154,6 +222,65 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_program_settings: {
+        Row: {
+          created_at: string
+          default_commission_rate: number
+          developer_signature_path: string | null
+          developer_stamp_path: string | null
+          developer_user_id: string
+          lead_lock_days: number
+          payout_terms: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_commission_rate?: number
+          developer_signature_path?: string | null
+          developer_stamp_path?: string | null
+          developer_user_id: string
+          lead_lock_days?: number
+          payout_terms?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_commission_rate?: number
+          developer_signature_path?: string | null
+          developer_stamp_path?: string | null
+          developer_user_id?: string
+          lead_lock_days?: number
+          payout_terms?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      apartment_daily_views: {
+        Row: {
+          apartment_id: string
+          day: string
+          views: number
+        }
+        Insert: {
+          apartment_id: string
+          day: string
+          views?: number
+        }
+        Update: {
+          apartment_id?: string
+          day?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_daily_views_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
             referencedColumns: ["id"]
           },
         ]
@@ -1457,6 +1584,189 @@ export type Database = {
           },
         ]
       }
+      notification_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          job_id: string | null
+          onesignal_message_id: string | null
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          job_id?: string | null
+          onesignal_message_id?: string | null
+          payload?: Json
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          job_id?: string | null
+          onesignal_message_id?: string | null
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "notification_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_jobs: {
+        Row: {
+          attempts: number
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          locale: string
+          max_attempts: number
+          onesignal_message_id: string | null
+          payload: Json
+          recipient_email: string | null
+          recipient_user_id: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_job_status"]
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          locale?: string
+          max_attempts?: number
+          onesignal_message_id?: string | null
+          payload?: Json
+          recipient_email?: string | null
+          recipient_user_id: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_job_status"]
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          locale?: string
+          max_attempts?: number
+          onesignal_message_id?: string | null
+          payload?: Json
+          recipient_email?: string | null
+          recipient_user_id?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_job_status"]
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_jobs_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_templates: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          html_template: string
+          id: number
+          is_active: boolean
+          key: string
+          locale: string
+          schema: Json
+          subject_template: string
+          updated_at: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          html_template: string
+          id?: number
+          is_active?: boolean
+          key: string
+          locale?: string
+          schema?: Json
+          subject_template: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          html_template?: string
+          id?: number
+          is_active?: boolean
+          key?: string
+          locale?: string
+          schema?: Json
+          subject_template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      onesignal_user_links: {
+        Row: {
+          created_at: string
+          email: string
+          email_subscription_id: string | null
+          enabled: boolean
+          last_error: string | null
+          last_synced_at: string | null
+          onesignal_id: string | null
+          supabase_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_subscription_id?: string | null
+          enabled?: boolean
+          last_error?: string | null
+          last_synced_at?: string | null
+          onesignal_id?: string | null
+          supabase_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_subscription_id?: string | null
+          enabled?: boolean
+          last_error?: string | null
+          last_synced_at?: string | null
+          onesignal_id?: string | null
+          supabase_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onesignal_user_links_supabase_user_id_fkey"
+            columns: ["supabase_user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_clicks: {
         Row: {
           created_at: string
@@ -1841,6 +2151,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_custom_fields_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_daily_metrics: {
+        Row: {
+          day: string
+          leads: number
+          project_id: string
+          views: number
+        }
+        Insert: {
+          day: string
+          leads?: number
+          project_id: string
+          views?: number
+        }
+        Update: {
+          day?: string
+          leads?: number
+          project_id?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_daily_metrics_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -2354,39 +2693,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notification_templates: {
-        Row: {
-          channel: string
-          created_at: string
-          html_template: string
-          id: number
-          is_active: boolean
-          key: string
-          locale: string
-          subject_template: string
-        }
-        Insert: {
-          channel: string
-          created_at?: string
-          html_template: string
-          id?: number
-          is_active?: boolean
-          key: string
-          locale: string
-          subject_template: string
-        }
-        Update: {
-          channel?: string
-          created_at?: string
-          html_template?: string
-          id?: number
-          is_active?: boolean
-          key?: string
-          locale?: string
-          subject_template?: string
-        }
-        Relationships: []
-      }
       tags: {
         Row: {
           color: string | null
@@ -2522,7 +2828,10 @@ export type Database = {
           id: string
           is_vat_payer: boolean | null
           legal_address: string | null
+          marketing_emails_consent: boolean
           partner_id: string | null
+          password_set_at: string | null
+          person_type: string | null
           phone: string | null
           preferred_locale: string
           tax_id: string | null
@@ -2541,7 +2850,10 @@ export type Database = {
           id: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          marketing_emails_consent?: boolean
           partner_id?: string | null
+          password_set_at?: string | null
+          person_type?: string | null
           phone?: string | null
           preferred_locale?: string
           tax_id?: string | null
@@ -2560,7 +2872,10 @@ export type Database = {
           id?: string
           is_vat_payer?: boolean | null
           legal_address?: string | null
+          marketing_emails_consent?: boolean
           partner_id?: string | null
+          password_set_at?: string | null
+          person_type?: string | null
           phone?: string | null
           preferred_locale?: string
           tax_id?: string | null
@@ -2728,6 +3043,7 @@ export type Database = {
         Returns: undefined
       }
       crm_run_automation_jobs: { Args: { p_limit?: number }; Returns: Json }
+      empty_admin_analytics: { Args: never; Returns: Json }
       ensure_unique_slug: {
         Args: { base_slug: string; project_id?: string }
         Returns: string
@@ -2738,6 +3054,17 @@ export type Database = {
         Returns: string
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_admin_analytics: {
+        Args: {
+          p_auth_user_id: string
+          p_developer_id?: string
+          p_end_ts?: string
+          p_is_manager_mode?: boolean
+          p_selected_project_id?: string
+          p_start_ts?: string
+        }
+        Returns: Json
+      }
       get_partner_commission_percentage: {
         Args: { p_link_type: string; partner_id_param: string }
         Returns: number
@@ -2774,6 +3101,8 @@ export type Database = {
         | "task_completion"
         | "automation"
       lead_task_type: "call" | "meeting" | "message" | "payment" | "other"
+      notification_channel: "email"
+      notification_job_status: "queued" | "sending" | "sent" | "failed"
       project_type: "building" | "object"
     }
     CompositeTypes: {
@@ -2900,9 +3229,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],
@@ -2918,6 +3244,8 @@ export const Constants = {
         "automation",
       ],
       lead_task_type: ["call", "meeting", "message", "payment", "other"],
+      notification_channel: ["email"],
+      notification_job_status: ["queued", "sending", "sent", "failed"],
       project_type: ["building", "object"],
     },
   },

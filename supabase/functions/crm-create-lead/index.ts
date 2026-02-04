@@ -327,6 +327,92 @@ serve(async (req) => {
 
     const projectOwnerId = String((apartment as any)?.projects?.user_id ?? "");
 
+    // Lead Lock (Agent protection): if request includes agentId, prevent duplicates
+    // across developer projects for a configurable time window.
+    const agentId = typeof body.agentId === "string" && body.agentId ? String(body.agentId) : null;
+    if (agentId) {
+      const { data: agentApp, error: agentErr } = await svc
+        .from("agent_applications")
+        .select("id, developer_user_id")
+        .eq("id", agentId)
+        .maybeSingle();
+      if (agentErr) throw agentErr;
+      if (!agentApp?.id) {
+        return createJsonResponse({ error: "Invalid agentId" }, 400, origin);
+      }
+
+      const developerId = agentApp.developer_user_id ? String(agentApp.developer_user_id) : null;
+      if (!developerId) {
+        return createJsonResponse({ error: "Invalid agent application (missing developer)" }, 400, origin);
+      }
+
+      // Ensure agent belongs to this developer/project
+      if (developerId !== projectOwnerId) {
+        return createJsonResponse({ error: "Agent not allowed for this project" }, 403, origin);
+      }
+
+      const { data: settings, error: settingsErr } = await svc
+        .from("agent_program_settings")
+        .select("lead_lock_days")
+        .eq("developer_user_id", developerId)
+        .maybeSingle();
+      if (settingsErr) throw settingsErr;
+      const leadLockDays = typeof (settings as any)?.lead_lock_days === "number" ? Number((settings as any).lead_lock_days) : 30;
+      const cutoffIso = new Date(Date.now() - Math.max(0, leadLockDays) * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: devProjects, error: devProjErr } = await svc
+        .from("projects")
+        .select("id")
+        .eq("user_id", developerId);
+      if (devProjErr) throw devProjErr;
+      const devProjectIds = (devProjects ?? []).map((p: any) => String(p.id)).filter(Boolean);
+
+      if (devProjectIds.length > 0) {
+        // Check by email first
+        const checkEmail = async () => {
+          const { data } = await svc
+            .from("leads")
+            .select("id, agent_id, created_at, project_id")
+            .in("project_id", devProjectIds)
+            .eq("email", email)
+            .gte("created_at", cutoffIso)
+            .order("created_at", { ascending: false })
+            .limit(5);
+          return (data ?? []) as Array<{ id: string; agent_id: string | null }>;
+        };
+
+        const checkPhone = async () => {
+          const { data } = await svc
+            .from("leads")
+            .select("id, agent_id, created_at, project_id")
+            .in("project_id", devProjectIds)
+            .eq("phone", phone)
+            .gte("created_at", cutoffIso)
+            .order("created_at", { ascending: false })
+            .limit(5);
+          return (data ?? []) as Array<{ id: string; agent_id: string | null }>;
+        };
+
+        const candidates = [
+          ...(await checkEmail()),
+          ...(await checkPhone()),
+        ];
+
+        const blocked = candidates.find((l) => {
+          const a = l.agent_id ? String(l.agent_id) : null;
+          return !a || a !== agentId;
+        });
+
+        if (blocked) {
+          return createJsonResponse(
+            { error: "client_locked", message: "Клиент уже зафиксирован у застройщика", leadId: blocked.id },
+            409,
+            origin,
+          );
+        }
+      }
+    }
+
     // Load CRM configs
     const { data: amoSettingsRows } = await svc
       .from("project_crm_settings")

@@ -5,7 +5,8 @@ export interface AgencyPartner {
     contactPerson: string;
     phone: string;
     email: string;
-    status: 'active' | 'pending' | 'blocked';
+    status: 'active' | 'pending' | 'blocked' | 'needs_correction';
+    rejectionReason?: string;
     commissionRate: number;
     source: string;
     joinedAt: string;
@@ -33,6 +34,10 @@ export interface PartnerPayout {
 
 export interface PartnerFilter {
     search: string;
-    status: 'all' | 'active' | 'pending' | 'blocked';
+    status: 'all' | 'active' | 'pending' | 'blocked' | 'needs_correction';
     type: 'all' | 'agency' | 'individual';
+    minCommission?: number;
+    maxCommission?: number;
+    dateFrom?: string;
+    dateTo?: string;
 }

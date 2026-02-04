@@ -32,13 +32,10 @@ export const useFloorPolygons = ({
               if (!found || apt.floor_number !== floor) return apt;
               return {
                 ...apt,
-                polygon: Array.isArray(
-                  // @ts-ignore polygon may come from raw supabase type
-                  found.polygon,
-                )
-                  ? // @ts-ignore polygon may come from raw supabase type
-                  (found.polygon as { x: number; y: number }[])
-                  : apt.polygon,
+                polygon: (() => {
+                  const raw = (found as unknown as { polygon?: unknown }).polygon;
+                  return Array.isArray(raw) ? (raw as { x: number; y: number }[]) : apt.polygon;
+                })(),
               };
             }),
           );
@@ -67,13 +64,10 @@ export const useFloorPolygons = ({
               if (!found) return apt;
               return {
                 ...apt,
-                polygon: Array.isArray(
-                  // @ts-ignore polygon is from supabase
-                  found.polygon,
-                )
-                  ? // @ts-ignore polygon is from supabase
-                  (found.polygon as { x: number; y: number }[])
-                  : [],
+                polygon: (() => {
+                  const raw = (found as unknown as { polygon?: unknown }).polygon;
+                  return Array.isArray(raw) ? (raw as { x: number; y: number }[]) : [];
+                })(),
               };
             }),
           );

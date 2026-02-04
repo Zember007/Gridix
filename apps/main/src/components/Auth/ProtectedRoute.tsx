@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
 import { supabase } from "@gridix/utils/api";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
+import { hasUserPassword, hasAuthTokensInHash } from "@gridix/utils";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,8 +14,9 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) => {
   const { user, loading, requiresPasswordSetup } = useAuth();
   const location = useLocation();
-  const [ssoHandled, setSsoHandled] = useState(false);
-  const [ssoProcessing, setSsoProcessing] = useState(false);
+  const [passwordGateLoading, setPasswordGateLoading] = useState(false);
+  const [needsPasswordSet, setNeedsPasswordSet] = useState(false);
+  const currentLanguage = useMemo(() => getLanguageFromPath(location.pathname), [location.pathname]);
 
   // Если открылись из amoCRM без SSO — сохраняем параметры установки в localStorage,
   // чтобы не потерять их при редиректе на /auth/signup
@@ -41,98 +43,45 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
     }
   }, [location.search]);
 
-  // Обработка SSO-токена из query-параметра ?sso=
-  // Используем Bring Your Own JWT подход: обмениваем custom JWT на полноценную сессию
+  // Проверяем, требуется ли установка пароля (через RPC, без localStorage хаков).
+  // ВАЖНО: этот useEffect должен быть до любых ранних return'ов,
+  // иначе нарушится порядок хуков при изменении `loading`.
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const ssoToken = searchParams.get('sso');
-
-    if (!ssoToken || ssoHandled || user) {
-      setSsoProcessing(false);
-      return;
-    }
-
-    setSsoHandled(true);
-    setSsoProcessing(true);
-
-    (async () => {
-      try {
-        // Verify and decode the signed SSO token
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        
-        if (!supabaseUrl) {
-          console.error('Missing Supabase configuration');
-          setSsoProcessing(false);
-          return;
-        }
-
-        const { data: sessionData , error } = await supabase.functions.invoke('amocrm-sso-login', {
-          body: {
-            action: 'verify',
-            token: ssoToken,
-          }
-        });
-
-        if (error) {
-          console.error('Failed to verify SSO token:', error);
-          setSsoProcessing(false);
-          return;
-        }
-
-        
-        // Set session with the returned tokens
-        const { error: setError } = await supabase.auth.setSession({
-          access_token: sessionData.access_token,
-          refresh_token: sessionData.refresh_token,
-        });
-
-        if (setError) {
-          console.error('Error setting session:', setError);
-          setSsoProcessing(false);
-          return;
-        }
-
-
-        // Очищаем sso из URL, чтобы избежать повторной обработки и утечки токена в историю
-        const newSearch = new URLSearchParams(location.search);
-        newSearch.delete('sso');
-        const newSearchString = newSearch.toString();
-        const newUrl =
-          location.pathname + (newSearchString ? `?${newSearchString}` : '') + location.hash;
-        window.history.replaceState({}, '', newUrl);
-        
-        setSsoProcessing(false);
-      } catch (e) {
-        console.error('Failed to process SSO token:', e);
-        // В случае ошибки тоже очищаем параметр
-        const newSearch = new URLSearchParams(location.search);
-        newSearch.delete('sso');
-        const newSearchString = newSearch.toString();
-        const newUrl =
-          location.pathname + (newSearchString ? `?${newSearchString}` : '') + location.hash;
-        window.history.replaceState({}, '', newUrl);
-        setSsoProcessing(false);
+    let cancelled = false;
+    const run = async () => {
+      if (loading || !requireAuth || !user?.id) {
+        setNeedsPasswordSet(false);
+        setPasswordGateLoading(false);
+        return;
       }
-    })();
-  }, [location.pathname, location.search, location.hash, ssoHandled, user]);
+      try {
+        setPasswordGateLoading(true);
+        const hasPassword = await hasUserPassword(supabase as any);
+        if (!cancelled) setNeedsPasswordSet(!hasPassword || requiresPasswordSetup);
+      } catch (e) {
+        // If RPC fails, fall back to requiresPasswordSetup only.
+        if (!cancelled) setNeedsPasswordSet(!!requiresPasswordSetup);
+      } finally {
+        if (!cancelled) setPasswordGateLoading(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, requireAuth, user?.id, requiresPasswordSetup]);
 
-  const searchParams = new URLSearchParams(location.search);
-  const hasSso = searchParams.has('sso');
-
-  // Показываем loading если:
-  // 1. Идет загрузка auth состояния
-  // 2. Есть SSO токен, но он еще обрабатывается
-  // 3. Есть SSO токен, но пользователь еще не авторизован и обработка еще не завершена
-  if (loading || ssoProcessing || (hasSso && !user && !ssoHandled)) {
+  if (loading) {
     return <FullPageLoaderView />;
   }
 
-  // Редиректим на /auth только если:
-  // 1. Требуется авторизация
-  // 2. Пользователь не авторизован
-  // 3. НЕТ SSO токена в URL (или он уже обработан)
-  // 4. Обработка SSO не идет
-  if (requireAuth && !user && !hasSso && !ssoProcessing) {
+  // Редиректим на отдельное приложение авторизации (VITE_SSO_URL) или на локальный /auth.
+  if (requireAuth && !user) {
+    // В URL уже есть токены (hash или ?code=) — не редиректим на SSO, даём время применить сессию.
+    if (typeof window !== "undefined" && (hasAuthTokensInHash() || new URLSearchParams(location.search).get("code"))) {
+      return <FullPageLoaderView />;
+    }
+
     const amoParams = new URLSearchParams(location.search);
     const hasAmoInstall =
       amoParams.get('amo_install') === '1' ||
@@ -140,21 +89,41 @@ export const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteP
       amoParams.has('amo_user_id') ||
       amoParams.has('amo_subdomain');
 
-    // Получаем текущий язык из URL и создаем правильный путь для авторизации
-    const currentLanguage = getLanguageFromPath(location.pathname);
-    const authPath = addLanguageToPath(hasAmoInstall ? '/auth/signup' : '/auth', currentLanguage);
+    const ssoBase = (import.meta as any).env?.VITE_SSO_URL as string | undefined;
+    if (typeof ssoBase === 'string' && ssoBase.trim()) {
+      const base = ssoBase.trim().endsWith('/') ? ssoBase.trim().slice(0, -1) : ssoBase.trim();
+      const fullCurrent = window.location.origin + location.pathname + (location.search || '');
 
-    // Сохраняем полный redirect (pathname+search), чтобы после регистрации вернуться в нужную страницу,
-    // а query с amo-параметрами не потерялся
-    const redirectValue = location.pathname + (location.search || '');
+      // Полный редирект на другое приложение (не Navigate — иначе остаёмся на том же origin).
+      const ssoToken = amoParams.get("sso");
+      if (ssoToken) {
+        const withoutSso = new URL(fullCurrent);
+        withoutSso.searchParams.delete("sso");
+        window.location.replace(
+          `${base}/${currentLanguage}/auth/callback?sso=${encodeURIComponent(ssoToken)}&redirect_to=${encodeURIComponent(withoutSso.toString())}`
+        );
+        return <FullPageLoaderView />;
+      }
+
+      const authPath = hasAmoInstall ? "auth/signup" : "auth";
+      window.location.replace(
+        `${base}/${currentLanguage}/${authPath}?redirect_to=${encodeURIComponent(fullCurrent)}`
+      );
+      return <FullPageLoaderView />;
+    }
+
+    // VITE_SSO_URL не задан: редирект на локальные страницы авторизации в main (legacy).
+    const authPath = addLanguageToPath(hasAmoInstall ? "/auth/signup" : "/auth", currentLanguage);
+    const redirectValue = location.pathname + (location.search || "");
     return <Navigate to={`${authPath}?redirect=${encodeURIComponent(redirectValue)}`} replace />;
   }
 
-  // Проверяем, требуется ли установка пароля
-  if (requireAuth && user && (requiresPasswordSetup || localStorage.getItem('password_set_required') === 'true')) {
-    const currentLanguage = getLanguageFromPath(location.pathname);
-    const setPasswordPath = addLanguageToPath('/set-password', currentLanguage);
-    return <Navigate to={`${setPasswordPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  if (requireAuth && user) {
+    if (passwordGateLoading) return <FullPageLoaderView />;
+    if (needsPasswordSet) {
+      const setPasswordPath = addLanguageToPath('/set-password', currentLanguage);
+      return <Navigate to={`${setPasswordPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    }
   }
 
   return <>{children}</>;

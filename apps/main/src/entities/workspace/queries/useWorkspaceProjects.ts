@@ -8,6 +8,7 @@ import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
 export interface Project {
   id: string;
   name: string;
+  address?: string | null;
   description: string | null;
   floors: number;
   slug: string | null;
@@ -57,7 +58,7 @@ export const useWorkspaceProjects = () => {
           }
 
           // Загружаем проекты застройщика, ограниченные списком доступных проектов
-          let query = supabase
+          const query = supabase
             .from('projects')
             .select(`
               *,

@@ -1,10 +1,11 @@
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from "@gridix/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import { Loader } from "@gridix/ui";
-import { Building2, Plus, Trash2, Eye, Edit3, Building } from 'lucide-react';
+import { SharedProjectDrawer, type SharedProject } from "@gridix/ui";
+import { Building2, Plus, Trash2, Eye, Edit3, Building, Info, ShieldCheck, Globe, Save, Percent, FileText, Image as ImageIcon, PlayCircle, Hammer, X, Handshake } from 'lucide-react';
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useWorkspaceProjects } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { useProjectCRUD } from '@/entities/project/queries/useProjects';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 import { LeadsStats } from '@/components/admin/LeadsNotification';
 import { Project } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
+import { supabase } from "@gridix/utils/api";
 
 
 interface ProjectListProps {
@@ -46,6 +48,9 @@ const ProjectList = ({
   const { projects, loading, refresh, isManagerMode } = useWorkspaceProjects();
   const { deleteProject: deleteProjectCRUD } = useProjectCRUD();
   const { amoWidget } = useAmoWidget();
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [drawerProject, setDrawerProject] = useState<SharedProject | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
   const isCrmMode = mode === 'crm';
 
@@ -65,9 +70,8 @@ const ProjectList = ({
       return;
     }
 
-    // Менеджеры не могут удалять проекты
     if (isManagerMode) {
-      toast.error('Менеджеры не могут удалять проекты');
+      toast.error(t('projectList.managersCannotDelete'));
       return;
     }
 
@@ -88,14 +92,18 @@ const ProjectList = ({
       : `${prefix}/embed/project/id/${project.id}`;
   };
 
+  const getPublicProjectUrl = (project: Project) => {
+    return project.slug
+      ? `/${language}/project/${project.slug}`
+      : `/${language}/project/id/${project.id}`;
+  };
+
   const viewProject = (project: Project) => {
     // CRM opens embed in the same tab; admin opens public page in new tab
     const base =
       isCrmMode
         ? getEmbedProjectUrl(project)
-        : project.slug
-          ? `/${language}/project/${project.slug}`
-          : `/${language}/project/id/${project.id}`;
+        : getPublicProjectUrl(project);
 
     const url = new URL(base, window.location.origin);
     if (isCrmMode && crmQueryParams) {
@@ -105,6 +113,546 @@ const ProjectList = ({
       }
     }
     window.open(url.toString(), isCrmMode ? '_self' : '_blank');
+  };
+
+  // Convert Project to SharedProject for the drawer
+  const toSharedProject = (project: Project): SharedProject => ({
+    id: project.id,
+    name: project.name,
+    imageUrl: project.building_image_url ?? undefined,
+    location: project.address ?? undefined,
+    description: project.description ?? undefined,
+    floors: project.floors ?? undefined,
+    partnershipStatus: 'active',
+  });
+
+  const mapApiProjectToShared = (p: any): SharedProject => {
+    const partnershipSettings = p?.partnershipSettings
+      ? {
+          isEnabled: Boolean(p.partnershipSettings.isEnabled),
+          allowPartnerConnect: p.partnershipSettings.allowPartnerConnect === false ? false : true,
+          commissionType: (p.partnershipSettings.commissionType === "fixed" ? "fixed" : "percent") as "fixed" | "percent",
+          commissionValue: Number(p.partnershipSettings.commissionValue ?? 5),
+          payoutCondition: p.partnershipSettings.payoutCondition ?? undefined,
+          contractUrl: p.partnershipSettings.contractUrl ?? undefined,
+        }
+      : undefined;
+
+    const commissionPercent =
+      partnershipSettings?.commissionType === "percent" ? partnershipSettings.commissionValue : undefined;
+
+    return {
+      id: String(p?.id ?? ""),
+      name: String(p?.name ?? ""),
+      imageUrl: p?.imageUrl ? String(p.imageUrl) : undefined,
+      location: p?.location ? String(p.location) : undefined,
+      description: p?.description ? String(p.description) : undefined,
+      completionDate: p?.completionDate ? String(p.completionDate) : undefined,
+      floors: typeof p?.floors === "number" ? p.floors : p?.floors ? Number(p.floors) : undefined,
+      minPrice: p?.minPrice ? Number(p.minPrice) : undefined,
+      yield: p?.yield ? Number(p.yield) : undefined,
+      stats: p?.stats ?? undefined,
+      media: p?.media ?? undefined,
+      constructionProgress: p?.constructionProgress ?? undefined,
+      partnershipSettings,
+      partnershipStatus: "active",
+      commissionPercent,
+      commissionCondition: partnershipSettings?.payoutCondition,
+    };
+  };
+
+  const loadDrawerProject = async (projectId: string) => {
+    setDrawerLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("project-drawer", {
+        body: { action: "get_project_drawer", project_id: projectId },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error ?? "Failed to load project");
+      setDrawerProject(mapApiProjectToShared(data.project));
+    } catch (e) {
+      console.error("Failed to load drawer project", e);
+      toast.error("Не удалось загрузить данные проекта для сайдбара");
+      setDrawerProject(null);
+    } finally {
+      setDrawerLoading(false);
+    }
+  };
+
+  const handleOpenDrawer = (project: Project) => {
+    setSelectedProject(project);
+  };
+
+  const handleCloseDrawer = () => {
+    setSelectedProject(null);
+    setDrawerProject(null);
+  };
+
+  const handleOpenPublicPage = (p: SharedProject) => {
+    const project = projects.find((pr) => pr.id === p.id);
+    if (!project) return;
+    viewProject(project);
+  };
+
+  const handleNavigateToEditor = (projectId: string) => {
+    setSelectedProject(null);
+    setDrawerProject(null);
+    onEditProject?.(projectId, false);
+  };
+
+  useEffect(() => {
+    if (!selectedProject || isCrmMode) return;
+    void loadDrawerProject(selectedProject.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProject?.id, isCrmMode]);
+
+  const effectiveDrawerProject = useMemo(() => {
+    if (drawerProject) return drawerProject;
+    if (selectedProject) return toSharedProject(selectedProject);
+    return null;
+  }, [drawerProject, selectedProject]);
+
+  const DeveloperPartnersTab = ({ project }: { project: SharedProject }) => {
+    const initial = useMemo(
+      () =>
+        project.partnershipSettings ?? {
+          isEnabled: false,
+          allowPartnerConnect: true,
+          commissionType: "percent" as const,
+          commissionValue: 5,
+          payoutCondition: "",
+          contractUrl: "",
+        },
+      [project.partnershipSettings],
+    );
+
+    const [form, setForm] = useState(initial);
+    useEffect(() => setForm(initial), [initial, project.id]); // reset on project change / reload
+
+    const onSave = async () => {
+      try {
+        const { error } = await supabase.functions.invoke("project-drawer", {
+          body: {
+            action: "upsert_partnership_settings",
+            project_id: project.id,
+            settings: {
+              is_enabled: Boolean(form.isEnabled),
+              allow_partner_connect: Boolean(form.allowPartnerConnect ?? true),
+              commission_type: form.commissionType,
+              commission_value: Number(form.commissionValue ?? 0),
+              payout_condition: form.payoutCondition ?? null,
+              contract_url: form.contractUrl ?? null,
+            },
+          },
+        });
+        if (error) throw error;
+        toast.success("Условия партнёрской программы обновлены");
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to save partnership settings", e);
+        toast.error("Не удалось сохранить условия");
+      }
+    };
+
+    return (
+      <div className="p-6 space-y-6">
+        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
+          <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0 h-fit">
+            <ShieldCheck size={20} />
+          </div>
+          <div>
+            <h4 className="font-bold text-indigo-900 text-sm">{t('projectList.productConditions.title')}</h4>
+            <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+              {t('projectList.productConditions.description', { name: project.name })}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <Globe size={16} className="text-blue-600" /> {t('projectList.productConditions.publishInCatalog')}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">{t('projectList.productConditions.publishInCatalogDesc')}</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={Boolean(form.isEnabled)}
+              onChange={(e) => setForm((p) => ({ ...p, isEnabled: e.target.checked }))}
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+          </label>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <Handshake size={16} className="text-slate-700" /> {t('projectList.productConditions.allowBecomePartner')}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">
+              {t('projectList.productConditions.allowBecomePartnerDesc')}
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={form.allowPartnerConnect !== false}
+              onChange={(e) => setForm((p) => ({ ...p, allowPartnerConnect: e.target.checked }))}
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+          </label>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+            {t('projectList.productConditions.rewardConditions')}
+          </h4>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 mb-1.5 block">{t('projectList.productConditions.commissionTypeLabel')}</label>
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, commissionType: "percent" }))}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    form.commissionType === "percent" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"
+                  }`}
+                >
+                  {t('projectList.productConditions.commissionPercent')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, commissionType: "fixed" }))}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    form.commissionType === "fixed" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500"
+                  }`}
+                >
+                  {t('projectList.productConditions.commissionFixed')}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-500 mb-1.5 block">{t('projectList.productConditions.commissionSize')}</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={Number(form.commissionValue ?? 0)}
+                  onChange={(e) => setForm((p) => ({ ...p, commissionValue: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 outline-none focus:border-blue-500"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                  {form.commissionType === "percent" ? <Percent size={14} /> : "$"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-500 mb-1.5 block">{t('projectList.productConditions.payoutConditionsLabel')}</label>
+            <textarea
+              value={String(form.payoutCondition ?? "")}
+              onChange={(e) => setForm((p) => ({ ...p, payoutCondition: e.target.value }))}
+              placeholder={t('projectList.productConditions.payoutConditionPlaceholder')}
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500 min-h-[90px] resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-slate-100 flex justify-end">
+          <button
+            type="button"
+            onClick={onSave}
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Save size={16} /> {t('projectList.productConditions.apply')}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const DeveloperConstructionTab = ({ project }: { project: SharedProject }) => {
+    const [newTitle, setNewTitle] = useState("");
+    const [newDesc, setNewDesc] = useState("");
+    const [newDate, setNewDate] = useState(() => new Date().toISOString().split("T")[0]);
+
+    const addUpdate = async () => {
+      if (!newTitle.trim() || !newDesc.trim()) return;
+      try {
+        const { error } = await supabase.functions.invoke("project-drawer", {
+          body: {
+            action: "add_construction_update",
+            project_id: project.id,
+            date: newDate,
+            title: newTitle,
+            description: newDesc,
+            images: [],
+          },
+        });
+        if (error) throw error;
+        toast.success("Обновление добавлено");
+        setNewTitle("");
+        setNewDesc("");
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to add construction update", e);
+        toast.error("Не удалось добавить обновление");
+      }
+    };
+
+    const deleteUpdate = async (id: string) => {
+      try {
+        const { error } = await supabase.functions.invoke("project-drawer", {
+          body: { action: "delete_construction_update", project_id: project.id, id },
+        });
+        if (error) throw error;
+        toast.success("Удалено");
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to delete construction update", e);
+        toast.error("Не удалось удалить");
+      }
+    };
+
+    const updates = project.constructionProgress ?? [];
+
+    return (
+      <div className="p-6">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-8">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Добавить новость</h4>
+          <div className="space-y-3">
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              className="w-full p-2 border rounded text-sm"
+            />
+            <input
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Заголовок"
+              className="w-full p-2 border rounded text-sm"
+            />
+            <textarea
+              value={newDesc}
+              onChange={(e) => setNewDesc(e.target.value)}
+              placeholder="Описание…"
+              className="w-full p-2 border rounded text-sm h-20 resize-none"
+            />
+            <button
+              type="button"
+              onClick={addUpdate}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-colors"
+            >
+              <Plus size={16} /> Опубликовать
+            </button>
+          </div>
+        </div>
+
+        <div className="relative pl-4 border-l border-slate-200 space-y-8">
+          {updates.length === 0 && <div className="text-sm text-slate-400 italic pl-4">Нет обновлений</div>}
+          {updates.map((u) => (
+            <div key={u.id} className="relative pl-6">
+              <div className="absolute -left-[21px] top-1 w-3 h-3 bg-blue-500 rounded-full ring-4 ring-white" />
+              <div className="flex items-start justify-between gap-4">
+                <div className="grow">
+                  <div className="text-xs font-bold text-slate-400 mb-1">{new Date(u.date).toLocaleDateString()}</div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-1">{u.title}</h4>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 leading-relaxed">
+                    {u.description}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteUpdate(u.id)}
+                  className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                  title="Удалить"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const DeveloperMediaTab = ({ project }: { project: SharedProject }) => {
+    const [uploading, setUploading] = useState<null | "render" | "video" | "presentation">(null);
+
+    const uploadFiles = async (kind: "render" | "video" | "presentation", files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      if (!user) {
+        toast.error(t("projectList.authRequired"));
+        return;
+      }
+
+      setUploading(kind);
+      try {
+        for (const file of Array.from(files)) {
+          const safeName = file.name.replace(/\//g, "_");
+          const filePath = `${user.id}/${project.id}/drawer_media/${kind}/${Date.now()}_${safeName}`;
+          const { error: uploadError } = await supabase.storage.from("project-files").upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || "application/octet-stream",
+          });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(filePath);
+          const publicUrl = urlData.publicUrl;
+
+          const title =
+            kind === "presentation" || kind === "video"
+              ? safeName.replace(/\.[^/.]+$/, "")
+              : null;
+
+          const { error: addErr } = await supabase.functions.invoke("project-drawer", {
+            body: {
+              action: "add_media_item",
+              project_id: project.id,
+              kind,
+              url: publicUrl,
+              title,
+            },
+          });
+          if (addErr) throw addErr;
+        }
+        toast.success("Материалы загружены");
+        await loadDrawerProject(project.id);
+      } catch (e) {
+        console.error("Failed to upload media", e);
+        toast.error("Не удалось загрузить материалы");
+      } finally {
+        setUploading(null);
+      }
+    };
+
+    const renders = project.media?.renders ?? [];
+    const videos = project.media?.videos ?? [];
+    const docs = project.media?.presentations ?? [];
+
+    return (
+      <div className="p-6 space-y-8">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <ImageIcon size={16} /> Рендеры ({renders.length})
+            </h4>
+            <label className="text-xs font-bold text-blue-600 cursor-pointer hover:underline">
+              {uploading === "render" ? "Загрузка…" : "Добавить"}
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                multiple
+                disabled={uploading !== null}
+                onChange={(e) => void uploadFiles("render", e.target.files)}
+              />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {renders.map((url, i) => (
+              <div key={`${url}-${i}`} className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative group">
+                <img src={url} alt={`Render ${i}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <PlayCircle size={16} /> Видео ({videos.length})
+            </h4>
+            <label className="text-xs font-bold text-blue-600 cursor-pointer hover:underline">
+              {uploading === "video" ? "Загрузка…" : "Добавить"}
+              <input
+                type="file"
+                className="hidden"
+                accept="video/*"
+                multiple
+                disabled={uploading !== null}
+                onChange={(e) => void uploadFiles("video", e.target.files)}
+              />
+            </label>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {videos.map((vid, i) => (
+              <a
+                key={`${vid.url}-${i}`}
+                href={vid.url}
+                target="_blank"
+                rel="noreferrer"
+                className="space-y-2 group"
+              >
+                <div className="aspect-video rounded-lg overflow-hidden border border-slate-200 relative bg-black">
+                  {vid.thumbnail ? (
+                    <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover opacity-80" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/50">NO PREVIEW</div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/40">
+                      <PlayCircle size={20} />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs font-bold text-slate-700 truncate group-hover:text-blue-600">{vid.title}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <FileText size={16} /> Презентации ({docs.length})
+            </h4>
+            <label className="text-xs font-bold text-blue-600 cursor-pointer hover:underline">
+              {uploading === "presentation" ? "Загрузка…" : "Добавить"}
+              <input
+                type="file"
+                className="hidden"
+                accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                multiple
+                disabled={uploading !== null}
+                onChange={(e) => void uploadFiles("presentation", e.target.files)}
+              />
+            </label>
+          </div>
+          <div className="space-y-2">
+            {docs.map((doc) => (
+              <a
+                key={doc.id}
+                href={doc.url ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-300 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-50 text-red-600 rounded-lg">
+                    <FileText size={16} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-slate-900">{doc.title}</div>
+                    <div className="text-[10px] text-slate-400">
+                      {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : ""}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -117,6 +665,33 @@ const ProjectList = ({
 
   return (
     <div className="space-y-6 ">
+      {/* Project Drawer */}
+      {selectedProject && !isCrmMode && (
+        <SharedProjectDrawer
+          project={effectiveDrawerProject}
+          mode="developer"
+          onClose={handleCloseDrawer}
+          onOpenPublicPage={handleOpenPublicPage}
+          onNavigateToEditor={handleNavigateToEditor}
+          t={(key, params) => t(`common.${key}`, params as Record<string, string | number>)}
+          renderPartnersTab={(p) => <DeveloperPartnersTab project={p} />}
+          renderMediaTab={(p) =>
+            drawerLoading ? (
+              <div className="p-8 text-center text-slate-400">Загрузка…</div>
+            ) : (
+              <DeveloperMediaTab project={p} />
+            )
+          }
+          renderConstructionTab={(p) =>
+            drawerLoading ? (
+              <div className="p-8 text-center text-slate-400">Загрузка…</div>
+            ) : (
+              <DeveloperConstructionTab project={p} />
+            )
+          }
+        />
+      )}
+
       {/* Projects Grid */}
       {projects.length === 0 ? (
         <Card className="border-dashed border-2 ">
@@ -251,24 +826,49 @@ const ProjectList = ({
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      onClick={() => viewProject(project)}
-                      className="flex-1"
-                      style={{
-                        backgroundColor: ADMIN_THEME.primary,
-                        color: ADMIN_THEME.textOnPrimary,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      {t('managerAccounts.openLink')}
-                    </Button>
+                    {/* In admin mode, show details button that opens drawer */}
+                    {!isCrmMode && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenDrawer(project)}
+                        className="flex-1"
+                        style={{
+                          backgroundColor: ADMIN_THEME.primary,
+                          color: ADMIN_THEME.textOnPrimary,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                        }}
+                      >
+                        <Info className="h-4 w-4 mr-2" />
+                        {t('projectList.details')}
+                      </Button>
+                    )}
+
+                    {/* In CRM mode, directly open embed */}
+                    {isCrmMode && (
+                      <Button
+                        size="sm"
+                        onClick={() => viewProject(project)}
+                        className="flex-1"
+                        style={{
+                          backgroundColor: ADMIN_THEME.primary,
+                          color: ADMIN_THEME.textOnPrimary,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {t('managerAccounts.openLink')}
+                      </Button>
+                    )}
                     
                     {!isCrmMode && onEditProject && (
                       <Button
