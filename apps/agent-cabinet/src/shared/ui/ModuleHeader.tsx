@@ -71,7 +71,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
   const financeTitle = t("common.moduleHeader.financeTitle");
   const balanceLabel = t("common.moduleHeader.balanceLabel");
   const createLabel = t("common.moduleHeader.create");
-
+ы
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
