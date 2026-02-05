@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@gridix/utils/lib"
+import { useWidgetPortalContainer } from "./hooks/use-widget-portal-container"
 
 const Dialog = DialogPrimitive.Root
 
@@ -27,32 +28,14 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-// Helper hook to detect if we're in a Shadow DOM (widget context)
-const useShadowRootContainer = () => {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Try to find the portal container in Shadow DOM
-    const currentElement = document.getElementById('gridix-widget-root');
-    if (currentElement?.shadowRoot) {
-      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
-      if (portalContainer) {
-        setContainer(portalContainer as HTMLElement);
-      }
-    }
-  }, []);
-  
-  return container;
-};
-
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const shadowContainer = useShadowRootContainer();
+  const portalContainer = useWidgetPortalContainer()
   
   return (
-    <DialogPortal container={shadowContainer}>
+    <DialogPortal container={portalContainer ?? undefined}>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
@@ -69,7 +52,7 @@ const DialogContent = React.forwardRef<
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
-  );
+  )
 })
 DialogContent.displayName = DialogPrimitive.Content.displayName
 

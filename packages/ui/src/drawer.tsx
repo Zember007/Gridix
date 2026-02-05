@@ -2,6 +2,7 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@gridix/utils/lib"
+import { useWidgetPortalContainer } from "./hooks/use-widget-portal-container"
 
 const Drawer = ({
   shouldScaleBackground = true,
@@ -32,32 +33,14 @@ const DrawerOverlay = React.forwardRef<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
-// Helper hook to detect if we're in a Shadow DOM (widget context)
-const useShadowRootContainer = () => {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Try to find the portal container in Shadow DOM
-    const currentElement = document.getElementById('gridix-widget-root');
-    if (currentElement?.shadowRoot) {
-      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
-      if (portalContainer) {
-        setContainer(portalContainer as HTMLElement);
-      }
-    }
-  }, []);
-  
-  return container;
-};
-
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const shadowContainer = useShadowRootContainer();
+  const portalContainer = useWidgetPortalContainer()
   
   return (
-    <DrawerPortal container={shadowContainer}>
+    <DrawerPortal container={portalContainer ?? undefined}>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
@@ -71,7 +54,7 @@ const DrawerContent = React.forwardRef<
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
-  );
+  )
 })
 DrawerContent.displayName = "DrawerContent"
 

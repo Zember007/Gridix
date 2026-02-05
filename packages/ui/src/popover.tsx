@@ -2,37 +2,20 @@ import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 
 import { cn } from "@gridix/utils/lib"
+import { useWidgetPortalContainer } from "./hooks/use-widget-portal-container"
 
 const Popover = PopoverPrimitive.Root
 
 const PopoverTrigger = PopoverPrimitive.Trigger
 
-// Helper hook to detect if we're in a Shadow DOM (widget context)
-const useShadowRootContainer = () => {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Try to find the portal container in Shadow DOM
-    const currentElement = document.getElementById('gridix-widget-root');
-    if (currentElement?.shadowRoot) {
-      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
-      if (portalContainer) {
-        setContainer(portalContainer as HTMLElement);
-      }
-    }
-  }, []);
-  
-  return container;
-};
-
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, align = "center", sideOffset = 4, ...props }, ref) => {
-  const shadowContainer = useShadowRootContainer();
+  const portalContainer = useWidgetPortalContainer()
   
   return (
-    <PopoverPrimitive.Portal container={shadowContainer}>
+    <PopoverPrimitive.Portal container={portalContainer ?? undefined}>
       <PopoverPrimitive.Content
         ref={ref}
         align={align}
@@ -44,7 +27,7 @@ const PopoverContent = React.forwardRef<
         {...props}
       />
     </PopoverPrimitive.Portal>
-  );
+  )
 })
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 

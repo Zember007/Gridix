@@ -3,6 +3,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@gridix/utils/lib"
 import { buttonVariants } from "./button"
+import { useWidgetPortalContainer } from "./hooks/use-widget-portal-container"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
@@ -25,32 +26,14 @@ const AlertDialogOverlay = React.forwardRef<
 ))
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
-// Helper hook to detect if we're in a Shadow DOM (widget context)
-const useShadowRootContainer = () => {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Try to find the portal container in Shadow DOM
-    const currentElement = document.getElementById('gridix-widget-root');
-    if (currentElement?.shadowRoot) {
-      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
-      if (portalContainer) {
-        setContainer(portalContainer as HTMLElement);
-      }
-    }
-  }, []);
-  
-  return container;
-};
-
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, ...props }, ref) => {
-  const shadowContainer = useShadowRootContainer();
+  const portalContainer = useWidgetPortalContainer()
   
   return (
-    <AlertDialogPortal container={shadowContainer}>
+    <AlertDialogPortal container={portalContainer ?? undefined}>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Content
         ref={ref}
@@ -61,7 +44,7 @@ const AlertDialogContent = React.forwardRef<
         {...props}
       />
     </AlertDialogPortal>
-  );
+  )
 })
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 

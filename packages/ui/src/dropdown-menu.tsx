@@ -3,6 +3,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@gridix/utils/lib"
+import { useWidgetPortalContainer } from "./hooks/use-widget-portal-container"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
@@ -54,32 +55,14 @@ const DropdownMenuSubContent = React.forwardRef<
 DropdownMenuSubContent.displayName =
   DropdownMenuPrimitive.SubContent.displayName
 
-// Helper hook to detect if we're in a Shadow DOM (widget context)
-const useShadowRootContainer = () => {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
-  
-  React.useEffect(() => {
-    // Try to find the portal container in Shadow DOM
-    const currentElement = document.getElementById('gridix-widget-root');
-    if (currentElement?.shadowRoot) {
-      const portalContainer = currentElement.shadowRoot.getElementById('gridix-portal-container');
-      if (portalContainer) {
-        setContainer(portalContainer as HTMLElement);
-      }
-    }
-  }, []);
-  
-  return container;
-};
-
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 4, ...props }, ref) => {
-  const shadowContainer = useShadowRootContainer();
+  const portalContainer = useWidgetPortalContainer()
   
   return (
-    <DropdownMenuPrimitive.Portal container={shadowContainer}>
+    <DropdownMenuPrimitive.Portal container={portalContainer ?? undefined}>
       <DropdownMenuPrimitive.Content
         ref={ref}
         sideOffset={sideOffset}
@@ -90,7 +73,7 @@ const DropdownMenuContent = React.forwardRef<
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
-  );
+  )
 })
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
 
