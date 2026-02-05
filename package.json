@@ -10,9 +10,11 @@
     "clean": "pnpm turbo run clean",
     "dev:main": "pnpm --filter @gridix/main dev",
     "dev:agent": "pnpm --filter @gridix/agent-cabinet dev",
-    "dev:auth": "pnpm --filter @gridix/auth dev"
+    "dev:auth": "pnpm --filter @gridix/auth dev",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "turbo": "^2.3.3"
   },
   "packageManager": "pnpm@9.15.4",
