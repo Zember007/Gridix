@@ -32,3 +32,12 @@ dist-ssr
 
 # Supabase
 /supabase/
+
+.pnpm-store/
+.npm-logs/
+.turbo
+.turbo-cache/
+.npm-cache/
+.npm-log/
+.npm-store/
+.npm-logs/
