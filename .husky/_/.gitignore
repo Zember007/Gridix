@@ -1,4 +1,3 @@
 *
-# Husky runtime must be committed
-!.husky/_/husky.sh
-!.husky/_/.gitignore
+!.gitignore
+!husky.sh
