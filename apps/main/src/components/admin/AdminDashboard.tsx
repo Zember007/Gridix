@@ -325,7 +325,7 @@ const AdminDashboard = () => {
 
         <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
           {activeTab === 'projects' && (
-            <div className="space-y-6 projects_list_usertour">
+            <div className="space-y-6 projects_list_usertour h-full">
               <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
