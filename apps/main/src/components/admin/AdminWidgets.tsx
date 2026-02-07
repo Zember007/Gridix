@@ -117,9 +117,8 @@ const AdminWidgets = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-full">
         <Spinner size="md" style={{ borderColor: ADMIN_THEME.primary }} />
-        <span className="ml-2">{t('adminWidgets.loading')}</span>
       </div>
     );
   }

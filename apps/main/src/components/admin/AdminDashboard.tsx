@@ -343,13 +343,13 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'subscription' && userRole.type !== 'manager' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <SubscriptionTab />
             </div>
           )}
 
           {activeTab === 'partners' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <PartnersPage />
             </div>
           )}
@@ -365,13 +365,13 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'widgets' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <AdminWidgets />
             </div>
           )}
 
           {activeTab === 'analytics' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <AdminAnalytics />
             </div>
           )}

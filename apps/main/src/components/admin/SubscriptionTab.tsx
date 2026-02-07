@@ -46,7 +46,7 @@ export default function SubscriptionTab() {
 
   if (loading || plansLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="flex justify-center items-center py-12 h-full">
         <Spinner size="md" />
       </div>
     );

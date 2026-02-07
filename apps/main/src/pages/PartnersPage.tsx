@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { usePartner } from '@/entities/partner/queries/usePartner';
-import { useToast } from '@gridix/ui';
-import { Loader2, Wallet } from 'lucide-react';
-import { useLanguage } from '@gridix/utils/react';
-import { PartnerAccountSection } from '@/components/partners/PartnerAccountSection';
-import { PartnerInstructionsSection } from '@/components/partners/PartnerInstructionsSection';
-import { PartnerOverviewSection } from '@/components/partners/PartnerOverviewSection';
-import { PartnerReferralsSection } from '@/components/partners/PartnerReferralsSection';
-import { PartnerClientsSection } from '@/components/partners/PartnerClientsSection';
-import { Button } from "@gridix/ui";
+import {useState} from 'react';
+import {usePartner} from '@/entities/partner/queries/usePartner';
+import {Button, useToast} from '@gridix/ui';
+import {Wallet} from 'lucide-react';
+import {useLanguage} from '@gridix/utils/react';
+import {PartnerAccountSection} from '@/components/partners/PartnerAccountSection';
+import {PartnerInstructionsSection} from '@/components/partners/PartnerInstructionsSection';
+import {PartnerOverviewSection} from '@/components/partners/PartnerOverviewSection';
+import {PartnerReferralsSection} from '@/components/partners/PartnerReferralsSection';
+import {PartnerClientsSection} from '@/components/partners/PartnerClientsSection';
+import Spinner from "@/shared/ui/Spinner";
 
 const PartnersPage = () => {
   const { isPartner, loading, createPartnerProfile } = usePartner();
@@ -40,8 +40,8 @@ const PartnersPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center h-full">
+        <Spinner className="h-8 w-8 animate-spin" />
       </div>
     );
   }
