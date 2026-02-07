@@ -659,7 +659,7 @@ const ProjectList = ({
   if (loading) {
     return (
       <div className="grid h-full w-full place-items-center">
-          <Spinner className={''}/>
+          <Spinner/>
       </div>
     );
   }
