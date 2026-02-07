@@ -313,7 +313,7 @@ const ProjectApartmentSelector = ({
         selectedType: filters.selectedType,
     });
 
-    const themeColor = (project as unknown as Record<string, unknown>)?.theme_color as string ?? '#000000';
+    const themeColor = (project as unknown as Record<string, unknown>)?.theme_color as string || '#000000';
 
     const facadeDataLoaded =
         !shouldLoadFacadeData || (floorsAllLoaded && settingsLoaded && facadesLoaded);
