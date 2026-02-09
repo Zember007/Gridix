@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from "@gridix/ui";
+import {Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Slider } from "@gridix/ui";
 import { cn } from "@gridix/utils/lib";
@@ -147,7 +147,7 @@ export const AdvancedFilters = ({
   ]);
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-4 pb-0 relative">
+    <div data-widget-portal-container className="grid grid-cols-1 gap-4 p-4 pb-0 relative ">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-gray-900">{t('project.filters')}</div>
         <Button
@@ -220,20 +220,17 @@ export const AdvancedFilters = ({
       {viewMode !== 'floor-plan' && project?.project_type !== 'object' && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.floor')}</div>
-          <div className="flex flex-wrap gap-2">
-            {floorOptions.map(o => (
-              <button
-                key={o.value}
-                type="button"
-                className={cn(
-                  'px-3 py-2 rounded-full border text-sm',
-                  advFloor === o.value ? 'border-gray-900 text-gray-900 bg-gray-50' : 'border-gray-200 text-gray-600',
-                )}
-                onClick={() => setAdvFloor(o.value)}
-              >
-                {o.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-2 ">
+            <Select  value={advFloor} onValueChange={setAdvFloor}>
+              <SelectTrigger className="shadow-none h-auto p-0 bg-transparent px-3 py-2 rounded-full border text-sm">
+                <SelectValue placeholder={t('project.parameters')} />
+              </SelectTrigger>
+              <SelectContent className={'h-[200px]'}>
+                {floorOptions.map(o => (
+                    <SelectItem className={'py-2 mb-1 rounded-full border text-sm'} key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}
