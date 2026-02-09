@@ -74,6 +74,49 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
     const labelOverlaysRef = useRef<HTMLElement[]>([]);
     const prevHoverIdRef = useRef<string | null>(null);
+    // Keep a ref to annotations so imperative methods always read the latest value
+    const annotationsRef = useRef<Annotation[]>([]);
+    annotationsRef.current = annotations;
+    // Prefer OpenSeadragon-provided image size to avoid CORS issues with `new Image()`
+    const [osdImageSize, setOsdImageSize] = useState<{ width: number; height: number } | null>(null);
+
+    useEffect(() => {
+        // Reset size when image URL changes (viewer will re-open)
+        setOsdImageSize(null);
+    }, [imageUrl]);
+
+    useEffect(() => {
+        if (!viewer) return;
+
+        const updateFromViewer = () => {
+            try {
+                const item = viewer.world?.getItemAt?.(0);
+                const size = item?.getContentSize?.();
+                if (size && typeof size.x === 'number' && typeof size.y === 'number') {
+                    const width = Math.round(size.x);
+                    const height = Math.round(size.y);
+                    if (width > 0 && height > 0) {
+                        setOsdImageSize({ width, height });
+                    }
+                }
+            } catch {
+                // ignore
+            }
+        };
+
+        // Try immediately (if already open) and also on each open
+        updateFromViewer();
+        viewer.addHandler?.('open', updateFromViewer);
+
+        return () => {
+            viewer.removeHandler?.('open', updateFromViewer);
+        };
+    }, [viewer]);
+
+    const getEffectiveImageSize = useCallback(async () => {
+        if (osdImageSize) return osdImageSize;
+        return await getImageSize(imageUrl);
+    }, [imageUrl, osdImageSize]);
 
     // View mode: propagate hover changes (for external tooltips)
     useEffect(() => {
@@ -85,7 +128,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     }, [hovered, mode, onHoverAnnotationId]);
 
     const convertShapeToAnnotation = useCallback(async (shape: Shape): Promise<Annotation> => {
-        const { width, height } = await getImageSize(imageUrl);
+        const { width, height } = await getEffectiveImageSize();
 
         // Конвертируем shape в пиксели
         const inPixels = shapeToPixels(shape, width, height);
@@ -125,47 +168,158 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         };
 
         return annotation;
-    }, [imageUrl]);
+    }, [getEffectiveImageSize]);
 
     const annotationToShape = useCallback(async (annotation: Annotation): Promise<Shape | null> => {
         try {
-            const { width, height } = await getImageSize(imageUrl);
+            const { width, height } = await getEffectiveImageSize();
 
-            // Извлекаем геометрию из аннотации
-            const selector = annotation.target.selector as AnnotationSelector;
+            // Annotorious can return different selector shapes depending on how the annotation was created:
+            // - Our persisted shapes use a custom selector: { type: 'POLYGON' | 'RECTANGLE', geometry: { points/bounds } }
+            // - User-drawn annotations typically use W3C selectors like SvgSelector / FragmentSelector (xywh=pixel:...)
+            const target = (annotation as unknown as { target?: { selector?: unknown } }).target;
+            const rawSelector = target?.selector;
+            const selectorCandidates: unknown[] = Array.isArray(rawSelector)
+                ? rawSelector
+                : rawSelector
+                    ? [rawSelector]
+                    : [];
 
-            if (!selector || !selector.geometry) {
-                console.warn('Invalid annotation selector:', annotation);
-                return null;
-            }
+            const parseSvgPolygonPoints = (svg: string): Point[] | null => {
+                const polygonMatch = svg.match(/<polygon[^>]*\bpoints=['"]([^'"]+)['"][^>]*>/i);
+                if (!polygonMatch?.[1]) return null;
 
-            const geometry = selector.geometry;
+                const nums = polygonMatch[1].match(/-?\d*\.?\d+/g)?.map(Number) ?? [];
+                if (nums.length < 6) return null; // at least 3 points
+
+                const pts: Point[] = [];
+                for (let i = 0; i + 1 < nums.length; i += 2) {
+                    const x = nums[i];
+                    const y = nums[i + 1];
+                    if (typeof x === 'number' && typeof y === 'number' && Number.isFinite(x) && Number.isFinite(y)) {
+                        pts.push({ x, y });
+                    }
+                }
+                return pts.length >= 3 ? pts : null;
+            };
+
+            const parseSvgRect = (svg: string): { minX: number; minY: number; maxX: number; maxY: number } | null => {
+                const rectMatch = svg.match(/<rect\b[^>]*>/i);
+                if (!rectMatch) return null;
+                const tag = rectMatch[0];
+
+                const getAttr = (name: string) => {
+                    const m = tag.match(new RegExp(`\\b${name}=['"]([^'"]+)['"]`, 'i'));
+                    return m?.[1];
+                };
+
+                const x = Number(getAttr('x'));
+                const y = Number(getAttr('y'));
+                const w = Number(getAttr('width'));
+                const h = Number(getAttr('height'));
+                if (![x, y, w, h].every((n) => Number.isFinite(n))) return null;
+                return { minX: x, minY: y, maxX: x + w, maxY: y + h };
+            };
+
+            const parseFragmentXywh = (value: string): { minX: number; minY: number; maxX: number; maxY: number } | null => {
+                // Examples:
+                // - "xywh=pixel:160,120,30,40"
+                // - "xywh=160,120,30,40"
+                const m = value.match(/xywh=(?:pixel:)?\s*(-?\d*\.?\d+)\s*,\s*(-?\d*\.?\d+)\s*,\s*(-?\d*\.?\d+)\s*,\s*(-?\d*\.?\d+)/i);
+                if (!m) return null;
+                const x = Number(m[1]);
+                const y = Number(m[2]);
+                const w = Number(m[3]);
+                const h = Number(m[4]);
+                if (![x, y, w, h].every((n) => Number.isFinite(n))) return null;
+                return { minX: x, minY: y, maxX: x + w, maxY: y + h };
+            };
+
             let pointsInPixels: Point[] = [];
+            let inferredType: 'polygon' | 'rectangle' = 'polygon';
 
-            // Обрабатываем разные типы геометрии
-            if (selector.type === 'POLYGON' && geometry.points) {
-                // Для полигона точки уже есть в формате [[x, y], ...]
-                pointsInPixels = geometry.points.map(([x, y]: [number, number]) => ({ x, y }));
-            } else if (selector.type === 'RECTANGLE' && geometry.bounds) {
-                // Для прямоугольника создаем точки из bounds
-                const { minX, minY, maxX, maxY } = geometry.bounds;
-                pointsInPixels = [
-                    { x: minX, y: minY },
-                    { x: maxX, y: minY },
-                    { x: maxX, y: maxY },
-                    { x: minX, y: maxY }
-                ];
-            } else {
-                console.warn('Unknown geometry type:', selector.type);
+            for (const candidate of selectorCandidates) {
+                if (!candidate || typeof candidate !== 'object') continue;
+                const sel = candidate as Record<string, unknown>;
+                const type = typeof sel.type === 'string' ? sel.type : undefined;
+
+                // Custom persisted selector (used for shapes coming from DB)
+                if ((type === 'POLYGON' || type === 'RECTANGLE') && typeof sel.geometry === 'object' && sel.geometry) {
+                    const custom = sel as unknown as AnnotationSelector;
+                    const geometry = custom.geometry;
+                    if (custom.type === 'POLYGON' && geometry.points) {
+                        pointsInPixels = geometry.points.map(([x, y]) => ({ x, y }));
+                        inferredType = 'polygon';
+                        break;
+                    }
+                    if (custom.type === 'RECTANGLE' && geometry.bounds) {
+                        const { minX, minY, maxX, maxY } = geometry.bounds;
+                        pointsInPixels = [
+                            { x: minX, y: minY },
+                            { x: maxX, y: minY },
+                            { x: maxX, y: maxY },
+                            { x: minX, y: maxY }
+                        ];
+                        inferredType = 'rectangle';
+                        break;
+                    }
+                }
+
+                // W3C SvgSelector (used by user-drawn annotations in Annotorious)
+                if (type === 'SvgSelector' && typeof sel.value === 'string') {
+                    const svg = sel.value;
+                    const pts = parseSvgPolygonPoints(svg);
+                    if (pts) {
+                        pointsInPixels = pts;
+                        inferredType = 'polygon';
+                        break;
+                    }
+                    const bounds = parseSvgRect(svg);
+                    if (bounds) {
+                        pointsInPixels = [
+                            { x: bounds.minX, y: bounds.minY },
+                            { x: bounds.maxX, y: bounds.minY },
+                            { x: bounds.maxX, y: bounds.maxY },
+                            { x: bounds.minX, y: bounds.maxY }
+                        ];
+                        inferredType = 'rectangle';
+                        break;
+                    }
+                }
+
+                // W3C FragmentSelector with xywh bounds (rectangles)
+                if (type === 'FragmentSelector' && typeof sel.value === 'string') {
+                    const bounds = parseFragmentXywh(sel.value);
+                    if (bounds) {
+                        pointsInPixels = [
+                            { x: bounds.minX, y: bounds.minY },
+                            { x: bounds.maxX, y: bounds.minY },
+                            { x: bounds.maxX, y: bounds.maxY },
+                            { x: bounds.minX, y: bounds.maxY }
+                        ];
+                        inferredType = 'rectangle';
+                        break;
+                    }
+                }
+            }
+
+            if (!pointsInPixels || pointsInPixels.length === 0) {
+                console.warn('Unsupported/invalid annotation selector:', annotation);
                 return null;
             }
+
+            // Preserve color from currentShape or shapes props instead of hardcoded fallback
+            const existingColor =
+                (currentShape && currentShape.id === annotation.id ? currentShape.color : undefined) ??
+                shapes.find(s => s.id === annotation.id)?.color ??
+                '#3b82f6';
 
             // Создаем shape в пикселях
             const shapeInPixels: Shape = {
                 id: annotation.id,
-                type: selector.type === 'RECTANGLE' ? 'rectangle' : 'polygon',
+                type: inferredType,
                 points: pointsInPixels,
-                color: '#00ff00',
+                color: existingColor,
                 isSelected: false
             };
 
@@ -177,20 +331,20 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             console.error('Error converting annotation to shape:', error);
             return null;
         }
-    }, [imageUrl]);
+    }, [currentShape, getEffectiveImageSize, shapes]);
 
     // Экспортируем метод для получения актуального currentShape из аннотатора
     useImperativeHandle(ref, () => ({
         getCurrentShape: async () => {
-            
             if (!annotator) {
                 return null;
             }
             
             if (!currentShape) {
                 // Пытаемся получить первую аннотацию, если currentShape нет
-                if (annotations.length > 0) {
-                    const shape = await annotationToShape(annotations[0] as Annotation);
+                const latestAnnotations = annotationsRef.current;
+                if (latestAnnotations.length > 0) {
+                    const shape = await annotationToShape(latestAnnotations[0] as Annotation);
                     return shape;
                 }
                 return null;
@@ -206,9 +360,9 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 // Небольшая задержка для применения изменений
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Получаем все аннотации и находим нужную по ID
-                const allAnnotations = annotations;
-                const updatedAnnotation = allAnnotations.find(a => a.id === currentShapeId);
+                // Используем ref для получения актуальных аннотаций (не stale замыкание)
+                const latestAnnotations = annotationsRef.current;
+                const updatedAnnotation = latestAnnotations.find(a => a.id === currentShapeId);
                 
                 if (updatedAnnotation) {
                     // Конвертируем аннотацию в Shape с актуальными координатами
@@ -227,7 +381,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 return currentShape;
             }
         }
-    }), [annotator, currentShape, annotationToShape, annotations]);
+    }), [annotator, currentShape, annotationToShape]);
 
     // IMPORTANT! Memo-ize your options to avoid
     // unexpected re-renders of the OSD viewer.
@@ -296,7 +450,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             .map(shape => ({ ...shape, isSelected: false }));
         
         saveShapesToAnnotations(backgroundShapes);
-    }, [shapes, annotator, saveShapesToAnnotations, currentShape]);
+    }, [shapes, annotator, saveShapesToAnnotations, currentShape, mode]);
     
     // Отдельно обрабатываем изменение currentShape (когда начинаем/завершаем редактирование)
     useEffect(() => {
@@ -327,18 +481,29 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         saveShapesToAnnotations(allShapes).then(() => {
             // После загрузки аннотаций, выделяем currentShape для редактирования
             if (currentShape && currentShape.id) {
-                setTimeout(() => {
-                    const annotation = annotations.find(a => a.id === currentShape.id);
-                    if (annotation) {
-                        annotator.setSelected(annotation.id);
+                const targetId = currentShape.id;
+                // Retry selection: Annotorious may not register the annotation immediately
+                // after setAnnotations(). Try up to 5 times with increasing delays.
+                let attempt = 0;
+                const trySelect = () => {
+                    attempt++;
+                    try {
+                        annotator.setSelected(targetId);
+                    } catch {
+                        // ignore; we'll retry below
+                    } finally {
+                        if (attempt < 5) {
+                            setTimeout(trySelect, 80 * attempt);
+                        }
                     }
-                }, 100);
+                };
+                setTimeout(trySelect, 80);
             } else {
                 // Снимаем выделение если currentShape === null
                 annotator.setSelected();
             }
         });
-    }, [currentShape, shapes, annotator, saveShapesToAnnotations, annotations]);
+    }, [currentShape, shapes, annotator, saveShapesToAnnotations]);
 
 
 
@@ -498,7 +663,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         const run = async () => {
             clear();
 
-            const { width, height } = await getImageSize(imageUrl);
+            const { width, height } = await getEffectiveImageSize();
             if (cancelled) return;
 
             const overlays: HTMLElement[] = [];
@@ -541,7 +706,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             cancelled = true;
             clear();
         };
-    }, [imageUrl, labelsById, mode, shapes, showLabels, viewer]);
+    }, [getEffectiveImageSize, labelsById, mode, shapes, showLabels, viewer]);
 
 
 

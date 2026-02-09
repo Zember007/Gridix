@@ -1,10 +1,10 @@
 
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Button } from "@gridix/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X, Plus, Check } from 'lucide-react';
+import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X, Plus, Check, Undo2, Redo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from "@gridix/utils/api";
 import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
@@ -37,6 +37,11 @@ interface ProjectFacade {
   order_index: number;
 }
 
+interface FacadeDisplaySettings {
+  colors: { building: string };
+  opacity: { normal: number; hover: number };
+}
+
 const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: BuildingImageEditorProps) => {
   const [facades, setFacades] = useState<ProjectFacade[]>([]);
   const [selectedFacadeId, setSelectedFacadeId] = useState<string | null>(null);
@@ -55,9 +60,19 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [newFacadeName, setNewFacadeName] = useState('');
   const [newFacadeFile, setNewFacadeFile] = useState<File | null>(null);
   const [savingFacade, setSavingFacade] = useState(false);
+
+  // Facade polygon display settings (loaded from projects.polygon_settings_facade)
+  const [facadeDisplaySettings, setFacadeDisplaySettings] = useState<FacadeDisplaySettings>({
+    colors: { building: '#3b82f6' },
+    opacity: { normal: 0.4, hover: 0.7 },
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newFacadeFileInputRef = useRef<HTMLInputElement>(null);
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
+
+  // Undo / Redo stacks for polygon point editing
+  const undoStackRef = useRef<Shape[]>([]);
+  const redoStackRef = useRef<Shape[]>([]);
   const { user } = useAuth();
   const { project } = useProject(projectId);
   const { t } = useLanguage();
@@ -382,6 +397,9 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       setSelectedFloor(floor.floor_number);
       setIsEditing(true);
       setIsCreatingNewFloor(false);
+      // Clear undo/redo stacks when starting a new editing session
+      undoStackRef.current = [];
+      redoStackRef.current = [];
 
       // Set current shape for editing
       const editingShape: Shape = {
@@ -399,26 +417,94 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     setIsCreatingNewFloor(true);
     setIsEditing(true);
     setEditingFloorId(null);
+    // Clear undo/redo stacks when starting a new editing session
+    undoStackRef.current = [];
+    redoStackRef.current = [];
 
-    // Create a new empty shape for the new floor
-    const newShape: Shape = {
-      id: `new-floor-${selectedFloor}`,
-      type: 'polygon',
-      points: [],
-      color: '#3b82f6',
-      isSelected: true
+    // IMPORTANT:
+    // Do NOT set a placeholder currentShape with a non-existent annotation ID.
+    // Let the annotator create a real annotation via drawing; then createAnnotation
+    // event will populate currentShape with the correct id + points.
+    setCurrentShape(null);
+  };
+
+
+
+  // Provide annotation styles based on facade display settings
+  const getStyleById = useCallback((_id: string) => {
+    return {
+      fill: facadeDisplaySettings.colors.building,
+      fillOpacity: facadeDisplaySettings.opacity.normal,
+      stroke: facadeDisplaySettings.colors.building,
+      strokeOpacity: 1,
+      strokeWidth: 2,
     };
-    setCurrentShape(newShape);
-  };
+  }, [facadeDisplaySettings]);
+
+  const handleCurrentShapeUpdate = useCallback((shape: Shape | null) => {
+    setCurrentShape(prev => {
+      // Push previous version onto undo stack if points actually changed
+      if (prev && shape && prev.id === shape.id) {
+        const prevPts = JSON.stringify(prev.points);
+        const nextPts = JSON.stringify(shape.points);
+        if (prevPts !== nextPts) {
+          undoStackRef.current = [...undoStackRef.current, prev];
+          // Any new edit clears the redo stack
+          redoStackRef.current = [];
+        }
+      }
+      return shape;
+    });
+  }, []);
 
 
 
-  const handleCurrentShapeUpdate = (shape: Shape | null) => {
-    setCurrentShape(shape);
+  const handleUndo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return;
+    const prev = undoStackRef.current[undoStackRef.current.length - 1];
+    if (!prev) return;
+    undoStackRef.current = undoStackRef.current.slice(0, -1);
+    setCurrentShape(cur => {
+      if (cur) {
+        redoStackRef.current = [...redoStackRef.current, cur];
+      }
+      return prev;
+    });
+  }, []);
 
-  };
+  const handleRedo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return;
+    const next = redoStackRef.current[redoStackRef.current.length - 1];
+    if (!next) return;
+    redoStackRef.current = redoStackRef.current.slice(0, -1);
+    setCurrentShape(cur => {
+      if (cur) {
+        undoStackRef.current = [...undoStackRef.current, cur];
+      }
+      return next;
+    });
+  }, []);
 
+  // Keyboard shortcuts for Undo/Redo while editing
+  useEffect(() => {
+    if (!isEditing) return;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (!isMod) return;
+
+      if (e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, handleUndo, handleRedo]);
 
   const handlePolygonSave = async () => {
     if (!currentShape) return;
@@ -459,10 +545,13 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
         toast.success(t('buildingImage.polygon.createSuccess', { floor: selectedFloor }));
       } else if (editingFloorId) {
-        // Update existing floor
+        // Update existing floor (persist both polygon and color)
         const { error } = await supabase
           .from('building_floors')
-          .update({ polygon: shapeToSave.points as { x: number; y: number }[] })
+          .update({
+            polygon: shapeToSave.points as { x: number; y: number }[],
+            color: shapeToSave.color,
+          })
           .eq('id', editingFloorId);
 
         if (error) throw error;
@@ -477,6 +566,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       setIsCreatingNewFloor(false);
       setCurrentShape(null);
       setIsEditing(false);
+      undoStackRef.current = [];
+      redoStackRef.current = [];
     } catch (error) {
       console.error('Error saving polygon:', error);
       toast.error(isCreatingNewFloor ? t('buildingImage.polygon.createError') : t('buildingImage.polygon.saveError'));
@@ -488,6 +579,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     setEditingFloorId(null);
     setIsCreatingNewFloor(false);
     setCurrentShape(null);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
     // Reload data to reset any changes
     loadBuildingData();
   };
@@ -514,6 +607,39 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       loadBuildingData();
     }
   }, [loadBuildingData, projectId, project]);
+
+  // Load facade display settings from DB
+  useEffect(() => {
+    const loadFacadeSettings = async () => {
+      const pid = project?.id || projectId;
+      if (!pid) return;
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('polygon_settings_facade')
+          .eq('id', pid)
+          .single();
+        if (error) throw error;
+        if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
+          const s = data.polygon_settings_facade as Record<string, unknown>;
+          const colors = s?.colors as Record<string, unknown> | undefined;
+          const opacity = s?.opacity as Record<string, unknown> | undefined;
+          setFacadeDisplaySettings({
+            colors: {
+              building: (typeof colors?.building === 'string' ? colors.building : '#3b82f6'),
+            },
+            opacity: {
+              normal: typeof opacity?.normal === 'number' ? opacity.normal : 0.4,
+              hover: typeof opacity?.hover === 'number' ? opacity.hover : 0.7,
+            },
+          });
+        }
+      } catch (e) {
+        console.error('Error loading facade display settings:', e);
+      }
+    };
+    void loadFacadeSettings();
+  }, [project?.id, projectId]);
 
   React.useEffect(() => {
     // Keep local image in sync if parent provides an updated legacy image URL AND we have no facade selected yet.
@@ -770,6 +896,26 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 {(isEditing || currentShape) && (
                   <div className="flex items-center gap-2">
                     <Button
+                      onClick={handleUndo}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      disabled={undoStackRef.current.length === 0}
+                      title="Undo (Ctrl+Z)"
+                    >
+                      <Undo2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={handleRedo}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      disabled={redoStackRef.current.length === 0}
+                      title="Redo (Ctrl+Shift+Z)"
+                    >
+                      <Redo2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
                       onClick={handlePolygonSave}
                       size="sm"
                       className="h-8"
@@ -797,7 +943,18 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 shapes={shapes}
                 currentShape={currentShape}
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
+                mode={isEditing ? 'edit' : 'view'}
                 drawingEnabled={isEditing}
+                getStyleById={getStyleById}
+                onSelectAnnotationId={(id) => {
+                  // In view mode, clicking a polygon enters editing for that floor
+                  if (!isEditing && id) {
+                    const floor = buildingFloors.find(f => f.id === id);
+                    if (floor) {
+                      startEditingFloor(floor.id);
+                    }
+                  }
+                }}
               />
 
             </div>
@@ -848,6 +1005,18 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       <PolygonCustomizationSettings
         projectId={project?.id || projectId}
         type="building"
+        onSettingsChange={(settings) => {
+          // Sync local display settings from the settings panel for live preview
+          setFacadeDisplaySettings({
+            colors: {
+              building: settings.colors.building || '#3b82f6',
+            },
+            opacity: {
+              normal: settings.opacity.normal,
+              hover: settings.opacity.hover,
+            },
+          });
+        }}
       />
     </div>
   );
