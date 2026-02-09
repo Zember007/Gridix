@@ -97,9 +97,9 @@ export const ProjectHeader = ({
                       <SlidersHorizontal className="h-3 w-3" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="top" className="h-[90dvh]">
+                  <SheetContent side="top" className="h-[90dvh] p-0">
 
-                    <div className="mt-6 overflow-y-auto p-4 h-full">
+                    <div className="mt-6 overflow-y-auto h-full">
                       <AdvancedFilters
                         open={isFiltersOpen}
                         onClose={() => setIsFiltersOpen(false)}
