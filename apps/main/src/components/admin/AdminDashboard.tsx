@@ -1,30 +1,35 @@
-
-import { useMemo, useRef, useState, useEffect } from 'react';
-import { Button } from "@gridix/ui";
-import { MessageCircleQuestionMark, User as UserIcon } from 'lucide-react';
-import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {Button} from "@gridix/ui";
+import {MessageCircleQuestionMark} from 'lucide-react';
+import {ADMIN_THEME, getAdminThemeVariables} from "@gridix/utils/lib";
 import ProjectList from '@/components/projects/ProjectList';
 import AdminSettings from './AdminSettings';
 import AdminWidgets from './AdminWidgets';
-import { LeadsManager } from './LeadsManager';
+import {LeadsManager} from './LeadsManager';
 import SubscriptionTab from './SubscriptionTab';
 import PartnersPage from '../../pages/PartnersPage';
-import { AgencyPartnersPage } from '@/components/admin/partners/AgencyPartnersPage';
+import {AgencyPartnersPage} from '@/components/admin/partners/AgencyPartnersPage';
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
-import { AdminAnalytics } from './AdminAnalytics';
-import { IntegrationsTab } from './IntegrationsTab';
-import { useLanguageNavigation } from '@gridix/utils/react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { AdminSidebar, ProjectEditorSidebarMenuButton } from "@/shared/ui/sidebar-component";
-import { ManagerBlockedScreen } from '@/components/Auth/ManagerBlockedScreen';
-import { useAmoWidget } from '@/hooks/useAmoWidget';
-import { useLeadsRealtime } from '@/hooks/useLeadsRealtime';
-import { isDevTourMode, startAdminChecklist, startAdminOnboardingTour, startPartnersTour, startProjectCreationTour } from '@gridix/utils/integrations';
-import { waitForSelectors } from '@gridix/utils/integrations';
-import { AdminContactsPage } from '@/components/admin/contacts/AdminContactsPage';
-import { useLeads } from '@/entities/lead/queries/useLeads';
+import {AdminAnalytics} from './AdminAnalytics';
+import {IntegrationsTab} from './IntegrationsTab';
+import {useLanguageNavigation} from '@gridix/utils/react';
+import {useAuth} from '@/contexts/AuthContext';
+import {useUserRole} from '@/hooks/useUserRole';
+import {useWorkspace} from '@/contexts/WorkspaceContext';
+import {AdminSidebar, ProjectEditorSidebarMenuButton} from "@/shared/ui/sidebar-component";
+import {ManagerBlockedScreen} from '@/components/Auth/ManagerBlockedScreen';
+import {useAmoWidget} from '@/hooks/useAmoWidget';
+import {useLeadsRealtime} from '@/hooks/useLeadsRealtime';
+import {
+  isDevTourMode,
+  startAdminChecklist,
+  startAdminOnboardingTour,
+  startPartnersTour,
+  startProjectCreationTour,
+  waitForSelectors
+} from '@gridix/utils/integrations';
+import {AdminContactsPage} from '@/components/admin/contacts/AdminContactsPage';
+import {useLeads} from '@/entities/lead/queries/useLeads';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -325,7 +330,7 @@ const AdminDashboard = () => {
 
         <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
           {activeTab === 'projects' && (
-            <div className="space-y-6 projects_list_usertour">
+            <div className="space-y-6 projects_list_usertour h-full">
               <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
@@ -338,13 +343,13 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'subscription' && userRole.type !== 'manager' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <SubscriptionTab />
             </div>
           )}
 
           {activeTab === 'partners' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <PartnersPage />
             </div>
           )}
@@ -360,13 +365,13 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'widgets' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <AdminWidgets />
             </div>
           )}
 
           {activeTab === 'analytics' && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full">
               <AdminAnalytics />
             </div>
           )}

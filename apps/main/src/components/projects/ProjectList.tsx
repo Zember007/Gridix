@@ -16,6 +16,7 @@ import { LeadsStats } from '@/components/admin/LeadsNotification';
 import { Project } from '@/entities/workspace/queries/useWorkspaceProjects';
 import { useAmoWidget } from '@/hooks/useAmoWidget';
 import { supabase } from "@gridix/utils/api";
+import Spinner from "@/shared/ui/Spinner.tsx";
 
 
 interface ProjectListProps {
@@ -255,7 +256,7 @@ const ProjectList = ({
     };
 
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 h-full">
         <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
           <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0 h-fit">
             <ShieldCheck size={20} />
@@ -657,8 +658,8 @@ const ProjectList = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader size="md" color={ADMIN_THEME.primary} />
+      <div className="grid h-full w-full place-items-center">
+          <Spinner/>
       </div>
     );
   }
