@@ -136,7 +136,7 @@ export const CompactFilters = ({
             <SlidersHorizontal className="h-4 w-4 text-gray-700" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-[420px] max-h-[calc(100vh-150px)] overflow-y-auto relative p-0">
+        <PopoverContent align="start" className=" max-h-[calc(100vh-150px)] overflow-y-auto relative p-0">
           <AdvancedFilters
             open={advancedOpen}
             onClose={() => setAdvancedOpen(false)}
