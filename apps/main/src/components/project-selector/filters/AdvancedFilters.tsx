@@ -1,5 +1,15 @@
 import {useEffect, useMemo, useState} from 'react';
-import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
+import {
+  Button,
+  Input,
+  RangeInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  useLockBodyScroll
+} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
@@ -170,6 +180,8 @@ export const AdvancedFilters = ({
     });
   };
 
+  useLockBodyScroll(open);
+
   return (
     <div className="grid grid-cols-1 gap-4 p-4 pb-0 relative ">
       <div className="flex items-center justify-between gap-3">
@@ -181,6 +193,10 @@ export const AdvancedFilters = ({
           onClick={() => {
             resetFilters();
             onClose?.();
+            window.scrollTo({
+              top: 650,
+              behavior: "smooth",
+            });
           }}
         >
           <RotateCcw className="h-4 w-4" />

@@ -665,7 +665,7 @@ const ProjectApartmentSelector = ({
                                                         {/* Layouts are shown under the facade (instead of a separate tab) */}
                                                         {project?.project_type !== 'object' && (
                                                             <LayoutGallery
-                                                                apartments={apartments}
+                                                                apartments={filters.filteredApartments}
                                                                 selectedRooms={filters.selectedRooms}
                                                                 selectedType={filters.selectedType}
                                                                 setSelectedRooms={filters.setSelectedRooms}
@@ -693,7 +693,7 @@ const ProjectApartmentSelector = ({
                                                                 <ApartmentFloorPlan
                                                                     project={project}
                                                                     projectId={project.id}
-                                                                    apartments={apartments.filter(apt =>
+                                                                    apartments={filters.filteredApartments.filter(apt =>
                                                                         selectedFloorForPlan !== null ? apt.floor_number === selectedFloorForPlan : true,
                                                                     )}
                                                                     onApartmentSelect={openApartmentPreview}
