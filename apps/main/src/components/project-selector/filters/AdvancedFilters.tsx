@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import {Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Slider } from "@gridix/ui";
-import { cn } from "@gridix/utils/lib";
-import { RotateCcw } from 'lucide-react';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider} from "@gridix/ui";
+import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
+import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
-import { getCurrencySymbolSafe } from "@gridix/utils/lib";
-import { useLanguage } from '@/contexts/LanguageContext';
+import {useLanguage} from '@/contexts/LanguageContext';
+
 type ProjectLike = {
   currency?: string | null;
   has_commercial?: boolean | null;
@@ -146,8 +144,34 @@ export const AdvancedFilters = ({
     selectedCurrency,
   ]);
 
+  const handleApplyFilters = () => {
+    const currencyChanged = advCurrency !== selectedCurrency;
+
+    if (currencyChanged) {
+      setSelectedCurrency(advCurrency);
+    }
+
+    setSelectedType(advType);
+    setSelectedRooms(advRooms);
+    setSelectedFloor(advFloor);
+
+    if (!currencyChanged) {
+      setPriceRange(advPrice);
+      setAreaRange(advArea);
+    }
+
+    setSearchQuery(advSearch);
+    setShowOnlyAvailable(advAvailable);
+
+    onClose?.();
+    window.scrollTo({
+      top: 650,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div data-widget-portal-container className="grid grid-cols-1 gap-4 p-4 pb-0 relative ">
+    <div className="grid grid-cols-1 gap-4 p-4 pb-0 relative ">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-gray-900">{t('project.filters')}</div>
         <Button
@@ -293,22 +317,7 @@ export const AdvancedFilters = ({
           {t('project.onlyAvailable')}
         </Button>
         <Button
-          onClick={() => {
-            const currencyChanged = advCurrency !== selectedCurrency;
-            if (currencyChanged) {
-              setSelectedCurrency(advCurrency);
-            }
-            setSelectedType(advType);
-            setSelectedRooms(advRooms);
-            setSelectedFloor(advFloor);
-            if (!currencyChanged) {
-              setPriceRange(advPrice);
-              setAreaRange(advArea);
-            }
-            setSearchQuery(advSearch);
-            setShowOnlyAvailable(advAvailable);
-            onClose?.();
-          }}
+          onClick={handleApplyFilters}
           style={{ backgroundColor: themeColor, color: '#fff' }}
         >
           {ui.apply}
