@@ -147,7 +147,7 @@ export const AdvancedFilters = ({
   ]);
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 gap-4 p-4 pb-0 relative">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-gray-900">{t('project.filters')}</div>
         <Button
@@ -285,7 +285,7 @@ export const AdvancedFilters = ({
         <Input value={advSearch} onChange={(e) => setAdvSearch(e.target.value)} />
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 sticky bottom-0 bg-gray-50 -mx-4 p-4">
         <Button
           variant="outline"
           className={cn(
