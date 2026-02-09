@@ -1,15 +1,13 @@
-import { useEffect } from 'react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@gridix/ui";
-import { Button } from "@gridix/ui";
-import { SlidersHorizontal } from 'lucide-react';
-import { useLanguage } from '@gridix/utils/react';
-import { ViewModeButtons } from './ViewModeButtons';
-import { CompactFilters } from './filters/CompactFilters';
-import { AdvancedFilters } from './filters/AdvancedFilters';
-import type { Project } from '@/entities/project/queries/useProjects';
-import type { ProjectFilters } from './hooks/useProjectFilters';
-import { LanguageToggle } from '@gridix/ui';
-import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
+import {useEffect} from 'react';
+import {Button, LanguageToggle, Sheet, SheetContent, SheetTrigger} from "@gridix/ui";
+import {SlidersHorizontal} from 'lucide-react';
+import {useLanguage} from '@gridix/utils/react';
+import {ViewModeButtons} from './ViewModeButtons';
+import {CompactFilters} from './filters/CompactFilters';
+import {AdvancedFilters} from './filters/AdvancedFilters';
+import type {Project} from '@/entities/project/queries/useProjects';
+import type {ProjectFilters} from './hooks/useProjectFilters';
+import {Language, LANGUAGE_CONFIG} from "@gridix/utils/lib";
 
 interface ProjectHeaderProps {
   project: Project;

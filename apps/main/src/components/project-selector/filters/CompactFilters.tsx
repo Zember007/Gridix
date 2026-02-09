@@ -20,10 +20,10 @@ interface CompactFiltersProps {
   setSelectedCurrency: (value: string) => void;
   showOnlyAvailable: boolean;
   setShowOnlyAvailable: (value: boolean) => void;
-  priceRange: number[];
-  setPriceRange: (value: number[]) => void;
-  areaRange: number[];
-  setAreaRange: (value: number[]) => void;
+  priceRange: [number, number];
+  setPriceRange: (value: [number, number]) => void;
+  areaRange: [number, number];
+  setAreaRange: (value: [number, number]) => void;
   minPrice: number;
   maxPrice: number;
   minArea: number;

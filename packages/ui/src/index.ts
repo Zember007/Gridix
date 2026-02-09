@@ -73,3 +73,4 @@ export * from './hooks/use-lockscroll';
 export * from './use-toast';
 export * from './wheel-picker';
 export * from './shared-project-drawer';
+export * from './range-input';

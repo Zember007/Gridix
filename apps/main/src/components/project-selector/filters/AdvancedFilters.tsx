@@ -1,5 +1,5 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider} from "@gridix/ui";
+import {useEffect, useMemo, useState} from 'react';
+import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
@@ -27,10 +27,10 @@ type Props = {
   setSelectedCurrency: (value: string) => void;
   showOnlyAvailable: boolean;
   setShowOnlyAvailable: (value: boolean) => void;
-  priceRange: number[];
-  setPriceRange: (value: number[]) => void;
-  areaRange: number[];
-  setAreaRange: (value: number[]) => void;
+  priceRange: [number, number];
+  setPriceRange: (value: [number, number]) => void;
+  areaRange: [number, number];
+  setAreaRange: (value: [number, number]) => void;
   minPrice: number;
   maxPrice: number;
   minArea: number;
@@ -117,7 +117,7 @@ export const AdvancedFilters = ({
   const [advRooms, setAdvRooms] = useState(selectedRooms);
   const [advFloor, setAdvFloor] = useState(selectedFloor);
   const [advPrice, setAdvPrice] = useState(priceRange);
-  const [advArea, setAdvArea] = useState(areaRange);
+  const [advArea, setAdvArea] = useState<[number,number]>(areaRange);
   const [advAvailable, setAdvAvailable] = useState(showOnlyAvailable);
   const [advSearch, setAdvSearch] = useState(searchQuery);
   const [advCurrency, setAdvCurrency] = useState(selectedCurrency);
@@ -268,47 +268,26 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500">{t('project.price')}</div>
-        <div className="text-xs text-gray-700">
-          {formatPrice(advPrice[0] ?? minPrice)}–{formatPrice(advPrice[1] ?? maxPrice)} {getCurrencySymbolSafe(advCurrency)}
-        </div>
-        <Slider
-          value={advPrice}
-          onValueChange={setAdvPrice}
-          max={maxPrice}
-          min={minPrice}
-          step={1}
-          className="w-full"
-          style={
-            {
-              '--slider-thumb-color': themeColor,
-              '--slider-range-color': themeColor,
-            } as React.CSSProperties
-          }
+        <RangeInput
+            label={t("project.price")}
+            min={minPrice}
+            max={maxPrice}
+            value={[minPrice, maxPrice]}
+            onChange={(next) => setAdvPrice(next)}
+            formatHint={formatPrice}
+            unit={getCurrencySymbolSafe(advCurrency)}
+            clamp={true}
         />
-      </div>
 
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500">{t('project.area')}</div>
-        <div className="text-xs text-gray-700">
-          {(advArea[0] ?? minArea)}–{(advArea[1] ?? maxArea)} м²
-        </div>
-        <Slider
-          value={advArea}
-          onValueChange={setAdvArea}
-          max={maxArea}
-          min={minArea}
-          step={1}
-          className="w-full"
-          style={
-            {
-              '--slider-thumb-color': themeColor,
-              '--slider-range-color': themeColor,
-            } as React.CSSProperties
-          }
+        <RangeInput
+            label={t("project.area")}
+            min={minArea}
+            max={maxArea}
+            value={advArea}
+            onChange={(next) => setAdvArea(next)}
+            unit="м²"
+            clamp={true}
         />
-      </div>
 
       <div className="space-y-2">
         <div className="text-xs text-gray-500">{t('project.apartmentNumber')}</div>
