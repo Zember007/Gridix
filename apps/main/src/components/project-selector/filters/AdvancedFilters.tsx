@@ -224,19 +224,28 @@ export const AdvancedFilters = ({
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.rooms')}</div>
           <div className="flex flex-wrap gap-2">
-            {roomsOptions.map(o => (
-              <button
-                key={o.value}
-                type="button"
-                className={cn(
-                  'px-3 py-2 rounded-full border text-sm',
-                  advRooms === o.value ? 'border-gray-900 text-gray-900 bg-gray-50' : 'border-gray-200 text-gray-600',
-                )}
-                onClick={() => setAdvRooms(o.value)}
-              >
-                {o.label}
-              </button>
-            ))}
+            {roomsOptions.length < 6 ? roomsOptions.map(o => (
+                <button
+                    key={o.value}
+                    type="button"
+                    className={cn(
+                        'px-3 py-2 rounded-full border text-sm',
+                        advRooms === o.value ? 'border-gray-900 text-gray-900 bg-gray-50' : 'border-gray-200 text-gray-600',
+                    )}
+                    onClick={() => setAdvRooms(o.value)}
+                >     {o.label}</button>))
+                :
+                  (<Select  value={advRooms} onValueChange={setAdvRooms}>
+              <SelectTrigger className="shadow-none h-auto p-0 bg-transparent px-3 py-2 rounded-full border text-sm">
+                <SelectValue placeholder={t('project.parameters')} />
+              </SelectTrigger>
+              <SelectContent className={'h-[200px]'}>
+                {roomsOptions.map(o => (
+                    <SelectItem className={'py-2 mb-1 rounded-full border text-sm'} key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>)
+            }
           </div>
         </div>
       )}
