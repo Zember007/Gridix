@@ -15,6 +15,7 @@ import { useLanguage } from '@gridix/utils/react';
 import { Shape } from './polygon-editor/GeometryShapes';
 import { compressToWebP } from '@gridix/utils/lib';
 import { trackUsertourEvent } from '@gridix/utils/integrations';
+import PolygonAnnotatorTest from '@/components/visualization/polygon-editor/PolygonAnnotatorTest'
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -936,6 +937,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   </div>
                 )}
               </div>
+
+              {/* <PolygonAnnotatorTest /> */}
 
               <PolygonAnnotator
                 ref={polygonAnnotatorRef}

@@ -68,7 +68,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     const annotator = useAnnotator();
     const viewer = useViewer();
     const hovered = useHover<Annotation>();
-    
+
     const prevShapesRef = useRef<Shape[]>([]);
     const prevCurrentShapeIdRef = useRef<string | null>(null);
     const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
@@ -339,7 +339,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             if (!annotator) {
                 return null;
             }
-            
+
             if (!currentShape) {
                 // Пытаемся получить первую аннотацию, если currentShape нет
                 const latestAnnotations = annotationsRef.current;
@@ -349,31 +349,31 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
                 }
                 return null;
             }
-            
+
             // Сохраняем ID текущей аннотации
             const currentShapeId = currentShape.id;
-            
+
             try {
                 // Программно снимаем выделение, чтобы закоммитить все изменения
                 annotator.setSelected();
-                
+
                 // Небольшая задержка для применения изменений
                 await new Promise(resolve => setTimeout(resolve, 100));
-                
+
                 // Используем ref для получения актуальных аннотаций (не stale замыкание)
                 const latestAnnotations = annotationsRef.current;
                 const updatedAnnotation = latestAnnotations.find(a => a.id === currentShapeId);
-                
+
                 if (updatedAnnotation) {
                     // Конвертируем аннотацию в Shape с актуальными координатами
                     const shape = await annotationToShape(updatedAnnotation as Annotation);
-                    
+
                     // Восстанавливаем выделение
                     annotator.setSelected(currentShapeId);
-                    
+
                     return shape;
                 }
-                
+
                 // Если не нашли аннотацию, возвращаем currentShape
                 return currentShape;
             } catch (error) {
@@ -432,52 +432,52 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         if (mode !== 'view' && currentShape) {
             return;
         }
-        
+
         // Проверяем, изменились ли ID shapes
         const shapesIds = shapes.map(s => s.id).sort().join(',');
         const prevShapesIds = prevShapesRef.current.map(s => s.id).sort().join(',');
-        
+
         // Если ID не изменились, ничего не делаем (избегаем циклических обновлений)
         if (shapesIds === prevShapesIds && prevShapesRef.current.length > 0) {
             return;
         }
-        
+
         prevShapesRef.current = shapes;
-        
+
         // Показываем только неактивные shapes (фоновые)
         const backgroundShapes = shapes
             .filter(shape => !currentShape || shape.id !== currentShape.id)
             .map(shape => ({ ...shape, isSelected: false }));
-        
+
         saveShapesToAnnotations(backgroundShapes);
     }, [shapes, annotator, saveShapesToAnnotations, currentShape, mode]);
-    
+
     // Отдельно обрабатываем изменение currentShape (когда начинаем/завершаем редактирование)
     useEffect(() => {
         if (!annotator) return;
-        
+
         const currentShapeId = currentShape?.id || null;
-        
+
         // Если ID currentShape не изменился, ничего не делаем
         if (currentShapeId === prevCurrentShapeIdRef.current) {
             return;
         }
-        
+
         prevCurrentShapeIdRef.current = currentShapeId;
-        
+
         // Показываем все shapes: фоновые + текущий редактируемый
         const allShapes: Shape[] = [];
-        
+
         shapes.forEach(shape => {
             if (!currentShape || shape.id !== currentShape.id) {
                 allShapes.push({ ...shape, isSelected: false });
             }
         });
-        
+
         if (currentShape && currentShape.points.length > 0) {
             allShapes.push({ ...currentShape, isSelected: true });
         }
-        
+
         saveShapesToAnnotations(allShapes).then(() => {
             // После загрузки аннотаций, выделяем currentShape для редактирования
             if (currentShape && currentShape.id) {
@@ -516,7 +516,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
         const handleCreate = async (annotation: Annotation) => {
             const shape = await annotationToShape(annotation);
-            
+
             if (shape) {
                 // Если мы в режиме редактирования и создаем новый полигон
                 if (drawingEnabled && onCurrentShapeUpdate) {
@@ -529,7 +529,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
         const handleUpdate = async (annotation: Annotation) => {
             const shape = await annotationToShape(annotation);
-            
+
             if (shape) {
                 // Если обновляемая аннотация - это currentShape
                 if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
@@ -541,7 +541,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         };
 
         const handleDelete = (annotation: Annotation) => {
-            
+
             // Если удалили currentShape, сбрасываем его
             if (currentShape && annotation.id === currentShape.id && onCurrentShapeUpdate) {
                 onCurrentShapeUpdate(null);
@@ -549,7 +549,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         };
 
         const handleSelectionChanged = async (selected: Annotation[]) => {
-            
+
             if (selected.length > 0) {
                 const annotation = selected[0];
                 const selectedId = annotation?.id ?? null;
@@ -598,8 +598,8 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
             annotator.on('deleteAnnotation', handleDelete);
         }
         annotator.on('selectionChanged', handleSelectionChanged);
-        
-        
+
+
 
         return () => {
             if (mode !== 'view') {
@@ -713,17 +713,18 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
 
     return (
         <div className="h-full w-full flex flex-col gap-2">
-        
 
-       
+
+
 
             {/* Область аннотирования */}
             <div className="flex-1 border rounded-lg overflow-hidden">
                 <OpenSeadragonAnnotator
-                    tool={mode === 'view' ? null : 'polygon'}
                     style={annotationStyle}
+                    drawingMode="click"
+                    tool={mode === 'view' ? null : 'polygon'}
                     drawingEnabled={mode === 'view' ? false : drawingEnabled}
-                    userSelectAction={mode === 'view' ? UserSelectAction.SELECT : undefined}
+                    userSelectAction={mode === 'view' ? UserSelectAction.SELECT : UserSelectAction.EDIT}
                 >
                     <OpenSeadragonViewer
                         options={options}
