@@ -41,3 +41,6 @@ jobs:
 
       - name: Build
         run: pnpm turbo run build
+
+      - name: Test
+        run: pnpm --filter @gridix/main test 

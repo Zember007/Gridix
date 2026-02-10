@@ -1,3 +1,4 @@
 #!/bin/sh
 
 pnpm turbo run lint
+pnpm --filter @gridix/main test 
