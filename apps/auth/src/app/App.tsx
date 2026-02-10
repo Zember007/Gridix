@@ -3,6 +3,7 @@ import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import AuthPage from "@/pages/AuthPage";
 import CallbackPage from "@/pages/CallbackPage";
+import RootPage from "@/pages/RootPage";
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
       <BrowserRouter>
         <LanguageWrapper>
           <Routes>
+            <Route path="/" element={<RootPage />} />
             <Route path="/:lang/auth" element={<AuthPage />} />
             <Route path="/:lang/auth/signin" element={<AuthPage />} />
             <Route path="/:lang/auth/signup" element={<AuthPage />} />
