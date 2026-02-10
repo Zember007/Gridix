@@ -50,7 +50,7 @@ export const formatPrice = (price: number, currency: CurrencyType): string => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
-  
+
   return `${formatter.format(price)} ${symbol}`;
 };
 
@@ -65,32 +65,36 @@ export const getCurrencySymbolSafe = (currency: string | null): string => {
 
 export const formatPriceWithCurrency = (price: number, currency: string | null, locale: string = 'en-US'): string => {
   if (!price) return 'Цена по запросу';
-  
+
   const symbol = getCurrencySymbolSafe(currency);
   const formatter = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
-  
+
   return `${formatter.format(price)} ${symbol}`;
 };
 
-// Simple fixed-rate conversion helper, aligned with useProjectFilters logic
-const EXCHANGE_RATES: Record<CurrencyType, number> = {
+export const formatMoney = (price: number, currency: string | null, locale: string = 'en-US'): string => {
+  return formatPriceWithCurrency(price, currency, locale);
+};
+
+// Exchange rates represented as RUB per 1 unit of currency
+const RUB_PER_UNIT: Record<CurrencyType, number> = {
   RUB: 1,
-  USD: 0.011,
-  EUR: 0.01,
-  GEL: 0.03,
+  USD: 90.9090909091,
+  EUR: 100,
+  GEL: 33.3333333333,
 };
 
 export const convertPrice = (
-  price: number,
-  fromCurrency: string | null | undefined,
-  toCurrency: string | null | undefined
+    price: number,
+    fromCurrency: string | null | undefined,
+    toCurrency: string | null | undefined
 ): number => {
   if (!price) return 0;
   const from: CurrencyType = isValidCurrency(String(fromCurrency)) ? (fromCurrency as CurrencyType) : 'RUB';
   const to: CurrencyType = isValidCurrency(String(toCurrency)) ? (toCurrency as CurrencyType) : 'RUB';
-  const priceInRub = from === 'RUB' ? price : price / EXCHANGE_RATES[from];
-  return to === 'RUB' ? priceInRub : priceInRub * EXCHANGE_RATES[to];
+  const priceInRub = price * RUB_PER_UNIT[from];
+  return priceInRub / RUB_PER_UNIT[to];
 };

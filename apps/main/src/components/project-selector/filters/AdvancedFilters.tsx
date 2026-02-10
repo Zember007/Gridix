@@ -286,11 +286,11 @@ export const AdvancedFilters = ({
             label={t("project.price")}
             min={minPrice}
             max={maxPrice}
-            value={[minPrice, maxPrice]}
+            value={advPrice}
             onChange={(next) => setAdvPrice(next)}
             formatHint={formatPrice}
             unit={getCurrencySymbolSafe(advCurrency)}
-            clamp={true}
+            clamp={false}
         />
 
         <RangeInput

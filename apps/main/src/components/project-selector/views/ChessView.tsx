@@ -22,6 +22,7 @@ type Props = {
     onApartmentSelect: (apartment: Apartment) => void;
     onOpenFloorPlan: (floorNumber: number) => void;
     themeColor: string;
+    selectedCurrency: string;
     // Extra props can be passed from parent; keep them optional for TS safety
     language?: string;
     t?: (key: string, options?: Record<string, unknown>) => string;
@@ -42,11 +43,12 @@ const getStatusColorClass = (status: Apartment['status']) => {
 };
 
 export const ChessView = ({
-    project,
-    apartments,
-    onApartmentSelect,
-    onOpenFloorPlan,
-}: Props) => {
+                              project,
+                              apartments,
+                              onApartmentSelect,
+                              onOpenFloorPlan,
+                              selectedCurrency,
+                          }: Props) => {
     const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
 
     const { t } = useLanguage();
@@ -84,8 +86,8 @@ export const ChessView = ({
 
     const floorSettings = project.polygon_settings_floor as
         | {
-            colors?: { available?: string; reserved?: string; sold?: string };
-        }
+        colors?: { available?: string; reserved?: string; sold?: string };
+    }
         | undefined;
 
     const colors = {
@@ -181,6 +183,7 @@ export const ChessView = ({
                                                             }}
                                                             className="min-w-[200px]"
                                                             currency={project.currency || null}
+                                                            selectedCurrency={selectedCurrency}
                                                         />
                                                     </TooltipContent>
                                                 </Tooltip>
@@ -223,4 +226,3 @@ export const ChessView = ({
         </div>
     );
 };
-
