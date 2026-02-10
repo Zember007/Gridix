@@ -148,7 +148,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   }
 
   return (
-    <div className={cn("flex justify-center md:items-center",className)}>
+    <div className={cn("flex justify-center md:items-center border-b-2 border-gray-200",className)}>
       {/* 1. Chess - Шахматка */}
       <Button
         variant="ghost"
