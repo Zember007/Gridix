@@ -607,6 +607,7 @@ const ProjectApartmentSelector = ({
                                                     onApartmentSelect={openApartmentPreview}
                                                     onOpenFloorPlan={openFloorPlanFromPanel}
                                                     themeColor={themeColor}
+                                                    selectedCurrency={filters.selectedCurrency}
                                                     language={language}
                                                 />
                                             </Suspense>
@@ -627,6 +628,7 @@ const ProjectApartmentSelector = ({
                                                         handleViewApartment={openApartmentPreview}
                                                         projectId={project.id}
                                                         projectCurrency={project?.currency}
+                                                        selectedCurrency={filters.selectedCurrency}
                                                     />
                                                 </Suspense>
                                             </div>
@@ -657,6 +659,7 @@ const ProjectApartmentSelector = ({
                                                                 facadeSettings={facadeSettings}
                                                                 loading={floorsAllLoading || settingsLoading}
                                                                 facades={facades.map((f) => ({id: f.id, name: f.name}))}
+                                                                selectedCurrency={filters.selectedCurrency}
                                                                 activeFacadeIndex={activeFacadeIndex}
                                                                 onFacadeChange={(nextIndex) => setActiveFacadeIndex(nextIndex)}
                                                             />
@@ -675,7 +678,7 @@ const ProjectApartmentSelector = ({
                                                                 hasFreeLayout={filters.hasFreeLayout}
                                                                 preloadedLayoutPhotosByRooms={preloadedLayoutPhotosByRooms}
                                                                 project={project}
-                                                                formatPrice={formatPrice}
+                                                                convertPrice={filters.convertPrice}
                                                                 selectedCurrency={filters.selectedCurrency}
                                                                 isMobile={isMobile ?? false}
                                                                 themeColor={themeColor}

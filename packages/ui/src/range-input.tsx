@@ -94,7 +94,7 @@ export const RangeInput = ({
                         className={`${inputClassName} pr-10`}
                         onChange={(e) => {
                             const raw = e.target.value;
-                            const nextTo = raw === "" ? max : Number(raw);
+                            const nextTo = raw > String(max) ? max : Number(raw);
                             commit(from, nextTo);
                         }}
                     />

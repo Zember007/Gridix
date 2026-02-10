@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Language } from "@gridix/utils/lib";
+import { formatMoney, Language } from "@gridix/utils/lib";
 import type { Apartment } from '@/entities/apartment/model/types';
 
 interface FieldConfig {
@@ -56,10 +56,9 @@ export const useFieldHelpers = ({
         return '-';
 
       if (fieldName === 'price') {
-        return (
-          formatPrice(convertPrice(value as number, projectCurrency, selectedCurrency)) +
-          ' ' +
-          selectedCurrency
+          return formatMoney(
+              convertPrice(value as number, projectCurrency, selectedCurrency),
+              selectedCurrency,
         );
       }
 
@@ -90,7 +89,7 @@ export const useFieldHelpers = ({
           return String(value);
       }
     },
-    [convertPrice, formatPrice, projectCurrency, selectedCurrency, selectedType, t],
+      [convertPrice, projectCurrency, selectedCurrency, selectedType, t],
   );
 
   return {
