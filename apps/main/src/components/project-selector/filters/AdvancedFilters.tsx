@@ -179,9 +179,7 @@ export const AdvancedFilters = ({
       behavior: "smooth",
     });
   };
-
-  useLockBodyScroll(open);
-
+  
   return (
     <div className="grid grid-cols-1 gap-4 p-4 pb-0 relative ">
       <div className="flex items-center justify-between gap-3">
