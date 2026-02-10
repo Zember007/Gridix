@@ -108,7 +108,7 @@ export const CompactFilters = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-9 w-9 rounded-full p-0 bg-white border-gray-200 [&_svg]:size-4"
+            className="h-9 rounded-full p-0 bg-white border-gray-200 [&_svg]:size-4 basis-9 shrink-0"
             aria-label={t('project.filters')}
             title={t('project.filters')}
           >

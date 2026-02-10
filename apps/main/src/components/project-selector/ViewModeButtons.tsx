@@ -3,6 +3,7 @@ import { Button } from "@gridix/ui";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@gridix/ui";
 import { Building2, Grid, List, MapPin, Heart, Menu, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {cn} from "@/shared/lib/utils.ts";
 
 
 
@@ -17,11 +18,12 @@ interface ViewModeButtonsProps {
   themeColor?: string;
   mapVisible?: boolean
   isWidget?: boolean;
+  className?: string;
 }
 
 
 
-export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible,className }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -146,7 +148,7 @@ export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favor
   }
 
   return (
-    <div className="flex justify-center md:items-center  border-b-2 border-gray-200">
+    <div className={cn("flex justify-center md:items-center",className)}>
       {/* 1. Chess - Шахматка */}
       <Button
         variant="ghost"
