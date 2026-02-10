@@ -302,26 +302,18 @@ export const ProjectSidePanel = ({
       {state.kind === 'floor' ? (
         <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
           {/* Floor Preview Section */}
-          <div className="p-6 border-b border-gray-100 shrink-0">
-            <div className="text-sm text-gray-500 mb-4">{project.name}</div>
+          <div className="shrink-0">
 
-            <div className="relative  w-full bg-gray-50 rounded-lg overflow-hidden mb-4 flex items-center justify-center border border-gray-100">
+            <div
+              onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
+
+              className="relative  w-full rounded-lg overflow-hidden mb-4 flex items-center justify-center">
               <FloorPlanView
                 floorNumber={state.floorNumber}
                 projectId={project.id}
               />
             </div>
 
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant="link"
-                className="text-blue-600 font-medium"
-                onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
-              >
-                {ui.openFloorPlan}
-              </Button>
-            </div>
           </div>
 
           {/* Apartment List */}
