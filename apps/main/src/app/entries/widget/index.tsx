@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { LANGUAGE_CONFIG } from "@gridix/utils/lib";
 import i18n from '@/shared/lib/i18n';
 import { AuthProvider } from '@/contexts/AuthContext';
-import ProjectApartmentSelector from '@/widgets/projectApartmentSelector';
+import { ProjectApartmentSelector } from '@/components';
 import '@/index.css';
 import {
   FloatingProjectButton,

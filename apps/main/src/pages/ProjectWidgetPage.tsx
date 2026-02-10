@@ -1,6 +1,6 @@
 
 import { useLocation, useParams } from "react-router-dom";
-import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
+import { ProjectApartmentSelector } from '@/components';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useMemo } from "react";
 import { BitrixCrmTopBar } from "@/pages/bitrix/components/BitrixCrmTopBar";

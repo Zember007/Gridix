@@ -1,11 +1,15 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Apartment } from '@/entities/apartment/model/types';
-import { convertPrice, DEFAULT_CURRENCY, isValidCurrency } from "@gridix/utils/lib";
+import { convertPrice, DEFAULT_CURRENCY, isValidCurrency } from '@gridix/utils/lib';
+
+// ── Types ──
+
+export type ApartmentTypeFilter = 'all' | 'apartment' | 'commercial' | 'parking';
 
 interface Project {
-  currency?: string;
-  has_commercial?: boolean;
-  has_parking?: boolean;
+  currency?: string | null;
+  has_commercial?: boolean | null;
+  has_parking?: boolean | null;
 }
 
 interface UseProjectFiltersProps {
@@ -13,179 +17,297 @@ interface UseProjectFiltersProps {
   project?: Project;
 }
 
-export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProps) => {
-  const [selectedFloor, setSelectedFloor] = useState<string>('all');
-  const [selectedRooms, setSelectedRooms] = useState<string>('all');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
-  const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
-  const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
+// ── Filter state ──
 
+interface FiltersState {
+  selectedFloor: string;
+  selectedRooms: string;
+  priceRange: [number, number];
+  areaRange: [number, number];
+  searchQuery: string;
+  showOnlyAvailable: boolean;
+  selectedType: ApartmentTypeFilter;
+  selectedCurrency: string;
+}
 
-  // Set currency from project
-  useEffect(() => {
-    if (project?.currency && isValidCurrency(project.currency)) {
-      setSelectedCurrency(project.currency);
-      return;
-    }
+const INITIAL_STATE: FiltersState = {
+  selectedFloor: 'all',
+  selectedRooms: 'all',
+  priceRange: [0, 10_000_000],
+  areaRange: [0, 1000],
+  searchQuery: '',
+  showOnlyAvailable: true,
+  selectedType: 'all',
+  selectedCurrency: 'RUB',
+};
 
-    setSelectedCurrency(DEFAULT_CURRENCY);
-  }, [project?.currency]);
+// ── Actions ──
 
-  // Get unique floors
-  const getUniqueFloors = useCallback(() => {
-    return [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b);
-  }, [apartments]);
+type FiltersAction =
+  | { type: 'SET_FLOOR'; value: string }
+  | { type: 'SET_ROOMS'; value: string }
+  | { type: 'SET_PRICE_RANGE'; value: [number, number] }
+  | { type: 'SET_AREA_RANGE'; value: [number, number] }
+  | { type: 'SET_SEARCH'; value: string }
+  | { type: 'SET_SHOW_ONLY_AVAILABLE'; value: boolean }
+  | { type: 'SET_TYPE'; value: ApartmentTypeFilter }
+  | { type: 'SET_CURRENCY'; value: string }
+  | { type: 'RESET'; defaults: Partial<FiltersState> };
 
-  // Get unique room counts
-  const getUniqueRoomCounts = useCallback(() => {
-    const numericRooms = apartments
-        .filter(apt => apt.type === 'apartment' && apt.rooms !== 'free_layout')
-        .map(apt => typeof apt.rooms === 'string' ? parseInt(apt.rooms) : apt.rooms)
-        .filter(rooms => !isNaN(rooms));
-    return [...new Set(numericRooms)].sort((a, b) => a - b);
-  }, [apartments]);
+function filtersReducer(state: FiltersState, action: FiltersAction): FiltersState {
+  switch (action.type) {
+    case 'SET_FLOOR':
+      return { ...state, selectedFloor: action.value };
+    case 'SET_ROOMS':
+      return { ...state, selectedRooms: action.value };
+    case 'SET_PRICE_RANGE':
+      return { ...state, priceRange: action.value };
+    case 'SET_AREA_RANGE':
+      return { ...state, areaRange: action.value };
+    case 'SET_SEARCH':
+      return { ...state, searchQuery: action.value };
+    case 'SET_SHOW_ONLY_AVAILABLE':
+      return { ...state, showOnlyAvailable: action.value };
+    case 'SET_TYPE':
+      return { ...state, selectedType: action.value };
+    case 'SET_CURRENCY':
+      return { ...state, selectedCurrency: action.value };
+    case 'RESET':
+      return { ...INITIAL_STATE, ...action.defaults };
+    default:
+      return state;
+  }
+}
 
-  // Check if free_layout exists
-  const hasFreeLayout = useCallback(() => {
-    return apartments.some(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
-  }, [apartments]);
-  // Calculate price and area ranges
-  const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
-    if (apartments.length === 0) {
-      return { minPrice: 0, maxPrice: 10000000, minArea: 0, maxArea: 200 };
-    }
-    const convertedPrices = apartments
-        .map(apt => convertPrice(apt.price || 0, project?.currency, selectedCurrency));
-    const areas = apartments.map(apt => apt.area);
-    return {
-      minPrice: convertedPrices.length > 0 ? Math.min(...convertedPrices) : 0,
-      maxPrice: convertedPrices.length > 0 ? Math.max(...convertedPrices) : 10000000,
-      minArea: areas.length > 0 ? Math.min(...areas) : 0,
-      maxArea: areas.length > 0 ? Math.max(...areas) : 200,
-    };
-  }, [apartments, selectedCurrency, project?.currency]);
+// ── Pure filter function (testable) ──
 
-  const previousCurrencyRef = useRef<string>(selectedCurrency);
-
-  // Update range bounds when currency changes, preserving the selected interval semantics.
-  useEffect(() => {
-    if (apartments.length === 0) return;
-
-    setPriceRange((previousRange) => {
-      const [previousMin = minPrice, previousMax = maxPrice] = previousRange;
-      const previousCurrency = previousCurrencyRef.current;
-      const currentCurrency = selectedCurrency;
-
-      const nextMin = convertPrice(previousMin, previousCurrency, currentCurrency);
-      const nextMax = convertPrice(previousMax, previousCurrency, currentCurrency);
-
-      const normalizedMin = Math.max(minPrice, Math.min(nextMin, maxPrice));
-      const normalizedMax = Math.min(maxPrice, Math.max(nextMax, minPrice));
-
-      return normalizedMin <= normalizedMax ? [normalizedMin, normalizedMax] : [minPrice, maxPrice];
-    });
-
-    setAreaRange((previousRange) => {
-      if (!previousRange.length) return [minArea, maxArea];
-      const [previousMin = minArea, previousMax = maxArea] = previousRange;
-      const normalizedMin = Math.max(minArea, Math.min(previousMin, maxArea));
-      const normalizedMax = Math.min(maxArea, Math.max(previousMax, minArea));
-      return normalizedMin <= normalizedMax ? [normalizedMin, normalizedMax] : [minArea, maxArea];
-    });
-
-    previousCurrencyRef.current = selectedCurrency;
-  }, [selectedCurrency, minPrice, maxPrice, minArea, maxArea, apartments.length]);
-
-  // Filtered apartments
-  const filteredApartments = useMemo(() => {
-    let filtered = [...apartments];
-
-    if (selectedFloor !== 'all') {
-      filtered = filtered.filter(apt => apt.floor_number === parseInt(selectedFloor));
-    }
-
-    if (selectedRooms !== 'all') {
-      if (selectedRooms === '4+') {
-        filtered = filtered.filter(apt =>
-                apt.type === 'apartment' && (
-                    Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'
-                )
-        );
-      } else if (selectedRooms === 'free_layout') {
-        filtered = filtered.filter(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
-      } else {
-        filtered = filtered.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === parseInt(selectedRooms));
-      }
-    }
-
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(apt => apt.type === selectedType);
-    }
-
-    if (showOnlyAvailable) {
-      filtered = filtered.filter(apt => apt.status === 'available');
-    }
-
-    const minSelectedPrice = priceRange[0] ?? 0;
-    const maxSelectedPrice = priceRange[1] ?? Number.MAX_SAFE_INTEGER;
-    const minSelectedArea = areaRange[0] ?? 0;
-    const maxSelectedArea = areaRange[1] ?? Number.MAX_SAFE_INTEGER;
-
-    filtered = filtered.filter(apt => {
-      const price = apt.price || 0;
-      const convertedPrice = convertPrice(price, project?.currency, selectedCurrency);
-      const area = apt.area || 0;
-
-      return (
-          convertedPrice >= minSelectedPrice &&
-          convertedPrice <= maxSelectedPrice &&
-          area >= minSelectedArea &&
-          area <= maxSelectedArea
-      );
-    });
-
-    if (searchQuery) {
-      filtered = filtered.filter(apt =>
-          apt.apartment_number.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    return filtered;
-  }, [apartments, selectedFloor, selectedRooms, selectedType, showOnlyAvailable, priceRange, areaRange, searchQuery, selectedCurrency, project?.currency]);
-
-  const getAvailableCount = useCallback(() => {
-    return filteredApartments.filter(apt => apt.status === 'available').length;
-  }, [filteredApartments]);
-
-  const resetFilters = useCallback(() => {
-    setSelectedFloor('all');
-    setSelectedRooms('all');
-    setSelectedType('all');
-    setSearchQuery('');
-    setShowOnlyAvailable(true);
-
-    // Reset currency to project currency when possible, otherwise RUB
-    const base = (project?.currency && isValidCurrency(project.currency)) ? project.currency : DEFAULT_CURRENCY;
-    setSelectedCurrency(base);
-
-    // Reset ranges to full allowed range for current currency/units
-    setPriceRange([minPrice, maxPrice]);
-    setAreaRange([minArea, maxArea]);
-  }, [maxArea, maxPrice, minArea, minPrice, project?.currency]);
-
-  return {
-    // State
+export function filterApartments(
+  apartments: Apartment[],
+  state: FiltersState,
+  projectCurrency: string | undefined | null,
+): Apartment[] {
+  const {
     selectedFloor,
     selectedRooms,
+    selectedType,
+    showOnlyAvailable,
     priceRange,
     areaRange,
     searchQuery,
-    showOnlyAvailable,
-    selectedType,
     selectedCurrency,
+  } = state;
+
+  let result = apartments;
+
+  if (selectedFloor !== 'all') {
+    const floorNum = parseInt(selectedFloor, 10);
+    result = result.filter(apt => apt.floor_number === floorNum);
+  }
+
+  if (selectedRooms !== 'all') {
+    if (selectedRooms === '4+') {
+      result = result.filter(
+        apt => apt.type === 'apartment' && (Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'),
+      );
+    } else if (selectedRooms === 'free_layout') {
+      result = result.filter(apt => apt.type === 'apartment' && apt.rooms === 'free_layout');
+    } else {
+      const roomCount = parseInt(selectedRooms, 10);
+      result = result.filter(apt => apt.type === 'apartment' && Number(apt.rooms) === roomCount);
+    }
+  }
+
+  if (selectedType !== 'all') {
+    result = result.filter(apt => apt.type === selectedType);
+  }
+
+  if (showOnlyAvailable) {
+    result = result.filter(apt => apt.status === 'available');
+  }
+
+  const [minPrice, maxPrice] = priceRange;
+  const [minArea, maxArea] = areaRange;
+
+  result = result.filter(apt => {
+    const converted = convertPrice(apt.price || 0, projectCurrency, selectedCurrency);
+    const area = apt.area || 0;
+    return converted >= minPrice && converted <= maxPrice && area >= minArea && area <= maxArea;
+  });
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    result = result.filter(apt => apt.apartment_number.toLowerCase().includes(q));
+  }
+
+  return result;
+}
+
+// ── Hook ──
+
+export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProps) => {
+  const [state, dispatch] = useReducer(filtersReducer, INITIAL_STATE);
+
+  // ── Dispatch wrappers (maintain backward-compatible setter signatures) ──
+
+  const setSelectedFloor = useCallback(
+    (value: string) => dispatch({ type: 'SET_FLOOR', value }),
+    [],
+  );
+  const setSelectedRooms = useCallback(
+    (value: string) => dispatch({ type: 'SET_ROOMS', value }),
+    [],
+  );
+  const setPriceRange = useCallback(
+    (value: [number, number]) => dispatch({ type: 'SET_PRICE_RANGE', value }),
+    [],
+  );
+  const setAreaRange = useCallback(
+    (value: [number, number]) => dispatch({ type: 'SET_AREA_RANGE', value }),
+    [],
+  );
+  const setSearchQuery = useCallback(
+    (value: string) => dispatch({ type: 'SET_SEARCH', value }),
+    [],
+  );
+  const setShowOnlyAvailable = useCallback(
+    (value: boolean) => dispatch({ type: 'SET_SHOW_ONLY_AVAILABLE', value }),
+    [],
+  );
+  const setSelectedType = useCallback(
+    (value: ApartmentTypeFilter) => dispatch({ type: 'SET_TYPE', value }),
+    [],
+  );
+  const setSelectedCurrency = useCallback(
+    (value: string) => dispatch({ type: 'SET_CURRENCY', value }),
+    [],
+  );
+
+  // ── Sync currency from project ──
+
+  useEffect(() => {
+    if (project?.currency && isValidCurrency(project.currency)) {
+      dispatch({ type: 'SET_CURRENCY', value: project.currency });
+    } else {
+      dispatch({ type: 'SET_CURRENCY', value: DEFAULT_CURRENCY });
+    }
+  }, [project?.currency]);
+
+  // ── Unique values (memoized) ──
+
+  const getUniqueFloors = useCallback(
+    () => [...new Set(apartments.map(apt => apt.floor_number))].sort((a, b) => a - b),
+    [apartments],
+  );
+
+  const getUniqueRoomCounts = useCallback(() => {
+    const numericRooms = apartments
+      .filter(apt => apt.type === 'apartment' && apt.rooms !== 'free_layout')
+      .map(apt => (typeof apt.rooms === 'string' ? parseInt(apt.rooms, 10) : apt.rooms))
+      .filter(rooms => !isNaN(rooms));
+    return [...new Set(numericRooms)].sort((a, b) => a - b);
+  }, [apartments]);
+
+  const hasFreeLayout = useCallback(
+    () => apartments.some(apt => apt.type === 'apartment' && apt.rooms === 'free_layout'),
+    [apartments],
+  );
+
+  // ── Price / area bounds ──
+
+  const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
+    if (apartments.length === 0) {
+      return { minPrice: 0, maxPrice: 10_000_000, minArea: 0, maxArea: 200 };
+    }
+    const prices = apartments.map(apt =>
+      convertPrice(apt.price || 0, project?.currency, state.selectedCurrency),
+    );
+    const areas = apartments.map(apt => apt.area);
+    return {
+      minPrice: Math.min(...prices),
+      maxPrice: Math.max(...prices),
+      minArea: Math.min(...areas),
+      maxArea: Math.max(...areas),
+    };
+  }, [apartments, state.selectedCurrency, project?.currency]);
+
+  // ── Adjust ranges when currency changes ──
+
+  const previousCurrencyRef = useRef(state.selectedCurrency);
+
+  useEffect(() => {
+    if (apartments.length === 0) return;
+
+    const prev = previousCurrencyRef.current;
+    const curr = state.selectedCurrency;
+
+    if (prev !== curr) {
+      const [prevMin, prevMax] = state.priceRange;
+      const nextMin = convertPrice(prevMin, prev, curr);
+      const nextMax = convertPrice(prevMax, prev, curr);
+      const clampedMin = Math.max(minPrice, Math.min(nextMin, maxPrice));
+      const clampedMax = Math.min(maxPrice, Math.max(nextMax, minPrice));
+
+      dispatch({
+        type: 'SET_PRICE_RANGE',
+        value: clampedMin <= clampedMax ? [clampedMin, clampedMax] : [minPrice, maxPrice],
+      });
+    }
+
+    // Area range normalisation (in case bounds shifted)
+    const [prevAreaMin, prevAreaMax] = state.areaRange;
+    const normAreaMin = Math.max(minArea, Math.min(prevAreaMin, maxArea));
+    const normAreaMax = Math.min(maxArea, Math.max(prevAreaMax, minArea));
+    if (normAreaMin !== prevAreaMin || normAreaMax !== prevAreaMax) {
+      dispatch({
+        type: 'SET_AREA_RANGE',
+        value: normAreaMin <= normAreaMax ? [normAreaMin, normAreaMax] : [minArea, maxArea],
+      });
+    }
+
+    previousCurrencyRef.current = curr;
+  }, [state.selectedCurrency, minPrice, maxPrice, minArea, maxArea, apartments.length, state.priceRange, state.areaRange]);
+
+  // ── Filtered apartments ──
+
+  const filteredApartments = useMemo(
+    () => filterApartments(apartments, state, project?.currency),
+    [apartments, state, project?.currency],
+  );
+
+  // ── Available count ──
+
+  const getAvailableCount = useCallback(
+    () => filteredApartments.filter(apt => apt.status === 'available').length,
+    [filteredApartments],
+  );
+
+  // ── Reset ──
+
+  const resetFilters = useCallback(() => {
+    const baseCurrency =
+      project?.currency && isValidCurrency(project.currency) ? project.currency : DEFAULT_CURRENCY;
+    dispatch({
+      type: 'RESET',
+      defaults: {
+        selectedCurrency: baseCurrency,
+        priceRange: [minPrice, maxPrice],
+        areaRange: [minArea, maxArea],
+      },
+    });
+  }, [minPrice, maxPrice, minArea, maxArea, project?.currency]);
+
+  // ── Public API (backward compatible) ──
+
+  return {
+    // State
+    selectedFloor: state.selectedFloor,
+    selectedRooms: state.selectedRooms,
+    priceRange: state.priceRange,
+    areaRange: state.areaRange,
+    searchQuery: state.searchQuery,
+    showOnlyAvailable: state.showOnlyAvailable,
+    selectedType: state.selectedType,
+    selectedCurrency: state.selectedCurrency,
 
     // Setters
     setSelectedFloor,
@@ -197,7 +319,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     setSelectedType,
     setSelectedCurrency,
 
-    // Computed values
+    // Computed
     filteredApartments,
     getUniqueFloors,
     getUniqueRoomCounts,

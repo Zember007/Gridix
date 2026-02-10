@@ -10,7 +10,8 @@
     "build:widget": "WIDGET_BUILD=true vite build --outDir ./public/widget",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@annotorious/react": "^3.7.12",
@@ -90,6 +91,7 @@
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-inspect": "^0.8.5"
+    "vite-plugin-inspect": "^0.8.5",
+    "vitest": "^4.0.18"
   }
 }
