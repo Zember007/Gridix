@@ -41,20 +41,75 @@ export const RangeInput = ({
                                unit,
                                className,
                                inputClassName,
-                               clamp = false,
                            }: RangeInputProps) => {
     const from = value[0];
     const to = value[1];
 
-    const commit = (nextFrom: number, nextTo: number) => {
-        if (!clamp) {
-            onChange([nextFrom, nextTo]);
-            return;
+
+    const [fromText, setFromText] = React.useState<string>(String(from));
+    const [toText, setToText] = React.useState<string>(String(to));
+
+    React.useEffect(() => {
+        setFromText(String(from));
+    }, [from]);
+
+    React.useEffect(() => {
+        setToText(String(to));
+    }, [to]);
+
+    const parseNumber = (raw: string): number | null => {
+        const trimmed = raw.trim();
+
+        if (trimmed === "") {
+            return null;
         }
 
+        const parsed = Number(trimmed);
+        if (!Number.isFinite(parsed)) {
+            return null;
+        }
+
+        return parsed;
+    };
+
+    const commit = (nextFrom: number, nextTo: number) => {
         const f = clampNum(nextFrom, min, max);
         const t = clampNum(nextTo, min, max);
         onChange([f, t]);
+    };
+
+    const commitFrom = () => {
+        const parsedFrom = parseNumber(fromText);
+
+        if (parsedFrom === null) {
+            setFromText("");
+            return;
+        }
+
+        const boundedFrom = clampNum(parsedFrom, min, max);
+        const boundedTo = clampNum(to, min, max);
+        const nextFrom = Math.min(boundedFrom, boundedTo);
+
+        commit(nextFrom, boundedTo);
+        setFromText(String(nextFrom));
+        setToText(String(boundedTo));
+    };
+
+    const commitTo = () => {
+        const parsedTo = parseNumber(toText);
+
+        if (parsedTo === null) {
+            setToText("");
+            return;
+        }
+
+        const boundedFrom = clampNum(from, min, max);
+        const boundedTo = clampNum(parsedTo, min, max);
+        const nextTo = Math.max(boundedTo, boundedFrom);
+
+        commit(boundedFrom, nextTo);
+        setFromText(String(boundedFrom));
+        setToText(String(nextTo));
     };
 
     return (
@@ -68,13 +123,17 @@ export const RangeInput = ({
                         inputMode="numeric"
                         min={min}
                         max={to}
-                        value={from}
+                        value={fromText}
                         placeholder={fromPlaceholder}
                         className={`${inputClassName} pr-10`} // место под unit справа
                         onChange={(e) => {
-                            const raw = e.target.value;
-                            const nextFrom = raw === "" ? min : Number(raw);
-                            commit(nextFrom, to);
+                            setFromText(e.target.value);
+                        }}
+                        onBlur={commitFrom}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                commitFrom();
+                            }
                         }}
                     />
 
@@ -89,13 +148,17 @@ export const RangeInput = ({
                         inputMode="numeric"
                         min={from}
                         max={max}
-                        value={to}
+                        value={toText}
                         placeholder={toPlaceholder}
                         className={`${inputClassName} pr-10`}
                         onChange={(e) => {
-                            const raw = e.target.value;
-                            const nextTo = raw > String(max) ? max : Number(raw);
-                            commit(from, nextTo);
+                            setToText(e.target.value);
+                        }}
+                        onBlur={commitTo}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                commitTo();
+                            }
                         }}
                     />
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
