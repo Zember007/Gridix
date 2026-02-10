@@ -16,8 +16,8 @@ interface UseProjectFiltersProps {
 export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProps) => {
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<string>('all');
-  const [priceRange, setPriceRange] = useState<number[]>([0, 10000000]);
-  const [areaRange, setAreaRange] = useState<number[]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
+  const [areaRange, setAreaRange] = useState<[number, number]>([0, 1000]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true);
   const [selectedType, setSelectedType] = useState<'all' | 'apartment' | 'commercial' | 'parking'>('all');

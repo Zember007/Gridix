@@ -280,7 +280,7 @@ export const AdvancedFilters = ({
             onChange={(next) => setAdvPrice(next)}
             formatHint={formatPrice}
             unit={getCurrencySymbolSafe(advCurrency)}
-            clamp={false}
+            clamp={true}
         />
 
         <RangeInput
