@@ -4,6 +4,10 @@ export type PolygonPointPct = { x: number; y: number };
 export type PolygonBoundsPct = { minX: number; maxX: number; minY: number; maxY: number };
 export type PopupSize = { width: number; height: number };
 export type PopupPosition = { x: number; y: number };
+export type ImageRectInContainer = {
+  offset: { x: number; y: number };
+  size: { width: number; height: number };
+};
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -41,22 +45,22 @@ const clampWithin = (pos: number, popupSize: number, containerSize: number, pad:
 export function computeMobileDockPosition(args: {
   containerEl: HTMLElement | null;
   isExpanded: boolean;
-  imgDimensions: { width: number; height: number };
+  imageRect: ImageRectInContainer | null;
   visibleFloors: BuildingFloor[];
   size: PopupSize;
 }): PopupPosition | null {
-  const { containerEl, isExpanded, imgDimensions, visibleFloors, size } = args;
+  const { containerEl, isExpanded, imageRect, visibleFloors, size } = args;
   if (!containerEl) return null;
-  if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return null;
+  if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return null;
 
   const containerRect = containerEl.getBoundingClientRect();
   const containerWidth = containerRect.width;
   const containerHeight = containerRect.height;
 
-  const svgWidth = imgDimensions.width;
-  const svgHeight = imgDimensions.height;
-  const svgLeft = (containerWidth - svgWidth) / 2;
-  const svgTop = (containerHeight - svgHeight) / 2;
+  const svgWidth = imageRect.size.width;
+  const svgHeight = imageRect.size.height;
+  const svgLeft = imageRect.offset.x;
+  const svgTop = imageRect.offset.y;
 
   const padding = 8;
   const offset = 12;
@@ -143,13 +147,13 @@ export function computeMobileDockPosition(args: {
 export function computePopupPositionForPolygon(args: {
   containerEl: HTMLElement | null;
   isExpanded: boolean;
-  imgDimensions: { width: number; height: number };
+  imageRect: ImageRectInContainer | null;
   polygonBoundsPct: PolygonBoundsPct;
   size: PopupSize;
 }): PopupPosition | null {
-  const { containerEl, isExpanded, imgDimensions, polygonBoundsPct, size } = args;
+  const { containerEl, isExpanded, imageRect, polygonBoundsPct, size } = args;
   if (!containerEl) return null;
-  if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return null;
+  if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return null;
 
   const padding = 8;
   const offset = 12;
@@ -158,10 +162,10 @@ export function computePopupPositionForPolygon(args: {
   const containerWidth = containerRect.width;
   const containerHeight = containerRect.height;
 
-  const svgWidth = imgDimensions.width;
-  const svgHeight = imgDimensions.height;
-  const svgLeft = (containerWidth - svgWidth) / 2;
-  const svgTop = (containerHeight - svgHeight) / 2;
+  const svgWidth = imageRect.size.width;
+  const svgHeight = imageRect.size.height;
+  const svgLeft = imageRect.offset.x;
+  const svgTop = imageRect.offset.y;
 
   const polyMinX = svgLeft + (polygonBoundsPct.minX / 100) * svgWidth;
   const polyMaxX = svgLeft + (polygonBoundsPct.maxX / 100) * svgWidth;
@@ -199,7 +203,6 @@ export function computePopupPositionForPolygon(args: {
 
   return { x, y };
 }
-
 
 
 
