@@ -413,9 +413,9 @@ export const ProjectSidePanel = ({
               <span className="text-3xl font-bold text-gray-900">
                 {formatPrice(state.apartment.price ?? undefined)}
               </span>
-              <span className="text-sm text-gray-500 font-medium">
+              { state.apartment.price && <span className="text-sm text-gray-500 font-medium">
                 {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
-              </span>
+              </span>}
             </div>
           </div>
 
