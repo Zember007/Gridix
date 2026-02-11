@@ -35,6 +35,7 @@ interface CompactFiltersProps {
   hasFreeLayout?: () => boolean;
   project?: Project;
   viewMode: string;
+  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
 }
 
@@ -66,6 +67,7 @@ export const CompactFilters = ({
   hasFreeLayout,
   project,
   viewMode,
+  setViewMode,
   themeColor = '#000000',
 }: CompactFiltersProps) => {
   const { t, language } = useLanguage();
@@ -145,6 +147,7 @@ export const CompactFilters = ({
             {...(hasFreeLayout ? { hasFreeLayout } : {})}
             {...(project ? { project } : {})}
             viewMode={viewMode}
+            setViewMode={setViewMode}
             themeColor={themeColor}
             formatPrice={formatPrice}
           />

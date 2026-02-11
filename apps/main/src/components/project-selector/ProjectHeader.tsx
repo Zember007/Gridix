@@ -81,6 +81,7 @@ export const ProjectHeader = ({
                 hasFreeLayout={filters.hasFreeLayout}
                 project={project}
                 viewMode={viewMode}
+                setViewMode={setViewMode}
                 themeColor={themeColor}
                 formatPrice={formatPrice}
               />
@@ -142,6 +143,7 @@ export const ProjectHeader = ({
                         {...(filters.hasFreeLayout ? { hasFreeLayout: filters.hasFreeLayout } : {})}
                         project={project}
                         viewMode={viewMode}
+                        setViewMode={setViewMode}
                         themeColor={themeColor}
                         formatPrice={formatPrice}
                       />

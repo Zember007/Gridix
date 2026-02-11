@@ -2,7 +2,6 @@ import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import { normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
-import { useLocation, useNavigate } from 'react-router-dom';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import {useLanguage} from '@/contexts/LanguageContext';
@@ -43,6 +42,7 @@ type Props = {
   hasFreeLayout?: () => boolean;
   project?: ProjectLike;
   viewMode: string;
+  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
   formatPrice: (price: number) => string;
 };
@@ -76,12 +76,11 @@ export const AdvancedFilters = ({
   hasFreeLayout,
   project,
   viewMode,
+  setViewMode,
   themeColor = '#000000',
   formatPrice,
 }: Props) => {
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const ui = useMemo(() => ({
     apply: language === 'ru' ? 'Применить' : 'Apply',
@@ -179,15 +178,7 @@ export const AdvancedFilters = ({
     setSearchQuery(advSearch);
     setShowOnlyAvailable(advAvailable);
 
-    const nextSearchParams = new URLSearchParams(location.search);
-    nextSearchParams.set('view', 'list');
-    navigate(
-      {
-        pathname: location.pathname,
-        search: `?${nextSearchParams.toString()}` ,
-      },
-      { replace: false },
-    );
+    setViewMode('list');
 
     onClose?.();
     window.scrollTo({
