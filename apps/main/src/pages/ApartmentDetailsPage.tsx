@@ -1083,7 +1083,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             style={getButtonStyle('available')}
                             onClick={() => setIsReserveDialogOpen(true)}
                           >
-                            {t('common.reserve')}
+                            {t('common.leaveRequest')}
                           </Button>
                         )}
 
