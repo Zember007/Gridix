@@ -75,6 +75,9 @@ importers:
       postcss:
         specifier: ^8.4.47
         version: 8.5.6
+      rtlcss:
+        specifier: ^4.3.0
+        version: 4.3.0
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
@@ -145,6 +148,9 @@ importers:
       postcss:
         specifier: ^8.4.47
         version: 8.5.6
+      rtlcss:
+        specifier: ^4.3.0
+        version: 4.3.0
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
@@ -362,6 +368,9 @@ importers:
       postcss:
         specifier: ^8.4.47
         version: 8.5.6
+      rtlcss:
+        specifier: ^4.3.0
+        version: 4.3.0
       tailwindcss:
         specifier: ^3.4.11
         version: 3.4.19
@@ -4457,6 +4466,11 @@ packages:
   rollup@4.57.0:
     resolution: {integrity: sha512-e5lPJi/aui4TO1LpAXIRLySmwXSE8k3b9zoGfd42p67wzxog4WHjiZF3M2uheQih4DGyc25QEV4yRBbpueNiUA==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
+    hasBin: true
+
+  rtlcss@4.3.0:
+    resolution: {integrity: sha512-FI+pHEn7Wc4NqKXMXFM+VAYKEj/mRIcW4h24YVwVtyjI+EqGrLc2Hx/Ny0lrZ21cBWU2goLy36eqMcNj3AQJig==}
+    engines: {node: '>=12.0.0'}
     hasBin: true
 
   run-applescript@7.1.0:
@@ -8820,6 +8834,13 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.57.0
       '@rollup/rollup-win32-x64-msvc': 4.57.0
       fsevents: 2.3.3
+
+  rtlcss@4.3.0:
+    dependencies:
+      escalade: 3.2.0
+      picocolors: 1.1.1
+      postcss: 8.5.6
+      strip-json-comments: 3.1.1
 
   run-applescript@7.1.0: {}
 

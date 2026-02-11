@@ -160,7 +160,7 @@ const AuthPage = () => {
       const run = async () => {
         // 1) Если пришли из amoCRM (виджет без SSO) — пробуем "связать аккаунты" без токенов:
         // создаём/обновляем запись в crm_connections с crm_type=amocrm и subdomain.
-        // Это нужно для того, чтобы следующий заход из amoCRM смог получить SSO через amocrm-sso-login.
+        // Это нужно для того, чтобы следующий заход из amoCRM смог получить SSO через sso-login.
         try {
           if (!linkingAmoRef.current) {
             linkingAmoRef.current = true;

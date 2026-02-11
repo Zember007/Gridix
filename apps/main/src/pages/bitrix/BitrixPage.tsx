@@ -6,15 +6,13 @@ import { Button, Card, CardContent, Loader } from "@gridix/ui";
 import { toast } from "sonner";
 import ProjectList from "@/components/projects/ProjectList";
 import { BitrixCrmTopBar } from "@/pages/bitrix/components/BitrixCrmTopBar";
+import { useBitrixConnect } from "@/pages/bitrix/hooks/useBitrixConnect";
 import { useCrmProjectsLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
-
-type BitrixAuth = { domain?: string; member_id?: string; memberId?: string } | null;
 
 function getBitrixDealIdFromPlacement(): number | null {
   try {
-    const info = (BX24 as unknown as { placement?: { info?: () => { options?: unknown } } })?.placement?.info?.();
+    const info = typeof BX24 !== "undefined" ? BX24?.placement?.info?.() ?? null : null;
     const opts = info?.options ?? null;
-
     const optsObj: Record<string, unknown> | null =
       typeof opts === "object" && opts !== null ? (opts as Record<string, unknown>) : null;
 
@@ -23,7 +21,6 @@ function getBitrixDealIdFromPlacement(): number | null {
       return Number.isFinite(n) && n > 0 ? n : null;
     };
 
-    // Common variants
     const direct =
       toDealId(optsObj?.ENTITY_ID) ??
       toDealId(optsObj?.entityId) ??
@@ -31,16 +28,11 @@ function getBitrixDealIdFromPlacement(): number | null {
       null;
     if (direct) return direct;
 
-    // Some placements pass options as JSON string or nested PLACEMENT_OPTIONS
-    const raw =
-      typeof opts === "string"
-        ? opts
-        : (optsObj?.PLACEMENT_OPTIONS as unknown);
+    const raw = typeof opts === "string" ? opts : (optsObj?.PLACEMENT_OPTIONS as unknown);
     if (typeof raw === "string" && raw.trim()) {
       try {
         const parsed = JSON.parse(raw);
-        const fromJson = toDealId(parsed?.ID ?? parsed?.id);
-        if (fromJson) return fromJson;
+        return toDealId(parsed?.ID ?? parsed?.id);
       } catch {
         // ignore
       }
@@ -60,30 +52,22 @@ function normalizeDomain(raw: string | null | undefined): string {
 
 export default function BitrixPage() {
   const navigate = useNavigate();
-  const initialParams = useMemo(() => new URLSearchParams(window.location.search), []);
-  const initialDealIdFromUrl = useMemo(() => {
-    const sp = new URLSearchParams(window.location.search);
-    const raw = sp.get("deal_id");
+  const qp = useMemo(() => new URLSearchParams(window.location.search), []);
+  const initialDealId = useMemo(() => {
+    const raw = qp.get("deal_id");
     const n = raw ? Number(raw) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
-  }, []);
-  const initialDomainFromUrl = useMemo(() => {
-    const raw = initialParams.get("domain") ?? initialParams.get("DOMAIN") ?? "";
-    return normalizeDomain(raw);
-  }, [initialParams]);
-  const initialMemberIdFromUrl = useMemo(() => {
-    return initialParams.get("member_id") ?? initialParams.get("memberId") ?? initialParams.get("MEMBER_ID") ?? null;
-  }, [initialParams]);
+  }, [qp]);
+  const initialDomain = useMemo(() => normalizeDomain(qp.get("domain") ?? qp.get("DOMAIN") ?? ""), [qp]);
+  const initialMemberId = useMemo(() => qp.get("member_id") ?? qp.get("memberId") ?? qp.get("MEMBER_ID") ?? null, [qp]);
 
-  const [loading, setLoading] = useState(true);
-  const [bxDomain, setBxDomain] = useState<string | null>(initialDomainFromUrl || null);
-  const [bxMemberId, setBxMemberId] = useState<string | null>(initialMemberIdFromUrl || null);
-  const [dealId, setDealId] = useState<number | null>(initialDealIdFromUrl);
+  const [bxDomain, setBxDomain] = useState<string | null>(initialDomain || null);
+  const [bxMemberId, setBxMemberId] = useState<string | null>(initialMemberId || null);
+  const [dealId, setDealId] = useState<number | null>(initialDealId);
+  const [ssoAttempted, setSsoAttempted] = useState(false);
 
-  const [needsConnect, setNeedsConnect] = useState(false);
-  const [connectUrl, setConnectUrl] = useState<string | null>(null);
-
-  const { projects, loading: projectsLoading } = useCrmProjectsLite(!loading && !needsConnect);
+  const { status, user, connectUrl } = useBitrixConnect(bxDomain, bxMemberId);
+  const { projects, loading: projectsLoading } = useCrmProjectsLite(!!user && status === "claimed");
 
   const setSearchParams = (patch: Record<string, string | null>) => {
     const url = new URL(window.location.href);
@@ -95,19 +79,16 @@ export default function BitrixPage() {
   };
 
   useEffect(() => {
-    // Do not block page loading on BX24.init(). In some Bitrix contexts, init callback can be delayed.
     if (typeof BX24 === "undefined") return;
     try {
       BX24.init(() => {
         try {
           BX24.fitWindow?.();
-          const auth: BitrixAuth =
-            (BX24 as unknown as { getAuth?: () => BitrixAuth })?.getAuth?.() ?? null;
-          const authDomain = normalizeDomain(auth?.domain ?? null);
-          const authMemberId = auth?.member_id ?? auth?.memberId ?? null;
-          if (authDomain) setBxDomain(authDomain);
-          if (authMemberId) setBxMemberId(String(authMemberId));
-
+          const auth = BX24.getAuth?.() ?? null;
+          const d = normalizeDomain(auth?.domain ?? null);
+          const m = auth?.member_id ?? null;
+          if (d) setBxDomain(d);
+          if (m) setBxMemberId(String(m));
           const placementDealId = getBitrixDealIdFromPlacement();
           setDealId(placementDealId);
         } catch {
@@ -120,67 +101,42 @@ export default function BitrixPage() {
   }, []);
 
   useEffect(() => {
+    setSearchParams({ crm: "bitrix", deal_id: dealId ? String(dealId) : null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealId]);
+
+  useEffect(() => {
     const run = async () => {
+      if (ssoAttempted || !bxDomain || !bxMemberId) return;
+      const { data: u0 } = await supabase.auth.getUser();
+      if (u0?.user) return;
+
+      setSsoAttempted(true);
       try {
-        setLoading(true);
-        setNeedsConnect(false);
-
-        const domain = bxDomain;
-        const memberId = bxMemberId;
-        const dId = dealId;
-
-        // Propagate CRM context into URL so it survives navigation to project/apartment pages.
-        setSearchParams({
-          crm: "bitrix",
-          deal_id: dId ? String(dId) : null,
+        const { data: ssoData, error: ssoErr } = await supabase.functions.invoke("sso-login", {
+          body: { action: "bitrix24", domain: bxDomain, member_id: bxMemberId },
         });
-
-        // Bitrix SSO: auto-login using Bitrix domain+member_id
-        const { data: u0 } = await supabase.auth.getUser();
-        let user = u0?.user ?? null;
-
-        if (!user && domain && memberId) {
-          // Reuse shared SSO endpoint (CRM-neutral). It returns a short-lived signed token.
-          const { data: ssoData, error: ssoErr } = await supabase.functions.invoke("amocrm-sso-login", {
-            body: { action: "bitrix24", domain, member_id: memberId },
+        const sso = (ssoData as { sso?: string } | null)?.sso;
+        if (!ssoErr && typeof sso === "string" && sso) {
+          const { data: sessionData, error: verifyErr } = await supabase.functions.invoke("sso-login", {
+            body: { action: "verify", token: sso },
           });
-
-          const sso = (ssoData as { sso?: unknown } | null)?.sso;
-          if (!ssoErr && typeof sso === "string" && sso) {
-            const { data: sessionData, error: verifyErr } = await supabase.functions.invoke("amocrm-sso-login", {
-              body: { action: "verify", token: sso },
-            });
-            const access = (sessionData as { access_token?: unknown } | null)?.access_token;
-            const refresh = (sessionData as { refresh_token?: unknown } | null)?.refresh_token;
-            if (!verifyErr && typeof access === "string" && typeof refresh === "string") {
-              await supabase.auth.setSession({ access_token: access, refresh_token: refresh });
-            }
+          const access = (sessionData as { access_token?: string } | null)?.access_token;
+          const refresh = (sessionData as { refresh_token?: string } | null)?.refresh_token;
+          if (!verifyErr && typeof access === "string" && typeof refresh === "string") {
+            await supabase.auth.setSession({ access_token: access, refresh_token: refresh });
           }
-
-          const { data: u1 } = await supabase.auth.getUser();
-          user = u1?.user ?? null;
-        }
-
-        if (!user) {
-          setNeedsConnect(true);
-          if (domain && memberId) {
-            setConnectUrl(
-              `/embed/connect/bitrix24?domain=${encodeURIComponent(domain)}&member_id=${encodeURIComponent(memberId)}`
-            );
-          }
-          return;
         }
       } catch (e) {
         console.error(e);
-        toast.error("Не удалось загрузить Bitrix страницу");
-      } finally {
-        setLoading(false);
       }
     };
-
     void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bxDomain, bxMemberId, dealId]);
+  }, [bxDomain, bxMemberId, ssoAttempted]);
+
+  const loading = status === "loading";
+  const needsConnect = !user && (status === "pending" || status === "needs_install" || status === "claimed");
+  const showProjects = !!user && status === "claimed";
 
   if (loading) {
     return (
@@ -204,23 +160,23 @@ export default function BitrixPage() {
       {needsConnect && (
         <Card>
           <CardContent className="p-4 text-sm space-y-3">
-            <div className="text-muted-foreground">
-              Чтобы открыть проекты, нужно подключить Bitrix24 к аккаунту Gridix (SSO).
-            </div>
             {connectUrl ? (
-              <Button onClick={() => window.open(connectUrl, "_blank", "noopener,noreferrer")} className="w-full">
+              <Button
+                onClick={() => (window.location.href = connectUrl)}
+                className="w-full"
+              >
                 Подключить Bitrix24
               </Button>
             ) : (
               <div className="text-muted-foreground">
-                Не удалось получить параметры Bitrix (domain/member_id). Откройте эту страницу из меню приложения в Bitrix.
+                Нет параметров Bitrix (domain/member_id). Откройте страницу из приложения Gridix в Bitrix24.
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {!needsConnect && (
+      {showProjects && (
         <ProjectList
           mode="crm"
           embedPathMode="root"
@@ -230,4 +186,3 @@ export default function BitrixPage() {
     </div>
   );
 }
-

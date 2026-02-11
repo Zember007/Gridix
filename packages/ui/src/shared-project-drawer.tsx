@@ -182,7 +182,7 @@ const OverviewTab: React.FC<{
   return (
     <div className="p-6 space-y-6">
       {/* Commission Block */}
-      <div
+  {/*     <div
         className={`border rounded-xl p-4 flex gap-3 ${
           isConnected ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-200"
         }`}
@@ -215,7 +215,7 @@ const OverviewTab: React.FC<{
               : t("drawer.commission.signOffer")}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Stats Grid */}
    {/*    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -604,7 +604,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
 
       {/* Drawer */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col border-l border-slate-200"
+        className="!mt-0 fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col border-l border-slate-200"
         style={{ zIndex }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -734,7 +734,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => onShare?.(project)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                className="py-3 px-4 h-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >
                 <Share2 size={16} />
               </button>
@@ -754,7 +754,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToEditor?.(project.id)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                className="py-3 px-4 h-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >
                 <Building2 size={16} />
               </button>

@@ -1,5 +1,11 @@
 export type Language = 'ru' | 'en' | 'ka' | 'ar' | 'he';
 
+export const RTL_LANGUAGES = ['ar', 'he'] as const;
+
+export function isRtlLanguage(language: Language): boolean {
+  return (RTL_LANGUAGES as readonly Language[]).includes(language);
+}
+
 export const LANGUAGE_CONFIG = {
  
   en: {
