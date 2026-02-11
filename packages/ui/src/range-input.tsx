@@ -42,8 +42,8 @@ export const RangeInput = ({
                                className,
                                inputClassName,
                            }: RangeInputProps) => {
-    const from = value[0];
-    const to = value[1];
+    const from = Math.floor(value[0]);
+    const to = Math.ceil(value[1]);
 
 
     const [fromText, setFromText] = React.useState<string>(String(from));

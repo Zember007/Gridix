@@ -39,3 +39,5 @@ describe('parseFloor', () => {
     expect(parseFloor(new URLSearchParams('floor='))).toBeNull();
   });
 });
+
+
