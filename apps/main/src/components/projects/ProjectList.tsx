@@ -674,7 +674,6 @@ const ProjectList = ({
           onClose={handleCloseDrawer}
           onOpenPublicPage={handleOpenPublicPage}
           onNavigateToEditor={handleNavigateToEditor}
-          t={(key, params) => t(`common.${key}`, params as Record<string, string | number>)}
           renderPartnersTab={(p) => <DeveloperPartnersTab project={p} />}
           renderMediaTab={(p) =>
             drawerLoading ? (

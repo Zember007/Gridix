@@ -1,6 +1,7 @@
 import "leaflet/dist/leaflet.css";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Icon, LatLngBounds } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Eye, MapPin } from "lucide-react";
@@ -26,10 +27,6 @@ export interface InteractiveProjectsMapProps {
    * If not provided, we build a default URL based on slug/id.
    */
   onOpenProject?: (project: InteractiveMapProject) => void;
-  /**
-   * Optional translation function (for embedding apps without @gridix/utils/react).
-   */
-  t?: (key: string) => string;
   className?: string;
   defaultCenter?: [number, number];
   defaultZoom?: number;
@@ -68,11 +65,11 @@ export function InteractiveProjectsMap({
   selectedProjectId,
   onProjectSelect,
   onOpenProject,
-  t,
   className,
   defaultCenter = [41.7151, 44.8271], // Tbilisi
   defaultZoom = 10,
 }: InteractiveProjectsMapProps) {
+  const { t } = useTranslation();
   const [selectedProject, setSelectedProject] = useState<InteractiveMapProject | null>(null);
 
   const center = useMemo<[number, number]>(() => {
@@ -139,7 +136,7 @@ export function InteractiveProjectsMap({
 
                   <Button onClick={() => handleOpenProject(project)} className="w-full" size="sm">
                     <Eye className="h-4 w-4 mr-2" />
-                    {t ? t("embed.viewApartments") : "Открыть"}
+                    {t("embed.viewApartments")}
                   </Button>
                 </div>
               </Popup>

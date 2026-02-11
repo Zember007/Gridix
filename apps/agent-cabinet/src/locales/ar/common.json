@@ -73,6 +73,22 @@
       "latestEvents": "Latest events",
       "pulseLeads": "Leads: {{count}}",
       "pulsePayouts": "Payouts:"
+    },
+    "chart": {
+      "title": "ديناميات الإيرادات",
+      "subtitle": "دخل العمولة على مدى 6 أشهر"
+    },
+    "activity": {
+      "title": "خلاصة النشاط",
+      "empty": "لا يوجد نشاط حديث",
+      "system": "نظام",
+      "newLead": "الرصاص الجديد",
+      "leadsLabel": "يؤدي",
+      "commissionPaid": "العمولة المدفوعة",
+      "pendingPayout": "في انتظار الدفع",
+      "recent": "حديثاً",
+      "thisMonth": "هذا الشهر",
+      "inPipeline": "في خط الأنابيب"
     }
   },
   "catalog": {
@@ -83,8 +99,69 @@
     "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
     "noProjects": "No public projects for the selected workspace yet.",
     "open": "Open",
+    "details": "تفاصيل",
     "share": "Share",
     "clientLinkPrompt": "Client link"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "ملخص",
+      "units": "الوحدات",
+      "construction": "بناء",
+      "media": "وسائط",
+      "partners": "الشركاء",
+      "settings": "إعدادات"
+    },
+    "commission": {
+      "title": "عمولتك",
+      "active": "نشيط",
+      "requiresContract": "يتطلب العقد",
+      "condition": "شرط الدفع",
+      "signOffer": "قم بتوقيع العرض مع المطور لقفل العملاء والحصول على العمولة."
+    },
+    "stats": {
+      "roi": "عائد الاستثمار",
+      "completion": "انتهاء",
+      "priceFrom": "السعر من",
+      "units": "الوحدات"
+    },
+    "about": {
+      "title": "حول المشروع",
+      "description": "مجمع سكني حديث في منطقة مرموقة. مثالية للعيش والاستثمار."
+    },
+    "quickAccess": "الوصول السريع",
+    "media": {
+      "title": "مشروع البنك الإعلامي",
+      "downloadAll": "تنزيل الكل (ZIP)",
+      "renders": "يجعل",
+      "videos": "فيديوهات",
+      "presentations": "العروض التقديمية",
+      "noMaterials": "لا توجد مواد",
+      "restricted": "الوصول مقيد",
+      "signToAccess": "قم بتوقيع العقد مع المطور للوصول إلى بنك الإعلام.",
+      "connect": "يتصل"
+    },
+    "construction": {
+      "title": "تقدم البناء",
+      "noUpdates": "لا توجد تحديثات"
+    },
+    "units": {
+      "legend": {
+        "available": "متاح",
+        "booked": "حجزت",
+        "sold": "مُباع"
+      },
+      "downloadPdf": "تحميل قوات الدفاع الشعبي"
+    },
+    "actions": {
+      "lock": "قفل العميل",
+      "favorite": "أضف إلى المجموعة",
+      "share": "يشارك",
+      "becomePartner": "كن شريكا",
+      "pendingConfirmation": "في انتظار التأكيد",
+      "partnershipUnavailable": "الشراكة غير متوفرة",
+      "openPage": "افتح الصفحة"
+    }
   },
   "contacts": {
     "title": "Contacts",
@@ -106,9 +183,11 @@
     "title": "Analytics",
     "subtitle": "Key performance overview",
     "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "export": "يصدّر",
     "views": {
       "sales": "Sales",
-      "finance": "Finance"
+      "finance": "Finance",
+      "crm": "إدارة علاقات العملاء"
     },
     "period": {
       "last7": "Last 7 days",
@@ -124,12 +203,37 @@
       "sources": "Sources",
       "noSourceData": "No source data."
     },
+    "crm": {
+      "totalLeads": "إجمالي العملاء المتوقعين",
+      "inFunnel": "في القمع",
+      "conversion": "تحويل",
+      "sources": "مصادر",
+      "funnelTitle": "قمع المبيعات",
+      "sourceBreakdown": "مصادر الرصاص"
+    },
     "finance": {
       "paid": "Paid",
       "pending": "Pending",
       "payoutsCount": "Payouts",
       "registry": "Payout registry",
-      "noPayouts": "No payouts."
+      "registryTitle": "سجل اللجنة",
+      "registryDescription": "تتبع حالات دفع العمولة من المطورين. يتم تحديث البيانات تلقائيًا عند تغيير حالة الصفقة.",
+      "noPayouts": "No payouts.",
+      "pipeline": "خط أنابيب",
+      "inProgress": "في تَقَدم",
+      "dealsInWork": "الصفقات في العمل",
+      "received": "تلقى",
+      "success": "نجاح",
+      "successDeals": "صفقات ناجحة",
+      "total": "المجموع",
+      "allTime": "كل الوقت",
+      "export": "يصدّر",
+      "colAmount": "كمية",
+      "colProject": "مشروع",
+      "colDate": "تاريخ",
+      "colStatus": "حالة",
+      "statusPaid": "مدفوع",
+      "statusPending": "قيد الانتظار"
     }
   },
   "agent": {
@@ -154,4 +258,3 @@
     }
   }
 }
-

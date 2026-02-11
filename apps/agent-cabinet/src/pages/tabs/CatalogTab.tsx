@@ -313,7 +313,6 @@ export function CatalogTab() {
           onClose={handleCloseDrawer}
           onShare={handleShareProject}
           onOpenPublicPage={handleOpenPublicPage}
-          t={(key, params) => t(`common.${key}`, params as Record<string, string>)}
           renderUnitsTab={(p) => <AgentUnitsTab project={p} />}
         />
       )}

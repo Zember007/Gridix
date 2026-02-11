@@ -73,6 +73,22 @@
       "latestEvents": "Latest events",
       "pulseLeads": "Leads: {{count}}",
       "pulsePayouts": "Payouts:"
+    },
+    "chart": {
+      "title": "შემოსავლების დინამიკა",
+      "subtitle": "კომისიის შემოსავალი 6 თვეზე მეტია"
+    },
+    "activity": {
+      "title": "აქტივობის არხი",
+      "empty": "ბოლო აქტივობა არ არის",
+      "system": "სისტემა",
+      "newLead": "ახალი ტყვია",
+      "leadsLabel": "იწვევს",
+      "commissionPaid": "გადახდილი საკომისიო",
+      "pendingPayout": "მომლოდინე გადახდა",
+      "recent": "ცოტა ხნის წინ",
+      "thisMonth": "ამ თვეში",
+      "inPipeline": "მილსადენში"
     }
   },
   "catalog": {
@@ -83,8 +99,69 @@
     "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
     "noProjects": "No public projects for the selected workspace yet.",
     "open": "Open",
+    "details": "დეტალები",
     "share": "Share",
     "clientLinkPrompt": "Client link"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "მიმოხილვა",
+      "units": "ერთეულები",
+      "construction": "მშენებლობა",
+      "media": "მედია",
+      "partners": "პარტნიორები",
+      "settings": "პარამეტრები"
+    },
+    "commission": {
+      "title": "თქვენი საკომისიო",
+      "active": "აქტიური",
+      "requiresContract": "მოითხოვს კონტრაქტს",
+      "condition": "გადახდის პირობა",
+      "signOffer": "ხელი მოაწერეთ შემოთავაზებას დეველოპერთან, რომ ჩაკეტოთ კლიენტები და მიიღოთ საკომისიო."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "დასრულება",
+      "priceFrom": "ფასი დან",
+      "units": "ერთეულები"
+    },
+    "about": {
+      "title": "პროექტის შესახებ",
+      "description": "თანამედროვე საცხოვრებელი კომპლექსი პრესტიჟულ უბანში. იდეალურია საცხოვრებლად და საინვესტიციოდ."
+    },
+    "quickAccess": "სწრაფი წვდომა",
+    "media": {
+      "title": "პროექტის მედია ბანკი",
+      "downloadAll": "ჩამოტვირთეთ ყველა (ZIP)",
+      "renders": "რენდერებს",
+      "videos": "ვიდეოები",
+      "presentations": "პრეზენტაციები",
+      "noMaterials": "არ არის მასალები",
+      "restricted": "წვდომა შეზღუდულია",
+      "signToAccess": "გააფორმეთ კონტრაქტი დეველოპერთან მედია ბანკში შესასვლელად.",
+      "connect": "დაკავშირება"
+    },
+    "construction": {
+      "title": "მშენებლობის პროგრესი",
+      "noUpdates": "განახლებები არ არის"
+    },
+    "units": {
+      "legend": {
+        "available": "ხელმისაწვდომია",
+        "booked": "დაჯავშნილი",
+        "sold": "გაიყიდა"
+      },
+      "downloadPdf": "ჩამოტვირთეთ PDF"
+    },
+    "actions": {
+      "lock": "კლიენტის ჩაკეტვა",
+      "favorite": "კოლექციაში დამატება",
+      "share": "გააზიარეთ",
+      "becomePartner": "გახდი პარტნიორი",
+      "pendingConfirmation": "ელოდება დადასტურებას",
+      "partnershipUnavailable": "პარტნიორობა მიუწვდომელია",
+      "openPage": "გახსენი გვერდი"
+    }
   },
   "contacts": {
     "title": "Contacts",
@@ -106,9 +183,11 @@
     "title": "Analytics",
     "subtitle": "Key performance overview",
     "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "export": "ექსპორტი",
     "views": {
       "sales": "Sales",
-      "finance": "Finance"
+      "finance": "Finance",
+      "crm": "CRM"
     },
     "period": {
       "last7": "Last 7 days",
@@ -124,12 +203,37 @@
       "sources": "Sources",
       "noSourceData": "No source data."
     },
+    "crm": {
+      "totalLeads": "სულ ლიდერობს",
+      "inFunnel": "ძაბრში",
+      "conversion": "კონვერტაცია",
+      "sources": "წყაროები",
+      "funnelTitle": "გაყიდვების ძაბრი",
+      "sourceBreakdown": "წამყვანი წყაროები"
+    },
     "finance": {
       "paid": "Paid",
       "pending": "Pending",
       "payoutsCount": "Payouts",
       "registry": "Payout registry",
-      "noPayouts": "No payouts."
+      "registryTitle": "კომისიის რეესტრი",
+      "registryDescription": "თვალყური ადევნეთ საკომისიოს გადახდის სტატუსებს დეველოპერებისგან. მონაცემები ავტომატურად განახლდება გარიგების სტატუსის შეცვლისას.",
+      "noPayouts": "No payouts.",
+      "pipeline": "მილსადენი",
+      "inProgress": "მიმდინარეობს",
+      "dealsInWork": "გარიგებები სამუშაოში",
+      "received": "მიღებული",
+      "success": "წარმატებები",
+      "successDeals": "წარმატებული გარიგებები",
+      "total": "სულ",
+      "allTime": "ყველა დროის",
+      "export": "ექსპორტი",
+      "colAmount": "თანხა",
+      "colProject": "პროექტი",
+      "colDate": "თარიღი",
+      "colStatus": "სტატუსი",
+      "statusPaid": "გადახდილი",
+      "statusPending": "მომლოდინე"
     }
   },
   "agent": {
@@ -154,4 +258,3 @@
     }
   }
 }
-

@@ -1,6 +1,6 @@
 {
   "chooseApartment": "ბინის მითითება",
-  "filters" : "ფილტრები",
+  "filters": "ფილტრები",
   "filtersDescription": "ფილტრების გამოყენება",
   "additionalInfo": "დამატებითი ინფორმაცია",
   "advancedFilters": "ყველა ფილტრი",
@@ -27,7 +27,7 @@
   "floor": "სართული",
   "floorPlan": "სართულის გეგმა",
   "floors": "სართულები",
-  "hideAdvancedFilters": "დაწვრილებითი დამალვა", 
+  "hideAdvancedFilters": "დაწვრილებითი დამალვა",
   "found": "ნაპოვნია",
   "from": "-დან",
   "interactivePlan": "ინტერაქტიული გეგმა",

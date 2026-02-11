@@ -1,0 +1,76 @@
+{
+  "drawer": {
+    "tabs": {
+      "overview": "Overview",
+      "units": "Units",
+      "construction": "Construction",
+      "media": "Media",
+      "partners": "Partners",
+      "settings": "Settings"
+    },
+    "commission": {
+      "title": "Your commission",
+      "active": "Active",
+      "requiresContract": "Requires contract",
+      "condition": "Payment condition",
+      "signOffer": "Sign the offer with the developer to lock clients and receive commission."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "Completion",
+      "priceFrom": "Price from",
+      "units": "Units"
+    },
+    "about": {
+      "title": "About project",
+      "description": "Modern residential complex in a prestigious area. Ideal for living and investment."
+    },
+    "quickAccess": "Quick access",
+    "media": {
+      "title": "Project media bank",
+      "downloadAll": "Download all (ZIP)",
+      "renders": "Renders",
+      "videos": "Videos",
+      "presentations": "Presentations",
+      "noMaterials": "No materials",
+      "restricted": "Access restricted",
+      "signToAccess": "Sign the contract with the developer to access the media bank.",
+      "connect": "Connect"
+    },
+    "construction": {
+      "title": "Construction progress",
+      "noUpdates": "No updates"
+    },
+    "units": {
+      "legend": {
+        "available": "Available",
+        "booked": "Booked",
+        "sold": "Sold"
+      },
+      "downloadPdf": "Download PDF"
+    },
+    "actions": {
+      "lock": "Lock client",
+      "favorite": "Add to collection",
+      "share": "Share",
+      "becomePartner": "Become a partner",
+      "pendingConfirmation": "Pending confirmation",
+      "partnershipUnavailable": "Partnership not available",
+      "openPage": "Open page"
+    }
+  },
+  "embed": {
+    "viewApartments": "View apartments"
+  },
+  "common": {
+    "language": "Language",
+    "more": "More details",
+    "hide": "Hide"
+  },
+  "admin": {
+    "documentation": "Documentation"
+  },
+  "auth": {
+    "signOut": "Sign Out"
+  }
+}

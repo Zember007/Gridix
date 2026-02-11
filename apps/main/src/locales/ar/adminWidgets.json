@@ -22,5 +22,20 @@
   "title": "الودجات",
   "widgetScript": "نص الودجت",
   "widgetScriptDesc": "ملف الجافا سكريبت الرئيسي للودجت",
-  "width": "العرض"
+  "width": "العرض",
+  "widgetDisplay": "عرض القطعة",
+  "showAdvanced": "الإعدادات المتقدمة",
+  "hideAdvanced": "إخفاء المتقدمة",
+  "showFullProject": "عرض المشروع كاملا",
+  "showFullProjectDesc": "عرض رقعة الشطرنج الكاملة للشقة مع المرشحات داخل كتلة القطعة.",
+  "showFloatingButton": "إظهار الزر العائم",
+  "showFloatingButtonDesc": "أظهر زرًا دائريًا في الزاوية يحتوي على رابط لصفحة المشروع.",
+  "floatingButtonPosition": "موضع الزر العائم",
+  "floatingButtonSide": "جانب",
+  "floatingButtonSideLeft": "غادر",
+  "floatingButtonSideRight": "يمين",
+  "floatingButtonBottomOffset": "الإزاحة السفلية (بكسل)",
+  "floatingButtonSideOffset": "الإزاحة الجانبية (بكسل)",
+  "floatingButtonPositionDesc": "يتم تطبيق إعدادات الموضع فقط في حالة تمكين الزر العائم.",
+  "atLeastOneOptionRequired": "يجب عليك تمكين خيار واحد على الأقل: إظهار المشروع أو الزر العائم."
 }

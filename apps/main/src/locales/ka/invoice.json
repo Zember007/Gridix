@@ -47,10 +47,10 @@
     "not_generated": "PDF-ფაქტურა ჯერ არ არის გენერირებული. მიმართეთ ადმინისტრატორს.",
     "payment_instructions": "გადახდის ინსტრუქციები",
     "instructions_list": [
-      "ჩამოტვირთეთ PDF-ფაქტურა ზემოთ მოცემული ღილაკით",
-      "გადაიხადეთ ფაქტურა ბანკის გადარიცხვით მოცემული რეკვიზიტებით",
-      "შეინახეთ გადახდის დადასტურება",
-      "დაელოდეთ ადმინისტრატორის მიერ გამოწერის აქტივაციას"
+      "Download the PDF invoice using the button above",
+      "Pay the invoice via bank transfer using the provided details",
+      "Save the payment confirmation",
+      "Wait for subscription activation by administrator"
     ],
     "support_contact": "კითხვების შემთხვევაში მიმართეთ ტექნიკურ მხარდაჭერას"
   },

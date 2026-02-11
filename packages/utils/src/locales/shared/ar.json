@@ -1,0 +1,76 @@
+{
+  "drawer": {
+    "tabs": {
+      "overview": "نظرة عامة",
+      "units": "الوحدات",
+      "construction": "البناء",
+      "media": "الوسائط",
+      "partners": "الشركاء",
+      "settings": "الإعدادات"
+    },
+    "commission": {
+      "title": "عمولتك",
+      "active": "نشط",
+      "requiresContract": "يتطلب عقداً",
+      "condition": "شرط الدفع",
+      "signOffer": "لتأمين العميل والحصول على العمولة، يلزم توقيع العرض مع المطور."
+    },
+    "stats": {
+      "roi": "العائد على الاستثمار",
+      "completion": "موعد التسليم",
+      "priceFrom": "السعر من",
+      "units": "الوحدات"
+    },
+    "about": {
+      "title": "عن المشروع",
+      "description": "مجمع سكني حديث في منطقة مرموقة. مثالي للسكن والاستثمار."
+    },
+    "quickAccess": "وصول سريع",
+    "media": {
+      "title": "بنك الوسائط للمشروع",
+      "downloadAll": "تحميل الكل (ZIP)",
+      "renders": "العروض",
+      "videos": "الفيديوهات",
+      "presentations": "العروض التقديمية",
+      "noMaterials": "لا توجد مواد",
+      "restricted": "الوصول مقيد",
+      "signToAccess": "وقّع العقد مع المطور للحصول على الوصول إلى بنك الوسائط.",
+      "connect": "اتصال"
+    },
+    "construction": {
+      "title": "تقدم البناء",
+      "noUpdates": "لا توجد تحديثات"
+    },
+    "units": {
+      "legend": {
+        "available": "متاح",
+        "booked": "محجوز",
+        "sold": "مباع"
+      },
+      "downloadPdf": "تحميل PDF"
+    },
+    "actions": {
+      "lock": "تأمين العميل",
+      "favorite": "إضافة إلى المجموعة",
+      "share": "مشاركة",
+      "becomePartner": "كن شريكاً",
+      "pendingConfirmation": "في انتظار التأكيد",
+      "partnershipUnavailable": "الشراكة غير متاحة",
+      "openPage": "فتح الصفحة"
+    }
+  },
+  "embed": {
+    "viewApartments": "عرض الشقق"
+  },
+  "common": {
+    "language": "اللغة",
+    "more": "المزيد من التفاصيل",
+    "hide": "إخفاء"
+  },
+  "admin": {
+    "documentation": "التوثيق"
+  },
+  "auth": {
+    "signOut": "تسجيل الخروج"
+  }
+}
