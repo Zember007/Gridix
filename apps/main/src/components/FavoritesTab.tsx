@@ -51,6 +51,7 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
     price?: number;
     status: string;
     floor_number: number;
+    image_url?: string | null;
   };
 
   const toApartment = (fav: FavoriteItem): Apartment => {
@@ -108,6 +109,21 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
             onClick={() => handleViewApartment(toApartment(apartment))}
           >
             <CardContent className="p-4">
+              <div className="mb-4">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
+                  {apartment.image_url ? (
+                    <img
+                      src={apartment.image_url}
+                      alt={`${t('apartment.apartment')} № ${apartment.apartment_number}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200">
+                      <Home className="h-10 w-10 text-slate-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h4 className="font-semibold text-gray-900">
