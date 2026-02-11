@@ -565,7 +565,6 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   renderUnitsTab,
   renderMediaTab,
   renderConstructionTab,
-  renderPartnersTab,
   renderSettingsTab,
   initialTab = "overview",
 }) => {
