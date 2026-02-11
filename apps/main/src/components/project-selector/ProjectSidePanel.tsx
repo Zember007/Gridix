@@ -97,6 +97,7 @@ export const ProjectSidePanel = ({
       apartmentNumber: isRu ? 'Номер квартиры' : 'Apartment number',
       status: isRu ? 'Статус' : 'Status',
       onRequest: isRu ? 'По запросу' : 'On request',
+      viewDetails: isRu ? 'Посмотреть детали' : 'View Details',
     };
   }, [language]);
 
@@ -435,7 +436,7 @@ export const ProjectSidePanel = ({
               style={{ backgroundColor: themeColor }}
               onClick={() => onOpenApartmentDetails(state.apartment)}
             >
-              {ui.book}
+              {ui.viewDetails}
             </Button>
           </div>
 
