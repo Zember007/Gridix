@@ -23,6 +23,7 @@ interface FiltersState {
   selectedFloor: string;
   selectedRooms: string;
   priceRange: [number, number];
+  priceRangeCurrency: string;
   areaRange: [number, number];
   searchQuery: string;
   showOnlyAvailable: boolean;
@@ -34,11 +35,12 @@ const INITIAL_STATE: FiltersState = {
   selectedFloor: 'all',
   selectedRooms: 'all',
   priceRange: [0, 10_000_000],
+  priceRangeCurrency: DEFAULT_CURRENCY,
   areaRange: [0, 1000],
   searchQuery: '',
   showOnlyAvailable: true,
   selectedType: 'all',
-  selectedCurrency: 'RUB',
+  selectedCurrency: DEFAULT_CURRENCY,
 };
 
 // ── Actions ──
@@ -61,7 +63,7 @@ function filtersReducer(state: FiltersState, action: FiltersAction): FiltersStat
     case 'SET_ROOMS':
       return { ...state, selectedRooms: action.value };
     case 'SET_PRICE_RANGE':
-      return { ...state, priceRange: action.value };
+      return { ...state, priceRange: action.value, priceRangeCurrency: state.selectedCurrency };
     case 'SET_AREA_RANGE':
       return { ...state, areaRange: action.value };
     case 'SET_SEARCH':
@@ -140,6 +142,23 @@ export function filterApartments(
   }
 
   return result;
+}
+
+export function normalizePriceRangeForCurrencyChange(params: {
+  prevCurrency: string;
+  nextCurrency: string;
+  prevRange: [number, number];
+  minPrice: number;
+  maxPrice: number;
+}): [number, number] {
+  const { prevCurrency, nextCurrency, prevRange, minPrice, maxPrice } = params;
+  const [prevMin, prevMax] = prevRange;
+  const nextMin = convertPrice(prevMin, prevCurrency, nextCurrency);
+  const nextMax = convertPrice(prevMax, prevCurrency, nextCurrency);
+  const clampedMin = Math.max(minPrice, Math.min(nextMin, maxPrice));
+  const clampedMax = Math.min(maxPrice, Math.max(nextMax, minPrice));
+
+  return clampedMin <= clampedMax ? [clampedMin, clampedMax] : [minPrice, maxPrice];
 }
 
 // ── Hook ──
@@ -240,16 +259,16 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     const prev = previousCurrencyRef.current;
     const curr = state.selectedCurrency;
 
-    if (prev !== curr) {
-      const [prevMin, prevMax] = state.priceRange;
-      const nextMin = convertPrice(prevMin, prev, curr);
-      const nextMax = convertPrice(prevMax, prev, curr);
-      const clampedMin = Math.max(minPrice, Math.min(nextMin, maxPrice));
-      const clampedMax = Math.min(maxPrice, Math.max(nextMax, minPrice));
-
+    if (prev !== curr && state.priceRangeCurrency !== curr) {
       dispatch({
         type: 'SET_PRICE_RANGE',
-        value: clampedMin <= clampedMax ? [clampedMin, clampedMax] : [minPrice, maxPrice],
+        value: normalizePriceRangeForCurrencyChange({
+          prevCurrency: prev,
+          nextCurrency: curr,
+          prevRange: state.priceRange,
+          minPrice,
+          maxPrice,
+        }),
       });
     }
 
@@ -265,7 +284,17 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     }
 
     previousCurrencyRef.current = curr;
-  }, [state.selectedCurrency, minPrice, maxPrice, minArea, maxArea, apartments.length, state.priceRange, state.areaRange]);
+  }, [
+    state.selectedCurrency,
+    state.priceRangeCurrency,
+    minPrice,
+    maxPrice,
+    minArea,
+    maxArea,
+    apartments.length,
+    state.priceRange,
+    state.areaRange,
+  ]);
 
   // ── Filtered apartments ──
 
@@ -291,6 +320,7 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
       defaults: {
         selectedCurrency: baseCurrency,
         priceRange: [minPrice, maxPrice],
+        priceRangeCurrency: baseCurrency,
         areaRange: [minArea, maxArea],
       },
     });

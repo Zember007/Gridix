@@ -26,6 +26,7 @@ const DEFAULT_STATE = {
   selectedFloor: 'all',
   selectedRooms: 'all',
   priceRange: [0, 10_000_000] as [number, number],
+  priceRangeCurrency: 'USD',
   areaRange: [0, 1000] as [number, number],
   searchQuery: '',
   showOnlyAvailable: false,
