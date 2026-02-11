@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { SlidersHorizontal, DollarSign, Calendar } from 'lucide-react';
+import { useState } from 'react';
 import { useLanguage } from '@gridix/utils/react';
 import { useProjectsWithPrices, ProjectWithMinPrice } from '@/entities/project/queries/useProjectsWithPrices';
 import { Tables } from '@gridix/types/database';
@@ -55,7 +54,6 @@ const InteractiveProjectsMap = ({ onProjectSelect, selectedProjectId, userId, pr
       selectedProjectId={selectedProjectId}
       onProjectSelect={onProjectSelect}
       onOpenProject={handleViewProject as any}
-      t={t as any}
       className="relative h-[80vh] grow"
     />
   );
