@@ -589,9 +589,11 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
     { id: "construction", label: t("drawer.tabs.construction"), icon: <Hammer size={16} /> },
   ];
 
+  /*
   if (isDeveloper) {
     tabs.push({ id: "partners", label: t("drawer.tabs.partners"), icon: <Handshake size={16} /> });
   }
+  */
 
   return (
     <>
@@ -682,6 +684,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
             ) : (
               <ConstructionTab project={project} t={t} />
             ))}
+          {/*
           {activeTab === "partners" &&
             isDeveloper &&
             (renderPartnersTab ? (
@@ -689,6 +692,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
             ) : (
               <div className="p-8 text-center text-slate-400">Partners view not implemented</div>
             ))}
+          */}
           {activeTab === "settings" &&
             isDeveloper &&
             (renderSettingsTab ? (
