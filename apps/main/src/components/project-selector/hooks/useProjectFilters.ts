@@ -15,6 +15,13 @@ interface Project {
 interface UseProjectFiltersProps {
   apartments: Apartment[];
   project?: Project;
+  isPriceVisible?: boolean;
+  isAreaVisible?: boolean;
+}
+
+interface FilterVisibilityOptions {
+  isPriceVisible?: boolean;
+  isAreaVisible?: boolean;
 }
 
 // ── Filter state ──
@@ -87,6 +94,7 @@ export function filterApartments(
   apartments: Apartment[],
   state: FiltersState,
   projectCurrency: string | undefined | null,
+  visibility: FilterVisibilityOptions = {},
 ): Apartment[] {
   const {
     selectedFloor,
@@ -98,6 +106,9 @@ export function filterApartments(
     searchQuery,
     selectedCurrency,
   } = state;
+
+  const isPriceVisible = visibility.isPriceVisible ?? true;
+  const isAreaVisible = visibility.isAreaVisible ?? true;
 
   let result = apartments;
 
@@ -127,14 +138,18 @@ export function filterApartments(
     result = result.filter(apt => apt.status === 'available');
   }
 
-  const [minPrice, maxPrice] = priceRange;
-  const [minArea, maxArea] = areaRange;
+  if (isPriceVisible || isAreaVisible) {
+    const [minPrice, maxPrice] = priceRange;
+    const [minArea, maxArea] = areaRange;
 
-  result = result.filter(apt => {
-    const converted = convertPrice(apt.price || 0, projectCurrency, selectedCurrency);
-    const area = apt.area || 0;
-    return converted >= minPrice && converted <= maxPrice && area >= minArea && area <= maxArea;
-  });
+    result = result.filter(apt => {
+      const converted = convertPrice(apt.price || 0, projectCurrency, selectedCurrency);
+      const area = apt.area || 0;
+      const matchesPrice = !isPriceVisible || (converted >= minPrice && converted <= maxPrice);
+      const matchesArea = !isAreaVisible || (area >= minArea && area <= maxArea);
+      return matchesPrice && matchesArea;
+    });
+  }
 
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
@@ -163,7 +178,12 @@ export function normalizePriceRangeForCurrencyChange(params: {
 
 // ── Hook ──
 
-export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProps) => {
+export const useProjectFilters = ({
+  apartments,
+  project,
+  isPriceVisible = true,
+  isAreaVisible = true,
+}: UseProjectFiltersProps) => {
   const [state, dispatch] = useReducer(filtersReducer, INITIAL_STATE);
 
   // ── Dispatch wrappers (maintain backward-compatible setter signatures) ──
@@ -296,11 +316,39 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     state.areaRange,
   ]);
 
+  useEffect(() => {
+    if (apartments.length === 0) return;
+
+    if (!isPriceVisible) {
+      const [priceMin, priceMax] = state.priceRange;
+      if (priceMin !== minPrice || priceMax !== maxPrice) {
+        dispatch({ type: 'SET_PRICE_RANGE', value: [minPrice, maxPrice] });
+      }
+    }
+
+    if (!isAreaVisible) {
+      const [areaMin, areaMax] = state.areaRange;
+      if (areaMin !== minArea || areaMax !== maxArea) {
+        dispatch({ type: 'SET_AREA_RANGE', value: [minArea, maxArea] });
+      }
+    }
+  }, [
+    apartments.length,
+    isPriceVisible,
+    isAreaVisible,
+    minPrice,
+    maxPrice,
+    minArea,
+    maxArea,
+    state.priceRange,
+    state.areaRange,
+  ]);
+
   // ── Filtered apartments ──
 
   const filteredApartments = useMemo(
-    () => filterApartments(apartments, state, project?.currency),
-    [apartments, state, project?.currency],
+    () => filterApartments(apartments, state, project?.currency, { isPriceVisible, isAreaVisible }),
+    [apartments, state, project?.currency, isPriceVisible, isAreaVisible],
   );
 
   // ── Available count ──
@@ -338,6 +386,8 @@ export const useProjectFilters = ({ apartments, project }: UseProjectFiltersProp
     showOnlyAvailable: state.showOnlyAvailable,
     selectedType: state.selectedType,
     selectedCurrency: state.selectedCurrency,
+    isPriceVisible,
+    isAreaVisible,
 
     // Setters
     setSelectedFloor,

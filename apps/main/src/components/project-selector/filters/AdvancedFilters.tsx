@@ -45,6 +45,8 @@ type Props = {
   setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
   formatPrice: (price: number) => string;
+  isPriceVisible: boolean;
+  isAreaVisible: boolean;
 };
 
 export const AdvancedFilters = ({
@@ -79,6 +81,8 @@ export const AdvancedFilters = ({
   setViewMode,
   themeColor = '#000000',
   formatPrice,
+  isPriceVisible,
+  isAreaVisible,
 }: Props) => {
   const { t, language } = useLanguage();
 
@@ -209,16 +213,17 @@ export const AdvancedFilters = ({
         </Button>
       </div>
 
-      {/* Currency (only in advanced) */}
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500">{t('project.currency')}</div>
-        <CurrencyToggle
-          projectCurrency={project?.currency || null}
-          selectedCurrency={advCurrency}
-          onChange={handleCurrencyChange}
-          themeColor={themeColor}
-        />
-      </div>
+      {isPriceVisible && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500">{t('project.currency')}</div>
+          <CurrencyToggle
+            projectCurrency={project?.currency || null}
+            selectedCurrency={advCurrency}
+            onChange={handleCurrencyChange}
+            themeColor={themeColor}
+          />
+        </div>
+      )}
 
       {(project?.has_commercial || project?.has_parking) && (
         <div className="space-y-2">
@@ -289,26 +294,30 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-        <RangeInput
-            label={t("project.price")}
-            min={minPrice}
-            max={maxPrice}
-            value={advPrice}
-            onChange={(next) => setAdvPrice(next)}
-            formatHint={formatPrice}
-            unit={getCurrencySymbolSafe(advCurrency)}
-            clamp={true}
-        />
+      {isPriceVisible && (
+          <RangeInput
+              label={t("project.price")}
+              min={minPrice}
+              max={maxPrice}
+              value={advPrice}
+              onChange={(next) => setAdvPrice(next)}
+              formatHint={formatPrice}
+              unit={getCurrencySymbolSafe(advCurrency)}
+              clamp={true}
+          />
+      )}
 
-        <RangeInput
-            label={t("project.area")}
-            min={minArea}
-            max={maxArea}
-            value={advArea}
-            onChange={(next) => setAdvArea(next)}
-            unit="м²"
-            clamp={true}
-        />
+      {isAreaVisible && (
+          <RangeInput
+              label={t("project.area")}
+              min={minArea}
+              max={maxArea}
+              value={advArea}
+              onChange={(next) => setAdvArea(next)}
+              unit="м²"
+              clamp={true}
+          />
+      )}
 
       <div className="space-y-2">
         <div className="text-xs text-gray-500">{t('project.apartmentNumber')}</div>
@@ -335,4 +344,3 @@ export const AdvancedFilters = ({
     </div>
   );
 };
-
