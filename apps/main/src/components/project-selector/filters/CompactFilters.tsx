@@ -2,8 +2,8 @@ import {Button, Popover, PopoverContent, PopoverTrigger} from "@gridix/ui";
 import {SlidersHorizontal} from 'lucide-react';
 import {useLanguage} from '@/contexts/LanguageContext';
 import {Tables} from '@gridix/types/database';
-import {useMemo, useState} from 'react';
-import {AdvancedFilters} from './AdvancedFilters';
+import {useState} from 'react';
+import {AdvancedFilters} from '@/components';
 
 type Project = Tables<'projects'>;
 
@@ -35,6 +35,7 @@ interface CompactFiltersProps {
   hasFreeLayout?: () => boolean;
   project?: Project;
   viewMode: string;
+  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
 }
 
@@ -66,35 +67,10 @@ export const CompactFilters = ({
   hasFreeLayout,
   project,
   viewMode,
+  setViewMode,
   themeColor = '#000000',
 }: CompactFiltersProps) => {
-  const { t, language } = useLanguage();
-
-  const ui = useMemo(() => ({
-    apply: language === 'ru' ? 'Применить' : 'Apply',
-  }), [language]);
-
-  const roomsOptions = useMemo(() => {
-    const base = [{ value: 'all', label: t('project.allTypes') }];
-    const nums = getUniqueRoomCounts().map((rooms) => ({
-      value: rooms.toString(),
-      label: rooms === 0 ? t('apartment.studio') : `${rooms} ${t('apartment.room')}`,
-    }));
-    const free = (hasFreeLayout && hasFreeLayout())
-      ? [{ value: 'free_layout', label: t('apartment.freeLayout') }]
-      : [];
-    return [...base, ...nums, ...free];
-  }, [getUniqueRoomCounts, hasFreeLayout, t]);
-
-  // Note: floor is only available in AdvancedFilters now.
-
-  const typeOptions = useMemo(() => {
-    const base = [{ value: 'all' as const, label: t('project.allTypes') }];
-    const apt = [{ value: 'apartment' as const, label: t('apartmentsManager.typeApartment') }];
-    const comm = project?.has_commercial ? [{ value: 'commercial' as const, label: t('apartmentsManager.typeCommercial') }] : [];
-    const park = project?.has_parking ? [{ value: 'parking' as const, label: t('apartmentsManager.typeParking') }] : [];
-    return [...base, ...apt, ...comm, ...park];
-  }, [project?.has_commercial, project?.has_parking, t]);
+  const { t } = useLanguage();
 
   // Advanced filters popover (left icon)
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -145,56 +121,12 @@ export const CompactFilters = ({
             {...(hasFreeLayout ? { hasFreeLayout } : {})}
             {...(project ? { project } : {})}
             viewMode={viewMode}
+            setViewMode={setViewMode}
             themeColor={themeColor}
             formatPrice={formatPrice}
           />
         </PopoverContent>
       </Popover>
-
-      {/* Type filter - only show if project has commercial or parking */}
-    {/*   {(project?.has_commercial || project?.has_parking) && (
-        <Popover open={typeOpen} onOpenChange={setTypeOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-full hover:bg-gray-50 border-gray-200 px-3 gap-2 font-normal [&_svg]:size-3"
-            >
-              <span className="text-gray-700">{t('project.type')}</span>
-              <ChevronDown className="h-4 w-4 text-gray-400" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-[320px] p-2">
-            <div className="max-h-[260px] overflow-y-auto">
-              {typeOptions.map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  className={cn(
-                    'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-gray-50',
-                    stagedType === o.value && 'bg-gray-50',
-                  )}
-                  onClick={() => setStagedType(o.value)}
-                >
-                  <span className="text-gray-800">{o.label}</span>
-                  {stagedType === o.value && <Check className="h-4 w-4 text-gray-900" />}
-                </button>
-              ))}
-            </div>
-            <div className="pt-2 border-t border-gray-100 flex justify-end">
-              <Button
-                onClick={() => {
-                  setSelectedType(stagedType);
-                  setTypeOpen(false);
-                }}
-                style={{ backgroundColor: themeColor, color: '#fff' }}
-              >
-                {ui.apply}
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      )} */}
     </div>
 
   );

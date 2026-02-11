@@ -1,17 +1,15 @@
-import {useEffect} from 'react';
+import {RefObject, useEffect} from 'react';
 import {Button, LanguageToggle, Sheet, SheetContent, SheetTrigger} from "@gridix/ui";
 import {SlidersHorizontal} from 'lucide-react';
 import {useLanguage} from '@gridix/utils/react';
-import {ViewModeButtons} from './ViewModeButtons';
-import {CompactFilters} from './filters/CompactFilters';
-import {AdvancedFilters} from './filters/AdvancedFilters';
+import {AdvancedFilters, CompactFilters, ViewModeButtons} from '@/components';
 import type {Project} from '@/entities/project/queries/useProjects';
 import type {ProjectFilters} from './hooks/useProjectFilters';
 import {cn, Language, LANGUAGE_CONFIG} from "@gridix/utils/lib";
 
 interface ProjectHeaderProps {
   project: Project;
-  filtersRef: React.RefObject<HTMLDivElement>;
+  filtersRef: RefObject<HTMLDivElement>;
   isWidget: boolean;
   isMobile: boolean;
   viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess';
@@ -40,7 +38,7 @@ export const ProjectHeader = ({
   isFiltersOpen,
   setIsFiltersOpen,
 }: ProjectHeaderProps) => {
-  const { t, language, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const allowedLanguages: Language[] | null = Array.isArray(
     (project as unknown as { available_languages?: unknown }).available_languages
@@ -81,6 +79,7 @@ export const ProjectHeader = ({
                 hasFreeLayout={filters.hasFreeLayout}
                 project={project}
                 viewMode={viewMode}
+                setViewMode={setViewMode}
                 themeColor={themeColor}
                 formatPrice={formatPrice}
               />
@@ -142,6 +141,7 @@ export const ProjectHeader = ({
                         {...(filters.hasFreeLayout ? { hasFreeLayout: filters.hasFreeLayout } : {})}
                         project={project}
                         viewMode={viewMode}
+                        setViewMode={setViewMode}
                         themeColor={themeColor}
                         formatPrice={formatPrice}
                       />

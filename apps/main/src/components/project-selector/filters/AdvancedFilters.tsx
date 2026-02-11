@@ -2,7 +2,6 @@ import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import { normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
-import { upsertViewMode } from '../hooks/useUrlState';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import {useLanguage} from '@/contexts/LanguageContext';
@@ -43,6 +42,7 @@ type Props = {
   hasFreeLayout?: () => boolean;
   project?: ProjectLike;
   viewMode: string;
+  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
   formatPrice: (price: number) => string;
 };
@@ -76,6 +76,7 @@ export const AdvancedFilters = ({
   hasFreeLayout,
   project,
   viewMode,
+  setViewMode,
   themeColor = '#000000',
   formatPrice,
 }: Props) => {
@@ -160,16 +161,6 @@ export const AdvancedFilters = ({
     setAdvCurrency(nextCurrency);
   };
 
-  const pushViewListToHistory = () => {
-    const currentUrl = new URL(window.location.href);
-    const nextUrl = new URL(window.location.href);
-    nextUrl.search = upsertViewMode(nextUrl.searchParams, 'list').toString();
-
-    if (nextUrl.toString() !== currentUrl.toString()) {
-      window.history.pushState(window.history.state, '', nextUrl.toString());
-    }
-  };
-
   const handleApplyFilters = () => {
     const currencyChanged = advCurrency !== selectedCurrency;
 
@@ -187,7 +178,7 @@ export const AdvancedFilters = ({
     setSearchQuery(advSearch);
     setShowOnlyAvailable(advAvailable);
 
-    pushViewListToHistory();
+    setViewMode('list');
 
     onClose?.();
     window.scrollTo({

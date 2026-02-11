@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { ViewMode } from '../types';
 
 /** URL parameter names */
@@ -16,29 +17,6 @@ const VALID_VIEW_MODES: ViewMode[] = [
 
 function isValidViewMode(value: string): value is ViewMode {
   return (VALID_VIEW_MODES as string[]).includes(value);
-}
-
-/** Read current search params from window.location without react-router. */
-function readParams(): URLSearchParams {
-  return new URLSearchParams(window.location.search);
-}
-
-/** Write search params via replaceState (no history entry). */
-function writeParams(params: URLSearchParams) {
-  const url = new URL(window.location.href);
-  url.search = params.toString();
-  window.history.replaceState(window.history.state, '', url.toString());
-}
-
-
-export function upsertViewMode(params: URLSearchParams, viewMode: ViewMode): URLSearchParams {
-  const nextParams = new URLSearchParams(params);
-  if (viewMode === 'facade') {
-    nextParams.delete(PARAM_VIEW);
-  } else {
-    nextParams.set(PARAM_VIEW, viewMode);
-  }
-  return nextParams;
 }
 
 // ── Parse helpers ──
@@ -64,53 +42,47 @@ interface UseUrlStateResult {
   setSelectedFloorForPlan: (floor: number | null) => void;
 }
 
-/**
- * Provides `viewMode` and `selectedFloorForPlan` state synchronized with URL
- * search parameters (`?view=` and `?floor=`).
- *
- * - On mount, state is initialized from the URL.
- * - When state changes, the URL is updated via `replaceState` (no new history entry).
- * - The apartment slide-over URL is managed separately (pushState in the handler).
- */
 export const useUrlState = (): UseUrlStateResult => {
-  // Initialization from URL happens only once.
-  const [viewMode, setViewModeRaw] = useState<ViewMode>(() => parseViewMode(readParams()));
-  const [selectedFloorForPlan, setFloorRaw] = useState<number | null>(() => parseFloor(readParams()));
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Track whether the current URL write was triggered by us (to avoid loops with popstate).
-  const isInternalUpdate = useRef(false);
+  const viewMode = parseViewMode(searchParams);
+  const selectedFloorForPlan = parseFloor(searchParams);
 
-  // ── Sync state → URL ──
-  useEffect(() => {
-    isInternalUpdate.current = true;
-    const params = readParams();
+  const setViewMode = useCallback(
+    (mode: ViewMode) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (mode === 'facade') {
+            next.delete(PARAM_VIEW);
+          } else {
+            next.set(PARAM_VIEW, mode);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
-    const nextParams = upsertViewMode(params, viewMode);
-
-    // floor
-    if (selectedFloorForPlan !== null) {
-      nextParams.set(PARAM_FLOOR, String(selectedFloorForPlan));
-    } else {
-      nextParams.delete(PARAM_FLOOR);
-    }
-
-    writeParams(nextParams);
-
-    // Allow next popstate to be treated as external.
-    requestAnimationFrame(() => {
-      isInternalUpdate.current = false;
-    });
-  }, [viewMode, selectedFloorForPlan]);
-
-  // ── Wrapped setters ──
-
-  const setViewMode = useCallback((mode: ViewMode) => {
-    setViewModeRaw(mode);
-  }, []);
-
-  const setSelectedFloorForPlan = useCallback((floor: number | null) => {
-    setFloorRaw(floor);
-  }, []);
+  const setSelectedFloorForPlan = useCallback(
+    (floor: number | null) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (floor === null) {
+            next.delete(PARAM_FLOOR);
+          } else {
+            next.set(PARAM_FLOOR, String(floor));
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   return {
     viewMode,
