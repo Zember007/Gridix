@@ -3,7 +3,6 @@ import {
   X,
   MapPin,
   Building2,
-  Wallet,
   Info,
   LayoutGrid,
   Hammer,
