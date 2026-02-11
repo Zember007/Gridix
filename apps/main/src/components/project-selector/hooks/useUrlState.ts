@@ -30,6 +30,17 @@ function writeParams(params: URLSearchParams) {
   window.history.replaceState(window.history.state, '', url.toString());
 }
 
+
+export function upsertViewMode(params: URLSearchParams, viewMode: ViewMode): URLSearchParams {
+  const nextParams = new URLSearchParams(params);
+  if (viewMode === 'facade') {
+    nextParams.delete(PARAM_VIEW);
+  } else {
+    nextParams.set(PARAM_VIEW, viewMode);
+  }
+  return nextParams;
+}
+
 // ── Parse helpers ──
 
 export function parseViewMode(params: URLSearchParams): ViewMode {
@@ -74,21 +85,16 @@ export const useUrlState = (): UseUrlStateResult => {
     isInternalUpdate.current = true;
     const params = readParams();
 
-    // viewMode
-    if (viewMode === 'facade') {
-      params.delete(PARAM_VIEW);
-    } else {
-      params.set(PARAM_VIEW, viewMode);
-    }
+    const nextParams = upsertViewMode(params, viewMode);
 
     // floor
     if (selectedFloorForPlan !== null) {
-      params.set(PARAM_FLOOR, String(selectedFloorForPlan));
+      nextParams.set(PARAM_FLOOR, String(selectedFloorForPlan));
     } else {
-      params.delete(PARAM_FLOOR);
+      nextParams.delete(PARAM_FLOOR);
     }
 
-    writeParams(params);
+    writeParams(nextParams);
 
     // Allow next popstate to be treated as external.
     requestAnimationFrame(() => {

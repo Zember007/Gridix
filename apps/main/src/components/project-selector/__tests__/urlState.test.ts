@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseViewMode, parseFloor } from '../hooks/useUrlState';
+import { parseViewMode, parseFloor, upsertViewMode } from '../hooks/useUrlState';
 
 describe('parseViewMode', () => {
   it('returns facade by default when no param', () => {
@@ -37,5 +37,25 @@ describe('parseFloor', () => {
   it('returns null for non-numeric floor', () => {
     expect(parseFloor(new URLSearchParams('floor=abc'))).toBeNull();
     expect(parseFloor(new URLSearchParams('floor='))).toBeNull();
+  });
+});
+
+
+describe('upsertViewMode', () => {
+  it('sets view=list and preserves other params', () => {
+    const params = new URLSearchParams('floor=12&rooms=2');
+    const next = upsertViewMode(params, 'list');
+
+    expect(next.get('view')).toBe('list');
+    expect(next.get('floor')).toBe('12');
+    expect(next.get('rooms')).toBe('2');
+  });
+
+  it('removes view when facade mode is selected', () => {
+    const params = new URLSearchParams('view=map&floor=4');
+    const next = upsertViewMode(params, 'facade');
+
+    expect(next.get('view')).toBeNull();
+    expect(next.get('floor')).toBe('4');
   });
 });
