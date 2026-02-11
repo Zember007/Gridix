@@ -23,6 +23,8 @@ type Props = {
     onOpenFloorPlan: (floorNumber: number) => void;
     themeColor: string;
     selectedCurrency: string;
+    isPriceVisible: boolean;
+    isAreaVisible: boolean;
     // Extra props can be passed from parent; keep them optional for TS safety
     language?: string;
     t?: (key: string, options?: Record<string, unknown>) => string;
@@ -48,6 +50,8 @@ export const ChessView = ({
                               onApartmentSelect,
                               onOpenFloorPlan,
                               selectedCurrency,
+                              isPriceVisible,
+                              isAreaVisible,
                           }: Props) => {
     const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
 
@@ -178,8 +182,8 @@ export const ChessView = ({
                                                             settings={{
                                                                 showNumbers: true,
                                                                 showTooltip: true,
-                                                                showArea: true,
-                                                                showPrice: true,
+                                                                showArea: isAreaVisible,
+                                                                showPrice: isPriceVisible,
                                                             }}
                                                             className="min-w-[200px]"
                                                             currency={project.currency || null}

@@ -37,6 +37,8 @@ interface CompactFiltersProps {
   viewMode: string;
   setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
+  isPriceVisible: boolean;
+  isAreaVisible: boolean;
 }
 
 export const CompactFilters = ({
@@ -69,6 +71,8 @@ export const CompactFilters = ({
   viewMode,
   setViewMode,
   themeColor = '#000000',
+  isPriceVisible,
+  isAreaVisible,
 }: CompactFiltersProps) => {
   const { t } = useLanguage();
 
@@ -124,6 +128,8 @@ export const CompactFilters = ({
             setViewMode={setViewMode}
             themeColor={themeColor}
             formatPrice={formatPrice}
+            isPriceVisible={isPriceVisible}
+            isAreaVisible={isAreaVisible}
           />
         </PopoverContent>
       </Popover>

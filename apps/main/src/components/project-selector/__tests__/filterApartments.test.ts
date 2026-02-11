@@ -98,6 +98,26 @@ describe('filterApartments', () => {
     expect(result.map(a => a.id)).toEqual(['2']);
   });
 
+  it('ignores price filter when price field is hidden', () => {
+    const result = filterApartments(
+      apartments,
+      { ...DEFAULT_STATE, priceRange: [60_000, 150_000] },
+      'USD',
+      { isPriceVisible: false },
+    );
+    expect(result.map(a => a.id)).toEqual(['1', '2', '3', '4', '5']);
+  });
+
+  it('ignores area filter when area field is hidden', () => {
+    const result = filterApartments(
+      apartments,
+      { ...DEFAULT_STATE, areaRange: [50, 70] },
+      'USD',
+      { isAreaVisible: false },
+    );
+    expect(result.map(a => a.id)).toEqual(['1', '2', '3', '4', '5']);
+  });
+
   it('filters by search query (case-insensitive)', () => {
     const result = filterApartments(
       apartments,

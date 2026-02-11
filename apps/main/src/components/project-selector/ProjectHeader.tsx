@@ -82,6 +82,8 @@ export const ProjectHeader = ({
                 setViewMode={setViewMode}
                 themeColor={themeColor}
                 formatPrice={formatPrice}
+                isPriceVisible={filters.isPriceVisible}
+                isAreaVisible={filters.isAreaVisible}
               />
             </div>
           )}
@@ -144,6 +146,8 @@ export const ProjectHeader = ({
                         setViewMode={setViewMode}
                         themeColor={themeColor}
                         formatPrice={formatPrice}
+                        isPriceVisible={filters.isPriceVisible}
+                        isAreaVisible={filters.isAreaVisible}
                       />
                     </div>
                   </SheetContent>
@@ -190,7 +194,6 @@ export const ProjectHeader = ({
     </div>
   );
 };
-
 
 
 

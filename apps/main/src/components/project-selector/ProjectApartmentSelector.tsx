@@ -60,6 +60,15 @@ const ProjectApartmentSelector = ({
 
     const filtersRef = useRef<HTMLDivElement>(null);
 
+    const isPriceVisible = useMemo(
+        () => fieldSettings.find(field => field.field_name === 'price')?.is_visible ?? true,
+        [fieldSettings],
+    );
+    const isAreaVisible = useMemo(
+        () => fieldSettings.find(field => field.field_name === 'area')?.is_visible ?? true,
+        [fieldSettings],
+    );
+
     const {
         apartments,
         setApartments,
@@ -112,6 +121,8 @@ const ProjectApartmentSelector = ({
     const filters = useProjectFilters({
         apartments,
         project: project ?? undefined,
+        isPriceVisible,
+        isAreaVisible,
     });
 
     const { getFieldLabel, getCustomFieldValue, formatFieldValue, formatPrice } = useFieldHelpers({
@@ -345,6 +356,8 @@ const ProjectApartmentSelector = ({
                                                         onOpenFloorPlan={openFloorPlanFromPanel}
                                                         themeColor={themeColor}
                                                         selectedCurrency={filters.selectedCurrency}
+                                                        isPriceVisible={filters.isPriceVisible}
+                                                        isAreaVisible={filters.isAreaVisible}
                                                         language={language}
                                                     />
                                                 </Suspense>
