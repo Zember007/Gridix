@@ -46,6 +46,9 @@
   "dashboard": "ადმინისტრაციული პანელი",
   "dashboardDescription": "პროექტების და პარამეტრების მართვა",
   "leads": "ლიდები",
+  "crm": "CRM",
+  "agent_network": "აგენტების ქსელი",
+  "contacts": "კონტაქტები",
   "project": {
     "create": {
       "description": "აირჩიეთ პროექტის შექმნის მეთოდი",
@@ -98,7 +101,65 @@
   "integrationsDescription": "დააკავშირეთ გარე სერვისები თქვენს სამუშაო სივრცესთან.",
   "projectsConfig": "პროექტების კონფიგურაცია",
   "configureProjects": "პროექტების კონფიგურაცია",
+  "common": {
+    "active": "აქტიური",
+    "inactive": "არააქტიური",
+    "comingSoon": "მალე",
+    "cancel": "გაუქმება",
+    "confirm": "დაადასტურეთ"
+  },
+  "amocrm": {
+    "description": "გაყიდვების ავტომატიზაცია და ლიდერების მართვა AmoCRM ინტეგრაციით.",
+    "connectedTo": "დაკავშირებულია",
+    "disconnect": "გათიშვა",
+    "reconnect": "ხელახლა დაკავშირება",
+    "tokenExpired": "ჟეტონს ვადა გაუვიდა",
+    "connectAmoCRM": "შეაერთეთ AmoCRM",
+    "disconnectWarningTitle": "გათიშვა ინტეგრაცია?",
+    "disconnectWarningMessage": "ეს შეაჩერებს ყველა სინქრონიზაციის პროცესს. მოგვიანებით შეგიძლიათ ხელახლა დაკავშირება.",
+    "disconnectSuccess": "კავშირი წარმატებით გათიშულია",
+    "disconnectError": "კავშირის გათიშვა ვერ მოხერხდა",
+    "settingsLoadError": "პარამეტრების ჩატვირთვა ვერ მოხერხდა",
+    "authError": "ავტორიზაცია ვერ მოხერხდა",
+    "saveSuccess": "პარამეტრები წარმატებით შენახულია",
+    "saveError": "პარამეტრების შენახვა ვერ მოხერხდა",
+    "pipeline": "მილსადენი",
+    "status": "სტატუსი",
+    "responsible": "პასუხისმგებელი მომხმარებელი",
+    "selectPipeline": "აირჩიეთ მილსადენი",
+    "selectStatus": "აირჩიეთ სტატუსი",
+    "selectUser": "აირჩიეთ მომხმარებელი",
+    "notConnected": "არ არის დაკავშირებული",
+    "connectInAdmin": "დაკავშირება ადმინისტრაციულ პანელში",
+    "connectInAdminDescription": "ჯერ უნდა დააკავშიროთ AmoCRM ადმინისტრაციულ პანელში.",
+    "goToAdmin": "გადადით ადმინისტრაციულ პანელზე"
+  },
   "bitrix24": {
+    "description": "CRM, ამოცანები და პროექტის მენეჯმენტი ერთ ადგილას.",
+    "connectedTo": "დაკავშირებულია",
+    "disconnect": "გათიშვა",
+    "installApp": "დააინსტალირეთ აპლიკაცია",
+    "howToConnect": "როგორ დააკავშიროთ:",
+    "step1": "გახსენით Bitrix24 Marketplace",
+    "step2": "დააინსტალირეთ \"Gridix\" აპლიკაცია",
+    "step3": "შეიყვანეთ კოდი აქ",
+    "enterCode": "შეიყვანეთ კავშირის კოდი",
+    "connect": "დაკავშირება",
+    "checking": "მიმდინარეობს შემოწმება...",
+    "disconnectWarningTitle": "გათიშეთ Bitrix24?",
+    "disconnectWarningMessage": "ეს გააუქმებს კავშირს და შეწყვეტს სინქრონიზაციას.",
+    "disconnectSuccess": "კავშირი წარმატებით გათიშულია",
+    "disconnectError": "კავშირის გათიშვა ვერ მოხერხდა",
+    "connectError": "დაკავშირება ვერ მოხერხდა",
+    "invalidCode": "არასწორი ან ვადაგასული კოდი",
+    "settingsLoadError": "პარამეტრების ჩატვირთვა ვერ მოხერხდა",
+    "category": "გარიგების კატეგორია",
+    "stage": "გარიგების ეტაპი",
+    "selectCategory": "აირჩიეთ კატეგორია",
+    "selectStage": "აირჩიეთ ეტაპი",
+    "notConnected": "არ არის დაკავშირებული",
+    "connectInAdmin": "დაკავშირება ადმინისტრაციულ პანელში",
+    "connectInAdminDescription": "ჯერ უნდა დააკავშიროთ Bitrix24 ადმინისტრაციულ პანელში.",
     "attached": "დაკავშირებულია",
     "attachError": "ვერ მოხერხდა დაკავშირება",
     "detached": "გამოირთო",
@@ -112,5 +173,137 @@
     "syncError": "ვერ მოხერხდა ვоронка-ს სინქრონიზაცია"
   },
   "widgets": "ვიჯეტები",
-  "documentation": "დოკუმენტაცია"
+  "documentation": "დოკუმენტაცია",
+  "subscriptionPage": {
+    "title": "თქვენი ხელმოწერები",
+    "description": "შეარჩიეთ გეგმა, რომელიც შეესაბამება თქვენს ბიზნესს.",
+    "refresh": "განაახლეთ",
+    "projects": {
+      "emptyTitle": "არანაირი პროექტები",
+      "emptyDescription": "შექმენით თქვენი პირველი პროექტი \"პროექტების\" განყოფილებაში, რათა გაააქტიუროთ გამოწერა და განბლოკოთ ყველა ფუნქცია.",
+      "tariff": "გეგმავენ",
+      "expiresAt": "იწურება",
+      "notSelected": "არ არის შერჩეული",
+      "status": {
+        "active": "აქტიური",
+        "expired": "ვადა გაუვიდა",
+        "inactive": "არ არის აქტიური"
+      },
+      "buttons": {
+        "extend": "გააგრძელე",
+        "activate": "გააქტიურება"
+      }
+    },
+    "durations": {
+      "1": "1 თვე",
+      "3": "3 თვე",
+      "6": "6 თვე",
+      "12": "12 თვე"
+    },
+    "hints": {
+      "6": "💰 კარგი დანაზოგი 6 თვის გადახდისას.",
+      "12": "👍 დიდი არჩევანი! ყველაზე პოპულარული გეგმა.",
+      "36": "🔥 სუპერ დაზოგვა! 50% ფასდაკლება მთელი პერიოდის განმავლობაში."
+    },
+    "pricing": {
+      "availablePlansTitle": "ხელმისაწვდომი გეგმები",
+      "availablePlansDescription": "აირჩიეთ გეგმა, რომელიც საუკეთესოდ მუშაობს თქვენთვის.",
+      "usdPerMonth": "აშშ დოლარი/თვეში",
+      "perProject": "თითო პროექტზე",
+      "billedEvery": "დარიცხული ყოველი",
+      "monthsShort": "თვე",
+      "monthsShortPlural": "თვეების",
+      "savings": "დანაზოგი",
+      "choosePlan": "აირჩიეთ {{name}}"
+    },
+    "history": {
+      "title": "შეკვეთების ისტორია",
+      "filters": {
+        "all": "ყველა",
+        "paid": "გადახდილი",
+        "pending": "მიმდინარეობს"
+      },
+      "table": {
+        "date": "თარიღი / ID",
+        "projects": "პროექტები",
+        "tariff": "გეგმავენ",
+        "method": "მეთოდი",
+        "amount": "თანხა",
+        "status": "სტატუსი",
+        "actions": "მოქმედებები"
+      },
+      "status": {
+        "paid": "გადახდილი",
+        "pending": "მიმდინარეობს",
+        "cancelled": "გაუქმდა"
+      },
+      "unknownProject": "არ არის მითითებული",
+      "projectsCount": "{{count}} პროექტი",
+      "downloadInvoice": "ინვოისის ჩამოტვირთვა",
+      "empty": "შეკვეთები ვერ მოიძებნა"
+    },
+    "checkout": {
+      "title": "გადახდა",
+      "selectPlan": "აირჩიეთ გეგმა",
+      "selectProjects": "აირჩიეთ პროექტები",
+      "projectsSelected": "არჩეულია {{count}}",
+      "projectsHint": "გამოწერა ხდება პროექტის მიხედვით. მთლიანი ღირებულება გამოითვლება შემდეგნაირად: გეგმის ფასი × პროექტების რაოდენობა.",
+      "noProjects": "ჯერ არ გაქვთ პროექტები. შექმენით პროექტი გადახდამდე.",
+      "payerType": {
+        "individual": "ინდივიდუალური",
+        "company": "კომპანია"
+      },
+      "fields": {
+        "contactName": "სრული სახელი / საკონტაქტო პირი",
+        "email": "ელფოსტა",
+        "phone": "ტელეფონი",
+        "companyName": "კომპანიის სახელი",
+        "taxId": "საგადასახადო ID",
+        "address": "იურიდიული მისამართი"
+      },
+      "placeholders": {
+        "contactName": "ჯონ სმიტი",
+        "email": "email@example.com",
+        "phone": "+995 555 000 000",
+        "companyName": "შპს ACME"
+      },
+      "errors": {
+        "enterName": "შეიყვანეთ სახელი",
+        "enterEmail": "შეიყვანეთ ელფოსტა",
+        "invalidEmail": "არასწორი ელფოსტა",
+        "enterPhone": "შეიყვანეთ ტელეფონი",
+        "shortPhone": "ტელეფონის ნომერი ძალიან მოკლეა",
+        "enterCompanyName": "შეიყვანეთ კომპანიის სახელი",
+        "selectAtLeastOneProject": "გთხოვთ, აირჩიოთ მინიმუმ ერთი პროექტი გადახდისთვის.",
+        "selectPlan": "გთხოვთ, აირჩიოთ გეგმა",
+        "noProjectsSelected": "გთხოვთ, აირჩიოთ მინიმუმ ერთი პროექტი"
+      },
+      "summary": {
+        "totalToPay": "სულ გადასახდელი",
+        "plan": "გეგმავენ",
+        "projects": "პროექტები:",
+        "payer": "გადამხდელი:"
+      },
+      "methods": {
+        "card": {
+          "title": "საბანკო ბარათი",
+          "description": "Visa, Mastercard, Apple Pay",
+          "unavailable": "მიუწვდომელია"
+        },
+        "invoice": {
+          "title": "ინვოისი",
+          "description": "PDF გენერაცია (Swift/IBAN)"
+        }
+      },
+      "footer": {
+        "total": "სულ:",
+        "next": "შემდეგი",
+        "processing": "დამუშავება..."
+      }
+    },
+    "toasts": {
+      "invoiceRequestedSingle": "ინვოისი მოითხოვა წარმატებით. შეგიძლიათ გადმოწეროთ შეკვეთის ისტორიაში.",
+      "invoiceRequestedMultiple": "ინვოისები მოთხოვნილია {{count}} პროექტისთვის"
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { DEFAULT_LANGUAGE } from "@gridix/utils/lib";
+import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 
 // Load all locale JSON files from ./locales/<lang>/*.json
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>(
@@ -59,6 +59,8 @@ void i18n.use(initReactI18next).init({
   debug: false,
   react: { useSuspense: false },
 });
+
+addSharedResources(i18n);
 
 export default i18n;
 

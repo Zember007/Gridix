@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { DEFAULT_LANGUAGE } from "@gridix/utils/lib";
+import { addSharedResources, DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 
 // Импорт всех JSON файлов переводов
 // Используем относительный путь от текущего файла (src/shared/lib/i18n.ts -> src/locales)
@@ -89,5 +89,7 @@ void i18n
       useSuspense: false,
     },
   });
+
+addSharedResources(i18n);
 
 export default i18n;

@@ -142,7 +142,7 @@ const ProfileFooterMenu = ({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer" style={{ color: ADMIN_THEME.sidebarText }}>
             <Globe className="h-4 w-4" />
-            <span className="flex-1">{t("common.language") || "Language"}</span>
+            <span className="flex-1">{t("common.language")}</span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent
             className="w-48"

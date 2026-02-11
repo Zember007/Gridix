@@ -47,10 +47,10 @@
     "not_generated": "PDF-счет еще не сгенерирован. Обратитесь к администратору.",
     "payment_instructions": "Инструкции по оплате",
     "instructions_list": [
-      "Скачайте PDF-счет по кнопке выше",
-      "Оплатите счет через банковский перевод по указанным реквизитам",
-      "Сохраните подтверждение оплаты",
-      "Ожидайте активации подписки администратором"
+      "Download the PDF invoice using the button above",
+      "Pay the invoice via bank transfer using the provided details",
+      "Save the payment confirmation",
+      "Wait for subscription activation by administrator"
     ],
     "support_contact": "При возникновении вопросов обращайтесь в техподдержку"
   },

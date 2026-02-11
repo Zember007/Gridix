@@ -46,6 +46,9 @@
   "dashboard": "לוח המחוונים לניהול",
   "dashboardDescription": "ניהול פרויקטים והגדרות",
   "leads": "לידים",
+  "crm": "CRM",
+  "agent_network": "רשת סוכנים",
+  "contacts": "אנשי קשר",
   "project": {
     "create": {
       "description": "בחר כיצד ליצור את הפרויקט",

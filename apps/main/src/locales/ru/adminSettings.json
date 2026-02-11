@@ -55,22 +55,18 @@
   "updateEmail": "Обновить Email",
   "updatePassword": "Обновить пароль",
   "vatPayer": "Плательщик НДС",
-
   "notifications": "Уведомления",
   "templates": "Шаблоны",
   "data": "Данные",
-
   "profileInfo": "Профиль",
   "profileInfoDesc": "Ваши персональные данные",
   "fullName": "Имя",
   "fullNamePlaceholder": "Имя Фамилия",
-
   "companyLogo": "Логотип компании",
   "uploadLogo": "Загрузить логотип",
   "logoHint": "PNG, JPG или SVG. Рекомендуется квадратное изображение.",
   "logoUploaded": "Логотип загружен",
   "logoUploadError": "Не удалось загрузить логотип",
-
   "systemDomain": "Системный домен (White Label)",
   "systemDomainHint": "Генерируется автоматически из названия бренда.",
   "brandName": "Название бренда",
@@ -83,7 +79,6 @@
   "industryInvestment": "Инвестиции",
   "industryMarketing": "Маркетинг",
   "industryDevelopment": "Строительство",
-
   "notificationPreferences": "Предпочтения уведомлений",
   "notificationPreferencesDesc": "Выберите, куда и какие уведомления вы хотите получать.",
   "notificationChannels": "Каналы доставки",
@@ -104,7 +99,6 @@
   "eventPaymentReceivedDesc": "О зачислении средств от клиентов.",
   "eventSystemUpdate": "Обновления системы",
   "eventSystemUpdateDesc": "Новости о продукте и системные сообщения.",
-
   "messageTemplates": "Шаблоны сообщений",
   "messageTemplatesDesc": "Быстрые ответы для WhatsApp и Telegram",
   "createTemplate": "Создать шаблон",
@@ -123,7 +117,6 @@
   "templateContentPlaceholder": "Текст сообщения...",
   "templateVariables": "Переменные:",
   "selectTemplateHint": "Выберите шаблон для редактирования или создайте новый",
-
   "dataManagement": "Управление данными",
   "dataManagementDesc": "Экспорт и сброс настроек",
   "backupTitle": "Резервное копирование",
@@ -137,7 +130,6 @@
   "resetSuccess": "Настройки сброшены",
   "resetError": "Не удалось сбросить настройки",
   "resetButton": "Сбросить настройки",
-
   "telegramNeedsStart": "Telegram не подключен",
   "telegramNeedsStartDesc": "Пожалуйста, начните диалог с {{bot}}, чтобы бот мог отправлять вам сообщения.",
   "telegramVerifyError": "Не удалось проверить Telegram"

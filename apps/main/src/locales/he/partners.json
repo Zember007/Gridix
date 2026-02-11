@@ -311,5 +311,34 @@
   "moreProjects": "ועוד {{count}} פרויקטים",
   "integratorCabinetTitle": "לוח מחוונים של אינטגרטור",
   "integratorCabinetText": "כאן אתה רואה רק לקוחות מנוהלים. עבור כל לקוח יש לך הערות מהירות והתחברות כדי להגדיר פרויקטים ומנויים.",
-  "qrShow": "הצג קוד QR"
+  "qrShow": "הצג קוד QR",
+  "tabs": {
+    "list": "רשימת שותפים",
+    "conditions": "תנאי שותפות"
+  },
+  "stats": {
+    "totalPartners": "סך הכל שותפים",
+    "active": "פָּעִיל",
+    "salesVolume": "נפח מכירות",
+    "pendingPayout": "ממתין לתשלום"
+  },
+  "table": {
+    "agent": "סוֹכֵן",
+    "status": "סטָטוּס",
+    "rate": "קֶצֶב",
+    "leads": "לידים",
+    "balance": "לְאַזֵן",
+    "accrued": "נצבר"
+  },
+  "actions": {
+    "approve": "אשר שותף",
+    "payout": "תשלום עמלה",
+    "block": "לַחסוֹם",
+    "unblock": "בטל את החסימה"
+  },
+  "filters": "מסננים",
+  "invite": "לְהַזמִין",
+  "showPendingOnly": "הצג בהמתנה בלבד",
+  "clickToFilter": "לחץ כדי לסנן",
+  "noPartners": "אין שותפים"
 }

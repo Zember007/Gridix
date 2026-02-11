@@ -133,79 +133,13 @@
   "kanban": {
     "noDeals": "لا توجد صفقات",
     "dragHere": "اسحب هنا",
-    "createDeal": "إنشاء صفقة"
-  },
-  "list": {
-    "selectAll": "تحديد الكل",
-    "selected": "محدد"
-  },
-  "drawer": {
-    "contact": "جهة الاتصال",
-    "details": "تفاصيل الصفقة",
-    "tasks": "المهام",
-    "history": "التاريخ",
-    "addTask": "إضافة مهمة",
-    "addNote": "إضافة ملاحظة",
-    "tags": "الوسوم",
-    "source": "المصدر",
+    "createDeal": "إنشاء صفقة",
+    "changeStage": "تغيير المرحلة",
     "budget": "الميزانية",
-    "apartment": "الشقة",
-    "created": "تم الإنشاء",
-    "close": "إغلاق"
-  },
-  "createModal": {
-    "title": "صفقة جديدة",
-    "name": "اسم العميل",
-    "phone": "الهاتف",
-    "email": "البريد الإلكتروني (اختياري)",
-    "create": "إنشاء",
-    "cancel": "إلغاء",
-    "duplicateWarning": "تم العثور على عميل محتمل مشابه!",
-    "duplicateDesc": "يوجد بالفعل عميل محتمل بهذا الرقم في النظام:"
-  },
-  "funnel": {
-    "title": "إعداد القمع",
-    "funnels": "الأقماع",
-    "addFunnel": "إضافة قمع",
-    "archived": "الأقماع المؤرشفة",
-    "addStage": "إضافة مرحلة",
-    "deleteStage": "حذف المرحلة",
-    "rename": "إعادة تسمية",
-    "triggers": "الأتمتة",
-    "addTrigger": "إضافة محفز",
-    "noAutomations": "لا توجد أتمتة",
-    "automationDesc": "أضف إجراءات عند الانتقال إلى هذه المرحلة",
-    "back": "رجوع",
-    "save": "حفظ",
-    "deleteAllTriggers": "حذف جميع المحفزات"
-  },
-  "settings": {
-    "import": "استيراد",
-    "export": "تصدير (CSV)",
-    "funnelSetup": "إعداد القمع",
-    "cardAppearance": "مظهر البطاقة",
-    "findDuplicates": "البحث عن التكرارات",
-    "massActions": "الإجراءات الجماعية"
-  },
-  "sources": {
-    "instagram": "Instagram",
-    "website": "الموقع",
-    "referral": "إحالة",
-    "walk_in": "وارد",
-    "facebook": "Facebook",
-    "admin": "المسؤول"
-  },
-  "toolbar": {
-    "selected": "محدد",
-    "changeStatus": "تغيير الحالة",
-    "assign": "تعيين",
-    "delete": "حذف",
-    "manager": "المدير"
-  },
-  "emptyState": {
-    "notFound": "لم يتم العثور على شيء",
-    "tryChangingFilters": "حاول تغيير معاملات البحث أو الفلاتر.",
-    "resetFilters": "إعادة تعيين الفلاتر"
+    "noTasks": "لا توجد مهام",
+    "empty": "فارغ",
+    "moveHere": "نقل هنا",
+    "quickAdd": "+ إضافة سريعة..."
   },
   "list": {
     "selectAll": "تحديد الكل",
@@ -222,17 +156,6 @@
     "today": "اليوم",
     "yesterday": "أمس",
     "daysAgo": "أيام مضت"
-  },
-  "kanban": {
-    "noDeals": "لا توجد صفقات",
-    "dragHere": "اسحب هنا",
-    "createDeal": "إنشاء صفقة",
-    "changeStage": "تغيير المرحلة",
-    "budget": "الميزانية",
-    "noTasks": "لا توجد مهام",
-    "empty": "فارغ",
-    "moveHere": "نقل هنا",
-    "quickAdd": "+ إضافة سريعة..."
   },
   "drawer": {
     "contact": "جهة الاتصال",
@@ -304,6 +227,40 @@
     "moveHere": "نقل هنا",
     "doubleClickToEdit": "انقر نقرًا مزدوجًا لتغيير الاسم",
     "insertStage": "إدراج مرحلة"
+  },
+  "settings": {
+    "import": "استيراد",
+    "export": "تصدير (CSV)",
+    "funnelSetup": "إعداد القمع",
+    "cardAppearance": "مظهر البطاقة",
+    "findDuplicates": "البحث عن التكرارات",
+    "massActions": "الإجراءات الجماعية"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "الموقع",
+    "referral": "إحالة",
+    "walk_in": "وارد",
+    "facebook": "Facebook",
+    "admin": "المسؤول"
+  },
+  "toolbar": {
+    "selected": "محدد",
+    "changeStatus": "تغيير الحالة",
+    "assign": "تعيين",
+    "delete": "حذف",
+    "manager": "المدير"
+  },
+  "emptyState": {
+    "notFound": "لم يتم العثور على شيء",
+    "tryChangingFilters": "حاول تغيير معاملات البحث أو الفلاتر.",
+    "resetFilters": "إعادة تعيين الفلاتر"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "تحذير: مشغلات حالة الشقة المطلوبة مفقودة",
+    "funnelTriggersDesc": "للتعامل مع الحجوزات والمبيعات بشكل صحيح، قم بتعيين المشغلات التي تغير حالة الشقة المقيدة إلى \"محجوزة\" و\"مباعة\" في كل مسار تحويل.",
+    "missingFunnels": "مسارات التحويل تفتقد المشغلات",
+    "funnelTriggersCta": "فتح إعداد القمع"
   },
   "cardAppearance": {
     "title": "مظهر البطاقة",
@@ -405,6 +362,10 @@
     "selectStage": "اختر المرحلة للانتقال إليها",
     "noAdditionalSettings": "لا توجد إعدادات إضافية لهذا النوع من الإجراءات.",
     "descriptionRequired": "لا يمكن أن يكون الوصف فارغًا.",
+    "tagsToAddPlaceholder": "العلامات المطلوب إضافتها (مفصولة بفواصل)",
+    "apartmentStatusReserved": "محجوز",
+    "apartmentStatusSold": "مُباع",
+    "apartmentStatusAvailable": "متاح",
     "icons": {
       "clock": "تأخير",
       "distribution": "توزيع",
@@ -412,7 +373,8 @@
       "statusChange": "تغيير الحالة",
       "editField": "تحرير الحقل",
       "addTag": "إضافة وسم",
-      "notification": "إشعار"
+      "notification": "إشعار",
+      "apartmentStatus": "حالة الشقة"
     }
   },
   "cardFields": {

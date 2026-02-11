@@ -8,6 +8,7 @@
   "createNew": "צור פרויקט",
   "deleteConfirm": "האם אתה בטוח שברצונך למחוק את הפרויקט {{name}}?",
   "deleteProject": "מחק את הפרויקט",
+  "details": "פרטים",
   "editProject": "ערוך פרויקט",
   "errorDeleting": "שגיאה במחיקת הפרויקט",
   "errorLoading": "שגיאה בטעינת פרויקטים",

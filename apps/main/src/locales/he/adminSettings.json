@@ -55,22 +55,18 @@
   "updateEmail": "עדכן אימייל",
   "updatePassword": "עדכן סיסמה",
   "vatPayer": "משלם מע\"מ",
-
   "notifications": "Notifications",
   "templates": "Templates",
   "data": "Data",
-
   "profileInfo": "Profile",
   "profileInfoDesc": "Your personal details",
   "fullName": "Full name",
   "fullNamePlaceholder": "John Smith",
-
   "companyLogo": "Company logo",
   "uploadLogo": "Upload logo",
   "logoHint": "PNG, JPG or SVG. Recommended square image.",
   "logoUploaded": "Logo uploaded",
   "logoUploadError": "Failed to upload logo",
-
   "systemDomain": "System domain (White label)",
   "systemDomainHint": "Generated automatically from your brand name.",
   "brandName": "Brand name",
@@ -83,7 +79,6 @@
   "industryInvestment": "Investment",
   "industryMarketing": "Marketing",
   "industryDevelopment": "Development",
-
   "notificationPreferences": "Notification preferences",
   "notificationPreferencesDesc": "Choose which events and channels you want to receive.",
   "notificationChannels": "Delivery channels",
@@ -104,7 +99,6 @@
   "eventPaymentReceivedDesc": "When funds are received from clients.",
   "eventSystemUpdate": "System updates",
   "eventSystemUpdateDesc": "Product news and system messages.",
-
   "messageTemplates": "Message templates",
   "messageTemplatesDesc": "Quick replies for WhatsApp and Telegram",
   "createTemplate": "Create template",
@@ -123,7 +117,6 @@
   "templateContentPlaceholder": "Message text...",
   "templateVariables": "Variables:",
   "selectTemplateHint": "Select a template to edit or create a new one",
-
   "dataManagement": "Data management",
   "dataManagementDesc": "Backup and reset settings",
   "backupTitle": "Backup",
@@ -137,7 +130,6 @@
   "resetSuccess": "Settings reset",
   "resetError": "Failed to reset settings",
   "resetButton": "Reset settings",
-
   "telegramNeedsStart": "Telegram is not connected",
   "telegramNeedsStartDesc": "Please start a chat with {{bot}} so it can send you messages.",
   "telegramVerifyError": "Failed to verify Telegram"

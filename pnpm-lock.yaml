@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      fs-extra:
+        specifier: ^11.3.3
+        version: 11.3.3
+      google-translate-api-x:
+        specifier: ^10.7.2
+        version: 10.7.2
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -584,6 +590,9 @@ importers:
       react-hook-form:
         specifier: ^7.53.0
         version: 7.71.1(react@18.3.1)
+      react-i18next:
+        specifier: ^15.7.4
+        version: 15.7.4(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
       react-input-mask:
         specifier: ^2.0.4
         version: 2.0.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

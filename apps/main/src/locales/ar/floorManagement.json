@@ -1,0 +1,21 @@
+{
+  "add": "يضيف",
+  "addFloor": "أضف أرضية",
+  "addFloorError": "حدث خطأ أثناء إضافة الأرضية",
+  "addFloorSuccess": "تمت إضافة الطابق {{floor}} بنجاح",
+  "apartment": "شقة",
+  "apartments": "شقق",
+  "deleteFloorConfirm": "هل أنت متأكد أنك تريد حذف الطابق {{الطابق}}؟",
+  "deleteFloorError": "حدث خطأ أثناء حذف الأرضية",
+  "deleteFloorSuccess": "تم حذف الطابق {{floor}} بنجاح",
+  "deleteFloorWithApartmentsConfirm": "هل أنت متأكد أنك تريد حذف الطابق {{الطابق}}؟ يحتوي على {{count}} شقة سيتم حذفها أيضًا.",
+  "description": "إضافة أو إزالة الطوابق في المشروع",
+  "existingFloors": "الطوابق الموجودة",
+  "floor": "أرضية",
+  "floorAlreadyExists": "الطابق {{الطابق}} موجود بالفعل",
+  "floorNumber": "رقم الطابق",
+  "invalidFloorNumber": "رقم الطابق غير صالح",
+  "manageFloors": "إدارة الطوابق",
+  "noFloors": "لم يتم إنشاء أي طوابق",
+  "title": "إدارة الأرضيات"
+}

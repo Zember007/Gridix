@@ -46,12 +46,12 @@
     "downloading": "מוריד...",
     "not_generated": "חשבונית PDF טרם נוצרה. צור קשר עם מנהל המערכת.",
     "payment_instructions": "הוראות תשלום",
-    "instructions_list": {
-      "0": "הורד את חשבונית PDF באמצעות הכפתור למעלה",
-      "1": "שלם את החשבונית באמצעות העברה בנקאית באמצעות הפרטים שסופקו",
-      "2": "שמור את אישור התשלום",
-      "3": "המתן להפעלת המנוי על ידי מנהל המערכת"
-    },
+    "instructions_list": [
+      "Download the PDF invoice using the button above",
+      "Pay the invoice via bank transfer using the provided details",
+      "Save the payment confirmation",
+      "Wait for subscription activation by administrator"
+    ],
     "support_contact": "צור קשר עם התמיכה אם יש לך שאלות כלשהן"
   },
   "admin": {

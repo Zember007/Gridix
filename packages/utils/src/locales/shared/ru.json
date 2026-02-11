@@ -1,0 +1,76 @@
+{
+  "drawer": {
+    "tabs": {
+      "overview": "Обзор",
+      "units": "Шахматка",
+      "construction": "Стройка",
+      "media": "Материалы",
+      "partners": "Партнёры",
+      "settings": "Настройки"
+    },
+    "commission": {
+      "title": "Ваша комиссия",
+      "active": "Активно",
+      "requiresContract": "Требуется договор",
+      "condition": "Условия выплаты",
+      "signOffer": "Чтобы зафиксировать клиента и получить комиссию, необходимо подписать оферту с застройщиком."
+    },
+    "stats": {
+      "roi": "ROI",
+      "completion": "Срок сдачи",
+      "priceFrom": "Цена от",
+      "units": "Юнитов"
+    },
+    "about": {
+      "title": "О проекте",
+      "description": "Современный жилой комплекс в престижном районе. Идеально подходит для проживания и инвестиций."
+    },
+    "quickAccess": "Быстрый доступ",
+    "media": {
+      "title": "Медиа-банк проекта",
+      "downloadAll": "Скачать все (ZIP)",
+      "renders": "Рендеры",
+      "videos": "Видео",
+      "presentations": "Презентации",
+      "noMaterials": "Нет материалов",
+      "restricted": "Доступ ограничен",
+      "signToAccess": "Подпишите договор с застройщиком, чтобы получить доступ к медиа-банку.",
+      "connect": "Подключить"
+    },
+    "construction": {
+      "title": "Ход строительства",
+      "noUpdates": "Нет обновлений"
+    },
+    "units": {
+      "legend": {
+        "available": "Свободно",
+        "booked": "Бронь",
+        "sold": "Продано"
+      },
+      "downloadPdf": "Скачать PDF"
+    },
+    "actions": {
+      "lock": "Фиксация",
+      "favorite": "В подборку",
+      "share": "Поделиться",
+      "becomePartner": "Стать партнером",
+      "pendingConfirmation": "Ожидает подтверждения",
+      "partnershipUnavailable": "Партнёрство недоступно",
+      "openPage": "Открыть страницу"
+    }
+  },
+  "embed": {
+    "viewApartments": "Посмотреть квартиры"
+  },
+  "common": {
+    "language": "Язык",
+    "more": "Подробнее",
+    "hide": "Скрыть"
+  },
+  "admin": {
+    "documentation": "Документация"
+  },
+  "auth": {
+    "signOut": "Выйти"
+  }
+}
