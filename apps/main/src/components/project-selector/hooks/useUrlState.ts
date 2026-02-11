@@ -30,6 +30,8 @@ function writeParams(params: URLSearchParams) {
   window.history.replaceState(window.history.state, '', url.toString());
 }
 
+
+
 // ── Parse helpers ──
 
 export function parseViewMode(params: URLSearchParams): ViewMode {

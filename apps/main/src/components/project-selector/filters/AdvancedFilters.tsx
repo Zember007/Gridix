@@ -1,6 +1,8 @@
 import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
+import { normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import {useLanguage} from '@/contexts/LanguageContext';
@@ -78,6 +80,8 @@ export const AdvancedFilters = ({
   formatPrice,
 }: Props) => {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const ui = useMemo(() => ({
     apply: language === 'ru' ? 'Применить' : 'Apply',
@@ -144,6 +148,20 @@ export const AdvancedFilters = ({
     selectedCurrency,
   ]);
 
+
+  const handleCurrencyChange = (nextCurrency: string) => {
+    if (nextCurrency === advCurrency) return;
+
+    setAdvPrice(normalizePriceRangeForCurrencyChange({
+      prevCurrency: advCurrency,
+      nextCurrency,
+      prevRange: advPrice,
+      minPrice,
+      maxPrice,
+    }));
+    setAdvCurrency(nextCurrency);
+  };
+
   const handleApplyFilters = () => {
     const currencyChanged = advCurrency !== selectedCurrency;
 
@@ -155,13 +173,21 @@ export const AdvancedFilters = ({
     setSelectedRooms(advRooms);
     setSelectedFloor(advFloor);
 
-    if (!currencyChanged) {
-      setPriceRange(advPrice);
-      setAreaRange(advArea);
-    }
+    setPriceRange(advPrice);
+    setAreaRange(advArea);
 
     setSearchQuery(advSearch);
     setShowOnlyAvailable(advAvailable);
+
+    const nextSearchParams = new URLSearchParams(location.search);
+    nextSearchParams.set('view', 'list');
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${nextSearchParams.toString()}` ,
+      },
+      { replace: false },
+    );
 
     onClose?.();
     window.scrollTo({
@@ -198,7 +224,7 @@ export const AdvancedFilters = ({
         <CurrencyToggle
           projectCurrency={project?.currency || null}
           selectedCurrency={advCurrency}
-          onChange={(c) => setAdvCurrency(c)}
+          onChange={handleCurrencyChange}
           themeColor={themeColor}
         />
       </div>
