@@ -44,7 +44,10 @@ const BuildingFacadeView = ({
                             }: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
-  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
+  const [imageRect, setImageRect] = useState<{
+    offset: { x: number; y: number };
+    size: { width: number; height: number };
+  } | null>(null);
   const outerRef = useRef<HTMLDivElement>(null);
   // This ref MUST point to the "image area" only (not including the bottom carousel),
   // because popup positioning and svg overlay are relative to this container.
@@ -114,11 +117,11 @@ const BuildingFacadeView = ({
           computeMobileDockPositionUtil({
             containerEl: containerRef.current,
             isExpanded: isExpanded ?? false,
-            imgDimensions,
+            imageRect,
             visibleFloors,
             size,
           }),
-      [imgDimensions, isExpanded, visibleFloors]
+      [imageRect, isExpanded, visibleFloors]
   );
 
   const computePopupPositionForPolygon = useCallback(
@@ -129,11 +132,11 @@ const BuildingFacadeView = ({
           computePopupPositionForPolygonUtil({
             containerEl: containerRef.current,
             isExpanded: isExpanded ?? false,
-            imgDimensions,
+            imageRect,
             polygonBoundsPct,
             size,
           }),
-      [imgDimensions, isExpanded]
+      [imageRect, isExpanded]
   );
 
   const handleFloorHover = useCallback((floorNumber: number) => {
@@ -183,20 +186,42 @@ const BuildingFacadeView = ({
     popupSize,
   ]);
 
-  const measureImageContainer = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const width = Math.round(rect.width);
-    const height = Math.round(rect.height);
-    if (width <= 0 || height <= 0) return;
-    setImgDimensions(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+  const measureImageRect = useCallback(() => {
+    const containerEl = containerRef.current;
+    const imageEl = imgRef.current;
+    if (!containerEl || !imageEl) return;
+
+    const containerRect = containerEl.getBoundingClientRect();
+    const imgRect = imageEl.getBoundingClientRect();
+
+    const nextRect = {
+      offset: {
+        x: imgRect.left - containerRect.left,
+        y: imgRect.top - containerRect.top,
+      },
+      size: {
+        width: imgRect.width,
+        height: imgRect.height,
+      },
+    };
+
+    if (nextRect.size.width <= 0 || nextRect.size.height <= 0) return;
+
+    setImageRect((prev) => {
+      if (!prev) return nextRect;
+      const same =
+        Math.abs(prev.offset.x - nextRect.offset.x) <= 0.5 &&
+        Math.abs(prev.offset.y - nextRect.offset.y) <= 0.5 &&
+        Math.abs(prev.size.width - nextRect.size.width) <= 0.5 &&
+        Math.abs(prev.size.height - nextRect.size.height) <= 0.5;
+      return same ? prev : nextRect;
+    });
   }, []);
 
   useLayoutEffect(() => {
     // After any layout-affecting change, measure the real image-area container.
-    measureImageContainer();
-  }, [measureImageContainer, isExpanded, isMobile, facadeImageUrl]);
+    measureImageRect();
+  }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -205,31 +230,32 @@ const BuildingFacadeView = ({
     const observer = new ResizeObserver(() => {
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        measureImageContainer();
+        measureImageRect();
       });
     });
     observer.observe(el);
 
     // Fallback for viewport changes on some browsers.
-    window.addEventListener('resize', measureImageContainer);
+    window.addEventListener('resize', measureImageRect);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener('resize', measureImageContainer);
+      window.removeEventListener('resize', measureImageRect);
     };
-  }, [measureImageContainer]);
+  }, [measureImageRect]);
 
   useEffect(() => {
     if (visibleFloors.length > 0) {
-      if (isExpanded && isMobile && imgDimensions.width > 0 && imgDimensions.height > 0) {
+      if (isExpanded && isMobile && imageRect && imageRect.size.width > 0 && imageRect.size.height > 0) {
         handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
       }
     }
-  }, [handleFloorHover, imgDimensions.height, imgDimensions.width, isExpanded, isMobile, visibleFloors]);
+  }, [handleFloorHover, imageRect, isExpanded, isMobile, visibleFloors]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
+    setImageRect(null);
     setShowPopup(false);
     setPopupAnchor(null);
     setPopupPosition(null);
@@ -346,7 +372,7 @@ const BuildingFacadeView = ({
 
   useLayoutEffect(() => {
     if (!showPopup || !containerRef.current || !popupRef.current) return;
-    if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return;
+    if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return;
 
     const rect = popupRef.current.getBoundingClientRect();
     const measured = { width: rect.width, height: rect.height };
@@ -394,8 +420,7 @@ const BuildingFacadeView = ({
   }, [
     computeMobileDockPosition,
     computePopupPositionForPolygon,
-    imgDimensions.height,
-    imgDimensions.width,
+    imageRect,
     isExpanded,
     isMobile,
     mobilePopupDockPosition,
@@ -456,7 +481,7 @@ const BuildingFacadeView = ({
       return;
     }
 
-    if (imgDimensions.width === 0 || imgDimensions.height === 0) {
+    if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) {
       return;
     }
 
@@ -492,10 +517,10 @@ const BuildingFacadeView = ({
 
     // Переводим проценты в пиксели относительно контейнера,
     // учитывая, что изображение центрируется внутри него
-    const svgWidth = imgDimensions.width;
-    const svgHeight = imgDimensions.height;
-    const svgLeft = (containerWidth - svgWidth) / 2;
-    const svgTop = (containerHeight - svgHeight) / 2;
+    const svgWidth = imageRect.size.width;
+    const svgHeight = imageRect.size.height;
+    const svgLeft = imageRect.offset.x;
+    const svgTop = imageRect.offset.y;
 
     const bboxLeft = svgLeft + (minX / 100) * svgWidth;
     const bboxRight = svgLeft + (maxX / 100) * svgWidth;
@@ -558,7 +583,7 @@ const BuildingFacadeView = ({
     void intersectsPolygons;
 
 
-  }, [isMobile, isExpanded, visibleFloors, imgDimensions.width, imgDimensions.height]);
+  }, [isMobile, isExpanded, visibleFloors, imageRect]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
@@ -640,11 +665,12 @@ const BuildingFacadeView = ({
                   alt={project.name}
                   className={`block h-full transition-all duration-500 w-auto mx-auto`}
                   draggable={false}
+                  onLoad={measureImageRect}
               />
-              {visibleFloors.length > 0 && imgRef.current && (
+              {visibleFloors.length > 0 && imageRect && (
                   <svg
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
-                      style={{ width: imgRef.current?.width ?? '100%', height: imgRef.current?.height ?? '100%' }}
+                      style={{ width: imageRect.size.width, height: imageRect.size.height }}
                       viewBox="0 0 100 100"
                       preserveAspectRatio="none"
                   >
