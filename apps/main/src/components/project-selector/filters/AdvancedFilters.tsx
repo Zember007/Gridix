@@ -1,6 +1,8 @@
 import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
+import { normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
+import { upsertViewMode } from '../hooks/useUrlState';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import {useLanguage} from '@/contexts/LanguageContext';
@@ -144,6 +146,30 @@ export const AdvancedFilters = ({
     selectedCurrency,
   ]);
 
+
+  const handleCurrencyChange = (nextCurrency: string) => {
+    if (nextCurrency === advCurrency) return;
+
+    setAdvPrice(normalizePriceRangeForCurrencyChange({
+      prevCurrency: advCurrency,
+      nextCurrency,
+      prevRange: advPrice,
+      minPrice,
+      maxPrice,
+    }));
+    setAdvCurrency(nextCurrency);
+  };
+
+  const pushViewListToHistory = () => {
+    const currentUrl = new URL(window.location.href);
+    const nextUrl = new URL(window.location.href);
+    nextUrl.search = upsertViewMode(nextUrl.searchParams, 'list').toString();
+
+    if (nextUrl.toString() !== currentUrl.toString()) {
+      window.history.pushState(window.history.state, '', nextUrl.toString());
+    }
+  };
+
   const handleApplyFilters = () => {
     const currencyChanged = advCurrency !== selectedCurrency;
 
@@ -155,13 +181,13 @@ export const AdvancedFilters = ({
     setSelectedRooms(advRooms);
     setSelectedFloor(advFloor);
 
-    if (!currencyChanged) {
-      setPriceRange(advPrice);
-      setAreaRange(advArea);
-    }
+    setPriceRange(advPrice);
+    setAreaRange(advArea);
 
     setSearchQuery(advSearch);
     setShowOnlyAvailable(advAvailable);
+
+    pushViewListToHistory();
 
     onClose?.();
     window.scrollTo({
@@ -198,7 +224,7 @@ export const AdvancedFilters = ({
         <CurrencyToggle
           projectCurrency={project?.currency || null}
           selectedCurrency={advCurrency}
-          onChange={(c) => setAdvCurrency(c)}
+          onChange={handleCurrencyChange}
           themeColor={themeColor}
         />
       </div>
