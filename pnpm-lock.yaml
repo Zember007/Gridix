@@ -26,6 +26,9 @@ importers:
       '@gridix/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@gridix/partner-program':
+        specifier: workspace:*
+        version: link:../../packages/partner-program
       '@gridix/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -181,6 +184,9 @@ importers:
       '@gridix/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@gridix/partner-program':
+        specifier: workspace:*
+        version: link:../../packages/partner-program
       '@gridix/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -408,6 +414,85 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@22.19.7)(jiti@1.21.7)(terser@5.46.0)
 
+  apps/partners:
+    dependencies:
+      '@gridix/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@gridix/partner-program':
+        specifier: workspace:*
+        version: link:../../packages/partner-program
+      '@gridix/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@gridix/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@gridix/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@supabase/supabase-js':
+        specifier: ^2.50.0
+        version: 2.93.2
+      '@tanstack/react-query':
+        specifier: ^5.56.2
+        version: 5.90.20(react@18.3.1)
+      i18next:
+        specifier: ^23.10.0
+        version: 23.16.8
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-i18next:
+        specifier: ^15.7.4
+        version: 15.7.4(i18next@23.16.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
+      react-router-dom:
+        specifier: ^6.26.2
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sonner:
+        specifier: ^1.5.0
+        version: 1.7.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.27
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.27)
+      '@vitejs/plugin-react-swc':
+        specifier: ^3.5.0
+        version: 3.11.0(vite@5.4.21(@types/node@22.19.7)(terser@5.46.0))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.23(postcss@8.5.6)
+      postcss:
+        specifier: ^8.4.47
+        version: 8.5.6
+      rtlcss:
+        specifier: ^4.3.0
+        version: 4.3.0
+      tailwindcss:
+        specifier: ^3.4.11
+        version: 3.4.19
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.19)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.1
+        version: 5.4.21(@types/node@22.19.7)(terser@5.46.0)
+
   packages/config:
     devDependencies:
       '@eslint/js':
@@ -434,6 +519,52 @@ importers:
       typescript-eslint:
         specifier: ^8.0.1
         version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
+
+  packages/partner-program:
+    dependencies:
+      '@gridix/types':
+        specifier: workspace:*
+        version: link:../types
+      '@gridix/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@gridix/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@supabase/supabase-js':
+        specifier: ^2.50.0
+        version: 2.93.2
+      '@tanstack/react-query':
+        specifier: ^5.56.2
+        version: 5.90.20(react@18.3.1)
+      lucide-react:
+        specifier: ^0.553.0
+        version: 0.553.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      sonner:
+        specifier: ^1.5.0
+        version: 1.7.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@gridix/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.27
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.27)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^5.4.1
+        version: 5.4.21(@types/node@22.19.7)(terser@5.46.0)
 
   packages/types:
     devDependencies:

@@ -9,17 +9,17 @@ import {
   SimplifiedSidebar,
   type SimplifiedSidebarNavItem,
 } from "@gridix/ui";
-import { ChartBar, Buildings as Building2, UserCircle as UserIcon, Stack as Layers3 } from "@phosphor-icons/react";
+import { ChartBar, Buildings as Building2, UserCircle as UserIcon, Stack as Layers3, Handshake } from "@phosphor-icons/react";
 import { Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@gridix/ui";
 
-export type AgentCabinetPage = "dashboard" | "analytics" | "contacts" | "catalog";
+export type AgentCabinetPage = "dashboard" | "analytics" | "contacts" | "catalog" | "partnerProgram";
 
 const getQueryPage = (search: string): AgentCabinetPage | null => {
   const page = new URLSearchParams(search).get("page");
-  if (page === "dashboard" || page === "analytics" || page === "contacts" || page === "catalog") return page;
+  if (page === "dashboard" || page === "analytics" || page === "contacts" || page === "catalog" || page === "partnerProgram") return page;
   return null;
 };
 
@@ -51,6 +51,7 @@ export function AgentCabinetLayout({
       { id: "contacts", icon: <UserIcon size={20} />, label: t("common.nav.contacts") },
       { id: "catalog", icon: <Layers3 size={20} />, label: t("common.nav.projects") },
       { id: "analytics", icon: <ChartBar size={20} />, label: t("common.nav.analytics") },
+      { id: "partnerProgram", icon: <Handshake size={20} />, label: t("common.nav.partnerProgram") },
     ],
     [t],
   );
