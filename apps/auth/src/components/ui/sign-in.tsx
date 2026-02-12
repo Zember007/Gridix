@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+
+import heroVideoSrc from "@/assets/Preview_video_gridix.mp4";
 
 // --- HELPER COMPONENTS (ICONS) ---
 
@@ -164,6 +166,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [internalAccountType, setInternalAccountType] = useState<AccountType>("developer");
+  const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoReady && videoRef.current) {
+      videoRef.current.play().catch(() => { });
+    }
+  }, [videoReady]);
 
   const {
     signInTab = "Sign In",
@@ -171,7 +181,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     signInTitle = "Welcome back",
     signUpTitle = "Create your account",
     signInDescription = "Access your account and continue your journey with us",
-    signUpDescription = "Create an account to get started",
+    signUpDescription = "",
     emailLabel = "Email Address",
     emailPlaceholder = "Enter your email address",
     passwordLabel = "Password",
@@ -227,38 +237,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
               {computedTitle}
             </h1>
-            <p className="animate-element animate-delay-200 text-muted-foreground">
-              {computedDescription}
-            </p>
+            {computedDescription && (
+              <p className="animate-element animate-delay-200 text-muted-foreground">
+                {computedDescription}
+              </p>
+            )}
 
             {banner}
-
-            <div className="animate-element animate-delay-250 grid grid-cols-2 gap-2 rounded-2xl border border-border p-1 bg-foreground/5 backdrop-blur-sm">
-              <button
-                type="button"
-                onClick={() => setMode("signin")}
-                className={[
-                  "rounded-xl py-2 text-sm font-semibold transition-colors",
-                  mode === "signin"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-foreground/5",
-                ].join(" ")}
-              >
-                {signInTab}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("signup")}
-                className={[
-                  "rounded-xl py-2 text-sm font-semibold transition-colors",
-                  mode === "signup"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-foreground/5",
-                ].join(" ")}
-              >
-                {signUpTab}
-              </button>
-            </div>
 
             <form
               className="space-y-5"
@@ -459,21 +444,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </button>
             </form>
 
-            <div className="animate-element animate-delay-700 relative flex items-center justify-center">
-              <span className="w-full border-t border-border"></span>
-              <span className="px-4 text-sm text-muted-foreground bg-background absolute">
-                {orContinueWith}
-              </span>
-            </div>
+            {onGoogleSignIn &&
+              <>
+                <div className="animate-element animate-delay-700 relative flex items-center justify-center">
+                  <span className="w-full border-t border-border"></span>
+                  <span className="px-4 text-sm text-muted-foreground bg-background absolute">
+                    {orContinueWith}
+                  </span>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => onGoogleSignIn?.({ mode, accountType: resolvedAccountType })}
-              className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors"
-            >
-              <GoogleIcon />
-              {continueWithGoogle}
-            </button>
+                <button
+                  type="button"
+                  onClick={() => onGoogleSignIn?.({ mode, accountType: resolvedAccountType })}
+                  className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors"
+                >
+                  <GoogleIcon />
+                  {continueWithGoogle}
+                </button>
+              </>}
 
             <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
               {mode === "signin" ? createAccountPrompt : alreadyHaveAccountPrompt}{" "}
@@ -492,12 +480,25 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
       </section>
 
-      {/* Right column: hero image + testimonials */}
+      {/* Right column: hero video (async) / image fallback + testimonials */}
       {heroImageSrc && (
         <section className="hidden md:block flex-1 relative p-4">
+          {/* Fallback/initial background */}
           <div
             className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center"
             style={{ backgroundImage: `url(${heroImageSrc})` }}
+          />
+          {/* Video loads async and fades in when ready */}
+          <video
+            ref={videoRef}
+            src={heroVideoSrc}
+            className={`absolute inset-4 w-full h-full rounded-3xl object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            onCanPlay={() => setVideoReady(true)}
+            aria-hidden
           />
           {testimonials.length > 0 && testimonials[0] && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">

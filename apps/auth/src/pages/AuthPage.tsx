@@ -291,7 +291,6 @@ export default function AuthPage() {
           signInTitle: t("auth.signInTitle"),
           signUpTitle: t("auth.signUpTitle"),
           signInDescription: t("auth.signInDescription"),
-          signUpDescription: t("auth.signUpDescription"),
           emailLabel: t("auth.email"),
           emailPlaceholder: t("auth.emailPlaceholder"),
           passwordLabel: t("auth.password"),
@@ -386,7 +385,7 @@ export default function AuthPage() {
             setAuthLoading(false);
           }
         }}
-        onGoogleSignIn={({ accountType: selectedAccountType }) => {
+       /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
           try {
             localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
             if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
@@ -405,7 +404,7 @@ export default function AuthPage() {
               }`,
             },
           });
-        }}
+        }} */
       />
 
       <Dialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
