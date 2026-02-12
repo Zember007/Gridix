@@ -3,6 +3,7 @@ import { Badge } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Tabs, TabsList, TabsTrigger } from "@gridix/ui";
 import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useInstallment } from '@/hooks/useInstallment';
 import { Apartment } from '@/entities/apartment/model/types';
@@ -139,6 +140,11 @@ export const ListView = ({
   const areaVisible = fieldVisibility.area;
   const roomsVisible = fieldVisibility.rooms;
 
+  const hasVisibleCardDetails = useMemo(() => {
+    const hasCustomVisibleFields = getVisibleFields().some(field => field.is_custom);
+    return roomsVisible || areaVisible || fieldVisibility.number || fieldVisibility.floor || fieldVisibility.status || hasCustomVisibleFields;
+  }, [areaVisible, fieldVisibility.floor, fieldVisibility.number, fieldVisibility.status, getVisibleFields, roomsVisible]);
+
   return (
     <div className="container mx-auto md:px-6 py-8 grow flex">
       <div className={`${(project?.has_commercial || project?.has_parking) ? "space-y-6" : "space-y-1"} flex flex-col w-full`}>
@@ -241,12 +247,14 @@ export const ListView = ({
                                     {apartment.type === 'apartment' ? apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
                                   </span>
                                 )}
-                                <Badge
-                                  variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                                  className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
-                                >
-                                  {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                                </Badge>
+                                {fieldVisibility.status && (
+                                  <Badge
+                                    variant={apartment.status === 'available' ? 'default' : 'secondary'}
+                                    className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
+                                  >
+                                    {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-xs text-gray-600 space-y-1">
                                 {
@@ -369,7 +377,8 @@ export const ListView = ({
                             </div>
 
                             {/* Apartment Info - Horizontal scrollable container with gradient indicators */}
-                            <div className="flex-1 overflow-hidden ml-[57px] relative h-full">
+                            {hasVisibleCardDetails && (
+                              <div className="flex-1 overflow-hidden ml-[57px] relative h-full">
                               {/* Left gradient indicator */}
                               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100" id={`left-gradient-${apartment.id}`}></div>
 
@@ -475,22 +484,20 @@ export const ListView = ({
 
 
                               </div>
-                            </div>
+                              </div>
+                            )}
 
                             {/* Price Section */}
-                            {
-                              priceVisible && (
-                                <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
-                                  <div className="text-[20px] font-extrabold text-black leading-[26px]">
-                                    {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                                  </div>
-                                  {apartment.price && project?.installment_enabled && (
-                                    <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
-                                      {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
-                                    </div>
-                                  )}
+                            <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
+                              <div className="text-[20px] font-extrabold text-black leading-[26px]">
+                                {priceVisible && apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                              </div>
+                              {priceVisible && apartment.price && project?.installment_enabled && (
+                                <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
+                                  {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
                                 </div>
                               )}
+                            </div>
 
                             {/* Action Buttons - Always visible */}
                             {apartment.status === 'available' && <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
@@ -555,12 +562,14 @@ export const ListView = ({
                             )}
                           </div>
                           <div className="text-center space-y-1">
-                            <div className="text-sm font-medium text-gray-700">
-                              {!Number.isNaN(apartment.rooms) && (
-                                <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-600">{apartment.area} м²</div>
+                            {roomsVisible && (
+                              <div className="text-sm font-medium text-gray-700">
+                                {!Number.isNaN(apartment.rooms) && (
+                                  <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
+                                )}
+                              </div>
+                            )}
+                            {areaVisible && <div className="text-xs text-gray-600">{apartment.area} м²</div>}
                             <div className="text-xs font-semibold text-gray-900">
                               {apartment.price && priceVisible ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                             </div>

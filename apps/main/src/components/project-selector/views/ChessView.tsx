@@ -10,7 +10,7 @@ import {
     TooltipTrigger,
 } from "@gridix/ui";
 import { useLanguage } from '@/contexts/LanguageContext';
-import ApartmentPopup from '@/components/visualization/ApartmentPopup';
+import ApartmentPopup, { hasAnyPopupContent } from '@/components/visualization/ApartmentPopup';
 import type { FieldVisibility } from '../types';
 
 type ApartmentWithSection = Apartment & {
@@ -154,6 +154,23 @@ export const ChessView = ({
                                                     ? colors.sold
                                                     : colors.available;
 
+                                        const popupSettings = {
+                                            showNumbers: fieldVisibility.number,
+                                            showTooltip: fieldVisibility.tooltip,
+                                            showArea: fieldVisibility.area,
+                                            showPrice: fieldVisibility.price,
+                                            showRooms: fieldVisibility.rooms,
+                                        };
+
+                                        const shouldRenderTooltip = hasAnyPopupContent(
+                                            popupSettings,
+                                            apt,
+                                            {
+                                                showStatus: fieldVisibility.status,
+                                                showFloor: fieldVisibility.floor,
+                                            },
+                                        );
+
                                         return (
                                             <div
                                                 key={apt.id}
@@ -172,24 +189,20 @@ export const ChessView = ({
                                                             <span className="group-hover/number:scale-140 transition-all block">{apt.type !== 'apartment' ? apt.apartment_number.slice(0, 2) : apt.rooms == 0 ? 'S' : apt.rooms}</span>
                                                         </button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent side="top" className="p-0 border-none bg-transparent shadow-none">
-                                                        <ApartmentPopup
-                                                            apartment={apt}
-                                                            variant="static"
-                                                            showFloor={fieldVisibility.floor}
-                                                            settings={{
-                                                                showNumbers: fieldVisibility.number,
-                                                                showTooltip: fieldVisibility.tooltip,
-                                                                showArea: fieldVisibility.area,
-                                                                showPrice: fieldVisibility.price,
-                                                                showRooms: fieldVisibility.rooms,
-                                                            }}
-                                                            showStatus={fieldVisibility.status}
-                                                            className="min-w-[200px]"
-                                                            currency={project.currency || null}
-                                                            selectedCurrency={selectedCurrency}
-                                                        />
-                                                    </TooltipContent>
+                                                    {shouldRenderTooltip && (
+                                                        <TooltipContent side="top" className="p-0 border-none bg-transparent shadow-none">
+                                                            <ApartmentPopup
+                                                                apartment={apt}
+                                                                variant="static"
+                                                                showFloor={fieldVisibility.floor}
+                                                                settings={popupSettings}
+                                                                showStatus={fieldVisibility.status}
+                                                                className="min-w-[200px]"
+                                                                currency={project.currency || null}
+                                                                selectedCurrency={selectedCurrency}
+                                                            />
+                                                        </TooltipContent>
+                                                    )}
                                                 </Tooltip>
                                             </div>
                                         );
