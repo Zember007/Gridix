@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@gridix/config": "workspace:*",
+    "@gridix/partner-program": "workspace:*",
     "@gridix/types": "workspace:*",
     "@gridix/ui": "workspace:*",
     "@gridix/utils": "workspace:*",

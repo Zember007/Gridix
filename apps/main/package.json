@@ -17,6 +17,7 @@
     "@annotorious/react": "^3.7.12",
     "@google-cloud/translate": "^9.3.0",
     "@gridix/config": "workspace:*",
+    "@gridix/partner-program": "workspace:*",
     "@gridix/types": "workspace:*",
     "@gridix/ui": "workspace:*",
     "@gridix/utils": "workspace:*",

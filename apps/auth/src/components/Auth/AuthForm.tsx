@@ -23,7 +23,7 @@ import { supabase } from "@gridix/utils/api";
 import { useLanguage } from "@gridix/utils/react";
 import { getLanguageFromPath } from "@gridix/utils/lib";
 
-type AccountType = "developer" | "agent";
+type AccountType = "developer" | "agent" | "partner";
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -263,7 +263,7 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
 
               <TabsContent value="signup" className="space-y-4">
                 {showAccountTypeSelector && (
-                  <div className="grid grid-cols-2 gap-2 p-1 border border-slate-200 rounded-xl">
+                  <div className="grid grid-cols-3 gap-2 p-1 border border-slate-200 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setAccountType("developer")}
@@ -287,6 +287,18 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
                       ].join(" ")}
                     >
                       Agent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType("partner")}
+                      className={[
+                        "py-2 rounded-lg text-sm font-extrabold",
+                        accountType === "partner"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-500 hover:bg-slate-50",
+                      ].join(" ")}
+                    >
+                      {t("auth.partner")}
                     </button>
                   </div>
                 )}

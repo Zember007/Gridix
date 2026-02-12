@@ -12,7 +12,8 @@ import {AgencyPartnersPage} from '@/components/admin/partners/AgencyPartnersPage
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import {AdminAnalytics} from './AdminAnalytics';
 import {IntegrationsTab} from './IntegrationsTab';
-import {useLanguageNavigation} from '@gridix/utils/react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguageNavigation } from '@gridix/utils/react';
 import {useAuth} from '@/contexts/AuthContext';
 import {useUserRole} from '@/hooks/useUserRole';
 import {useWorkspace} from '@/contexts/WorkspaceContext';
@@ -203,7 +204,9 @@ const AdminDashboard = () => {
 
     void run();
   }, [loading, showCreateModal, user, userProfile]);
-  const { navigate } = useLanguageNavigation();
+  const location = useLocation();
+  const routerNavigate = useNavigate();
+  const { navigate, getPathWithLanguage } = useLanguageNavigation();
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
 
@@ -286,15 +289,16 @@ const AdminDashboard = () => {
 
   const handleManualCreate = () => {
     setShowCreateModal(false);
-    navigate('/admin/project/new');
+    routerNavigate(getPathWithLanguage('/admin/project/new'), {
+      state: { from: location.pathname },
+    });
   };
 
   const handleEditProject = (projectId: string, isNew: boolean) => {
-    if (isNew) {
-      navigate('/admin/project/new');
-    } else {
-      navigate(`/admin/project/${projectId}`);
-    }
+    const path = isNew
+      ? getPathWithLanguage('/admin/project/new')
+      : getPathWithLanguage(`/admin/project/${projectId}`);
+    routerNavigate(path, { state: { from: location.pathname } });
   };
 
   const handleSignOut = async () => {
