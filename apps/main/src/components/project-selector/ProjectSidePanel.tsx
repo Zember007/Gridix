@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Apartment } from '@/entities/apartment/model/types';
 import type { Project } from '@/entities/project/queries/useProjects';
 import type { UseApartmentsDataResult } from './hooks/useApartmentsData';
+import type { FieldVisibility } from './types';
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import FloorPlanView from '@/components/visualization/FloorPlanView';
@@ -29,6 +30,7 @@ type Props = {
   onOpenApartmentDetails: (apartment: Apartment) => void;
   onOpenFloorPlan: (floorNumber: number) => void;
   selectedCurrency: string;
+  fieldVisibility: FieldVisibility;
 };
 
 const statusBadgeClass = (status: Apartment['status']) => {
@@ -67,6 +69,7 @@ export const ProjectSidePanel = ({
   onOpenApartmentDetails,
   onOpenFloorPlan,
   selectedCurrency,
+  fieldVisibility,
 }: Props) => {
   const { toggleFavorite, isFavorite } = useFavorites(project.id);
   const [apartmentCoverPhotoById, setApartmentCoverPhotoById] = useState<Record<string, string | null>>({});
@@ -275,9 +278,11 @@ export const ProjectSidePanel = ({
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white shrink-0">
         <div>
           {state.kind === 'apartment' ? (
-            <h2 className="text-xl font-bold text-gray-900">
-              № {state.apartment.apartment_number}
-            </h2>
+            fieldVisibility.number ? (
+              <h2 className="text-xl font-bold text-gray-900">
+                № {state.apartment.apartment_number}
+              </h2>
+            ) : null
           ) : (
             <h2 className="text-xl font-bold text-gray-900">
               {state.floorNumber} {ui.floor}
@@ -356,21 +361,31 @@ export const ProjectSidePanel = ({
                 <div className="flex flex-col justify-between grow min-w-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-1 inline-block">
-                        № {apt.apartment_number}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {(apt.rooms === 0 || apt.rooms === '0') ? tt('apartment.studio') : `${apt.rooms}${ui.rooms} `}, {apt.area} {ui.area}
-                      </div>
+                      {fieldVisibility.number && (
+                        <div className="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-1 inline-block">
+                          № {apt.apartment_number}
+                        </div>
+                      )}
+                      {(fieldVisibility.rooms || fieldVisibility.area) && (
+                        <div className="text-xs text-gray-500 truncate">
+                          {fieldVisibility.rooms ? ((apt.rooms === 0 || apt.rooms === '0') ? tt('apartment.studio') : `${apt.rooms}${ui.rooms} `) : ''}
+                          {fieldVisibility.rooms && fieldVisibility.area ? ', ' : ''}
+                          {fieldVisibility.area ? `${apt.area} ${ui.area}` : ''}
+                        </div>
+                      )}
                     </div>
-                    <Badge variant="outline" className={cn('border ml-2 whitespace-nowrap', statusBadgeClass(apt.status))}>
-                      {apt.status === 'available' ? ui.available : apt.status === 'reserved' ? ui.reserved : ui.sold}
-                    </Badge>
+                    {fieldVisibility.status && (
+                      <Badge variant="outline" className={cn('border ml-2 whitespace-nowrap', statusBadgeClass(apt.status))}>
+                        {apt.status === 'available' ? ui.available : apt.status === 'reserved' ? ui.reserved : ui.sold}
+                      </Badge>
+                    )}
                   </div>
 
-                  <div className="font-bold text-lg mt-1 text-gray-900">
-                    {formatPrice(apt.price || 0)}
-                  </div>
+                  {fieldVisibility.price && (
+                    <div className="font-bold text-lg mt-1 text-gray-900">
+                      {formatPrice(apt.price || 0)}
+                    </div>
+                  )}
                 </div>
               </div>
             ))
@@ -381,19 +396,25 @@ export const ProjectSidePanel = ({
         <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
           {/* Summary */}
           <div className="px-6 py-4 flex items-center gap-6 border-b border-gray-50 bg-white shrink-0">
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900">
-                {(state.apartment.rooms === 0 || state.apartment.rooms === '0') ? tt('apartment.studio') : `${state.apartment.rooms}${ui.rooms} `}
-              </span>
-            </div>
-            <div className="w-px h-6 bg-gray-200"></div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900">{state.apartment.area} <span className="text-base font-medium text-gray-500">{ui.area}</span></span>
-            </div>
-            <div className="w-px h-6 bg-gray-200"></div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-gray-900">{state.apartment.floor_number} <span className="text-base font-medium text-gray-500">{ui.floor}</span></span>
-            </div>
+            {fieldVisibility.rooms && (
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gray-900">
+                  {(state.apartment.rooms === 0 || state.apartment.rooms === '0') ? tt('apartment.studio') : `${state.apartment.rooms}${ui.rooms} `}
+                </span>
+              </div>
+            )}
+            {fieldVisibility.rooms && (fieldVisibility.area || fieldVisibility.floor) && <div className="w-px h-6 bg-gray-200"></div>}
+            {fieldVisibility.area && (
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gray-900">{state.apartment.area} <span className="text-base font-medium text-gray-500">{ui.area}</span></span>
+              </div>
+            )}
+            {fieldVisibility.area && fieldVisibility.floor && <div className="w-px h-6 bg-gray-200"></div>}
+            {fieldVisibility.floor && (
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gray-900">{state.apartment.floor_number} <span className="text-base font-medium text-gray-500">{ui.floor}</span></span>
+              </div>
+            )}
           </div>
 
           {/* Plan Image */}
@@ -417,16 +438,18 @@ export const ProjectSidePanel = ({
           </div>
 
           {/* Price */}
-          <div className="px-6 py-4 shrink-0 bg-white">
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold text-gray-900">
-                {formatPrice(state.apartment.price ?? undefined)}
-              </span>
-              { state.apartment.price && <span className="text-sm text-gray-500 font-medium">
-                {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
-              </span>}
+          {fieldVisibility.price && (
+            <div className="px-6 py-4 shrink-0 bg-white">
+              <div className="flex flex-col">
+                <span className="text-3xl font-bold text-gray-900">
+                  {formatPrice(state.apartment.price ?? undefined)}
+                </span>
+                { state.apartment.price && fieldVisibility.area && <span className="text-sm text-gray-500 font-medium">
+                  {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
+                </span>}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Actions */}
           <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
@@ -455,28 +478,32 @@ export const ProjectSidePanel = ({
               {ui.summary}
             </h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">{ui.apartmentNumber}</span>
-                <span className="font-medium text-gray-900">
-                  {state.apartment.apartment_number}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500">{ui.status}</span>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    'border ml-2 whitespace-nowrap',
-                    statusBadgeClass(state.apartment.status),
-                  )}
-                >
-                  {state.apartment.status === 'available'
-                    ? ui.available
-                    : state.apartment.status === 'reserved'
-                      ? ui.reserved
-                      : ui.sold}
-                </Badge>
-              </div>
+              {fieldVisibility.number && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">{ui.apartmentNumber}</span>
+                  <span className="font-medium text-gray-900">
+                    {state.apartment.apartment_number}
+                  </span>
+                </div>
+              )}
+              {fieldVisibility.status && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">{ui.status}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'border ml-2 whitespace-nowrap',
+                      statusBadgeClass(state.apartment.status),
+                    )}
+                  >
+                    {state.apartment.status === 'available'
+                      ? ui.available
+                      : state.apartment.status === 'reserved'
+                        ? ui.reserved
+                        : ui.sold}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         </div>

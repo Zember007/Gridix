@@ -3,6 +3,7 @@ import { Badge } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Tabs, TabsList, TabsTrigger } from "@gridix/ui";
 import { List, Grid, Building2, Heart, Share2 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useInstallment } from '@/hooks/useInstallment';
 import { Apartment } from '@/entities/apartment/model/types';
@@ -10,6 +11,7 @@ import { getCurrencySymbolSafe } from "@gridix/utils/lib";
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Tables } from '@gridix/types/database';
+import type { FieldVisibility } from '../types';
 
 type Project = Tables<'projects'>;
 
@@ -52,6 +54,7 @@ interface ListViewProps {
   isMobile: boolean;
   themeColor?: string;
   hideViewToggle?: boolean;
+  fieldVisibility: FieldVisibility;
 }
 
 export const ListView = ({
@@ -74,6 +77,7 @@ export const ListView = ({
   isMobile,
   themeColor = '#000000',
   hideViewToggle = false,
+  fieldVisibility,
 }: ListViewProps) => {
   const { t } = useLanguage();
 
@@ -132,9 +136,14 @@ export const ListView = ({
     });
   };
 
-  const priceVisible = getVisibleFields().find(field => field.field_name === 'price')?.is_visible;
-  const areaVisible = getVisibleFields().find(field => field.field_name === 'area')?.is_visible;
-  const roomsVisible = getVisibleFields().find(field => field.field_name === 'rooms')?.is_visible;
+  const priceVisible = fieldVisibility.price;
+  const areaVisible = fieldVisibility.area;
+  const roomsVisible = fieldVisibility.rooms;
+
+  const hasVisibleCardDetails = useMemo(() => {
+    const hasCustomVisibleFields = getVisibleFields().some(field => field.is_custom);
+    return roomsVisible || areaVisible || fieldVisibility.number || fieldVisibility.floor || fieldVisibility.status || hasCustomVisibleFields;
+  }, [areaVisible, fieldVisibility.floor, fieldVisibility.number, fieldVisibility.status, getVisibleFields, roomsVisible]);
 
   return (
     <div className="container mx-auto md:px-6 py-8 grow flex">
@@ -233,15 +242,19 @@ export const ListView = ({
                             </div>
                             <div className="flex-grow space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="font-medium text-sm">
-                                  {apartment.type === 'apartment' ? apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
-                                </span>
-                                <Badge
-                                  variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                                  className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
-                                >
-                                  {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                                </Badge>
+                                {roomsVisible && (
+                                  <span className="font-medium text-sm">
+                                    {apartment.type === 'apartment' ? apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}` : apartment.type}
+                                  </span>
+                                )}
+                                {fieldVisibility.status && (
+                                  <Badge
+                                    variant={apartment.status === 'available' ? 'default' : 'secondary'}
+                                    className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
+                                  >
+                                    {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-xs text-gray-600 space-y-1">
                                 {
@@ -364,7 +377,8 @@ export const ListView = ({
                             </div>
 
                             {/* Apartment Info - Horizontal scrollable container with gradient indicators */}
-                            <div className="flex-1 overflow-hidden ml-[57px] relative h-full">
+                            {hasVisibleCardDetails && (
+                              <div className="flex-1 overflow-hidden ml-[57px] relative h-full">
                               {/* Left gradient indicator */}
                               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 transition-opacity duration-300 group-hover:opacity-100" id={`left-gradient-${apartment.id}`}></div>
 
@@ -470,22 +484,20 @@ export const ListView = ({
 
 
                               </div>
-                            </div>
+                              </div>
+                            )}
 
                             {/* Price Section */}
-                            {
-                              priceVisible && (
-                                <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
-                                  <div className="text-[20px] font-extrabold text-black leading-[26px]">
-                                    {apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
-                                  </div>
-                                  {apartment.price && project?.installment_enabled && (
-                                    <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
-                                      {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
-                                    </div>
-                                  )}
+                            <div className="flex-shrink-0 text-center min-w-[139px] mr-8">
+                              <div className="text-[20px] font-extrabold text-black leading-[26px]">
+                                {priceVisible && apartment.price ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
+                              </div>
+                              {priceVisible && apartment.price && project?.installment_enabled && (
+                                <div className="text-[14px] font-light text-[#6C6C6C] leading-[21px] mt-1">
+                                  {t('project.from')} {formatPrice(convertPrice(calculateMonthlyPayment(apartment.price), project?.currency, selectedCurrency))}{getCurrencySymbolSafe(selectedCurrency)}
                                 </div>
                               )}
+                            </div>
 
                             {/* Action Buttons - Always visible */}
                             {apartment.status === 'available' && <div className="flex-shrink-0 flex items-center gap-4 mr-[57px]">
@@ -538,20 +550,26 @@ export const ListView = ({
                         </div>}
                         <CardContent className="p-3 h-full flex flex-col justify-between">
                           <div className="text-center flex flex-col items-center gap-[5px]">
-                            <div className="text-sm font-bold text-gray-900 ">
-                              {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
-                            </div>
-                            <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
-                              {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                            </Badge>
+                            {fieldVisibility.number && (
+                              <div className="text-sm font-bold text-gray-900 ">
+                                {apartment.apartment_number || `#${apartment.id.slice(-4)}`}
+                              </div>
+                            )}
+                            {fieldVisibility.status && (
+                              <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                                {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-center space-y-1">
-                            <div className="text-sm font-medium text-gray-700">
-                              {!Number.isNaN(apartment.rooms) && (
-                                <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-600">{apartment.area} м²</div>
+                            {roomsVisible && (
+                              <div className="text-sm font-medium text-gray-700">
+                                {!Number.isNaN(apartment.rooms) && (
+                                  <>{apartment.rooms == 0 ? t('apartment.studio') : `${apartment.rooms} ${t('apartment.rooms')}`}</>
+                                )}
+                              </div>
+                            )}
+                            {areaVisible && <div className="text-xs text-gray-600">{apartment.area} м²</div>}
                             <div className="text-xs font-semibold text-gray-900">
                               {apartment.price && priceVisible ? `${formatPrice(convertPrice(apartment.price, project?.currency, selectedCurrency))} ${getCurrencySymbolSafe(selectedCurrency)}` : t('project.onRequest')}
                             </div>
@@ -583,10 +601,12 @@ export const ListView = ({
 
                             <CardContent className="p-3 h-full flex flex-col justify-between">
                               <div className="text-center flex flex-col items-center gap-[5px]">
-                                <div className="text-sm font-bold text-gray-900 ">{apartment.apartment_number || `#${apartment.id.slice(-4)}`}</div>
-                                <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
-                                  {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
-                                </Badge>
+                                {fieldVisibility.number && <div className="text-sm font-bold text-gray-900 ">{apartment.apartment_number || `#${apartment.id.slice(-4)}`}</div>}
+                                {fieldVisibility.status && (
+                                  <Badge variant={apartment.status === 'available' ? 'default' : 'secondary'} className={`text-[8px] !flex justify-center leading-[1] ${apartment.status === 'available' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
+                                    {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-center space-y-1">
                                 {roomsVisible && (

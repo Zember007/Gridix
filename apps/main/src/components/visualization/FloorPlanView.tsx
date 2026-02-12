@@ -259,7 +259,10 @@ const FloorPlanView = ({
                             showTooltip: floorSettings?.display?.showTooltip ?? false,
                             showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
                             showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
+                            showRooms: visibleFields.find(field => field.field_name === 'rooms')?.is_visible ?? false,
                         }}
+                        showFloor={visibleFields.find(field => field.field_name === 'floor')?.is_visible ?? false}
+                        showStatus={visibleFields.find(field => field.field_name === 'status')?.is_visible ?? false}
                         currency={currency || null}
                         selectedCurrency={selectedCurrency}
                     />

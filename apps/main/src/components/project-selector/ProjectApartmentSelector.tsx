@@ -7,6 +7,7 @@ import { useFields } from '@/hooks/useFields';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { FilterFieldKey, useProjectFilters } from './hooks/useProjectFilters';
+import type { FieldVisibility } from './types';
 import { ChessView } from './views/ChessView';
 import LoaderView from './views/LoaderView';
 import { useApartmentsData } from './hooks/useApartmentsData';
@@ -75,6 +76,16 @@ const ProjectApartmentSelector = ({
             status: true,
         });
     }, [fieldSettings]);
+
+    const fieldVisibility = useMemo<FieldVisibility>(() => ({
+        rooms: visibleFilterFields.rooms,
+        floor: visibleFilterFields.floor,
+        price: visibleFilterFields.price,
+        area: visibleFilterFields.area,
+        number: visibleFilterFields.number,
+        status: visibleFilterFields.status,
+        tooltip: true,
+    }), [visibleFilterFields]);
 
     const {
         apartments,
@@ -351,6 +362,7 @@ const ProjectApartmentSelector = ({
                                                         selectedCurrency={filters.selectedCurrency}
                                                         isMobile={isMobile ?? false}
                                                         themeColor={themeColor}
+                                                        fieldVisibility={fieldVisibility}
                                                     />
                                                 </Suspense>
                                             ) : viewMode === 'chess' ? (
@@ -362,8 +374,7 @@ const ProjectApartmentSelector = ({
                                                         onOpenFloorPlan={openFloorPlanFromPanel}
                                                         themeColor={themeColor}
                                                         selectedCurrency={filters.selectedCurrency}
-                                                        isPriceVisible={filters.isPriceVisible}
-                                                        isAreaVisible={filters.isAreaVisible}
+                                                        fieldVisibility={fieldVisibility}
                                                         language={language}
                                                     />
                                                 </Suspense>
@@ -448,6 +459,7 @@ const ProjectApartmentSelector = ({
                             onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
                             onOpenFloorPlan={openFloorPlanFromPanel}
                             selectedCurrency={filters.selectedCurrency}
+                            fieldVisibility={fieldVisibility}
                         />
                     </div>
 
