@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterApartments } from '../hooks/useProjectFilters';
+import { filterApartments, getHasAnyVisibleFilter } from '../hooks/useProjectFilters';
 import type { Apartment } from '@/entities/apartment/model/types';
 
 function makeApartment(overrides: Partial<Apartment> = {}): Apartment {
@@ -59,7 +59,6 @@ describe('filterApartments', () => {
   });
 
   it('filters by rooms (4+)', () => {
-    // None with 4+ rooms in test data, but free_layout counts
     const result = filterApartments(apartments, { ...DEFAULT_STATE, selectedRooms: '4+' }, 'USD');
     expect(result.map(a => a.id)).toEqual(['4']);
   });
@@ -103,7 +102,7 @@ describe('filterApartments', () => {
       apartments,
       { ...DEFAULT_STATE, priceRange: [60_000, 150_000] },
       'USD',
-      { isPriceVisible: false },
+      { price: false },
     );
     expect(result.map(a => a.id)).toEqual(['1', '2', '3', '4', '5']);
   });
@@ -113,7 +112,7 @@ describe('filterApartments', () => {
       apartments,
       { ...DEFAULT_STATE, areaRange: [50, 70] },
       'USD',
-      { isAreaVisible: false },
+      { area: false },
     );
     expect(result.map(a => a.id)).toEqual(['1', '2', '3', '4', '5']);
   });
@@ -139,5 +138,58 @@ describe('filterApartments', () => {
       'USD',
     );
     expect(result.map(a => a.id)).toEqual(['1']);
+  });
+
+  it('ignores hidden floor filter even if state has old value', () => {
+    const result = filterApartments(
+      apartments,
+      { ...DEFAULT_STATE, selectedFloor: '2' },
+      'USD',
+      { floor: false },
+    );
+    expect(result).toHaveLength(5);
+  });
+
+  it('returns all apartments when all filter fields are hidden', () => {
+    const result = filterApartments(
+      apartments,
+      {
+        ...DEFAULT_STATE,
+        selectedFloor: '2',
+        selectedRooms: '2',
+        selectedType: 'parking',
+        showOnlyAvailable: true,
+        priceRange: [60_000, 80_000],
+        areaRange: [55, 70],
+        searchQuery: '303',
+      },
+      'USD',
+      {
+        type: false,
+        rooms: false,
+        floor: false,
+        price: false,
+        area: false,
+        number: false,
+        status: false,
+      },
+    );
+
+    expect(result).toHaveLength(5);
+  });
+});
+
+
+describe('getHasAnyVisibleFilter', () => {
+  it('returns false when all filter fields are hidden', () => {
+    expect(getHasAnyVisibleFilter({
+      type: false,
+      rooms: false,
+      floor: false,
+      price: false,
+      area: false,
+      number: false,
+      status: false,
+    })).toBe(false);
   });
 });
