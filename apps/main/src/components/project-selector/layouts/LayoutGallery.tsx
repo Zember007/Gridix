@@ -327,26 +327,26 @@ export const LayoutGallery = ({
                           }
 
                           {/* Price range */}
-                          {
-                              visibleFields.find(field => field.field_name === 'price')?.is_visible ?
-                              (() => {
-                                const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
-
-                                  const minPrice = Math.min(...prices as number[]);
-                                  const maxPrice = Math.max(...prices as number[]);
-                                  const convertedMinPrice = convertPrice(minPrice, project?.currency, selectedCurrency);
-                                  const convertedMaxPrice = convertPrice(maxPrice, project?.currency, selectedCurrency);
-                                  return (
-                                      <div className="font-bold text-lg">
-                                        {convertedMinPrice === convertedMaxPrice
-                                            ? formatMoney(convertedMinPrice, selectedCurrency)
-                                            : `${formatMoney(convertedMinPrice, selectedCurrency)} - ${formatMoney(convertedMaxPrice, selectedCurrency)}`
-                                        }
-                                      </div>
-                                  );
-                                }
-                              )() : <div className="font-bold text-lg">{t('project.onRequest')}</div> }
-
+                            {
+                                visibleFields.find(field => field.field_name === 'price')?.is_visible ?
+                                (() => {
+                                    const prices = apartmentGroup.map(apt => apt.price).filter(p => p);
+                                    if (prices.length > 0) {
+                                        const minPrice = Math.min(...prices as number[]);
+                                        const maxPrice = Math.max(...prices as number[]);
+                                        const convertedMinPrice = convertPrice(minPrice, project?.currency, selectedCurrency);
+                                        const convertedMaxPrice = convertPrice(maxPrice, project?.currency, selectedCurrency);
+                                        return (
+                                            <div className="font-bold text-lg">
+                                                {convertedMinPrice === convertedMaxPrice
+                                                    ? formatMoney(convertedMinPrice, selectedCurrency)
+                                                    : `${formatMoney(convertedMinPrice, selectedCurrency)} - ${formatMoney(convertedMaxPrice, selectedCurrency)}`
+                                                }
+                                            </div>
+                                        );
+                                    }
+                                    return <div className="font-bold text-lg">{t('project.onRequest')}</div>;
+                                })(): <div className="font-bold text-lg">{t('project.onRequest')}</div>}
                           <Button
                               className="w-full text-white hover:opacity-90"
                               style={{ backgroundColor: themeColor }}
