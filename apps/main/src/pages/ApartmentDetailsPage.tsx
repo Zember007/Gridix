@@ -1157,8 +1157,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         title={cardTitle}
                         floorLabel={t('project.floor')}
                         roomText={roomText}
-                        isPriceVisible={priceVisible}
-                        isAreaVisible={areaVisible}
+                        fieldSettings={fieldSettings}
                         formattedPrice={formattedPrice}
                         getStatusColor={getStatusColor}
                         getStatusStyle={getStatusStyle}

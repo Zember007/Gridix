@@ -10,6 +10,12 @@ vi.mock('@gridix/ui', () => ({
   ),
 }));
 
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({
+    t: (key: string) => (key === 'project.onRequest' ? 'по запросу' : key),
+  }),
+}));
+
 import RecommendedApartmentCard from './RecommendedApartmentCard';
 
 const apartment: Apartment = {
@@ -40,6 +46,17 @@ const hiddenPriceSettings: FieldSetting[] = [
   },
 ];
 
+const hiddenAreaSettings: FieldSetting[] = [
+  {
+    field_name: 'area',
+    field_label: 'Area',
+    field_type: 'number',
+    is_custom: false,
+    is_visible: false,
+    sort_order: 1,
+  },
+];
+
 describe('RecommendedApartmentCard visibility', () => {
   it('shows "по запросу" when price is hidden by field settings', () => {
     const markup = renderToStaticMarkup(
@@ -50,8 +67,6 @@ describe('RecommendedApartmentCard visibility', () => {
         title="Apartment № 12"
         floorLabel="floor"
         roomText="2 rooms"
-        isPriceVisible
-        isAreaVisible
         fieldSettings={hiddenPriceSettings}
         formattedPrice="$150,000"
         getStatusColor={() => 'text-green-600'}
@@ -65,7 +80,7 @@ describe('RecommendedApartmentCard visibility', () => {
     expect(markup).not.toContain('₽');
   });
 
-  it('hides area and keeps details row clean when area visibility is false', () => {
+  it('hides area and keeps details row clean when area is hidden by field settings', () => {
     const markup = renderToStaticMarkup(
       <RecommendedApartmentCard
         apartment={apartment}
@@ -74,8 +89,7 @@ describe('RecommendedApartmentCard visibility', () => {
         title="Apartment № 12"
         floorLabel="floor"
         roomText="2 rooms"
-        isPriceVisible
-        visibility={{ area: false }}
+        fieldSettings={hiddenAreaSettings}
         formattedPrice="$150,000"
         getStatusColor={() => 'text-green-600'}
         getStatusStyle={() => ({})}

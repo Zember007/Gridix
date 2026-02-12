@@ -4,6 +4,7 @@ import { Badge } from '@gridix/ui';
 import { Apartment } from '@/entities/apartment/model/types';
 import type { FieldSetting } from '@/hooks/useFields';
 import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RecommendedApartmentCardProps {
   apartment: Apartment;
@@ -12,12 +13,8 @@ interface RecommendedApartmentCardProps {
   title: string;
   floorLabel: string;
   roomText: string;
-  isPriceVisible?: boolean;
-  isAreaVisible?: boolean;
-  visibility?: Partial<{ price: boolean; area: boolean }>;
   fieldSettings?: FieldSetting[];
   formattedPrice?: string | null;
-  priceOnRequestText?: string;
   getStatusColor: (status: Apartment['status']) => string;
   getStatusStyle: (status: Apartment['status']) => CSSProperties;
   getStatusLabel: (status: Apartment['status']) => string;
@@ -30,25 +27,19 @@ const RecommendedApartmentCard = ({
   title,
   floorLabel,
   roomText,
-  isPriceVisible = true,
-  isAreaVisible = true,
-  visibility,
   fieldSettings,
   formattedPrice,
-  priceOnRequestText = 'по запросу',
   getStatusColor,
   getStatusStyle,
   getStatusLabel,
 }: RecommendedApartmentCardProps) => {
-  const settingsVisibility = fieldSettings ? getApartmentFieldVisibility(fieldSettings) : null;
-
-  const showPrice = settingsVisibility?.price ?? visibility?.price ?? isPriceVisible;
-  const showArea = settingsVisibility?.area ?? visibility?.area ?? isAreaVisible;
+  const { t } = useLanguage();
+  const visibility = fieldSettings ? getApartmentFieldVisibility(fieldSettings) : { price: true, area: true };
 
   const detailsParts = [
     roomText,
-    showArea ? `${apartment.area} m²` : null,
-    !showPrice ? priceOnRequestText : null,
+    visibility.area ? `${apartment.area} m²` : null,
+    !visibility.price ? t('project.onRequest') : null,
   ].filter((value): value is string => Boolean(value));
 
   const detailsText = detailsParts.join(' • ');
@@ -87,7 +78,7 @@ const RecommendedApartmentCard = ({
           </span>
         </div>
         {detailsText && <div className="text-sm text-gray-600 mb-2 font-poppins">{detailsText}</div>}
-        {showPrice && formattedPrice && (
+        {visibility.price && formattedPrice && (
           <div className="text-lg font-medium text-gray-900 font-poppins">{formattedPrice}</div>
         )}
       </div>
