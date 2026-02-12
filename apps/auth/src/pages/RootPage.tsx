@@ -17,8 +17,6 @@ export default function RootPage() {
     let cancelled = false;
 
     const run = async () => {
-      const pathname = window.location.pathname;
-      const hasHash = window.location.hash.length > 0;
       const hasTokens = hasAuthTokensInHash();
    
 
@@ -31,7 +29,6 @@ export default function RootPage() {
       try {
         await supabaseAuthInitPromise;
       } catch (e) {
-        const err = e as Error;
         console.error("Auth init failed:", e);
       }
       if (cancelled) return;
