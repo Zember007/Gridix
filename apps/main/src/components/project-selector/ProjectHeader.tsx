@@ -59,7 +59,7 @@ export const ProjectHeader = ({
     new Intl.NumberFormat('en-US').format(Math.round(price));
   return (
     <div ref={filtersRef} className="bg-white sticky top-0 z-40">
-      <div className="container mx-auto md:px-6 md:py-3 py-2 flex flex-col gap-4">
+      <div className="container mx-auto md:px-6 md:py-3 py-2 flex flex-col">
         <div className={cn("flex items-center  gap-4 justify-between ", isWidget && 'justify-end')}>
           { !isWidget &&
             (<h1
@@ -176,10 +176,9 @@ export const ProjectHeader = ({
 
 
 
-        {!isMobile && !isWidget && <div className="flex">
+        {!isMobile && !isWidget && <div className="flex  max-w-full overflow-x-auto pt-4 custom-scrollbar">
 
           <ViewModeButtons
-            isWidget={isWidget}
             viewMode={viewMode}
             setViewMode={setViewMode}
             favoritesCount={favoritesCount}

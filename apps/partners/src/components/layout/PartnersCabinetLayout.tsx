@@ -68,7 +68,7 @@ export function PartnersCabinetLayout({
       userEmail={user?.email ?? ""}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      title={t("partners.title")}
+      title={t("common.app.title")}
       showWorkspaceSwitcher={false}
       syncQueryParam={false}
       isMobile={Boolean(isMobile)}

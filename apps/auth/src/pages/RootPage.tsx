@@ -1,33 +1,54 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
+import { hasAuthTokensInHash, consumeSupabaseSessionFromUrl } from "@gridix/utils";
 import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
 
 /**
  * Handles root path "/". When Supabase redirects after magic link / OAuth
- * to `/#access_token=...&refresh_token=...`, the session is consumed by
- * supabaseAuthInitPromise. Here we wait for init, then redirect to the
- * appropriate app (main or agent) by account_type; otherwise go to /auth.
+ * to `/#access_token=...&refresh_token=...`, we consume the hash (here and/or
+ * in supabaseAuthInitPromise), then redirect to the appropriate app by account_type.
  */
 export default function RootPage() {
   const [action, setAction] = useState<"loading" | "redirect" | "to-auth">("loading");
+  const { lang } = useParams();
 
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
-      await supabaseAuthInitPromise;
+      const hasTokens = hasAuthTokensInHash();
+   
+
+      // Consume tokens from hash immediately when landing on / with magic link / OAuth callback.
+      if (hasTokens) {
+        await consumeSupabaseSessionFromUrl(supabase);
+        if (cancelled) return;
+      }
+
+      try {
+        await supabaseAuthInitPromise;
+      } catch (e) {
+        console.error("Auth init failed:", e);
+      }
       if (cancelled) return;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      // Give the client a moment to persist session after setSession, then try getSession (with one retry)
+      await new Promise((r) => setTimeout(r, 50));
       if (cancelled) return;
+      let session = (await supabase.auth.getSession()).data.session;
+      if (!session?.user?.id) {
+        await new Promise((r) => setTimeout(r, 150));
+        if (cancelled) return;
+        session = (await supabase.auth.getSession()).data.session;
+      }
+      if (cancelled) return;
+
 
       if (session?.user?.id) {
         try {
           await redirectToAppByAccountType(supabase, session, {
-            lang: window.location.pathname.split("/")[1] || "en",
+            lang: lang || window.location.pathname.split("/")[1] || "en",
           });
           setAction("redirect");
         } catch (e) {
@@ -46,7 +67,8 @@ export default function RootPage() {
   }, []);
 
   if (action === "to-auth") {
-    return <Navigate replace to="/auth" />;
+    const nextLang = lang || "en";
+    return <Navigate replace to={`/${nextLang}/auth`} />;
   }
 
   return (

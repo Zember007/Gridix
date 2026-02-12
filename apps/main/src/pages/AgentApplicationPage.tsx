@@ -82,7 +82,7 @@ function renderHtmlTemplate(template: string, payload: Record<string, unknown>):
 export default function AgentApplicationPage() {
     const [searchParams] = useSearchParams();
     const developerId = searchParams.get("developer_id");
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const [step, setStep] = useState<Step>("details");
 
     const [loading, setLoading] = useState(false);
@@ -203,7 +203,7 @@ export default function AgentApplicationPage() {
             const at = typeof data?.account_type === "string" ? String(data.account_type) : null;
             if (data?.exists === true && at && at !== "agent") {
                 setEmailBlocked(true);
-                toast.error("Этот email уже принадлежит другому типу аккаунта. Используйте другой email.");
+                toast.error(t("agentApplication.emailAccountTypeBlocked"));
             }
         } catch (e: any) {
             console.error("check_auth_user_exists failed", e);
@@ -229,11 +229,11 @@ export default function AgentApplicationPage() {
     const verifyExistingUserPassword = async () => {
         const emailNorm = formData.email.trim().toLowerCase();
         if (!emailNorm) {
-            toast.error("Введите email.");
+            toast.error(t("agentApplication.enterEmail"));
             return false;
         }
         if (!password) {
-            toast.error("Введите пароль.");
+            toast.error(t("agentApplication.enterPassword"));
             return false;
         }
         try {
@@ -244,7 +244,7 @@ export default function AgentApplicationPage() {
             if (error) throw error;
             const valid = data?.valid === true;
             if (!valid) {
-                toast.error("Неверный пароль.");
+                toast.error(t("agentApplication.wrongPassword"));
                 setPasswordVerified(false);
                 return false;
             }
@@ -252,7 +252,7 @@ export default function AgentApplicationPage() {
             return true;
         } catch (e: any) {
             console.error("verify_auth_user_password failed", e);
-            toast.error(e?.message || "Не удалось проверить пароль.");
+            toast.error(e?.message || t("agentApplication.passwordCheckFailed"));
             setPasswordVerified(false);
             return false;
         } finally {
@@ -337,32 +337,32 @@ export default function AgentApplicationPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!developerId) {
-            toast.error("Invalid application link. Developer ID is missing.");
+            toast.error(t("agentApplication.invalidLinkMissingDeveloperId"));
             return;
         }
 
         if (!detailsValid) {
-            toast.error("Пожалуйста, заполните обязательные поля.");
+            toast.error(t("agentApplication.fillRequiredFields"));
             return;
         }
 
         if (!signatureValid) {
-            toast.error("Пожалуйста, добавьте подпись.");
+            toast.error(t("agentApplication.addSignature"));
             return;
         }
 
         if (templatesLoading) {
-            toast.error("Пожалуйста, подождите — загружаем договоры...");
+            toast.error(t("agentApplication.waitLoadingContracts"));
             return;
         }
 
         if (selectedTemplates.length === 0) {
-            toast.error("Выберите язык(и) договора.");
+            toast.error(t("agentApplication.selectContractLanguage"));
             return;
         }
 
         if (!acceptedAgreements) {
-            toast.error("Пожалуйста, подтвердите согласие с условиями договоров.");
+            toast.error(t("agentApplication.confirmAgreement"));
             return;
         }
 
@@ -410,10 +410,10 @@ export default function AgentApplicationPage() {
 
             // NOTE: full multi-contract signing is added in the next step of this plan (sign_agreements).
             setStep("success");
-            toast.success("Заявка отправлена!");
-        } catch (error: any) {
+            toast.success(t("agentApplication.applicationSubmitted"));
+        } catch (error: unknown) {
             console.error("Error submitting application:", error);
-            toast.error(error.message || "Failed to submit application");
+            toast.error(error instanceof Error ? error.message : t("agentApplication.submitFailed"));
         } finally {
             setLoading(false);
         }
@@ -568,7 +568,7 @@ export default function AgentApplicationPage() {
         const downloadPdf = async () => {
             if (!exportRef.current) return;
             if (!props.renderedHtml) {
-                toast.error("Нет HTML-версии договора для скачивания.");
+                toast.error(t("agentApplication.noHtmlForDownload"));
                 return;
             }
             try {
@@ -602,7 +602,7 @@ export default function AgentApplicationPage() {
                 pdf.save(`${safeName}.pdf`);
             } catch (e: any) {
                 console.error("downloadPdf failed", e);
-                toast.error(e?.message || "Не удалось скачать договор.");
+                toast.error(e?.message || t("agentApplication.downloadContractFailed"));
             } finally {
                 setDownloading(false);
             }
@@ -689,9 +689,9 @@ export default function AgentApplicationPage() {
                                 />
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-center p-10">
-                                    <div className="text-lg font-black text-slate-900">Договор</div>
+                                    <div className="text-lg font-black text-slate-900">{t("agentApplication.contract")}</div>
                                     <div className="text-sm text-slate-500 mt-2">
-                                        HTML-версия не задана. Откройте файл договора.
+                                        {t("agentApplication.htmlVersionNotSet")}
                                     </div>
                                     {props.template.url && (
                                         <a
@@ -700,7 +700,7 @@ export default function AgentApplicationPage() {
                                             rel="noreferrer"
                                             className="mt-4 text-sm font-bold underline"
                                         >
-                                            Открыть {props.template.name}
+                                            {t("agentApplication.openFile", { name: props.template.name })}
                                         </a>
                                     )}
                                 </div>
@@ -711,7 +711,7 @@ export default function AgentApplicationPage() {
                         <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
                             <div className="w-48 relative">
                                 <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">Developer</div>
+                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.developer")}</div>
                                 {developerAssets.stamp_url && (
                                     <img
                                         src={developerAssets.stamp_url}
@@ -741,7 +741,7 @@ export default function AgentApplicationPage() {
                                     />
                                 )}
                                 <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">Agent</div>
+                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.agent")}</div>
                                 <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
                             </div>
                         </div>
@@ -759,10 +759,10 @@ export default function AgentApplicationPage() {
                                 disabled={pageIndex <= 0}
                                 className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-white text-slate-800 disabled:opacity-40"
                             >
-                                ← Назад
+                                {t("agentApplication.pageBack")}
                             </button>
                             <div className="text-xs font-extrabold text-slate-700 tabular-nums">
-                                Стр. {pageIndex + 1} / {pageCount}
+                                {t("agentApplication.pageOf", { current: pageIndex + 1, total: pageCount })}
                             </div>
                             <button
                                 type="button"
@@ -770,7 +770,7 @@ export default function AgentApplicationPage() {
                                 disabled={pageIndex >= pageCount - 1}
                                 className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-white text-slate-800 disabled:opacity-40"
                             >
-                                Далее →
+                                {t("agentApplication.pageNext")}
                             </button>
                         </div>
                     ) : (
@@ -783,7 +783,7 @@ export default function AgentApplicationPage() {
                         disabled={downloading || !props.renderedHtml}
                         className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-slate-900 text-white disabled:opacity-50"
                     >
-                        {downloading ? "Скачиваем..." : "Скачать PDF"}
+                        {downloading ? t("agentApplication.downloading") : t("agentApplication.downloadPdf")}
                     </button>
                 </div>
 
@@ -834,7 +834,7 @@ export default function AgentApplicationPage() {
                         <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
                             <div className="w-48 relative">
                                 <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">Developer</div>
+                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.developer")}</div>
                                 {developerAssets.stamp_url && (
                                     <img
                                         src={developerAssets.stamp_url}
@@ -864,7 +864,7 @@ export default function AgentApplicationPage() {
                                     />
                                 )}
                                 <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">Agent</div>
+                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.agent")}</div>
                                 <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
                             </div>
                         </div>
@@ -908,15 +908,15 @@ export default function AgentApplicationPage() {
                     <CardHeader className="border-b border-slate-100">
                         <div className="flex items-center justify-between gap-4">
                             <div>
-                                <CardTitle className="text-2xl font-black text-slate-900">Регистрация агента</CardTitle>
+                                <CardTitle className="text-2xl font-black text-slate-900">{t("agentApplication.title")}</CardTitle>
                                 <CardDescription>
-                                    Заполните данные, добавьте подпись и подпишите договор(ы).
+                                    {t("agentApplication.description")}
                                 </CardDescription>
                             </div>
                             <div className="text-xs font-bold uppercase text-slate-400">
-                                {step === "details" && "Анкета"}
-                                {step === "signature" && "Подпись"}
-                                {step === "contracts" && "Договоры"}
+                                {step === "details" && t("agentApplication.stepQuestionnaire")}
+                                {step === "signature" && t("agentApplication.stepSignature")}
+                                {step === "contracts" && t("agentApplication.stepContracts")}
                             </div>
                         </div>
 
@@ -936,7 +936,7 @@ export default function AgentApplicationPage() {
                                         <div
                                             className={[
                                                 "w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-sm",
-                                                active ? "bg-blue-600 text-white" : done ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500",
+                                                active ? "bg-black text-white" : done ? "bg-black text-white" : "bg-slate-100 text-slate-500",
                                             ].join(" ")}
                                         >
                                             {s.label}
@@ -958,14 +958,14 @@ export default function AgentApplicationPage() {
                                     <div className="max-w-2xl mx-auto space-y-6">
                                         {!developerId && (
                                             <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
-                                                Некорректная ссылка: отсутствует <strong>developer_id</strong>.
+                                                {t("agentApplication.invalidLinkDescription")}
                                             </div>
                                         )}
 
                                         <div className="space-y-4">
                                             {/* Email is always first */}
                                             <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Email</label>
+                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t("agentApplication.email")}</label>
                                                 <input
                                                     type="email"
                                                     value={formData.email}
@@ -981,18 +981,18 @@ export default function AgentApplicationPage() {
                                                     }}
                                                     onBlur={(e) => void checkExistingUserByEmail(e.target.value)}
                                                     onInput={(e) => scheduleEmailCheck((e.target as HTMLInputElement).value)}
-                                                    placeholder="ivan@example.com"
+                                                    placeholder={t("agentApplication.emailPlaceholder")}
                                                     className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
                                                 />
-                                                {emailCheckLoading && <p className="text-xs text-slate-500 mt-1">Проверяем email...</p>}
+                                                {emailCheckLoading && <p className="text-xs text-slate-500 mt-1">{t("agentApplication.checkingEmail")}</p>}
                                                 {emailBlocked && (
                                                     <p className="text-xs text-red-600 font-semibold mt-1">
-                                                        Этот email нельзя использовать для регистрации агента.
+                                                        {t("agentApplication.emailBlockedForAgent")}
                                                     </p>
                                                 )}
                                                 {authUserExists === true && (
                                                     <p className="text-xs text-slate-500 mt-1">
-                                                        Пользователь уже зарегистрирован. Введите пароль для продолжения.
+                                                        {t("agentApplication.userExistsEnterPassword")}
                                                     </p>
                                                 )}
                                             </div>
@@ -1000,7 +1000,7 @@ export default function AgentApplicationPage() {
                                             {/* Existing user: hide all fields, show only password */}
                                             {authUserExists === true ? (
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Пароль</label>
+                                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t("agentApplication.password")}</label>
                                                     <input
                                                         type="password"
                                                         value={password}
@@ -1008,11 +1008,11 @@ export default function AgentApplicationPage() {
                                                             setPasswordVerified(false);
                                                             setPassword(e.target.value);
                                                         }}
-                                                        placeholder="Введите пароль"
+                                                        placeholder={t("agentApplication.passwordPlaceholder")}
                                                         className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
                                                     />
                                                     {passwordVerified && (
-                                                        <div className="text-xs text-green-700 font-semibold mt-1">Пароль подтвержден.</div>
+                                                        <div className="text-xs text-green-700 font-semibold mt-1">{t("agentApplication.passwordVerified")}</div>
                                                     )}
                                                 </div>
                                             ) : (
@@ -1027,7 +1027,7 @@ export default function AgentApplicationPage() {
                                                                     : "text-slate-500 hover:bg-slate-50"
                                                                 }`}
                                                         >
-                                                            <Building2 size={16} /> Компания (ООО)
+                                                            <Building2 size={16} /> {t("agentApplication.companyType")}
                                                         </button>
                                                         <button
                                                             type="button"
@@ -1037,14 +1037,14 @@ export default function AgentApplicationPage() {
                                                                     : "text-slate-500 hover:bg-slate-50"
                                                                 }`}
                                                         >
-                                                            <User size={16} /> Физ. лицо / ИП
+                                                            <User size={16} /> {t("agentApplication.individualType")}
                                                         </button>
                                                     </div>
 
                                                     {/* Partner-like fields */}
                                                     <div>
                                                         <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                                                            {personType === "company" ? "Название компании" : "ФИО"}
+                                                            {personType === "company" ? t("agentApplication.companyName") : t("agentApplication.fullName")}
                                                         </label>
                                                         <input
                                                             type="text"
@@ -1063,7 +1063,7 @@ export default function AgentApplicationPage() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div>
                                                             <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                                                                ID / Tax Number
+                                                                {t("agentApplication.taxId")}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -1073,7 +1073,7 @@ export default function AgentApplicationPage() {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Телефон</label>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t("agentApplication.phone")}</label>
                                                             <input
                                                                 type="tel"
                                                                 value={formData.phone}
@@ -1085,7 +1085,7 @@ export default function AgentApplicationPage() {
 
                                                     <div>
                                                         <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                                                            Юридический адрес
+                                                            {t("agentApplication.legalAddress")}
                                                         </label>
                                                         <input
                                                             type="text"
@@ -1097,12 +1097,12 @@ export default function AgentApplicationPage() {
 
                                                     <div>
                                                         <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
-                                                            Банковские реквизиты (опционально)
+                                                            {t("agentApplication.bankDetailsOptional")}
                                                         </label>
                                                         <textarea
                                                             value={formData.bank_details}
                                                             onChange={(e) => setFormData({ ...formData, bank_details: e.target.value })}
-                                                            placeholder="IBAN / SWIFT / ..."
+                                                            placeholder={t("agentApplication.bankDetailsPlaceholder")}
                                                             className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all min-h-[96px]"
                                                         />
                                                     </div>
@@ -1120,14 +1120,14 @@ export default function AgentApplicationPage() {
                                                 variant={signatureMethod === "draw" ? "default" : "outline"}
                                                 onClick={() => setSignatureMethod("draw")}
                                             >
-                                                Нарисовать
+                                                {t("agentApplication.draw")}
                                             </Button>
                                             <Button
                                                 type="button"
                                                 variant={signatureMethod === "upload" ? "default" : "outline"}
                                                 onClick={() => setSignatureMethod("upload")}
                                             >
-                                                Загрузить
+                                                {t("agentApplication.upload")}
                                             </Button>
                                         </div>
 
@@ -1147,7 +1147,7 @@ export default function AgentApplicationPage() {
                                                     onTouchEnd={stopDrawing}
                                                 />
                                                 <div className="absolute top-4 left-4 text-xs font-bold uppercase text-slate-300 pointer-events-none">
-                                                    Область подписи
+                                                    {t("agentApplication.signatureArea")}
                                                 </div>
                                                 <Button
                                                     type="button"
@@ -1155,7 +1155,7 @@ export default function AgentApplicationPage() {
                                                     className="absolute top-4 right-4"
                                                     onClick={clearCanvas}
                                                 >
-                                                    Очистить
+                                                    {t("agentApplication.clear")}
                                                 </Button>
                                             </div>
                                         ) : (
@@ -1185,16 +1185,16 @@ export default function AgentApplicationPage() {
                                     <div className="space-y-6">
                                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                             <div>
-                                                <div className="text-lg font-black text-slate-900">Договор(ы)</div>
+                                                <div className="text-lg font-black text-slate-900">{t("agentApplication.contractsTitle")}</div>
                                                 <div className="text-sm text-slate-500">
-                                                    Если выбрано несколько языков, договоры отображаются в ряд.
+                                                    {t("agentApplication.contractsMultiLanguageHint")}
                                                 </div>
                                             </div>
 
                                             <div className="flex flex-wrap gap-2">
                                                 {availableLangs.length === 0 ? (
                                                     <div className="text-sm text-slate-500">
-                                                        {templatesLoading ? "Загружаем договоры..." : "Договоры не найдены."}
+                                                        {templatesLoading ? t("agentApplication.loadingContracts") : t("agentApplication.noContractsFound")}
                                                     </div>
                                                 ) : (
                                                     availableLangs.map((l) => {
@@ -1230,7 +1230,7 @@ export default function AgentApplicationPage() {
                                                     if (options.length <= 1) return null;
                                                     return (
                                                         <div key={l} className="rounded-xl border border-slate-200 bg-white p-4">
-                                                            <div className="text-xs font-bold uppercase text-slate-500 mb-2">Шаблон ({l})</div>
+                                                            <div className="text-xs font-bold uppercase text-slate-500 mb-2">{t("agentApplication.templateLabel", { lang: l })}</div>
                                                             <select
                                                                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none"
                                                                 value={selectedTemplateByLang[l] ?? ""}
@@ -1277,8 +1277,7 @@ export default function AgentApplicationPage() {
                                                     className="mt-1 h-5 w-5"
                                                 />
                                                 <div className="text-sm text-slate-700">
-                                                    Я подтверждаю, что ознакомился(лась) с условиями выбранных договоров и принимаю их.
-                                                </div>
+                                                    {t("agentApplication.confirmAgreementsRead")}                                                </div>
                                             </label>
                                         </div>
                                     </div>
@@ -1296,7 +1295,7 @@ export default function AgentApplicationPage() {
                                         if (step === "contracts") return setStep("signature");
                                     }}
                                 >
-                                    Назад
+                                    {t("agentApplication.backButton")}
                                 </Button>
 
                                 {step !== "contracts" ? (
@@ -1313,21 +1312,21 @@ export default function AgentApplicationPage() {
                                             if (step === "details") {
                                                 if (!developerId) return;
                                                 if (!detailsValid) {
-                                                    toast.error("Заполните обязательные поля.");
+                                                    toast.error(t("agentApplication.fillRequiredFieldsShort"));
                                                     return;
                                                 }
                                                 if (emailCheckLoading) {
-                                                    toast.error("Дождитесь окончания проверки email.");
+                                                    toast.error(t("agentApplication.waitEmailCheck"));
                                                     return;
                                                 }
                                                 if (emailBlocked) {
-                                                    toast.error("Этот email нельзя использовать. Укажите другой email.");
+                                                    toast.error(t("agentApplication.emailCannotUse"));
                                                     return;
                                                 }
                                                 // If user typed email but never blurred, enforce check before continuing.
                                                 if (authUserExists === null) {
                                                     void checkExistingUserByEmail(formData.email);
-                                                    toast.error("Сначала подтвердите email (проверка пользователя).");
+                                                    toast.error(t("agentApplication.confirmEmailFirst"));
                                                     return;
                                                 }
                                                 if (authUserExists === true) {
@@ -1340,18 +1339,18 @@ export default function AgentApplicationPage() {
                                                 setStep("signature");
                                             } else if (step === "signature") {
                                                 if (!signatureValid) {
-                                                    toast.error("Необходима подпись.");
+                                                    toast.error(t("agentApplication.signatureRequired"));
                                                     return;
                                                 }
                                                 setStep("contracts");
                                             }
                                         }}
                                     >
-                                        Далее
+                                        {t("agentApplication.nextButton")}
                                     </Button>
                                 ) : (
                                     <Button type="submit" disabled={loading || authLoading || !contractsValid}>
-                                        {loading ? "Отправляем..." : "Подписать и отправить"}
+                                        {loading ? t("agentApplication.sending") : t("agentApplication.signAndSubmit")}
                                     </Button>
                                 )}
                             </div>

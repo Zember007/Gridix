@@ -23,7 +23,7 @@ interface ViewModeButtonsProps {
 
 
 
-export const ViewModeButtons = ({ isWidget = false, viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible,className }: ViewModeButtonsProps) => {
+export const ViewModeButtons = ({ viewMode, setViewMode, favoritesCount, isMobile, projectType, themeColor = '#000000', mapVisible,className }: ViewModeButtonsProps) => {
   const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

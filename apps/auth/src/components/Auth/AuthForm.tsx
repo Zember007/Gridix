@@ -263,7 +263,7 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
 
               <TabsContent value="signup" className="space-y-4">
                 {showAccountTypeSelector && (
-                  <div className="grid grid-cols-3 gap-2 p-1 border border-slate-200 rounded-xl">
+                  <div className="grid grid-cols-2 gap-2 p-1 border border-slate-200 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setAccountType("developer")}

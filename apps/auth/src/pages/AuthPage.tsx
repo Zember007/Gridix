@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { supabase } from "@gridix/utils/api";
+import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
+import { hasAuthTokensInHash, consumeSupabaseSessionFromUrl } from "@gridix/utils";
 import { useLanguageNavigation } from "@gridix/utils/react";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
@@ -116,6 +117,33 @@ export default function AuthPage() {
   useEffect(() => {
     if (mode === "recovery" || hashIndicatesRecovery) setIsRecovery(true);
   }, [mode, hashIndicatesRecovery]);
+
+  // When magic link lands on /en/auth#access_token=... (or any path with hash tokens), consume and redirect
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!hasAuthTokensInHash()) return;
+    let cancelled = false;
+    const run = async () => {
+      await consumeSupabaseSessionFromUrl(supabase);
+      if (cancelled) return;
+      try {
+        await supabaseAuthInitPromise;
+      } catch {
+        // ignore
+      }
+      if (cancelled) return;
+      const { data } = await supabase.auth.getSession();
+      if (cancelled || !data.session?.user?.id) return;
+      await redirectByAccountType({
+        redirectToUrl: redirectToUrl ?? null,
+        lang: window.location.pathname.split("/")[1] || "en",
+      });
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [redirectToUrl]);
 
   if (loading) return <FullPageLoaderView />;
 

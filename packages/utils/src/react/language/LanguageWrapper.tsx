@@ -14,8 +14,14 @@ export default function LanguageWrapper({ children }: LanguageWrapperProps) {
   useLanguage()
 
   if (!hasLanguagePrefix(location.pathname)) {
-    const redirectPath = `${getLanguagePrefix(DEFAULT_LANGUAGE)}${location.pathname}${location.search}`
-    return <Navigate to={redirectPath} replace />
+    const redirectPathname = `${getLanguagePrefix(DEFAULT_LANGUAGE)}${location.pathname}`
+    // IMPORTANT: preserve hash (#access_token=... etc.) so magic links keep working during lang redirect
+    return (
+      <Navigate
+        to={{ pathname: redirectPathname, search: location.search, hash: location.hash }}
+        replace
+      />
+    )
   }
 
   return <>{children}</>

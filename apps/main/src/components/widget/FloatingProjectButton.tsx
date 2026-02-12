@@ -70,7 +70,7 @@ export const FloatingProjectButton = ({
       const projectPath = project?.slug
         ? project.slug
         : `id/${project?.id || projectId}`;
-      const url = `${baseDomain}/${language}/project/${projectPath}`;
+      const url = `${baseDomain}/${language}/project/${projectPath}?isWidget=true`;
       setIframeUrl(url);
       setIsIframeOpen(true);
     } catch (error) {

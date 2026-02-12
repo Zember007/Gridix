@@ -5,7 +5,6 @@ import { AgencyPartner } from './types';
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
-import { toast } from "sonner";
 
 interface Props {
     partner: AgencyPartner | null;

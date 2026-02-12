@@ -406,29 +406,7 @@ const AdminDashboard = () => {
           onManualCreate={handleManualCreate}
         />
 
-        {/* Support Button */}
-        <Button
-          size={"icon"}
-          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-0 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour "
-          style={{
-            backgroundColor: ADMIN_THEME.primary,
-            color: ADMIN_THEME.textOnPrimary,
-            borderColor: ADMIN_THEME.primary,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onClick={() => {
-            window.open('https://t.me/gridix_bot', '_blank');
-          }}
-        >
-          <MessageCircleQuestionMark />
-        </Button>
+      
       </div>
     </div>
   );
