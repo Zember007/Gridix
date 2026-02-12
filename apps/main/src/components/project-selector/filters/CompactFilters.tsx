@@ -4,6 +4,7 @@ import {useLanguage} from '@/contexts/LanguageContext';
 import {Tables} from '@gridix/types/database';
 import {useState} from 'react';
 import {AdvancedFilters} from '@/components';
+import type { FilterFieldKey } from '../hooks/useProjectFilters';
 
 type Project = Tables<'projects'>;
 
@@ -37,8 +38,8 @@ interface CompactFiltersProps {
   viewMode: string;
   setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
-  isPriceVisible: boolean;
-  isAreaVisible: boolean;
+  visibleFilterFields: Record<FilterFieldKey, boolean>;
+  hasAnyVisibleFilter: boolean;
 }
 
 export const CompactFilters = ({
@@ -71,8 +72,8 @@ export const CompactFilters = ({
   viewMode,
   setViewMode,
   themeColor = '#000000',
-  isPriceVisible,
-  isAreaVisible,
+  visibleFilterFields,
+  hasAnyVisibleFilter,
 }: CompactFiltersProps) => {
   const { t } = useLanguage();
 
@@ -128,8 +129,8 @@ export const CompactFilters = ({
             setViewMode={setViewMode}
             themeColor={themeColor}
             formatPrice={formatPrice}
-            isPriceVisible={isPriceVisible}
-            isAreaVisible={isAreaVisible}
+            visibleFilterFields={visibleFilterFields}
+            hasAnyVisibleFilter={hasAnyVisibleFilter}
           />
         </PopoverContent>
       </Popover>

@@ -82,8 +82,8 @@ export const ProjectHeader = ({
                 setViewMode={setViewMode}
                 themeColor={themeColor}
                 formatPrice={formatPrice}
-                isPriceVisible={filters.isPriceVisible}
-                isAreaVisible={filters.isAreaVisible}
+                visibleFilterFields={filters.visibleFilterFields}
+                hasAnyVisibleFilter={filters.hasAnyVisibleFilter}
               />
             </div>
           )}
@@ -146,8 +146,8 @@ export const ProjectHeader = ({
                         setViewMode={setViewMode}
                         themeColor={themeColor}
                         formatPrice={formatPrice}
-                        isPriceVisible={filters.isPriceVisible}
-                        isAreaVisible={filters.isAreaVisible}
+                        visibleFilterFields={filters.visibleFilterFields}
+                        hasAnyVisibleFilter={filters.hasAnyVisibleFilter}
                       />
                     </div>
                   </SheetContent>

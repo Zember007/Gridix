@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
-import { normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
+import { FilterFieldKey, normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
 import {useLanguage} from '@/contexts/LanguageContext';
@@ -45,8 +45,8 @@ type Props = {
   setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
   themeColor?: string;
   formatPrice: (price: number) => string;
-  isPriceVisible: boolean;
-  isAreaVisible: boolean;
+  visibleFilterFields: Record<FilterFieldKey, boolean>;
+  hasAnyVisibleFilter: boolean;
 };
 
 export const AdvancedFilters = ({
@@ -81,8 +81,8 @@ export const AdvancedFilters = ({
   setViewMode,
   themeColor = '#000000',
   formatPrice,
-  isPriceVisible,
-  isAreaVisible,
+  visibleFilterFields,
+  hasAnyVisibleFilter,
 }: Props) => {
   const { t, language } = useLanguage();
 
@@ -213,7 +213,7 @@ export const AdvancedFilters = ({
         </Button>
       </div>
 
-      {isPriceVisible && (
+      {visibleFilterFields.price && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.currency')}</div>
           <CurrencyToggle
@@ -225,7 +225,7 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-      {(project?.has_commercial || project?.has_parking) && (
+      {visibleFilterFields.type && (project?.has_commercial || project?.has_parking) && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.type')}</div>
           <div className="flex flex-wrap gap-2">
@@ -246,7 +246,7 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-      {project?.project_type !== 'object' && (
+      {visibleFilterFields.rooms && project?.project_type !== 'object' && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.rooms')}</div>
           <div className="flex flex-wrap gap-2">
@@ -276,7 +276,7 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-      {viewMode !== 'floor-plan' && project?.project_type !== 'object' && (
+      {visibleFilterFields.floor && viewMode !== 'floor-plan' && project?.project_type !== 'object' && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">{t('project.floor')}</div>
           <div className="flex flex-wrap gap-2 ">
@@ -294,7 +294,7 @@ export const AdvancedFilters = ({
         </div>
       )}
 
-      {isPriceVisible && (
+      {visibleFilterFields.price && (
           <RangeInput
               label={t("project.price")}
               min={minPrice}
@@ -307,7 +307,7 @@ export const AdvancedFilters = ({
           />
       )}
 
-      {isAreaVisible && (
+      {visibleFilterFields.area && (
           <RangeInput
               label={t("project.area")}
               min={minArea}
@@ -319,27 +319,39 @@ export const AdvancedFilters = ({
           />
       )}
 
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500">{t('project.apartmentNumber')}</div>
-        <Input value={advSearch} onChange={(e) => setAdvSearch(e.target.value)} />
-      </div>
+      {visibleFilterFields.number && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500">{t('project.apartmentNumber')}</div>
+          <Input value={advSearch} onChange={(e) => setAdvSearch(e.target.value)} />
+        </div>
+      )}
+
+      {!hasAnyVisibleFilter && (
+        <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-500">
+          Фильтровать не по чему
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 sticky bottom-0 bg-gray-50 -mx-4 p-4">
-        <Button
-          variant="outline"
-          className={cn(
-            advAvailable ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-gray-200 text-gray-700',
-          )}
-          onClick={() => setAdvAvailable(!advAvailable)}
-        >
-          {t('project.onlyAvailable')}
-        </Button>
-        <Button
-          onClick={handleApplyFilters}
-          style={{ backgroundColor: themeColor, color: '#fff' }}
-        >
-          {ui.apply}
-        </Button>
+        {visibleFilterFields.status && (
+          <Button
+            variant="outline"
+            className={cn(
+              advAvailable ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-gray-200 text-gray-700',
+            )}
+            onClick={() => setAdvAvailable(!advAvailable)}
+          >
+            {t('project.onlyAvailable')}
+          </Button>
+        )}
+        {hasAnyVisibleFilter && (
+          <Button
+            onClick={handleApplyFilters}
+            style={{ backgroundColor: themeColor, color: '#fff' }}
+          >
+            {ui.apply}
+          </Button>
+        )}
       </div>
     </div>
   );

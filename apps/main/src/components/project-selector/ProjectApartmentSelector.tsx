@@ -6,7 +6,7 @@ import { useLanguage } from '@gridix/utils/react';
 import { useFields } from '@/hooks/useFields';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProjectFilters } from './hooks/useProjectFilters';
+import { FilterFieldKey, useProjectFilters } from './hooks/useProjectFilters';
 import { ChessView } from './views/ChessView';
 import LoaderView from './views/LoaderView';
 import { useApartmentsData } from './hooks/useApartmentsData';
@@ -60,14 +60,21 @@ const ProjectApartmentSelector = ({
 
     const filtersRef = useRef<HTMLDivElement>(null);
 
-    const isPriceVisible = useMemo(
-        () => fieldSettings.find(field => field.field_name === 'price')?.is_visible ?? true,
-        [fieldSettings],
-    );
-    const isAreaVisible = useMemo(
-        () => fieldSettings.find(field => field.field_name === 'area')?.is_visible ?? true,
-        [fieldSettings],
-    );
+    const visibleFilterFields = useMemo(() => {
+        const filterFieldKeys: FilterFieldKey[] = ['type', 'rooms', 'floor', 'price', 'area', 'number', 'status'];
+        return filterFieldKeys.reduce<Record<FilterFieldKey, boolean>>((acc, fieldKey) => {
+            acc[fieldKey] = fieldSettings.find(field => field.field_name === fieldKey)?.is_visible ?? true;
+            return acc;
+        }, {
+            type: true,
+            rooms: true,
+            floor: true,
+            price: true,
+            area: true,
+            number: true,
+            status: true,
+        });
+    }, [fieldSettings]);
 
     const {
         apartments,
@@ -121,8 +128,7 @@ const ProjectApartmentSelector = ({
     const filters = useProjectFilters({
         apartments,
         project: project ?? undefined,
-        isPriceVisible,
-        isAreaVisible,
+        visibleFilterFields,
     });
 
     const { getFieldLabel, getCustomFieldValue, formatFieldValue, formatPrice } = useFieldHelpers({

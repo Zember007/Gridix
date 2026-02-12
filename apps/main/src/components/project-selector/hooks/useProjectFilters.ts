@@ -15,13 +15,35 @@ interface Project {
 interface UseProjectFiltersProps {
   apartments: Apartment[];
   project?: Project;
-  isPriceVisible?: boolean;
-  isAreaVisible?: boolean;
+  visibleFilterFields?: FilterVisibilityOptions;
 }
 
+export type FilterFieldKey = 'type' | 'rooms' | 'floor' | 'price' | 'area' | 'number' | 'status';
+
 interface FilterVisibilityOptions {
-  isPriceVisible?: boolean;
-  isAreaVisible?: boolean;
+  type?: boolean;
+  rooms?: boolean;
+  floor?: boolean;
+  price?: boolean;
+  area?: boolean;
+  number?: boolean;
+  status?: boolean;
+}
+
+const DEFAULT_FILTER_VISIBILITY: Required<FilterVisibilityOptions> = {
+  type: true,
+  rooms: true,
+  floor: true,
+  price: true,
+  area: true,
+  number: true,
+  status: true,
+};
+
+
+export function getHasAnyVisibleFilter(visibility: FilterVisibilityOptions = {}): boolean {
+  const normalized = { ...DEFAULT_FILTER_VISIBILITY, ...visibility };
+  return Object.values(normalized).some(Boolean);
 }
 
 // ── Filter state ──
@@ -107,17 +129,16 @@ export function filterApartments(
     selectedCurrency,
   } = state;
 
-  const isPriceVisible = visibility.isPriceVisible ?? true;
-  const isAreaVisible = visibility.isAreaVisible ?? true;
+  const visible = { ...DEFAULT_FILTER_VISIBILITY, ...visibility };
 
   let result = apartments;
 
-  if (selectedFloor !== 'all') {
+  if (visible.floor && selectedFloor !== 'all') {
     const floorNum = parseInt(selectedFloor, 10);
     result = result.filter(apt => apt.floor_number === floorNum);
   }
 
-  if (selectedRooms !== 'all') {
+  if (visible.rooms && selectedRooms !== 'all') {
     if (selectedRooms === '4+') {
       result = result.filter(
         apt => apt.type === 'apartment' && (Number(apt.rooms) >= 4 || apt.rooms === 'free_layout'),
@@ -130,28 +151,28 @@ export function filterApartments(
     }
   }
 
-  if (selectedType !== 'all') {
+  if (visible.type && selectedType !== 'all') {
     result = result.filter(apt => apt.type === selectedType);
   }
 
-  if (showOnlyAvailable) {
+  if (visible.status && showOnlyAvailable) {
     result = result.filter(apt => apt.status === 'available');
   }
 
-  if (isPriceVisible || isAreaVisible) {
+  if (visible.price || visible.area) {
     const [minPrice, maxPrice] = priceRange;
     const [minArea, maxArea] = areaRange;
 
     result = result.filter(apt => {
       const converted = convertPrice(apt.price || 0, projectCurrency, selectedCurrency);
       const area = apt.area || 0;
-      const matchesPrice = !isPriceVisible || (converted >= minPrice && converted <= maxPrice);
-      const matchesArea = !isAreaVisible || (area >= minArea && area <= maxArea);
+      const matchesPrice = !visible.price || (converted >= minPrice && converted <= maxPrice);
+      const matchesArea = !visible.area || (area >= minArea && area <= maxArea);
       return matchesPrice && matchesArea;
     });
   }
 
-  if (searchQuery) {
+  if (visible.number && searchQuery) {
     const q = searchQuery.toLowerCase();
     result = result.filter(apt => apt.apartment_number.toLowerCase().includes(q));
   }
@@ -181,9 +202,13 @@ export function normalizePriceRangeForCurrencyChange(params: {
 export const useProjectFilters = ({
   apartments,
   project,
-  isPriceVisible = true,
-  isAreaVisible = true,
+  visibleFilterFields = DEFAULT_FILTER_VISIBILITY,
 }: UseProjectFiltersProps) => {
+  const visibility = useMemo(
+    () => ({ ...DEFAULT_FILTER_VISIBILITY, ...visibleFilterFields }),
+    [visibleFilterFields],
+  );
+
   const [state, dispatch] = useReducer(filtersReducer, INITIAL_STATE);
 
   // ── Dispatch wrappers (maintain backward-compatible setter signatures) ──
@@ -319,14 +344,14 @@ export const useProjectFilters = ({
   useEffect(() => {
     if (apartments.length === 0) return;
 
-    if (!isPriceVisible) {
+    if (!visibility.price) {
       const [priceMin, priceMax] = state.priceRange;
       if (priceMin !== minPrice || priceMax !== maxPrice) {
         dispatch({ type: 'SET_PRICE_RANGE', value: [minPrice, maxPrice] });
       }
     }
 
-    if (!isAreaVisible) {
+    if (!visibility.area) {
       const [areaMin, areaMax] = state.areaRange;
       if (areaMin !== minArea || areaMax !== maxArea) {
         dispatch({ type: 'SET_AREA_RANGE', value: [minArea, maxArea] });
@@ -334,8 +359,8 @@ export const useProjectFilters = ({
     }
   }, [
     apartments.length,
-    isPriceVisible,
-    isAreaVisible,
+    visibility.price,
+    visibility.area,
     minPrice,
     maxPrice,
     minArea,
@@ -347,8 +372,8 @@ export const useProjectFilters = ({
   // ── Filtered apartments ──
 
   const filteredApartments = useMemo(
-    () => filterApartments(apartments, state, project?.currency, { isPriceVisible, isAreaVisible }),
-    [apartments, state, project?.currency, isPriceVisible, isAreaVisible],
+    () => filterApartments(apartments, state, project?.currency, visibility),
+    [apartments, state, project?.currency, visibility],
   );
 
   // ── Available count ──
@@ -386,8 +411,10 @@ export const useProjectFilters = ({
     showOnlyAvailable: state.showOnlyAvailable,
     selectedType: state.selectedType,
     selectedCurrency: state.selectedCurrency,
-    isPriceVisible,
-    isAreaVisible,
+    visibleFilterFields: visibility,
+    isPriceVisible: visibility.price,
+    isAreaVisible: visibility.area,
+    hasAnyVisibleFilter: getHasAnyVisibleFilter(visibility),
 
     // Setters
     setSelectedFloor,
