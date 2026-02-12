@@ -592,7 +592,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
         apartment,
         pdfUrl,
         pdf_main: project?.pdf_presentation_url || undefined,
-
+        apiUrl: import.meta.env.VITE_API_URL || '',
       });
 
     } catch (error) {
