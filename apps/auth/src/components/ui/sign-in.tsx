@@ -176,8 +176,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   }, [videoReady]);
 
   const {
-    signInTab = "Sign In",
-    signUpTab = "Sign Up",
     signInTitle = "Welcome back",
     signUpTitle = "Create your account",
     signInDescription = "Access your account and continue your journey with us",

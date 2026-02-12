@@ -111,9 +111,6 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
 const SIGNIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
 
-const LS_PENDING_ACCOUNT_TYPE = "gridix_auth_pending_account_type";
-const LS_PENDING_REF = "gridix_auth_pending_ref";
-const LS_PENDING_INVITE = "gridix_auth_pending_invite";
 
 export default function AuthPage() {
   const { navigate } = useLanguageNavigation();
