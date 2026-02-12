@@ -1146,7 +1146,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                         convertPrice(recApartment.price, project?.currency || null, selectedCurrency),
                         selectedCurrency,
                       )
-                      : null;
+                      : t('project.onRequest');
 
                     return (
                       <RecommendedApartmentCard
