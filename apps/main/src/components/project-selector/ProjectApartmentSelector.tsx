@@ -423,6 +423,7 @@ const ProjectApartmentSelector = ({
                                                             themeColor={themeColor}
                                                             showOnlyAvailable={filters.showOnlyAvailable}
                                                             isMobile={isMobile ?? false}
+                                                            selectedCurrency={filters.selectedCurrency}
                                                         />
                                                     )}
                                                 </div>
@@ -446,6 +447,7 @@ const ProjectApartmentSelector = ({
                             filteredApartments={filters.filteredApartments}
                             onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
                             onOpenFloorPlan={openFloorPlanFromPanel}
+                            selectedCurrency={filters.selectedCurrency}
                         />
                     </div>
 

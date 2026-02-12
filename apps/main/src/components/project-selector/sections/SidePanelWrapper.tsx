@@ -15,6 +15,7 @@ interface SidePanelWrapperProps {
     filteredApartments: Apartment[];
     onOpenApartmentDetails: (apartment: Apartment) => void;
     onOpenFloorPlan: (floorNumber: number) => void;
+    selectedCurrency: string;
 }
 
 export const SidePanelWrapper = ({
@@ -29,6 +30,7 @@ export const SidePanelWrapper = ({
     filteredApartments,
     onOpenApartmentDetails,
     onOpenFloorPlan,
+    selectedCurrency,
 }: SidePanelWrapperProps) => {
     const panelProps = {
         open,
@@ -42,6 +44,7 @@ export const SidePanelWrapper = ({
         filteredApartments,
         onOpenApartmentDetails,
         onOpenFloorPlan,
+        selectedCurrency,
     };
 
     return (
