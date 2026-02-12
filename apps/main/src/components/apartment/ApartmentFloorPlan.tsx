@@ -15,6 +15,7 @@ interface ApartmentFloorPlanProps {
   selectedFloorNumber?: number;
   project: Project;
   visibleFields?: FieldSetting[];
+  selectedCurrency?: string;
 }
 
 interface BuildingFloor {
@@ -24,7 +25,7 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber, visibleFields = [] }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber, visibleFields = [], selectedCurrency }: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
@@ -81,6 +82,7 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
         apartments={floorApartments}
         onApartmentSelect={onApartmentSelect}
         visibleFields={visibleFields}
+        selectedCurrency={selectedCurrency}
       />
   );
 };

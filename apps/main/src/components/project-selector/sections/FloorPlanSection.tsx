@@ -20,6 +20,7 @@ interface FloorPlanSectionProps {
     themeColor: string;
     showOnlyAvailable: boolean;
     isMobile: boolean;
+    selectedCurrency: string;
 }
 
 export const FloorPlanSection = ({
@@ -34,6 +35,7 @@ export const FloorPlanSection = ({
     themeColor,
     showOnlyAvailable,
     isMobile,
+    selectedCurrency,
 }: FloorPlanSectionProps) => (
     <div className="w-full bg-white min-h-[600px] h-full">
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-full`}>
@@ -50,6 +52,7 @@ export const FloorPlanSection = ({
                     onApartmentSelect={onApartmentSelect}
                     selectedFloorNumber={selectedFloorForPlan ?? 0}
                     visibleFields={visibleFields}
+                    selectedCurrency={selectedCurrency}
                 />
             </div>
 

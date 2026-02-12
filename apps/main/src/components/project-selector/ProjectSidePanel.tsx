@@ -5,7 +5,7 @@ import type { UseApartmentsDataResult } from './hooks/useApartmentsData';
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import FloorPlanView from '@/components/visualization/FloorPlanView';
-import { cn } from "@gridix/utils/lib";
+import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Loader2, Share2, X, Heart } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from "@gridix/utils/api";
@@ -28,6 +28,7 @@ type Props = {
   // onSelectApartmentPreview removed as per instruction
   onOpenApartmentDetails: (apartment: Apartment) => void;
   onOpenFloorPlan: (floorNumber: number) => void;
+  selectedCurrency: string;
 };
 
 const statusBadgeClass = (status: Apartment['status']) => {
@@ -65,6 +66,7 @@ export const ProjectSidePanel = ({
   // onSelectApartmentPreview removed from destructuring
   onOpenApartmentDetails,
   onOpenFloorPlan,
+  selectedCurrency,
 }: Props) => {
   const { toggleFavorite, isFavorite } = useFavorites(project.id);
   const [apartmentCoverPhotoById, setApartmentCoverPhotoById] = useState<Record<string, string | null>>({});
@@ -244,13 +246,19 @@ export const ProjectSidePanel = ({
 
   const formatPrice = (price?: number) => {
     if (!price) return tt('project.onRequest');
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: project.currency || 'RUB', maximumFractionDigits: 0 }).format(price);
+    return formatMoney(
+      convertPrice(price, project.currency || null, selectedCurrency),
+      selectedCurrency,
+    );
   };
 
   const formatPricePerMeter = (price?: number, area?: number) => {
     if (!price || !area) return '';
     const ppm = Math.round(price / area);
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: project.currency || 'RUB', maximumFractionDigits: 0 }).format(ppm);
+    return formatMoney(
+      convertPrice(ppm, project.currency || null, selectedCurrency),
+      selectedCurrency,
+    );
   };
 
   if (!state) return null;
@@ -312,6 +320,7 @@ export const ProjectSidePanel = ({
               <FloorPlanView
                 floorNumber={state.floorNumber}
                 projectId={project.id}
+                selectedCurrency={selectedCurrency}
               />
             </div>
 
