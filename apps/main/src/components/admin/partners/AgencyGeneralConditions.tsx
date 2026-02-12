@@ -6,8 +6,10 @@ import { Input } from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
+import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import mammoth from 'mammoth';
@@ -18,36 +20,30 @@ import type { FunctionsError } from '@supabase/supabase-js';
 
 GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
-// Available variables for the contract
-const CONTRACT_VARIABLES = [
-    // Preferred (new): matches `agent-program` payload paths
-    { key: '{{agent.full_name}}', label: 'Агент: ФИО / Название компании' },
-    { key: '{{agent.person_type}}', label: 'Агент: Тип (company|individual)' },
-    { key: '{{agent.company_name}}', label: 'Агент: Название компании' },
-    { key: '{{agent.tax_id}}', label: 'Агент: Tax ID' },
-    { key: '{{agent.legal_address}}', label: 'Агент: Юридический адрес' },
-    { key: '{{agent.email}}', label: 'Агент: Email' },
-    { key: '{{agent.phone}}', label: 'Агент: Телефон' },
-    { key: '{{date.today}}', label: 'Дата (YYYY-MM-DD)' },
-    { key: '{{commission_rate}}', label: 'Ставка комиссии (%)' },
-
-    { key: '{{developer.company_name}}', label: 'Застройщик: Компания' },
-    { key: '{{developer.full_name}}', label: 'Застройщик: Контактное лицо' },
-    { key: '{{developer.tax_id}}', label: 'Застройщик: Tax ID' },
-    { key: '{{developer.legal_address}}', label: 'Застройщик: Юр. адрес' },
-    { key: '{{developer.email}}', label: 'Застройщик: Email' },
-    { key: '{{developer.phone}}', label: 'Застройщик: Телефон' },
-
-    // Backward-compatible aliases (older templates)
-    { key: '{{partner_name}}', label: 'Партнер (alias): Имя' },
-    { key: '{{partner_id}}', label: 'Партнер (alias): ID' },
-    { key: '{{company_name}}', label: 'Партнер (alias): Компания' },
-    { key: '{{tax_id}}', label: 'Партнер (alias): Tax ID' },
-    { key: '{{address}}', label: 'Партнер (alias): Адрес' },
-    { key: '{{date_text}}', label: 'Дата (alias)' },
-
-    // HTML-only (preview): insert raw HTML via triple braces
-    { key: '{{{sign_image}}}', label: 'Подпись (HTML, raw)' },
+// Available variables for the contract (labelKey = partners.generalConditions.contractVars*)
+const CONTRACT_VARIABLE_KEYS: Array<{ key: string; labelKey: string }> = [
+    { key: '{{agent.full_name}}', labelKey: 'contractVarsAgentFullName' },
+    { key: '{{agent.person_type}}', labelKey: 'contractVarsAgentPersonType' },
+    { key: '{{agent.company_name}}', labelKey: 'contractVarsAgentCompanyName' },
+    { key: '{{agent.tax_id}}', labelKey: 'contractVarsAgentTaxId' },
+    { key: '{{agent.legal_address}}', labelKey: 'contractVarsAgentLegalAddress' },
+    { key: '{{agent.email}}', labelKey: 'contractVarsAgentEmail' },
+    { key: '{{agent.phone}}', labelKey: 'contractVarsAgentPhone' },
+    { key: '{{date.today}}', labelKey: 'contractVarsDateToday' },
+    { key: '{{commission_rate}}', labelKey: 'contractVarsCommissionRate' },
+    { key: '{{developer.company_name}}', labelKey: 'contractVarsDeveloperCompany' },
+    { key: '{{developer.full_name}}', labelKey: 'contractVarsDeveloperFullName' },
+    { key: '{{developer.tax_id}}', labelKey: 'contractVarsDeveloperTaxId' },
+    { key: '{{developer.legal_address}}', labelKey: 'contractVarsDeveloperLegalAddress' },
+    { key: '{{developer.email}}', labelKey: 'contractVarsDeveloperEmail' },
+    { key: '{{developer.phone}}', labelKey: 'contractVarsDeveloperPhone' },
+    { key: '{{partner_name}}', labelKey: 'contractVarsPartnerName' },
+    { key: '{{partner_id}}', labelKey: 'contractVarsPartnerId' },
+    { key: '{{company_name}}', labelKey: 'contractVarsCompanyName' },
+    { key: '{{tax_id}}', labelKey: 'contractVarsTaxId' },
+    { key: '{{address}}', labelKey: 'contractVarsAddress' },
+    { key: '{{date_text}}', labelKey: 'contractVarsDateText' },
+    { key: '{{{sign_image}}}', labelKey: 'contractVarsSignImage' },
 ];
 
 type Template = {
@@ -120,67 +116,86 @@ async function extractPdfToHtml(arrayBuffer: ArrayBuffer): Promise<string> {
     return pages.join('<hr/>');
 }
 
-const GoogleDocsImportModal: React.FC<{ isOpen: boolean; onClose: () => void; onImport: (url: string, name: string) => void }> = ({ isOpen, onClose, onImport }) => {
+type TFunction = (key: string) => string;
+
+/** Extract Google Docs document ID from a docs.google.com URL */
+function getGoogleDocId(link: string): string | null {
+    const trimmed = link.trim();
+    const match = trimmed.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+    return match?.[1] ?? null;
+}
+
+/** Build Google Docs export URL for DOCX (doc must be shared "Anyone with the link can view") */
+function getGoogleDocExportUrl(docId: string): string {
+    return `https://docs.google.com/document/d/${docId}/export?format=docx`;
+}
+
+const GoogleDocsImportModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onImport: (url: string, name: string) => Promise<void>;
+    t: TFunction;
+}> = ({ isOpen, onClose, onImport, t }) => {
     const [url, setUrl] = useState('');
     const [name, setName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleImport = () => {
-        if (!url || !name) return;
+    const handleImport = async () => {
+        if (!url?.trim() || !name?.trim()) return;
         setIsLoading(true);
-        // Simulate API call to fetch Google Doc content
-        setTimeout(() => {
-            onImport(url, name);
-            setIsLoading(false);
+        try {
+            await onImport(url.trim(), name.trim());
             onClose();
             setUrl('');
             setName('');
-        }, 1500);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Импорт из Google Docs</DialogTitle>
+                    <DialogTitle>{t('partners.generalConditions.googleImportTitle')}</DialogTitle>
                 </DialogHeader>
                 <div className="p-6 space-y-4">
-                    <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm border border-blue-100 flex gap-2">
-                        <AlertCircle size={16} className="shrink-0 mt-0.5"/>
-                        <p>Убедитесь, что в настройках доступа Google Doc установлено "Читатель" (Viewer) для всех, у кого есть ссылка.</p>
+                    <div className="bg-[var(--admin-background-secondary)] text-[var(--admin-text-secondary)] p-3 rounded-lg text-sm border border-[var(--admin-border)] flex gap-2">
+                        <AlertCircle size={16} className="shrink-0 mt-0.5 text-[var(--admin-info)]"/>
+                        <p>{t('partners.generalConditions.googleImportHint')}</p>
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Название шаблона</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('partners.generalConditions.templateNameLabel')}</label>
                         <input 
                             type="text" 
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            placeholder="Например: Агентский договор 2025" 
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 text-sm"
+                            placeholder={t('partners.generalConditions.templateNamePlaceholder')} 
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[var(--admin-primary)] text-sm"
                             autoFocus
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Ссылка на документ</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase">{t('partners.generalConditions.documentLinkLabel')}</label>
                         <div className="relative">
                             <LinkIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
                             <input 
                                 type="url" 
                                 value={url}
                                 onChange={e => setUrl(e.target.value)}
-                                placeholder="https://docs.google.com/document/d/..." 
-                                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 text-sm"
+                                placeholder={t('partners.generalConditions.documentLinkPlaceholder')} 
+                                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[var(--admin-primary)] text-sm"
                             />
                         </div>
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="ghost" onClick={onClose}>Отмена</Button>
+                    <Button variant="ghost" onClick={onClose}>{t('partners.generalConditions.cancel')}</Button>
                     <Button 
                         onClick={handleImport} 
                         disabled={!url || !name || isLoading}
                     >
-                        {isLoading ? 'Загрузка...' : 'Импортировать'}
+                        {isLoading ? t('partners.generalConditions.importing') : t('partners.generalConditions.importBtn')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -194,7 +209,8 @@ const TemplateEditorModal: React.FC<{
     template: Template | null;
     onSave: (id: number, content: string, lang: string) => void;
     isLoading: boolean;
-}> = ({ isOpen, onClose, template, onSave, isLoading }) => {
+    t: TFunction;
+}> = ({ isOpen, onClose, template, onSave, isLoading, t }) => {
     const [content, setContent] = useState('');
     const [lang, setLang] = useState<string>('RU');
     const quillRef = useRef<ReactQuill>(null);
@@ -227,7 +243,7 @@ const TemplateEditorModal: React.FC<{
             if (variable) {
                 const range = quill.getSelection(true);
                 const index = range ? range.index : quill.getLength();
-                quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
+                quill.insertText(index, variable, { 'bold': true, 'color': 'var(--admin-primary)' });
                 quill.setSelection({ index: index + variable.length, length: 0 });
                 // Quill API edits don't always propagate to controlled ReactQuill value automatically
                 requestAnimationFrame(syncContentFromQuill);
@@ -256,7 +272,7 @@ const TemplateEditorModal: React.FC<{
         
         const range = quill.getSelection(true);
         const index = range ? range.index : quill.getLength();
-        quill.insertText(index, variable, { 'bold': true, 'color': '#2563eb' });
+        quill.insertText(index, variable, { 'bold': true, 'color': 'var(--admin-primary)' });
         quill.setSelection({ index: index + variable.length, length: 0 } as any);
         requestAnimationFrame(() => setContent(quill.root.innerHTML));
     };
@@ -281,9 +297,9 @@ const TemplateEditorModal: React.FC<{
             <DialogContent className="max-w-6xl h-[85vh] flex flex-col bg-[#F0F2F5] p-0">
                 <DialogHeader className="px-6 pt-6 pb-0">
                     <div className="flex items-center justify-between gap-4">
-                        <DialogTitle>Редактор: {template?.name || 'Новый шаблон'}</DialogTitle>
+                        <DialogTitle>{t('partners.generalConditions.editorTitle')}: {template?.name || t('partners.generalConditions.newTemplate')}</DialogTitle>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500">Язык</span>
+                            <span className="text-xs font-bold text-slate-500">{t('partners.generalConditions.language')}</span>
                             <select
                                 value={lang}
                                 onChange={(e) => setLang(e.target.value)}
@@ -301,7 +317,7 @@ const TemplateEditorModal: React.FC<{
                         <div className="w-[210mm] h-full bg-white shadow-lg relative flex flex-col p-8 overflow-hidden">
                             {isLoading ? (
                                 <div className="flex-1 flex items-center justify-center text-sm text-slate-400">
-                                    Загрузка документа...
+                                    {t('partners.generalConditions.loadingDocument')}
                                 </div>
                             ) : (
                                 <ReactQuill
@@ -318,7 +334,7 @@ const TemplateEditorModal: React.FC<{
                                             ['clean']
                                         ]
                                     }}
-                                    placeholder="Начните вводить текст договора..."
+                                    placeholder={t('partners.generalConditions.editorPlaceholder')}
                                     className="flex-1 w-full flex flex-col min-h-0
                                       [&_.ql-toolbar]:sticky [&_.ql-toolbar]:top-0 [&_.ql-toolbar]:z-20
                                       [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:px-0 [&_.ql-toolbar]:bg-white
@@ -340,26 +356,26 @@ const TemplateEditorModal: React.FC<{
                     <div className="w-72 bg-white border-l border-slate-200 p-0 flex flex-col z-10 shadow-xl">
                         <div className="p-4 border-b border-slate-100 bg-slate-50">
                             <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                                <Braces size={16} className="text-blue-600"/>
-                                Переменные
+                                <Braces size={16} className="text-[var(--admin-primary)]"/>
+                                {t('partners.generalConditions.variables')}
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-1">Перетащите или кликните</p>
+                            <p className="text-[10px] text-slate-500 mt-1">{t('partners.generalConditions.variablesHint')}</p>
                         </div>
                         
                         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                            {CONTRACT_VARIABLES.map(v => (
+                            {CONTRACT_VARIABLE_KEYS.map(v => (
                                 <button
                                     key={v.key}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, v.key)}
                                     onClick={() => insertVariable(v.key)}
-                                    className="w-full text-left p-3 rounded-xl bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group relative overflow-hidden cursor-grab active:cursor-grabbing"
+                                    className="w-full text-left p-3 rounded-xl bg-white border border-slate-200 hover:border-[var(--admin-primary)] hover:shadow-md transition-all group relative overflow-hidden cursor-grab active:cursor-grabbing"
                                 >
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 opacity-0 group-hover:opacity-100">
                                         <GripVertical size={14} />
                                     </div>
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-blue-500 transition-colors"></div>
-                                    <div className="text-xs font-bold text-slate-700 group-hover:text-blue-700">{v.label}</div>
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-[var(--admin-primary)] transition-colors"></div>
+                                    <div className="text-xs font-bold text-slate-700 group-hover:text-[var(--admin-primary)]">{t(`partners.generalConditions.${v.labelKey}`)}</div>
                                     <div className="text-[10px] font-mono text-slate-400 mt-1 bg-slate-50 px-1.5 py-0.5 rounded w-fit">{v.key}</div>
                                 </button>
                             ))}
@@ -367,16 +383,16 @@ const TemplateEditorModal: React.FC<{
                         
                         <div className="p-4 border-t border-slate-200 bg-slate-50">
                              <div className="text-[10px] text-slate-400 mb-2 text-center flex items-center justify-center gap-1">
-                                <GripVertical size={12}/> Можно перетаскивать (Drag&Drop)
+                                <GripVertical size={12}/> {t('partners.generalConditions.dragDropHint')}
                              </div>
                         </div>
                     </div>
                 </div>
 
                 <DialogFooter className="p-4 border-t border-slate-200 bg-white shrink-0">
-                    <Button variant="ghost" onClick={onClose}>Отмена</Button>
+                    <Button variant="ghost" onClick={onClose}>{t('partners.generalConditions.cancel')}</Button>
                     <Button onClick={handleSave} className="flex items-center gap-2" disabled={isLoading}>
-                        <Save size={18}/> Сохранить и закрыть
+                        <Save size={18}/> {t('partners.generalConditions.saveAndClose')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -385,6 +401,15 @@ const TemplateEditorModal: React.FC<{
 };
 
 export const AgencyGeneralConditions: React.FC = () => {
+    const { t } = useLanguage();
+
+    useEffect(() => {
+        const themeVariables = getAdminThemeVariables(ADMIN_THEME);
+        Object.entries(themeVariables).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+        });
+    }, []);
+
     const [activeTab, setActiveTab] = useState<'rules' | 'templates' | 'signature'>('rules');
     const [settings, setSettings] = useState({
         defaultCommission: 4,
@@ -442,7 +467,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             setContracts(items);
         } catch (e) {
             console.error('Failed to load contracts', e);
-            toast.error('Ошибка при загрузке договоров');
+            toast.error(t('partners.generalConditions.errorLoadContracts'));
             setContracts([]);
         } finally {
             setLoadingContracts(false);
@@ -465,7 +490,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             setTemplates(items);
         } catch (e) {
             console.error('Failed to load templates', e);
-            toast.error('Ошибка при загрузке шаблонов');
+            toast.error(t('partners.generalConditions.errorLoadTemplates'));
             setTemplates([]);
         } finally {
             setLoadingTemplates(false);
@@ -507,13 +532,13 @@ export const AgencyGeneralConditions: React.FC = () => {
                 }
             } catch (e) {
                 console.error('Failed to load agent program settings', e);
-                toast.error('Ошибка при загрузке условий');
+                toast.error(t('partners.generalConditions.errorLoadSettings'));
             } finally {
                 setLoadingSettings(false);
             }
         };
         void loadSettings();
-    }, [developerId]);
+    }, [developerId, t]);
 
     const saveSettingsPatch = useCallback(async (patch: Record<string, unknown>) => {
         if (!developerId) return;
@@ -538,10 +563,10 @@ export const AgencyGeneralConditions: React.FC = () => {
                 payout_terms: settings.payoutTerms,
             });
             setIsEditing(false);
-            toast.success('Условия обновлены', { description: 'Новые правила применятся к новым партнерам' });
-        } catch (e: any) {
+            toast.success(t('partners.generalConditions.conditionsUpdated'), { description: t('partners.generalConditions.conditionsUpdatedDesc') });
+        } catch (e: unknown) {
             console.error('Failed to save agent program settings', e);
-            toast.error(e?.message || 'Ошибка при сохранении условий');
+            toast.error(e instanceof Error ? e.message : t('partners.generalConditions.errorSaveConditions'));
         } finally {
             setLoadingSettings(false);
         }
@@ -551,7 +576,7 @@ export const AgencyGeneralConditions: React.FC = () => {
         const files = event.target.files;
         if (!files || files.length === 0) return;
         if (!developerId) {
-            toast.error('Не удалось определить застройщика (workspace)');
+            toast.error(t('partners.generalConditions.errorDeveloperUnknown'));
             return;
         }
 
@@ -560,7 +585,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             for (const file of Array.from(files)) {
                 const lower = file.name.toLowerCase();
                 if (!lower.endsWith('.docx') && !lower.endsWith('.pdf')) {
-                    toast.error('Поддерживаются только DOCX или PDF файлы');
+                    toast.error(t('partners.generalConditions.onlyDocxPdf'));
                     continue;
                 }
                 const fd = new FormData();
@@ -574,12 +599,12 @@ export const AgencyGeneralConditions: React.FC = () => {
                 if (!data?.success) throw new Error(data?.error || 'Upload failed');
             }
 
-            toast.success('Договоры загружены');
+            toast.success(t('partners.generalConditions.contractsUploaded'));
             await loadContracts();
             await loadTemplates();
         } catch (e) {
             console.error('Failed to upload contracts', e);
-            toast.error(e instanceof Error ? e.message : 'Ошибка при загрузке договоров');
+            toast.error(e instanceof Error ? e.message : t('partners.generalConditions.errorUploadContracts'));
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -587,19 +612,19 @@ export const AgencyGeneralConditions: React.FC = () => {
     };
 
     const handleDeleteContract = async (path: string) => {
-        if (!confirm('Удалить договор?')) return;
+        if (!confirm(t('partners.generalConditions.confirmDeleteContract'))) return;
         try {
             const { data, error } = await supabase.functions.invoke('agent-program', {
                 body: { action: 'delete_developer_contract', developer_user_id: developerId, path },
             });
             if (error) throw error;
             if (!data?.success) throw new Error(data?.error || 'Delete failed');
-            toast.success('Договор удалён');
+            toast.success(t('partners.generalConditions.contractDeleted'));
             await loadContracts();
             await loadTemplates();
         } catch (e) {
             console.error('Failed to delete contract', e);
-            toast.error('Ошибка при удалении договора');
+            toast.error(t('partners.generalConditions.errorDeleteContract'));
         }
     };
 
@@ -619,8 +644,8 @@ export const AgencyGeneralConditions: React.FC = () => {
     }, [settings.developerStampPath]);
 
     const handleUploadImage = async (type: 'signature' | 'stamp', file: globalThis.File) => {
-        if (!assetsBasePath) throw new Error('Не удалось определить застройщика (workspace)');
-        if (file.type !== 'image/png') throw new Error('Только PNG (желательно с прозрачным фоном)');
+        if (!assetsBasePath) throw new Error(t('partners.generalConditions.errorDeveloperUnknown'));
+        if (file.type !== 'image/png') throw new Error(t('partners.generalConditions.onlyPng'));
 
         const path = `${assetsBasePath}/${type}.png`;
 
@@ -640,7 +665,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                     ? { ...prev, developerSignaturePath: String(data?.path ?? path) }
                     : { ...prev, developerStampPath: String(data?.path ?? path) },
             );
-            toast.success(type === 'signature' ? 'Подпись сохранена' : 'Печать сохранена');
+            toast.success(type === 'signature' ? t('partners.generalConditions.signatureSaved') : t('partners.generalConditions.stampSaved'));
         } finally {
             setSavingImages((prev) => ({ ...prev, [type]: false }));
         }
@@ -659,7 +684,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                     ? { ...prev, developerSignaturePath: null }
                     : { ...prev, developerStampPath: null },
             );
-            toast.success(type === 'signature' ? 'Подпись удалена' : 'Печать удалена');
+            toast.success(type === 'signature' ? t('partners.generalConditions.signatureRemoved') : t('partners.generalConditions.stampRemoved'));
         } finally {
             setSavingImages((prev) => ({ ...prev, [type]: false }));
         }
@@ -669,7 +694,7 @@ export const AgencyGeneralConditions: React.FC = () => {
         if (!developerId) return;
         const template = templates.find((t) => t.id === id);
         if (!template) {
-            toast.error('Шаблон не найден');
+            toast.error(t('partners.generalConditions.templateNotFound'));
             return;
         }
         try {
@@ -685,16 +710,16 @@ export const AgencyGeneralConditions: React.FC = () => {
             });
             if (error) throw error;
             if (!data?.success) throw new Error(data?.error || 'Failed to save template');
-            toast.success('Шаблон обновлен');
+            toast.success(t('partners.generalConditions.templateUpdated'));
             await loadTemplates();
         } catch (e) {
             console.error('Failed to save template', e);
-            toast.error('Ошибка при сохранении шаблона');
+            toast.error(t('partners.generalConditions.errorSaveTemplate'));
         }
     };
 
     const handleDeleteTemplate = async (id: number) => {
-        if (!confirm('Удалить шаблон?')) return;
+        if (!confirm(t('partners.generalConditions.confirmDeleteTemplate'))) return;
         if (!developerId) return;
         try {
             const { data, error } = await supabase.functions.invoke('agent-program', {
@@ -702,11 +727,11 @@ export const AgencyGeneralConditions: React.FC = () => {
             });
             if (error) throw error;
             if (!data?.success) throw new Error(data?.error || 'Delete failed');
-            toast.success('Шаблон удалён');
+            toast.success(t('partners.generalConditions.templateDeleted'));
             await loadTemplates();
         } catch (e) {
             console.error('Failed to delete template', e);
-            toast.error('Ошибка при удалении шаблона');
+            toast.error(t('partners.generalConditions.errorDeleteTemplate'));
         }
     };
 
@@ -727,20 +752,63 @@ export const AgencyGeneralConditions: React.FC = () => {
         } catch (e) {
             console.error('Failed to get download url', e);
             const maybe = e as FunctionsError | Error;
-            toast.error(maybe?.message || 'Ошибка при скачивании');
+            toast.error(maybe?.message || t('partners.generalConditions.errorDownload'));
         }
     };
 
     const handleGoogleDocsImport = async (url: string, name: string) => {
-        // TODO: Implement Google Docs import
-        toast.info('Импорт из Google Docs будет реализован позже');
+        if (!developerId) {
+            toast.error(t('partners.generalConditions.errorDeveloperUnknown'));
+            return;
+        }
+        const docId = getGoogleDocId(url);
+        if (!docId) {
+            toast.error(t('partners.generalConditions.googleImportInvalidLink'));
+            return;
+        }
+        const exportUrl = getGoogleDocExportUrl(docId);
+        let arrayBuffer: ArrayBuffer;
+        try {
+            let res = await fetch(exportUrl, { mode: 'cors', credentials: 'omit' });
+            if (!res.ok) {
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(exportUrl)}`;
+                res = await fetch(proxyUrl);
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            arrayBuffer = await res.arrayBuffer();
+            if (arrayBuffer.byteLength === 0) throw new Error('Empty response');
+        } catch (e) {
+            console.error('Google Docs fetch failed', e);
+            toast.error(t('partners.generalConditions.googleImportComingSoon'));
+            return;
+        }
+        const safeName = name
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9._-]/g, '_')
+            .replace(/_+/g, '_') || 'imported';
+        const fileName = safeName.toLowerCase().endsWith('.docx') ? safeName : `${safeName}.docx`;
+        const file = new File([arrayBuffer], fileName, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        try {
+            const fd = new FormData();
+            fd.set('action', 'upload_developer_contract');
+            fd.set('developer_user_id', developerId);
+            fd.set('file', file);
+            const { data, error } = await supabase.functions.invoke('agent-program', { body: fd });
+            if (error) throw error;
+            if (!data?.success) throw new Error((data?.error as string) || 'Upload failed');
+            toast.success(t('partners.generalConditions.contractsUploaded'));
+            await loadTemplates();
+        } catch (e) {
+            console.error('Upload after Google Docs import failed', e);
+            toast.error(e instanceof Error ? e.message : t('partners.generalConditions.errorUploadContracts'));
+        }
     };
 
     const openTemplateEditor = async (template: Template) => {
         setEditingTemplate(template);
         setIsEditorLoading(true);
         try {
-            if (!developerId) throw new Error('Не удалось определить застройщика (workspace)');
+            if (!developerId) throw new Error(t('partners.generalConditions.errorDeveloperUnknown'));
 
             // If we already have editable HTML saved, use it as the source of truth.
             if (template.content_html) {
@@ -791,7 +859,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             }
         } catch (e) {
             console.error('Failed to open template editor', e);
-            toast.error('Ошибка при открытии шаблона');
+            toast.error(t('partners.generalConditions.errorOpenTemplate'));
         } finally {
             setIsEditorLoading(false);
         }
@@ -805,21 +873,23 @@ export const AgencyGeneralConditions: React.FC = () => {
                 template={editingTemplate}
                 onSave={handleTemplateSave}
                 isLoading={isEditorLoading}
+                t={t}
             />
 
             <GoogleDocsImportModal 
                 isOpen={isGoogleImportOpen}
                 onClose={() => setIsGoogleImportOpen(false)}
                 onImport={handleGoogleDocsImport}
+                t={t}
             />
 
             {/* Header Banner */}
-            <div className="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
+            <div className="bg-[var(--admin-primary)] rounded-2xl p-6 text-[var(--admin-text-on-primary)] relative overflow-hidden shadow-lg">
                 <div className="relative z-10 flex justify-between items-center">
                     <div>
-                        <h2 className="text-2xl font-bold mb-1">Генеральные условия</h2>
-                        <p className="text-indigo-200 text-sm max-w-xl">
-                            Эти правила действуют по умолчанию для всех новых агентств и брокеров, подключающихся к вашей сети.
+                        <h2 className="text-2xl font-bold mb-1">{t('partners.generalConditions.title')}</h2>
+                        <p className="opacity-90 text-sm max-w-xl">
+                            {t('partners.generalConditions.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -829,21 +899,21 @@ export const AgencyGeneralConditions: React.FC = () => {
                 <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-slate-200 bg-white ">
                     <button
                         onClick={() => setActiveTab('rules')}
-                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'rules' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'rules' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <ShieldCheck size={16} /> Правила
+                        <ShieldCheck size={16} /> {t('partners.generalConditions.tabRules')}
                     </button>
                     <button
                         onClick={() => setActiveTab('templates')}
-                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'templates' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <FileText size={16} /> Шаблоны договоров
+                        <FileText size={16} /> {t('partners.generalConditions.tabTemplates')}
                     </button>
                     <button
                         onClick={() => setActiveTab('signature')}
-                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'signature' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                        className={`py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'signature' ? 'border-[var(--admin-primary)] text-[var(--admin-primary)]' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                     >
-                        <PenTool size={16} /> Подпись и печать
+                        <PenTool size={16} /> {t('partners.generalConditions.tabSignature')}
                     </button>
                 </div>
             </div>
@@ -852,22 +922,22 @@ export const AgencyGeneralConditions: React.FC = () => {
                 <div className="flex flex-col gap-6">
                     <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-slate-900 text-lg">Базовые параметры</h3>
+                            <h3 className="font-bold text-slate-900 text-lg">{t('partners.generalConditions.basicParams')}</h3>
                             {!isEditing ? (
-                                <Button variant="ghost" onClick={() => setIsEditing(true)} className="text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors h-auto">
-                                    Редактировать
+                                <Button variant="ghost" onClick={() => setIsEditing(true)} className="text-sm font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-background-hover)] px-3 py-1.5 rounded-lg transition-colors h-auto">
+                                    {t('partners.generalConditions.edit')}
                                 </Button>
                             ) : (
                                 <div className="flex gap-2">
-                                    <Button variant="ghost" onClick={() => setIsEditing(false)} className="text-sm font-medium text-slate-500 hover:bg-slate-100 px-3 py-1.5 rounded-lg h-auto">Отмена</Button>
-                                    <Button onClick={handleSave} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm h-auto">Сохранить</Button>
+                                    <Button variant="ghost" onClick={() => setIsEditing(false)} className="text-sm font-medium text-slate-500 hover:bg-slate-100 px-3 py-1.5 rounded-lg h-auto">{t('partners.generalConditions.cancel')}</Button>
+                                    <Button onClick={handleSave} className="text-sm font-bold text-[var(--admin-text-on-primary)] bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-hover)] px-3 py-1.5 rounded-lg shadow-sm h-auto">{t('partners.generalConditions.save')}</Button>
                                 </div>
                             )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Комиссия по умолчанию</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.defaultCommission')}</label>
                                 <div className="relative">
                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10">
                                         <Percent size={16} />
@@ -880,11 +950,11 @@ export const AgencyGeneralConditions: React.FC = () => {
                                         className="w-full pl-9 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
                                     />
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1.5">Применяется, если не задано иное для конкретного партнера.</p>
+                                <p className="text-xs text-slate-400 mt-1.5">{t('partners.generalConditions.defaultCommissionHint')}</p>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Срок защиты (Lead Lock)</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.leadLock')}</label>
                                 <div className="relative">
                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10">
                                         <Clock size={16} />
@@ -896,14 +966,14 @@ export const AgencyGeneralConditions: React.FC = () => {
                                         onChange={e => setSettings({ ...settings, leadLockDays: Number(e.target.value) })}
                                         className="w-full pl-9 pr-12 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500 font-medium z-10">дней</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500 font-medium z-10">{t('partners.generalConditions.days')}</span>
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1.5">Период защиты клиента за партнером.</p>
+                                <p className="text-xs text-slate-400 mt-1.5">{t('partners.generalConditions.leadLockHint')}</p>
                             </div>
                         </div>
 
                         <div className="mt-6">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Регламент выплат</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.payoutTerms')}</label>
                             <Textarea
                                 disabled={!isEditing}
                                 value={settings.payoutTerms}
@@ -915,18 +985,18 @@ export const AgencyGeneralConditions: React.FC = () => {
 
                     <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-800 text-sm">
                         <AlertCircle size={20} className="shrink-0 mt-0.5" />
-                        <p>Изменение базовой комиссии не повлияет на уже подписанные индивидуальные договоры с партнерами.</p>
+                        <p>{t('partners.generalConditions.alertCommission')}</p>
                     </div>
                 </div>
             )}
 
             {activeTab === 'templates' && (
                 <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
-                        <AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5"/>
-                        <div className="text-xs text-blue-800">
-                            <p className="font-bold mb-1">Как работают шаблоны?</p>
-                            <p>Вы можете редактировать текст шаблона и вставлять динамические переменные (имя партнера, дату, ставку комиссии). Поддерживаются DOCX и PDF (PDF не конвертируем в текст автоматически — после первого сохранения можно скачивать и DOCX и PDF).</p>
+                    <div className="bg-[var(--admin-background-secondary)] border border-[var(--admin-border)] rounded-xl p-4 flex gap-3">
+                        <AlertCircle size={20} className="text-[var(--admin-primary)] shrink-0 mt-0.5"/>
+                        <div className="text-xs text-[var(--admin-text-secondary)]">
+                            <p className="font-bold mb-1">{t('partners.generalConditions.templatesHowTitle')}</p>
+                            <p>{t('partners.generalConditions.templatesHowText')}</p>
                         </div>
                     </div>
 
@@ -934,43 +1004,43 @@ export const AgencyGeneralConditions: React.FC = () => {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs border-b border-slate-200">
                                 <tr>
-                                    <th className="px-6 py-4">Имя файла</th>
-                                    <th className="px-6 py-4">Язык</th>
-                                    <th className="px-6 py-4">Дата</th>
-                                    <th className="px-6 py-4 text-right">Действия</th>
+                                    <th className="px-6 py-4">{t('partners.generalConditions.tableFileName')}</th>
+                                    <th className="px-6 py-4">{t('partners.generalConditions.tableLang')}</th>
+                                    <th className="px-6 py-4">{t('partners.generalConditions.tableDate')}</th>
+                                    <th className="px-6 py-4 text-right">{t('partners.generalConditions.tableActions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {loadingTemplates ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">Загрузка...</td>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">{t('partners.generalConditions.loading')}</td>
                                     </tr>
                                 ) : templates.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">Нет шаблонов</td>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-xs text-slate-400">{t('partners.generalConditions.noTemplates')}</td>
                                     </tr>
                                 ) : (
-                                    templates.map(t => (
-                                        <tr key={t.id} className="hover:bg-slate-50 group">
+                                    templates.map((tmpl) => (
+                                        <tr key={tmpl.id} className="hover:bg-slate-50 group">
                                             <td className="px-6 py-4 flex items-center gap-3">
                                                 <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
                                                     <FileText size={18}/>
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-slate-900">{t.name}</div>
+                                                    <div className="font-bold text-slate-900">{tmpl.name}</div>
                                                     <div className="text-xs text-slate-400">
-                                                        {t.name.toLowerCase().endsWith('.pdf') ? 'PDF Document (.pdf)' : 'Word Document (.docx)'}
+                                                        {tmpl.name.toLowerCase().endsWith('.pdf') ? t('partners.generalConditions.pdfDocument') : t('partners.generalConditions.wordDocument')}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4"><span className="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600">{t.lang}</span></td>
-                                            <td className="px-6 py-4 text-slate-500">{t.date}</td>
+                                            <td className="px-6 py-4"><span className="bg-slate-100 px-2 py-1 rounded text-xs font-bold text-slate-600">{tmpl.lang}</span></td>
+                                            <td className="px-6 py-4 text-slate-500">{tmpl.date}</td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2 relative">
                                                 <button 
-                                                    onClick={() => void openTemplateEditor(t)} 
-                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                                                        title="Редактировать в редакторе"
+                                                    onClick={() => void openTemplateEditor(tmpl)} 
+                                                        className="p-2 text-slate-400 hover:text-[var(--admin-primary)] hover:bg-[var(--admin-background-hover)] rounded-lg transition-colors border border-transparent hover:border-[var(--admin-border)]"
+                                                        title={t('partners.generalConditions.editInEditor')}
                                                     >
                                                         <FileEdit size={16}/>
                                                     </button>
@@ -978,22 +1048,22 @@ export const AgencyGeneralConditions: React.FC = () => {
                                                     {/* Actions Dropdown */}
                                                     <div className="relative">
                                                         <button 
-                                                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === t.id ? null : t.id); }}
-                                                            className={`p-2 rounded-lg transition-colors ${menuOpenId === t.id ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'}`}
+                                                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === tmpl.id ? null : tmpl.id); }}
+                                                            className={`p-2 rounded-lg transition-colors ${menuOpenId === tmpl.id ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'}`}
                                                         >
                                                             <MoreVertical size={16}/>
                                                         </button>
-                                                        {menuOpenId === t.id && (
+                                                        {menuOpenId === tmpl.id && (
                                                             <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 animate-in fade-in zoom-in-95">
-                                                                <button onClick={() => void handleDownload(t, 'docx')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
-                                                                    <Download size={14} className="text-blue-500"/> Скачать DOCX
+                                                                <button onClick={() => void handleDownload(tmpl, 'docx')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
+                                                                    <Download size={14} className="text-[var(--admin-primary)]"/> {t('partners.generalConditions.downloadDocx')}
                                                                 </button>
-                                                                <button onClick={() => void handleDownload(t, 'pdf')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
-                                                                    <Printer size={14} className="text-red-500"/> Скачать PDF
+                                                                <button onClick={() => void handleDownload(tmpl, 'pdf')} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-slate-700 hover:bg-slate-50">
+                                                                    <Printer size={14} className="text-red-500"/> {t('partners.generalConditions.downloadPdf')}
                                                                 </button>
                                                                 <div className="h-px bg-slate-100 my-1"></div>
-                                                                <button onClick={() => handleDeleteTemplate(t.id)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-red-600 hover:bg-red-50">
-                                                                    <Trash2 size={14}/> Удалить
+                                                                <button onClick={() => handleDeleteTemplate(tmpl.id)} className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 text-red-600 hover:bg-red-50">
+                                                                    <Trash2 size={14}/> {t('partners.generalConditions.delete')}
                                                                 </button>
                                                             </div>
                                                         )}
@@ -1019,14 +1089,14 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 onClick={() => setIsGoogleImportOpen(true)}
                                 className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors"
                             >
-                                <ExternalLink size={16}/> Импорт из Google Docs
+                                <ExternalLink size={16}/> {t('partners.generalConditions.importGoogleDocs')}
                             </button>
                             
                             <button 
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-sm"
+                                className="flex items-center gap-2 bg-[var(--admin-primary)] text-[var(--admin-text-on-primary)] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[var(--admin-primary-hover)] transition-colors shadow-sm"
                             >
-                                <FileIcon size={16}/> Загрузить файл
+                                <FileIcon size={16}/> {t('partners.generalConditions.uploadFile')}
                             </button>
                         </div>
                     </div>
@@ -1036,7 +1106,7 @@ export const AgencyGeneralConditions: React.FC = () => {
             {activeTab === 'signature' && (
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <h3 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
-                        <PenTool size={18} className="text-purple-600" /> Подпись и печать
+                        <PenTool size={18} className="text-[var(--admin-primary)]" /> {t('partners.generalConditions.signatureAndStamp')}
                     </h3>
 
                     <input
@@ -1051,7 +1121,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 await handleUploadImage('signature', file);
                             } catch (err) {
                                 console.error('signature upload failed', err);
-                                toast.error(err instanceof Error ? err.message : 'Ошибка при загрузке подписи');
+                                toast.error(err instanceof Error ? err.message : t('partners.generalConditions.errorUploadSignature'));
                             } finally {
                                 if (signatureInputRef.current) signatureInputRef.current.value = '';
                             }
@@ -1069,7 +1139,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 await handleUploadImage('stamp', file);
                             } catch (err) {
                                 console.error('stamp upload failed', err);
-                                toast.error(err instanceof Error ? err.message : 'Ошибка при загрузке печати');
+                                toast.error(err instanceof Error ? err.message : t('partners.generalConditions.errorUploadStamp'));
                             } finally {
                                 if (stampInputRef.current) stampInputRef.current.value = '';
                             }
@@ -1079,7 +1149,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
-                                <PenTool size={14} /> Подпись директора (PNG)
+                                <PenTool size={14} /> {t('partners.generalConditions.signatureDirector')}
                             </div>
                             <div className="aspect-video bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden group">
                                 {signatureUrl ? (
@@ -1089,7 +1159,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                             onClick={() => void handleClearImage('signature')}
                                             disabled={savingImages.signature}
                                             className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-                                            title="Удалить"
+                                            title={t('partners.generalConditions.remove')}
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -1098,19 +1168,19 @@ export const AgencyGeneralConditions: React.FC = () => {
                                     <button
                                         onClick={() => signatureInputRef.current?.click()}
                                         disabled={savingImages.signature}
-                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-[var(--admin-primary)] transition-colors disabled:opacity-50"
                                     >
                                         <Upload size={24} />
-                                        <span className="text-xs font-bold uppercase">Загрузить PNG</span>
+                                        <span className="text-xs font-bold uppercase">{t('partners.generalConditions.uploadPng')}</span>
                                     </button>
                                 )}
                             </div>
-                            <p className="text-xs text-slate-400 mt-2">Используется для автоматического подписания договоров.</p>
+                            <p className="text-xs text-slate-400 mt-2">{t('partners.generalConditions.signatureHint')}</p>
                         </div>
 
                         <div>
                             <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
-                                <Check size={14} /> Печать компании (PNG)
+                                <Check size={14} /> {t('partners.generalConditions.stampCompany')}
                             </div>
                             <div className="aspect-video bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden group">
                                 {stampUrl ? (
@@ -1120,7 +1190,7 @@ export const AgencyGeneralConditions: React.FC = () => {
                                             onClick={() => void handleClearImage('stamp')}
                                             disabled={savingImages.stamp}
                                             className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-                                            title="Удалить"
+                                            title={t('partners.generalConditions.remove')}
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -1129,14 +1199,14 @@ export const AgencyGeneralConditions: React.FC = () => {
                                     <button
                                         onClick={() => stampInputRef.current?.click()}
                                         disabled={savingImages.stamp}
-                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                        className="flex flex-col items-center gap-2 text-slate-400 hover:text-[var(--admin-primary)] transition-colors disabled:opacity-50"
                                     >
                                         <Upload size={24} />
-                                        <span className="text-xs font-bold uppercase">Загрузить PNG</span>
+                                        <span className="text-xs font-bold uppercase">{t('partners.generalConditions.uploadPng')}</span>
                                     </button>
                                 )}
                             </div>
-                            <p className="text-xs text-slate-400 mt-2">Будет наложена поверх подписи в документах.</p>
+                            <p className="text-xs text-slate-400 mt-2">{t('partners.generalConditions.stampHint')}</p>
                         </div>
                     </div>
                 </div>

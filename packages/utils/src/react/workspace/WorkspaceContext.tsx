@@ -182,3 +182,25 @@ export function WorkspaceProvider({
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
+/**
+ * Provider for apps that do not use workspaces (e.g. partners app).
+ * Supplies empty workspaces and no-op handlers so components like SimplifiedSidebar
+ * that call useWorkspace() do not throw when showWorkspaceSwitcher is false.
+ */
+const NO_WORKSPACE_VALUE: WorkspaceContextType = {
+  type: "developer",
+  activeWorkspaceId: null,
+  setActiveWorkspaceId: () => {},
+  isManagerMode: false,
+  availableWorkspaces: [],
+  reloadWorkspaces: async () => {},
+};
+
+export function NoWorkspaceProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <WorkspaceContext.Provider value={NO_WORKSPACE_VALUE}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
+}
+

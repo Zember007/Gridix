@@ -1,0 +1,12 @@
+{
+  "app": {
+    "title": "Partnership"
+  },
+  "nav": {
+    "overview": "Overview",
+    "referrals": "Referrals",
+    "clients": "Clients",
+    "instructions": "Instructions",
+    "account": "Account"
+  }
+}

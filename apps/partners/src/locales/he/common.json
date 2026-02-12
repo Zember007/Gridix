@@ -1,0 +1,12 @@
+{
+  "app": {
+    "title": "שותפות"
+  },
+  "nav": {
+    "overview": "סקירה כללית",
+    "referrals": "הפניות",
+    "clients": "לקוחות",
+    "instructions": "הוראות",
+    "account": "חֶשְׁבּוֹן"
+  }
+}

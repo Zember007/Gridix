@@ -22,6 +22,9 @@ type Props = {
     onApartmentSelect: (apartment: Apartment) => void;
     onOpenFloorPlan: (floorNumber: number) => void;
     themeColor: string;
+    selectedCurrency: string;
+    isPriceVisible: boolean;
+    isAreaVisible: boolean;
     // Extra props can be passed from parent; keep them optional for TS safety
     language?: string;
     t?: (key: string, options?: Record<string, unknown>) => string;
@@ -42,11 +45,14 @@ const getStatusColorClass = (status: Apartment['status']) => {
 };
 
 export const ChessView = ({
-    project,
-    apartments,
-    onApartmentSelect,
-    onOpenFloorPlan,
-}: Props) => {
+                              project,
+                              apartments,
+                              onApartmentSelect,
+                              onOpenFloorPlan,
+                              selectedCurrency,
+                              isPriceVisible,
+                              isAreaVisible,
+                          }: Props) => {
     const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
 
     const { t } = useLanguage();
@@ -84,8 +90,8 @@ export const ChessView = ({
 
     const floorSettings = project.polygon_settings_floor as
         | {
-            colors?: { available?: string; reserved?: string; sold?: string };
-        }
+        colors?: { available?: string; reserved?: string; sold?: string };
+    }
         | undefined;
 
     const colors = {
@@ -96,7 +102,7 @@ export const ChessView = ({
 
 
     return (
-        <div className="flex flex-col  bg-white overflow-hidden select-none container mx-auto md:px-6 py-8 grow flex">
+        <div className="flex flex-col  bg-white overflow-hidden select-none container mx-auto md:px-6 py-8 grow">
             <div className="pb-4 flex gap-4 shrink-0 border-b border-gray-50">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                     <div
@@ -176,11 +182,12 @@ export const ChessView = ({
                                                             settings={{
                                                                 showNumbers: true,
                                                                 showTooltip: true,
-                                                                showArea: true,
-                                                                showPrice: true,
+                                                                showArea: isAreaVisible,
+                                                                showPrice: isPriceVisible,
                                                             }}
                                                             className="min-w-[200px]"
                                                             currency={project.currency || null}
+                                                            selectedCurrency={selectedCurrency}
                                                         />
                                                     </TooltipContent>
                                                 </Tooltip>
@@ -223,4 +230,3 @@ export const ChessView = ({
         </div>
     );
 };
-

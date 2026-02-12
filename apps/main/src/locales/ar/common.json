@@ -8,12 +8,14 @@
   "error": "حدث خطأ",
   "example": "مثال",
   "grid": "شبكة",
+  "hide": "يخفي",
   "list": "قائمة",
   "menu": "القائمة",
   "more": "المزيد من التفاصيل",
   "priceOnRequest": "عند الطلب",
   "reserve": "احجز",
   "reserved": "محجوز",
+  "leaveRequest": "اترك طلبًا",
   "search": "بحث",
   "sold": "مباع",
   "unavailable": "غير متاح",
@@ -25,5 +27,65 @@
   "companySettingsNotFound": "لم يتم العثور على إعدادات الشركة. يرجى تكوين معلومات شركتك قبل إنشاء الفواتير.",
   "companySettingsIncomplete": "يرجى ملء تفاصيل الدفع في إعدادات الشركة لإنشاء الفواتير.",
   "invoiceGenerationFailed": "فشل في إنشاء الفاتورة",
-  "invoiceDownloadFailed": "فشل في تحميل الفاتورة"
+  "invoiceDownloadFailed": "فشل في تحميل الفاتورة",
+  "drawer": {
+    "tabs": {
+      "overview": "ملخص",
+      "units": "الوحدات",
+      "construction": "بناء",
+      "media": "وسائط",
+      "partners": "الشركاء",
+      "settings": "إعدادات"
+    },
+    "commission": {
+      "title": "عمولتك",
+      "active": "نشيط",
+      "requiresContract": "يتطلب العقد",
+      "condition": "شرط الدفع",
+      "signOffer": "قم بتوقيع العرض مع المطور لقفل العملاء والحصول على العمولة."
+    },
+    "stats": {
+      "roi": "عائد الاستثمار",
+      "completion": "انتهاء",
+      "priceFrom": "السعر من",
+      "units": "الوحدات"
+    },
+    "about": {
+      "title": "حول المشروع",
+      "description": "مجمع سكني حديث في منطقة مرموقة. مثالية للعيش والاستثمار."
+    },
+    "quickAccess": "الوصول السريع",
+    "media": {
+      "title": "مشروع البنك الإعلامي",
+      "downloadAll": "تنزيل الكل (ZIP)",
+      "renders": "يجعل",
+      "videos": "فيديوهات",
+      "presentations": "العروض التقديمية",
+      "noMaterials": "لا توجد مواد",
+      "restricted": "الوصول مقيد",
+      "signToAccess": "قم بتوقيع العقد مع المطور للوصول إلى بنك الإعلام.",
+      "connect": "يتصل"
+    },
+    "construction": {
+      "title": "تقدم البناء",
+      "noUpdates": "لا توجد تحديثات"
+    },
+    "units": {
+      "legend": {
+        "available": "متاح",
+        "booked": "حجزت",
+        "sold": "مُباع"
+      },
+      "downloadPdf": "تحميل قوات الدفاع الشعبي"
+    },
+    "actions": {
+      "lock": "قفل العميل",
+      "favorite": "أضف إلى المجموعة",
+      "share": "يشارك",
+      "becomePartner": "كن شريكا",
+      "pendingConfirmation": "في انتظار التأكيد",
+      "partnershipUnavailable": "الشراكة غير متوفرة",
+      "openPage": "افتح الصفحة"
+    }
+  }
 }

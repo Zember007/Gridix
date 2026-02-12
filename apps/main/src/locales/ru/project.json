@@ -1,6 +1,6 @@
 {
   "chooseApartment": "Выбрать квартиру",
-  "filters" : "Фильтры",
+  "filters": "Фильтры",
   "filtersDescription": "Фильтры для поиска",
   "additionalInfo": "Дополнительная информация",
   "advancedFilters": "Все фильтры",
@@ -27,7 +27,7 @@
   "floor": "Этаж",
   "floorPlan": "План этажа",
   "floors": "этажей",
-  "hideAdvancedFilters": "Скрыть фильтры", 
+  "hideAdvancedFilters": "Скрыть фильтры",
   "found": "Найдено",
   "from": "от",
   "interactivePlan": "Интерактивный план",

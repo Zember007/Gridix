@@ -12,7 +12,8 @@ import {AgencyPartnersPage} from '@/components/admin/partners/AgencyPartnersPage
 import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
 import {AdminAnalytics} from './AdminAnalytics';
 import {IntegrationsTab} from './IntegrationsTab';
-import {useLanguageNavigation} from '@gridix/utils/react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguageNavigation } from '@gridix/utils/react';
 import {useAuth} from '@/contexts/AuthContext';
 import {useUserRole} from '@/hooks/useUserRole';
 import {useWorkspace} from '@/contexts/WorkspaceContext';
@@ -203,7 +204,9 @@ const AdminDashboard = () => {
 
     void run();
   }, [loading, showCreateModal, user, userProfile]);
-  const { navigate } = useLanguageNavigation();
+  const location = useLocation();
+  const routerNavigate = useNavigate();
+  const { navigate, getPathWithLanguage } = useLanguageNavigation();
   const { userRole, isManager, developerId } = useUserRole();
   const { availableWorkspaces } = useWorkspace();
 
@@ -286,15 +289,16 @@ const AdminDashboard = () => {
 
   const handleManualCreate = () => {
     setShowCreateModal(false);
-    navigate('/admin/project/new');
+    routerNavigate(getPathWithLanguage('/admin/project/new'), {
+      state: { from: location.pathname },
+    });
   };
 
   const handleEditProject = (projectId: string, isNew: boolean) => {
-    if (isNew) {
-      navigate('/admin/project/new');
-    } else {
-      navigate(`/admin/project/${projectId}`);
-    }
+    const path = isNew
+      ? getPathWithLanguage('/admin/project/new')
+      : getPathWithLanguage(`/admin/project/${projectId}`);
+    routerNavigate(path, { state: { from: location.pathname } });
   };
 
   const handleSignOut = async () => {
@@ -402,29 +406,7 @@ const AdminDashboard = () => {
           onManualCreate={handleManualCreate}
         />
 
-        {/* Support Button */}
-        <Button
-          size={"icon"}
-          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour"
-          style={{
-            backgroundColor: ADMIN_THEME.primary,
-            color: ADMIN_THEME.textOnPrimary,
-            borderColor: ADMIN_THEME.primary,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onClick={() => {
-            window.open('https://t.me/gridix_bot', '_blank');
-          }}
-        >
-          <MessageCircleQuestionMark />
-        </Button>
+      
       </div>
     </div>
   );

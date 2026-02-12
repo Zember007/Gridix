@@ -23,27 +23,31 @@ import InteractionHint from '@/components/visualization/InteractionHint';
 const COLLAPSED_HEIGHT = 280;
 
 const BuildingFacadeView = ({
-  project,
-  imageUrl,
-  apartments,
-  onFloorSelect,
-  onApartmentSelect,
-  filtersRef: _filtersRef,
-  externalImageLoaded: _externalImageLoaded,
-  externalImageNaturalSize: _externalImageNaturalSize,
-  showOnlyAvailable: _showOnlyAvailable = false,
-  visibleFields,
-  buildingFloors,
-  facadeSettings,
-  loading,
-  themeColor,
-  facades,
-  activeFacadeIndex,
-  onFacadeChange,
-}: BuildingFacadeViewProps) => {
+                              project,
+                              imageUrl,
+                              apartments,
+                              onFloorSelect,
+                              onApartmentSelect,
+                              filtersRef: _filtersRef,
+                              externalImageLoaded: _externalImageLoaded,
+                              externalImageNaturalSize: _externalImageNaturalSize,
+                              showOnlyAvailable: _showOnlyAvailable = false,
+                              visibleFields,
+                              buildingFloors,
+                              facadeSettings,
+                              loading,
+                              selectedCurrency,
+                              themeColor,
+                              facades,
+                              activeFacadeIndex,
+                              onFacadeChange,
+                            }: BuildingFacadeViewProps) => {
   const isMobile = useIsMobile();
   const [isExpanded, setIsExpanded] = useState((project.facade_open));
-  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
+  const [imageRect, setImageRect] = useState<{
+    offset: { x: number; y: number };
+    size: { width: number; height: number };
+  } | null>(null);
   const outerRef = useRef<HTMLDivElement>(null);
   // This ref MUST point to the "image area" only (not including the bottom carousel),
   // because popup positioning and svg overlay are relative to this container.
@@ -70,10 +74,10 @@ const BuildingFacadeView = ({
   const facadeImageUrl = imageUrl ?? project.building_image_url ?? null;
 
   const showFacadeNav =
-    !!facades &&
-    facades.length > 1 &&
-    typeof activeFacadeIndex === 'number' &&
-    typeof onFacadeChange === 'function';
+      !!facades &&
+      facades.length > 1 &&
+      typeof activeFacadeIndex === 'number' &&
+      typeof onFacadeChange === 'function';
 
   const handlePrevFacade = useCallback(() => {
     if (!showFacadeNav) return;
@@ -96,9 +100,9 @@ const BuildingFacadeView = ({
     // but never hide ALL polygons (old projects often have 0 available).
     if (_showOnlyAvailable) {
       const floorsWithAvailable = new Set(
-        apartments
-          .filter(apt => apt.status === 'available')
-          .map(apt => apt.floor_number),
+          apartments
+              .filter(apt => apt.status === 'available')
+              .map(apt => apt.floor_number),
       );
 
       const filtered = buildingFloors.filter(floor => floorsWithAvailable.has(floor.floor_number));
@@ -109,30 +113,30 @@ const BuildingFacadeView = ({
   }, [buildingFloors, apartments, project.project_type, _showOnlyAvailable]);
 
   const computeMobileDockPosition = useCallback(
-    (size: { width: number; height: number }) =>
-      computeMobileDockPositionUtil({
-        containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
-        imgDimensions,
-        visibleFloors,
-        size,
-      }),
-    [imgDimensions, isExpanded, visibleFloors]
+      (size: { width: number; height: number }) =>
+          computeMobileDockPositionUtil({
+            containerEl: containerRef.current,
+            isExpanded: isExpanded ?? false,
+            imageRect,
+            visibleFloors,
+            size,
+          }),
+      [imageRect, isExpanded, visibleFloors]
   );
 
   const computePopupPositionForPolygon = useCallback(
-    (
-      polygonBoundsPct: { minX: number; maxX: number; minY: number; maxY: number },
-      size: { width: number; height: number }
-    ) =>
-      computePopupPositionForPolygonUtil({
-        containerEl: containerRef.current,
-        isExpanded: isExpanded ?? false,
-        imgDimensions,
-        polygonBoundsPct,
-        size,
-      }),
-    [imgDimensions, isExpanded]
+      (
+          polygonBoundsPct: { minX: number; maxX: number; minY: number; maxY: number },
+          size: { width: number; height: number }
+      ) =>
+          computePopupPositionForPolygonUtil({
+            containerEl: containerRef.current,
+            isExpanded: isExpanded ?? false,
+            imageRect,
+            polygonBoundsPct,
+            size,
+          }),
+      [imageRect, isExpanded]
   );
 
   const handleFloorHover = useCallback((floorNumber: number) => {
@@ -156,7 +160,7 @@ const BuildingFacadeView = ({
       // Mobile: фиксируем попап в одной "лучшей" позиции (не зависит от выбранного полигона)
       if (isMobile) {
         const sizeForInitial =
-          (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
+            (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
         const dock = mobilePopupDockPosition ?? computeMobileDockPosition(sizeForInitial);
         if (dock) {
           setMobilePopupDockPosition(dock);
@@ -167,7 +171,7 @@ const BuildingFacadeView = ({
 
       // Desktop: быстрое предварительное позиционирование (потом useLayoutEffect уточнит по реальному размеру)
       const sizeForInitial =
-        (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
+          (popupSize.width > 0 && popupSize.height > 0) ? popupSize : { width: 160, height: 120 };
       const nextPos = computePopupPositionForPolygon(polygonBounds, sizeForInitial);
       if (nextPos) setPopupPosition(nextPos);
     }
@@ -182,20 +186,42 @@ const BuildingFacadeView = ({
     popupSize,
   ]);
 
-  const measureImageContainer = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const width = Math.round(rect.width);
-    const height = Math.round(rect.height);
-    if (width <= 0 || height <= 0) return;
-    setImgDimensions(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+  const measureImageRect = useCallback(() => {
+    const containerEl = containerRef.current;
+    const imageEl = imgRef.current;
+    if (!containerEl || !imageEl) return;
+
+    const containerRect = containerEl.getBoundingClientRect();
+    const imgRect = imageEl.getBoundingClientRect();
+
+    const nextRect = {
+      offset: {
+        x: imgRect.left - containerRect.left,
+        y: imgRect.top - containerRect.top,
+      },
+      size: {
+        width: imgRect.width,
+        height: imgRect.height,
+      },
+    };
+
+    if (nextRect.size.width <= 0 || nextRect.size.height <= 0) return;
+
+    setImageRect((prev) => {
+      if (!prev) return nextRect;
+      const same =
+        Math.abs(prev.offset.x - nextRect.offset.x) <= 0.5 &&
+        Math.abs(prev.offset.y - nextRect.offset.y) <= 0.5 &&
+        Math.abs(prev.size.width - nextRect.size.width) <= 0.5 &&
+        Math.abs(prev.size.height - nextRect.size.height) <= 0.5;
+      return same ? prev : nextRect;
+    });
   }, []);
 
   useLayoutEffect(() => {
     // After any layout-affecting change, measure the real image-area container.
-    measureImageContainer();
-  }, [measureImageContainer, isExpanded, isMobile, facadeImageUrl]);
+    measureImageRect();
+  }, [measureImageRect, isExpanded, isMobile, facadeImageUrl]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -204,31 +230,32 @@ const BuildingFacadeView = ({
     const observer = new ResizeObserver(() => {
       if (frame) cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        measureImageContainer();
+        measureImageRect();
       });
     });
     observer.observe(el);
 
     // Fallback for viewport changes on some browsers.
-    window.addEventListener('resize', measureImageContainer);
+    window.addEventListener('resize', measureImageRect);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener('resize', measureImageContainer);
+      window.removeEventListener('resize', measureImageRect);
     };
-  }, [measureImageContainer]);
+  }, [measureImageRect]);
 
   useEffect(() => {
     if (visibleFloors.length > 0) {
-      if (isExpanded && isMobile && imgDimensions.width > 0 && imgDimensions.height > 0) {
+      if (isExpanded && isMobile && imageRect && imageRect.size.width > 0 && imageRect.size.height > 0) {
         handleFloorHover(visibleFloors[0]?.floor_number ?? 0);
       }
     }
-  }, [handleFloorHover, imgDimensions.height, imgDimensions.width, isExpanded, isMobile, visibleFloors]);
+  }, [handleFloorHover, imageRect, isExpanded, isMobile, visibleFloors]);
 
   // When facade image changes, reset cached dimensions to force a clean recompute.
   useEffect(() => {
+    setImageRect(null);
     setShowPopup(false);
     setPopupAnchor(null);
     setPopupPosition(null);
@@ -295,18 +322,19 @@ const BuildingFacadeView = ({
       }
 
       return (
-        <ApartmentPopup
-          ref={popupRef}
-          apartment={apartment}
-          position={{ x: position.x, y: position.y }}
-          settings={{
-            showNumbers: facadeSettings?.display?.showNumbers ?? true,
-            showTooltip: facadeSettings?.display?.showTooltip ?? false,
-            showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
-            showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
-          }}
-          currency={project.currency || null}
-        />
+          <ApartmentPopup
+              ref={popupRef}
+              apartment={apartment}
+              position={{ x: position.x, y: position.y }}
+              settings={{
+                showNumbers: facadeSettings?.display?.showNumbers ?? true,
+                showTooltip: facadeSettings?.display?.showTooltip ?? false,
+                showArea: visibleFields.find(field => field.field_name === 'area')?.is_visible ?? false,
+                showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
+              }}
+              currency={project.currency || null}
+              selectedCurrency={selectedCurrency}
+          />
       );
     }
 
@@ -314,43 +342,43 @@ const BuildingFacadeView = ({
     const stats = getFloorStats(Number);
 
     return (
-      <div
-        ref={popupRef}
-        className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:min-w-[100px] md:h-[100px] min-w-[80px] h-[110px]"
-        style={{
-          left: position.x,
-          top: position.y,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {facadeSettings?.display?.showNumbers && (
-          <div className="text-center flex items-center justify-center gap-[7px] md:p-0 p-1">
-            {t('project.floor')} <span className='font-bold'>{Number}</span>
-          </div>
-        )}
+        <div
+            ref={popupRef}
+            className="absolute z-30 uppercase bg-white flex flex-col rounded-[20px] overflow-hidden md:text-[12px] text-[10px] shadow-xl border border-gray-200 md:min-w-[100px] md:h-[100px] min-w-[80px] h-[110px]"
+            style={{
+              left: position.x,
+              top: position.y,
+            }}
+            onClick={(e) => e.stopPropagation()}
+        >
+          {facadeSettings?.display?.showNumbers && (
+              <div className="text-center flex items-center justify-center gap-[7px] md:p-0 p-1">
+                {t('project.floor')} <span className='font-bold'>{Number}</span>
+              </div>
+          )}
 
-        <div className="md:mx-0 mx-1 flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
-          <div className="md:text-[32px] text-[20px] leading-[1.1]">{stats.available}</div>
-          {t('project.available')}
+          <div className="md:mx-0 mx-1 flex flex-col items-center justify-center text-white h-full rounded-[20px] bg-[#514A47] px-2">
+            <div className="md:text-[32px] text-[20px] leading-[1.1]">{stats.available}</div>
+            {t('project.available')}
+          </div>
+          <Button
+              onClick={() => { handleFloorClick(Number); }}
+              variant="outline" className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
+            {t('customFields.show')}
+          </Button>
         </div>
-        <Button
-          onClick={() => { handleFloorClick(Number); }}
-          variant="outline" className="md:hidden text-[10px] m-1 p-1 rounded-[20px]">
-          {t('customFields.show')}
-        </Button>
-      </div>
     );
   };
 
   useLayoutEffect(() => {
     if (!showPopup || !containerRef.current || !popupRef.current) return;
-    if (!isExpanded || imgDimensions.width === 0 || imgDimensions.height === 0) return;
+    if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return;
 
     const rect = popupRef.current.getBoundingClientRect();
     const measured = { width: rect.width, height: rect.height };
 
     const sizeChanged =
-      Math.abs(measured.width - popupSize.width) > 0.5 || Math.abs(measured.height - popupSize.height) > 0.5;
+        Math.abs(measured.width - popupSize.width) > 0.5 || Math.abs(measured.height - popupSize.height) > 0.5;
     if (sizeChanged) {
       setPopupSize(measured);
     }
@@ -358,19 +386,19 @@ const BuildingFacadeView = ({
     // Mobile: позиция всегда одна — выбираем best dock по всем полигонам и используем его
     if (isMobile) {
       const size = (measured.width > 0 && measured.height > 0)
-        ? measured
-        : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 });
+          ? measured
+          : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 });
       const dock = computeMobileDockPosition(size);
       if (!dock) return;
 
       const dockChanged =
-        !mobilePopupDockPosition ||
-        Math.abs(dock.x - mobilePopupDockPosition.x) > 0.5 ||
-        Math.abs(dock.y - mobilePopupDockPosition.y) > 0.5;
+          !mobilePopupDockPosition ||
+          Math.abs(dock.x - mobilePopupDockPosition.x) > 0.5 ||
+          Math.abs(dock.y - mobilePopupDockPosition.y) > 0.5;
       if (dockChanged) setMobilePopupDockPosition(dock);
 
       const posChanged =
-        !popupPosition || Math.abs(dock.x - popupPosition.x) > 0.5 || Math.abs(dock.y - popupPosition.y) > 0.5;
+          !popupPosition || Math.abs(dock.x - popupPosition.x) > 0.5 || Math.abs(dock.y - popupPosition.y) > 0.5;
       if (posChanged) setPopupPosition(dock);
       return;
     }
@@ -378,22 +406,21 @@ const BuildingFacadeView = ({
     if (!popupAnchor) return;
 
     const nextPos =
-      computePopupPositionForPolygon(
-        popupAnchor.polygonBounds,
-        (measured.width > 0 && measured.height > 0) ? measured : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 })
-      ) ?? null;
+        computePopupPositionForPolygon(
+            popupAnchor.polygonBounds,
+            (measured.width > 0 && measured.height > 0) ? measured : (popupSize.width > 0 ? popupSize : { width: 160, height: 120 })
+        ) ?? null;
 
     if (!nextPos) return;
     const changed =
-      !popupPosition || Math.abs(nextPos.x - popupPosition.x) > 0.5 || Math.abs(nextPos.y - popupPosition.y) > 0.5;
+        !popupPosition || Math.abs(nextPos.x - popupPosition.x) > 0.5 || Math.abs(nextPos.y - popupPosition.y) > 0.5;
     if (changed) {
       setPopupPosition(nextPos);
     }
   }, [
     computeMobileDockPosition,
     computePopupPositionForPolygon,
-    imgDimensions.height,
-    imgDimensions.width,
+    imageRect,
     isExpanded,
     isMobile,
     mobilePopupDockPosition,
@@ -454,7 +481,7 @@ const BuildingFacadeView = ({
       return;
     }
 
-    if (imgDimensions.width === 0 || imgDimensions.height === 0) {
+    if (!imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) {
       return;
     }
 
@@ -464,7 +491,7 @@ const BuildingFacadeView = ({
 
     // Берём только этажи с валидными полигонами
     const floorsWithPolygons = visibleFloors.filter(
-      (f) => f.polygon && f.polygon.length >= 3
+        (f) => f.polygon && f.polygon.length >= 3
     );
 
     // Если полигонов нет, просто ставим переключатель внизу по центру
@@ -490,10 +517,10 @@ const BuildingFacadeView = ({
 
     // Переводим проценты в пиксели относительно контейнера,
     // учитывая, что изображение центрируется внутри него
-    const svgWidth = imgDimensions.width;
-    const svgHeight = imgDimensions.height;
-    const svgLeft = (containerWidth - svgWidth) / 2;
-    const svgTop = (containerHeight - svgHeight) / 2;
+    const svgWidth = imageRect.size.width;
+    const svgHeight = imageRect.size.height;
+    const svgLeft = imageRect.offset.x;
+    const svgTop = imageRect.offset.y;
 
     const bboxLeft = svgLeft + (minX / 100) * svgWidth;
     const bboxRight = svgLeft + (maxX / 100) * svgWidth;
@@ -519,10 +546,10 @@ const BuildingFacadeView = ({
       const top = cy - halfH;
       const bottom = cy + halfH;
       if (
-        left >= margin &&
-        right <= containerWidth - margin &&
-        top >= margin &&
-        bottom <= containerHeight - margin
+          left >= margin &&
+          right <= containerWidth - margin &&
+          top >= margin &&
+          bottom <= containerHeight - margin
       ) {
         candidates.push({ cx, cy });
       }
@@ -546,17 +573,17 @@ const BuildingFacadeView = ({
       const bottom = c.cy + halfH;
 
       const noOverlap =
-        right < bboxLeft - gapFromPolygons ||
-        left > bboxRight + gapFromPolygons ||
-        bottom < bboxTop - gapFromPolygons ||
-        top > bboxBottom + gapFromPolygons;
+          right < bboxLeft - gapFromPolygons ||
+          left > bboxRight + gapFromPolygons ||
+          bottom < bboxTop - gapFromPolygons ||
+          top > bboxBottom + gapFromPolygons;
 
       return !noOverlap;
     };
     void intersectsPolygons;
 
 
-  }, [isMobile, isExpanded, visibleFloors, imgDimensions.width, imgDimensions.height]);
+  }, [isMobile, isExpanded, visibleFloors, imageRect]);
 
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
@@ -572,10 +599,10 @@ const BuildingFacadeView = ({
 
   if (loading) {
     return (
-      <div
-        className="w-full h-full flex items-center justify-center min-h-[200px]">
-        <Spinner size="md" className="border-[#1E1E1E]" />
-      </div>
+        <div
+            className="w-full h-full flex items-center justify-center min-h-[200px]">
+          <Spinner size="md" className="border-[#1E1E1E]" />
+        </div>
     );
   }
 
@@ -588,177 +615,178 @@ const BuildingFacadeView = ({
 
 
   return (
-    <>
+      <>
 
-      <div
-        ref={outerRef}
-        className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg  flex items-stretch justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
-        style={{
-          minHeight: isExpanded ? 600 : 'auto',
-          height: isExpanded
-            ? (isMobile ? 'auto' : 'calc(100dvh - 200px)')
-            : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),
-          width: isExpanded ? '100%' : '100%',
-          maxWidth: isExpanded ? '100%' : undefined,
-          boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
-        }}
-      >
-
-        {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
         <div
-          ref={containerRef}
-          className="relative w-full flex-1 overflow-hidden flex items-center justify-center"
-          style={{ touchAction: isTouchZooming ? 'none' : 'manipulation' }}
-        >
-          {/* Размытый фон для заполнения пустых областей */}
-          {facadeImageUrl && (
-            <>
-              <img
-                src={facadeImageUrl}
-                alt="Building"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
-                {...({ fetchpriority: 'high' } as React.ImgHTMLAttributes<HTMLImageElement> & { fetchpriority?: string })}
-              />
-              <div className="absolute inset-0 bg-black/20" />
-            </>
-          )}
-
-          <div
-            className="relative w-full h-full"
+            ref={outerRef}
+            className={`relative w-full bg-gray-50 overflow-hidden md:rounded-lg  flex items-stretch justify-center flex-col ${isExpanded ? '' : 'mx-auto'} ${isMobile ? 'touch-manipulation' : ''}`}
             style={{
-              transform: isTouchZooming ? `scale(2)` : 'scale(1)',
-              transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
-              touchAction: isTouchZooming ? 'none' : 'manipulation',
+              minHeight: isExpanded ? 600 : 'auto',
+              height: isExpanded
+                  ? (isMobile ? 'auto' : 'calc(100dvh - 200px)')
+                  : (isMobile ? '200px' : `${COLLAPSED_HEIGHT}px`),
+              width: isExpanded ? '100%' : '100%',
+              maxWidth: isExpanded ? '100%' : undefined,
+              boxShadow: isExpanded ? '0 8px 32px rgba(0,0,0,0.12)' : undefined,
             }}
+        >
+
+          {/* Image area (popup positioning & svg overlay are relative to THIS container) */}
+          <div
+              ref={containerRef}
+              className="relative w-full flex-1 overflow-hidden flex items-center justify-center"
+              style={{ touchAction: isTouchZooming ? 'none' : 'manipulation' }}
           >
-            <img
-              ref={imgRef}
-              src={facadeImageUrl}
-              alt={project.name}
-              className={`block h-full transition-all duration-500 w-auto mx-auto`}
-              draggable={false}
-            />
-            {visibleFloors.length > 0 && imgRef.current && (
-              <svg
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
-                style={{ width: imgRef.current?.width ?? '100%', height: imgRef.current?.height ?? '100%' }}
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-              >
-                <rect x="0" y="0" width="100" height="100" fill="none" />
-                {visibleFloors.map((floor) => {
-                  if (!floor.polygon || floor.polygon.length < 3) return null;
-                  const points = floor.polygon
-                    .map(point => `${point.x},${point.y}`)
-                    .join(' ');
-                  const baseColor = getFloorFillColor(floor);
-                  const isHovered = hoveredFloor === floor.floor_number;
-                  const isActive = hoveredFloor === floor.floor_number;
-                  return (
-                    <g key={floor.id}>
-                      <polygon
-                        points={points}
-                        fill={baseColor}
-                        fillOpacity={(isHovered || isActive) ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
-                        className="cursor-pointer transition-all duration-200"
-                        data-floor={floor.floor_number}
-                        onClick={() => handleSVGFloorClick(floor.floor_number)}
-                        onMouseEnter={() => {
-                          if (isExpanded) {
-                            handleSVGFloorHover(floor.floor_number);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          if (isExpanded) {
-                            setHoveredFloor(null);
-                            handleFloorLeave();
-                          }
-                        }}
-                        style={{
-                          pointerEvents: 'auto',
-                          touchAction: 'none',
-                          filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
-                          transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
-                          transformOrigin: 'center',
-                        }}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
+            {/* Размытый фон для заполнения пустых областей */}
+            {facadeImageUrl && (
+                <>
+                  <img
+                      src={facadeImageUrl}
+                      alt="Building"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ filter: 'blur(8px)', transform: 'scale(1.1)' }}
+                      {...({ fetchpriority: 'high' } as React.ImgHTMLAttributes<HTMLImageElement> & { fetchpriority?: string })}
+                  />
+                  <div className="absolute inset-0 bg-black/20" />
+                </>
             )}
-          </div>
 
-          {showFacadeNav && (
-            <>
-              <button
-                type="button"
-                aria-label="Previous facade"
-                className={`absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
-                onClick={handlePrevFacade}
-                style={{ touchAction: 'manipulation' }}
-              >
-                <ChevronLeft className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              </button>
-              <button
-                type="button"
-                aria-label="Next facade"
-                className={`absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
-                onClick={handleNextFacade}
-                style={{ touchAction: 'manipulation' }}
-              >
-                <ChevronRight className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-              </button>
-            </>
-          )}
-
-          {!isExpanded && (
-            <button
-              className={` absolute ${showFacadeNav ? 'bottom-12' : 'bottom-4'} left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
-                }`}
-              onClick={() => setIsExpanded(true)}
-              style={{ touchAction: 'manipulation' }}
+            <div
+                className="relative w-full h-full"
+                style={{
+                  transform: isTouchZooming ? `scale(2)` : 'scale(1)',
+                  transformOrigin: `${touchOrigin.x}px ${touchOrigin.y}px`,
+                  touchAction: isTouchZooming ? 'none' : 'manipulation',
+                }}
             >
-              <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
-            </button>
-          )}
+              <img
+                  ref={imgRef}
+                  src={facadeImageUrl}
+                  alt={project.name}
+                  className={`block h-full transition-all duration-500 w-auto mx-auto`}
+                  draggable={false}
+                  onLoad={measureImageRect}
+              />
+              {visibleFloors.length > 0 && imageRect && (
+                  <svg
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
+                      style={{ width: imageRect.size.width, height: imageRect.size.height }}
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                  >
+                    <rect x="0" y="0" width="100" height="100" fill="none" />
+                    {visibleFloors.map((floor) => {
+                      if (!floor.polygon || floor.polygon.length < 3) return null;
+                      const points = floor.polygon
+                          .map(point => `${point.x},${point.y}`)
+                          .join(' ');
+                      const baseColor = getFloorFillColor(floor);
+                      const isHovered = hoveredFloor === floor.floor_number;
+                      const isActive = hoveredFloor === floor.floor_number;
+                      return (
+                          <g key={floor.id}>
+                            <polygon
+                                points={points}
+                                fill={baseColor}
+                                fillOpacity={(isHovered || isActive) ? (facadeSettings?.opacity.hover ?? 0.7) : (facadeSettings?.opacity.normal ?? 0.4)}
+                                className="cursor-pointer transition-all duration-200"
+                                data-floor={floor.floor_number}
+                                onClick={() => handleSVGFloorClick(floor.floor_number)}
+                                onMouseEnter={() => {
+                                  if (isExpanded) {
+                                    handleSVGFloorHover(floor.floor_number);
+                                  }
+                                }}
+                                onMouseLeave={() => {
+                                  if (isExpanded) {
+                                    setHoveredFloor(null);
+                                    handleFloorLeave();
+                                  }
+                                }}
+                                style={{
+                                  pointerEvents: 'auto',
+                                  touchAction: 'none',
+                                  filter: isHovered && facadeSettings?.hoverEffects?.glow ? 'drop-shadow(0 0 8px rgba(0,0,0,0.4))' : undefined,
+                                  transform: isHovered && facadeSettings?.hoverEffects?.scale ? 'scale(1.02)' : 'scale(1)',
+                                  transformOrigin: 'center',
+                                }}
+                            />
+                          </g>
+                      );
+                    })}
+                  </svg>
+              )}
+            </div>
 
-          {showFacadeNav && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
-              <div className="flex items-end gap-3 bg-white/80 backdrop-blur px-3 py-2 rounded-full shadow-lg">
-                {facades!.map((f, idx) => {
-                  const isActive = idx === activeFacadeIndex;
-                  return (
-                    <button
-                      key={f.id}
+            {showFacadeNav && (
+                <>
+                  <button
                       type="button"
-                      onClick={() => onFacadeChange?.(idx)}
-                      className="flex flex-col items-center gap-1 max-w-[90px]"
-                      aria-label={f.name}
-                    >
+                      aria-label="Previous facade"
+                      className={`absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+                      onClick={handlePrevFacade}
+                      style={{ touchAction: 'manipulation' }}
+                  >
+                    <ChevronLeft className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  </button>
+                  <button
+                      type="button"
+                      aria-label="Next facade"
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center transition-all ${isMobile ? 'p-2.5 active:scale-95' : 'p-3 hover:scale-105'}`}
+                      onClick={handleNextFacade}
+                      style={{ touchAction: 'manipulation' }}
+                  >
+                    <ChevronRight className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  </button>
+                </>
+            )}
+
+            {!isExpanded && (
+                <button
+                    className={` absolute ${showFacadeNav ? 'bottom-12' : 'bottom-4'} left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full  items-center justify-center z-10 transition-all ${isMobile ? 'p-3 active:scale-95' : 'p-4 hover:scale-105'
+                    }`}
+                    onClick={() => setIsExpanded(true)}
+                    style={{ touchAction: 'manipulation' }}
+                >
+                  <Maximize2 className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-7 w-7'}`} />
+                </button>
+            )}
+
+            {showFacadeNav && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+                  <div className="flex items-end gap-3 bg-white/80 backdrop-blur px-3 py-2 rounded-full shadow-lg">
+                    {facades!.map((f, idx) => {
+                      const isActive = idx === activeFacadeIndex;
+                      return (
+                          <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => onFacadeChange?.(idx)}
+                              className="flex flex-col items-center gap-1 max-w-[90px]"
+                              aria-label={f.name}
+                          >
                       <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          isActive ? 'bg-gray-900' : 'bg-gray-400'
-                        }`}
+                          className={`h-2.5 w-2.5 rounded-full ${
+                              isActive ? 'bg-gray-900' : 'bg-gray-400'
+                          }`}
                       />
-                      <span className={`text-[10px] leading-none truncate ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
+                            <span className={`text-[10px] leading-none truncate ${isActive ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
                         {f.name}
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                          </button>
+                      );
+                    })}
+                  </div>
+                </div>
+            )}
 
-          {showPopup && selectedFloor !== null && popupPosition && (
-            <FloorPopup Number={selectedFloor} position={popupPosition} />
-          )}
-          <InteractionHint storageKey="building" />
-        </div>
+            {showPopup && selectedFloor !== null && popupPosition && (
+                <FloorPopup Number={selectedFloor} position={popupPosition} />
+            )}
+            <InteractionHint storageKey="building" />
+          </div>
 
-        {/*    {isExpanded && (
+          {/*    {isExpanded && (
           <button
             className={`absolute top-[12px] right-[12px] bg-white/90 hover:bg-white shadow-lg rounded-full flex items-center justify-center z-20 transition-all ${isMobile ? 'p-[10px] active:scale-95' : 'p-3 hover:scale-105'
               }`}
@@ -769,53 +797,53 @@ const BuildingFacadeView = ({
             <X className={`text-gray-900 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
           </button>
         )} */}
-        {isMobile && isExpanded && visibleFloors.length > 0 && (
-          <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
-            <div className={`flex flex-row items-center gap-4 w-full`}>
+          {isMobile && isExpanded && visibleFloors.length > 0 && (
+              <div className={`w-full border-t border-l-0 bg-gradient-to-b from-gray-50 to-gray-100 border-gray-200 shadow-inner flex flex-row items-center justify-center`}>
+                <div className={`flex flex-row items-center gap-4 w-full`}>
 
 
-              {/* Floor Carousel */}
-              <div className={`flex-1 flex items-center justify-center min-h-0`}>
-                <div className={`w-full max-w-[100vw] relative`}>
-                  <Carousel
-                    className="w-full h-full "
-                    orientation={isMobile ? "horizontal" : "vertical"}
-                    opts={{
-                      align: "center",
-                      loop: visibleFloors.length > 3,
-                    }}
-                    setApi={setCarouselApi}
-                  >
-                    <div className={`w-full h-full shadow-xl border-2 border-white bg-white backdrop-blur-sm flex flex-col justify-center`}>
-                      <CarouselContent>
-                        {visibleFloors.map((floor, index) => (
-                          <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
-                            <button
-                              className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl  ${selectedFloor === floor.floor_number
-                                ? 'text-white'
-                                : 'hover:bg-gray-100 text-gray-700'
-                                }`}
-                              style={selectedFloor === floor.floor_number ? { backgroundColor: themeColor } : {}}
-                              onClick={() => handleSVGFloorHover(floor.floor_number)}
-                            >
-                              {floor.floor_number}
-                            </button>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
+                  {/* Floor Carousel */}
+                  <div className={`flex-1 flex items-center justify-center min-h-0`}>
+                    <div className={`w-full max-w-[100vw] relative`}>
+                      <Carousel
+                          className="w-full h-full "
+                          orientation={isMobile ? "horizontal" : "vertical"}
+                          opts={{
+                            align: "center",
+                            loop: visibleFloors.length > 3,
+                          }}
+                          setApi={setCarouselApi}
+                      >
+                        <div className={`w-full h-full shadow-xl border-2 border-white bg-white backdrop-blur-sm flex flex-col justify-center`}>
+                          <CarouselContent>
+                            {visibleFloors.map((floor, index) => (
+                                <CarouselItem key={index} className={`basis-1/5 flex items-center justify-center`}>
+                                  <button
+                                      className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl  ${selectedFloor === floor.floor_number
+                                          ? 'text-white'
+                                          : 'hover:bg-gray-100 text-gray-700'
+                                      }`}
+                                      style={selectedFloor === floor.floor_number ? { backgroundColor: themeColor } : {}}
+                                      onClick={() => handleSVGFloorHover(floor.floor_number)}
+                                  >
+                                    {floor.floor_number}
+                                  </button>
+                                </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                        </div>
+
+
+                      </Carousel>
                     </div>
+                  </div>
 
 
-                  </Carousel>
                 </div>
               </div>
-
-
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+          )}
+        </div>
+      </>
   );
 };
 

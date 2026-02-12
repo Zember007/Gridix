@@ -133,7 +133,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                 />
                             </div>
 
-                            <Popover open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen}>
+                   {/*          <Popover open={isFilterPanelOpen} onOpenChange={setIsFilterPanelOpen}>
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" className="font-bold flex items-center gap-2">
                                         <Filter size={16} />
@@ -150,7 +150,7 @@ export const AgencyPartnersPage: React.FC = () => {
                                     setFilters={setFilters}
                                     onClose={() => setIsFilterPanelOpen(false)}
                                 />
-                            </Popover>
+                            </Popover> */}
 
                             <Button
                                 onClick={() => setIsInviteModalOpen(true)}

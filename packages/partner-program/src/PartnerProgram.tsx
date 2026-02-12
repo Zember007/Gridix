@@ -108,7 +108,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 text-sm font-medium">1</span>
@@ -123,7 +123,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 text-sm font-medium">2</span>
@@ -138,7 +138,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 text-sm font-medium">3</span>

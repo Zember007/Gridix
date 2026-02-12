@@ -27,6 +27,3 @@ export * from './visualization';
 export { default as FavoritesTab } from './FavoritesTab';
 export { default as InstallmentCalculator } from './InstallmentCalculator';
 export { default as LanguageWrapper } from './LanguageWrapper';
-
-// Main selector component (re-export for backward compatibility)
-export { default as ProjectApartmentSelector } from './ProjectApartmentSelector';

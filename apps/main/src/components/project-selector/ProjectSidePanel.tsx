@@ -5,7 +5,7 @@ import type { UseApartmentsDataResult } from './hooks/useApartmentsData';
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import FloorPlanView from '@/components/visualization/FloorPlanView';
-import { cn } from "@gridix/utils/lib";
+import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Loader2, Share2, X, Heart } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from "@gridix/utils/api";
@@ -28,6 +28,7 @@ type Props = {
   // onSelectApartmentPreview removed as per instruction
   onOpenApartmentDetails: (apartment: Apartment) => void;
   onOpenFloorPlan: (floorNumber: number) => void;
+  selectedCurrency: string;
 };
 
 const statusBadgeClass = (status: Apartment['status']) => {
@@ -65,6 +66,7 @@ export const ProjectSidePanel = ({
   // onSelectApartmentPreview removed from destructuring
   onOpenApartmentDetails,
   onOpenFloorPlan,
+  selectedCurrency,
 }: Props) => {
   const { toggleFavorite, isFavorite } = useFavorites(project.id);
   const [apartmentCoverPhotoById, setApartmentCoverPhotoById] = useState<Record<string, string | null>>({});
@@ -97,6 +99,7 @@ export const ProjectSidePanel = ({
       apartmentNumber: isRu ? 'Номер квартиры' : 'Apartment number',
       status: isRu ? 'Статус' : 'Status',
       onRequest: isRu ? 'По запросу' : 'On request',
+      viewDetails: isRu ? 'Посмотреть детали' : 'View Details',
     };
   }, [language]);
 
@@ -243,13 +246,19 @@ export const ProjectSidePanel = ({
 
   const formatPrice = (price?: number) => {
     if (!price) return tt('project.onRequest');
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: project.currency || 'RUB', maximumFractionDigits: 0 }).format(price);
+    return formatMoney(
+      convertPrice(price, project.currency || null, selectedCurrency),
+      selectedCurrency,
+    );
   };
 
   const formatPricePerMeter = (price?: number, area?: number) => {
     if (!price || !area) return '';
     const ppm = Math.round(price / area);
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: project.currency || 'RUB', maximumFractionDigits: 0 }).format(ppm);
+    return formatMoney(
+      convertPrice(ppm, project.currency || null, selectedCurrency),
+      selectedCurrency,
+    );
   };
 
   if (!state) return null;
@@ -302,26 +311,19 @@ export const ProjectSidePanel = ({
       {state.kind === 'floor' ? (
         <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
           {/* Floor Preview Section */}
-          <div className="p-6 border-b border-gray-100 shrink-0">
-            <div className="text-sm text-gray-500 mb-4">{project.name}</div>
+          <div className="shrink-0">
 
-            <div className="relative  w-full bg-gray-50 rounded-lg overflow-hidden mb-4 flex items-center justify-center border border-gray-100">
+            <div
+              onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
+
+              className="relative  w-full rounded-lg overflow-hidden mb-4 flex items-center justify-center">
               <FloorPlanView
                 floorNumber={state.floorNumber}
                 projectId={project.id}
+                selectedCurrency={selectedCurrency}
               />
             </div>
 
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant="link"
-                className="text-blue-600 font-medium"
-                onClick={() => onOpenFloorPlan(Number(state.floorNumber))}
-              >
-                {ui.openFloorPlan}
-              </Button>
-            </div>
           </div>
 
           {/* Apartment List */}
@@ -420,9 +422,9 @@ export const ProjectSidePanel = ({
               <span className="text-3xl font-bold text-gray-900">
                 {formatPrice(state.apartment.price ?? undefined)}
               </span>
-              <span className="text-sm text-gray-500 font-medium">
+              { state.apartment.price && <span className="text-sm text-gray-500 font-medium">
                 {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
-              </span>
+              </span>}
             </div>
           </div>
 
@@ -443,7 +445,7 @@ export const ProjectSidePanel = ({
               style={{ backgroundColor: themeColor }}
               onClick={() => onOpenApartmentDetails(state.apartment)}
             >
-              {ui.book}
+              {ui.viewDetails}
             </Button>
           </div>
 

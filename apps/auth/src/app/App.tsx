@@ -12,6 +12,9 @@ export default function App() {
         <LanguageWrapper>
           <Routes>
             <Route path="/" element={<RootPage />} />
+            {/* After LanguageWrapper adds /:lang prefix, land here */}
+            <Route path="/:lang" element={<RootPage />} />
+            <Route path="/:lang/" element={<RootPage />} />
             <Route path="/:lang/auth" element={<AuthPage />} />
             <Route path="/:lang/auth/signin" element={<AuthPage />} />
             <Route path="/:lang/auth/signup" element={<AuthPage />} />

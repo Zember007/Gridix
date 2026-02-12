@@ -17,6 +17,7 @@ interface FloorPlanViewProps {
     onApartmentSelect?: (apartment: Apartment) => void;
     currency?: string | null;
     visibleFields?: FieldSetting[];
+    selectedCurrency?: string;
 }
 
 interface FloorPlan {
@@ -30,7 +31,8 @@ const FloorPlanView = ({
                            apartments,
                            onApartmentSelect,
                            currency,
-                           visibleFields = []
+                           visibleFields = [],
+                           selectedCurrency,
                        }: FloorPlanViewProps) => {
     const [floorPlan, setFloorPlan] = useState<FloorPlan | null>(null);
     const {project} = useProject(projectId);
@@ -259,6 +261,7 @@ const FloorPlanView = ({
                             showPrice: visibleFields.find(field => field.field_name === 'price')?.is_visible ?? false,
                         }}
                         currency={currency || null}
+                        selectedCurrency={selectedCurrency}
                     />
                 )}
                 <InteractionHint storageKey="floor-plan"/>

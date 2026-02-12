@@ -133,79 +133,13 @@
   "kanban": {
     "noDeals": "გარიგებები არ არის",
     "dragHere": "გადაიტანეთ აქ",
-    "createDeal": "გარიგების შექმნა"
-  },
-  "list": {
-    "selectAll": "ყველას არჩევა",
-    "selected": "არჩეულია"
-  },
-  "drawer": {
-    "contact": "კონტაქტი",
-    "details": "გარიგების დეტალები",
-    "tasks": "ამოცანები",
-    "history": "ისტორია",
-    "addTask": "ამოცანის დამატება",
-    "addNote": "შენიშვნის დამატება",
-    "tags": "ტეგები",
-    "source": "წყარო",
+    "createDeal": "გარიგების შექმნა",
+    "changeStage": "ეტაპის შეცვლა",
     "budget": "ბიუჯეტი",
-    "apartment": "ბინა",
-    "created": "შექმნილია",
-    "close": "დახურვა"
-  },
-  "createModal": {
-    "title": "ახალი გარიგება",
-    "name": "კლიენტის სახელი",
-    "phone": "ტელეფონი",
-    "email": "ელ-ფოსტა (არასავალდებულო)",
-    "create": "შექმნა",
-    "cancel": "გაუქმება",
-    "duplicateWarning": "მსგავსი ლიდი ნაპოვნია!",
-    "duplicateDesc": "სისტემაში უკვე არსებობს ლიდი ამ ტელეფონის ნომრით:"
-  },
-  "funnel": {
-    "title": "ძაბრის კონფიგურაცია",
-    "funnels": "ძაბრები",
-    "addFunnel": "ძაბრის დამატება",
-    "archived": "არქივირებული ძაბრები",
-    "addStage": "ეტაპის დამატება",
-    "deleteStage": "ეტაპის წაშლა",
-    "rename": "სახელის შეცვლა",
-    "triggers": "ავტომატიზაცია",
-    "addTrigger": "ტრიგერის დამატება",
-    "noAutomations": "ავტომატიზაცია არ არის",
-    "automationDesc": "დაამატეთ მოქმედებები ამ ეტაპზე გადასვლისას",
-    "back": "უკან",
-    "save": "შენახვა",
-    "deleteAllTriggers": "ყველა ტრიგერის წაშლა"
-  },
-  "settings": {
-    "import": "იმპორტი",
-    "export": "ექსპორტი (CSV)",
-    "funnelSetup": "ძაბრის კონფიგურაცია",
-    "cardAppearance": "ბარათის გარეგნობა",
-    "findDuplicates": "დუბლიკატების პოვნა",
-    "massActions": "მასობრივი მოქმედებები"
-  },
-  "sources": {
-    "instagram": "Instagram",
-    "website": "ვებსაიტი",
-    "referral": "რეკომენდაცია",
-    "walk_in": "შემომავალი",
-    "facebook": "Facebook",
-    "admin": "ადმინი"
-  },
-  "toolbar": {
-    "selected": "არჩეულია",
-    "changeStatus": "სტატუსის შეცვლა",
-    "assign": "მინიჭება",
-    "delete": "წაშლა",
-    "manager": "მენეჯერი"
-  },
-  "emptyState": {
-    "notFound": "არაფერი მოიძებნა",
-    "tryChangingFilters": "სცადეთ შეცვალოთ ძიების პარამეტრები ან ფილტრები.",
-    "resetFilters": "ფილტრების გადატვირთვა"
+    "noTasks": "ამოცანები არ არის",
+    "empty": "ცარიელი",
+    "moveHere": "აქ გადატანა",
+    "quickAdd": "+ სწრაფი დამატება..."
   },
   "list": {
     "selectAll": "ყველას არჩევა",
@@ -222,17 +156,6 @@
     "today": "დღეს",
     "yesterday": "გუშინ",
     "daysAgo": "დღის წინ"
-  },
-  "kanban": {
-    "noDeals": "გარიგებები არ არის",
-    "dragHere": "გადაიტანეთ აქ",
-    "createDeal": "გარიგების შექმნა",
-    "changeStage": "ეტაპის შეცვლა",
-    "budget": "ბიუჯეტი",
-    "noTasks": "ამოცანები არ არის",
-    "empty": "ცარიელი",
-    "moveHere": "აქ გადატანა",
-    "quickAdd": "+ სწრაფი დამატება..."
   },
   "drawer": {
     "contact": "კონტაქტი",
@@ -304,6 +227,40 @@
     "moveHere": "აქ გადატანა",
     "doubleClickToEdit": "ორჯერ დააწკაპუნეთ სახელის შესაცვლელად",
     "insertStage": "ეტაპის ჩასმა"
+  },
+  "settings": {
+    "import": "იმპორტი",
+    "export": "ექსპორტი (CSV)",
+    "funnelSetup": "ძაბრის კონფიგურაცია",
+    "cardAppearance": "ბარათის გარეგნობა",
+    "findDuplicates": "დუბლიკატების პოვნა",
+    "massActions": "მასობრივი მოქმედებები"
+  },
+  "sources": {
+    "instagram": "Instagram",
+    "website": "ვებსაიტი",
+    "referral": "რეკომენდაცია",
+    "walk_in": "შემომავალი",
+    "facebook": "Facebook",
+    "admin": "ადმინი"
+  },
+  "toolbar": {
+    "selected": "არჩეულია",
+    "changeStatus": "სტატუსის შეცვლა",
+    "assign": "მინიჭება",
+    "delete": "წაშლა",
+    "manager": "მენეჯერი"
+  },
+  "emptyState": {
+    "notFound": "არაფერი მოიძებნა",
+    "tryChangingFilters": "სცადეთ შეცვალოთ ძიების პარამეტრები ან ფილტრები.",
+    "resetFilters": "ფილტრების გადატვირთვა"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "გაფრთხილება: ბინის სტატუსის საჭირო ტრიგერები აკლია",
+    "funnelTriggersDesc": "ჯავშნებისა და გაყიდვების სწორად დასამუშავებლად, დააყენეთ ტრიგერები, რომლებიც ცვლის შეკრული ბინის სტატუსს „დაჯავშნული“ და „გაყიდული“ ყველა ძაბრში.",
+    "missingFunnels": "ძაბრებს აკლია ტრიგერები",
+    "funnelTriggersCta": "გახსენით ძაბრის დაყენება"
   },
   "cardAppearance": {
     "title": "ბარათის გარეგნობა",
@@ -405,6 +362,10 @@
     "selectStage": "ეტაპის არჩევა გადასატანად",
     "noAdditionalSettings": "ამ ტიპის მოქმედებისთვის დამატებითი პარამეტრები არ არის.",
     "descriptionRequired": "აღწერა არ შეიძლება იყოს ცარიელი.",
+    "tagsToAddPlaceholder": "დასამატებელი ტეგები (მძიმით გამოყოფილი)",
+    "apartmentStatusReserved": "დაცულია",
+    "apartmentStatusSold": "გაიყიდა",
+    "apartmentStatusAvailable": "ხელმისაწვდომია",
     "icons": {
       "clock": "დაგვიანება",
       "distribution": "განაწილება",
@@ -412,7 +373,8 @@
       "statusChange": "სტატუსის შეცვლა",
       "editField": "ველის რედაქტირება",
       "addTag": "ტეგის დამატება",
-      "notification": "შეტყობინება"
+      "notification": "შეტყობინება",
+      "apartmentStatus": "ბინის სტატუსი"
     }
   },
   "cardFields": {

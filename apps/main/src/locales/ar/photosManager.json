@@ -1,0 +1,21 @@
+{
+  "apartmentOption": "شقة {{رقم}} (الدور {{طابق}})",
+  "authRequired": "المصادقة مطلوبة لتحميل الصور",
+  "deleteError": "حدث خطأ أثناء حذف الصورة",
+  "deleteSuccess": "تم حذف الصورة",
+  "description": "تحميل الصور الفردية لشقق محددة",
+  "duplicateError": "خطأ في تكرار الصور",
+  "duplicateSuccess": "الصور مكررة لـ {{count}} شقة مماثلة",
+  "duplicateToSimilar": "تكرار لشقق مماثلة",
+  "individualPhotos": "الصور الفردية",
+  "layoutPhotos": "صور التخطيط",
+  "noPhotos": "لم يتم تحميل أي صور",
+  "noPhotosDesc": "قم بتحميل الصور للشقة المختارة",
+  "selectApartment": "اختر شقة",
+  "selectApartmentPlaceholder": "اختر شقة لتحريرها",
+  "title": "إدارة صور الشقق",
+  "uploadError": "حدث خطأ أثناء تحميل الصور",
+  "uploadMultiple": "يمكنك تحديد ملفات متعددة في وقت واحد",
+  "uploadPhotos": "تحميل الصور",
+  "uploadSuccess": "تم تحميل الصور"
+}

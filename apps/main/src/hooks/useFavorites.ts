@@ -13,27 +13,61 @@ interface FavoriteApartment {
 }
 
 const FAVORITES_STORAGE_KEY = 'apartment-favorites';
+const FAVORITES_UPDATED_EVENT = 'gridix:favorites-updated';
+
+type FavoritesUpdatedDetail = FavoriteApartment[];
 
 export const useFavorites = (projectId?: string) => {
   const [favorites, setFavorites] = useState<FavoriteApartment[]>([]);
 
-  // Загружаем избранные из localStorage при инициализации
-  useEffect(() => {
+  const readFavoritesFromStorage = (): FavoriteApartment[] => {
     try {
       const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setFavorites(Array.isArray(parsed) ? parsed : []);
-      }
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.error('Error loading favorites from localStorage:', error);
+      return [];
     }
+  };
+
+  // Загружаем избранные из localStorage при инициализации + слушаем изменения
+  useEffect(() => {
+    setFavorites(readFavoritesFromStorage());
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== FAVORITES_STORAGE_KEY) return;
+      setFavorites(readFavoritesFromStorage());
+    };
+
+    const handleCustomEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<FavoritesUpdatedDetail>;
+      if (Array.isArray(customEvent.detail)) {
+        setFavorites(customEvent.detail);
+      } else {
+        setFavorites(readFavoritesFromStorage());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(FAVORITES_UPDATED_EVENT, handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(FAVORITES_UPDATED_EVENT, handleCustomEvent);
+    };
   }, []);
 
   // Сохраняем избранные в localStorage при изменении
   const saveFavoritesToStorage = (newFavorites: FavoriteApartment[]) => {
     try {
       localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
+      window.dispatchEvent(
+        new CustomEvent<FavoritesUpdatedDetail>(FAVORITES_UPDATED_EVENT, {
+          detail: newFavorites,
+        })
+      );
     } catch (error) {
       console.error('Error saving favorites to localStorage:', error);
     }

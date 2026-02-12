@@ -50,11 +50,11 @@ export interface BuildingFacadeViewProps {
   buildingFloors: BuildingFloor[];
   facadeSettings: FacadeSettings | null;
   loading: boolean;
+  selectedCurrency?: string;
   facades?: FacadeNavItem[];
   activeFacadeIndex?: number;
   onFacadeChange?: (nextIndex: number) => void;
 }
-
 
 
 

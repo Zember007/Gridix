@@ -104,6 +104,66 @@
     "share": "לַחֲלוֹק",
     "clientLinkPrompt": "קישור ללקוח"
   },
+  "drawer": {
+    "tabs": {
+      "overview": "סקירה כללית",
+      "units": "יחידות",
+      "construction": "בְּנִיָה",
+      "media": "כְּלֵי תִקְשׁוֹרֶת",
+      "partners": "שותפים",
+      "settings": "הגדרות"
+    },
+    "commission": {
+      "title": "העמלה שלך",
+      "active": "פָּעִיל",
+      "requiresContract": "דורש חוזה",
+      "condition": "תנאי תשלום",
+      "signOffer": "חתמו על ההצעה עם היזם כדי לנעול לקוחות ולקבל עמלה."
+    },
+    "stats": {
+      "roi": "החזר ROI",
+      "completion": "סִיוּם",
+      "priceFrom": "מחיר מ",
+      "units": "יחידות"
+    },
+    "about": {
+      "title": "לגבי הפרויקט",
+      "description": "מתחם מגורים מודרני באזור יוקרתי. אידיאלי למגורים ולהשקעה."
+    },
+    "quickAccess": "גישה מהירה",
+    "media": {
+      "title": "בנק מדיה לפרויקטים",
+      "downloadAll": "הורד הכל (ZIP)",
+      "renders": "מעבד",
+      "videos": "סרטונים",
+      "presentations": "מצגות",
+      "noMaterials": "אין חומרים",
+      "restricted": "הגישה מוגבלת",
+      "signToAccess": "חתום על החוזה עם היזם כדי לגשת לבנק המדיה.",
+      "connect": "לְחַבֵּר"
+    },
+    "construction": {
+      "title": "התקדמות הבנייה",
+      "noUpdates": "אין עדכונים"
+    },
+    "units": {
+      "legend": {
+        "available": "זָמִין",
+        "booked": "הוזמן",
+        "sold": "נמכר"
+      },
+      "downloadPdf": "הורד PDF"
+    },
+    "actions": {
+      "lock": "נעל לקוח",
+      "favorite": "הוסף לאוסף",
+      "share": "לַחֲלוֹק",
+      "becomePartner": "הפוך לשותף",
+      "pendingConfirmation": "ממתין לאישור",
+      "partnershipUnavailable": "שותפות לא זמינה",
+      "openPage": "פתח עמוד"
+    }
+  },
   "contacts": {
     "title": "אנשי קשר",
     "subtitle": "{{count}} אנשי קשר",
@@ -199,4 +259,3 @@
     }
   }
 }
-

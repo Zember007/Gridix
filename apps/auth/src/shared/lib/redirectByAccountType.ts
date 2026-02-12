@@ -45,6 +45,7 @@ export async function redirectToAppByAccountType(
 
   const agentCabinet = getEnv("VITE_AGENT_CABINET_URL", "https://agent.gridix.live");
   const mainApp = getEnv("VITE_MAIN_APP_URL", "https://app.gridix.live");
+  const partnersApp = getEnv("VITE_PARTNERS_APP_URL", "https://partner.gridix.live");
 
   const hash = new URLSearchParams({
     access_token: session.access_token,
@@ -59,13 +60,16 @@ export async function redirectToAppByAccountType(
       const allow = new Set([
         new URL(agentCabinet).origin,
         new URL(mainApp).origin,
+        new URL(partnersApp).origin,
       ]);
       if (allow.has(u.origin)) {
         const isAgentTarget = u.origin === new URL(agentCabinet).origin;
         const isMainTarget = u.origin === new URL(mainApp).origin;
+        const isPartnerTarget = u.origin === new URL(partnersApp).origin;
         const wrongTarget =
           (isAgentTarget && accountType !== "agent") ||
-          (isMainTarget && accountType === "agent");
+          (isMainTarget && (accountType === "agent" || accountType === "partner")) ||
+          (isPartnerTarget && accountType !== "partner");
         if (!wrongTarget) {
           const base = `${u.origin}${u.pathname}${u.search}`;
           window.location.replace(`${base}#${hash}`);
@@ -77,7 +81,14 @@ export async function redirectToAppByAccountType(
     }
   }
 
-  const targetBase = accountType === "agent" ? agentCabinet : mainApp;
+  let targetBase: string;
+  if (accountType === "agent") {
+    targetBase = agentCabinet;
+  } else if (accountType === "partner") {
+    targetBase = partnersApp;
+  } else {
+    targetBase = mainApp;
+  }
   const langFromUrl = lang ?? (window.location.pathname.split("/")[1] || "en");
   window.location.replace(`${targetBase}/${langFromUrl}/#${hash}`);
 }

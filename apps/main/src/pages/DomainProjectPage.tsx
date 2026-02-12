@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 import { useProjectByDomain } from "@/entities/project/queries/useProjectByDomain";
 import { Loader2, AlertTriangle } from "lucide-react";
-import ProjectApartmentSelector from "@/components/ProjectApartmentSelector";
+import { ProjectApartmentSelector } from '@/components';
 import { Alert, AlertDescription, AlertTitle } from "@gridix/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";

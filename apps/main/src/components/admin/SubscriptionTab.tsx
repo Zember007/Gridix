@@ -147,7 +147,6 @@ export default function SubscriptionTab() {
 
   const durationOptions = [
     { value: 1, label: t('admin.subscriptionPage.durations.1') },
-    { value: 3, label: t('admin.subscriptionPage.durations.3') },
     { value: 6, label: t('admin.subscriptionPage.durations.6') },
     { value: 12, label: t('admin.subscriptionPage.durations.12') },
   ];

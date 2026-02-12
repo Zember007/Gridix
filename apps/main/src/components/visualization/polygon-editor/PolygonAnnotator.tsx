@@ -64,6 +64,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
     showLabels = false,
     labelsById
 }, ref) => {
+
     const annotations = useAnnotations<Annotation>();
     const annotator = useAnnotator();
     const viewer = useViewer();
@@ -394,7 +395,7 @@ const AnnotatorContent = forwardRef<PolygonAnnotatorRef, PolygonAnnotatorProps>(
         showNavigationControl: true,
         showNavigator: true,
         navigatorPosition: 'BOTTOM_RIGHT',
-        defaultZoomLevel: 0.5,
+        defaultZoomLevel: 0.8,
         minZoomLevel: 0.5,
         maxZoomLevel: 10,
         visibilityRatio: 1.0,

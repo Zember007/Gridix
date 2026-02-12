@@ -23,6 +23,8 @@ import {
 } from "./dropdown-menu";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
+import { Button } from "./button";
+import { MessageCircleQuestionMark } from "lucide-react";
 
 const normalizePreferredLanguage = (value: unknown): Language | null => {
   const raw = String(value ?? "").trim().toLowerCase();
@@ -79,9 +81,8 @@ const ProfileFooterMenu = ({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`flex items-center w-full ${
-            isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"
-          } rounded-md hover:bg-opacity-80 transition-colors`}
+          className={`flex items-center w-full ${isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"
+            } rounded-md hover:bg-opacity-80 transition-colors`}
           style={{ backgroundColor: "transparent" }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
@@ -142,7 +143,7 @@ const ProfileFooterMenu = ({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer" style={{ color: ADMIN_THEME.sidebarText }}>
             <Globe className="h-4 w-4" />
-            <span className="flex-1">{t("common.language") || "Language"}</span>
+            <span className="flex-1">{t("common.language")}</span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent
             className="w-48"
@@ -154,9 +155,8 @@ const ProfileFooterMenu = ({
             {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
               <DropdownMenuItem
                 key={code}
-                className={`cursor-pointer pl-8 ${
-                  language === code ? "!bg-[var(--admin-sidebar-active-background)]" : "hover:!bg-[var(--admin-sidebar-active-background)]"
-                }`}
+                className={`cursor-pointer pl-8 ${language === code ? "!bg-[var(--admin-sidebar-active-background)]" : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                  }`}
                 style={{ color: ADMIN_THEME.sidebarText }}
                 onSelect={() => {
                   void handleSelectLanguage(code as Language);
@@ -336,9 +336,8 @@ export function SimplifiedSidebar({
           {!isMobile && (
             <button
               onClick={onToggleCollapse}
-              className={`flex items-center justify-center rounded-lg transition-colors duration-200 ${
-                isCollapsed ? "px-3 py-2" : "p-1"
-              }`}
+              className={`flex items-center justify-center rounded-lg transition-colors duration-200 ${isCollapsed ? "px-3 py-2" : "p-1"
+                }`}
               style={{ color: ADMIN_THEME.sidebarText, border: `1px solid transparent` }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
@@ -352,9 +351,8 @@ export function SimplifiedSidebar({
               type="button"
             >
               <ChevronDownIcon
-                className={`h-4 w-4 transition-transform duration-300 ${
-                  isCollapsed ? "rotate-90" : "-rotate-90"
-                }`}
+                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
+                  }`}
               />
             </button>
           )}
@@ -386,12 +384,12 @@ export function SimplifiedSidebar({
                 onClick={hasChildren ? () => toggleExpand(item.id) : () => handleSectionChange(item.id)}
                 {...(hasChildren
                   ? {
-                      items: item.children!,
-                      activeItemId: activeSection,
-                      onItemClick: (id: string) => handleSectionChange(id),
-                      isExpanded,
-                      onToggleExpand: () => toggleExpand(item.id),
-                    }
+                    items: item.children!,
+                    activeItemId: activeSection,
+                    onItemClick: (id: string) => handleSectionChange(id),
+                    isExpanded,
+                    onToggleExpand: () => toggleExpand(item.id),
+                  }
                   : {})}
               />
             );
@@ -431,23 +429,56 @@ export function SimplifiedSidebar({
     </>
   );
 
+  const SupportButton = () => {
+    return (
+      <Button
+          size={"icon"}
+          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-1 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour "
+          style={{
+            backgroundColor: ADMIN_THEME.primary,
+            color: ADMIN_THEME.textOnPrimary,
+            borderColor: ADMIN_THEME.primary,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          onClick={() => {
+            window.open('https://t.me/gridix_bot', '_blank');
+          }}
+        >
+          <MessageCircleQuestionMark />
+        </Button>
+    );
+  };
+
   if (isMobile) {
     return (
-      <aside className="flex flex-col h-full overflow-hidden" style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}>
-        {sidebarContent}
-      </aside>
+      <>
+        <aside className="flex flex-col h-full overflow-hidden" style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}>
+          {sidebarContent}
+        </aside>
+        {/* Support Button */}
+        <SupportButton />
+      </>
     );
   }
 
   return (
-    <aside
-      className={`flex flex-col sidebar_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${
-        isCollapsed ? "w-28" : "w-64"
-      }`}
+    <><aside
+      className={`flex flex-col sidebar_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
+        }`}
       style={{ backgroundColor: ADMIN_THEME.sidebarBackground, borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
     >
       {sidebarContent}
     </aside>
+      {/* Support Button */}
+      <SupportButton />
+    </>
   );
 }
 

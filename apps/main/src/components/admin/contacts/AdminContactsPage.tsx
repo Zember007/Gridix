@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, Search, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Building2, FileDown, Search, User } from 'lucide-react';
 import { supabase } from "@gridix/utils/api";
 import { Input } from "@gridix/ui";
+import { showToast } from "@gridix/utils/lib";
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useLeads } from '@/entities/lead/queries/useLeads';
+import { Button } from "@gridix/ui";
 
 type ContactKind = 'lead' | 'agent';
 
@@ -27,6 +30,7 @@ const normalizePhone = (value: string | null | undefined) => (value ? value.repl
 const normalizeEmail = (value: string | null | undefined) => (value ? value.trim().toLowerCase() : '');
 
 export function AdminContactsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { activeWorkspaceId, isManagerMode } = useWorkspace();
 
@@ -36,6 +40,8 @@ export function AdminContactsPage() {
 
   const [query, setQuery] = useState('');
   const [kindFilter, setKindFilter] = useState<'all' | ContactKind>('all');
+
+  const noName = t('admin.contactsPage.noName');
 
   const agentsQuery = useQuery({
     queryKey: ['agent_applications', developerId],
@@ -69,7 +75,7 @@ export function AdminContactsPage() {
         byKey.set(key, {
           id: lead.id,
           kind: 'lead',
-          name: name || 'Без имени',
+          name: name || noName,
           email: lead.email?.trim() || null,
           phone: lead.phone?.trim() || null,
           createdAt: lead.created_at || null,
@@ -80,7 +86,7 @@ export function AdminContactsPage() {
         byKey.set(key, {
           ...existing,
           // Prefer non-empty fields if present in later leads
-          name: existing.name !== 'Без имени' ? existing.name : name || existing.name,
+          name: existing.name !== noName ? existing.name : name || existing.name,
           email: existing.email || (lead.email?.trim() || null),
           phone: existing.phone || (lead.phone?.trim() || null),
           createdAt: existing.createdAt && lead.created_at
@@ -92,14 +98,14 @@ export function AdminContactsPage() {
     }
 
     return Array.from(byKey.values());
-  }, [leads]);
+  }, [leads, noName]);
 
   const agentContacts: ContactRow[] = useMemo(() => {
     const rows = agentsQuery.data ?? [];
     return rows.map((a) => ({
       id: a.id,
       kind: 'agent',
-      name: (a.full_name || '').trim() || 'Без имени',
+      name: (a.full_name || '').trim() || noName,
       email: a.email?.trim() || null,
       phone: a.phone?.trim() || null,
       createdAt: a.created_at || null,
@@ -108,7 +114,7 @@ export function AdminContactsPage() {
         agentType: a.type ?? null,
       },
     }));
-  }, [agentsQuery.data]);
+  }, [agentsQuery.data, noName]);
 
   const allContacts: ContactRow[] = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -133,15 +139,68 @@ export function AdminContactsPage() {
 
   const isLoading = leadsLoading || agentsQuery.isLoading;
 
+  const handleExportCSV = () => {
+    if (allContacts.length === 0) {
+      showToast(
+        'info',
+        t('admin.contactsPage.toastNothingToExportTitle'),
+        t('admin.contactsPage.toastNothingToExportDesc'),
+      );
+      return;
+    }
+    const headers = [
+      t('admin.contactsPage.tableContact'),
+      t('admin.contactsPage.tableType'),
+      t('admin.contactsPage.tablePhone'),
+      t('admin.contactsPage.tableEmail'),
+      t('admin.contactsPage.tableDetails'),
+      t('admin.contactsPage.tableDate'),
+    ];
+    const typeLabel = (kind: ContactKind) =>
+      kind === 'agent' ? t('admin.contactsPage.typeAgent') : t('admin.contactsPage.typeClient');
+    const rows = allContacts.map((c) => {
+      const safeName = (c.name || '').replace(/"/g, '""');
+      const details =
+        c.kind === 'agent'
+          ? `${c.meta?.agentStatus ?? '—'}${c.meta?.agentType ? ` • ${c.meta.agentType}` : ''}`
+          : t('admin.contactsPage.detailsLeads', { count: c.meta?.leadCount ?? 1 });
+      const date = c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '—';
+      return `"${safeName}","${typeLabel(c.kind)}","${(c.phone ?? '').replace(/"/g, '""')}","${(c.email ?? '').replace(/"/g, '""')}","${details.replace(/"/g, '""')}","${date}"`;
+    });
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `contacts_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(
+      'success',
+      t('admin.contactsPage.toastExportDoneTitle'),
+      t('admin.contactsPage.toastExportDoneDesc'),
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Контакты</h2>
-          <p className="text-sm text-slate-500">
-            Клиенты из лидов и ваши агенты/партнёры.
-          </p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('admin.contactsPage.title')}</h2>
+          <p className="text-sm text-slate-500">{t('admin.contactsPage.description')}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportCSV}
+          disabled={isLoading || allContacts.length === 0}
+          className="shrink-0 gap-2"
+        >
+          <FileDown size={16} />
+          {t('admin.contactsPage.exportBtn')}
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -149,7 +208,7 @@ export function AdminContactsPage() {
           <div className="relative flex-1 max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <Input
-              placeholder="Поиск по имени, телефону или email..."
+              placeholder={t('admin.contactsPage.searchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-10 h-10 bg-slate-50 border-slate-200"
@@ -159,9 +218,9 @@ export function AdminContactsPage() {
           <div className="flex gap-2">
             {(
               [
-                { id: 'all', label: 'Все' },
-                { id: 'lead', label: 'Клиенты' },
-                { id: 'agent', label: 'Агенты' },
+                { id: 'all', labelKey: 'admin.contactsPage.filterAll' },
+                { id: 'lead', labelKey: 'admin.contactsPage.filterClients' },
+                { id: 'agent', labelKey: 'admin.contactsPage.filterAgents' },
               ] as const
             ).map((opt) => (
               <button
@@ -173,7 +232,7 @@ export function AdminContactsPage() {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>
@@ -183,18 +242,18 @@ export function AdminContactsPage() {
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4">Контакт</th>
-                <th className="px-6 py-4">Тип</th>
-                <th className="px-6 py-4">Телефон</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4 text-right">Детали</th>
+                <th className="px-6 py-4">{t('admin.contactsPage.tableContact')}</th>
+                <th className="px-6 py-4">{t('admin.contactsPage.tableType')}</th>
+                <th className="px-6 py-4">{t('admin.contactsPage.tablePhone')}</th>
+                <th className="px-6 py-4">{t('admin.contactsPage.tableEmail')}</th>
+                <th className="px-6 py-4 text-right">{t('admin.contactsPage.tableDetails')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {isLoading && (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
-                    Загрузка...
+                    {t('admin.contactsPage.loading')}
                   </td>
                 </tr>
               )}
@@ -202,7 +261,7 @@ export function AdminContactsPage() {
               {!isLoading && allContacts.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
-                    Контактов не найдено
+                    {t('admin.contactsPage.noContacts')}
                   </td>
                 </tr>
               )}
@@ -216,11 +275,14 @@ export function AdminContactsPage() {
                       <User size={18} className="text-[var(--admin-primary)]" />
                     );
 
-                  const typeLabel = c.kind === 'agent' ? 'Агент' : 'Клиент';
+                  const typeLabel =
+                    c.kind === 'agent'
+                      ? t('admin.contactsPage.typeAgent')
+                      : t('admin.contactsPage.typeClient');
                   const details =
                     c.kind === 'agent'
                       ? `${c.meta?.agentStatus ?? '—'}${c.meta?.agentType ? ` • ${c.meta.agentType}` : ''}`
-                      : `${c.meta?.leadCount ?? 1} лид(ов)`;
+                      : t('admin.contactsPage.detailsLeads', { count: c.meta?.leadCount ?? 1 });
 
                   return (
                     <tr key={`${c.kind}:${c.id}`} className="hover:bg-slate-50 transition-colors">

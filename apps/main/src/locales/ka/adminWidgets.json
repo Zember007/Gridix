@@ -22,5 +22,20 @@
   "title": "ვიჯეტები",
   "widgetScript": "ვიჯეტის სკრიპტი",
   "widgetScriptDesc": "ვიჯეტის ძირითადი JavaScript ფაილი",
-  "width": "სიგანე"
+  "width": "სიგანე",
+  "widgetDisplay": "ვიჯეტის ჩვენება",
+  "showAdvanced": "გაფართოებული პარამეტრები",
+  "hideAdvanced": "გაფართოების დამალვა",
+  "showFullProject": "სრული პროექტის ჩვენება",
+  "showFullProjectDesc": "აჩვენეთ სრული ბინის ჭადრაკის დაფა ფილტრებით ვიჯეტის ბლოკში.",
+  "showFloatingButton": "მცურავი ღილაკის ჩვენება",
+  "showFloatingButtonDesc": "აჩვენეთ კუთხეში მრგვალი ღილაკი პროექტის გვერდის ბმულით.",
+  "floatingButtonPosition": "მცურავი ღილაკის პოზიცია",
+  "floatingButtonSide": "მხარე",
+  "floatingButtonSideLeft": "მარცხენა",
+  "floatingButtonSideRight": "უფლება",
+  "floatingButtonBottomOffset": "ქვედა ოფსეტი (px)",
+  "floatingButtonSideOffset": "გვერდითი გადაადგილება (px)",
+  "floatingButtonPositionDesc": "პოზიციის პარამეტრები გამოიყენება მხოლოდ იმ შემთხვევაში, თუ ჩართულია მცურავი ღილაკი.",
+  "atLeastOneOptionRequired": "თქვენ უნდა ჩართოთ მინიმუმ ერთი ვარიანტი: პროექტის ჩვენება ან მცურავი ღილაკი."
 }

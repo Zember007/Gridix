@@ -1,6 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFavorites } from '@/hooks/useFavorites';
-import { formatPriceWithCurrency } from "@gridix/utils/lib";
+import { convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import { Card, CardContent } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
@@ -11,11 +11,12 @@ import { Apartment } from '@/entities/apartment/model/types';
 interface FavoritesTabProps {
   projectId: string;
   projectCurrency?: string | null;
+  selectedCurrency: string;
   handleViewApartment: (apartment: Apartment) => void
   fieldVisible: string[]
 }
 
-const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVisible }: FavoritesTabProps) => {
+const FavoritesTab = ({ projectId, projectCurrency, selectedCurrency, handleViewApartment, fieldVisible }: FavoritesTabProps) => {
   const { t } = useLanguage();
   const { favorites, removeFromFavorites } = useFavorites();
 
@@ -158,8 +159,12 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
               
                 <div className="mb-3">
                   <div className="text-lg font-bold text-gray-900">
-                    {apartment.price && fieldVisible.includes('price') ? formatPriceWithCurrency(apartment.price, projectCurrency || null) : t('common.priceOnRequest')}
-                  </div>
+                    {apartment.price && fieldVisible.includes('price')
+                        ? formatMoney(
+                            convertPrice(apartment.price, projectCurrency || null, selectedCurrency),
+                            selectedCurrency,
+                        )
+                        : t('common.priceOnRequest')}</div>
                 </div>
             
 

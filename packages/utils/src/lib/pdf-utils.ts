@@ -13,6 +13,7 @@ interface PDFGenerationOptions {
   apartment: Apartment;
   pdfUrl: string;
   pdf_main?: string | ArrayBuffer | Uint8Array | undefined;
+  apiUrl: string;
 }
 
 // Функция для загрузки PDF файла
@@ -36,9 +37,7 @@ const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promis
 };
 
 // Функция для загрузки PDF из API
-const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
-  const meta = import.meta as unknown as { env?: { VITE_API_URL?: string } };
-  const apiUrl = meta.env?.VITE_API_URL ?? '';
+const loadPDFFromAPI = async (pdfUrl: string, apiUrl: string): Promise<ArrayBuffer> => {
   const response = await fetch(`${apiUrl}/pdf?url=${pdfUrl}`);
   if (!response.ok) {
     throw new Error(`Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`);
@@ -50,13 +49,13 @@ const loadPDFFromAPI = async (pdfUrl: string): Promise<ArrayBuffer> => {
 const isMainPdf = true;
 
 export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
-  const { apartment, pdfUrl, pdf_main } = options;
+  const { apartment, pdfUrl, pdf_main, apiUrl } = options;
 
   const { PDFDocument } = await import('pdf-lib');
 
   try {
     // Загружаем PDF из API
-    const apiPdfBytes = await loadPDFFromAPI(pdfUrl);
+    const apiPdfBytes = await loadPDFFromAPI(pdfUrl, apiUrl);
     const apiPdfDoc = await PDFDocument.load(apiPdfBytes, { ignoreEncryption: true });
 
     // Если есть основной PDF, объединяем их

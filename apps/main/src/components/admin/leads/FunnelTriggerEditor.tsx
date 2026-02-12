@@ -45,7 +45,6 @@ export const FunnelTriggerEditor: React.FC<FunnelTriggerEditorProps> = ({
 
   const handleSave = () => {
     if (!description.trim()) {
-      alert(t('leads.triggers.descriptionRequired'));
       return;
     }
 

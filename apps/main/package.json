@@ -10,12 +10,14 @@
     "build:widget": "WIDGET_BUILD=true vite build --outDir ./public/widget",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@annotorious/react": "^3.7.12",
     "@google-cloud/translate": "^9.3.0",
     "@gridix/config": "workspace:*",
+    "@gridix/partner-program": "workspace:*",
     "@gridix/types": "workspace:*",
     "@gridix/ui": "workspace:*",
     "@gridix/utils": "workspace:*",
@@ -82,6 +84,7 @@
     "globals": "^15.9.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
+    "rtlcss": "^4.3.0",
     "tailwindcss": "^3.4.11",
     "tailwindcss-animate": "^1.0.7",
     "terser": "^5.36.0",
@@ -90,6 +93,7 @@
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-inspect": "^0.8.5"
+    "vite-plugin-inspect": "^0.8.5",
+    "vitest": "^4.0.18"
   }
 }

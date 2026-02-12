@@ -1,6 +1,6 @@
 {
   "chooseApartment": "اختر الشقة",
-  "filters" : "التصفيات",
+  "filters": "التصفيات",
   "filtersDescription": "التصفيات للبحث",
   "additionalInfo": "معلومات إضافية",
   "advancedFilters": "جميع التصفيات",
@@ -20,6 +20,7 @@
   "contactManager": "الاتصال بالمدير",
   "contactManagerNotConfigured": "معلومات الاتصال بالمدير غير مكونة",
   "contactMessage": "مرحبا! أنا مهتم بمشروع {{projectName}}. هل يمكنك تقديم معلومات إضافية؟",
+  "currency": "عملة",
   "chess": "الشطرنج",
   "facade": "الواجهة",
   "finishing": "التشطيب",
@@ -38,6 +39,7 @@
   "listView": "عرض القائمة",
   "loading": "جاري التحميل...",
   "location": "الموقع",
+  "moreFilters": "المزيد من المرشحات",
   "noBuildingPlan": "مخطط المبنى غير مكون",
   "noContactInfo": "معلومات الاتصال بالمدير غير مكونة",
   "noImage": "لم يتم تحميل الصورة",
@@ -62,5 +64,6 @@
   "table": "جدول",
   "total": "الإجمالي",
   "type": "النوع",
-  "viewApartments": "عرض {{count}} خيارات"
+  "viewApartments": "عرض {{count}} خيارات",
+  "plan_floor": "مخطط الطابق {{الطابق}}."
 }

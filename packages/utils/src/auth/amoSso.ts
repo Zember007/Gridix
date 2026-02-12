@@ -17,7 +17,7 @@ export async function exchangeAmoSsoToken(
   supabase: AmoSsoSupabaseClient,
   token: string,
 ): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("amocrm-sso-login", {
+  const { data, error } = await supabase.functions.invoke("sso-login", {
     body: { action: "verify", token },
   });
 

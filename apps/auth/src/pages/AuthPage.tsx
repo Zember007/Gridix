@@ -28,6 +28,7 @@ function safeRedirectUrl(input: string | null): string | null {
     const allowed = new Set([
       (import.meta as any).env?.VITE_MAIN_APP_URL,
       (import.meta as any).env?.VITE_AGENT_CABINET_URL,
+      (import.meta as any).env?.VITE_PARTNERS_APP_URL,
     ].filter(Boolean));
     // allow same-origin and known app bases
     if (u.origin === window.location.origin) return u.toString();
@@ -53,8 +54,16 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
 
   const mainAppUrl = (import.meta as any).env?.VITE_MAIN_APP_URL || "https://app.gridix.live";
   const agentCabinetUrl = (import.meta as any).env?.VITE_AGENT_CABINET_URL || "https://agent.gridix.live";
+  const partnersAppUrl = (import.meta as any).env?.VITE_PARTNERS_APP_URL || "https://partner.gridix.live";
 
-  const targetBase = accountType === "agent" ? agentCabinetUrl : mainAppUrl;
+  let targetBase: string;
+  if (accountType === "agent") {
+    targetBase = agentCabinetUrl;
+  } else if (accountType === "partner") {
+    targetBase = partnersAppUrl;
+  } else {
+    targetBase = mainAppUrl;
+  }
 
   const safe = safeRedirectUrl(params.redirectToUrl ?? null);
   const hash = new URLSearchParams({
@@ -68,15 +77,19 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
     const u = new URL(safe);
     const mainOrigin = new URL(mainAppUrl).origin;
     const agentOrigin = new URL(agentCabinetUrl).origin;
+    const partnersOrigin = new URL(partnersAppUrl).origin;
 
-    // Guard: developer/manager must NOT be redirected into agent-cabinet even if redirect_to points there.
-    // (and vice-versa for agent -> main app)
+    // Guard: prevent cross-account-type redirects
     const isAgentTarget = u.origin === agentOrigin;
     const isMainTarget = u.origin === mainOrigin;
+    const isPartnerTarget = u.origin === partnersOrigin;
 
-    if ((isAgentTarget && accountType !== "agent") || (isMainTarget && accountType === "agent")) {
-      // ignore redirect_to, use default landing below
-    } else {
+    const wrongTarget =
+      (isAgentTarget && accountType !== "agent") ||
+      (isMainTarget && (accountType === "agent" || accountType === "partner")) ||
+      (isPartnerTarget && accountType !== "partner");
+
+    if (!wrongTarget) {
       const base = `${u.origin}${u.pathname}${u.search}`;
       window.location.href = `${base}#${hash}`;
       return;
@@ -84,7 +97,14 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
   }
 
   // Default landing
-  const defaultPath = accountType === "agent" ? `${targetBase}/${params.lang}/` : `${targetBase}/${params.lang}/admin`;
+  let defaultPath: string;
+  if (accountType === "agent") {
+    defaultPath = `${targetBase}/${params.lang}/`;
+  } else if (accountType === "partner") {
+    defaultPath = `${targetBase}/${params.lang}/`;
+  } else {
+    defaultPath = `${targetBase}/${params.lang}/admin`;
+  }
   window.location.href = `${defaultPath}#${hash}`;
 }
 

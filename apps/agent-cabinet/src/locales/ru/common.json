@@ -9,7 +9,8 @@
     "contacts": "Контакты",
     "leads": "Лиды",
     "payouts": "Выплаты",
-    "analytics": "Аналитика"
+    "analytics": "Аналитика",
+    "partnerProgram": "Партнёрская программа"
   },
   "common": {
     "loading": "Загрузка...",
@@ -258,4 +259,3 @@
     }
   }
 }
-

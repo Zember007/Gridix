@@ -1,0 +1,12 @@
+{
+  "app": {
+    "title": "الشراكة"
+  },
+  "nav": {
+    "overview": "ملخص",
+    "referrals": "الإحالات",
+    "clients": "العملاء",
+    "instructions": "تعليمات",
+    "account": "حساب"
+  }
+}

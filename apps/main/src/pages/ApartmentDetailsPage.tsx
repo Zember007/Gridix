@@ -74,6 +74,10 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [bitrixBusy, setBitrixBusy] = useState(false);
+  const [isBitrixDealPickerOpen, setIsBitrixDealPickerOpen] = useState(false);
+  const [bitrixDealsLoading, setBitrixDealsLoading] = useState(false);
+  const [bitrixDeals, setBitrixDeals] = useState<Array<{ id: number; title: string; stage_id?: string | null }>>([]);
+  const [bitrixDealsQuery, setBitrixDealsQuery] = useState("");
   const [recommendedApartments, setRecommendedApartments] = useState<Apartment[]>([]);
   const [recommendationThumbnails, setRecommendationThumbnails] = useState<Record<string, string | null>>({});
   const [selectedCurrency, setSelectedCurrency] = useState<string>('RUB');
@@ -96,14 +100,14 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     setBitrixDealId(bitrixContext.dealId);
   }, [bitrixContext.dealId]);
 
-  const patchSearchParams = (patch: Record<string, string | null>) => {
+  const patchSearchParams = useCallback((patch: Record<string, string | null>) => {
     const url = new URL(window.location.href);
     for (const [k, v] of Object.entries(patch)) {
       if (v === null || v === undefined || v === '') url.searchParams.delete(k);
       else url.searchParams.set(k, v);
     }
     navigate({ search: url.search }, { replace: true });
-  };
+  }, [navigate]);
 
   const selectBitrixDealId = async (): Promise<number> => {
     if (typeof BX24 === 'undefined') throw new Error('BX24 недоступен');
@@ -137,11 +141,39 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     });
   };
 
-  const ensureGridixAuth = async () => {
+  const ensureGridixAuth = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
     if (!data?.user) throw new Error('Нужно подключить Bitrix к аккаунту Gridix (SSO)');
     return data.user;
-  };
+  }, []);
+
+  const loadBitrixUnlinkedDeals = useCallback(async () => {
+    if (!apartment) return;
+    try {
+      setBitrixDealsLoading(true);
+      await ensureGridixAuth();
+      const { data, error } = await supabase.functions.invoke("bitrix-app", {
+        body: { action: "bitrix_list_unlinked_deals", project_id: apartment.project_id, limit: 50 },
+      });
+      if (error) throw error;
+      const deals = ((data as any)?.deals ?? []) as Array<any>;
+      const normalized = Array.isArray(deals)
+        ? deals
+          .map((d) => ({
+            id: Number(d?.id),
+            title: String(d?.title ?? ""),
+            stage_id: d?.stage_id ? String(d.stage_id) : null,
+          }))
+          .filter((d) => Number.isFinite(d.id) && d.id > 0 && d.title.trim().length > 0)
+        : [];
+      setBitrixDeals(normalized);
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Не удалось загрузить сделки Bitrix");
+    } finally {
+      setBitrixDealsLoading(false);
+    }
+  }, [apartment, ensureGridixAuth]);
 
   const bitrixCreateDeal = async () => {
     if (!apartment || !project) return;
@@ -169,13 +201,12 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   };
 
-  const bitrixLinkToDeal = async () => {
+  const linkApartmentToBitrixDeal = useCallback(async (dealId: number) => {
     if (!apartment || !project) return;
     try {
       setBitrixBusy(true);
       await ensureGridixAuth();
 
-      const dealId = bitrixDealId ?? (await selectBitrixDealId());
       setBitrixDealId(dealId);
       patchSearchParams({ crm: 'bitrix', deal_id: String(dealId) });
 
@@ -195,6 +226,22 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       toast.error(e instanceof Error ? e.message : 'Не удалось привязать квартиру к сделке');
     } finally {
       setBitrixBusy(false);
+    }
+  }, [apartment, ensureGridixAuth, patchSearchParams, project]);
+
+  const bitrixLinkToDeal = async () => {
+    if (!apartment || !project) return;
+
+    // If deal already known (Bitrix placement passed deal_id), link immediately.
+    if (bitrixDealId) {
+      await linkApartmentToBitrixDeal(bitrixDealId);
+      return;
+    }
+
+    // Otherwise show our non-blocking picker (instead of waiting on BX24.selectCRM).
+    setIsBitrixDealPickerOpen(true);
+    if (!bitrixDeals.length) {
+      void loadBitrixUnlinkedDeals();
     }
   };
 
@@ -545,7 +592,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
         apartment,
         pdfUrl,
         pdf_main: project?.pdf_presentation_url || undefined,
-
+        apiUrl: import.meta.env.VITE_API_URL || '',
       });
 
     } catch (error) {
@@ -1036,7 +1083,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                             style={getButtonStyle('available')}
                             onClick={() => setIsReserveDialogOpen(true)}
                           >
-                            {t('common.reserve')}
+                            {t('common.leaveRequest')}
                           </Button>
                         )}
 
@@ -1243,6 +1290,105 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
                 maxInstallmentMonths={project.max_installment_months || 24}
                 themeColor={(project as unknown as Record<string, unknown>)?.theme_color as string || '#000000'}
               />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Bitrix deal picker (avoid UI freeze on BX24.selectCRM) */}
+        {bitrixContext.isBitrix && (
+          <Dialog
+            open={isBitrixDealPickerOpen}
+            onOpenChange={(open) => {
+              setIsBitrixDealPickerOpen(open);
+              if (open) void loadBitrixUnlinkedDeals();
+              if (!open) setBitrixDealsQuery("");
+            }}
+          >
+            <DialogContent className="sm:max-w-[650px]">
+              <DialogHeader>
+                <DialogTitle>Выберите сделку Bitrix</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground">
+                  Показываем сделки без привязки к квартире (не “зафиксированные” в Gridix).
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    value={bitrixDealsQuery}
+                    onChange={(e) => setBitrixDealsQuery(e.target.value)}
+                    placeholder="Поиск по названию или #ID"
+                    className="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={bitrixDealsLoading || bitrixBusy}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => void loadBitrixUnlinkedDeals()}
+                    disabled={bitrixDealsLoading || bitrixBusy}
+                  >
+                    Обновить
+                  </Button>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const id = await selectBitrixDealId();
+                      setIsBitrixDealPickerOpen(false);
+                      await linkApartmentToBitrixDeal(id);
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Не удалось открыть выбор сделки");
+                    }
+                  }}
+                  disabled={bitrixDealsLoading || bitrixBusy}
+                >
+                  Выбрать через Bitrix (BX24)
+                </Button>
+
+                {bitrixDealsLoading ? (
+                  <div className="py-8 flex items-center justify-center">
+                    <Loader />
+                  </div>
+                ) : (
+                  <div className="max-h-[360px] overflow-auto rounded-md border border-border">
+                    {bitrixDeals
+                      .filter((d) => {
+                        const q = bitrixDealsQuery.trim().toLowerCase();
+                        if (!q) return true;
+                        return String(d.id).includes(q) || d.title.toLowerCase().includes(q);
+                      })
+                      .map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-b-0 disabled:opacity-50"
+                          onClick={async () => {
+                            setIsBitrixDealPickerOpen(false);
+                            await linkApartmentToBitrixDeal(d.id);
+                          }}
+                          disabled={bitrixBusy}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="font-medium">#{d.id}</div>
+                            {d.stage_id ? (
+                              <div className="text-xs text-muted-foreground">{d.stage_id}</div>
+                            ) : null}
+                          </div>
+                          <div className="text-sm text-muted-foreground break-words">{d.title}</div>
+                        </button>
+                      ))}
+
+                    {!bitrixDeals.length && (
+                      <div className="px-3 py-6 text-sm text-muted-foreground">
+                        Не найдено доступных сделок для привязки.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         )}

@@ -21,7 +21,19 @@ export const IntegrationsTab = () => {
                 <AmoCRMConnection />
 
                 {/* Bitrix24 Card */}
-                <Bitrix24Connection />
+                {/* <Bitrix24Connection /> */}
+
+                <Card className="opacity-60 border-dashed">
+                    <CardHeader>
+                        <CardTitle className="text-xl text-muted-foreground">Bitrix24</CardTitle>
+                        <CardDescription>{t('admin.common.comingSoon') || 'Coming Soon'}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-center py-8">
+                            <Package className="h-12 w-12 text-muted-foreground opacity-20" />
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Coming Soon Card */}
                 <Card className="opacity-60 border-dashed">

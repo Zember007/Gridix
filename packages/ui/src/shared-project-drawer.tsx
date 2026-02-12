@@ -1,9 +1,9 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   X,
   MapPin,
   Building2,
-  Wallet,
   Info,
   LayoutGrid,
   Hammer,
@@ -91,9 +91,6 @@ export interface SharedProjectDrawerProps {
   onClose: () => void;
   zIndex?: number;
 
-  // Translations
-  t?: (key: string, params?: Record<string, unknown>) => string;
-
   // Agent/Catalog mode actions
   onLock?: (project: SharedProject) => void;
   onConnect?: (project: SharedProject) => void;
@@ -116,61 +113,6 @@ export interface SharedProjectDrawerProps {
   initialTab?: SharedProjectDrawerTab;
 }
 
-// --- Utility Components ---
-
-const defaultT = (key: string, params?: Record<string, unknown>): string => {
-  const translations: Record<string, string> = {
-    "drawer.tabs.overview": "Overview",
-    "drawer.tabs.units": "Units",
-    "drawer.tabs.construction": "Construction",
-    "drawer.tabs.media": "Media",
-    "drawer.tabs.partners": "Partners",
-    "drawer.tabs.settings": "Settings",
-    "drawer.commission.title": "Your commission",
-    "drawer.commission.active": "Active",
-    "drawer.commission.requiresContract": "Requires contract",
-    "drawer.commission.condition": "Payment condition",
-    "drawer.commission.signOffer": "Sign the offer with the developer to lock clients and receive commission.",
-    "drawer.stats.roi": "ROI",
-    "drawer.stats.completion": "Completion",
-    "drawer.stats.priceFrom": "Price from",
-    "drawer.stats.units": "Units",
-    "drawer.about.title": "About project",
-    "drawer.about.description": "Modern residential complex in a prestigious area. Ideal for living and investment.",
-    "drawer.quickAccess": "Quick access",
-    "drawer.media.title": "Project media bank",
-    "drawer.media.downloadAll": "Download all (ZIP)",
-    "drawer.media.renders": "Renders",
-    "drawer.media.videos": "Videos",
-    "drawer.media.presentations": "Presentations",
-    "drawer.media.noMaterials": "No materials",
-    "drawer.media.restricted": "Access restricted",
-    "drawer.media.signToAccess": "Sign the contract with the developer to access the media bank.",
-    "drawer.media.connect": "Connect",
-    "drawer.construction.title": "Construction progress",
-    "drawer.construction.noUpdates": "No updates",
-    "drawer.units.legend.available": "Available",
-    "drawer.units.legend.booked": "Booked",
-    "drawer.units.legend.sold": "Sold",
-    "drawer.units.downloadPdf": "Download PDF",
-    "drawer.actions.lock": "Lock client",
-    "drawer.actions.favorite": "Add to collection",
-    "drawer.actions.share": "Share",
-    "drawer.actions.becomePartner": "Become a partner",
-    "drawer.actions.pendingConfirmation": "Pending confirmation",
-    "drawer.actions.partnershipUnavailable": "Partnership not available",
-    "drawer.actions.openPage": "Open page",
-  };
-
-  let result = translations[key] ?? key;
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => {
-      result = result.replace(`{{${k}}}`, String(v));
-    });
-  }
-  return result;
-};
-
 // --- Tab Components ---
 
 const OverviewTab: React.FC<{
@@ -182,7 +124,7 @@ const OverviewTab: React.FC<{
   return (
     <div className="p-6 space-y-6">
       {/* Commission Block */}
-      <div
+  {/*     <div
         className={`border rounded-xl p-4 flex gap-3 ${
           isConnected ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-200"
         }`}
@@ -215,7 +157,7 @@ const OverviewTab: React.FC<{
               : t("drawer.commission.signOffer")}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Stats Grid */}
    {/*    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -555,7 +497,6 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   mode,
   onClose,
   zIndex = 50,
-  t: externalT,
   onLock,
   onConnect,
   onShare,
@@ -570,7 +511,9 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   initialTab = "overview",
 }) => {
   void _onUpdate; // Reserved for future use
-  const t = externalT ?? defaultT;
+  const { t: tRaw } = useTranslation();
+  const t = (key: string, params?: Record<string, unknown>): string =>
+    tRaw(key, (params ?? {}) as Record<string, string | number>);
   const [activeTab, setActiveTab] = useState<SharedProjectDrawerTab>(initialTab);
 
   if (!project) return null;
@@ -604,7 +547,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
 
       {/* Drawer */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col border-l border-slate-200"
+        className="!mt-0 fixed inset-y-0 right-0 w-full max-w-3xl bg-white shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col border-l border-slate-200"
         style={{ zIndex }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -734,7 +677,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => onShare?.(project)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                className="py-3 px-4 h-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >
                 <Share2 size={16} />
               </button>
@@ -754,7 +697,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToEditor?.(project.id)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                className="py-3 px-4 h-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >
                 <Building2 size={16} />
               </button>
