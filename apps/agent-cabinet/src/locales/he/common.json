@@ -1,156 +1,201 @@
 {
   "app": {
-    "title": "Agent Cabinet"
+    "title": "קבינט סוכנים"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "application": "Application",
-    "projects": "Catalog",
-    "contacts": "Contacts",
-    "leads": "Leads",
-    "payouts": "Payouts",
-    "analytics": "Analytics"
+    "dashboard": "לוּחַ מַחווָנִים",
+    "application": "בַּקָשָׁה",
+    "projects": "קָטָלוֹג",
+    "contacts": "אנשי קשר",
+    "leads": "לידים",
+    "payouts": "תשלומים",
+    "analytics": "אנליטיקס",
+    "partnerProgram": "תוכנית שותפים"
   },
   "common": {
-    "loading": "Loading...",
-    "save": "Save",
-    "cancel": "Cancel",
-    "continue": "Continue",
+    "loading": "טְעִינָה...",
+    "save": "לְהַצִיל",
+    "cancel": "לְבַטֵל",
+    "continue": "לְהַמשִׁיך",
     "empty": "—"
   },
   "auth": {
-    "email": "Email",
-    "sendLink": "Send magic link",
-    "signOut": "Sign out",
-    "checkEmailTitle": "Check your email",
-    "magicLinkSent": "Magic link has been sent.",
-    "processingLogin": "Processing login…",
-    "setPasswordTitle": "Set password",
-    "setPasswordDescription": "Your password is not set yet. Please create a password to continue.",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "savePassword": "Save password",
-    "passwordUpdated": "Password updated"
+    "email": "אֶלֶקטרוֹנִי",
+    "sendLink": "שלח קישור קסם",
+    "signOut": "צא",
+    "checkEmailTitle": "בדוק את האימייל שלך",
+    "magicLinkSent": "קישור קסם נשלח.",
+    "processingLogin": "מעבד התחברות...",
+    "setPasswordTitle": "הגדר סיסמה",
+    "setPasswordDescription": "הסיסמה שלך עדיין לא מוגדרת. אנא צור סיסמה כדי להמשיך.",
+    "password": "סִיסמָה",
+    "confirmPassword": "אשר את הסיסמה",
+    "savePassword": "שמור סיסמה",
+    "passwordUpdated": "הסיסמה עודכנה"
   },
   "errors": {
-    "emailRequired": "Email is required.",
-    "failedToSendLink": "Failed to send link.",
-    "passwordMinLength": "Password must be at least 8 characters.",
-    "passwordsDontMatch": "Passwords do not match.",
-    "failedToUpdatePassword": "Failed to update password."
+    "emailRequired": "יש צורך באימייל.",
+    "failedToSendLink": "שליחת הקישור נכשלה.",
+    "passwordMinLength": "הסיסמה חייבת להיות באורך 8 תווים לפחות.",
+    "passwordsDontMatch": "הסיסמאות אינן תואמות.",
+    "failedToUpdatePassword": "עדכון הסיסמה נכשל."
   },
   "notFound": {
-    "title": "Page not found",
-    "goHome": "Go home"
+    "title": "הדף לא נמצא",
+    "goHome": "לך הביתה"
   },
   "workspace": {
-    "noActiveTitle": "No active workspace",
-    "pickInSidebar": "Pick a workspace in the sidebar."
+    "noActiveTitle": "אין סביבת עבודה פעילה",
+    "pickInSidebar": "בחר סביבת עבודה בסרגל הצד."
   },
   "moduleHeader": {
-    "searchPlaceholder": "Search…",
-    "financeTitle": "Finance",
-    "balanceLabel": "Your balance",
-    "create": "Create"
+    "searchPlaceholder": "לְחַפֵּשׂ…",
+    "financeTitle": "לְמַמֵן",
+    "balanceLabel": "האיזון שלך",
+    "create": "לִיצוֹר"
   },
   "dashboard": {
-    "title": "My dashboard",
-    "subtitleWorkspace": "Workspace: {{workspace}}",
-    "subtitleNoWorkspace": "Pick a workspace",
+    "title": "לוח המחוונים שלי",
+    "subtitleWorkspace": "סביבת עבודה: {{סביבת עבודה}}",
+    "subtitleNoWorkspace": "בחר סביבת עבודה",
     "metrics": {
-      "leads": "Leads",
-      "contactsSubtext": "Contacts: {{count}}",
-      "commissionPaid": "Commission paid",
-      "commissionPending": "Commission pending",
-      "projectsSubtext": "Projects: {{count}}",
-      "catalog": "Catalog",
-      "availableProjects": "Available projects"
+      "leads": "לידים",
+      "contactsSubtext": "אנשי קשר: {{count}}",
+      "commissionPaid": "עמלה ששולמה",
+      "commissionPending": "עמלה בהמתנה",
+      "projectsSubtext": "פרויקטים: {{count}}",
+      "catalog": "קָטָלוֹג",
+      "availableProjects": "פרויקטים זמינים"
     },
     "blocks": {
-      "dynamicsTitle": "Dynamics",
-      "inProgress": "In progress",
-      "pulseTitle": "Pulse",
-      "latestEvents": "Latest events",
-      "pulseLeads": "Leads: {{count}}",
-      "pulsePayouts": "Payouts:"
+      "dynamicsTitle": "דִינָמִיקָה",
+      "inProgress": "בתהליך",
+      "pulseTitle": "דוֹפֶק",
+      "latestEvents": "אירועים אחרונים",
+      "pulseLeads": "לידים: {{count}}",
+      "pulsePayouts": "תשלומים:"
+    },
+    "chart": {
+      "title": "דינמיקה של הכנסות",
+      "subtitle": "הכנסה מעמלה על פני 6 חודשים"
+    },
+    "activity": {
+      "title": "הזנת פעילות",
+      "empty": "אין פעילות אחרונה",
+      "system": "מַעֲרֶכֶת",
+      "newLead": "מוביל חדש",
+      "leadsLabel": "מוביל",
+      "commissionPaid": "עמלה ששולמה",
+      "pendingPayout": "ממתין לתשלום",
+      "recent": "לָאַחֲרוֹנָה",
+      "thisMonth": "החודש הזה",
+      "inPipeline": "בצנרת"
     }
   },
   "catalog": {
-    "title": "Catalog",
-    "subtitle": "Unified new builds catalog",
-    "subtitleWithWorkspace": "Unified new builds catalog • {{workspace}}",
-    "searchPlaceholder": "Search by project name…",
-    "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
-    "noProjects": "No public projects for the selected workspace yet.",
-    "open": "Open",
-    "share": "Share",
-    "clientLinkPrompt": "Client link"
+    "title": "קָטָלוֹג",
+    "subtitle": "קטלוג בנייה מאוחדת",
+    "subtitleWithWorkspace": "קטלוג בנייה מאוחדת • {{סביבת עבודה}}",
+    "searchPlaceholder": "חפש לפי שם הפרויקט...",
+    "filtersPlaceholder": "מסננים יועברו 1:1 מ-'gridix-visual' (מיקום/מחירים/סטטוסים).",
+    "noProjects": "אין עדיין פרויקטים ציבוריים עבור סביבת העבודה שנבחרה.",
+    "open": "לִפְתוֹחַ",
+    "details": "פרטים",
+    "share": "לַחֲלוֹק",
+    "clientLinkPrompt": "קישור ללקוח"
   },
   "contacts": {
-    "title": "Contacts",
-    "subtitle": "{{count}} contacts",
-    "subtitleWithWorkspace": "{{count}} contacts • {{workspace}}",
-    "searchPlaceholder": "Search and filter",
-    "notFound": "No contacts found.",
+    "title": "אנשי קשר",
+    "subtitle": "{{count}} אנשי קשר",
+    "subtitleWithWorkspace": "{{count}} אנשי קשר • {{סביבת עבודה}}",
+    "searchPlaceholder": "חפש וסנן",
+    "notFound": "לא נמצאו אנשי קשר.",
     "columns": {
-      "contact": "Contact"
+      "contact": "מַגָע"
     },
     "drawer": {
-      "leadsAndLast": "Leads: {{count}} • Last: {{last}}",
-      "contactsSection": "Contacts",
-      "projectsSection": "Projects",
-      "notSelected": "No contact selected."
+      "leadsAndLast": "הפניות: {{count}} • אחרונות: {{last}}",
+      "contactsSection": "אנשי קשר",
+      "projectsSection": "פרויקטים",
+      "notSelected": "לא נבחר איש קשר."
     }
   },
   "analytics": {
-    "title": "Analytics",
-    "subtitle": "Key performance overview",
-    "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "title": "אנליטיקס",
+    "subtitle": "סקירת ביצועים מפתח",
+    "subtitleWithWorkspace": "סקירה כללית של מדדי מפתח • {{סביבת עבודה}}",
+    "export": "יְצוּא",
     "views": {
-      "sales": "Sales",
-      "finance": "Finance"
+      "sales": "מכירות",
+      "finance": "לְמַמֵן",
+      "crm": "CRM"
     },
     "period": {
-      "last7": "Last 7 days",
-      "last30": "Last 30 days",
-      "quarter": "This quarter",
-      "year": "This year"
+      "last7": "7 ימים אחרונים",
+      "last30": "30 הימים האחרונים",
+      "quarter": "הרבעון הזה",
+      "year": "השנה"
     },
-    "loadError": "Failed to load analytics.",
+    "loadError": "טעינת הניתוח נכשלה.",
     "sales": {
-      "totalLeads": "Total leads",
-      "funnelByStage": "Funnel (by stage)",
-      "noStageData": "No stage data.",
-      "sources": "Sources",
-      "noSourceData": "No source data."
+      "totalLeads": "סך כל הפניות",
+      "funnelByStage": "משפך (לפי שלב)",
+      "noStageData": "אין נתוני שלב.",
+      "sources": "מקורות",
+      "noSourceData": "אין נתוני מקור."
+    },
+    "crm": {
+      "totalLeads": "סך כל הפניות",
+      "inFunnel": "במשפך",
+      "conversion": "הֲמָרָה",
+      "sources": "מקורות",
+      "funnelTitle": "משפך מכירות",
+      "sourceBreakdown": "מקורות מובילים"
     },
     "finance": {
-      "paid": "Paid",
-      "pending": "Pending",
-      "payoutsCount": "Payouts",
-      "registry": "Payout registry",
-      "noPayouts": "No payouts."
+      "paid": "בתשלום",
+      "pending": "תָלוּי וְעוֹמֵד",
+      "payoutsCount": "תשלומים",
+      "registry": "רישום תשלומים",
+      "registryTitle": "מרשם הנציבות",
+      "registryDescription": "עקוב אחר סטטוסי תשלום עמלות ממפתחים. הנתונים מתעדכנים אוטומטית בשינוי סטטוס העסקה.",
+      "noPayouts": "אין תשלומים.",
+      "pipeline": "צינור",
+      "inProgress": "בתהליך",
+      "dealsInWork": "עסקאות בעבודה",
+      "received": "התקבל",
+      "success": "הַצלָחָה",
+      "successDeals": "עסקאות מוצלחות",
+      "total": "סַך הַכֹּל",
+      "allTime": "כל הזמן",
+      "export": "יְצוּא",
+      "colAmount": "סְכוּם",
+      "colProject": "פּרוֹיֶקט",
+      "colDate": "תַאֲרִיך",
+      "colStatus": "סטָטוּס",
+      "statusPaid": "בתשלום",
+      "statusPending": "תָלוּי וְעוֹמֵד"
     }
   },
   "agent": {
-    "selectDeveloper": "Developer ID",
+    "selectDeveloper": "מזהה מפתח (מקישור הזמנה)",
     "application": {
-      "title": "Apply to developer",
-      "fullName": "Full name",
-      "phone": "Phone",
-      "bankDetails": "Bank details",
-      "agreements": "Agreements",
-      "signature": "Signature",
-      "drawSignature": "Draw",
-      "uploadSignature": "Upload",
-      "clear": "Clear",
-      "sign": "Sign agreement",
-      "submit": "Submit application"
+      "title": "הגשת בקשה למפתח",
+      "fullName": "שם מלא",
+      "phone": "טֵלֵפוֹן",
+      "bankDetails": "פרטי הבנק",
+      "agreements": "הסכמים",
+      "signature": "חֲתִימָה",
+      "drawSignature": "לִמְשׁוֹך",
+      "uploadSignature": "העלה",
+      "clear": "בָּרוּר",
+      "sign": "חתמו על הסכם",
+      "submit": "הגש בקשה"
     },
     "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "pending": "תָלוּי וְעוֹמֵד",
+      "approved": "מְאוּשָׁר",
+      "rejected": "נִדחֶה"
     }
   }
 }

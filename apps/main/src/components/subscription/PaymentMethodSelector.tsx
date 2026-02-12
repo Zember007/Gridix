@@ -92,7 +92,7 @@ export function PaymentMethodSelector({
 
           {selectedMethod === 'invoice' && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start gap-4">
                 {isSettingsComplete() ? (
                   <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                 ) : (

@@ -1,156 +1,201 @@
 {
   "app": {
-    "title": "Agent Cabinet"
+    "title": "خزانة الوكيل"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "application": "Application",
-    "projects": "Catalog",
-    "contacts": "Contacts",
-    "leads": "Leads",
-    "payouts": "Payouts",
-    "analytics": "Analytics"
+    "dashboard": "لوحة القيادة",
+    "application": "طلب",
+    "projects": "كتالوج",
+    "contacts": "اتصالات",
+    "leads": "يؤدي",
+    "payouts": "الدفعات",
+    "analytics": "التحليلات",
+    "partnerProgram": "برنامج الشريك"
   },
   "common": {
-    "loading": "Loading...",
-    "save": "Save",
-    "cancel": "Cancel",
-    "continue": "Continue",
+    "loading": "تحميل...",
+    "save": "يحفظ",
+    "cancel": "يلغي",
+    "continue": "يكمل",
     "empty": "—"
   },
   "auth": {
-    "email": "Email",
-    "sendLink": "Send magic link",
-    "signOut": "Sign out",
-    "checkEmailTitle": "Check your email",
-    "magicLinkSent": "Magic link has been sent.",
-    "processingLogin": "Processing login…",
-    "setPasswordTitle": "Set password",
-    "setPasswordDescription": "Your password is not set yet. Please create a password to continue.",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "savePassword": "Save password",
-    "passwordUpdated": "Password updated"
+    "email": "بريد إلكتروني",
+    "sendLink": "أرسل الرابط السحري",
+    "signOut": "تسجيل الخروج",
+    "checkEmailTitle": "تحقق من بريدك الإلكتروني",
+    "magicLinkSent": "تم إرسال الرابط السحري.",
+    "processingLogin": "جارٍ معالجة تسجيل الدخول…",
+    "setPasswordTitle": "تعيين كلمة المرور",
+    "setPasswordDescription": "لم يتم تعيين كلمة المرور الخاصة بك بعد. الرجاء إنشاء كلمة مرور للمتابعة.",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "savePassword": "حفظ كلمة المرور",
+    "passwordUpdated": "تم تحديث كلمة المرور"
   },
   "errors": {
-    "emailRequired": "Email is required.",
-    "failedToSendLink": "Failed to send link.",
-    "passwordMinLength": "Password must be at least 8 characters.",
-    "passwordsDontMatch": "Passwords do not match.",
-    "failedToUpdatePassword": "Failed to update password."
+    "emailRequired": "البريد الإلكتروني مطلوب.",
+    "failedToSendLink": "فشل في إرسال الرابط.",
+    "passwordMinLength": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    "passwordsDontMatch": "كلمات المرور غير متطابقة.",
+    "failedToUpdatePassword": "فشل تحديث كلمة المرور."
   },
   "notFound": {
-    "title": "Page not found",
-    "goHome": "Go home"
+    "title": "لم يتم العثور على الصفحة",
+    "goHome": "اذهب إلى المنزل"
   },
   "workspace": {
-    "noActiveTitle": "No active workspace",
-    "pickInSidebar": "Pick a workspace in the sidebar."
+    "noActiveTitle": "لا توجد مساحة عمل نشطة",
+    "pickInSidebar": "اختر مساحة عمل في الشريط الجانبي."
   },
   "moduleHeader": {
-    "searchPlaceholder": "Search…",
-    "financeTitle": "Finance",
-    "balanceLabel": "Your balance",
-    "create": "Create"
+    "searchPlaceholder": "يبحث…",
+    "financeTitle": "تمويل",
+    "balanceLabel": "رصيدك",
+    "create": "يخلق"
   },
   "dashboard": {
-    "title": "My dashboard",
-    "subtitleWorkspace": "Workspace: {{workspace}}",
-    "subtitleNoWorkspace": "Pick a workspace",
+    "title": "لوحة القيادة الخاصة بي",
+    "subtitleWorkspace": "مساحة العمل: {{مساحة العمل}}",
+    "subtitleNoWorkspace": "اختر مساحة عمل",
     "metrics": {
-      "leads": "Leads",
-      "contactsSubtext": "Contacts: {{count}}",
-      "commissionPaid": "Commission paid",
-      "commissionPending": "Commission pending",
-      "projectsSubtext": "Projects: {{count}}",
-      "catalog": "Catalog",
-      "availableProjects": "Available projects"
+      "leads": "يؤدي",
+      "contactsSubtext": "جهات الاتصال: {{عدد}}",
+      "commissionPaid": "العمولة مدفوعة",
+      "commissionPending": "اللجنة معلقة",
+      "projectsSubtext": "المشاريع: {{عدد}}",
+      "catalog": "كتالوج",
+      "availableProjects": "المشاريع المتاحة"
     },
     "blocks": {
-      "dynamicsTitle": "Dynamics",
-      "inProgress": "In progress",
-      "pulseTitle": "Pulse",
-      "latestEvents": "Latest events",
-      "pulseLeads": "Leads: {{count}}",
-      "pulsePayouts": "Payouts:"
+      "dynamicsTitle": "ديناميات",
+      "inProgress": "في تَقَدم",
+      "pulseTitle": "نبض",
+      "latestEvents": "آخر الأحداث",
+      "pulseLeads": "العملاء المتوقعون: {{عدد}}",
+      "pulsePayouts": "الدفعات:"
+    },
+    "chart": {
+      "title": "ديناميات الإيرادات",
+      "subtitle": "دخل العمولة على مدى 6 أشهر"
+    },
+    "activity": {
+      "title": "خلاصة النشاط",
+      "empty": "لا يوجد نشاط حديث",
+      "system": "نظام",
+      "newLead": "الرصاص الجديد",
+      "leadsLabel": "يؤدي",
+      "commissionPaid": "العمولة المدفوعة",
+      "pendingPayout": "في انتظار الدفع",
+      "recent": "حديثاً",
+      "thisMonth": "هذا الشهر",
+      "inPipeline": "في خط الأنابيب"
     }
   },
   "catalog": {
-    "title": "Catalog",
-    "subtitle": "Unified new builds catalog",
-    "subtitleWithWorkspace": "Unified new builds catalog • {{workspace}}",
-    "searchPlaceholder": "Search by project name…",
-    "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
-    "noProjects": "No public projects for the selected workspace yet.",
-    "open": "Open",
-    "share": "Share",
-    "clientLinkPrompt": "Client link"
+    "title": "كتالوج",
+    "subtitle": "كتالوج البناء الجديد الموحد",
+    "subtitleWithWorkspace": "كتالوج الإصدارات الجديدة الموحدة • {{مساحة العمل}}",
+    "searchPlaceholder": "البحث باسم المشروع...",
+    "filtersPlaceholder": "سيتم نقل المرشحات بنسبة 1:1 من `gridix-visual` (الموقع/الأسعار/الحالات).",
+    "noProjects": "لا توجد مشاريع عامة لمساحة العمل المحددة حتى الآن.",
+    "open": "يفتح",
+    "details": "تفاصيل",
+    "share": "يشارك",
+    "clientLinkPrompt": "رابط العميل"
   },
   "contacts": {
-    "title": "Contacts",
-    "subtitle": "{{count}} contacts",
-    "subtitleWithWorkspace": "{{count}} contacts • {{workspace}}",
-    "searchPlaceholder": "Search and filter",
-    "notFound": "No contacts found.",
+    "title": "اتصالات",
+    "subtitle": "{{عدد}} جهات الاتصال",
+    "subtitleWithWorkspace": "{{عدد}} جهات الاتصال • {{مساحة عمل}}",
+    "searchPlaceholder": "البحث والتصفية",
+    "notFound": "لم يتم العثور على جهات اتصال.",
     "columns": {
-      "contact": "Contact"
+      "contact": "اتصال"
     },
     "drawer": {
-      "leadsAndLast": "Leads: {{count}} • Last: {{last}}",
-      "contactsSection": "Contacts",
-      "projectsSection": "Projects",
-      "notSelected": "No contact selected."
+      "leadsAndLast": "العملاء المتوقعون: {{count}} • الأخير: {{last}}",
+      "contactsSection": "اتصالات",
+      "projectsSection": "المشاريع",
+      "notSelected": "لم يتم تحديد جهة اتصال."
     }
   },
   "analytics": {
-    "title": "Analytics",
-    "subtitle": "Key performance overview",
-    "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "title": "التحليلات",
+    "subtitle": "نظرة عامة على الأداء الرئيسي",
+    "subtitleWithWorkspace": "نظرة عامة على المقاييس الرئيسية • {{workspace}}",
+    "export": "يصدّر",
     "views": {
-      "sales": "Sales",
-      "finance": "Finance"
+      "sales": "مبيعات",
+      "finance": "تمويل",
+      "crm": "إدارة علاقات العملاء"
     },
     "period": {
-      "last7": "Last 7 days",
-      "last30": "Last 30 days",
-      "quarter": "This quarter",
-      "year": "This year"
+      "last7": "آخر 7 أيام",
+      "last30": "آخر 30 يومًا",
+      "quarter": "هذا الربع",
+      "year": "هذا العام"
     },
-    "loadError": "Failed to load analytics.",
+    "loadError": "فشل تحميل التحليلات.",
     "sales": {
-      "totalLeads": "Total leads",
-      "funnelByStage": "Funnel (by stage)",
-      "noStageData": "No stage data.",
-      "sources": "Sources",
-      "noSourceData": "No source data."
+      "totalLeads": "إجمالي العملاء المتوقعين",
+      "funnelByStage": "القمع (حسب المرحلة)",
+      "noStageData": "لا توجد بيانات المرحلة.",
+      "sources": "مصادر",
+      "noSourceData": "لا توجد بيانات المصدر."
+    },
+    "crm": {
+      "totalLeads": "إجمالي العملاء المتوقعين",
+      "inFunnel": "في القمع",
+      "conversion": "تحويل",
+      "sources": "مصادر",
+      "funnelTitle": "قمع المبيعات",
+      "sourceBreakdown": "مصادر الرصاص"
     },
     "finance": {
-      "paid": "Paid",
-      "pending": "Pending",
-      "payoutsCount": "Payouts",
-      "registry": "Payout registry",
-      "noPayouts": "No payouts."
+      "paid": "مدفوع",
+      "pending": "قيد الانتظار",
+      "payoutsCount": "الدفعات",
+      "registry": "سجل الدفع",
+      "registryTitle": "سجل اللجنة",
+      "registryDescription": "تتبع حالات دفع العمولة من المطورين. يتم تحديث البيانات تلقائيًا عند تغيير حالة الصفقة.",
+      "noPayouts": "لا دفعات.",
+      "pipeline": "خط أنابيب",
+      "inProgress": "في تَقَدم",
+      "dealsInWork": "الصفقات في العمل",
+      "received": "تلقى",
+      "success": "نجاح",
+      "successDeals": "صفقات ناجحة",
+      "total": "المجموع",
+      "allTime": "كل الوقت",
+      "export": "يصدّر",
+      "colAmount": "كمية",
+      "colProject": "مشروع",
+      "colDate": "تاريخ",
+      "colStatus": "حالة",
+      "statusPaid": "مدفوع",
+      "statusPending": "قيد الانتظار"
     }
   },
   "agent": {
-    "selectDeveloper": "Developer ID",
+    "selectDeveloper": "معرف المطور (من رابط الدعوة)",
     "application": {
-      "title": "Apply to developer",
-      "fullName": "Full name",
-      "phone": "Phone",
-      "bankDetails": "Bank details",
-      "agreements": "Agreements",
-      "signature": "Signature",
-      "drawSignature": "Draw",
-      "uploadSignature": "Upload",
-      "clear": "Clear",
-      "sign": "Sign agreement",
-      "submit": "Submit application"
+      "title": "تنطبق على المطور",
+      "fullName": "الاسم الكامل",
+      "phone": "هاتف",
+      "bankDetails": "تفاصيل البنك",
+      "agreements": "الاتفاقيات",
+      "signature": "إمضاء",
+      "drawSignature": "يرسم",
+      "uploadSignature": "رفع",
+      "clear": "واضح",
+      "sign": "توقيع الاتفاقية",
+      "submit": "تقديم الطلب"
     },
     "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "pending": "قيد الانتظار",
+      "approved": "موافقة",
+      "rejected": "مرفوض"
     }
   }
 }

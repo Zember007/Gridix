@@ -160,7 +160,7 @@ const ApartmentSyncDialog = ({
             
             <div className="max-h-64 overflow-y-auto space-y-2 border rounded-lg p-3">
               {targetApartments.map((apartment) => (
-                <div key={apartment.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
+                <div key={apartment.id} className="flex items-start gap-4 p-3 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
                   <Checkbox
                     id={`apartment-${apartment.id}`}
                     checked={selectedApartments.has(apartment.id)}
