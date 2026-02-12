@@ -381,11 +381,9 @@ export const ProjectSidePanel = ({
                     )}
                   </div>
 
-                  {fieldVisibility.price && (
                     <div className="font-bold text-lg mt-1 text-gray-900">
-                      {formatPrice(apt.price || 0)}
+                      {fieldVisibility.price ? formatPrice(apt.price || 0) : tt('project.onRequest')}
                     </div>
-                  )}
                 </div>
               </div>
             ))
@@ -438,18 +436,18 @@ export const ProjectSidePanel = ({
           </div>
 
           {/* Price */}
-          {fieldVisibility.price && (
+
             <div className="px-6 py-4 shrink-0 bg-white">
               <div className="flex flex-col">
                 <span className="text-3xl font-bold text-gray-900">
-                  {formatPrice(state.apartment.price ?? undefined)}
+                  {fieldVisibility.price ? formatPrice(state.apartment.price ?? undefined): tt('project.onRequest')}
                 </span>
                 { state.apartment.price && fieldVisibility.area && <span className="text-sm text-gray-500 font-medium">
                   {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
                 </span>}
               </div>
             </div>
-          )}
+
 
           {/* Actions */}
           <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
