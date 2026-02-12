@@ -60,18 +60,27 @@ export async function consumeSupabaseSessionFromUrl(
     const hp = parseHashParams(window.location.hash);
     const access_token = hp.get("access_token");
     const refresh_token = hp.get("refresh_token");
+
     if (access_token && refresh_token) {
-      // If a session already exists in this storage, ensure we replace it.
-      // This is required for cross-app redirects where a user can already be logged in as someone else.
-      try {
-        await supabase.auth.signOut({ scope: "local" });
-      } catch {
-        // ignore
+      // setSession replaces any existing session; avoid signOut first to prevent "signal is aborted" (competing requests).
+      const isAbortError = (e: unknown) =>
+        e instanceof Error && (e.message.includes("abort") || e.name === "AbortError");
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          lastError = error ?? null;
+          if (!lastError) break;
+          if (!isAbortError(lastError)) break;
+        } catch (e) {
+          lastError = e instanceof Error ? e : new Error(String(e));
+          if (!isAbortError(lastError)) throw lastError;
+        }
       }
-      const { error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
-      });
+
       // Remove tokens from hash to avoid leaking them into history/screens.
       const keysToRemove = [
         "access_token",
@@ -85,9 +94,13 @@ export async function consumeSupabaseSessionFromUrl(
       ];
       keysToRemove.forEach((k) => hp.delete(k));
       replaceUrlHash(hp);
-      if (error) throw error;
+      if (lastError) throw lastError;
+    } else if (typeof window !== "undefined") {
     }
   } catch (e) {
+    const err = e as Error;
+    if (typeof window !== "undefined") {
+    }
     console.error("Failed to set session from hash tokens:", e);
   }
 }
