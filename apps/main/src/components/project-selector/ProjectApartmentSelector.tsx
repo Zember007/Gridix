@@ -1,4 +1,5 @@
 import { lazy, startTransition, Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useIsMobile } from "@gridix/ui";
 import { Project, useProject } from '@/entities/project/queries/useProjects';
 import { Apartment } from '@/entities/apartment/model/types';
@@ -43,8 +44,12 @@ interface ProjectApartmentSelectorProps {
 
 const ProjectApartmentSelector = ({
     projectId,
-    isWidget = false,
+    isWidget: isWidgetProp = false,
 }: ProjectApartmentSelectorProps) => {
+    const [searchParams] = useSearchParams();
+    const isWidgetFromUrl = searchParams.get('isWidget') === 'true';
+    const isWidget = isWidgetProp || isWidgetFromUrl;
+
     const { t, language } = useLanguage();
     const isMobile = useIsMobile();
     const { project } = useProject(projectId);
