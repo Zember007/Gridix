@@ -4,7 +4,8 @@ import { formatPriceWithCurrency } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import { Card, CardContent } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Heart, Home, Square, ExternalLink } from 'lucide-react';
+import { Heart, Home, Square, ExternalLink, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Apartment } from '@/entities/apartment/model/types';
 
@@ -79,6 +80,42 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
     removeFromFavorites(apartmentId);
   };
 
+  const buildShareUrl = () => {
+    const url = new URL(window.location.href);
+    if (projectFavorites.length > 0) {
+      url.searchParams.set(
+        'favorites',
+        projectFavorites
+          .map((f) => String(f.apartment_number).trim())
+          .filter(Boolean)
+          .join(','),
+      );
+    } else {
+      url.searchParams.delete('favorites');
+    }
+    return url.toString();
+  };
+
+  const handleShareFavorites = async () => {
+    const url = buildShareUrl();
+    const title = t('favorites.title') || 'Подборка';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('common.copied'));
+      }
+    } catch (error) {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('common.copied'));
+      } catch (err) {
+        console.error('Error copying link to clipboard:', err);
+      }
+    }
+  };
+
   if (projectFavorites.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -99,6 +136,10 @@ const FavoritesTab = ({ projectId, projectCurrency, handleViewApartment, fieldVi
         <h2 className="text-lg font-semibold text-gray-900">
           {t('favorites.title') || 'Избранные квартиры'} ({projectFavorites.length})
         </h2>
+        <Button variant="outline" size="sm" onClick={handleShareFavorites}>
+          <Share2 className="h-4 w-4 mr-2" />
+          {t('common.share')}
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

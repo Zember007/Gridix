@@ -56,7 +56,12 @@ const ProjectApartmentSelector = ({
     const isMobile = useIsMobile();
     const {project} = useProject(projectId);
     const {fields: fieldSettings} = useFields(project?.id || null);
-    const {favoritesCount} = useFavorites(project?.id || undefined);
+    const {
+        favoritesCount,
+        favoritesForProject,
+        addToFavorites,
+        isFavorite,
+    } = useFavorites(project?.id || projectId);
     const {user} = useAuth();
 
     // State
@@ -107,6 +112,18 @@ const ProjectApartmentSelector = ({
         !!activeFacadeImageUrl;
 
     const {containerRef, scrollWidgetToTop} = useWidgetScroll(isWidget, [viewMode]);
+    const favoritesQueryNumbers = useMemo(() => {
+        try {
+            const sp = new URLSearchParams(window.location.search);
+            const raw = sp.get('favorites');
+            if (!raw) return [];
+            return Array.from(new Set(raw.split(',').map((v) => v.trim()).filter(Boolean)));
+        } catch {
+            return [];
+        }
+    }, []);
+    const hasAppliedFavoritesFromQuery = useRef(false);
+    const projectFavorites = favoritesForProject ?? [];
 
     // Load facades only when facade view is active
     useEffect(() => {
@@ -473,6 +490,75 @@ const ProjectApartmentSelector = ({
             }));
         }
     }, [projectId]);
+
+    const getFavoriteImageUrl = useCallback(
+        (apartment: Apartment): string | null => {
+            const layoutKey = apartment.type === 'apartment'
+                ? apartment.rooms == 0
+                    ? 'studio'
+                    : apartment.rooms === 'free_layout'
+                        ? 'free_layout'
+                        : `${apartment.rooms}-room`
+                : apartment.type;
+            const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+            return photos[0]?.image_url ?? null;
+        },
+        [preloadedLayoutPhotosByRooms],
+    );
+
+    useEffect(() => {
+        if (hasAppliedFavoritesFromQuery.current) return;
+        if (favoritesQueryNumbers.length === 0) {
+            hasAppliedFavoritesFromQuery.current = true;
+            return;
+        }
+        if (!apartmentsLoaded || apartments.length === 0) return;
+
+        const byNumber = new Map(apartments.map((apt) => [String(apt.apartment_number), apt]));
+        favoritesQueryNumbers.forEach((apartmentNumber) => {
+            const apt = byNumber.get(apartmentNumber);
+            if (!apt || isFavorite(apt.id)) return;
+            addToFavorites({
+                id: apt.id,
+                project_id: apt.project_id,
+                apartment_number: apt.apartment_number,
+                rooms: typeof apt.rooms === 'number' ? apt.rooms : Number(apt.rooms),
+                area: apt.area,
+                price: typeof apt.price === 'number' ? apt.price : 0,
+                status: apt.status,
+                floor_number: apt.floor_number,
+                image_url: getFavoriteImageUrl(apt),
+            });
+        });
+
+        hasAppliedFavoritesFromQuery.current = true;
+    }, [
+        apartments,
+        apartmentsLoaded,
+        favoritesQueryNumbers,
+        addToFavorites,
+        isFavorite,
+        getFavoriteImageUrl,
+    ]);
+
+    useEffect(() => {
+        if (favoritesQueryNumbers.length > 0 && !hasAppliedFavoritesFromQuery.current) {
+            return;
+        }
+        const url = new URL(window.location.href);
+        if (projectFavorites.length > 0) {
+            url.searchParams.set(
+                'favorites',
+                projectFavorites
+                    .map((fav) => String(fav.apartment_number).trim())
+                    .filter(Boolean)
+                    .join(','),
+            );
+        } else {
+            url.searchParams.delete('favorites');
+        }
+        window.history.replaceState(window.history.state, '', url.toString());
+    }, [projectFavorites, favoritesQueryNumbers]);
 
 
     const getVisibleFields = useCallback(
