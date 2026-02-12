@@ -2,6 +2,8 @@ import { Home } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { Badge } from '@gridix/ui';
 import { Apartment } from '@/entities/apartment/model/types';
+import type { FieldSetting } from '@/hooks/useFields';
+import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
 
 interface RecommendedApartmentCardProps {
   apartment: Apartment;
@@ -12,7 +14,10 @@ interface RecommendedApartmentCardProps {
   roomText: string;
   isPriceVisible?: boolean;
   isAreaVisible?: boolean;
+  visibility?: Partial<{ price: boolean; area: boolean }>;
+  fieldSettings?: FieldSetting[];
   formattedPrice?: string | null;
+  priceOnRequestText?: string;
   getStatusColor: (status: Apartment['status']) => string;
   getStatusStyle: (status: Apartment['status']) => CSSProperties;
   getStatusLabel: (status: Apartment['status']) => string;
@@ -27,13 +32,26 @@ const RecommendedApartmentCard = ({
   roomText,
   isPriceVisible = true,
   isAreaVisible = true,
+  visibility,
+  fieldSettings,
   formattedPrice,
+  priceOnRequestText = 'по запросу',
   getStatusColor,
   getStatusStyle,
   getStatusLabel,
 }: RecommendedApartmentCardProps) => {
-  const areaText = isAreaVisible ? `${apartment.area} m²` : '';
-  const detailsText = [roomText, areaText].filter(Boolean).join(' • ');
+  const settingsVisibility = fieldSettings ? getApartmentFieldVisibility(fieldSettings) : null;
+
+  const showPrice = settingsVisibility?.price ?? visibility?.price ?? isPriceVisible;
+  const showArea = settingsVisibility?.area ?? visibility?.area ?? isAreaVisible;
+
+  const detailsParts = [
+    roomText,
+    showArea ? `${apartment.area} m²` : null,
+    !showPrice ? priceOnRequestText : null,
+  ].filter((value): value is string => Boolean(value));
+
+  const detailsText = detailsParts.join(' • ');
 
   return (
     <div
@@ -69,7 +87,7 @@ const RecommendedApartmentCard = ({
           </span>
         </div>
         {detailsText && <div className="text-sm text-gray-600 mb-2 font-poppins">{detailsText}</div>}
-        {isPriceVisible && formattedPrice && (
+        {showPrice && formattedPrice && (
           <div className="text-lg font-medium text-gray-900 font-poppins">{formattedPrice}</div>
         )}
       </div>

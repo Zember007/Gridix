@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 import type { Apartment } from '@/entities/apartment/model/types';
+import type { FieldSetting } from '@/hooks/useFields';
 
 vi.mock('@gridix/ui', () => ({
   Badge: ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -28,29 +29,19 @@ const apartment: Apartment = {
   floor_plan_id: null,
 };
 
+const hiddenPriceSettings: FieldSetting[] = [
+  {
+    field_name: 'price',
+    field_label: 'Price',
+    field_type: 'number',
+    is_custom: false,
+    is_visible: false,
+    sort_order: 1,
+  },
+];
+
 describe('RecommendedApartmentCard visibility', () => {
-  it('hides price when isPriceVisible is false', () => {
-    const markup = renderToStaticMarkup(
-      <RecommendedApartmentCard
-        apartment={apartment}
-        thumbnailUrl={null}
-        onClick={() => undefined}
-        title="Apartment № 12"
-        floorLabel="floor"
-        roomText="2 rooms"
-        isPriceVisible={false}
-        isAreaVisible
-        formattedPrice="$150,000"
-        getStatusColor={() => 'text-green-600'}
-        getStatusStyle={() => ({})}
-        getStatusLabel={() => 'Available'}
-      />,
-    );
-
-    expect(markup).not.toContain('$150,000');
-  });
-
-  it('hides area and keeps details row clean when isAreaVisible is false', () => {
+  it('shows "по запросу" when price is hidden by field settings', () => {
     const markup = renderToStaticMarkup(
       <RecommendedApartmentCard
         apartment={apartment}
@@ -60,7 +51,31 @@ describe('RecommendedApartmentCard visibility', () => {
         floorLabel="floor"
         roomText="2 rooms"
         isPriceVisible
-        isAreaVisible={false}
+        isAreaVisible
+        fieldSettings={hiddenPriceSettings}
+        formattedPrice="$150,000"
+        getStatusColor={() => 'text-green-600'}
+        getStatusStyle={() => ({})}
+        getStatusLabel={() => 'Available'}
+      />,
+    );
+
+    expect(markup).toContain('по запросу');
+    expect(markup).not.toContain('$150,000');
+    expect(markup).not.toContain('₽');
+  });
+
+  it('hides area and keeps details row clean when area visibility is false', () => {
+    const markup = renderToStaticMarkup(
+      <RecommendedApartmentCard
+        apartment={apartment}
+        thumbnailUrl={null}
+        onClick={() => undefined}
+        title="Apartment № 12"
+        floorLabel="floor"
+        roomText="2 rooms"
+        isPriceVisible
+        visibility={{ area: false }}
         formattedPrice="$150,000"
         getStatusColor={() => 'text-green-600'}
         getStatusStyle={() => ({})}
@@ -69,7 +84,7 @@ describe('RecommendedApartmentCard visibility', () => {
     );
 
     expect(markup).not.toContain('m²');
-    expect(markup).not.toContain('•');
+    expect(markup).not.toContain('2 rooms • 42');
     expect(markup).toContain('2 rooms');
   });
 });
