@@ -11,6 +11,7 @@ import {
 } from "@gridix/ui";
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApartmentPopup from '@/components/visualization/ApartmentPopup';
+import type { FieldVisibility } from '../types';
 
 type ApartmentWithSection = Apartment & {
     section_number?: number | null;
@@ -23,8 +24,7 @@ type Props = {
     onOpenFloorPlan: (floorNumber: number) => void;
     themeColor: string;
     selectedCurrency: string;
-    isPriceVisible: boolean;
-    isAreaVisible: boolean;
+    fieldVisibility: FieldVisibility;
     // Extra props can be passed from parent; keep them optional for TS safety
     language?: string;
     t?: (key: string, options?: Record<string, unknown>) => string;
@@ -50,8 +50,7 @@ export const ChessView = ({
                               onApartmentSelect,
                               onOpenFloorPlan,
                               selectedCurrency,
-                              isPriceVisible,
-                              isAreaVisible,
+                              fieldVisibility,
                           }: Props) => {
     const [hoveredFloor, setHoveredFloor] = useState<number | null>(null);
 
@@ -177,14 +176,15 @@ export const ChessView = ({
                                                         <ApartmentPopup
                                                             apartment={apt}
                                                             variant="static"
-                                                            showFloor={false}
-                                                            showStatus={false}
+                                                            showFloor={fieldVisibility.floor}
                                                             settings={{
-                                                                showNumbers: true,
-                                                                showTooltip: true,
-                                                                showArea: isAreaVisible,
-                                                                showPrice: isPriceVisible,
+                                                                showNumbers: fieldVisibility.number,
+                                                                showTooltip: fieldVisibility.tooltip,
+                                                                showArea: fieldVisibility.area,
+                                                                showPrice: fieldVisibility.price,
+                                                                showRooms: fieldVisibility.rooms,
                                                             }}
+                                                            showStatus={fieldVisibility.status}
                                                             className="min-w-[200px]"
                                                             currency={project.currency || null}
                                                             selectedCurrency={selectedCurrency}

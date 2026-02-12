@@ -1,7 +1,7 @@
 import { ProjectSidePanel, type SidePanelState } from '../ProjectSidePanel';
 import type { Apartment } from '@/entities/apartment/model/types';
 import type { Project } from '@/entities/project/queries/useProjects';
-import type { LayoutPhoto } from '../types';
+import type { FieldVisibility, LayoutPhoto } from '../types';
 
 interface SidePanelWrapperProps {
     open: boolean;
@@ -16,6 +16,7 @@ interface SidePanelWrapperProps {
     onOpenApartmentDetails: (apartment: Apartment) => void;
     onOpenFloorPlan: (floorNumber: number) => void;
     selectedCurrency: string;
+    fieldVisibility: FieldVisibility;
 }
 
 export const SidePanelWrapper = ({
@@ -31,6 +32,7 @@ export const SidePanelWrapper = ({
     onOpenApartmentDetails,
     onOpenFloorPlan,
     selectedCurrency,
+    fieldVisibility,
 }: SidePanelWrapperProps) => {
     const panelProps = {
         open,
@@ -45,6 +47,7 @@ export const SidePanelWrapper = ({
         onOpenApartmentDetails,
         onOpenFloorPlan,
         selectedCurrency,
+        fieldVisibility,
     };
 
     return (

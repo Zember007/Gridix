@@ -8,6 +8,7 @@ type PopupSettings = {
   showTooltip: boolean;
   showArea: boolean;
   showPrice: boolean;
+  showRooms?: boolean;
 };
 
 type CommonProps = {
@@ -114,7 +115,7 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
           )}
 
           {/* Rooms */}
-          {apartment.rooms !== null && apartment.rooms !== undefined && (
+          {settings.showRooms !== false && apartment.rooms !== null && apartment.rooms !== undefined && (
               <div className="text-sm text-gray-600">
                 {t('project.rooms')}: {apartment.rooms === 0 ? 'S' : apartment.rooms}
               </div>

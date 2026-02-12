@@ -17,3 +17,13 @@ export interface LayoutPhoto {
     order_index: number;
     type: 'layout';
 }
+
+export interface FieldVisibility {
+    rooms: boolean;
+    floor: boolean;
+    price: boolean;
+    area: boolean;
+    number: boolean;
+    status: boolean;
+    tooltip: boolean;
+}
