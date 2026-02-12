@@ -8,6 +8,7 @@ type PopupSettings = {
   showTooltip: boolean;
   showArea: boolean;
   showPrice: boolean;
+  showRooms?: boolean;
 };
 
 type CommonProps = {
@@ -39,6 +40,27 @@ type StaticVariantProps = CommonProps & {
 
 type ApartmentPopupProps = AbsoluteVariantProps | StaticVariantProps;
 
+interface PopupContentOptions {
+  showStatus: boolean;
+  showFloor: boolean;
+}
+
+export const hasAnyPopupContent = (
+  settings: PopupSettings,
+  apartment: Apartment,
+  options: PopupContentOptions,
+): boolean => {
+  if (settings.showNumbers) return true;
+  if (options.showStatus) return true;
+  if (options.showFloor) return true;
+  if (settings.showArea) return true;
+  if (settings.showRooms !== false && apartment.rooms !== null && apartment.rooms !== undefined) return true;
+  // Keep popup useful when price is hidden: show "on request" fallback.
+  if (!settings.showPrice) return true;
+  if (typeof apartment.price === 'number' && apartment.price > 0) return true;
+  return false;
+};
+
 const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
                                                                                 apartment,
                                                                                 settings,
@@ -52,7 +74,7 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
                                                                               }, ref) => {
   const { t } = useLanguage();
 
-  if (!settings.showTooltip) return null;
+  if (!settings.showTooltip || !hasAnyPopupContent(settings, apartment, { showStatus, showFloor })) return null;
 
   const isAbsolute = variant !== 'static';
   const position = isAbsolute ? (rest as AbsoluteVariantProps).position : undefined;
@@ -104,17 +126,19 @@ const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
           )}
 
           {/* Price */}
-          {settings.showPrice && apartment.price && (
+          {(settings.showPrice ? !!apartment.price : true) && (
               <div className="text-sm font-semibold text-green-600">
-                {t('project.price')}: {formatMoney(
-                  convertPrice(apartment.price, currency || null, selectedCurrency || currency || null),
-                  selectedCurrency || currency || null,
-              )}
+                {t('project.price')}: {settings.showPrice && apartment.price
+                  ? formatMoney(
+                    convertPrice(apartment.price, currency || null, selectedCurrency || currency || null),
+                    selectedCurrency || currency || null,
+                  )
+                  : t('project.onRequest')}
               </div>
           )}
 
           {/* Rooms */}
-          {apartment.rooms !== null && apartment.rooms !== undefined && (
+          {settings.showRooms !== false && apartment.rooms !== null && apartment.rooms !== undefined && (
               <div className="text-sm text-gray-600">
                 {t('project.rooms')}: {apartment.rooms === 0 ? 'S' : apartment.rooms}
               </div>

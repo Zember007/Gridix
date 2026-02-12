@@ -8,6 +8,7 @@ import { useFields } from '@/hooks/useFields';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { FilterFieldKey, useProjectFilters } from './hooks/useProjectFilters';
+import type { FieldVisibility } from './types';
 import { ChessView } from './views/ChessView';
 import LoaderView from './views/LoaderView';
 import { useApartmentsData } from './hooks/useApartmentsData';
@@ -15,6 +16,7 @@ import { useBuildingImage } from './hooks/useBuildingImage';
 import { useFloorPolygons } from './hooks/useFloorPolygons';
 import { useWidgetScroll } from './hooks/useWidgetScroll';
 import { useFieldHelpers } from './hooks/useFieldHelpers';
+import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
 import { useSubscriptionStatus } from './hooks/useSubscriptionStatus';
 import { useFacadeData } from './hooks/useFacadeData';
 import { useUrlState } from './hooks/useUrlState';
@@ -65,21 +67,20 @@ const ProjectApartmentSelector = ({
 
     const filtersRef = useRef<HTMLDivElement>(null);
 
-    const visibleFilterFields = useMemo(() => {
-        const filterFieldKeys: FilterFieldKey[] = ['type', 'rooms', 'floor', 'price', 'area', 'number', 'status'];
-        return filterFieldKeys.reduce<Record<FilterFieldKey, boolean>>((acc, fieldKey) => {
-            acc[fieldKey] = fieldSettings.find(field => field.field_name === fieldKey)?.is_visible ?? true;
-            return acc;
-        }, {
-            type: true,
-            rooms: true,
-            floor: true,
-            price: true,
-            area: true,
-            number: true,
-            status: true,
-        });
-    }, [fieldSettings]);
+    const visibleFilterFields = useMemo<Record<FilterFieldKey, boolean>>(
+        () => getApartmentFieldVisibility(fieldSettings),
+        [fieldSettings],
+    );
+
+    const fieldVisibility = useMemo<FieldVisibility>(() => ({
+        rooms: visibleFilterFields.rooms,
+        floor: visibleFilterFields.floor,
+        price: visibleFilterFields.price,
+        area: visibleFilterFields.area,
+        number: visibleFilterFields.number,
+        status: visibleFilterFields.status,
+        tooltip: true,
+    }), [visibleFilterFields]);
 
     const {
         apartments,
@@ -356,6 +357,7 @@ const ProjectApartmentSelector = ({
                                                         selectedCurrency={filters.selectedCurrency}
                                                         isMobile={isMobile ?? false}
                                                         themeColor={themeColor}
+                                                        fieldVisibility={fieldVisibility}
                                                     />
                                                 </Suspense>
                                             ) : viewMode === 'chess' ? (
@@ -367,8 +369,7 @@ const ProjectApartmentSelector = ({
                                                         onOpenFloorPlan={openFloorPlanFromPanel}
                                                         themeColor={themeColor}
                                                         selectedCurrency={filters.selectedCurrency}
-                                                        isPriceVisible={filters.isPriceVisible}
-                                                        isAreaVisible={filters.isAreaVisible}
+                                                        fieldVisibility={fieldVisibility}
                                                         language={language}
                                                     />
                                                 </Suspense>
@@ -453,6 +454,7 @@ const ProjectApartmentSelector = ({
                             onOpenApartmentDetails={(apt) => void openApartmentDetails(apt)}
                             onOpenFloorPlan={openFloorPlanFromPanel}
                             selectedCurrency={filters.selectedCurrency}
+                            fieldVisibility={fieldVisibility}
                         />
                     </div>
 
