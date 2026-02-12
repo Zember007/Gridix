@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from "@gridix/utils/api";
 import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
+import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
+import RecommendedApartmentCard from '@/pages/components/RecommendedApartmentCard';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
 import ApartmentReservationForm from '@/components/apartment/ApartmentReservationForm';
 import InstallmentCalculator from '@/components/InstallmentCalculator';
@@ -603,12 +605,13 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   };
 
-  const priceVisible = fieldSettings.find(field => field.field_name === 'price')?.is_visible;
-  const areaVisible = fieldSettings.find(field => field.field_name === 'area')?.is_visible;
-  const roomsVisible = fieldSettings.find(field => field.field_name === 'rooms')?.is_visible;
-  const statusVisible = fieldSettings.find(field => field.field_name === 'status')?.is_visible;
-  const floorVisible = fieldSettings.find(field => field.field_name === 'floor')?.is_visible;
-  const numberVisible = fieldSettings.find(field => field.field_name === 'number')?.is_visible;
+  const fieldVisibility = useMemo(() => getApartmentFieldVisibility(fieldSettings), [fieldSettings]);
+  const priceVisible = fieldVisibility.price;
+  const areaVisible = fieldVisibility.area;
+  const roomsVisible = fieldVisibility.rooms;
+  const statusVisible = fieldVisibility.status;
+  const floorVisible = fieldVisibility.floor;
+  const numberVisible = fieldVisibility.number;
 
 
   const loading = projectLoading || apartmentLoading || photosLoading;
@@ -1127,58 +1130,41 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
               <div className="mt-12 space-y-6 bg-gray-50 rounded-2xl p-10">
                 <h2 className="text-3xl font-medium text-gray-900 font-poppins">Recommended apartments</h2>
                 <div className="grid grid-cols-4 gap-6">
-                  {recommendedApartments.map((recApartment) => (
-                    <div
-                      key={recApartment.id}
-                      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => openApartmentDetails(recApartment)}
-                    >
-                      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-                        {recommendationThumbnails[recApartment.id] ? (
-                          <img
-                            src={recommendationThumbnails[recApartment.id]!}
-                            alt={`Apartment ${recApartment.apartment_number}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            <Home className="h-12 w-12 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3">
-                          <Badge
-                            className={`${getStatusColor(recApartment.status)} px-2 py-1 rounded-full text-xs font-medium font-poppins`}
-                            style={getStatusStyle(recApartment.status)}
-                          >
-                            {getStatusLabel(recApartment.status)}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium text-gray-900 font-poppins">
-                            {recApartment.type === 'apartment' ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
-                              ? `Object № ${recApartment.apartment_number}`
-                              : `${t('apartment.apartment')} № ${recApartment.apartment_number}`) : `${recApartment.type} № ${recApartment.apartment_number}`}
-                          </h3>
-                          <span className="text-sm text-gray-500 font-poppins">
-                            {recApartment.floor_number} {t('project.floor')}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600 mb-2 font-poppins">
-                          {recApartment.rooms == 0 ? t('apartment.studio') : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`} • {recApartment.area} m²
-                        </div>
-                        {recApartment.price && priceVisible && (
-                          <div className="text-lg font-medium text-gray-900 font-poppins">
-                            {formatPriceWithCurrency(
-                              convertPrice(recApartment.price, project?.currency || null, selectedCurrency),
-                              selectedCurrency
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  {recommendedApartments.map((recApartment) => {
+                    const cardTitle = recApartment.type === 'apartment'
+                      ? ((project as unknown as Record<string, unknown>)?.project_type === 'object'
+                        ? `Object № ${recApartment.apartment_number}`
+                        : `${t('apartment.apartment')} № ${recApartment.apartment_number}`)
+                      : `${recApartment.type} № ${recApartment.apartment_number}`;
+
+                    const roomText = recApartment.rooms == 0
+                      ? t('apartment.studio')
+                      : `${recApartment.rooms} ${typeof recApartment.rooms === 'number' ? t('apartment.room') : ''}`;
+
+                    const formattedPrice = recApartment.price
+                      ? formatPriceWithCurrency(
+                        convertPrice(recApartment.price, project?.currency || null, selectedCurrency),
+                        selectedCurrency,
+                      )
+                      : null;
+
+                    return (
+                      <RecommendedApartmentCard
+                        key={recApartment.id}
+                        apartment={recApartment}
+                        thumbnailUrl={recommendationThumbnails[recApartment.id] ?? null}
+                        onClick={() => openApartmentDetails(recApartment)}
+                        title={cardTitle}
+                        floorLabel={t('project.floor')}
+                        roomText={roomText}
+                        fieldSettings={fieldSettings}
+                        formattedPrice={formattedPrice}
+                        getStatusColor={getStatusColor}
+                        getStatusStyle={getStatusStyle}
+                        getStatusLabel={getStatusLabel}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -15,6 +15,7 @@ import { useBuildingImage } from './hooks/useBuildingImage';
 import { useFloorPolygons } from './hooks/useFloorPolygons';
 import { useWidgetScroll } from './hooks/useWidgetScroll';
 import { useFieldHelpers } from './hooks/useFieldHelpers';
+import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
 import { useSubscriptionStatus } from './hooks/useSubscriptionStatus';
 import { useFacadeData } from './hooks/useFacadeData';
 import { useUrlState } from './hooks/useUrlState';
@@ -61,21 +62,10 @@ const ProjectApartmentSelector = ({
 
     const filtersRef = useRef<HTMLDivElement>(null);
 
-    const visibleFilterFields = useMemo(() => {
-        const filterFieldKeys: FilterFieldKey[] = ['type', 'rooms', 'floor', 'price', 'area', 'number', 'status'];
-        return filterFieldKeys.reduce<Record<FilterFieldKey, boolean>>((acc, fieldKey) => {
-            acc[fieldKey] = fieldSettings.find(field => field.field_name === fieldKey)?.is_visible ?? true;
-            return acc;
-        }, {
-            type: true,
-            rooms: true,
-            floor: true,
-            price: true,
-            area: true,
-            number: true,
-            status: true,
-        });
-    }, [fieldSettings]);
+    const visibleFilterFields = useMemo<Record<FilterFieldKey, boolean>>(
+        () => getApartmentFieldVisibility(fieldSettings),
+        [fieldSettings],
+    );
 
     const fieldVisibility = useMemo<FieldVisibility>(() => ({
         rooms: visibleFilterFields.rooms,
