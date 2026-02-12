@@ -349,7 +349,15 @@
     "registrationLinkLabel": "رابط تسجيل الوكيل",
     "linkHint": "أرسل هذا الرابط إلى وكيل أو مدير وكالة عقارية.",
     "emailInvite": "دعوة بالبريد الإلكتروني",
-    "qrCode": "رمز الاستجابة السريعة"
+    "qrCode": "رمز الاستجابة السريعة",
+    "emailPlaceholder": "البريد الإلكتروني للشريك",
+    "sendInvite": "أرسل الدعوة",
+    "sending": "إرسال…",
+    "inviteSent": "تم إرسال الدعوة",
+    "inviteFailed": "فشل إرسال الدعوة",
+    "qrTitle": "رمز الاستجابة السريعة لرابط التسجيل",
+    "qrDescription": "قم بالمسح الضوئي لفتح صفحة تسجيل الوكيل.",
+    "qrDownload": "تحميل PNG"
   },
   "generalConditions": {
     "title": "الشروط العامة",

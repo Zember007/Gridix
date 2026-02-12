@@ -39,7 +39,6 @@
   "userExistsEnterPassword": "Пользователь уже зарегистрирован. Введите пароль для продолжения.",
   "password": "Пароль",
   "passwordPlaceholder": "Введите пароль",
-  "passwordVerified": "Пароль подтверждён.",
   "companyType": "Компания (ООО)",
   "individualType": "Физ. лицо / ИП",
   "companyName": "Название компании",
@@ -67,5 +66,6 @@
   "signatureRequired": "Необходима подпись.",
   "nextButton": "Далее",
   "sending": "Отправляем...",
-  "signAndSubmit": "Подписать и отправить"
+  "signAndSubmit": "Подписать и отправить",
+  "passwordVerified": "Пароль подтверждён."
 }

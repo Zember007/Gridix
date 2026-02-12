@@ -349,7 +349,15 @@
     "registrationLinkLabel": "קישור לרישום סוכן",
     "linkHint": "שלח קישור זה לסוכן או מנהל משרד תיווך.",
     "emailInvite": "הזמנה באימייל",
-    "qrCode": "קוד QR"
+    "qrCode": "קוד QR",
+    "emailPlaceholder": "דוא\"ל של שותף",
+    "sendInvite": "שלח הזמנה",
+    "sending": "שְׁלִיחָה…",
+    "inviteSent": "ההזמנה נשלחה",
+    "inviteFailed": "שליחת ההזמנה נכשלה",
+    "qrTitle": "קוד QR לקישור הרשמה",
+    "qrDescription": "סרוק כדי לפתוח את דף הרישום של הסוכן.",
+    "qrDownload": "הורד PNG"
   },
   "generalConditions": {
     "title": "תנאים כלליים",
