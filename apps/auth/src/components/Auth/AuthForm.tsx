@@ -276,7 +276,7 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
                     >
                       {t("auth.developer")}
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       onClick={() => setAccountType("agent")}
                       className={[
@@ -287,7 +287,7 @@ export function AuthForm({ onSuccess, defaultMode }: AuthFormProps) {
                       ].join(" ")}
                     >
                       Agent
-                    </button>
+                    </button> */}
                     <button
                       type="button"
                       onClick={() => setAccountType("partner")}
