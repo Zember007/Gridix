@@ -98,9 +98,6 @@ export async function consumeSupabaseSessionFromUrl(
     } else if (typeof window !== "undefined") {
     }
   } catch (e) {
-    const err = e as Error;
-    if (typeof window !== "undefined") {
-    }
     console.error("Failed to set session from hash tokens:", e);
   }
 }
