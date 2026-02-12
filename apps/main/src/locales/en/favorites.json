@@ -1,7 +1,7 @@
 {
   "empty": {
-    "description": "Add apartments to favorites by tapping the heart",
-    "title": "No favorites yet"
+    "description": "Add apartments to collection by tapping the heart",
+    "title": "No collections yet"
   },
-  "title": "Favorites"
+  "title": "Collection"
 }
