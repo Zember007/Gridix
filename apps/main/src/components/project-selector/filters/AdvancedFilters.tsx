@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {Button, Input, RangeInput, Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
-import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
+import {cn, convertPrice, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import { FilterFieldKey, normalizePriceRangeForCurrencyChange } from '../hooks/useProjectFilters';
 import {RotateCcw} from 'lucide-react';
 import CurrencyToggle from '@/components/common/CurrencyToggle';
@@ -129,6 +129,19 @@ export const AdvancedFilters = ({
   const [advSearch, setAdvSearch] = useState(searchQuery);
   const [advCurrency, setAdvCurrency] = useState(selectedCurrency);
 
+  const [advMinPrice, advMaxPrice] = useMemo<[number, number]>(() => {
+    if (advCurrency === selectedCurrency) {
+      return [minPrice, maxPrice];
+    }
+
+    const convertedMin = convertPrice(minPrice, selectedCurrency, advCurrency);
+    const convertedMax = convertPrice(maxPrice, selectedCurrency, advCurrency);
+
+    return convertedMin <= convertedMax
+      ? [convertedMin, convertedMax]
+      : [convertedMax, convertedMin];
+  }, [advCurrency, selectedCurrency, minPrice, maxPrice]);
+
   useEffect(() => {
     if (!open) return;
     setAdvType(selectedType);
@@ -155,12 +168,18 @@ export const AdvancedFilters = ({
   const handleCurrencyChange = (nextCurrency: string) => {
     if (nextCurrency === advCurrency) return;
 
+    const nextMinPrice = convertPrice(minPrice, selectedCurrency, nextCurrency);
+    const nextMaxPrice = convertPrice(maxPrice, selectedCurrency, nextCurrency);
+    const [normalizedMinPrice, normalizedMaxPrice] = nextMinPrice <= nextMaxPrice
+      ? [nextMinPrice, nextMaxPrice]
+      : [nextMaxPrice, nextMinPrice];
+
     setAdvPrice(normalizePriceRangeForCurrencyChange({
       prevCurrency: advCurrency,
       nextCurrency,
       prevRange: advPrice,
-      minPrice,
-      maxPrice,
+      minPrice: normalizedMinPrice,
+      maxPrice: normalizedMaxPrice,
     }));
     setAdvCurrency(nextCurrency);
   };
@@ -297,8 +316,8 @@ export const AdvancedFilters = ({
       {visibleFilterFields.price && (
           <RangeInput
               label={t("project.price")}
-              min={minPrice}
-              max={maxPrice}
+              min={advMinPrice}
+              max={advMaxPrice}
               value={advPrice}
               onChange={(next) => setAdvPrice(next)}
               formatHint={formatPrice}
