@@ -50,38 +50,38 @@ export function useAgencyPartners() {
                 const uiStatus: AgencyPartner['status'] =
                     dbStatus === 'approved' ? 'active' :
                         dbStatus === 'needs_correction' ? 'needs_correction' :
-                        (dbStatus === 'blocked' || dbStatus === 'rejected') ? 'blocked' :
-                            // fallback for unexpected values
-                            'pending';
+                            (dbStatus === 'blocked' || dbStatus === 'rejected') ? 'blocked' :
+                                // fallback for unexpected values
+                                'pending';
 
                 return ({
-                id: item.id,
-                name: item.full_name,
-                type: (item.type || 'individual') as 'agency' | 'individual',
-                contactPerson: item.full_name,
-                phone: item.phone,
-                email: item.email,
-                status: uiStatus,
-                rejectionReason: item.rejection_reason ?? undefined,
-                commissionRate: item.commission_rate || 4,
-                source: 'website',
-                joinedAt: item.created_at,
-                agreementSigned: item.agreement_signed || false,
+                    id: item.id,
+                    name: item.full_name,
+                    type: (item.type || 'individual') as 'agency' | 'individual',
+                    contactPerson: item.full_name,
+                    phone: item.phone,
+                    email: item.email,
+                    status: uiStatus,
+                    rejectionReason: item.rejection_reason ?? undefined,
+                    commissionRate: item.commission_rate || 4,
+                    source: 'website',
+                    joinedAt: item.created_at,
+                    agreementSigned: item.agreement_signed || false,
                     bankDetails:
                         typeof item.bank_details === 'object' && item.bank_details !== null
-                            ? JSON.stringify(item.bank_details)
+                            ? { details: JSON.stringify(item.bank_details) }
                             : item.bank_details !== null && item.bank_details !== undefined
-                                ? String(item.bank_details)
-                                : undefined,
-                stats: {
-                    totalLeads: 0,
-                    activeDeals: 0,
-                    closedDeals: 0,
-                    totalRevenue: 0,
-                    commissionPaid: 0,
-                    commissionPending: 0
-                }
-            });
+                                ? { details: String(item.bank_details) }
+                                : { details: '' },
+                    stats: {
+                        totalLeads: 0,
+                        activeDeals: 0,
+                        closedDeals: 0,
+                        totalRevenue: 0,
+                        commissionPaid: 0,
+                        commissionPending: 0
+                    }
+                });
             });
 
             // Enrich stats: leads + commission (agent_payouts)
@@ -199,7 +199,7 @@ export function useAgencyPartners() {
                 status === 'active' ? 'approved' :
                     status === 'needs_correction' ? 'needs_correction' :
                         status === 'blocked' ? 'blocked' :
-                        'pending';
+                            'pending';
 
             const { data, error } = await supabase.functions.invoke('agent-program', {
                 body: {
