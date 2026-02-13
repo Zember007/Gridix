@@ -1,10 +1,1 @@
-/** @type {import("prettier").Config} */
-module.exports = {
-  printWidth: 100,
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
-  arrowParens: "always",
-  endOfLine: "lf",
-  plugins: ["prettier-plugin-tailwindcss"],
-};
+module.exports = require("./packages/config/prettier/prettier.config.cjs");
