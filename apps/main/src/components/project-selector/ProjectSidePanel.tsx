@@ -485,32 +485,8 @@ export const ProjectSidePanel = ({
 
 
             {/* Actions */}
-            <div className="px-6 py-4 grid grid-cols-[auto_auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
-              <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className={cn("h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50 hover:text-red-500", isFavorite(state.apartment.id) && "border-red-200 bg-red-50 text-red-500")}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFavoriteClick();
-                  }}
-              >
-                <Heart
-                    className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")}/>
-              </Button>
-              <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50"
-                  onClick={handleGeneratePDF}
-                  disabled={isGeneratingPDF}
-                  title="PDF"
-                  aria-label="PDF"
-              >
-                {isGeneratingPDF ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileDown className="h-5 w-5" />}
-              </Button>
+            <div className="px-6 py-4 flex flex-col gap-3 shrink-0 bg-white border-b border-gray-100">
+
               <Button
                   type="button"
                   className="h-12 text-lg font-semibold rounded-xl w-full text-white shadow-lg transition-all active:scale-[0.98]"
@@ -519,7 +495,38 @@ export const ProjectSidePanel = ({
               >
                 {ui.viewDetails}
               </Button>
+              <div className={'flex gap-3'}>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn("px-4 py-3 h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50 hover:text-red-500", isFavorite(state.apartment.id) && "border-red-200 bg-red-50 text-red-500")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFavoriteClick();
+                    }}
+                >
+                  <Heart
+                      className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")}/>
+                </Button>
 
+                <Button
+                    variant="outline"
+                    onClick={handleGeneratePDF}
+                    disabled={isGeneratingPDF}
+                    className={`px-4 py-3 h-12 w-12 rounded-xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && state.apartment.price && fieldVisibility.price ? '' : 'w-full'}`}
+                >
+
+                  {isGeneratingPDF ? (
+
+                      <Loader2 className="h-4 w-4 animate-spin"/>
+
+                  ) : (
+                      <FileDown className="h-5 w-5"/>
+
+                  )}
+                  <span className="hidden xs:block">PDF</span>
+                </Button></div>
             </div>
           </div>
         </div>
