@@ -334,13 +334,26 @@ export const useProjectFilters = ({
   const userInteractedRef = useRef(false);
   const didInitRangesRef = useRef(apartments.length > 0);
   const baseCurrency = getBaseCurrency(project?.currency);
+  const {
+    selectedFloor,
+    selectedRooms,
+    priceRange,
+    areaRange,
+    searchQuery,
+    showOnlyAvailable,
+    selectedType,
+    selectedCurrency,
+    priceRangeCurrency,
+  } = state;
 
   const bounds = useMemo(
-    () => computeBounds(apartments, project?.currency, state.selectedCurrency),
-    [apartments, project?.currency, state.selectedCurrency],
+    () => computeBounds(apartments, project?.currency, selectedCurrency),
+    [apartments, project?.currency, selectedCurrency],
   );
+  const priceBounds: [number, number] = [bounds.minPrice, bounds.maxPrice];
+  const areaBounds: [number, number] = [bounds.minArea, bounds.maxArea];
 
-  const previousCurrencyRef = useRef(state.selectedCurrency);
+  const previousCurrencyRef = useRef(selectedCurrency);
   const prevBoundsRef = useRef(bounds);
 
   const setSelectedFloor = useCallback(
@@ -425,19 +438,19 @@ export const useProjectFilters = ({
 
     didInitRangesRef.current = true;
     prevBoundsRef.current = computeBounds(apartments, project?.currency, baseCurrency);
-  }, [apartments, apartments.length, baseCurrency, project?.currency]);
+  }, [apartments, baseCurrency, project?.currency]);
 
   useEffect(() => {
     const prev = previousCurrencyRef.current;
-    const curr = state.selectedCurrency;
+    const curr = selectedCurrency;
 
-    if (apartments.length > 0 && prev !== curr && state.priceRangeCurrency !== curr) {
+    if (apartments.length > 0 && prev !== curr && priceRangeCurrency !== curr) {
       dispatch({
         type: 'SET_PRICE_RANGE',
         value: normalizePriceRangeForCurrencyChange({
           prevCurrency: prev,
           nextCurrency: curr,
-          prevRange: state.priceRange,
+          prevRange: priceRange,
           minPrice: bounds.minPrice,
           maxPrice: bounds.maxPrice,
         }),
@@ -449,9 +462,9 @@ export const useProjectFilters = ({
     apartments.length,
     bounds.maxPrice,
     bounds.minPrice,
-    state.priceRange,
-    state.priceRangeCurrency,
-    state.selectedCurrency,
+    priceRange,
+    priceRangeCurrency,
+    selectedCurrency,
   ]);
 
   useEffect(() => {
@@ -462,38 +475,38 @@ export const useProjectFilters = ({
 
     const prevBounds = prevBoundsRef.current;
 
-    if (state.priceRange[0] === prevBounds.minPrice && state.priceRange[1] === prevBounds.maxPrice) {
+    if (priceRange[0] === prevBounds.minPrice && priceRange[1] === prevBounds.maxPrice) {
       if (bounds.minPrice !== prevBounds.minPrice || bounds.maxPrice !== prevBounds.maxPrice) {
-        dispatch({ type: 'SET_PRICE_RANGE', value: [bounds.minPrice, bounds.maxPrice] });
+        dispatch({ type: 'SET_PRICE_RANGE', value: priceBounds });
       }
     }
 
-    if (state.areaRange[0] === prevBounds.minArea && state.areaRange[1] === prevBounds.maxArea) {
+    if (areaRange[0] === prevBounds.minArea && areaRange[1] === prevBounds.maxArea) {
       if (bounds.minArea !== prevBounds.minArea || bounds.maxArea !== prevBounds.maxArea) {
-        dispatch({ type: 'SET_AREA_RANGE', value: [bounds.minArea, bounds.maxArea] });
+        dispatch({ type: 'SET_AREA_RANGE', value: areaBounds });
       }
     }
 
     prevBoundsRef.current = bounds;
-  }, [apartments.length, bounds, state.areaRange, state.priceRange]);
+  }, [apartments.length, areaBounds, areaRange, bounds, priceBounds, priceRange]);
 
   useEffect(() => {
     if (apartments.length === 0) return;
 
     if (!visibility.price) {
-      const [priceMin, priceMax] = state.priceRange;
+      const [priceMin, priceMax] = priceRange;
       if (priceMin !== bounds.minPrice || priceMax !== bounds.maxPrice) {
-        dispatch({ type: 'SET_PRICE_RANGE', value: [bounds.minPrice, bounds.maxPrice] });
+        dispatch({ type: 'SET_PRICE_RANGE', value: priceBounds });
       }
     }
 
     if (!visibility.area) {
-      const [areaMin, areaMax] = state.areaRange;
+      const [areaMin, areaMax] = areaRange;
       if (areaMin !== bounds.minArea || areaMax !== bounds.maxArea) {
-        dispatch({ type: 'SET_AREA_RANGE', value: [bounds.minArea, bounds.maxArea] });
+        dispatch({ type: 'SET_AREA_RANGE', value: areaBounds });
       }
     }
-  }, [apartments.length, bounds, state.areaRange, state.priceRange, visibility.area, visibility.price]);
+  }, [apartments.length, areaBounds, areaRange, bounds, priceBounds, priceRange, visibility.area, visibility.price]);
 
   const filteredApartments = useMemo(
     () => filterApartments(apartments, state, project?.currency, visibility),
@@ -540,14 +553,14 @@ export const useProjectFilters = ({
   }, [apartments, baseCurrency, project?.currency]);
 
   return {
-    selectedFloor: state.selectedFloor,
-    selectedRooms: state.selectedRooms,
-    priceRange: state.priceRange,
-    areaRange: state.areaRange,
-    searchQuery: state.searchQuery,
-    showOnlyAvailable: state.showOnlyAvailable,
-    selectedType: state.selectedType,
-    selectedCurrency: state.selectedCurrency,
+    selectedFloor,
+    selectedRooms,
+    priceRange,
+    areaRange,
+    searchQuery,
+    showOnlyAvailable,
+    selectedType,
+    selectedCurrency,
     visibleFilterFields: visibility,
     isPriceVisible: visibility.price,
     isAreaVisible: visibility.area,
