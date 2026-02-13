@@ -54,10 +54,10 @@ const ProjectApartmentSelector = ({
 
     const { t, language } = useLanguage();
     const isMobile = useIsMobile();
-    const { project } = useProject(projectId);
-    const { fields: fieldSettings } = useFields(project?.id || null);
-    const { favoritesCount } = useFavorites(project?.id || undefined);
-    const { user } = useAuth();
+    const {project} = useProject(projectId);
+    const {fields: fieldSettings} = useFields(project?.id || null);
+    const {favoritesCount} = useFavorites(project?.id || undefined);
+    const {user} = useAuth();
 
     // State (viewMode & floor are synced to URL search params)
     const { viewMode, setViewMode, selectedFloorForPlan, setSelectedFloorForPlan } = useUrlState();
@@ -120,7 +120,7 @@ const ProjectApartmentSelector = ({
     );
     const activeFacadeImageUrl = activeFacade?.image_url ?? project?.building_image_url ?? null;
 
-    const { buildingImageLoaded, buildingImageNaturalSize } = useBuildingImage(activeFacadeImageUrl);
+    const {buildingImageLoaded, buildingImageNaturalSize} = useBuildingImage(activeFacadeImageUrl);
 
     const buildingFloors = useMemo(() => {
         if (!activeFacade?.id) return [];
@@ -289,13 +289,25 @@ const ProjectApartmentSelector = ({
         }
     }, [projectId]);
 
-    // ── Render ──
-
     const loaderBlock = (
         <div className="grid h-full w-full place-items-center absolute inset-0">
             <Spinner size="md" color={themeColor} />
         </div>
     );
+
+    // If widget mode and apartment is selected, show apartment details
+    if (isWidget && ui.isApartmentModalOpen && ui.selectedApartment) {
+        return (
+            <Suspense fallback={loaderBlock}>
+                <ApartmentDetailsPage
+                    onClose={ui.closeApartmentModal}
+                    useId={true}
+                    apartmentIdProp={ui.selectedApartment.id}
+                    projectIdProp={projectId}
+                />
+            </Suspense>
+        );
+    }
 
     return (
         <div ref={containerRef} className="min-h-screen bg-white flex flex-col relative select-none">

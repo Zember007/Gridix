@@ -4,7 +4,8 @@ import { convertPrice, formatMoney } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
 import { Card, CardContent } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Heart, Home, Square, ExternalLink } from 'lucide-react';
+import { Heart, Home, Square, ExternalLink, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Apartment } from '@/entities/apartment/model/types';
 
@@ -52,6 +53,7 @@ const FavoritesTab = ({ projectId, projectCurrency, selectedCurrency, handleView
     price?: number;
     status: string;
     floor_number: number;
+    image_url?: string | null;
   };
 
   const toApartment = (fav: FavoriteItem): Apartment => {
@@ -79,6 +81,42 @@ const FavoritesTab = ({ projectId, projectCurrency, selectedCurrency, handleView
     removeFromFavorites(apartmentId);
   };
 
+  const buildShareUrl = () => {
+    const url = new URL(window.location.href);
+    if (projectFavorites.length > 0) {
+      url.searchParams.set(
+        'favorites',
+        projectFavorites
+          .map((f) => String(f.apartment_number).trim())
+          .filter(Boolean)
+          .join(','),
+      );
+    } else {
+      url.searchParams.delete('favorites');
+    }
+    return url.toString();
+  };
+
+  const handleShareFavorites = async () => {
+    const url = buildShareUrl();
+    const title = t('favorites.title') || 'Подборка';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('common.copied'));
+      }
+    } catch (error) {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('common.copied'));
+      } catch (err) {
+        console.error('Error copying link to clipboard:', err);
+      }
+    }
+  };
+
   if (projectFavorites.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -99,6 +137,10 @@ const FavoritesTab = ({ projectId, projectCurrency, selectedCurrency, handleView
         <h2 className="text-lg font-semibold text-gray-900">
           {t('favorites.title') || 'Избранные квартиры'} ({projectFavorites.length})
         </h2>
+        <Button variant="outline" size="sm" onClick={handleShareFavorites}>
+          <Share2 className="h-4 w-4 mr-2" />
+          {t('common.share')}
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -109,6 +151,21 @@ const FavoritesTab = ({ projectId, projectCurrency, selectedCurrency, handleView
             onClick={() => handleViewApartment(toApartment(apartment))}
           >
             <CardContent className="p-4">
+              <div className="mb-4">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
+                  {apartment.image_url ? (
+                    <img
+                      src={apartment.image_url}
+                      alt={`${t('apartment.apartment')} № ${apartment.apartment_number}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200">
+                      <Home className="h-10 w-10 text-slate-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h4 className="font-semibold text-gray-900">

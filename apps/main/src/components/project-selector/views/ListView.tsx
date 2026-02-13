@@ -120,6 +120,18 @@ export const ListView = ({
     return Math.max(max, apartment.floor_number || 0);
   }, 0);
 
+  const getFavoriteImageUrl = (apartment: Apartment): string | null => {
+    const layoutKey = apartment.type === 'apartment'
+      ? apartment.rooms == 0
+        ? 'studio'
+        : apartment.rooms === 'free_layout'
+          ? 'free_layout'
+          : `${apartment.rooms}-room`
+      : apartment.type;
+    const photos = preloadedLayoutPhotosByRooms[layoutKey] || [];
+    return photos[0]?.image_url ?? null;
+  };
+
   const handleFavoriteToggle = (e: React.MouseEvent, apartment: Apartment) => {
     e.stopPropagation();
     if (!apartment) return;
@@ -132,7 +144,8 @@ export const ListView = ({
       area: apartment.area,
       price: typeof apartment.price === 'number' ? apartment.price : 0,
       status: apartment.status,
-      floor_number: apartment.floor_number
+      floor_number: apartment.floor_number,
+      image_url: getFavoriteImageUrl(apartment),
     });
   };
 
