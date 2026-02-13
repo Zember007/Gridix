@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowLeft, ExternalLink, Calculator, FileDown, Home, Square, MapPin, Share2, Heart } from 'lucide-react';
 import { toast } from "sonner";
 import { useState, useEffect } from 'react';
+import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { generateApartmentPdf } from '@/features/apartment/lib/generateApartmentPdf';
 import { supabase } from "@gridix/utils/api";
 import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import ApartmentPhotosViewer from '@/components/apartment/ApartmentPhotosViewer';
@@ -33,7 +35,6 @@ export default function DomainApartmentPage() {
   const [loading, setLoading] = useState(true);
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [viewTracked, setViewTracked] = useState(false);
 
   // Fetch apartment data
@@ -92,6 +93,18 @@ export default function DomainApartmentPage() {
     }
   }, [apartment, domainProject, loading, viewTracked]);
 
+  const { run: runGeneratePdf, isRunning: isGeneratingPDF } = useAsyncAction(generateApartmentPdf, {
+    onError: (error) => {
+      console.error('Error generating PDF:', error);
+      toast.error(t('apartment.pdfGenerationError'));
+    },
+  });
+
+  const handleGeneratePDF = async () => {
+    if (!apartment || !project) return;
+    await runGeneratePdf({ apartment, project, language });
+  };
+
   // Show loading spinner while determining the domain
   if (domainLoading) {
     return (
@@ -129,31 +142,6 @@ export default function DomainApartmentPage() {
       }
     } catch (error) {
       console.error('Error sharing:', error);
-    }
-  };
-
-  const handleGeneratePDF = async () => {
-    if (!apartment || !project) return;
-
-    setIsGeneratingPDF(true);
-    try {
-      // Динамически загружаем модуль PDF только когда нужен
-      const { generateApartmentPDF } = await import('@gridix/utils/lib');
-
-      const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${project.slug}/apartment/${apartment.apartment_number}/pdf`;
-
-
-      await generateApartmentPDF({
-        apartment,
-        pdfUrl,
-        pdf_main: project?.pdf_presentation_url || undefined,
-        apiUrl: import.meta.env.VITE_API_URL || '',
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error(t('apartment.pdfGenerationError'));
-    } finally {
-      setIsGeneratingPDF(false);
     }
   };
 

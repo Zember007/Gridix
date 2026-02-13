@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@gridix/ui";
 import { ArrowLeft, Calculator, FileDown, Home, Square, Share2, Heart, Loader2 } from 'lucide-react';
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { generateApartmentPdf } from '@/features/apartment/lib/generateApartmentPdf';
 import { supabase } from "@gridix/utils/api";
 import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
 import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
@@ -74,7 +76,6 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
 
   const [isReserveDialogOpen, setIsReserveDialogOpen] = useState(false);
   const [isCalculatorDialogOpen, setIsCalculatorDialogOpen] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [bitrixBusy, setBitrixBusy] = useState(false);
   const [isBitrixDealPickerOpen, setIsBitrixDealPickerOpen] = useState(false);
   const [bitrixDealsLoading, setBitrixDealsLoading] = useState(false);
@@ -579,32 +580,16 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
     }
   }, [apartment, project?.id, loadRecommendedApartments]);
 
-  const handleGeneratePDF = async () => {
-    if (!apartment || !project?.id) return;
-
-    setIsGeneratingPDF(true);
-    try {
-      // Динамически загружаем модуль PDF только когда нужен
-      const { generateApartmentPDF } = await import('@gridix/utils/lib');
-
-      // Формируем URL для API
-      const projectSlug = project.slug || `id/${project.id}`;
-      const pdfUrl = `https://${import.meta.env.VITE_SERVER_DOMAIN}/${language}/project/${projectSlug}/apartment/${apartment.apartment_number}/pdf`;
-
-      // Генерируем PDF через API
-      await generateApartmentPDF({
-        apartment,
-        pdfUrl,
-        pdf_main: project?.pdf_presentation_url || undefined,
-        apiUrl: import.meta.env.VITE_API_URL || '',
-      });
-
-    } catch (error) {
+  const { run: runGeneratePdf, isRunning: isGeneratingPDF } = useAsyncAction(generateApartmentPdf, {
+    onError: (error) => {
       console.error('Error generating PDF:', error);
       toast.error(t('common.error'));
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+    },
+  });
+
+  const handleGeneratePDF = async () => {
+    if (!apartment || !project?.id) return;
+    await runGeneratePdf({ apartment, project, language });
   };
 
   const fieldVisibility = useMemo(() => getApartmentFieldVisibility(fieldSettings), [fieldSettings]);

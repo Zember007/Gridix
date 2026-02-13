@@ -10,6 +10,9 @@ import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
 import {Loader2, Share2, X, Heart, FileDown} from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from "@gridix/utils/api";
+import { toast } from 'sonner';
+import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { generateApartmentPdf } from '@/features/apartment/lib/generateApartmentPdf';
 
 export type SidePanelState =
   | { kind: 'floor'; floorNumber: number }
@@ -266,6 +269,18 @@ export const ProjectSidePanel = ({
     );
   };
 
+  const { run: runGeneratePdf, isRunning: isGeneratingPDF } = useAsyncAction(generateApartmentPdf, {
+    onError: (error) => {
+      console.error('Error generating PDF:', error);
+      toast.error(tt('common.error'));
+    },
+  });
+
+  const handleGeneratePDF = async () => {
+    if (state?.kind !== 'apartment') return;
+    await runGeneratePdf({ apartment: state.apartment, project, language });
+  };
+
   if (!state) return null;
 
   return (
@@ -470,7 +485,7 @@ export const ProjectSidePanel = ({
 
 
             {/* Actions */}
-            <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
+            <div className="px-6 py-4 grid grid-cols-[auto_auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
               <Button
                   type="button"
                   variant="outline"
@@ -483,6 +498,18 @@ export const ProjectSidePanel = ({
               >
                 <Heart
                     className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")}/>
+              </Button>
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50"
+                  onClick={handleGeneratePDF}
+                  disabled={isGeneratingPDF}
+                  title="PDF"
+                  aria-label="PDF"
+              >
+                {isGeneratingPDF ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileDown className="h-5 w-5" />}
               </Button>
               <Button
                   type="button"
