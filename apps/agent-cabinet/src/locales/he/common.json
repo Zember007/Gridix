@@ -56,7 +56,7 @@
   },
   "dashboard": {
     "title": "לוח המחוונים שלי",
-    "subtitleWorkspace": "סביבת עבודה: {{סביבת עבודה}}",
+    "subtitleWorkspace": "סביבת עבודה: {{workspace}}",
     "subtitleNoWorkspace": "בחר סביבת עבודה",
     "metrics": {
       "leads": "לידים",

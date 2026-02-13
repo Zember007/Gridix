@@ -73,7 +73,10 @@ export default function SetPasswordPage() {
               }
               try {
                 setLoading(true);
-                const { error: authErr } = await supabase.auth.updateUser({ password });
+                const { error: authErr } = await supabase.auth.updateUser({
+                  password,
+                  data: { requires_password_setup: false },
+                });
                 if (authErr) throw authErr;
 
                 // Password presence is now detected via RPC check_if_user_has_password().

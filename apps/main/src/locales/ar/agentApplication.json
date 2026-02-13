@@ -67,5 +67,8 @@
   "nextButton": "التالي",
   "sending": "إرسال...",
   "signAndSubmit": "التوقيع وتقديم",
-  "passwordVerified": "تم التحقق من كلمة المرور."
+  "passwordVerified": "تم التحقق من كلمة المرور.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

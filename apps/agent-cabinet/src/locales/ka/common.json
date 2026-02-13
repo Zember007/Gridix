@@ -56,7 +56,7 @@
   },
   "dashboard": {
     "title": "ჩემი დაფა",
-    "subtitleWorkspace": "სამუშაო ადგილი: {{სამუშაო სივრცე}}",
+    "subtitleWorkspace": "სამუშაო ადგილი: {{workspace}}",
     "subtitleNoWorkspace": "აირჩიეთ სამუშაო ადგილი",
     "metrics": {
       "leads": "მიჰყავს",

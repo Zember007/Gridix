@@ -67,5 +67,8 @@
   "nextButton": "הַבָּא",
   "sending": "שְׁלִיחָה...",
   "signAndSubmit": "חתמו והגישו",
-  "passwordVerified": "סיסמה מאומתת."
+  "passwordVerified": "סיסמה מאומתת.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

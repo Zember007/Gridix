@@ -56,7 +56,7 @@
   },
   "dashboard": {
     "title": "لوحة القيادة الخاصة بي",
-    "subtitleWorkspace": "مساحة العمل: {{مساحة العمل}}",
+    "subtitleWorkspace": "مساحة العمل: {{workspace}}",
     "subtitleNoWorkspace": "اختر مساحة عمل",
     "metrics": {
       "leads": "يؤدي",

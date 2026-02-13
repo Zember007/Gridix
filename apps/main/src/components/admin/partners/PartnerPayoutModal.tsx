@@ -9,6 +9,7 @@ import {
 } from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
     isOpen: boolean;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, onPayout }) => {
+    const { t } = useLanguage();
     const [amount, setAmount] = useState('');
 
     if (!partner) return null;
@@ -38,7 +40,7 @@ export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, 
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Выплата комиссии</DialogTitle>
+                    <DialogTitle>{t('partners.payoutModal.title')}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
@@ -47,18 +49,18 @@ export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, 
                         </div>
                         <div>
                             <div className="font-bold text-slate-900">{partner.name}</div>
-                            <div className="text-xs text-slate-500 font-mono mt-0.5">{partner.bankDetails || 'Реквизиты не указаны'}</div>
+                            <div className="text-xs text-slate-500 font-mono mt-0.5">{partner.bankDetails?.details || t('partners.drawer.noBankDetails')}</div>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500">Доступно к выплате:</span>
+                            <span className="text-slate-500">{t('partners.payoutModal.availableToPayout')}</span>
                             <span className="font-bold text-slate-900">${maxAmount.toLocaleString()}</span>
                         </div>
 
                         <div className="relative">
-                            <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Сумма выплаты</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">{t('partners.payoutModal.amountLabel')}</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                                 <Input
@@ -66,7 +68,7 @@ export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, 
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-lg font-bold outline-none focus:ring-green-500 transition-all font-mono"
-                                    placeholder="0.00"
+                                    placeholder={t('partners.payoutModal.amountPlaceholder')}
                                     autoFocus
                                     max={maxAmount}
                                 />
@@ -76,7 +78,7 @@ export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, 
                         {maxAmount === 0 && (
                             <div className="p-3 bg-amber-50 text-amber-700 text-xs rounded-lg flex items-start gap-2">
                                 <AlertCircle size={14} className="mt-0.5" />
-                                У партнера нет подтвержденных комиссий к выплате.
+                                {t('partners.payoutModal.noCommissions')}
                             </div>
                         )}
                     </div>
@@ -87,7 +89,7 @@ export const PartnerPayoutModal: React.FC<Props> = ({ isOpen, onClose, partner, 
                             disabled={!amount || Number(amount) <= 0 || Number(amount) > maxAmount}
                             className="w-full py-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            <Wallet size={18} /> Подтвердить выплату
+                            <Wallet size={18} /> {t('partners.payoutModal.confirmPayout')}
                         </Button>
                     </div>
                 </form>

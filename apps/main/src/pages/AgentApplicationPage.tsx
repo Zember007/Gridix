@@ -5,9 +5,7 @@ import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Inpu
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Building2, User } from "lucide-react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+import { Building2, User, Download } from "lucide-react";
 
 type Step = "details" | "signature" | "contracts" | "success";
 
@@ -36,6 +34,19 @@ type DeveloperProfile = {
     legal_address: string | null;
     phone: string | null;
     email: string | null;
+};
+
+type ProgramSettings = {
+    default_commission_rate: number | null;
+    lead_lock_days: number | null;
+    payout_terms: string | null;
+    products_description: string | null;
+    territory: string | null;
+    exclusivity: string | null;
+    agreement_effective_date: string | null;
+    agreement_end_date: string | null;
+    force_majeure_weeks: number | null;
+    originals_count: number | null;
 };
 
 function escapeHtml(value: string): string {
@@ -96,6 +107,7 @@ export default function AgentApplicationPage() {
         stamp_url: null,
     });
     const [developerProfile, setDeveloperProfile] = useState<DeveloperProfile | null>(null);
+    const [programSettings, setProgramSettings] = useState<ProgramSettings | null>(null);
 
     const [formData, setFormData] = useState({
         email: "",
@@ -105,6 +117,10 @@ export default function AgentApplicationPage() {
         phone: "",
         legal_address: "",
         bank_details: "",
+        agent_company_type: "",
+        agent_registered_office: "",
+        agent_representative_name: "",
+        agent_representative_title: "",
     });
 
     const [personType, setPersonType] = useState<"company" | "individual">("company");
@@ -131,6 +147,18 @@ export default function AgentApplicationPage() {
     const [selectedTemplateByLang, setSelectedTemplateByLang] = useState<Record<string, string>>({});
     const [acceptedAgreements, setAcceptedAgreements] = useState(false);
 
+    // Signed contracts returned after successful submission (for download on success screen)
+    const [signedContractsResult, setSignedContractsResult] = useState<
+        Array<{
+            contract_template_path: string;
+            signed_contract_path: string;
+            signed_contract_mime: string;
+            signed_download_url?: string | null;
+            template_lang?: string | null;
+            template_name?: string | null;
+        }>
+    >([]);
+
     useEffect(() => {
         const load = async () => {
             if (!developerId) return;
@@ -151,6 +179,7 @@ export default function AgentApplicationPage() {
                 setTemplates(nextTemplates);
                 setDeveloperAssets((data?.developer_assets ?? null) as DeveloperAssets);
                 setDeveloperProfile((data?.developer_profile ?? null) as DeveloperProfile | null);
+                setProgramSettings((data?.program_settings ?? null) as ProgramSettings | null);
 
                 // Initialize selection: pick 1 template per lang and preselect all langs
                 const langs = Array.from(
@@ -180,6 +209,7 @@ export default function AgentApplicationPage() {
                 setTemplates([]);
                 setDeveloperAssets({ signature_path: null, signature_url: null, stamp_path: null, stamp_url: null });
                 setDeveloperProfile(null);
+                setProgramSettings(null);
             } finally {
                 setTemplatesLoading(false);
             }
@@ -226,15 +256,15 @@ export default function AgentApplicationPage() {
         }, 450);
     };
 
-    const verifyExistingUserPassword = async () => {
+    const verifyExistingUserPassword = async (): Promise<{ valid: boolean; hasSignature: boolean }> => {
         const emailNorm = formData.email.trim().toLowerCase();
         if (!emailNorm) {
             toast.error(t("agentApplication.enterEmail"));
-            return false;
+            return { valid: false, hasSignature: false };
         }
         if (!password) {
             toast.error(t("agentApplication.enterPassword"));
-            return false;
+            return { valid: false, hasSignature: false };
         }
         try {
             setAuthLoading(true);
@@ -246,15 +276,39 @@ export default function AgentApplicationPage() {
             if (!valid) {
                 toast.error(t("agentApplication.wrongPassword"));
                 setPasswordVerified(false);
-                return false;
+                return { valid: false, hasSignature: false };
             }
             setPasswordVerified(true);
-            return true;
-        } catch (e: any) {
+
+            // If the agent already has a global signature, pre-fill it
+            let hasSignature = false;
+            const sig = data?.agent_signature;
+            if (sig && typeof sig.signature_url === "string" && sig.signature_url) {
+                try {
+                    const resp = await fetch(sig.signature_url);
+                    const blob = await resp.blob();
+                    const reader = new FileReader();
+                    const dataUrl = await new Promise<string | null>((resolve) => {
+                        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+                        reader.onerror = () => resolve(null);
+                        reader.readAsDataURL(blob);
+                    });
+                    if (dataUrl && dataUrl.startsWith("data:image/")) {
+                        setUploadedSignatureDataUrl(dataUrl);
+                        setSignatureMethod(typeof sig.signature_method === "string" && sig.signature_method === "draw" ? "draw" : "upload");
+                        hasSignature = true;
+                    }
+                } catch (fetchErr) {
+                    console.warn("Could not fetch existing agent signature image", fetchErr);
+                }
+            }
+
+            return { valid: true, hasSignature };
+        } catch (e: unknown) {
             console.error("verify_auth_user_password failed", e);
-            toast.error(e?.message || t("agentApplication.passwordCheckFailed"));
+            toast.error(e instanceof Error ? e.message : t("agentApplication.passwordCheckFailed"));
             setPasswordVerified(false);
-            return false;
+            return { valid: false, hasSignature: false };
         } finally {
             setAuthLoading(false);
         }
@@ -283,6 +337,24 @@ export default function AgentApplicationPage() {
     const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
     const contractPayload = useMemo(() => {
+        const agentCompanyType = formData.agent_company_type || "";
+        const agentRegisteredOffice = formData.agent_registered_office || "";
+        const agentRepresentativeName = formData.agent_representative_name || "";
+        const agentRepresentativeTitle = formData.agent_representative_title || "";
+
+        const program = {
+            default_commission_rate: typeof programSettings?.default_commission_rate === "number" ? programSettings.default_commission_rate : 4,
+            lead_lock_days: typeof programSettings?.lead_lock_days === "number" ? programSettings.lead_lock_days : 30,
+            payout_terms: typeof programSettings?.payout_terms === "string" ? programSettings.payout_terms : null,
+            products_description: typeof programSettings?.products_description === "string" ? programSettings.products_description : null,
+            territory: typeof programSettings?.territory === "string" ? programSettings.territory : null,
+            exclusivity: typeof programSettings?.exclusivity === "string" ? programSettings.exclusivity : "non-exclusive",
+            agreement_effective_date: typeof programSettings?.agreement_effective_date === "string" ? programSettings.agreement_effective_date : null,
+            agreement_end_date: typeof programSettings?.agreement_end_date === "string" ? programSettings.agreement_end_date : null,
+            force_majeure_weeks: typeof programSettings?.force_majeure_weeks === "number" ? programSettings.force_majeure_weeks : 8,
+            originals_count: typeof programSettings?.originals_count === "number" ? programSettings.originals_count : 2,
+        };
+
         const agent = {
             id: "",
             full_name: displayName || "",
@@ -290,6 +362,10 @@ export default function AgentApplicationPage() {
             person_type: personType,
             tax_id: formData.tax_id || "",
             legal_address: formData.legal_address || "",
+            company_type: agentCompanyType,
+            registered_office: agentRegisteredOffice,
+            represented_by_name: agentRepresentativeName,
+            represented_by_title: agentRepresentativeTitle,
             email: formData.email || "",
             phone: formData.phone || "",
             bank_details: formData.bank_details ? { details: formData.bank_details } : null,
@@ -305,14 +381,28 @@ export default function AgentApplicationPage() {
             email: developerProfile?.email ?? null,
         };
 
-        const signImageHtml = finalSignatureDataUrl
-            ? `<img src="${escapeHtml(finalSignatureDataUrl)}" alt="signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
+        const agentSigHtml = finalSignatureDataUrl
+            ? `<img data-gridix-signature="agent" src="${escapeHtml(finalSignatureDataUrl)}" alt="agent signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
             : "";
+        const developerSigHtml =
+            developerAssets?.signature_url
+                ? `<img data-gridix-signature="developer" src="${escapeHtml(developerAssets.signature_url)}" alt="developer signature" style="height:64px;object-fit:contain;mix-blend-mode:multiply;" />`
+                : "";
+        const developerStampHtml =
+            developerAssets?.stamp_url
+                ? `<img data-gridix-stamp="developer" src="${escapeHtml(developerAssets.stamp_url)}" alt="developer stamp" style="height:64px;object-fit:contain;mix-blend-mode:multiply;opacity:0.9;" />`
+                : "";
 
         return {
             agent,
             application: { id: "", created_at: "" },
             developer,
+            program,
+            signatures: {
+                agent: agentSigHtml,
+                developer: developerSigHtml,
+                developer_stamp: developerStampHtml,
+            },
             date: { today: todayStr },
 
             // Backward-compatible aliases
@@ -322,10 +412,44 @@ export default function AgentApplicationPage() {
             tax_id: agent.tax_id,
             address: agent.legal_address,
             date_text: todayStr,
-            commission_rate: "",
-            sign_image: signImageHtml,
+            commission_rate: String(program.default_commission_rate ?? ""),
+            sign_image: agentSigHtml,
+
+            agent_signature: agentSigHtml,
+            developer_signature: developerSigHtml,
+            developer_stamp: developerStampHtml,
+
+            // Program aliases (to keep templates simpler if needed)
+            default_commission_rate: program.default_commission_rate,
+            payout_terms: program.payout_terms,
+            products_description: program.products_description,
+            territory: program.territory,
+            exclusivity: program.exclusivity,
+            agreement_effective_date: program.agreement_effective_date,
+            agreement_end_date: program.agreement_end_date,
+            force_majeure_weeks: program.force_majeure_weeks,
+            originals_count: program.originals_count,
         } satisfies Record<string, unknown>;
-    }, [developerId, developerProfile, displayName, finalSignatureDataUrl, formData.bank_details, formData.company_name, formData.email, formData.legal_address, formData.phone, formData.tax_id, personType, todayStr]);
+    }, [
+        developerId,
+        developerProfile,
+        developerAssets,
+        displayName,
+        finalSignatureDataUrl,
+        formData.bank_details,
+        formData.agent_company_type,
+        formData.agent_registered_office,
+        formData.agent_representative_name,
+        formData.agent_representative_title,
+        formData.company_name,
+        formData.email,
+        formData.legal_address,
+        formData.phone,
+        formData.tax_id,
+        personType,
+        programSettings,
+        todayStr,
+    ]);
 
     const detailsValid =
         authUserExists === true
@@ -386,6 +510,10 @@ export default function AgentApplicationPage() {
                             phone: formData.phone,
                             legal_address: formData.legal_address || null,
                             bank_details: { details: formData.bank_details },
+                            agent_company_type: formData.agent_company_type || null,
+                            agent_registered_office: formData.agent_registered_office || null,
+                            agent_representative_name: formData.agent_representative_name || null,
+                            agent_representative_title: formData.agent_representative_title || null,
                         }),
                 },
             });
@@ -408,7 +536,12 @@ export default function AgentApplicationPage() {
             });
             if (signResp.error) throw new Error(signResp.error.message);
 
-            // NOTE: full multi-contract signing is added in the next step of this plan (sign_agreements).
+            // Capture signed contracts for download on the success screen
+            const sc = signResp.data?.signed_contracts;
+            if (Array.isArray(sc)) {
+                setSignedContractsResult(sc);
+            }
+
             setStep("success");
             toast.success(t("agentApplication.applicationSubmitted"));
         } catch (error: unknown) {
@@ -510,17 +643,19 @@ export default function AgentApplicationPage() {
         const A4_H = 1123;
         const PAGE_PAD = 40; // similar to `p-10`
         const FOOTER_PAD_BOTTOM = 40; // similar to `bottom-10`
-        const FOOTER_H = 170; // reserved space for signature blocks
+        const hasInlineSignatures =
+            typeof props.renderedHtml === "string" &&
+            (props.renderedHtml.includes("data-gridix-signature=") || props.renderedHtml.includes("data-gridix-stamp="));
+        const FOOTER_H = hasInlineSignatures ? 0 : 170; // reserved space for signature blocks (only if not in-template)
         const COLUMN_GAP = 48; // px between pages in column layout
 
         const containerRef = useRef<HTMLDivElement>(null);
         const [containerWidth, setContainerWidth] = useState<number>(0);
         const measureRef = useRef<HTMLDivElement>(null);
-        const exportRef = useRef<HTMLDivElement>(null);
         const [pageIndex, setPageIndex] = useState(0);
         const [pageCount, setPageCount] = useState(1);
-        const [exportPageIndex, setExportPageIndex] = useState(0);
-        const [downloading, setDownloading] = useState(false);
+        const [exportPageIndex] = useState(0);
+        void exportPageIndex; // reserved for future use
 
         useEffect(() => {
             const el = containerRef.current;
@@ -563,50 +698,6 @@ export default function AgentApplicationPage() {
         }, [pageCount]);
 
         const visibleShiftX = pageIndex * (contentViewportW + COLUMN_GAP);
-        const exportShiftX = exportPageIndex * (contentViewportW + COLUMN_GAP);
-
-        const downloadPdf = async () => {
-            if (!exportRef.current) return;
-            if (!props.renderedHtml) {
-                toast.error(t("agentApplication.noHtmlForDownload"));
-                return;
-            }
-            try {
-                setDownloading(true);
-                const pdf = new jsPDF({ unit: "px", format: [A4_W, A4_H] });
-
-                for (let p = 0; p < pageCount; p++) {
-                    setExportPageIndex(p);
-                    await new Promise<void>((r) => requestAnimationFrame(() => r()));
-                    await new Promise<void>((r) => requestAnimationFrame(() => r()));
-
-                    const canvas = await html2canvas(exportRef.current, {
-                        scale: 2,
-                        useCORS: true,
-                        backgroundColor: "#ffffff",
-                        width: A4_W,
-                        height: A4_H,
-                    });
-                    const imgData = canvas.toDataURL("image/png");
-                    if (p > 0) pdf.addPage([A4_W, A4_H], "portrait");
-                    pdf.addImage(imgData, "PNG", 0, 0, A4_W, A4_H);
-                }
-
-                const safeName = String(props.template.name || "contract")
-                    .trim()
-                    .replace(/\s+/g, "_")
-                    .replace(/[^a-zA-Z0-9._-]/g, "_")
-                    .replace(/_+/g, "_")
-                    .replace(/\.(pdf|docx)$/i, "");
-
-                pdf.save(`${safeName}.pdf`);
-            } catch (e: any) {
-                console.error("downloadPdf failed", e);
-                toast.error(e?.message || t("agentApplication.downloadContractFailed"));
-            } finally {
-                setDownloading(false);
-            }
-        };
 
         return (
             <div ref={containerRef} className="shrink-0 w-[92vw] max-w-[520px]">
@@ -707,44 +798,46 @@ export default function AgentApplicationPage() {
                             )}
                         </div>
 
-                        {/* Signature area: developer + agent */}
-                        <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
-                            <div className="w-48 relative">
-                                <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.developer")}</div>
-                                {developerAssets.stamp_url && (
-                                    <img
-                                        src={developerAssets.stamp_url}
-                                        alt="developer-stamp"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
-                                    />
-                                )}
-                                {developerAssets.signature_url && (
-                                    <img
-                                        src={developerAssets.signature_url}
-                                        alt="developer-signature"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
-                                    />
-                                )}
-                            </div>
+                        {/* Signature area: developer + agent (only when template doesn't include inline signatures) */}
+                        {!hasInlineSignatures && (
+                            <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
+                                <div className="w-48 relative">
+                                    <div className="border-b border-slate-900 mb-2" />
+                                    <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.developer")}</div>
+                                    {developerAssets.stamp_url && (
+                                        <img
+                                            src={developerAssets.stamp_url}
+                                            alt="developer-stamp"
+                                            crossOrigin="anonymous"
+                                            className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
+                                        />
+                                    )}
+                                    {developerAssets.signature_url && (
+                                        <img
+                                            src={developerAssets.signature_url}
+                                            alt="developer-signature"
+                                            crossOrigin="anonymous"
+                                            className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
+                                        />
+                                    )}
+                                </div>
 
-                            <div className="w-48 relative">
-                                {finalSignatureDataUrl && (
-                                    <img
-                                        src={finalSignatureDataUrl}
-                                        alt="agent-signature"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
-                                        style={{ filter: "contrast(1.35)" }}
-                                    />
-                                )}
-                                <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.agent")}</div>
-                                <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
+                                <div className="w-48 relative">
+                                    {finalSignatureDataUrl && (
+                                        <img
+                                            src={finalSignatureDataUrl}
+                                            alt="agent-signature"
+                                            crossOrigin="anonymous"
+                                            className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
+                                            style={{ filter: "contrast(1.35)" }}
+                                        />
+                                    )}
+                                    <div className="border-b border-slate-900 mb-2" />
+                                    <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.agent")}</div>
+                                    <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -777,97 +870,8 @@ export default function AgentApplicationPage() {
                         <div />
                     )}
 
-                    <button
-                        type="button"
-                        onClick={() => void downloadPdf()}
-                        disabled={downloading || !props.renderedHtml}
-                        className="px-3 py-2 text-xs font-extrabold rounded-lg border border-slate-200 bg-slate-900 text-white disabled:opacity-50"
-                    >
-                        {downloading ? t("agentApplication.downloading") : t("agentApplication.downloadPdf")}
-                    </button>
-                </div>
-
-                {/* Offscreen export A4 (scale=1) */}
-                <div className="fixed left-[-10000px] top-0">
-                    <div
-                        ref={exportRef}
-                        className="bg-white"
-                        style={{ width: A4_W, height: A4_H, position: "relative" }}
-                    >
-                        <div
-                            className="absolute left-10 top-10 text-[10px] text-slate-800 overflow-hidden"
-                            style={{ width: contentViewportW, height: contentViewportH }}
-                        >
-                            {props.renderedHtml ? (
-                                <div
-                                    className={[
-                                        "h-full",
-                                        "[&_h1]:text-2xl [&_h1]:font-black [&_h1]:leading-tight [&_h1]:my-3",
-                                        "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:my-3",
-                                        "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2",
-                                        "[&_strong]:font-bold",
-                                        "[&_em]:italic",
-                                        "[&_u]:underline",
-                                        "[&_p]:my-2 [&_p]:leading-relaxed",
-                                        "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2",
-                                        "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2",
-                                        "[&_li]:my-1",
-                                        "[&_table]:w-full [&_table]:table-fixed [&_table]:my-2",
-                                        "[&_th]:bg-slate-50 [&_th]:font-bold [&_th]:border [&_th]:border-slate-200 [&_th]:p-1",
-                                        "[&_td]:border [&_td]:border-slate-200 [&_td]:p-1",
-                                        "[&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_blockquote]:my-2",
-                                    ].join(" ")}
-                                    style={{
-                                        width: contentViewportW,
-                                        height: contentViewportH,
-                                        columnWidth: contentViewportW,
-                                        columnGap: COLUMN_GAP,
-                                        columnFill: "auto",
-                                        transform: `translateX(-${exportShiftX}px)`,
-                                        transformOrigin: "top left",
-                                    }}
-                                    dangerouslySetInnerHTML={{ __html: props.renderedHtml }}
-                                />
-                            ) : null}
-                        </div>
-
-                        <div className="absolute left-10 right-10 bottom-10 pt-6 border-t border-slate-200 flex justify-between items-end">
-                            <div className="w-48 relative">
-                                <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.developer")}</div>
-                                {developerAssets.stamp_url && (
-                                    <img
-                                        src={developerAssets.stamp_url}
-                                        alt="developer-stamp"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-5 left-0 w-24 h-24 object-contain mix-blend-multiply opacity-80"
-                                    />
-                                )}
-                                {developerAssets.signature_url && (
-                                    <img
-                                        src={developerAssets.signature_url}
-                                        alt="developer-signature"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-7 left-0 w-28 h-16 object-contain mix-blend-multiply"
-                                    />
-                                )}
-                            </div>
-
-                            <div className="w-48 relative">
-                                {finalSignatureDataUrl && (
-                                    <img
-                                        src={finalSignatureDataUrl}
-                                        alt="agent-signature"
-                                        crossOrigin="anonymous"
-                                        className="absolute bottom-7 left-0 w-32 h-20 object-contain mix-blend-multiply"
-                                        style={{ filter: "contrast(1.35)" }}
-                                    />
-                                )}
-                                <div className="border-b border-slate-900 mb-2" />
-                                <div className="font-extrabold uppercase text-[11px]">{t("agentApplication.agent")}</div>
-                                <div className="text-slate-500 text-[10px]">{displayName || "—"}</div>
-                            </div>
-                        </div>
+                    <div className="text-xs text-slate-400 font-bold">
+                        {t("agentApplication.pdfAvailableAfterSubmit")}
                     </div>
                 </div>
             </div>
@@ -889,12 +893,42 @@ export default function AgentApplicationPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <CardTitle className="text-2xl font-bold">Thank You!</CardTitle>
+                            <CardTitle className="text-2xl font-bold">{t("agentApplication.successTitle")}</CardTitle>
                             <CardDescription>
-                                Your application has been received and is currently under review.
-                                We will contact you via email once it is approved.
+                                {t("agentApplication.successDescription")}
                             </CardDescription>
                         </CardHeader>
+                        {signedContractsResult.length > 0 && (
+                            <CardContent className="space-y-3 pt-0">
+                                <div className="text-sm font-bold text-slate-700 text-center">
+                                    {t("agentApplication.signedContractsDownload")}
+                                </div>
+                                {signedContractsResult.map((sc, idx) => {
+                                    const lang = sc.template_lang ? sc.template_lang.toUpperCase() : null;
+                                    const label = sc.template_name
+                                        ? `${sc.template_name}${lang ? ` (${lang})` : ""}`
+                                        : `${t("agentApplication.contract")} ${idx + 1}${lang ? ` — ${lang}` : ""}`;
+                                    const isPdf = sc.signed_contract_mime === "application/pdf";
+                                    return (
+                                        <a
+                                            key={sc.signed_contract_path}
+                                            href={sc.signed_download_url ?? "#"}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                                                <Download size={18} />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-bold text-slate-900 truncate">{label}</div>
+                                                <div className="text-xs text-slate-500">{isPdf ? "PDF" : sc.signed_contract_mime}</div>
+                                            </div>
+                                        </a>
+                                    );
+                                })}
+                            </CardContent>
+                        )}
                     </Card>
                 </motion.div>
             </div>
@@ -942,7 +976,7 @@ export default function AgentApplicationPage() {
                                             {s.label}
                                         </div>
                                         {idx < 2 && (
-                                            <div className={["h-1 w-10 rounded", done ? "bg-blue-600" : "bg-slate-200"].join(" ")} />
+                                            <div className={["h-1 w-10 rounded", done ? "bg-black" : "bg-slate-200"].join(" ")} />
                                         )}
                                     </div>
                                 );
@@ -1093,6 +1127,61 @@ export default function AgentApplicationPage() {
                                                             onChange={(e) => setFormData({ ...formData, legal_address: e.target.value })}
                                                             className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
                                                         />
+                                                    </div>
+
+                                                    {/* Contract party details (optional, for filling agreement blanks) */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                                {t("agentApplication.companyTypeOptional")}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.agent_company_type}
+                                                                onChange={(e) => setFormData({ ...formData, agent_company_type: e.target.value })}
+                                                                placeholder={t("agentApplication.companyTypePlaceholder")}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                                {t("agentApplication.registeredOfficeOptional")}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.agent_registered_office}
+                                                                onChange={(e) => setFormData({ ...formData, agent_registered_office: e.target.value })}
+                                                                placeholder={t("agentApplication.registeredOfficePlaceholder")}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                                {t("agentApplication.representedByNameOptional")}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.agent_representative_name}
+                                                                onChange={(e) => setFormData({ ...formData, agent_representative_name: e.target.value })}
+                                                                placeholder={t("agentApplication.representedByNamePlaceholder")}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
+                                                                {t("agentApplication.representedByTitleOptional")}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.agent_representative_title}
+                                                                onChange={(e) => setFormData({ ...formData, agent_representative_title: e.target.value })}
+                                                                placeholder={t("agentApplication.representedByTitlePlaceholder")}
+                                                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 transition-all"
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                     <div>
@@ -1331,8 +1420,11 @@ export default function AgentApplicationPage() {
                                                 }
                                                 if (authUserExists === true) {
                                                     void (async () => {
-                                                        const ok = await verifyExistingUserPassword();
-                                                        if (ok) setStep("signature");
+                                                        const result = await verifyExistingUserPassword();
+                                                        if (result.valid) {
+                                                            // If agent already has a signature, skip the signature step
+                                                            setStep(result.hasSignature ? "contracts" : "signature");
+                                                        }
                                                     })();
                                                     return;
                                                 }

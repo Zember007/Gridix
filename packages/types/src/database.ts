@@ -73,7 +73,11 @@ export type Database = {
       }
       agent_applications: {
         Row: {
+          agent_company_type: string | null
           agent_user_id: string | null
+          agent_registered_office: string | null
+          agent_representative_name: string | null
+          agent_representative_title: string | null
           agreement_signed: boolean | null
           agreement_signed_at: string | null
           bank_details: Json | null
@@ -100,7 +104,11 @@ export type Database = {
           type: string | null
         }
         Insert: {
+          agent_company_type?: string | null
           agent_user_id?: string | null
+          agent_registered_office?: string | null
+          agent_representative_name?: string | null
+          agent_representative_title?: string | null
           agreement_signed?: boolean | null
           agreement_signed_at?: string | null
           bank_details?: Json | null
@@ -127,7 +135,11 @@ export type Database = {
           type?: string | null
         }
         Update: {
+          agent_company_type?: string | null
           agent_user_id?: string | null
+          agent_registered_office?: string | null
+          agent_representative_name?: string | null
+          agent_representative_title?: string | null
           agreement_signed?: boolean | null
           agreement_signed_at?: string | null
           bank_details?: Json | null
@@ -228,33 +240,66 @@ export type Database = {
       }
       agent_program_settings: {
         Row: {
+          agreement_effective_date: string | null
+          agreement_end_date: string | null
           created_at: string
           default_commission_rate: number
+          developer_company_type: string | null
+          developer_registered_office: string | null
+          developer_representative_name: string | null
+          developer_representative_title: string | null
           developer_signature_path: string | null
           developer_stamp_path: string | null
           developer_user_id: string
+          exclusivity: string
+          force_majeure_weeks: number
           lead_lock_days: number
+          originals_count: number
+          products_description: string | null
           payout_terms: string | null
+          territory: string | null
           updated_at: string
         }
         Insert: {
+          agreement_effective_date?: string | null
+          agreement_end_date?: string | null
           created_at?: string
           default_commission_rate?: number
+          developer_company_type?: string | null
+          developer_registered_office?: string | null
+          developer_representative_name?: string | null
+          developer_representative_title?: string | null
           developer_signature_path?: string | null
           developer_stamp_path?: string | null
           developer_user_id: string
+          exclusivity?: string
+          force_majeure_weeks?: number
           lead_lock_days?: number
+          originals_count?: number
+          products_description?: string | null
           payout_terms?: string | null
+          territory?: string | null
           updated_at?: string
         }
         Update: {
+          agreement_effective_date?: string | null
+          agreement_end_date?: string | null
           created_at?: string
           default_commission_rate?: number
+          developer_company_type?: string | null
+          developer_registered_office?: string | null
+          developer_representative_name?: string | null
+          developer_representative_title?: string | null
           developer_signature_path?: string | null
           developer_stamp_path?: string | null
           developer_user_id?: string
+          exclusivity?: string
+          force_majeure_weeks?: number
           lead_lock_days?: number
+          originals_count?: number
+          products_description?: string | null
           payout_terms?: string | null
+          territory?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2820,6 +2865,7 @@ export type Database = {
           avatar_url: string | null
           bank_name: string | null
           billing_currency: string | null
+          company_type: string | null
           company_name: string | null
           created_at: string
           email: string | null
@@ -2834,6 +2880,9 @@ export type Database = {
           person_type: string | null
           phone: string | null
           preferred_locale: string
+          registered_office: string | null
+          representative_name: string | null
+          representative_title: string | null
           tax_id: string | null
           updated_at: string
         }
@@ -2842,6 +2891,7 @@ export type Database = {
           avatar_url?: string | null
           bank_name?: string | null
           billing_currency?: string | null
+          company_type?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
@@ -2856,6 +2906,9 @@ export type Database = {
           person_type?: string | null
           phone?: string | null
           preferred_locale?: string
+          registered_office?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -2864,6 +2917,7 @@ export type Database = {
           avatar_url?: string | null
           bank_name?: string | null
           billing_currency?: string | null
+          company_type?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
@@ -2878,6 +2932,9 @@ export type Database = {
           person_type?: string | null
           phone?: string | null
           preferred_locale?: string
+          registered_office?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
           tax_id?: string | null
           updated_at?: string
         }

@@ -11,7 +11,9 @@ export interface AgencyPartner {
     source: string;
     joinedAt: string;
     agreementSigned: boolean;
-    bankDetails?: string;
+    bankDetails?: {
+        details: string;
+    };
     stats: {
         totalLeads: number;
         activeDeals: number;

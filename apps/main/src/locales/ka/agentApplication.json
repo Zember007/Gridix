@@ -67,5 +67,8 @@
   "nextButton": "შემდეგი",
   "sending": "იგზავნება...",
   "signAndSubmit": "მოაწერეთ ხელი და წარადგინეთ",
-  "passwordVerified": "პაროლი დადასტურებულია."
+  "passwordVerified": "პაროლი დადასტურებულია.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }
