@@ -1,79 +1,79 @@
 {
   "app": {
-    "title": "Agent Cabinet"
+    "title": "აგენტის კაბინეტი"
   },
   "nav": {
-    "dashboard": "Dashboard",
-    "application": "Application",
-    "projects": "Catalog",
-    "contacts": "Contacts",
-    "leads": "Leads",
-    "payouts": "Payouts",
-    "analytics": "Analytics",
+    "dashboard": "დაფა",
+    "application": "განაცხადი",
+    "projects": "კატალოგი",
+    "contacts": "კონტაქტები",
+    "leads": "მიჰყავს",
+    "payouts": "გადახდები",
+    "analytics": "ანალიტიკა",
     "partnerProgram": "პარტნიორული პროგრამა"
   },
   "common": {
-    "loading": "Loading...",
-    "save": "Save",
-    "cancel": "Cancel",
-    "continue": "Continue",
-    "empty": "—"
+    "loading": "იტვირთება...",
+    "save": "შენახვა",
+    "cancel": "გაუქმება",
+    "continue": "განაგრძეთ",
+    "empty": "-"
   },
   "auth": {
-    "email": "Email",
-    "sendLink": "Send magic link",
-    "signOut": "Sign out",
-    "checkEmailTitle": "Check your email",
-    "magicLinkSent": "Magic link has been sent.",
-    "processingLogin": "Processing login…",
-    "setPasswordTitle": "Set password",
-    "setPasswordDescription": "Your password is not set yet. Please create a password to continue.",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "savePassword": "Save password",
-    "passwordUpdated": "Password updated"
+    "email": "ელფოსტა",
+    "sendLink": "ჯადოსნური ლინკის გაგზავნა",
+    "signOut": "გასვლა",
+    "checkEmailTitle": "შეამოწმეთ თქვენი ელ.წერილი",
+    "magicLinkSent": "ჯადოსნური ბმული გაიგზავნა.",
+    "processingLogin": "მიმდინარეობს შესვლის დამუშავება…",
+    "setPasswordTitle": "პაროლის დაყენება",
+    "setPasswordDescription": "თქვენი პაროლი ჯერ არ არის დაყენებული. გთხოვთ, შექმენით პაროლი გასაგრძელებლად.",
+    "password": "პაროლი",
+    "confirmPassword": "დაადასტურეთ პაროლი",
+    "savePassword": "პაროლის შენახვა",
+    "passwordUpdated": "პაროლი განახლებულია"
   },
   "errors": {
-    "emailRequired": "Email is required.",
-    "failedToSendLink": "Failed to send link.",
-    "passwordMinLength": "Password must be at least 8 characters.",
-    "passwordsDontMatch": "Passwords do not match.",
-    "failedToUpdatePassword": "Failed to update password."
+    "emailRequired": "საჭიროა ელ.ფოსტა.",
+    "failedToSendLink": "ბმულის გაგზავნა ვერ მოხერხდა.",
+    "passwordMinLength": "პაროლი უნდა შედგებოდეს მინიმუმ 8 სიმბოლოსგან.",
+    "passwordsDontMatch": "პაროლები არ ემთხვევა.",
+    "failedToUpdatePassword": "პაროლის განახლება ვერ მოხერხდა."
   },
   "notFound": {
-    "title": "Page not found",
-    "goHome": "Go home"
+    "title": "გვერდი ვერ მოიძებნა",
+    "goHome": "წადი სახლში"
   },
   "workspace": {
-    "noActiveTitle": "No active workspace",
-    "pickInSidebar": "Pick a workspace in the sidebar."
+    "noActiveTitle": "აქტიური სამუშაო ადგილი არ არის",
+    "pickInSidebar": "აირჩიეთ სამუშაო ადგილი გვერდითა ზოლში."
   },
   "moduleHeader": {
-    "searchPlaceholder": "Search…",
-    "financeTitle": "Finance",
-    "balanceLabel": "Your balance",
-    "create": "Create"
+    "searchPlaceholder": "ძიება…",
+    "financeTitle": "ფინანსები",
+    "balanceLabel": "შენი ბალანსი",
+    "create": "შექმნა"
   },
   "dashboard": {
-    "title": "My dashboard",
-    "subtitleWorkspace": "Workspace: {{workspace}}",
-    "subtitleNoWorkspace": "Pick a workspace",
+    "title": "ჩემი დაფა",
+    "subtitleWorkspace": "სამუშაო ადგილი: {{workspace}}",
+    "subtitleNoWorkspace": "აირჩიეთ სამუშაო ადგილი",
     "metrics": {
-      "leads": "Leads",
-      "contactsSubtext": "Contacts: {{count}}",
-      "commissionPaid": "Commission paid",
-      "commissionPending": "Commission pending",
-      "projectsSubtext": "Projects: {{count}}",
-      "catalog": "Catalog",
-      "availableProjects": "Available projects"
+      "leads": "მიჰყავს",
+      "contactsSubtext": "კონტაქტები: {{count}}",
+      "commissionPaid": "საკომისიო გადახდილია",
+      "commissionPending": "კომისია ელოდება",
+      "projectsSubtext": "პროექტები: {{count}}",
+      "catalog": "კატალოგი",
+      "availableProjects": "ხელმისაწვდომი პროექტები"
     },
     "blocks": {
-      "dynamicsTitle": "Dynamics",
-      "inProgress": "In progress",
-      "pulseTitle": "Pulse",
-      "latestEvents": "Latest events",
-      "pulseLeads": "Leads: {{count}}",
-      "pulsePayouts": "Payouts:"
+      "dynamicsTitle": "დინამიკა",
+      "inProgress": "მიმდინარეობს",
+      "pulseTitle": "პულსი",
+      "latestEvents": "უახლესი მოვლენები",
+      "pulseLeads": "ლიდერობს: {{count}}",
+      "pulsePayouts": "გადახდები:"
     },
     "chart": {
       "title": "შემოსავლების დინამიკა",
@@ -93,16 +93,16 @@
     }
   },
   "catalog": {
-    "title": "Catalog",
-    "subtitle": "Unified new builds catalog",
-    "subtitleWithWorkspace": "Unified new builds catalog • {{workspace}}",
-    "searchPlaceholder": "Search by project name…",
-    "filtersPlaceholder": "Filters will be ported 1:1 from `gridix-visual` (location/prices/statuses).",
-    "noProjects": "No public projects for the selected workspace yet.",
-    "open": "Open",
+    "title": "კატალოგი",
+    "subtitle": "ახალი შენობების ერთიანი კატალოგი",
+    "subtitleWithWorkspace": "ახალი ნაგებობების ერთიანი კატალოგი • {{სამუშაო სივრცე}}",
+    "searchPlaceholder": "პროექტის სახელის მიხედვით ძიება…",
+    "filtersPlaceholder": "ფილტრები პორტირებული იქნება 1:1 „gridix-visual“-დან (მდებარეობა/ფასები/სტატუსები).",
+    "noProjects": "არჩეული სამუშაო ადგილისთვის საჯარო პროექტები ჯერ არ არის.",
+    "open": "გახსენით",
     "details": "დეტალები",
-    "share": "Share",
-    "clientLinkPrompt": "Client link"
+    "share": "გააზიარეთ",
+    "clientLinkPrompt": "კლიენტის ბმული"
   },
   "drawer": {
     "tabs": {
@@ -165,44 +165,44 @@
     }
   },
   "contacts": {
-    "title": "Contacts",
-    "subtitle": "{{count}} contacts",
-    "subtitleWithWorkspace": "{{count}} contacts • {{workspace}}",
-    "searchPlaceholder": "Search and filter",
-    "notFound": "No contacts found.",
+    "title": "კონტაქტები",
+    "subtitle": "{{count}} კონტაქტი",
+    "subtitleWithWorkspace": "{{count}} კონტაქტი • {{სამუშაო სივრცე}}",
+    "searchPlaceholder": "მოძებნეთ და გაფილტრეთ",
+    "notFound": "კონტაქტები ვერ მოიძებნა.",
     "columns": {
-      "contact": "Contact"
+      "contact": "კონტაქტი"
     },
     "drawer": {
-      "leadsAndLast": "Leads: {{count}} • Last: {{last}}",
-      "contactsSection": "Contacts",
-      "projectsSection": "Projects",
-      "notSelected": "No contact selected."
+      "leadsAndLast": "წამყვანები: {{count}} • ბოლო: {{last}}",
+      "contactsSection": "კონტაქტები",
+      "projectsSection": "პროექტები",
+      "notSelected": "კონტაქტი არ არის არჩეული."
     }
   },
   "analytics": {
-    "title": "Analytics",
-    "subtitle": "Key performance overview",
-    "subtitleWithWorkspace": "Key metrics overview • {{workspace}}",
+    "title": "ანალიტიკა",
+    "subtitle": "ძირითადი შესრულების მიმოხილვა",
+    "subtitleWithWorkspace": "ძირითადი მეტრიკის მიმოხილვა • {{სამუშაო სივრცე}}",
     "export": "ექსპორტი",
     "views": {
-      "sales": "Sales",
-      "finance": "Finance",
+      "sales": "გაყიდვები",
+      "finance": "ფინანსები",
       "crm": "CRM"
     },
     "period": {
-      "last7": "Last 7 days",
-      "last30": "Last 30 days",
-      "quarter": "This quarter",
-      "year": "This year"
+      "last7": "ბოლო 7 დღე",
+      "last30": "ბოლო 30 დღე",
+      "quarter": "ამ კვარტალში",
+      "year": "წელს"
     },
-    "loadError": "Failed to load analytics.",
+    "loadError": "ანალიტიკის ჩატვირთვა ვერ მოხერხდა.",
     "sales": {
-      "totalLeads": "Total leads",
-      "funnelByStage": "Funnel (by stage)",
-      "noStageData": "No stage data.",
-      "sources": "Sources",
-      "noSourceData": "No source data."
+      "totalLeads": "სულ ლიდერობს",
+      "funnelByStage": "ძაბრი (ეტაპობრივად)",
+      "noStageData": "სასცენო მონაცემები არ არის.",
+      "sources": "წყაროები",
+      "noSourceData": "წყაროს მონაცემები არ არის."
     },
     "crm": {
       "totalLeads": "სულ ლიდერობს",
@@ -213,13 +213,13 @@
       "sourceBreakdown": "წამყვანი წყაროები"
     },
     "finance": {
-      "paid": "Paid",
-      "pending": "Pending",
-      "payoutsCount": "Payouts",
-      "registry": "Payout registry",
+      "paid": "გადახდილი",
+      "pending": "მომლოდინე",
+      "payoutsCount": "გადახდები",
+      "registry": "გადახდის რეესტრი",
       "registryTitle": "კომისიის რეესტრი",
       "registryDescription": "თვალყური ადევნეთ საკომისიოს გადახდის სტატუსებს დეველოპერებისგან. მონაცემები ავტომატურად განახლდება გარიგების სტატუსის შეცვლისას.",
-      "noPayouts": "No payouts.",
+      "noPayouts": "არანაირი გადახდა.",
       "pipeline": "მილსადენი",
       "inProgress": "მიმდინარეობს",
       "dealsInWork": "გარიგებები სამუშაოში",
@@ -238,24 +238,24 @@
     }
   },
   "agent": {
-    "selectDeveloper": "Developer ID",
+    "selectDeveloper": "დეველოპერის ID (მოწვევის ბმულიდან)",
     "application": {
-      "title": "Apply to developer",
-      "fullName": "Full name",
-      "phone": "Phone",
-      "bankDetails": "Bank details",
-      "agreements": "Agreements",
-      "signature": "Signature",
-      "drawSignature": "Draw",
-      "uploadSignature": "Upload",
-      "clear": "Clear",
-      "sign": "Sign agreement",
-      "submit": "Submit application"
+      "title": "მიმართეთ დეველოპერს",
+      "fullName": "სრული სახელი",
+      "phone": "ტელეფონი",
+      "bankDetails": "ბანკის დეტალები",
+      "agreements": "ხელშეკრულებები",
+      "signature": "ხელმოწერა",
+      "drawSignature": "დახატე",
+      "uploadSignature": "ატვირთვა",
+      "clear": "წმინდა",
+      "sign": "ხელი მოაწერე ხელშეკრულებას",
+      "submit": "განაცხადის გაგზავნა"
     },
     "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "pending": "მომლოდინე",
+      "approved": "დამტკიცებულია",
+      "rejected": "უარყოფილია"
     }
   }
 }

@@ -9,6 +9,7 @@ interface FavoriteApartment {
   price?: number;
   status: string;
   floor_number: number;
+  image_url?: string | null;
   addedAt: number;
 }
 

@@ -215,6 +215,7 @@ export const ProjectSidePanel = ({
 
   const handleFavoriteClick = () => {
     if (state && state.kind === 'apartment') {
+      const imageUrl = getApartmentImage(state.apartment);
       toggleFavorite({
         id: state.apartment.id,
         project_id: project.id,
@@ -224,6 +225,7 @@ export const ProjectSidePanel = ({
         price: state.apartment.price || 0,
         status: state.apartment.status,
         floor_number: state.apartment.floor_number,
+        image_url: imageUrl,
       });
     }
   };

@@ -46,6 +46,14 @@
   "taxId": "ID / საგადასახადო ნომერი",
   "phone": "ტელეფონი",
   "legalAddress": "იურიდიული მისამართი",
+  "companyTypeOptional": "კომპანიის ტიპი (სურვილისამებრ)",
+  "companyTypePlaceholder": "მაგ. შპს / სს / FZE",
+  "registeredOfficeOptional": "რეგისტრირებული ოფისი (სურვილისამებრ)",
+  "registeredOfficePlaceholder": "მაგ. დუბაი, UAE",
+  "representedByNameOptional": "წარმოდგენილია — სახელით (სურვილისამებრ)",
+  "representedByNamePlaceholder": "მაგ. ჯონ სმიტი",
+  "representedByTitleOptional": "წარმოდგენილია — სათაური (არასავალდებულო)",
+  "representedByTitlePlaceholder": "მაგ. გენერალური მენეჯერი / დირექტორი",
   "bankDetailsOptional": "ბანკის დეტალები (სურვილისამებრ)",
   "bankDetailsPlaceholder": "IBAN / SWIFT / ...",
   "draw": "დახატე",
@@ -67,5 +75,8 @@
   "nextButton": "შემდეგი",
   "sending": "იგზავნება...",
   "signAndSubmit": "მოაწერეთ ხელი და წარადგინეთ",
-  "passwordVerified": "პაროლი დადასტურებულია."
+  "passwordVerified": "პაროლი დადასტურებულია.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

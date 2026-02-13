@@ -377,6 +377,7 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
   const handleToggleFavorite = () => {
     if (!apartment) return;
 
+    const favoriteImageUrl = photos[0]?.image_url ?? null;
     toggleFavorite({
       id: apartment.id,
       project_id: apartment.project_id,
@@ -385,7 +386,8 @@ const ApartmentDetailsPage = ({ useId = false, apartmentIdProp = '', projectIdPr
       area: apartment.area,
       price: apartment.price || 0,
       status: apartment.status,
-      floor_number: apartment.floor_number
+      floor_number: apartment.floor_number,
+      image_url: favoriteImageUrl,
     });
   };
 

@@ -46,6 +46,14 @@
   "taxId": "الرقم التعريفي/الرقم الضريبي",
   "phone": "هاتف",
   "legalAddress": "العنوان القانوني",
+  "companyTypeOptional": "نوع الشركة (اختياري)",
+  "companyTypePlaceholder": "على سبيل المثال شركة ذات مسؤولية محدودة / هيئة الأوراق المالية / مؤسسة منطقة حرة",
+  "registeredOfficeOptional": "المكتب المسجل (اختياري)",
+  "registeredOfficePlaceholder": "على سبيل المثال دبي، الإمارات العربية المتحدة",
+  "representedByNameOptional": "يمثله - الاسم (اختياري)",
+  "representedByNamePlaceholder": "على سبيل المثال جون سميث",
+  "representedByTitleOptional": "يمثله - العنوان (اختياري)",
+  "representedByTitlePlaceholder": "على سبيل المثال المدير العام / المدير",
   "bankDetailsOptional": "تفاصيل البنك (اختياري)",
   "bankDetailsPlaceholder": "الآيبان / سويفت / ...",
   "draw": "يرسم",
@@ -67,5 +75,8 @@
   "nextButton": "التالي",
   "sending": "إرسال...",
   "signAndSubmit": "التوقيع وتقديم",
-  "passwordVerified": "تم التحقق من كلمة المرور."
+  "passwordVerified": "تم التحقق من كلمة المرور.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

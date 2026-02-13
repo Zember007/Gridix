@@ -2,10 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
 import { hasAuthTokensInHash, consumeSupabaseSessionFromUrl } from "@gridix/utils";
-import { useLanguageNavigation } from "@gridix/utils/react";
+import { useLanguageNavigation, useLanguage } from "@gridix/utils/react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Alert,
+  AlertDescription,
+  Button,
+  Input,
+  Label,
+} from "@gridix/ui";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { FullPageLoaderView } from "@/shared/ui/LoaderView";
 import ResetPasswordForm from "@/components/Auth/ResetPasswordForm";
-import { AuthForm } from "@/components/Auth/AuthForm";
+import { SignInPage, type AccountType } from "@/components/ui/sign-in";
 
 function safeRedirectUrl(input: string | null): string | null {
   if (!input) return null;
@@ -94,19 +108,40 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
   window.location.href = `${defaultPath}#${hash}`;
 }
 
+const SIGNIN_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
+
+
 export default function AuthPage() {
   const { navigate } = useLanguageNavigation();
+  const { t, language } = useLanguage();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const redirectToUrl = searchParams.get("redirect_to");
   const mode = searchParams.get("mode");
   const [isRecovery, setIsRecovery] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const [accountType, setAccountType] = useState<AccountType>("developer");
+  const [authLoading, setAuthLoading] = useState(false);
 
   const [loading] = useState(false);
 
   const isSignup = location.pathname.includes("/signup");
   const isSignin = location.pathname.includes("/signin");
+  const lang = window.location.pathname.split("/")[1] || "en";
+
+  const refCode = searchParams.get("ref");
+  const inviteCode = searchParams.get("invite");
+  const [partnerInfo, setPartnerInfo] = useState<{
+    id: string;
+    partner_code: string;
+    user_profiles: { full_name: string | null; email: string | null };
+  } | null>(null);
+  const [checkingPartner, setCheckingPartner] = useState(false);
 
   const hashIndicatesRecovery = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -145,22 +180,259 @@ export default function AuthPage() {
     };
   }, [redirectToUrl]);
 
+  useEffect(() => {
+    const checkPartner = async () => {
+      if (!refCode) {
+        setPartnerInfo(null);
+        return;
+      }
+      setCheckingPartner(true);
+      try {
+        const { data, error } = await supabase
+          .from("partner_profiles")
+          .select(
+            `
+            id,
+            partner_code,
+            user_profiles!partner_profiles_user_id_fkey (
+              full_name,
+              email
+            )
+          `,
+          )
+          .eq("partner_code", refCode)
+          .single();
+
+        if (error || !data) {
+          toast.error(t("auth.invalidReferralCode"));
+          setPartnerInfo(null);
+          return;
+        }
+        setPartnerInfo(data as any);
+      } catch (error: unknown) {
+        console.error("Error checking partner:", error);
+        toast.error(t("auth.failedToCheckPartner"));
+      } finally {
+        setCheckingPartner(false);
+      }
+    };
+    void checkPartner();
+  }, [refCode, t]);
+
+  const handleSendReset = async () => {
+    if (!resetEmail) {
+      toast.error(t("auth.enterEmail"));
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/${lang}/auth?mode=recovery`,
+      });
+      if (error) throw error;
+      toast.success(t("auth.resetEmailSent"));
+      setResetModalOpen(false);
+      setResetEmail("");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : t("auth.failedToSendEmail");
+      console.error("Reset email error:", err);
+      toast.error(message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   if (loading) return <FullPageLoaderView />;
 
-  return isRecovery ? (
-    <ResetPasswordForm
-      onSuccess={() => {
-        if (typeof window !== "undefined") window.location.hash = "";
-        navigate("/auth");
-      }}
-    />
-  ) : (
-    <AuthForm
-      defaultMode={isSignup ? "signup" : isSignin ? "signin" : undefined}
-      onSuccess={() => {
-        void redirectByAccountType({ redirectToUrl, lang: (window.location.pathname.split("/")[1] || "en") });
-      }}
-    />
+  if (isRecovery) {
+    return (
+      <ResetPasswordForm
+        onSuccess={() => {
+          if (typeof window !== "undefined") window.location.hash = "";
+          navigate("/auth");
+        }}
+      />
+    );
+  }
+
+  return (
+    <>
+      <SignInPage
+        defaultMode={isSignup ? "signup" : isSignin ? "signin" : "signin"}
+        heroImageSrc={SIGNIN_HERO_IMAGE}
+        banner={
+          <>
+            {refCode && partnerInfo && (
+              <Alert className="animate-element animate-delay-220">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {t("auth.partnerInvitation")} {partnerInfo?.user_profiles?.full_name}
+                </AlertDescription>
+              </Alert>
+            )}
+            {checkingPartner && (
+              <div className="animate-element animate-delay-220 flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("auth.checkingPartner")}
+              </div>
+            )}
+          </>
+        }
+        accountType={accountType}
+        onAccountTypeChange={setAccountType}
+        loading={authLoading}
+        labels={{
+          signInTab: t("auth.signIn"),
+          signUpTab: t("auth.signUp"),
+          signInTitle: t("auth.signInTitle"),
+          signUpTitle: t("auth.signUpTitle"),
+          signInDescription: t("auth.signInDescription"),
+          emailLabel: t("auth.email"),
+          emailPlaceholder: t("auth.emailPlaceholder"),
+          passwordLabel: t("auth.password"),
+          passwordPlaceholder: t("auth.passwordPlaceholder"),
+          fullNameLabel: t("auth.fullName"),
+          fullNamePlaceholder: t("auth.fullNamePlaceholder"),
+          companyNameLabel: t("auth.companyName"),
+          companyNamePlaceholder: t("auth.companyNamePlaceholder"),
+          phoneLabel: t("auth.phone"),
+          phonePlaceholder: t("auth.phonePlaceholder"),
+          accountTypeLabel: t("auth.selectAccountType"),
+          accountTypeDeveloper: t("auth.developer"),
+          accountTypePartner: t("auth.partner"),
+          marketingEmailsConsent: t("auth.marketingEmailsConsent"),
+          rememberMe: t("auth.keepMeSignedIn"),
+          resetPassword: t("auth.resetPasswordLink"),
+          signInButton: t("auth.signInButton"),
+          signUpButton: t("auth.signUpButton"),
+          orContinueWith: t("auth.orContinueWith"),
+          continueWithGoogle: t("auth.continueWithGoogle"),
+          createAccountPrompt: t("auth.createAccountPrompt"),
+          createAccountLink: t("auth.createAccountLink"),
+          alreadyHaveAccountPrompt: t("auth.alreadyHaveAccountPrompt"),
+          alreadyHaveAccountLink: t("auth.alreadyHaveAccountLink"),
+        }}
+        onResetPassword={() => setResetModalOpen(true)}
+        onSubmit={async (payload) => {
+          setAuthLoading(true);
+          try {
+            if (payload.mode === "signin") {
+              const { error } = await supabase.auth.signInWithPassword({
+                email: payload.email,
+                password: payload.password,
+              });
+              if (error) throw error;
+              toast.success(t("auth.welcome"));
+              await redirectByAccountType({ redirectToUrl: redirectToUrl ?? null, lang });
+              return;
+            }
+
+            // signup
+            const { data: authData, error } = await supabase.auth.signUp({
+              email: payload.email,
+              password: payload.password,
+              options: {
+                data: {
+                  full_name: payload.fullName,
+                  company_name: payload.companyName,
+                  phone: payload.phone,
+                  account_type: payload.accountType,
+                  partner_id: partnerInfo?.id || null,
+                  marketing_emails_consent: payload.marketingEmailsConsent ?? false,
+                  preferred_locale: language,
+                },
+              },
+            });
+            if (error) throw error;
+
+            if (authData.user) {
+              if (refCode && partnerInfo) {
+                const { error: linkError } = await supabase
+                  .from("partner_links")
+                  .insert({
+                    partner_id: partnerInfo.id,
+                    client_id: authData.user.id,
+                    type: "referral",
+                    status: "active",
+                    accepted_at: new Date().toISOString(),
+                  } as any);
+                if (linkError) console.error("Error creating partner link:", linkError);
+              }
+
+              if (inviteCode) {
+                const { error: inviteError } = await supabase
+                  .from("partner_invitations")
+                  .update({
+                    status: "accepted",
+                    accepted_at: new Date().toISOString(),
+                  } as any)
+                  .eq("invitation_code", inviteCode)
+                  .eq("email", payload.email);
+                if (inviteError) console.error("Error updating invitation:", inviteError);
+              }
+            }
+
+            toast.success(t("auth.checkEmail"));
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : t("auth.errorOccurred");
+            console.error("Auth error:", err);
+            toast.error(message);
+          } finally {
+            setAuthLoading(false);
+          }
+        }}
+       /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
+          try {
+            localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
+            if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
+            else localStorage.removeItem(LS_PENDING_REF);
+            if (inviteCode) localStorage.setItem(LS_PENDING_INVITE, inviteCode);
+            else localStorage.removeItem(LS_PENDING_INVITE);
+          } catch {
+            // ignore storage issues
+          }
+
+          void supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${window.location.origin}/${lang}/auth/callback${
+                redirectToUrl ? `?redirect_to=${encodeURIComponent(redirectToUrl)}` : ""
+              }`,
+            },
+          });
+        }} */
+      />
+
+      <Dialog open={resetModalOpen} onOpenChange={setResetModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("auth.resetPasswordTitle")}</DialogTitle>
+            <DialogDescription>{t("auth.resetPasswordDescription")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">{t("auth.resetEmail")}</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder={t("auth.emailPlaceholder")}
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" type="button" onClick={() => setResetModalOpen(false)}>
+                {t("auth.cancel")}
+              </Button>
+              <Button type="button" onClick={handleSendReset} disabled={resetLoading}>
+                {resetLoading ? t("auth.sending") : t("auth.sendLink")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

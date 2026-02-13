@@ -46,7 +46,7 @@ export const AgencyPartnersPage: React.FC = () => {
             }[status] || 'bg-slate-50 text-slate-700 ring-slate-600/20';
         const label =
             status === 'active'
-                ? t('partners.status.active')
+                ? t('partners.status.approved')
                 : status === 'pending'
                     ? t('partners.status.pending')
                     : status === 'needs_correction'

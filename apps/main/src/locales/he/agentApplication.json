@@ -46,6 +46,14 @@
   "taxId": "תעודה מזהה / מספר מס",
   "phone": "טֵלֵפוֹן",
   "legalAddress": "כתובת חוקית",
+  "companyTypeOptional": "סוג חברה (אופציונלי)",
+  "companyTypePlaceholder": "לְמָשָׁל LLC / JSC / FZE",
+  "registeredOfficeOptional": "משרד רשום (אופציונלי)",
+  "registeredOfficePlaceholder": "לְמָשָׁל דובאי, איחוד האמירויות",
+  "representedByNameOptional": "מיוצג על ידי - שם (אופציונלי)",
+  "representedByNamePlaceholder": "לְמָשָׁל ג'ון סמית'",
+  "representedByTitleOptional": "מיוצג על ידי - כותרת (אופציונלי)",
+  "representedByTitlePlaceholder": "לְמָשָׁל מנהל/מנהל כללי",
   "bankDetailsOptional": "פרטי בנק (אופציונלי)",
   "bankDetailsPlaceholder": "IBAN / SWIFT / ...",
   "draw": "לִמְשׁוֹך",
@@ -67,5 +75,8 @@
   "nextButton": "הַבָּא",
   "sending": "שְׁלִיחָה...",
   "signAndSubmit": "חתמו והגישו",
-  "passwordVerified": "סיסמה מאומתת."
+  "passwordVerified": "סיסמה מאומתת.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

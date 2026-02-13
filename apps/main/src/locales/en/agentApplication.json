@@ -46,6 +46,14 @@
   "taxId": "ID / Tax Number",
   "phone": "Phone",
   "legalAddress": "Legal address",
+  "companyTypeOptional": "Company type (optional)",
+  "companyTypePlaceholder": "e.g. LLC / JSC / FZE",
+  "registeredOfficeOptional": "Registered office (optional)",
+  "registeredOfficePlaceholder": "e.g. Dubai, UAE",
+  "representedByNameOptional": "Represented by — name (optional)",
+  "representedByNamePlaceholder": "e.g. John Smith",
+  "representedByTitleOptional": "Represented by — title (optional)",
+  "representedByTitlePlaceholder": "e.g. General Manager / Director",
   "bankDetailsOptional": "Bank details (optional)",
   "bankDetailsPlaceholder": "IBAN / SWIFT / ...",
   "draw": "Draw",
@@ -67,5 +75,8 @@
   "nextButton": "Next",
   "sending": "Sending...",
   "signAndSubmit": "Sign and submit",
-  "passwordVerified": "Password verified."
+  "passwordVerified": "Password verified.",
+  "successTitle": "Thank You!",
+  "signedContractsDownload": "Download your signed contracts:",
+  "pdfAvailableAfterSubmit": "PDF download available after signing"
 }

@@ -46,6 +46,14 @@
   "taxId": "ИНН / Tax ID",
   "phone": "Телефон",
   "legalAddress": "Юридический адрес",
+  "companyTypeOptional": "Тип компании (опционально)",
+  "companyTypePlaceholder": "Например: LLC / JSC / FZE",
+  "registeredOfficeOptional": "Registered office (опционально)",
+  "registeredOfficePlaceholder": "Например: Dubai, UAE",
+  "representedByNameOptional": "Представитель — имя (опционально)",
+  "representedByNamePlaceholder": "Например: John Smith",
+  "representedByTitleOptional": "Представитель — должность (опционально)",
+  "representedByTitlePlaceholder": "Например: General Manager / Director",
   "bankDetailsOptional": "Банковские реквизиты (опционально)",
   "bankDetailsPlaceholder": "IBAN / SWIFT / ...",
   "draw": "Нарисовать",
@@ -67,5 +75,8 @@
   "nextButton": "Далее",
   "sending": "Отправляем...",
   "signAndSubmit": "Подписать и отправить",
-  "passwordVerified": "Пароль подтверждён."
+  "passwordVerified": "Пароль подтверждён.",
+  "successTitle": "Спасибо!",
+  "signedContractsDownload": "Скачайте подписанные договоры:",
+  "pdfAvailableAfterSubmit": "Скачивание PDF доступно после подписания"
 }

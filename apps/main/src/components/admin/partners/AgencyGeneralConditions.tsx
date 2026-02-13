@@ -25,16 +25,36 @@ const CONTRACT_VARIABLE_KEYS: Array<{ key: string; labelKey: string }> = [
     { key: '{{agent.full_name}}', labelKey: 'contractVarsAgentFullName' },
     { key: '{{agent.person_type}}', labelKey: 'contractVarsAgentPersonType' },
     { key: '{{agent.company_name}}', labelKey: 'contractVarsAgentCompanyName' },
+    { key: '{{agent.company_type}}', labelKey: 'contractVarsAgentCompanyType' },
     { key: '{{agent.tax_id}}', labelKey: 'contractVarsAgentTaxId' },
     { key: '{{agent.legal_address}}', labelKey: 'contractVarsAgentLegalAddress' },
+    { key: '{{agent.registered_office}}', labelKey: 'contractVarsAgentRegisteredOffice' },
+    { key: '{{agent.represented_by_name}}', labelKey: 'contractVarsAgentRepresentedByName' },
+    { key: '{{agent.represented_by_title}}', labelKey: 'contractVarsAgentRepresentedByTitle' },
     { key: '{{agent.email}}', labelKey: 'contractVarsAgentEmail' },
     { key: '{{agent.phone}}', labelKey: 'contractVarsAgentPhone' },
     { key: '{{date.today}}', labelKey: 'contractVarsDateToday' },
     { key: '{{commission_rate}}', labelKey: 'contractVarsCommissionRate' },
+    { key: '{{program.default_commission_rate}}', labelKey: 'contractVarsProgramDefaultCommissionRate' },
+    { key: '{{program.payout_terms}}', labelKey: 'contractVarsProgramPayoutTerms' },
+    { key: '{{program.products_description}}', labelKey: 'contractVarsProgramProductsDescription' },
+    { key: '{{program.territory}}', labelKey: 'contractVarsProgramTerritory' },
+    { key: '{{program.exclusivity}}', labelKey: 'contractVarsProgramExclusivity' },
+    { key: '{{program.agreement_effective_date}}', labelKey: 'contractVarsProgramAgreementEffectiveDate' },
+    { key: '{{program.agreement_end_date}}', labelKey: 'contractVarsProgramAgreementEndDate' },
+    { key: '{{program.force_majeure_weeks}}', labelKey: 'contractVarsProgramForceMajeureWeeks' },
+    { key: '{{program.originals_count}}', labelKey: 'contractVarsProgramOriginalsCount' },
+    { key: '{{{signatures.developer_stamp}}}', labelKey: 'contractVarsDeveloperStamp' },
+    { key: '{{{signatures.developer}}}', labelKey: 'contractVarsDeveloperSignature' },
+    { key: '{{{signatures.agent}}}', labelKey: 'contractVarsAgentSignature' },
     { key: '{{developer.company_name}}', labelKey: 'contractVarsDeveloperCompany' },
     { key: '{{developer.full_name}}', labelKey: 'contractVarsDeveloperFullName' },
+    { key: '{{developer.company_type}}', labelKey: 'contractVarsDeveloperCompanyType' },
     { key: '{{developer.tax_id}}', labelKey: 'contractVarsDeveloperTaxId' },
     { key: '{{developer.legal_address}}', labelKey: 'contractVarsDeveloperLegalAddress' },
+    { key: '{{developer.registered_office}}', labelKey: 'contractVarsDeveloperRegisteredOffice' },
+    { key: '{{developer.represented_by_name}}', labelKey: 'contractVarsDeveloperRepresentedByName' },
+    { key: '{{developer.represented_by_title}}', labelKey: 'contractVarsDeveloperRepresentedByTitle' },
     { key: '{{developer.email}}', labelKey: 'contractVarsDeveloperEmail' },
     { key: '{{developer.phone}}', labelKey: 'contractVarsDeveloperPhone' },
     { key: '{{partner_name}}', labelKey: 'contractVarsPartnerName' },
@@ -415,6 +435,17 @@ export const AgencyGeneralConditions: React.FC = () => {
         defaultCommission: 4,
         leadLockDays: 30,
         payoutTerms: 'Выплата вознаграждения производится в течение 10 рабочих дней после поступления средств от клиента на счет застройщика. Валюта выплаты соответствует валюте договора.',
+        productsDescription: '',
+        territory: '',
+        exclusivity: 'non-exclusive' as 'exclusive' | 'non-exclusive',
+        agreementEffectiveDate: '',
+        agreementEndDate: '',
+        forceMajeureWeeks: 8,
+        originalsCount: 2,
+        developerCompanyType: '',
+        developerRegisteredOffice: '',
+        developerRepresentativeName: '',
+        developerRepresentativeTitle: '',
         developerSignaturePath: null as string | null,
         developerStampPath: null as string | null,
     });
@@ -526,6 +557,17 @@ export const AgencyGeneralConditions: React.FC = () => {
                         defaultCommission: typeof s.default_commission_rate === 'number' ? s.default_commission_rate : prev.defaultCommission,
                         leadLockDays: typeof s.lead_lock_days === 'number' ? s.lead_lock_days : prev.leadLockDays,
                         payoutTerms: typeof s.payout_terms === 'string' && s.payout_terms ? s.payout_terms : prev.payoutTerms,
+                        productsDescription: typeof s.products_description === 'string' ? s.products_description : prev.productsDescription,
+                        territory: typeof s.territory === 'string' ? s.territory : prev.territory,
+                        exclusivity: (s.exclusivity === 'exclusive' || s.exclusivity === 'non-exclusive') ? s.exclusivity : prev.exclusivity,
+                        agreementEffectiveDate: typeof s.agreement_effective_date === 'string' ? s.agreement_effective_date : prev.agreementEffectiveDate,
+                        agreementEndDate: typeof s.agreement_end_date === 'string' ? s.agreement_end_date : prev.agreementEndDate,
+                        forceMajeureWeeks: typeof s.force_majeure_weeks === 'number' ? s.force_majeure_weeks : prev.forceMajeureWeeks,
+                        originalsCount: typeof s.originals_count === 'number' ? s.originals_count : prev.originalsCount,
+                        developerCompanyType: typeof s.developer_company_type === 'string' ? s.developer_company_type : prev.developerCompanyType,
+                        developerRegisteredOffice: typeof s.developer_registered_office === 'string' ? s.developer_registered_office : prev.developerRegisteredOffice,
+                        developerRepresentativeName: typeof s.developer_representative_name === 'string' ? s.developer_representative_name : prev.developerRepresentativeName,
+                        developerRepresentativeTitle: typeof s.developer_representative_title === 'string' ? s.developer_representative_title : prev.developerRepresentativeTitle,
                         developerSignaturePath: typeof s.developer_signature_path === 'string' ? s.developer_signature_path : null,
                         developerStampPath: typeof s.developer_stamp_path === 'string' ? s.developer_stamp_path : null,
                     }));
@@ -561,6 +603,17 @@ export const AgencyGeneralConditions: React.FC = () => {
                 default_commission_rate: settings.defaultCommission,
                 lead_lock_days: settings.leadLockDays,
                 payout_terms: settings.payoutTerms,
+                products_description: settings.productsDescription || null,
+                territory: settings.territory || null,
+                exclusivity: settings.exclusivity,
+                agreement_effective_date: settings.agreementEffectiveDate || null,
+                agreement_end_date: settings.agreementEndDate || null,
+                force_majeure_weeks: settings.forceMajeureWeeks,
+                originals_count: settings.originalsCount,
+                developer_company_type: settings.developerCompanyType || null,
+                developer_registered_office: settings.developerRegisteredOffice || null,
+                developer_representative_name: settings.developerRepresentativeName || null,
+                developer_representative_title: settings.developerRepresentativeTitle || null,
             });
             setIsEditing(false);
             toast.success(t('partners.generalConditions.conditionsUpdated'), { description: t('partners.generalConditions.conditionsUpdatedDesc') });
@@ -980,6 +1033,149 @@ export const AgencyGeneralConditions: React.FC = () => {
                                 onChange={e => setSettings({ ...settings, payoutTerms: e.target.value })}
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 min-h-[100px] focus:bg-white transition-all resize-none disabled:opacity-70 leading-relaxed"
                             />
+                        </div>
+
+                        <div className="mt-6">
+                            <div className="flex items-center justify-between gap-4 mb-3">
+                                <h4 className="font-bold text-slate-900 text-sm">{t('partners.generalConditions.contractPlaceholders')}</h4>
+                                <span className="text-[10px] text-slate-400">{t('partners.generalConditions.contractPlaceholdersHint')}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.territory')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.territory}
+                                        onChange={(e) => setSettings({ ...settings, territory: e.target.value })}
+                                        placeholder={t('partners.generalConditions.territoryPlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.exclusivity')}</label>
+                                    <select
+                                        disabled={!isEditing}
+                                        value={settings.exclusivity}
+                                        onChange={(e) => setSettings({ ...settings, exclusivity: e.target.value as 'exclusive' | 'non-exclusive' })}
+                                        className="w-full h-12 px-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70"
+                                    >
+                                        <option value="non-exclusive">{t('partners.generalConditions.exclusivityNonExclusive')}</option>
+                                        <option value="exclusive">{t('partners.generalConditions.exclusivityExclusive')}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.principalCompanyType')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.developerCompanyType}
+                                        onChange={(e) => setSettings({ ...settings, developerCompanyType: e.target.value })}
+                                        placeholder={t('partners.generalConditions.principalCompanyTypePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.principalRegisteredOffice')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.developerRegisteredOffice}
+                                        onChange={(e) => setSettings({ ...settings, developerRegisteredOffice: e.target.value })}
+                                        placeholder={t('partners.generalConditions.principalRegisteredOfficePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.principalRepresentedByName')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.developerRepresentativeName}
+                                        onChange={(e) => setSettings({ ...settings, developerRepresentativeName: e.target.value })}
+                                        placeholder={t('partners.generalConditions.principalRepresentedByNamePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.principalRepresentedByTitle')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.developerRepresentativeTitle}
+                                        onChange={(e) => setSettings({ ...settings, developerRepresentativeTitle: e.target.value })}
+                                        placeholder={t('partners.generalConditions.principalRepresentedByTitlePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.productsDescription')}</label>
+                                <Textarea
+                                    disabled={!isEditing}
+                                    value={settings.productsDescription}
+                                    onChange={(e) => setSettings({ ...settings, productsDescription: e.target.value })}
+                                    placeholder={t('partners.generalConditions.productsDescriptionPlaceholder')}
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 min-h-[90px] focus:bg-white transition-all resize-none disabled:opacity-70 leading-relaxed"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.agreementEffectiveDate')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.agreementEffectiveDate}
+                                        onChange={(e) => setSettings({ ...settings, agreementEffectiveDate: e.target.value })}
+                                        placeholder={t('partners.generalConditions.agreementEffectiveDatePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.agreementEndDate')}</label>
+                                    <Input
+                                        type="text"
+                                        disabled={!isEditing}
+                                        value={settings.agreementEndDate}
+                                        onChange={(e) => setSettings({ ...settings, agreementEndDate: e.target.value })}
+                                        placeholder={t('partners.generalConditions.agreementEndDatePlaceholder')}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.forceMajeureWeeks')}</label>
+                                    <Input
+                                        type="number"
+                                        disabled={!isEditing}
+                                        value={settings.forceMajeureWeeks}
+                                        onChange={(e) => setSettings({ ...settings, forceMajeureWeeks: Number(e.target.value) })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">{t('partners.generalConditions.originalsCount')}</label>
+                                    <Input
+                                        type="number"
+                                        disabled={!isEditing}
+                                        value={settings.originalsCount}
+                                        onChange={(e) => setSettings({ ...settings, originalsCount: Number(e.target.value) })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:bg-white transition-all disabled:opacity-70 h-12"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
