@@ -63,9 +63,9 @@ interface FiltersState {
 const INITIAL_STATE: FiltersState = {
   selectedFloor: 'all',
   selectedRooms: 'all',
-  priceRange: [0, 10_000_000],
+  priceRange: [0, 0],
   priceRangeCurrency: DEFAULT_CURRENCY,
-  areaRange: [0, 1000],
+  areaRange: [0, 0],
   searchQuery: '',
   showOnlyAvailable: true,
   selectedType: 'all',
@@ -210,39 +210,69 @@ export const useProjectFilters = ({
   );
 
   const [state, dispatch] = useReducer(filtersReducer, INITIAL_STATE);
+  const didInitRangesRef = useRef(false);
+  const userInteractedRef = useRef(false);
+  const prevBoundsRef = useRef({ minPrice: 0, maxPrice: 0, minArea: 0, maxArea: 0 });
+
+  const baseCurrency =
+    project?.currency && isValidCurrency(project.currency) ? project.currency : DEFAULT_CURRENCY;
 
   // ── Dispatch wrappers (maintain backward-compatible setter signatures) ──
 
   const setSelectedFloor = useCallback(
-    (value: string) => dispatch({ type: 'SET_FLOOR', value }),
+    (value: string) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_FLOOR', value });
+    },
     [],
   );
   const setSelectedRooms = useCallback(
-    (value: string) => dispatch({ type: 'SET_ROOMS', value }),
+    (value: string) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_ROOMS', value });
+    },
     [],
   );
   const setPriceRange = useCallback(
-    (value: [number, number]) => dispatch({ type: 'SET_PRICE_RANGE', value }),
+    (value: [number, number]) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_PRICE_RANGE', value });
+    },
     [],
   );
   const setAreaRange = useCallback(
-    (value: [number, number]) => dispatch({ type: 'SET_AREA_RANGE', value }),
+    (value: [number, number]) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_AREA_RANGE', value });
+    },
     [],
   );
   const setSearchQuery = useCallback(
-    (value: string) => dispatch({ type: 'SET_SEARCH', value }),
+    (value: string) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_SEARCH', value });
+    },
     [],
   );
   const setShowOnlyAvailable = useCallback(
-    (value: boolean) => dispatch({ type: 'SET_SHOW_ONLY_AVAILABLE', value }),
+    (value: boolean) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_SHOW_ONLY_AVAILABLE', value });
+    },
     [],
   );
   const setSelectedType = useCallback(
-    (value: ApartmentTypeFilter) => dispatch({ type: 'SET_TYPE', value }),
+    (value: ApartmentTypeFilter) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_TYPE', value });
+    },
     [],
   );
   const setSelectedCurrency = useCallback(
-    (value: string) => dispatch({ type: 'SET_CURRENCY', value }),
+    (value: string) => {
+      userInteractedRef.current = true;
+      dispatch({ type: 'SET_CURRENCY', value });
+    },
     [],
   );
 
@@ -297,6 +327,49 @@ export const useProjectFilters = ({
   // ── Adjust ranges when currency changes ──
 
   const previousCurrencyRef = useRef(state.selectedCurrency);
+
+  useEffect(() => {
+    if (apartments.length === 0) {
+      didInitRangesRef.current = false;
+      prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+      return;
+    }
+
+    if (!didInitRangesRef.current) {
+      dispatch({ type: 'SET_CURRENCY', value: baseCurrency });
+      dispatch({ type: 'SET_PRICE_RANGE', value: [minPrice, maxPrice] });
+      dispatch({ type: 'SET_AREA_RANGE', value: [minArea, maxArea] });
+      didInitRangesRef.current = true;
+      prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+    }
+  }, [apartments.length, minPrice, maxPrice, minArea, maxArea, baseCurrency]);
+
+  useEffect(() => {
+    if (!didInitRangesRef.current || apartments.length === 0 || userInteractedRef.current) {
+      prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+      return;
+    }
+
+    const prevBounds = prevBoundsRef.current;
+    const shouldExpandPrice =
+      state.priceRange[0] === prevBounds.minPrice &&
+      state.priceRange[1] === prevBounds.maxPrice &&
+      (minPrice !== prevBounds.minPrice || maxPrice !== prevBounds.maxPrice);
+    const shouldExpandArea =
+      state.areaRange[0] === prevBounds.minArea &&
+      state.areaRange[1] === prevBounds.maxArea &&
+      (minArea !== prevBounds.minArea || maxArea !== prevBounds.maxArea);
+
+    if (shouldExpandPrice) {
+      dispatch({ type: 'SET_PRICE_RANGE', value: [minPrice, maxPrice] });
+    }
+
+    if (shouldExpandArea) {
+      dispatch({ type: 'SET_AREA_RANGE', value: [minArea, maxArea] });
+    }
+
+    prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+  }, [apartments.length, minPrice, maxPrice, minArea, maxArea, state.priceRange, state.areaRange]);
 
   useEffect(() => {
     if (apartments.length === 0) return;
@@ -386,8 +459,6 @@ export const useProjectFilters = ({
   // ── Reset ──
 
   const resetFilters = useCallback(() => {
-    const baseCurrency =
-      project?.currency && isValidCurrency(project.currency) ? project.currency : DEFAULT_CURRENCY;
     dispatch({
       type: 'RESET',
       defaults: {
@@ -397,7 +468,10 @@ export const useProjectFilters = ({
         areaRange: [minArea, maxArea],
       },
     });
-  }, [minPrice, maxPrice, minArea, maxArea, project?.currency]);
+    userInteractedRef.current = false;
+    didInitRangesRef.current = true;
+    prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+  }, [minPrice, maxPrice, minArea, maxArea, baseCurrency]);
 
   // ── Public API (backward compatible) ──
 
