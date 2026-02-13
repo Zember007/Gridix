@@ -40,7 +40,6 @@ const DEFAULT_FILTER_VISIBILITY: Required<FilterVisibilityOptions> = {
   status: true,
 };
 
-
 export function getHasAnyVisibleFilter(visibility: FilterVisibilityOptions = {}): boolean {
   const normalized = { ...DEFAULT_FILTER_VISIBILITY, ...visibility };
   return Object.values(normalized).some(Boolean);
@@ -60,17 +59,103 @@ interface FiltersState {
   selectedCurrency: string;
 }
 
-const INITIAL_STATE: FiltersState = {
-  selectedFloor: 'all',
-  selectedRooms: 'all',
-  priceRange: [0, 0],
-  priceRangeCurrency: DEFAULT_CURRENCY,
-  areaRange: [0, 0],
-  searchQuery: '',
-  showOnlyAvailable: true,
-  selectedType: 'all',
-  selectedCurrency: DEFAULT_CURRENCY,
+interface PriceAndAreaBounds {
+  minPrice: number;
+  maxPrice: number;
+  minArea: number;
+  maxArea: number;
+}
+
+interface InitFiltersStateArgs {
+  apartments: Apartment[];
+  project?: Project;
+}
+
+const EMPTY_BOUNDS: PriceAndAreaBounds = {
+  minPrice: 0,
+  maxPrice: 0,
+  minArea: 0,
+  maxArea: 0,
 };
+
+function getBaseCurrency(projectCurrency?: string | null): string {
+  return projectCurrency && isValidCurrency(projectCurrency) ? projectCurrency : DEFAULT_CURRENCY;
+}
+
+function sanitizeNumber(value: number | string | null | undefined): number {
+  const numericValue = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+}
+
+function getPriceAndAreaBounds(
+  apartments: Apartment[],
+  projectCurrency: string | undefined | null,
+  selectedCurrency: string,
+): PriceAndAreaBounds {
+  if (apartments.length === 0) {
+    return EMPTY_BOUNDS;
+  }
+
+  const prices = apartments.map(apt =>
+    sanitizeNumber(convertPrice(sanitizeNumber(apt.price), projectCurrency, selectedCurrency)),
+  );
+  const areas = apartments.map(apt => sanitizeNumber(apt.area));
+
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+  const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+  const minArea = areas.length > 0 ? Math.min(...areas) : 0;
+  const maxArea = areas.length > 0 ? Math.max(...areas) : 0;
+
+  return {
+    minPrice: Number.isFinite(minPrice) ? minPrice : 0,
+    maxPrice: Number.isFinite(maxPrice) ? maxPrice : 0,
+    minArea: Number.isFinite(minArea) ? minArea : 0,
+    maxArea: Number.isFinite(maxArea) ? maxArea : 0,
+  };
+}
+
+function getResetBaseState(): FiltersState {
+  return {
+    selectedFloor: 'all',
+    selectedRooms: 'all',
+    priceRange: [0, 0],
+    priceRangeCurrency: DEFAULT_CURRENCY,
+    areaRange: [0, 0],
+    searchQuery: '',
+    showOnlyAvailable: true,
+    selectedType: 'all',
+    selectedCurrency: DEFAULT_CURRENCY,
+  };
+}
+
+function computeProjectDefaults(params: {
+  apartments: Apartment[];
+  projectCurrency: string | undefined | null;
+  selectedCurrency: string;
+}): Pick<FiltersState, 'selectedCurrency' | 'priceRangeCurrency' | 'priceRange' | 'areaRange'> {
+  const { apartments, projectCurrency, selectedCurrency } = params;
+  const bounds = getPriceAndAreaBounds(apartments, projectCurrency, selectedCurrency);
+
+  return {
+    selectedCurrency,
+    priceRangeCurrency: selectedCurrency,
+    priceRange: apartments.length > 0 ? [bounds.minPrice, bounds.maxPrice] : [0, 0],
+    areaRange: apartments.length > 0 ? [bounds.minArea, bounds.maxArea] : [0, 0],
+  };
+}
+
+function initFiltersState({ apartments, project }: InitFiltersStateArgs): FiltersState {
+  const baseCurrency = getBaseCurrency(project?.currency);
+
+  return {
+    ...getResetBaseState(),
+    ...computeProjectDefaults({
+      apartments,
+      projectCurrency: project?.currency,
+      selectedCurrency: baseCurrency,
+    }),
+  };
+}
 
 // ── Actions ──
 
@@ -104,7 +189,7 @@ function filtersReducer(state: FiltersState, action: FiltersAction): FiltersStat
     case 'SET_CURRENCY':
       return { ...state, selectedCurrency: action.value };
     case 'RESET':
-      return { ...INITIAL_STATE, ...action.defaults };
+      return { ...getResetBaseState(), ...action.defaults };
     default:
       return state;
   }
@@ -209,13 +294,11 @@ export const useProjectFilters = ({
     [visibleFilterFields],
   );
 
-  const [state, dispatch] = useReducer(filtersReducer, INITIAL_STATE);
-  const didInitRangesRef = useRef(false);
+  const [state, dispatch] = useReducer(filtersReducer, { apartments, project }, initFiltersState);
+  const didInitRangesRef = useRef(apartments.length > 0);
   const userInteractedRef = useRef(false);
-  const prevBoundsRef = useRef({ minPrice: 0, maxPrice: 0, minArea: 0, maxArea: 0 });
 
-  const baseCurrency =
-    project?.currency && isValidCurrency(project.currency) ? project.currency : DEFAULT_CURRENCY;
+  const baseCurrency = getBaseCurrency(project?.currency);
 
   // ── Dispatch wrappers (maintain backward-compatible setter signatures) ──
 
@@ -279,12 +362,8 @@ export const useProjectFilters = ({
   // ── Sync currency from project ──
 
   useEffect(() => {
-    if (project?.currency && isValidCurrency(project.currency)) {
-      dispatch({ type: 'SET_CURRENCY', value: project.currency });
-    } else {
-      dispatch({ type: 'SET_CURRENCY', value: DEFAULT_CURRENCY });
-    }
-  }, [project?.currency]);
+    dispatch({ type: 'SET_CURRENCY', value: baseCurrency });
+  }, [baseCurrency]);
 
   // ── Unique values (memoized) ──
 
@@ -308,41 +387,36 @@ export const useProjectFilters = ({
 
   // ── Price / area bounds ──
 
-  const { minPrice, maxPrice, minArea, maxArea } = useMemo(() => {
-    if (apartments.length === 0) {
-      return { minPrice: 0, maxPrice: 10_000_000, minArea: 0, maxArea: 200 };
-    }
-    const prices = apartments.map(apt =>
-      convertPrice(apt.price || 0, project?.currency, state.selectedCurrency),
-    );
-    const areas = apartments.map(apt => apt.area);
-    return {
-      minPrice: Math.min(...prices),
-      maxPrice: Math.max(...prices),
-      minArea: Math.min(...areas),
-      maxArea: Math.max(...areas),
-    };
-  }, [apartments, state.selectedCurrency, project?.currency]);
-
-  // ── Adjust ranges when currency changes ──
+  const { minPrice, maxPrice, minArea, maxArea } = useMemo(
+    () => getPriceAndAreaBounds(apartments, project?.currency, state.selectedCurrency),
+    [apartments, project?.currency, state.selectedCurrency],
+  );
 
   const previousCurrencyRef = useRef(state.selectedCurrency);
+  const prevBoundsRef = useRef({ minPrice, maxPrice, minArea, maxArea });
+
+  // ── Fallback init for async apartments loading ──
 
   useEffect(() => {
-    if (apartments.length === 0) {
-      didInitRangesRef.current = false;
-      prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
-      return;
-    }
+    if (userInteractedRef.current) return;
+    if (didInitRangesRef.current) return;
+    if (apartments.length === 0) return;
 
-    if (!didInitRangesRef.current) {
-      dispatch({ type: 'SET_CURRENCY', value: baseCurrency });
-      dispatch({ type: 'SET_PRICE_RANGE', value: [minPrice, maxPrice] });
-      dispatch({ type: 'SET_AREA_RANGE', value: [minArea, maxArea] });
-      didInitRangesRef.current = true;
-      prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
-    }
-  }, [apartments.length, minPrice, maxPrice, minArea, maxArea, baseCurrency]);
+    dispatch({
+      type: 'RESET',
+      defaults: computeProjectDefaults({
+        apartments,
+        projectCurrency: project?.currency,
+        selectedCurrency: baseCurrency,
+      }),
+    });
+
+    didInitRangesRef.current = true;
+    prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
+    previousCurrencyRef.current = baseCurrency;
+  }, [apartments, apartments.length, project?.currency, baseCurrency, minPrice, maxPrice, minArea, maxArea]);
+
+  // ── Auto-expand bounds only in auto mode ──
 
   useEffect(() => {
     if (!didInitRangesRef.current || apartments.length === 0 || userInteractedRef.current) {
@@ -355,6 +429,7 @@ export const useProjectFilters = ({
       state.priceRange[0] === prevBounds.minPrice &&
       state.priceRange[1] === prevBounds.maxPrice &&
       (minPrice !== prevBounds.minPrice || maxPrice !== prevBounds.maxPrice);
+
     const shouldExpandArea =
       state.areaRange[0] === prevBounds.minArea &&
       state.areaRange[1] === prevBounds.maxArea &&
@@ -370,6 +445,8 @@ export const useProjectFilters = ({
 
     prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
   }, [apartments.length, minPrice, maxPrice, minArea, maxArea, state.priceRange, state.areaRange]);
+
+  // ── Adjust ranges when currency changes ──
 
   useEffect(() => {
     if (apartments.length === 0) return;
@@ -390,10 +467,10 @@ export const useProjectFilters = ({
       });
     }
 
-    // Area range normalisation (in case bounds shifted)
     const [prevAreaMin, prevAreaMax] = state.areaRange;
     const normAreaMin = Math.max(minArea, Math.min(prevAreaMin, maxArea));
     const normAreaMax = Math.min(maxArea, Math.max(prevAreaMax, minArea));
+
     if (normAreaMin !== prevAreaMin || normAreaMax !== prevAreaMax) {
       dispatch({
         type: 'SET_AREA_RANGE',
@@ -403,15 +480,15 @@ export const useProjectFilters = ({
 
     previousCurrencyRef.current = curr;
   }, [
+    apartments.length,
     state.selectedCurrency,
     state.priceRangeCurrency,
+    state.priceRange,
+    state.areaRange,
     minPrice,
     maxPrice,
     minArea,
     maxArea,
-    apartments.length,
-    state.priceRange,
-    state.areaRange,
   ]);
 
   useEffect(() => {
@@ -461,17 +538,18 @@ export const useProjectFilters = ({
   const resetFilters = useCallback(() => {
     dispatch({
       type: 'RESET',
-      defaults: {
+      defaults: computeProjectDefaults({
+        apartments,
+        projectCurrency: project?.currency,
         selectedCurrency: baseCurrency,
-        priceRange: [minPrice, maxPrice],
-        priceRangeCurrency: baseCurrency,
-        areaRange: [minArea, maxArea],
-      },
+      }),
     });
+
     userInteractedRef.current = false;
     didInitRangesRef.current = true;
     prevBoundsRef.current = { minPrice, maxPrice, minArea, maxArea };
-  }, [minPrice, maxPrice, minArea, maxArea, baseCurrency]);
+    previousCurrencyRef.current = baseCurrency;
+  }, [apartments, project?.currency, baseCurrency, minPrice, maxPrice, minArea, maxArea]);
 
   // ── Public API (backward compatible) ──
 
