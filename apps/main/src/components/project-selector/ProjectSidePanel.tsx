@@ -331,7 +331,7 @@ export const ProjectSidePanel = ({
       </div>
 
       {state.kind === 'floor' ? (
-        <div className="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col overflow-y-auto custom-scrollbar">
           {/* Floor Preview Section */}
           <div className="shrink-0">
 
@@ -514,7 +514,7 @@ export const ProjectSidePanel = ({
                     variant="outline"
                     onClick={handleGeneratePDF}
                     disabled={isGeneratingPDF}
-                    className={`px-4 py-3 h-12 w-12 rounded-xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && state.apartment.price && fieldVisibility.price ? '' : 'w-full'}`}
+                    className={`px-4 py-3 h-12 w-full rounded-xl border-2 border-gray-200 hover:border-gray-300 ${project?.installment_enabled && state.apartment.price && fieldVisibility.price ? '' : 'w-full'}`}
                 >
 
                   {isGeneratingPDF ? (
