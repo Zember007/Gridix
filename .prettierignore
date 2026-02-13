@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+out
+.next
+.turbo
+coverage
+.cache
+*.log
+pnpm-lock.yaml
+*.min.*
