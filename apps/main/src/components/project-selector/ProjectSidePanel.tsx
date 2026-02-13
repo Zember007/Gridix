@@ -7,7 +7,7 @@ import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import FloorPlanView from '@/components/visualization/FloorPlanView';
 import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
-import { Loader2, Share2, X, Heart } from 'lucide-react';
+import {Loader2, Share2, X, Heart, FileDown} from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from "@gridix/utils/api";
 
@@ -272,7 +272,7 @@ export const ProjectSidePanel = ({
     <aside
       aria-hidden={!open}
       className={cn(
-        'sticky top-0 bg-white overflow-y-auto flex flex-col w-full max-h-screen',
+        'sticky top-0 bg-white overflow-y-auto flex flex-col w-full max-h-screen h-full',
         open ? 'pointer-events-auto' : 'pointer-events-none',
       )}
     >
@@ -316,7 +316,7 @@ export const ProjectSidePanel = ({
       </div>
 
       {state.kind === 'floor' ? (
-        <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
           {/* Floor Preview Section */}
           <div className="shrink-0">
 
@@ -415,8 +415,25 @@ export const ProjectSidePanel = ({
                 <span className="text-xl font-bold text-gray-900">{state.apartment.floor_number} <span className="text-base font-medium text-gray-500">{ui.floor}</span></span>
               </div>
             )}
+            {fieldVisibility.status && (
+                <div className="flex items-center ml-auto justify-between">
+                  <Badge
+                      variant="outline"
+                      className={cn(
+                          'border ml-2 whitespace-nowrap',
+                          statusBadgeClass(state.apartment.status),
+                      )}
+                  >
+                    {state.apartment.status === 'available'
+                        ? ui.available
+                        : state.apartment.status === 'reserved'
+                            ? ui.reserved
+                            : ui.sold}
+                  </Badge>
+                </div>
+            )}
           </div>
-
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
           {/* Plan Image */}
           <div className="relative w-full shrink-0 p-6 bg-white overflow-hidden flex items-center justify-center border-b border-gray-100">
             <div className="relative w-full h-full cursor-zoom-in group">
@@ -436,74 +453,46 @@ export const ProjectSidePanel = ({
               )}
             </div>
           </div>
-
+          </div>
           {/* Price */}
 
+          <div className={'mt-auto'}>
             <div className="px-6 py-4 shrink-0 bg-white">
               <div className="flex flex-col">
                 <span className="text-3xl font-bold text-gray-900">
-                  {fieldVisibility.price ? formatPrice(state.apartment.price ?? undefined): tt('project.onRequest')}
+                  {fieldVisibility.price ? formatPrice(state.apartment.price ?? undefined) : tt('project.onRequest')}
                 </span>
-                { state.apartment.price && fieldVisibility.area && <span className="text-sm text-gray-500 font-medium">
+                {state.apartment.price && fieldVisibility.area && <span className="text-sm text-gray-500 font-medium">
                   {formatPricePerMeter(state.apartment.price ?? undefined, state.apartment.area)} / {ui.area}
                 </span>}
               </div>
             </div>
 
 
-          {/* Actions */}
-          <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className={cn("h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50 hover:text-red-500", isFavorite(state.apartment.id) && "border-red-200 bg-red-50 text-red-500")}
-              onClick={(e) => { e.stopPropagation(); handleFavoriteClick(); }}
-            >
-              <Heart className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")} />
-            </Button>
-            <Button
-              type="button"
-              className="h-12 text-lg font-semibold rounded-xl w-full text-white shadow-lg transition-all active:scale-[0.98]"
-              style={{ backgroundColor: themeColor }}
-              onClick={() => onOpenApartmentDetails(state.apartment)}
-            >
-              {ui.viewDetails}
-            </Button>
-          </div>
+            {/* Actions */}
+            <div className="px-6 py-4 grid grid-cols-[auto_1fr] gap-3 shrink-0 bg-white border-b border-gray-100">
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className={cn("h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50 hover:text-red-500", isFavorite(state.apartment.id) && "border-red-200 bg-red-50 text-red-500")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFavoriteClick();
+                  }}
+              >
+                <Heart
+                    className={cn("h-6 w-6 transition-colors", isFavorite(state.apartment.id) ? "fill-red-500 text-red-500" : "")}/>
+              </Button>
+              <Button
+                  type="button"
+                  className="h-12 text-lg font-semibold rounded-xl w-full text-white shadow-lg transition-all active:scale-[0.98]"
+                  style={{backgroundColor: themeColor}}
+                  onClick={() => onOpenApartmentDetails(state.apartment)}
+              >
+                {ui.viewDetails}
+              </Button>
 
-          {/* Characteristics */}
-          <div className="p-6 pb-12">
-            <h3 className="text-lg font-bold mb-4 border-b border-gray-100 pb-2">
-              {ui.summary}
-            </h3>
-            <div className="space-y-3 text-sm">
-              {fieldVisibility.number && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">{ui.apartmentNumber}</span>
-                  <span className="font-medium text-gray-900">
-                    {state.apartment.apartment_number}
-                  </span>
-                </div>
-              )}
-              {fieldVisibility.status && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">{ui.status}</span>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      'border ml-2 whitespace-nowrap',
-                      statusBadgeClass(state.apartment.status),
-                    )}
-                  >
-                    {state.apartment.status === 'available'
-                      ? ui.available
-                      : state.apartment.status === 'reserved'
-                        ? ui.reserved
-                        : ui.sold}
-                  </Badge>
-                </div>
-              )}
             </div>
           </div>
         </div>
