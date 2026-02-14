@@ -467,29 +467,33 @@ export function LeadsManager({
                     className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)] lg:col-span-3"
                     autoFocus
                   />
-                  <div>
-                    <select
-                      value={draftFilters.source}
-                      onChange={(e) =>
-                        setDraftFilters({ ...draftFilters, source: e.target.value })
-                      }
-                      className={`w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)] h-10 ${draftFilters.source === 'all'
-                        ? 'text-slate-400'
-                        : 'text-slate-900'
-                        }`}
-                    >
-                      <option value="all">
-                        {t('leads.filters.source')}: {t('leads.filters.allSources')}
-                      </option>
-                      {SOURCE_OPTIONS.filter((o) => o.value !== 'all').map(
-                        (option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </div>
+                    <div className={'relative'}>
+                        <select
+                            value={draftFilters.source}
+                            onChange={(e) =>
+                                setDraftFilters({...draftFilters, source: e.target.value})
+                            }
+                            className={`w-full bg-white border border-slate-200 appearance-none rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--admin-primary)] h-10 ${draftFilters.source === 'all'
+                                ? 'text-slate-400'
+                                : 'text-slate-900'
+                            }`}
+                        >
+                            <option value="all">
+                                {t('leads.filters.source')}: {t('leads.filters.allSources')}
+                            </option>
+                            {SOURCE_OPTIONS.filter((o) => o.value !== 'all').map(
+                                (option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ),
+                            )}
+                        </select>
+                        <span
+                            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                                            <ChevronDown size={16}/>
+                                         </span>
+                    </div>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
