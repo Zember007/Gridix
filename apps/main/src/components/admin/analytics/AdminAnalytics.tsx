@@ -280,7 +280,6 @@ export const AdminAnalytics = () => {
                     className="pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-
                   <Calendar className="h-4 w-4 text-black" />
                 </span>
               </div>

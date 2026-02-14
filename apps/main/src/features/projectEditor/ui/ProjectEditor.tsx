@@ -543,7 +543,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
       <ProjectEditorSidebarMenuButton
         setIsMobileOpen={setIsMobileOpen}
       />
-
       <div className={`flex-1 bg-background flex flex-col  transition-all duration-300 ${isCollapsed ? 'md:ml-28 md:max-w-[calc(100vw-7rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="px-6 py-4">
@@ -553,9 +552,6 @@ const ProjectEditor = ({ projectId, isNew, onBack }: ProjectEditorProps) => {
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">{t('projectEditor.back')}</span>
                 </Button>
-
-
-
                 <div className="hidden lg:block">
                   <h1 className="text-2xl font-bold">
                     {isNew ? t('projectEditor.newProject') : project.name}
