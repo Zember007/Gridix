@@ -82,7 +82,7 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
               </div>
 
               {/* Subscription Status Info */}
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+              <div className="flex-1 gap-4 flex max-lg:flex-col max-md:flex-row lg:gap-4 max-lg:gap-1 max-md:gap-4  border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
                 {/* Plan Name */}
                 <div>
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
