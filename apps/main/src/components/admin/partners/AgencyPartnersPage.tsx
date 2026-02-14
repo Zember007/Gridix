@@ -1,32 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import { Search, Link as LinkIcon, Handshake, ShieldCheck, LayoutList, Users, DollarSign, TrendingUp, Filter, ArrowUpDown, MoreHorizontal } from 'lucide-react';
-import { useAgencyPartners } from './useAgencyPartners';
-import { PartnerInviteModal } from './PartnerInviteModal';
-import { PartnerDrawer } from './PartnerDrawer';
-import { PartnerPayoutModal } from './PartnerPayoutModal';
-import { AgencyGeneralConditions } from './AgencyGeneralConditions';
-import { PartnerFiltersPanel } from './PartnerFiltersPanel';
-import { AgencyPartner } from './types';
-import { Button } from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Popover, PopoverTrigger } from "@gridix/ui";
+import React, {useMemo, useState} from 'react';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@gridix/ui";
-import { UserAvatar } from '@/components/admin/UserAvatar';
-import { useLanguage } from '@/contexts/LanguageContext';
+    ArrowUpDown,
+    DollarSign,
+    Handshake,
+    LayoutList,
+    Link as LinkIcon,
+    MoreHorizontal,
+    Search,
+    ShieldCheck,
+    TrendingUp,
+    Users
+} from 'lucide-react';
+import {useAgencyPartners} from './useAgencyPartners';
+import {PartnerInviteModal} from './PartnerInviteModal';
+import {PartnerDrawer} from './PartnerDrawer';
+import {PartnerPayoutModal} from './PartnerPayoutModal';
+import {AgencyGeneralConditions} from './AgencyGeneralConditions';
+import {AgencyPartner} from './types';
+import {Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Input} from "@gridix/ui";
+import {UserAvatar} from '@/components/admin/UserAvatar';
+import {useLanguage} from '@/contexts/LanguageContext';
 
 export const AgencyPartnersPage: React.FC = () => {
     const { t } = useLanguage();
-    const { partners, filters, setFilters, approvePartner, updatePartnerStatus, updatePartnerCommission, markPaid, stats, loading, developerId } = useAgencyPartners();
+    const { partners, filters, setFilters, approvePartner, updatePartnerStatus, updatePartnerCommission, markPaid, stats, developerId } = useAgencyPartners();
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [selectedPartner, setSelectedPartner] = useState<AgencyPartner | null>(null);
     const [payoutTarget, setPayoutTarget] = useState<AgencyPartner | null>(null);
     const [activeTab, setActiveTab] = useState<'list' | 'conditions'>('list');
-    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
     const handleStatusFilterCycle = () => {
         const cycle: Array<NonNullable<typeof filters.status>> = ['all', 'pending', 'needs_correction', 'active', 'blocked'];
@@ -60,17 +61,6 @@ export const AgencyPartnersPage: React.FC = () => {
             </span>
         );
     };
-
-    const activeFiltersCount = useMemo(() => {
-        return [
-            filters.status !== 'all',
-            filters.type !== 'all',
-            typeof filters.minCommission === 'number',
-            typeof filters.maxCommission === 'number',
-            Boolean(filters.dateFrom),
-            Boolean(filters.dateTo),
-        ].filter(Boolean).length;
-    }, [filters]);
 
     const handlePartnerUpdate = (id: string, data: Partial<AgencyPartner>) => {
         if (data.commissionRate) updatePartnerCommission(id, data.commissionRate);
