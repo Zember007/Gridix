@@ -210,7 +210,7 @@ export const AgencyPartnersPage: React.FC = () => {
 
                     {activeTab === 'list' && (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                                     <div className="p-3 bg-slate-100 text-[var(--admin-primary)] rounded-lg"><Users size={20} /></div>
                                     <div>
