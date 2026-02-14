@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import {useState} from 'react';
+import {useQuery} from '@tanstack/react-query';
+import {format} from 'date-fns';
+import {ru} from 'date-fns/locale';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gridix/ui";
-import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -17,43 +21,31 @@ import {
   TableHeader,
   TableRow,
 } from "@gridix/ui";
-import { Input } from "@gridix/ui";
+
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@gridix/ui";
-import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts';
-import {
-  Eye,
-  Users,
-  Home,
-  TrendingUp,
-  AlertCircle,
-} from 'lucide-react';
-import { supabase } from "@gridix/utils/api";
-import { useLanguage } from '@gridix/utils/react';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspaceProjects } from '@/entities/workspace/queries/useWorkspaceProjects';
-import Spinner from '@/shared/ui/Spinner';
+import {AlertCircle, Calendar, Eye, Home, TrendingUp, Users,} from 'lucide-react';
+import {useUserRole} from '@/hooks/useUserRole.ts';
+import {useWorkspace} from '@/contexts/WorkspaceContext.tsx';
+import {useAuth} from '@/contexts/AuthContext.tsx';
+import {useWorkspaceProjects} from '@/entities/workspace/queries/useWorkspaceProjects.ts';
+import Spinner from '@/shared/ui/Spinner.tsx';
+import {KpiCard} from "@/components/admin/analytics/KpiCard.tsx";
+import {useLanguage} from "@/contexts/LanguageContext";
+import {supabase} from "@/shared/api/supabase.ts";
 
 interface AnalyticsData {
   projectViews: Array<{ date: string; views: number }>;
@@ -259,7 +251,7 @@ export const AdminAnalytics = () => {
           <CardTitle>{t('admin.analytics.filters')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
                 {t('admin.analytics.period')}
@@ -280,21 +272,34 @@ export const AdminAnalytics = () => {
               <label className="text-sm font-medium mb-2 block">
                 {t('admin.analytics.dateFrom')}
               </label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+
+                  <Calendar className="h-4 w-4 text-black" />
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
                 {t('admin.analytics.dateTo')}
               </label>
+              <div className="relative">
               <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
+                className="pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <Calendar className="h-4 w-4 text-black" />
+                </span>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">
@@ -319,59 +324,19 @@ export const AdminAnalytics = () => {
       </Card>
 
       {/* Ключевые метрики */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalViews')}
-                </p>
-                <p className="text-2xl font-bold">{analyticsData.totalViews}</p>
-              </div>
-              <Eye className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalLeads')}
-                </p>
-                <p className="text-2xl font-bold">{analyticsData.totalLeads}</p>
-              </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.conversionRate')}
-                </p>
-                <p className="text-2xl font-bold">{analyticsData.conversionRate.toFixed(2)}%</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin.analytics.totalApartments')}
-                </p>
-                <p className="text-2xl font-bold">{analyticsData.apartmentStats.total}</p>
-              </div>
-              <Home className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+         <KpiCard value={analyticsData.totalViews}
+                 title={t('admin.analytics.totalViews')}
+                 icon={<Eye className="h-8 w-8"/>}/>
+        <KpiCard value={analyticsData.totalLeads}
+                 title={t('admin.analytics.totalLeads')}
+                 icon={<Users className="h-8 w-8"/>}/>
+        <KpiCard value={`${analyticsData.conversionRate.toFixed(2)}%`}
+                 title={t('admin.analytics.conversionRate')}
+                 icon={<TrendingUp className="h-8 w-8"/>}/>
+        <KpiCard value={analyticsData.apartmentStats.total}
+                 title={t('admin.analytics.totalApartments')}
+                 icon={<Home className="h-8 w-8"/>}/>
       </div>
 
       {/* Графики */}
