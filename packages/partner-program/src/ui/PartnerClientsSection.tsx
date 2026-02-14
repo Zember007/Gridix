@@ -445,7 +445,7 @@ export const PartnerClientsSection: React.FC = () => {
       {/* Шапка секции */}
       <div className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-          <div>
+          <div className={'self-start'}>
             <h2 className="text-2xl font-bold text-slate-900">
               {t('partners.clients')}
             </h2>
@@ -454,7 +454,7 @@ export const PartnerClientsSection: React.FC = () => {
             </p>
           </div>
           <button
-            className="bg-[#1a1a1a] hover:bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg hover:shadow-xl"
+            className="bg-[#1a1a1a] w-full md:w-auto justify-center hover:bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg hover:shadow-xl"
             onClick={() => setIsAddClientModalOpen(true)}
           >
             <UserPlus size={18} />
