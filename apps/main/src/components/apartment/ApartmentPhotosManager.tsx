@@ -1,20 +1,32 @@
-
-import { useState, useEffect } from 'react';
-import { Button } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
-import { Upload, Image as ImageIcon, Copy, Trash2, Layout, Home } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from "@gridix/utils/api";
-import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
+import {useEffect, useState} from 'react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@gridix/ui";
+import {Copy, Home, Image as ImageIcon, Layout, Trash2} from 'lucide-react';
+import {toast} from 'sonner';
+import {supabase} from "@gridix/utils/api";
+import {Apartment, normalizeApartmentData} from '@/entities/apartment/model/types';
 import LayoutPhotosManager from '@/components/visualization/LayoutPhotosManager';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@gridix/utils/react';
-import { compressToWebP } from '@gridix/utils/lib';
-import { Spinner } from "@/shared/ui/Spinner";
+import {useAuth} from '@/contexts/AuthContext';
+import {useLanguage} from '@gridix/utils/react';
+import {compressToWebP} from '@gridix/utils/lib';
+import {Spinner} from "@/shared/ui/Spinner";
 
 interface ApartmentPhotosManagerProps {
   projectId: string;

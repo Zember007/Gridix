@@ -412,7 +412,7 @@ export default function ProjectDomainSettings({ projectId, projectName }: Projec
         {/* Add new domain */}
         <div className="space-y-4">
           <Label htmlFor="new-domain">{t('domains.addNew')}</Label>
-          <div className="flex gap-2">
+          <div className="flex xs:flex-row flex-col gap-2">
             <Input
               id="new-domain"
               placeholder={t('domains.placeholder')}
