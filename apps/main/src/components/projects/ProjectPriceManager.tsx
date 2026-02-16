@@ -34,7 +34,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('update-project-prices', {
+      const { error } = await supabase.functions.invoke('update-project-prices', {
         body: {
           projectId,
           operation,
