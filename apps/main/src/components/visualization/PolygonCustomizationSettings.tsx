@@ -287,7 +287,7 @@ const PolygonCustomizationSettings = ({
         {/* Эффекты при наведении */}
         <div className="space-y-4">
           <h4 className="font-medium">{t('polygonSettings.hoverEffects')}</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
               <Label>{t('polygonSettings.colorChange')}</Label>
               <Switch
@@ -317,7 +317,7 @@ const PolygonCustomizationSettings = ({
         {/* Отображение информации */}
         <div className="space-y-4">
           <h4 className="font-medium">{t('polygonSettings.display')}</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
               <Label>{t('polygonSettings.showNumbers')}</Label>
               <Switch

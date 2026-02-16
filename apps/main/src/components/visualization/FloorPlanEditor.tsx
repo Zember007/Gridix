@@ -924,8 +924,8 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
         />
         
         {/* Header with Floor selector and controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center lg:flex-row flex-col gap-4 justify-between">
+          <div className="flex w-full items-center gap-4">
             <h2 className="text-lg font-semibold">{t('floorPlan.title')}</h2>
             {onFloorChange && (
               <div className="flex items-center gap-2">
@@ -960,7 +960,7 @@ const FloorPlanEditor = ({ projectId, floorNumber, onFloorChange }: FloorPlanEdi
               </div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2">
             <Button
               variant="outline"
               size="sm"
