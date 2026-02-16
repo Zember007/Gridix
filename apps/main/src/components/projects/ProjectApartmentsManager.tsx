@@ -1,37 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Button } from "@gridix/ui";
-import { Input } from "@gridix/ui";
-import { Label } from "@gridix/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
-import { Badge } from "@gridix/ui";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@gridix/ui";
-import { Plus, Edit2, Trash2, Save, X, Search, Copy, RefreshCw, Building, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from "@gridix/utils/api";
+import {useCallback, useEffect, useState} from 'react';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger
+} from "@gridix/ui";
+import {AlertTriangle, Building, Copy, Edit2, Plus, RefreshCw, Save, Search, Trash2, X} from 'lucide-react';
+import {toast} from 'sonner';
+import {supabase} from "@gridix/utils/api";
 import ApartmentCustomFields from '@/components/apartment/ApartmentCustomFields';
 import ApartmentSyncDialog from '@/components/apartment/ApartmentSyncDialog';
-import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
-import type { Json } from '@gridix/types/database';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/entities/project/queries/useProjects';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
-import { ADMIN_THEME } from "@gridix/utils/lib";
-import { trackUsertourEvent } from '@gridix/utils/integrations';
+import {Apartment, normalizeApartmentData} from '@/entities/apartment/model/types';
+import type {Json} from '@gridix/types/database';
+import {useLanguage} from '@/contexts/LanguageContext';
+import {useProject} from '@/entities/project/queries/useProjects';
+import {ADMIN_THEME} from "@gridix/utils/lib";
+import {trackUsertourEvent} from '@gridix/utils/integrations';
 
 interface ProjectApartmentsManagerProps {
   projectId: string;
   projectType?: 'building' | 'object' | null;
 }
-
-// Helper function to convert database polygon to our type
-const convertPolygonFromDb = (polygon: Json | null): { x: number; y: number }[] => {
-  if (!polygon || !Array.isArray(polygon)) return [];
-  return polygon.map((point: Json) => ({
-    x: typeof point === 'object' && point !== null && 'x' in point && typeof point.x === 'number' ? point.x : 0,
-    y: typeof point === 'object' && point !== null && 'y' in point && typeof point.y === 'number' ? point.y : 0
-  }));
-};
 
 // Helper function to convert our polygon type to database type
 const convertPolygonToDb = (polygon: { x: number; y: number }[]): Json => {
@@ -630,18 +637,19 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex sm:items-center items-start justify-between flex-col sm:flex-row gap-4">
           <div>
             <CardTitle>{t('apartmentsManager.title')}</CardTitle>
             <CardDescription>
               {t('apartmentsManager.description')}
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex sm:w-auto w-full gap-2">
             {
               projectType !== 'object' && (
                 <Button
                   variant="outline"
+                  className="w-full"
                   onClick={() => setFloorManagementOpen(true)}
                 >
                   <Building className="h-4 w-4 mr-2" />
@@ -652,7 +660,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
             <Button
               style={{ backgroundColor: ADMIN_THEME.primary }}
               onClick={() => setIsAddingNew(true)}
-              className="bg-real-estate-600 hover:bg-real-estate-700"
+              className="bg-real-estate-600 hover:bg-real-estate-700 w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
               {projectType === 'object' ? t('buildingImage.object.addNew') : t('apartmentsManager.addApartment')}
