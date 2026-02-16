@@ -1,5 +1,2 @@
 #!/bin/sh
-
-pnpm turbo run lint
-pnpm --filter @gridix/main test 
-pnpm run translate
+pnpm lint-staged
