@@ -29,7 +29,7 @@ const CrmView = ({ leadsCount, byStage, bySource, conversionRate, t }: CrmViewPr
   const totalInFunnel = byStage.reduce((sum, s) => sum + s.count, 0);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -168,13 +168,13 @@ interface FinanceViewProps {
 
 const FinanceView = ({ paid, pending, payoutCount, payouts, t }: FinanceViewProps) => {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-w-0">
       {/* Info Banner */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
-        <div className="p-2 bg-white text-slate-600 rounded-lg mt-0.5 border border-slate-100">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3 min-w-0">
+        <div className="p-2 bg-white text-slate-600 rounded-lg mt-0.5 border border-slate-100 shrink-0">
           <Wallet size={20} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h3 className="font-bold text-slate-900">{t("common.analytics.finance.registryTitle")}</h3>
           <p className="text-sm text-slate-600 mt-1 leading-relaxed">
             {t("common.analytics.finance.registryDescription")}
@@ -183,13 +183,13 @@ const FinanceView = ({ paid, pending, payoutCount, payouts, t }: FinanceViewProp
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider min-w-0 break-words">
               {t("common.analytics.finance.pipeline")}
             </p>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded shrink-0">
               <ArrowUpRight size={10} />
               {t("common.analytics.finance.inProgress")}
             </div>
@@ -199,12 +199,12 @@ const FinanceView = ({ paid, pending, payoutCount, payouts, t }: FinanceViewProp
             {payoutCount} {t("common.analytics.finance.dealsInWork")}
           </span>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider min-w-0 break-words">
               {t("common.analytics.finance.received")}
             </p>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded shrink-0">
               <ArrowUpRight size={10} />
               {t("common.analytics.finance.success")}
             </div>
@@ -214,9 +214,9 @@ const FinanceView = ({ paid, pending, payoutCount, payouts, t }: FinanceViewProp
             {t("common.analytics.finance.successDeals")}
           </span>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider min-w-0 break-words">
               {t("common.analytics.finance.total")}
             </p>
           </div>
@@ -228,43 +228,44 @@ const FinanceView = ({ paid, pending, payoutCount, payouts, t }: FinanceViewProp
       </div>
 
       {/* Payouts Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3 min-w-0">
           <h3 className="font-bold text-slate-900 text-sm">{t("common.analytics.finance.registry")}</h3>
           <button
             type="button"
-            className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+            aria-label={t("common.analytics.finance.export")}
+            className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 shrink-0"
           >
             <Download size={14} />
-            {t("common.analytics.finance.export")}
+            <span className="hidden sm:inline">{t("common.analytics.finance.export")}</span>
           </button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-w-0 max-w-full overscroll-x-contain">
           {payouts.length ? (
-            <table className="w-full text-left">
+            <table className="w-full min-w-[480px] text-left">
               <thead className="bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">{t("common.analytics.finance.colAmount")}</th>
-                  <th className="px-6 py-3">{t("common.analytics.finance.colProject")}</th>
-                  <th className="px-6 py-3">{t("common.analytics.finance.colDate")}</th>
-                  <th className="px-6 py-3">{t("common.analytics.finance.colStatus")}</th>
+                  <th className="px-3 sm:px-6 py-3 whitespace-nowrap">{t("common.analytics.finance.colAmount")}</th>
+                  <th className="px-3 sm:px-6 py-3 whitespace-nowrap">{t("common.analytics.finance.colProject")}</th>
+                  <th className="px-3 sm:px-6 py-3 whitespace-nowrap">{t("common.analytics.finance.colDate")}</th>
+                  <th className="px-3 sm:px-6 py-3 whitespace-nowrap">{t("common.analytics.finance.colStatus")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {payouts.slice(0, 30).map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">
+                    <td className="px-3 sm:px-6 py-4 font-mono font-bold text-slate-900 whitespace-nowrap">
                       ${Number(p.amount ?? 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-slate-700 truncate max-w-[200px]">
-                      {p.project_name ?? t("common.common.empty")}
+                    <td className="px-3 sm:px-6 py-4 text-slate-700">
+                      <div className="truncate max-w-[220px]">{p.project_name ?? t("common.common.empty")}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500">
+                    <td className="px-3 sm:px-6 py-4 text-slate-500 whitespace-nowrap">
                       {p.payout_date
                         ? new Date(p.payout_date).toLocaleDateString()
                         : t("common.common.empty")}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span
                         className={`text-xs font-bold px-2 py-1 rounded-lg ${
                           String(p.status) === "paid"
@@ -344,7 +345,7 @@ export function AnalyticsTab() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC]">
+    <div className="flex flex-col h-full bg-[#F8FAFC] overflow-x-hidden">
       <ModuleHeader
         title={t("common.analytics.title")}
         subtitle={
@@ -361,12 +362,12 @@ export function AnalyticsTab() {
       />
 
       {/* Filter Bar */}
-      <div className="px-4 md:px-6 py-4 bg-white border-b border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center sticky top-0 z-10 shadow-sm">
-        <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
+      <div className="px-4 md:px-6 py-4 bg-white border-b border-slate-200 flex flex-wrap sm:flex-nowrap gap-3 justify-between items-center sticky top-0 z-10 shadow-sm">
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto min-w-0 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => setView("crm")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               view === "crm"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
@@ -378,7 +379,7 @@ export function AnalyticsTab() {
           <button
             type="button"
             onClick={() => setView("finance")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               view === "finance"
                 ? "bg-slate-900 text-white shadow-md"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
@@ -389,8 +390,8 @@ export function AnalyticsTab() {
           </button>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200 text-sm text-slate-600 shadow-sm whitespace-nowrap">
+        <div className="flex items-center justify-end gap-3 w-full sm:w-auto min-w-0">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200 text-sm text-slate-600 shadow-sm whitespace-nowrap min-w-0">
             <Calendar size={16} className="text-slate-400" />
             <select
               value={period}
@@ -408,7 +409,7 @@ export function AnalyticsTab() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
-        <div className="max-w-[1600px] mx-auto pb-20">
+        <div className="max-w-[1600px] min-w-0 mx-auto">
           {!activeWorkspaceId ? (
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h3 className="font-bold text-slate-900">{t("common.workspace.noActiveTitle")}</h3>
@@ -434,4 +435,3 @@ export function AnalyticsTab() {
     </div>
   );
 }
-

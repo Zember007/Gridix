@@ -70,7 +70,6 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
   const effectiveSearchPlaceholder = searchPlaceholder ?? t("common.moduleHeader.searchPlaceholder");
   const financeTitle = t("common.moduleHeader.financeTitle");
   const balanceLabel = t("common.moduleHeader.balanceLabel");
-  const createLabel = t("common.moduleHeader.create");
   const hasDesktopRightControls = Boolean(balance !== undefined || actionsMenu || primaryAction);
 
   useEffect(() => {
@@ -104,7 +103,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
             ) : null}
           </div>
           {subtitle ? (
-            <p className="text-xs text-slate-500 font-medium mt-1 truncate max-w-[200px] md:max-w-md">
+            <p className="text-xs text-slate-500 font-medium mt-1 truncate max-w-full lg:max-w-md">
               {subtitle}
             </p>
           ) : null}
@@ -240,25 +239,19 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
                 </div>
               ) : null}
 
-              {primaryAction ? (
-                <button
-                  type="button"
-                  onClick={primaryAction.onClick}
-                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-slate-900/10 transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap"
-                >
-                  {primaryAction.icon || <Plus size={18} />}
-                  <span className="hidden lg:inline">{primaryAction.label}</span>
-                  <span className="lg:hidden">{createLabel}</span>
-                </button>
-              ) : null}
             </div>
           </div>
         ) : null}
 
-        {/* Mobile Primary Action */}
+        {/* Primary Action */}
         {primaryAction ? (
-          <button type="button" onClick={primaryAction.onClick} className="md:hidden bg-slate-900 text-white p-2 rounded-lg shadow-sm">
-            <Plus size={20} />
+          <button
+            type="button"
+            onClick={primaryAction.onClick}
+            className="bg-slate-900 hover:bg-slate-800 text-white h-9 md:h-10 px-2 md:px-4 rounded-lg text-sm font-bold shadow-md shadow-slate-900/10 transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap shrink-0"
+          >
+            {primaryAction.icon || <Plus size={18} />}
+            <span className="hidden md:inline">{primaryAction.label}</span>
           </button>
         ) : null}
       </div>
