@@ -224,7 +224,7 @@ const ApartmentPhotosManager = ({ projectId }: ApartmentPhotosManagerProps) => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="apartments" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
           <TabsTrigger value="apartments" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
             {t('photosManager.individualPhotos')}
