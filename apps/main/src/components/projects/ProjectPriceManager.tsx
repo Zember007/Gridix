@@ -67,9 +67,9 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div className="flex lg:flex-row flex-col gap-4 lg:items-end">
           
-          <div className="md:col-span-3">
+          <div>
             <Label className="mb-2 block">{t('projectEditor.operation') || 'Operation'}</Label>
             <div className="flex gap-2">
               <Button
@@ -93,7 +93,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
             </div>
           </div>
 
-          <div className="md:col-span-3">
+          <div className="flex-1 min-w-[180px]">
             <Label className="mb-2 block">{t('projectEditor.type') || 'Type'}</Label>
             <Select value={type} onValueChange={(v: 'percentage' | 'fixed') => setType(v)}>
               <SelectTrigger>
@@ -116,7 +116,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
             </Select>
           </div>
 
-          <div className="md:col-span-4">
+          <div className="flex-1 min-w-[180px]">
             <Label htmlFor="price-value" className="mb-2 block">
               {t('projectEditor.value') || 'Value'} 
               {type === 'percentage' ? ' (%)' : ''}
@@ -142,7 +142,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
             </div>
           </div>
 
-          <div className="md:col-span-2">
+          <div className="min-w-[140px]">
             <Button 
               onClick={handleUpdate} 
               disabled={loading || !value}
