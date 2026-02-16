@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useInstallment } from '@/hooks/useInstallment';
 import { Apartment } from '@/entities/apartment/model/types';
-import { getCurrencySymbolSafe } from "@gridix/utils/lib";
+import {cn, getCurrencySymbolSafe} from "@gridix/utils/lib";
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Tables } from '@gridix/types/database';
@@ -263,9 +263,9 @@ export const ListView = ({
                                 {fieldVisibility.status && (
                                   <Badge
                                     variant={apartment.status === 'available' ? 'default' : 'secondary'}
-                                    className={apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500'}
+                                    className={cn(apartment.status === 'available' ? 'bg-green-500' : 'bg-gray-500','max-sm:absolute max-sm:top-1 max-sm:left-1 max-sm:w-2 max-sm:h-5 max-sm:border-[50%]')}
                                   >
-                                    {apartment.status === 'available' ? t('common.available') : t('common.unavailable')}
+                                    <span className={'hidden sm:block '}>{apartment.status === 'available' ? t('common.available') : t('common.unavailable')}</span>
                                   </Badge>
                                 )}
                               </div>
