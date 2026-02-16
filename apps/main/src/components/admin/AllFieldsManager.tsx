@@ -178,40 +178,41 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                 onDragOver={handleDragOver}
                 onDrop={(e) => !isSaving && handleDrop(e, index)}
                 className={`
-                  flex items-center gap-3 p-3 border rounded-lg bg-background
-                  hover:shadow-sm transition-shadow
+                  flex max-xs:flex-col xs:items-center gap-3 p-3 border rounded-lg bg-background
+                  hover:shadow-sm transition-shadow relative
                   ${isSaving ? 'cursor-not-allowed opacity-50' : 'cursor-move'}
                   ${draggedIndex === index ? 'opacity-50' : ''}
                   ${!field.is_visible ? 'opacity-60' : ''}
                 `}
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+
+                <div className="flex-1 flex md:items-center md:flex-row flex-col gap-3 min-w-0">
+                  <div className="flex flex-col">
                     <span className="font-medium">{getFieldLabel(field)}</span>
-                    {field.is_custom ? (
-                      <Badge variant="secondary" className="text-xs">
+                    <p className="text-sm text-muted-foreground">
+                      {field.field_name}
+                    </p>
+
+                  </div>
+                  <div className={'flex gap-2  h-full'}>{field.is_custom ? (
+                      <Badge variant="secondary" className="text-xs whitespace-nowrap">
                         {t('customFields.custom')}
                       </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
+                  ) : (
+                      <Badge variant="outline" className="text-xs whitespace-nowrap">
                         {t('customFields.builtin')}
                       </Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs">
+                  )}
+                    <Badge variant="outline" className="text-xs whitespace-nowrap">
                       {field.field_type === 'text' && t('customFields.fieldTypeText')}
                       {field.field_type === 'number' && t('customFields.fieldTypeNumber')}
                       {field.field_type === 'select' && t('customFields.fieldTypeSelect')}
                       {field.field_type === 'boolean' && t('customFields.fieldTypeBoolean')}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {field.field_name}
-                  </p>
+                    </Badge></div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-col sm:flex-row gap-0 xs:gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -225,7 +226,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                       <EyeOff className="h-4 w-4" />
                     )}
                   </Button>
-                  
+
                   {field.is_custom && (
                     <>
                       <Button
@@ -236,7 +237,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
