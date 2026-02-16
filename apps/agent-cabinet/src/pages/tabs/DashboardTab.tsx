@@ -222,7 +222,7 @@ const LiveActivityFeed = ({ activities, t }: { activities: ActivityItem[]; t: (k
                   <div className="text-[10px] font-medium text-slate-900">{act.target}</div>
                 </div>
               </div>
-              <span className="text-[10px] text-slate-400">{act.time}</span>
+              <span className="ml-3 w-12 shrink-0 text-right text-[10px] leading-tight text-slate-400 break-words">{act.time}</span>
             </div>
           ))
         )}
@@ -320,8 +320,8 @@ export function DashboardTab() {
         hideSearch
       />
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-        <div className="max-w-[1600px] mx-auto space-y-6 pb-20">
+      <div className="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8 custom-scrollbar">
+        <div className="max-w-[1600px] mx-auto space-y-6">
           {!activeWorkspaceId ? (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-3">
               <Lock size={18} className="text-slate-400" />
@@ -392,4 +392,3 @@ export function DashboardTab() {
     </div>
   );
 }
-

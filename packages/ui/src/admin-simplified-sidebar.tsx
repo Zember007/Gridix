@@ -433,7 +433,7 @@ export function SimplifiedSidebar({
     return (
       <Button
           size={"icon"}
-          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-1 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour "
+          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-[60] rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour "
           style={{
             backgroundColor: ADMIN_THEME.primary,
             color: ADMIN_THEME.textOnPrimary,
@@ -481,4 +481,3 @@ export function SimplifiedSidebar({
     </>
   );
 }
-
