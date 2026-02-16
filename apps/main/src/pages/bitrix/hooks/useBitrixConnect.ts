@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@gridix/utils/api";
 
-export type BitrixConnectStatus = "loading" | "claimed" | "pending" | "needs_install" | "error";
+export type BitrixConnectStatus =
+  | "loading"
+  | "claimed"
+  | "pending"
+  | "needs_install"
+  | "error";
 
 export interface UseBitrixConnectResult {
   status: BitrixConnectStatus;
@@ -25,7 +30,7 @@ function normalizeDomain(raw: string | null | undefined): string {
  */
 export function useBitrixConnect(
   domain: string | null | undefined,
-  memberId: string | null | undefined
+  memberId: string | null | undefined,
 ): UseBitrixConnectResult {
   const normDomain = domain ? normalizeDomain(domain) : "";
   const normMemberId = memberId ? String(memberId).trim() : "";
@@ -45,12 +50,21 @@ export function useBitrixConnect(
 
       const { data: u0 } = await supabase.auth.getUser();
       const currentUser = u0?.user ?? null;
-      setUser(currentUser ? { id: currentUser.id, email: currentUser.email ?? undefined } : null);
+      setUser(
+        currentUser
+          ? { id: currentUser.id, email: currentUser.email ?? undefined }
+          : null,
+      );
 
       if (currentUser) {
-        const { data: statusData, error: statusErr } = await supabase.functions.invoke("bitrix-app", {
-          body: { action: "install_status", domain: normDomain, member_id: normMemberId },
-        });
+        const { data: statusData, error: statusErr } =
+          await supabase.functions.invoke("bitrix-app", {
+            body: {
+              action: "install_status",
+              domain: normDomain,
+              member_id: normMemberId,
+            },
+          });
 
         if (statusErr) {
           setStatus("error");
@@ -69,9 +83,14 @@ export function useBitrixConnect(
           setStatus("needs_install");
         }
       } else {
-        const { data: statusData, error: statusErr } = await supabase.functions.invoke("bitrix-app", {
-          body: { action: "install_status", domain: normDomain, member_id: normMemberId },
-        });
+        const { data: statusData, error: statusErr } =
+          await supabase.functions.invoke("bitrix-app", {
+            body: {
+              action: "install_status",
+              domain: normDomain,
+              member_id: normMemberId,
+            },
+          });
 
         if (statusErr) {
           setStatus("error");
@@ -105,12 +124,21 @@ export function useBitrixConnect(
 
     try {
       setError(null);
-      const { error: claimErr } = await supabase.functions.invoke("bitrix-app", {
-        body: { action: "claim_install", domain: normDomain, member_id: normMemberId },
-      });
+      const { error: claimErr } = await supabase.functions.invoke(
+        "bitrix-app",
+        {
+          body: {
+            action: "claim_install",
+            domain: normDomain,
+            member_id: normMemberId,
+          },
+        },
+      );
 
       if (claimErr) {
-        const msg = (claimErr as { message?: string })?.message ?? "Не удалось привязать установку";
+        const msg =
+          (claimErr as { message?: string })?.message ??
+          "Не удалось привязать установку";
         setError(msg);
         return false;
       }

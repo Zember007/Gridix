@@ -1,6 +1,6 @@
-import { Card, CardContent } from './card';
-import { Star, Quote } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Card, CardContent } from "./card";
+import { Star, Quote } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface Testimonial {
   id: number;
@@ -15,26 +15,29 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     id: 1,
-    name: 'Анна Петрова',
-    company: 'РосНедвижимость',
-    role: 'Директор по продажам',
-    content: 'Gridix полностью изменил наш подход к презентации проектов. Клиенты теперь могут интерактивно изучать планы, что значительно повысило конверсию продаж.',
+    name: "Анна Петрова",
+    company: "РосНедвижимость",
+    role: "Директор по продажам",
+    content:
+      "Gridix полностью изменил наш подход к презентации проектов. Клиенты теперь могут интерактивно изучать планы, что значительно повысило конверсию продаж.",
     rating: 5,
   },
   {
     id: 2,
-    name: 'Георгий Мамедов',
-    company: 'БатумиДевелопмент',
-    role: 'Руководитель проектов',
-    content: 'Простота использования и мощный функционал делают Gridix незаменимым инструментом. Особенно нравится возможность встраивания виджетов на наш сайт.',
+    name: "Георгий Мамедов",
+    company: "БатумиДевелопмент",
+    role: "Руководитель проектов",
+    content:
+      "Простота использования и мощный функционал делают Gridix незаменимым инструментом. Особенно нравится возможность встраивания виджетов на наш сайт.",
     rating: 5,
   },
   {
     id: 3,
-    name: 'Михаил Иванов',
-    company: 'СтройИнвест',
-    role: 'Маркетинг-менеджер',
-    content: 'Отличное решение для визуализации недвижимости! Клиенты оценили интерактивные планы. Техподдержка работает быстро и профессионально.',
+    name: "Михаил Иванов",
+    company: "СтройИнвест",
+    role: "Маркетинг-менеджер",
+    content:
+      "Отличное решение для визуализации недвижимости! Клиенты оценили интерактивные планы. Техподдержка работает быстро и профессионально.",
     rating: 5,
   },
 ];
@@ -58,7 +61,7 @@ export const Testimonials = ({ isMobile = false }: TestimonialsProps) => {
       <Star
         key={i}
         className={`h-4 w-4 ${
-          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          i < rating ? "fill-current text-yellow-400" : "text-gray-300"
         }`}
       />
     ));
@@ -70,20 +73,28 @@ export const Testimonials = ({ isMobile = false }: TestimonialsProps) => {
         {testimonials.map((testimonial, index) => (
           <Card
             key={testimonial.id}
-            className={`border-0 bg-white/90 backdrop-blur-sm shadow-lg transition-all duration-500 ${
-              index === currentIndex ? 'ring-2 ring-blue-500' : ''
+            className={`border-0 bg-white/90 shadow-lg backdrop-blur-sm transition-all duration-500 ${
+              index === currentIndex ? "ring-2 ring-blue-500" : ""
             }`}
           >
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <Quote className="h-8 w-8 text-blue-600 flex-shrink-0 mt-1" />
+                <Quote className="mt-1 h-8 w-8 flex-shrink-0 text-blue-600" />
                 <div className="flex-1">
-                  <p className="text-gray-700 mb-4 italic">"{testimonial.content}"</p>
+                  <p className="mb-4 text-gray-700 italic">
+                    "{testimonial.content}"
+                  </p>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                      <div className="text-sm text-gray-600">{testimonial.role}</div>
-                      <div className="text-sm text-blue-600 font-medium">{testimonial.company}</div>
+                      <div className="font-semibold text-gray-900">
+                        {testimonial.name}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {testimonial.role}
+                      </div>
+                      <div className="text-sm font-medium text-blue-600">
+                        {testimonial.company}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       {renderStars(testimonial.rating)}
@@ -100,24 +111,32 @@ export const Testimonials = ({ isMobile = false }: TestimonialsProps) => {
 
   return (
     <div className="relative">
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid gap-8 md:grid-cols-3">
         {testimonials.map((testimonial, index) => (
           <Card
             key={testimonial.id}
-            className={`border-0 bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-500 transform ${
-              index === currentIndex ? 'scale-105 ring-2 ring-blue-500' : 'hover:scale-105'
+            className={`transform border-0 bg-white/90 shadow-lg backdrop-blur-sm transition-all duration-500 hover:shadow-xl ${
+              index === currentIndex
+                ? "scale-105 ring-2 ring-blue-500"
+                : "hover:scale-105"
             }`}
           >
             <CardContent className="p-6">
               <div className="mb-4">
-                <Quote className="h-8 w-8 text-blue-600 mb-3" />
+                <Quote className="mb-3 h-8 w-8 text-blue-600" />
                 <p className="text-gray-700 italic">"{testimonial.content}"</p>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                  <div className="text-sm text-gray-600">{testimonial.role}</div>
-                  <div className="text-sm text-blue-600 font-medium">{testimonial.company}</div>
+                  <div className="font-semibold text-gray-900">
+                    {testimonial.name}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {testimonial.role}
+                  </div>
+                  <div className="text-sm font-medium text-blue-600">
+                    {testimonial.company}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   {renderStars(testimonial.rating)}
@@ -127,15 +146,17 @@ export const Testimonials = ({ isMobile = false }: TestimonialsProps) => {
           </Card>
         ))}
       </div>
-      
+
       {/* Indicators */}
-      <div className="flex justify-center mt-8 gap-2">
+      <div className="mt-8 flex justify-center gap-2">
         {testimonials.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentIndex ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
+            className={`h-3 w-3 rounded-full transition-all duration-300 ${
+              index === currentIndex
+                ? "bg-blue-600"
+                : "bg-gray-300 hover:bg-gray-400"
             }`}
           />
         ))}

@@ -1,4 +1,4 @@
-import type { FieldSetting } from '@/hooks/useFields';
+import type { FieldSetting } from "@/hooks/useFields";
 
 export interface ApartmentFieldVisibility {
   type: boolean;
@@ -23,12 +23,15 @@ const DEFAULT_APARTMENT_FIELD_VISIBILITY: ApartmentFieldVisibility = {
 export const getApartmentFieldVisibility = (
   fieldSettings: FieldSetting[],
 ): ApartmentFieldVisibility => {
-  return fieldSettings.reduce<ApartmentFieldVisibility>((acc, field) => {
-    if (field.field_name in acc) {
-      const fieldName = field.field_name as keyof ApartmentFieldVisibility;
-      acc[fieldName] = field.is_visible;
-    }
+  return fieldSettings.reduce<ApartmentFieldVisibility>(
+    (acc, field) => {
+      if (field.field_name in acc) {
+        const fieldName = field.field_name as keyof ApartmentFieldVisibility;
+        acc[fieldName] = field.is_visible;
+      }
 
-    return acc;
-  }, { ...DEFAULT_APARTMENT_FIELD_VISIBILITY });
+      return acc;
+    },
+    { ...DEFAULT_APARTMENT_FIELD_VISIBILITY },
+  );
 };

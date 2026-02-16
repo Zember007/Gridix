@@ -28,7 +28,7 @@ export const fetchLeads = async (
         floor_number,
         rooms
       )
-    `
+    `,
     )
     .order("created_at", { ascending: false });
 
@@ -66,10 +66,10 @@ export const fetchLeads = async (
   if (leadIds.length === 0) return leads;
 
   const { data: reads, error: readsError } = await supabase
-    .from('lead_reads')
-    .select('lead_id, read_at')
-    .eq('user_id', userId)
-    .in('lead_id', leadIds);
+    .from("lead_reads")
+    .select("lead_id, read_at")
+    .eq("user_id", userId)
+    .in("lead_id", leadIds);
 
   if (readsError) throw readsError;
 

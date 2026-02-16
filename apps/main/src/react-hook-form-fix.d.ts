@@ -9,7 +9,8 @@ declare module "react-hook-form" {
   export type FieldValues = Record<string, unknown>;
 
   // A pragmatic simplification: we don't attempt to model literal paths here.
-  export type FieldPath<TFieldValues extends FieldValues = FieldValues> = string;
+  export type FieldPath<TFieldValues extends FieldValues = FieldValues> =
+    string;
 
   export type ControllerRenderProps = Record<string, unknown>;
 
@@ -42,7 +43,9 @@ declare module "react-hook-form" {
 
   export const FormProvider: React.ComponentType<FormProviderProps>;
 
-  export const useFormContext: <TFieldValues extends FieldValues = FieldValues>() => {
+  export const useFormContext: <
+    TFieldValues extends FieldValues = FieldValues,
+  >() => {
     formState: unknown;
     getFieldState: (
       name: FieldPath<TFieldValues>,
@@ -50,4 +53,3 @@ declare module "react-hook-form" {
     ) => { error?: unknown } & Record<string, unknown>;
   };
 }
-

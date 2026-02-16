@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { supabase } from '@gridix/utils/api';
-import type { Apartment } from '@/entities/apartment/model/types';
-import type { ViewMode } from '../types';
+import { useEffect, useRef } from "react";
+import { supabase } from "@gridix/utils/api";
+import type { Apartment } from "@/entities/apartment/model/types";
+import type { ViewMode } from "../types";
 
 /** Minimal shape returned from the Supabase query (`id` + `polygon`). */
 interface PolygonRow {
@@ -26,15 +26,17 @@ export const useFloorPolygons = ({
   selectedFloorForPlan,
   setApartments,
 }: UseFloorPolygonsParams) => {
-  const loadedPolygonsForFloorsRef = useRef<Map<number, PolygonRow[]>>(new Map());
+  const loadedPolygonsForFloorsRef = useRef<Map<number, PolygonRow[]>>(
+    new Map(),
+  );
   const polygonsLoadingRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     const mergePolygons = (floor: number, rows: PolygonRow[]) => {
-      setApartments(prev =>
-        prev.map(apt => {
+      setApartments((prev) =>
+        prev.map((apt) => {
           if (apt.floor_number !== floor) return apt;
-          const found = rows.find(d => d.id === apt.id);
+          const found = rows.find((d) => d.id === apt.id);
           if (!found) return apt;
           return { ...apt, polygon: extractPolygon(found.polygon) };
         }),
@@ -55,26 +57,33 @@ export const useFloorPolygons = ({
 
       try {
         const { data, error } = await supabase
-          .from('apartments')
-          .select('id, polygon')
-          .eq('project_id', projectId)
-          .eq('floor_number', floor);
+          .from("apartments")
+          .select("id, polygon")
+          .eq("project_id", projectId)
+          .eq("floor_number", floor);
 
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const rows: PolygonRow[] = data.map(d => ({ id: d.id, polygon: d.polygon }));
+          const rows: PolygonRow[] = data.map((d) => ({
+            id: d.id,
+            polygon: d.polygon,
+          }));
           loadedPolygonsForFloorsRef.current.set(floor, rows);
           mergePolygons(floor, rows);
         }
       } catch (e) {
-        console.error('Error loading polygons for floor:', e);
+        console.error("Error loading polygons for floor:", e);
       } finally {
         polygonsLoadingRef.current.delete(floor);
       }
     };
 
-    if (projectId && viewMode === 'floor-plan' && selectedFloorForPlan !== null) {
+    if (
+      projectId &&
+      viewMode === "floor-plan" &&
+      selectedFloorForPlan !== null
+    ) {
       loadPolygonsForFloor(selectedFloorForPlan);
     }
   }, [projectId, viewMode, selectedFloorForPlan, setApartments]);

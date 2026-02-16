@@ -1,6 +1,4 @@
-
-import { Apartment } from '@gridix/types/entities';
-
+import { Apartment } from "@gridix/types/entities";
 
 /**
  * Сжимает PDF путём пересоздания документа
@@ -17,8 +15,10 @@ interface PDFGenerationOptions {
 }
 
 // Функция для загрузки PDF файла
-const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promise<ArrayBuffer> => {
-  if (typeof pdfSource === 'string') {
+const loadPDFFile = async (
+  pdfSource: string | ArrayBuffer | Uint8Array,
+): Promise<ArrayBuffer> => {
+  if (typeof pdfSource === "string") {
     const response = await fetch(pdfSource);
     if (!response.ok) {
       throw new Error(`Failed to load PDF from URL: ${pdfSource}`);
@@ -32,15 +32,20 @@ const loadPDFFile = async (pdfSource: string | ArrayBuffer | Uint8Array): Promis
     view.set(pdfSource);
     return buffer;
   } else {
-    throw new Error('Unsupported PDF source type');
+    throw new Error("Unsupported PDF source type");
   }
 };
 
 // Функция для загрузки PDF из API
-const loadPDFFromAPI = async (pdfUrl: string, apiUrl: string): Promise<ArrayBuffer> => {
+const loadPDFFromAPI = async (
+  pdfUrl: string,
+  apiUrl: string,
+): Promise<ArrayBuffer> => {
   const response = await fetch(`${apiUrl}/pdf?url=${pdfUrl}`);
   if (!response.ok) {
-    throw new Error(`Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`);
+    throw new Error(
+      `Failed to load PDF from API: ${pdfUrl}. Status: ${response.status}`,
+    );
   }
   // читаем основное тело
   return await response.arrayBuffer();
@@ -48,21 +53,26 @@ const loadPDFFromAPI = async (pdfUrl: string, apiUrl: string): Promise<ArrayBuff
 
 const isMainPdf = true;
 
-export const generateApartmentPDF = async (options: PDFGenerationOptions): Promise<void> => {
+export const generateApartmentPDF = async (
+  options: PDFGenerationOptions,
+): Promise<void> => {
   const { apartment, pdfUrl, pdf_main, apiUrl } = options;
 
-  const { PDFDocument } = await import('pdf-lib');
+  const { PDFDocument } = await import("pdf-lib");
 
   try {
     // Загружаем PDF из API
     const apiPdfBytes = await loadPDFFromAPI(pdfUrl, apiUrl);
-    const apiPdfDoc = await PDFDocument.load(apiPdfBytes, { ignoreEncryption: true });
+    const apiPdfDoc = await PDFDocument.load(apiPdfBytes, {
+      ignoreEncryption: true,
+    });
 
     // Если есть основной PDF, объединяем их
     if (pdf_main && isMainPdf) {
-      
       const mainPdfBytes = await loadPDFFile(pdf_main);
-      const mainPdfDoc = await PDFDocument.load(mainPdfBytes, { ignoreEncryption: true });
+      const mainPdfDoc = await PDFDocument.load(mainPdfBytes, {
+        ignoreEncryption: true,
+      });
 
       // Создаем новый документ для объединения
       const mergedPdfDoc = await PDFDocument.create();
@@ -70,14 +80,14 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       // Добавляем страницы из API PDF
       const apiPages = await mergedPdfDoc.copyPages(
         apiPdfDoc,
-        apiPdfDoc.getPageIndices()
+        apiPdfDoc.getPageIndices(),
       );
       apiPages.forEach((page) => mergedPdfDoc.addPage(page));
 
       // Добавляем страницы из основного PDF
       const mainPages = await mergedPdfDoc.copyPages(
         mainPdfDoc,
-        mainPdfDoc.getPageIndices()
+        mainPdfDoc.getPageIndices(),
       );
       mainPages.forEach((page) => mergedPdfDoc.addPage(page));
 
@@ -85,9 +95,11 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       const mergedPdfBytes = await mergedPdfDoc.save();
       const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
 
-      const blob = new Blob([new Uint8Array(mergedPdfBytes)], { type: 'application/pdf' });
+      const blob = new Blob([new Uint8Array(mergedPdfBytes)], {
+        type: "application/pdf",
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
@@ -97,9 +109,11 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
     } else {
       // Если нет основного PDF, просто скачиваем PDF из API
       const fileName = `apartment_${apartment.apartment_number}_details.pdf`;
-      const blob = new Blob([new Uint8Array(apiPdfBytes)], { type: 'application/pdf' });
+      const blob = new Blob([new Uint8Array(apiPdfBytes)], {
+        type: "application/pdf",
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
@@ -107,9 +121,8 @@ export const generateApartmentPDF = async (options: PDFGenerationOptions): Promi
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-
   } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw new Error('Failed to generate PDF');
+    console.error("Error generating PDF:", error);
+    throw new Error("Failed to generate PDF");
   }
 };

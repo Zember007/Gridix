@@ -1,7 +1,14 @@
-import { useIsMobile } from '@gridix/ui';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@gridix/ui";
-import { useEffect, useState, useMemo } from 'react';
-import { Apartment } from '@/entities/apartment/model/types';
+import { useIsMobile } from "@gridix/ui";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@gridix/ui";
+import { useEffect, useState, useMemo } from "react";
+import { Apartment } from "@/entities/apartment/model/types";
 
 interface FloorSelectorProps {
   selectedFloorForPlan: number | null;
@@ -20,7 +27,7 @@ export const FloorSelector = ({
   themeColor,
   apartments,
   showOnlyAvailable,
-  filteredApartments
+  filteredApartments,
 }: FloorSelectorProps) => {
   const isMobile = useIsMobile();
 
@@ -29,17 +36,15 @@ export const FloorSelector = ({
   // 2. Always show only floors with at least one apartment that has a polygon
   const floors = useMemo(() => {
     const allFloors = getUniqueFloors();
-    
-    return allFloors.filter(floor => {
-      
+
+    return allFloors.filter((floor) => {
       if (showOnlyAvailable) {
-        const hasAvailable = filteredApartments.some(apt => 
-          apt.floor_number === floor && 
-          apt.status === 'available'
+        const hasAvailable = filteredApartments.some(
+          (apt) => apt.floor_number === floor && apt.status === "available",
         );
         return hasAvailable;
       }
-      
+
       return true;
     });
   }, [getUniqueFloors, apartments, showOnlyAvailable, filteredApartments]);
@@ -56,19 +61,24 @@ export const FloorSelector = ({
     }
   }, [carouselApi, selectedFloorForPlan, floors]);
 
-
   if (floors.length === 0) return null;
 
   return (
-    <div className={`${isMobile ? 'h-20 w-full ' : 'w-15 '}  flex ${isMobile ? 'flex-row' : 'flex-col'} items-center justify-center p-4`}>
-      <div className={`flex ${isMobile ? 'flex-row items-center gap-4 w-full' : 'flex-col items-center gap-3 h-full'}`}>
-
-
+    <div
+      className={`${isMobile ? "h-20 w-full" : "w-15"} flex ${isMobile ? "flex-row" : "flex-col"} items-center justify-center p-4`}
+    >
+      <div
+        className={`flex ${isMobile ? "w-full flex-row items-center gap-4" : "h-full flex-col items-center gap-3"}`}
+      >
         {/* Floor Carousel */}
-        <div className={`${isMobile ? 'flex-1 flex items-center justify-center min-h-0 py-2' : 'flex-1 flex flex-col items-center justify-center min-h-[650px] py-10'}`}>
-          <div className={`${isMobile ? ' w-full max-w-[60vw]' : 'w-12 h-full'} relative`}>
+        <div
+          className={`${isMobile ? "flex min-h-0 flex-1 items-center justify-center py-2" : "flex min-h-[650px] flex-1 flex-col items-center justify-center py-10"}`}
+        >
+          <div
+            className={`${isMobile ? "w-full max-w-[60vw]" : "h-full w-12"} relative`}
+          >
             <Carousel
-              className="w-full h-full "
+              className="h-full w-full"
               orientation={isMobile ? "horizontal" : "vertical"}
               opts={{
                 align: "center",
@@ -76,16 +86,28 @@ export const FloorSelector = ({
               }}
               setApi={setCarouselApi}
             >
-              <div className={`${isMobile ? ' w-full' : 'w-12 h-full'}  flex flex-col justify-center`}>
-                <CarouselContent className={`max-h-[600px]  ${isMobile ? '' : 'flex-col'}`}>
+              <div
+                className={`${isMobile ? "w-full" : "h-full w-12"} flex flex-col justify-center`}
+              >
+                <CarouselContent
+                  className={`max-h-[600px] ${isMobile ? "" : "flex-col"}`}
+                >
                   {floors.map((floor) => (
-                    <CarouselItem key={floor} className={`${isMobile ? 'basis-1/5' : 'basis-1/3'} flex items-center justify-center`}>
+                    <CarouselItem
+                      key={floor}
+                      className={`${isMobile ? "basis-1/5" : "basis-1/3"} flex items-center justify-center`}
+                    >
                       <button
-                        className={`w-full h-10 flex items-center justify-center text-lg font-semibold rounded-xl transition-colors ${selectedFloorForPlan === floor
-                          ? 'text-white'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                        style={selectedFloorForPlan === floor ? { backgroundColor: themeColor } : {}}
+                        className={`flex h-10 w-full items-center justify-center rounded-xl text-lg font-semibold transition-colors ${
+                          selectedFloorForPlan === floor
+                            ? "text-white"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        style={
+                          selectedFloorForPlan === floor
+                            ? { backgroundColor: themeColor }
+                            : {}
+                        }
                         onClick={() => setSelectedFloorForPlan(floor)}
                       >
                         {floor}
@@ -100,13 +122,13 @@ export const FloorSelector = ({
                 <>
                   {isMobile ? (
                     <>
-                      <CarouselPrevious className="-left-10 h-8 w-8  border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                      <CarouselNext className="-right-10 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselPrevious className="-left-10 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                      <CarouselNext className="-right-10 h-8 w-8 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
                     </>
                   ) : (
                     <>
-                      <CarouselPrevious className="-top-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
-                      <CarouselNext className="-bottom-10 left-1/2 -translate-x-1/2 h-8 w-8 border-2 border-white bg-white/90 backdrop-blur-sm hover:bg-white opacity-80 hover:opacity-100 transition-all" />
+                      <CarouselPrevious className="-top-10 left-1/2 h-8 w-8 -translate-x-1/2 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
+                      <CarouselNext className="-bottom-10 left-1/2 h-8 w-8 -translate-x-1/2 border-2 border-white bg-white/90 opacity-80 backdrop-blur-sm transition-all hover:bg-white hover:opacity-100" />
                     </>
                   )}
                 </>
@@ -114,8 +136,6 @@ export const FloorSelector = ({
             </Carousel>
           </div>
         </div>
-
-
       </div>
     </div>
   );

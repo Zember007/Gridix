@@ -1,1 +1,1 @@
-export { EmbedLanguageInitializer } from "@gridix/utils/react"
+export { EmbedLanguageInitializer } from "@gridix/utils/react";

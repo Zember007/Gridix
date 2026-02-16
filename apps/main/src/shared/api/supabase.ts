@@ -6,5 +6,8 @@
 // - For partner "login as client" links that contain `#access_token=...&refresh_token=...`,
 //   we intentionally create a tab-scoped client that uses sessionStorage instead.
 //   That keeps the partner's main session intact in other tabs.
-export { supabase, supabaseAuthInitPromise, type SupabaseClientType } from "@gridix/utils/api"
-
+export {
+  supabase,
+  supabaseAuthInitPromise,
+  type SupabaseClientType,
+} from "@gridix/utils/api";

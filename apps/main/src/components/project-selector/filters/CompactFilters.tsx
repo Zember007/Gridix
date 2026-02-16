@@ -1,20 +1,22 @@
-import {Button, Popover, PopoverContent, PopoverTrigger} from "@gridix/ui";
-import {SlidersHorizontal} from 'lucide-react';
-import {useLanguage} from '@/contexts/LanguageContext';
-import {Tables} from '@gridix/types/database';
-import {useState} from 'react';
-import {AdvancedFilters} from '@/components';
-import type { FilterFieldKey } from '../hooks/useProjectFilters';
+import { Button, Popover, PopoverContent, PopoverTrigger } from "@gridix/ui";
+import { SlidersHorizontal } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Tables } from "@gridix/types/database";
+import { useState } from "react";
+import { AdvancedFilters } from "@/components";
+import type { FilterFieldKey } from "../hooks/useProjectFilters";
 
-type Project = Tables<'projects'>;
+type Project = Tables<"projects">;
 
 interface CompactFiltersProps {
   selectedRooms: string;
   setSelectedRooms: (value: string) => void;
   selectedFloor: string;
   setSelectedFloor: (value: string) => void;
-  selectedType: 'all' | 'apartment' | 'commercial' | 'parking';
-  setSelectedType: (value: 'all' | 'apartment' | 'commercial' | 'parking') => void;
+  selectedType: "all" | "apartment" | "commercial" | "parking";
+  setSelectedType: (
+    value: "all" | "apartment" | "commercial" | "parking",
+  ) => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   selectedCurrency: string;
@@ -36,7 +38,9 @@ interface CompactFiltersProps {
   hasFreeLayout?: () => boolean;
   project?: Project;
   viewMode: string;
-  setViewMode: (mode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess') => void;
+  setViewMode: (
+    mode: "facade" | "floor-plan" | "list" | "map" | "favorites" | "chess",
+  ) => void;
   themeColor?: string;
   visibleFilterFields: Record<FilterFieldKey, boolean>;
   hasAnyVisibleFilter: boolean;
@@ -71,7 +75,7 @@ export const CompactFilters = ({
   project,
   viewMode,
   setViewMode,
-  themeColor = '#000000',
+  themeColor = "#000000",
   visibleFilterFields,
   hasAnyVisibleFilter,
 }: CompactFiltersProps) => {
@@ -82,21 +86,24 @@ export const CompactFilters = ({
   // (staging + apply/reset lives inside AdvancedFilters component)
 
   return (
-    <div className="flex items-center gap-2 flex-wrap min-w-0">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       {/* Left: advanced filters */}
       <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             size="sm"
-            className="h-9 rounded-full p-0 bg-white border-gray-200 [&_svg]:size-4 basis-9 shrink-0"
-            aria-label={t('project.filters')}
-            title={t('project.filters')}
+            className="h-9 shrink-0 basis-9 rounded-full border-gray-200 bg-white p-0 [&_svg]:size-4"
+            aria-label={t("project.filters")}
+            title={t("project.filters")}
           >
             <SlidersHorizontal className="h-4 w-4 text-gray-700" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="max-w-[500px] max-h-[calc(100vh-150px)] overflow-y-auto relative p-0">
+        <PopoverContent
+          align="start"
+          className="relative max-h-[calc(100vh-150px)] max-w-[500px] overflow-y-auto p-0"
+        >
           <AdvancedFilters
             open={advancedOpen}
             onClose={() => setAdvancedOpen(false)}
@@ -135,6 +142,5 @@ export const CompactFilters = ({
         </PopoverContent>
       </Popover>
     </div>
-
   );
 };

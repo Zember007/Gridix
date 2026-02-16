@@ -1,8 +1,8 @@
-import React from 'react';
-import { Crown, CheckCircle } from 'lucide-react';
+import React from "react";
+import { Crown, CheckCircle } from "lucide-react";
 import { Button } from "@gridix/ui";
-import { SubscriptionPlan } from '@/entities/subscription/queries/useSubscription';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { SubscriptionPlan } from "@/entities/subscription/queries/useSubscription";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PricingPlansProps {
   plans: SubscriptionPlan[];
@@ -22,47 +22,47 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start max-w-5xl mx-auto">
+    <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-2">
       {plans.map((plan) => {
         const pricing =
           plan.pricing?.find((p) => p.durationMonths === selectedDuration) ||
           plan.pricing?.[0];
-        const isPro = plan.slug === 'pro';
+        const isPro = plan.slug === "pro";
 
         // Calculate savings properly - round to 2 decimal places
-        const savings = pricing?.savings 
-          ? Math.round(pricing.savings * 100) / 100 
+        const savings = pricing?.savings
+          ? Math.round(pricing.savings * 100) / 100
           : 0;
 
         return (
           <div
             key={plan.id}
-            className={`relative rounded-3xl transition-all duration-300 flex flex-col overflow-hidden ${
+            className={`relative flex flex-col overflow-hidden rounded-3xl transition-all duration-300 ${
               isPro
-                ? 'bg-slate-900 text-white shadow-2xl ring-1 ring-slate-900'
-                : 'bg-background text-foreground border border-border shadow-lg'
+                ? "bg-slate-900 text-white shadow-2xl ring-1 ring-slate-900"
+                : "border border-border bg-background text-foreground shadow-lg"
             }`}
           >
             {isPro && (
-              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
             )}
 
-            <div className="p-6 md:p-8 flex-1 flex flex-col">
-              <div className="flex justify-between items-start mb-6">
+            <div className="flex flex-1 flex-col p-6 md:p-8">
+              <div className="mb-6 flex items-start justify-between">
                 <div>
                   <h3
-                    className={`text-2xl font-black uppercase tracking-wide flex items-center gap-2 ${
-                      isPro ? 'text-white' : 'text-foreground'
+                    className={`flex items-center gap-2 text-2xl font-black uppercase tracking-wide ${
+                      isPro ? "text-white" : "text-foreground"
                     }`}
                   >
                     {plan.name}
                     {isPro && (
-                      <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
+                      <Crown className="h-5 w-5 fill-amber-400 text-amber-400" />
                     )}
                   </h3>
                   <p
-                    className={`text-sm mt-2 ${
-                      isPro ? 'text-slate-400' : 'text-muted-foreground'
+                    className={`mt-2 text-sm ${
+                      isPro ? "text-slate-400" : "text-muted-foreground"
                     }`}
                   >
                     {plan.description}
@@ -73,54 +73,54 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
               {pricing && (
                 <div className="mb-8">
                   <div className="flex items-end gap-2">
-                    <span className="text-4xl md:text-5xl font-black tracking-tight">
+                    <span className="text-4xl font-black tracking-tight md:text-5xl">
                       ${pricing.monthlyPrice}
                     </span>
-                    <div className="flex flex-col mb-1.5">
+                    <div className="mb-1.5 flex flex-col">
                       <span
                         className={`text-[10px] font-semibold uppercase ${
-                          isPro ? 'text-slate-400' : 'text-muted-foreground'
+                          isPro ? "text-slate-400" : "text-muted-foreground"
                         }`}
                       >
-                        {t('admin.subscriptionPage.pricing.usdPerMonth')}
+                        {t("admin.subscriptionPage.pricing.usdPerMonth")}
                       </span>
                       <span
                         className={`text-xs ${
-                          isPro ? 'text-slate-300' : 'text-muted-foreground'
+                          isPro ? "text-slate-300" : "text-muted-foreground"
                         }`}
                       >
-                        {t('admin.subscriptionPage.pricing.perProject')}
+                        {t("admin.subscriptionPage.pricing.perProject")}
                       </span>
                     </div>
                   </div>
 
                   <div
-                    className={`mt-4 p-3 rounded-xl ${
-                      isPro ? 'bg-slate-800' : 'bg-muted'
+                    className={`mt-4 rounded-xl p-3 ${
+                      isPro ? "bg-slate-800" : "bg-muted"
                     }`}
                   >
                     <span
                       className={`text-[10px] font-semibold uppercase ${
-                        isPro ? 'text-slate-400' : 'text-muted-foreground'
+                        isPro ? "text-slate-400" : "text-muted-foreground"
                       }`}
                     >
-                      {t('admin.subscriptionPage.pricing.billedEvery')}{' '}
-                      {pricing.durationMonths}{' '}
+                      {t("admin.subscriptionPage.pricing.billedEvery")}{" "}
+                      {pricing.durationMonths}{" "}
                       {pricing.durationMonths > 1
-                        ? t('admin.subscriptionPage.pricing.monthsShortPlural')
-                        : t('admin.subscriptionPage.pricing.monthsShort')}
+                        ? t("admin.subscriptionPage.pricing.monthsShortPlural")
+                        : t("admin.subscriptionPage.pricing.monthsShort")}
                     </span>
                     <div
                       className={`text-lg font-semibold ${
-                        isPro ? 'text-white' : 'text-foreground'
+                        isPro ? "text-white" : "text-foreground"
                       }`}
                     >
                       ${Math.round(pricing.totalPrice)}
                       {pricing.discountPercentage > 0 && savings > 0 && (
-                        <span className="ml-2 text-xs text-green-500 font-medium">
+                        <span className="ml-2 text-xs font-medium text-green-500">
                           −{pricing.discountPercentage}% (
-                          {t('admin.subscriptionPage.pricing.savings')}{' '}
-                          ${Math.round(savings)})
+                          {t("admin.subscriptionPage.pricing.savings")} $
+                          {Math.round(savings)})
                         </span>
                       )}
                     </div>
@@ -128,22 +128,24 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
                 </div>
               )}
 
-              <ul className="space-y-3 mb-6 flex-1">
+              <ul className="mb-6 flex-1 space-y-3">
                 {plan.features.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-start gap-3 text-sm text-left"
+                    className="flex items-start gap-3 text-left text-sm"
                   >
                     <div
-                      className={`mt-0.5 p-0.5 rounded-full shrink-0 ${
+                      className={`mt-0.5 shrink-0 rounded-full p-0.5 ${
                         isPro
-                          ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-blue-100 text-blue-600'
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-blue-100 text-blue-600"
                       }`}
                     >
-                      <CheckCircle className="w-3 h-3" />
+                      <CheckCircle className="h-3 w-3" />
                     </div>
-                    <span className={isPro ? 'text-slate-100' : 'text-foreground'}>
+                    <span
+                      className={isPro ? "text-slate-100" : "text-foreground"}
+                    >
                       {feature}
                     </span>
                   </li>
@@ -151,17 +153,17 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
               </ul>
 
               <Button
-                className={`w-full mt-auto ${
+                className={`mt-auto w-full ${
                   isPro
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 text-white'
+                    ? "bg-blue-600 text-white hover:bg-blue-500"
+                    : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
                 onClick={() => {
                   onSelectPlan(plan.id);
                   onOpenCheckout(plan.id);
                 }}
               >
-                {t('admin.subscriptionPage.pricing.choosePlan', {
+                {t("admin.subscriptionPage.pricing.choosePlan", {
                   name: plan.name,
                 })}
               </Button>
@@ -172,4 +174,3 @@ export const PricingPlans: React.FC<PricingPlansProps> = ({
     </div>
   );
 };
-

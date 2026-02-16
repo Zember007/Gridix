@@ -17,12 +17,17 @@ const sizeMap: Record<SpinnerSize, string> = {
   lg: "h-12 w-12",
 };
 
-export const Spinner = ({ size = "md", className, style, color }: SpinnerProps) => {
+export const Spinner = ({
+  size = "md",
+  className,
+  style,
+  color,
+}: SpinnerProps) => {
   return (
     <div
       style={{ ...style, ...(color ? { borderColor: color } : null) }}
       className={cn(
-        "animate-spin rounded-full border-b-2 border-primary",
+        "border-primary animate-spin rounded-full border-b-2",
         sizeMap[size],
         className,
       )}

@@ -1,6 +1,6 @@
-import { useEffect } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
-import { useTranslation } from "react-i18next"
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   type Language,
@@ -9,19 +9,19 @@ import {
   removeLanguageFromPath,
   LANGUAGE_CONFIG,
   isRtlLanguage,
-} from "../../lib"
+} from "../../lib";
 
 function applyDocumentDirection(language: Language) {
-  if (typeof document === "undefined") return
+  if (typeof document === "undefined") return;
 
-  const isRtl = isRtlLanguage(language)
-  const dir = isRtl ? "rtl" : "ltr"
+  const isRtl = isRtlLanguage(language);
+  const dir = isRtl ? "rtl" : "ltr";
 
-  document.documentElement.setAttribute("dir", dir)
-  document.documentElement.setAttribute("lang", language)
+  document.documentElement.setAttribute("dir", dir);
+  document.documentElement.setAttribute("lang", language);
 
   // Utility class for targeted RTL overrides in Tailwind/CSS if needed.
-  document.documentElement.classList.toggle("rtl", isRtl)
+  document.documentElement.classList.toggle("rtl", isRtl);
 }
 
 /**
@@ -29,115 +29,117 @@ function applyDocumentDirection(language: Language) {
  * Синхронизирует язык с URL и предоставляет функции для переводов
  */
 export const useLanguage = () => {
-  const { t, i18n } = useTranslation()
-  const location = useLocation()
-  const navigate = useNavigate()
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const language = i18n.language as Language
+  const language = i18n.language as Language;
 
   useEffect(() => {
-    applyDocumentDirection(language)
-  }, [language])
+    applyDocumentDirection(language);
+  }, [language]);
 
   useEffect(() => {
     if (location.pathname.startsWith("/embed/")) {
-      let detectedLanguage: Language | undefined
-      const urlParams = new URLSearchParams(location.search)
-      const langParam = urlParams.get("lang")
+      let detectedLanguage: Language | undefined;
+      const urlParams = new URLSearchParams(location.search);
+      const langParam = urlParams.get("lang");
       if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
-        detectedLanguage = langParam as Language
+        detectedLanguage = langParam as Language;
       }
       if (!detectedLanguage) {
-        const savedLanguage = localStorage.getItem("embed-language")
+        const savedLanguage = localStorage.getItem("embed-language");
         if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
-          detectedLanguage = savedLanguage as Language
+          detectedLanguage = savedLanguage as Language;
         }
       }
       if (detectedLanguage && detectedLanguage !== i18n.language) {
-        void i18n.changeLanguage(detectedLanguage)
+        void i18n.changeLanguage(detectedLanguage);
       }
-      return
+      return;
     }
 
-    const urlLanguage = getLanguageFromPath(location.pathname)
+    const urlLanguage = getLanguageFromPath(location.pathname);
     if (urlLanguage !== i18n.language) {
-      void i18n.changeLanguage(urlLanguage)
+      void i18n.changeLanguage(urlLanguage);
     }
-  }, [location.pathname, location.search, i18n])
+  }, [location.pathname, location.search, i18n]);
 
   const setLanguage = (newLanguage: Language) => {
-    if (newLanguage === language) return
+    if (newLanguage === language) return;
 
     if (location.pathname.startsWith("/embed/")) {
-      void i18n.changeLanguage(newLanguage)
-      localStorage.setItem("embed-language", newLanguage)
-      const search = new URLSearchParams(location.search)
-      search.set("lang", newLanguage)
-      navigate({ pathname: location.pathname, search: search.toString() }, { replace: true })
-      return
+      void i18n.changeLanguage(newLanguage);
+      localStorage.setItem("embed-language", newLanguage);
+      const search = new URLSearchParams(location.search);
+      search.set("lang", newLanguage);
+      navigate(
+        { pathname: location.pathname, search: search.toString() },
+        { replace: true },
+      );
+      return;
     }
 
-    const cleanPath = removeLanguageFromPath(location.pathname)
-    const newPath = addLanguageToPath(cleanPath, newLanguage)
+    const cleanPath = removeLanguageFromPath(location.pathname);
+    const newPath = addLanguageToPath(cleanPath, newLanguage);
 
-    void i18n.changeLanguage(newLanguage)
-    navigate(newPath, { replace: true })
-  }
+    void i18n.changeLanguage(newLanguage);
+    navigate(newPath, { replace: true });
+  };
 
   return {
     language,
     setLanguage,
     t,
-  }
-}
+  };
+};
 
 /**
  * Хук для работы с языком в embed-режиме (без роутинга)
  * Использует localStorage и query параметры для определения языка
  */
 export const useEmbedLanguage = (initialLanguage?: Language) => {
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
-    let detectedLanguage = initialLanguage
+    let detectedLanguage = initialLanguage;
 
     if (!detectedLanguage) {
-      const urlParams = new URLSearchParams(window.location.search)
-      const langParam = urlParams.get("lang")
+      const urlParams = new URLSearchParams(window.location.search);
+      const langParam = urlParams.get("lang");
       if (langParam && (langParam as Language) in LANGUAGE_CONFIG) {
-        detectedLanguage = langParam as Language
+        detectedLanguage = langParam as Language;
       }
     }
 
     if (!detectedLanguage) {
-      const savedLanguage = localStorage.getItem("embed-language")
+      const savedLanguage = localStorage.getItem("embed-language");
       if (savedLanguage && (savedLanguage as Language) in LANGUAGE_CONFIG) {
-        detectedLanguage = savedLanguage as Language
+        detectedLanguage = savedLanguage as Language;
       }
     }
 
     if (detectedLanguage && detectedLanguage !== i18n.language) {
-      void i18n.changeLanguage(detectedLanguage)
+      void i18n.changeLanguage(detectedLanguage);
     }
-  }, [initialLanguage, i18n])
+  }, [initialLanguage, i18n]);
 
-  const language = i18n.language as Language
+  const language = i18n.language as Language;
 
   useEffect(() => {
-    applyDocumentDirection(language)
-  }, [language])
+    applyDocumentDirection(language);
+  }, [language]);
 
   const setLanguage = (newLanguage: Language) => {
-    if (newLanguage === language) return
+    if (newLanguage === language) return;
 
-    void i18n.changeLanguage(newLanguage)
-    localStorage.setItem("embed-language", newLanguage)
-  }
+    void i18n.changeLanguage(newLanguage);
+    localStorage.setItem("embed-language", newLanguage);
+  };
 
   return {
     language,
     setLanguage,
     t,
-  }
-}
-
+  };
+};

@@ -1,7 +1,10 @@
-import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useLeadsQuery } from '@/entities/lead/queries/useLeadsQuery';
-import { cancelLead as apiCancelLead, updateLeadNotes as apiUpdateLeadNotes } from '@/entities/lead/api/leadApi';
+import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLeadsQuery } from "@/entities/lead/queries/useLeadsQuery";
+import {
+  cancelLead as apiCancelLead,
+  updateLeadNotes as apiUpdateLeadNotes,
+} from "@/entities/lead/api/leadApi";
 
 export interface Lead {
   id: string;
@@ -38,7 +41,7 @@ export interface Lead {
 
 export interface LeadFilters {
   projectId?: string | undefined;
-  status?: Lead['status'];
+  status?: Lead["status"];
   dateFrom?: string;
   dateTo?: string;
 }
@@ -58,9 +61,9 @@ export function useLeads(filters?: LeadFilters) {
       try {
         await apiCancelLead(leadId);
         // После изменения данных инвалидируем все связанные запросы по лидам
-        await queryClient.invalidateQueries({ queryKey: ['leads'] });
+        await queryClient.invalidateQueries({ queryKey: ["leads"] });
       } catch (err) {
-        console.error('Error cancelling lead:', err);
+        console.error("Error cancelling lead:", err);
         throw err;
       }
     },
@@ -72,9 +75,9 @@ export function useLeads(filters?: LeadFilters) {
       try {
         await apiUpdateLeadNotes(leadId, notes);
         // После изменения заметок также инвалидируем кэш
-        await queryClient.invalidateQueries({ queryKey: ['leads'] });
+        await queryClient.invalidateQueries({ queryKey: ["leads"] });
       } catch (err) {
-        console.error('Error updating lead notes:', err);
+        console.error("Error updating lead notes:", err);
         throw err;
       }
     },
@@ -85,18 +88,19 @@ export function useLeads(filters?: LeadFilters) {
   const getLeadCounts = () => {
     return {
       total: leads.length,
-      pending: leads.filter((lead) => lead.status === 'pending').length,
-      sent: leads.filter((lead) => lead.status === 'sent_to_crm').length,
-      savedOnly: leads.filter((lead) => lead.status === 'saved_only').length,
-      failed: leads.filter((lead) => lead.status === 'failed').length,
-      cancelled: leads.filter((lead) => lead.status === 'cancelled').length,
+      pending: leads.filter((lead) => lead.status === "pending").length,
+      sent: leads.filter((lead) => lead.status === "sent_to_crm").length,
+      savedOnly: leads.filter((lead) => lead.status === "saved_only").length,
+      failed: leads.filter((lead) => lead.status === "failed").length,
+      cancelled: leads.filter((lead) => lead.status === "cancelled").length,
     };
   };
 
   return {
     leads,
     loading: isLoading,
-    error: error instanceof Error ? error.message : error ? String(error) : null,
+    error:
+      error instanceof Error ? error.message : error ? String(error) : null,
     fetchLeads: refetchLeads,
     cancelLead,
     updateLeadNotes,
@@ -111,5 +115,5 @@ export function useProjectLeads(projectId?: string) {
 
 // Hook for getting failed leads only
 export function useFailedLeads(projectId?: string) {
-  return useLeads({ projectId, status: 'failed' });
+  return useLeads({ projectId, status: "failed" });
 }

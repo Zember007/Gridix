@@ -23,8 +23,7 @@ export async function processPendingReferralAfterAuth(): Promise<void> {
   const isSuccessResponse = (data: unknown): boolean => {
     if (!data || typeof data !== "object") return false;
     return (
-      "success" in data &&
-      (data as { success?: unknown }).success === true
+      "success" in data && (data as { success?: unknown }).success === true
     );
   };
 
@@ -49,17 +48,20 @@ export async function processPendingReferralAfterAuth(): Promise<void> {
     }
 
     if (invitationCode && invitationType === "managed") {
-      const { data, error } = await supabase.functions.invoke("partner-program", {
-        body: {
-          action: "track_referral",
-          partner_code: partnerCode,
-          invitation_code: invitationCode,
-          invitation_type: "managed",
-          utm_source: utmSource,
-          utm_medium: utmMedium,
-          utm_campaign: utmCampaign,
+      const { data, error } = await supabase.functions.invoke(
+        "partner-program",
+        {
+          body: {
+            action: "track_referral",
+            partner_code: partnerCode,
+            invitation_code: invitationCode,
+            invitation_type: "managed",
+            utm_source: utmSource,
+            utm_medium: utmMedium,
+            utm_campaign: utmCampaign,
+          },
         },
-      });
+      );
 
       if (error) {
         console.error("Error processing invitation (after auth):", error);
@@ -92,8 +94,9 @@ export async function processPendingReferralAfterAuth(): Promise<void> {
       window.localStorage.removeItem(STORAGE_KEY);
     }
   } catch (err) {
-    console.error("Error processing referral from localStorage (after auth):", err);
+    console.error(
+      "Error processing referral from localStorage (after auth):",
+      err,
+    );
   }
 }
-
-

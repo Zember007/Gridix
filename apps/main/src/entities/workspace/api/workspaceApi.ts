@@ -8,7 +8,7 @@ export interface WorkspaceProjectsParams {
 }
 
 export const fetchWorkspaceProjects = async (
-  params: WorkspaceProjectsParams
+  params: WorkspaceProjectsParams,
 ): Promise<Project[]> => {
   const { userId, activeWorkspaceId, isManagerMode } = params;
 
@@ -39,7 +39,7 @@ export const fetchWorkspaceProjects = async (
           full_name,
           company_name
         )
-      `
+      `,
       )
       .eq("user_id", activeWorkspaceId);
 
@@ -48,9 +48,12 @@ export const fetchWorkspaceProjects = async (
       query = query.in("id", projectIds);
     }
 
-    const { data: projectsData, error: projectsError } = await query.order("created_at", {
-      ascending: false,
-    });
+    const { data: projectsData, error: projectsError } = await query.order(
+      "created_at",
+      {
+        ascending: false,
+      },
+    );
 
     if (projectsError) throw projectsError;
 

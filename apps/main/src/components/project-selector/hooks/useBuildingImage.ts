@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 interface Size {
   width: number;
@@ -7,17 +7,18 @@ interface Size {
 
 export const useBuildingImage = (imageUrl?: string | null) => {
   const [buildingImageLoaded, setBuildingImageLoaded] = useState(false);
-  const [buildingImageNaturalSize, setBuildingImageNaturalSize] = useState<Size>({
-    width: 0,
-    height: 0,
-  });
+  const [buildingImageNaturalSize, setBuildingImageNaturalSize] =
+    useState<Size>({
+      width: 0,
+      height: 0,
+    });
   const imageLoadRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     if (imageLoadRef.current) {
       imageLoadRef.current.onload = null;
       imageLoadRef.current.onerror = null;
-      imageLoadRef.current.src = '';
+      imageLoadRef.current.src = "";
     }
 
     setBuildingImageLoaded(false);
@@ -33,7 +34,10 @@ export const useBuildingImage = (imageUrl?: string | null) => {
 
     img.onload = () => {
       if (img === imageLoadRef.current) {
-        setBuildingImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+        setBuildingImageNaturalSize({
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        });
         setBuildingImageLoaded(true);
       }
     };
@@ -60,38 +64,3 @@ export const useBuildingImage = (imageUrl?: string | null) => {
     buildingImageNaturalSize,
   };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

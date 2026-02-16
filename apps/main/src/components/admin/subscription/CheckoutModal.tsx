@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Crown,
   CheckCircle2,
@@ -11,14 +11,14 @@ import {
   Download,
   Loader2,
   Briefcase,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   ProjectSubscription,
   SubscriptionPlan,
   BillingDetails,
   BillingPayerType,
-} from '@/entities/subscription/queries/useSubscription';
-import { useLanguage } from '@/contexts/LanguageContext';
+} from "@/entities/subscription/queries/useSubscription";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,7 @@ interface CheckoutModalProps {
   onConfirm: (payer: BillingDetails, projectIds: string[]) => Promise<void>;
 }
 
-type CheckoutStep = 'select_projects' | 'payer_info' | 'payment_method';
+type CheckoutStep = "select_projects" | "payer_info" | "payment_method";
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isOpen,
@@ -57,22 +57,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onConfirm,
 }) => {
   const { t } = useLanguage();
-  const [step, setStep] = useState<CheckoutStep>('select_projects');
-  const [payerType, setPayerType] = useState<BillingPayerType>('company');
+  const [step, setStep] = useState<CheckoutStep>("select_projects");
+  const [payerType, setPayerType] = useState<BillingPayerType>("company");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(initialSelectedProjectIds);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(
+    initialSelectedProjectIds,
+  );
 
   const [formData, setFormData] = useState<BillingDetails>({
-    type: 'company',
-    name: '',
-    email: '',
-    phone: '',
-    companyName: '',
-    taxId: '',
-    address: '',
+    type: "company",
+    name: "",
+    email: "",
+    phone: "",
+    companyName: "",
+    taxId: "",
+    address: "",
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof BillingDetails, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof BillingDetails, string>>
+  >({});
 
   // Sync selected projects from parent when modal opens
   useEffect(() => {
@@ -107,10 +111,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const baseTotal = currentPricing ? currentPricing.totalPrice : 0;
   const finalTotal = baseTotal * selectedProjectIds.length;
   const durationOptions = [
-    { value: 1, label: t('admin.subscriptionPage.durations.1') },
-    { value: 3, label: t('admin.subscriptionPage.durations.3') },
-    { value: 6, label: t('admin.subscriptionPage.durations.6') },
-    { value: 12, label: t('admin.subscriptionPage.durations.12') },
+    { value: 1, label: t("admin.subscriptionPage.durations.1") },
+    { value: 3, label: t("admin.subscriptionPage.durations.3") },
+    { value: 6, label: t("admin.subscriptionPage.durations.6") },
+    { value: 12, label: t("admin.subscriptionPage.durations.12") },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,23 +134,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const validateForm = () => {
     const newErrors: Partial<Record<keyof BillingDetails, string>> = {};
 
-    if (!formData.name.trim()) newErrors.name = t('admin.subscriptionPage.checkout.errors.enterName');
+    if (!formData.name.trim())
+      newErrors.name = t("admin.subscriptionPage.checkout.errors.enterName");
 
     if (!formData.email.trim()) {
-      newErrors.email = t('admin.subscriptionPage.checkout.errors.enterEmail');
+      newErrors.email = t("admin.subscriptionPage.checkout.errors.enterEmail");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = t('admin.subscriptionPage.checkout.errors.invalidEmail');
+      newErrors.email = t(
+        "admin.subscriptionPage.checkout.errors.invalidEmail",
+      );
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = t('admin.subscriptionPage.checkout.errors.enterPhone');
+      newErrors.phone = t("admin.subscriptionPage.checkout.errors.enterPhone");
     } else if (formData.phone.length < 6) {
-      newErrors.phone = t('admin.subscriptionPage.checkout.errors.shortPhone');
+      newErrors.phone = t("admin.subscriptionPage.checkout.errors.shortPhone");
     }
 
-    if (payerType === 'company') {
+    if (payerType === "company") {
       if (!formData.companyName?.trim()) {
-        newErrors.companyName = t('admin.subscriptionPage.checkout.errors.enterCompanyName');
+        newErrors.companyName = t(
+          "admin.subscriptionPage.checkout.errors.enterCompanyName",
+        );
       }
     }
 
@@ -155,25 +164,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleNext = () => {
-    if (step === 'select_projects') {
+    if (step === "select_projects") {
       if (selectedProjectIds.length === 0) {
-        alert(t('admin.subscriptionPage.checkout.errors.selectAtLeastOneProject'));
+        alert(
+          t("admin.subscriptionPage.checkout.errors.selectAtLeastOneProject"),
+        );
         return;
       }
-      setStep('payer_info');
+      setStep("payer_info");
       return;
     }
 
-    if (step === 'payer_info') {
+    if (step === "payer_info") {
       if (validateForm()) {
-        setStep('payment_method');
+        setStep("payment_method");
       }
     }
   };
 
   const handleBack = () => {
-    if (step === 'payment_method') setStep('payer_info');
-    else if (step === 'payer_info') setStep('select_projects');
+    if (step === "payment_method") setStep("payer_info");
+    else if (step === "payer_info") setStep("select_projects");
   };
 
   const handleConfirm = async () => {
@@ -187,7 +198,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         },
         selectedProjectIds,
       );
-      setStep('select_projects');
+      setStep("select_projects");
       setSelectedProjectIds([]);
     } finally {
       setIsLoading(false);
@@ -195,31 +206,33 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm duration-200 animate-in fade-in">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-slate-50/50 p-6">
           <div className="flex items-center gap-4">
-            {step !== 'select_projects' && (
+            {step !== "select_projects" && (
               <button
                 onClick={handleBack}
-                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+                className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200"
               >
                 <ArrowLeft size={20} />
               </button>
             )}
             <div>
               <h2 className="text-xl font-bold text-slate-900">
-                {t('admin.subscriptionPage.checkout.title')}
+                {t("admin.subscriptionPage.checkout.title")}
               </h2>
               {currentPricing && (
                 <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                  <span>{t('admin.subscriptionPage.checkout.summary.totalToPay')}</span>
+                  <span>
+                    {t("admin.subscriptionPage.checkout.summary.totalToPay")}
+                  </span>
                   <Select
                     value={String(selectedDuration)}
                     onValueChange={(val) => onDurationChange(Number(val))}
                   >
-                    <SelectTrigger className="h-7 px-2 py-1 text-xs font-medium w-[150px]">
+                    <SelectTrigger className="h-7 w-[150px] px-2 py-1 text-xs font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -236,57 +249,61 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-slate-400 transition-colors hover:text-slate-600"
           >
             <X size={24} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-6 md:p-8">
           {/* STEP 1: SELECT PROJECTS */}
-          {step === 'select_projects' && (
-            <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+          {step === "select_projects" && (
+            <div className="space-y-8 duration-300 animate-in slide-in-from-right-4">
               {/* Plan Selector */}
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-3">
-                  {t('admin.subscriptionPage.checkout.selectPlan')}
+                <h4 className="mb-3 text-sm font-bold text-slate-900">
+                  {t("admin.subscriptionPage.checkout.selectPlan")}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   {plans.map((p) => {
                     const isSelected = p.id === selectedPlanId;
                     const planPricing =
-                      p.pricing?.find((pr) => pr.durationMonths === selectedDuration) ||
-                      p.pricing?.[0];
+                      p.pricing?.find(
+                        (pr) => pr.durationMonths === selectedDuration,
+                      ) || p.pricing?.[0];
                     return (
                       <button
                         key={p.id}
                         onClick={() => onPlanChange(p.id)}
-                        className={`relative p-4 border rounded-xl text-left transition-all group ${
+                        className={`group relative rounded-xl border p-4 text-left transition-all ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                            ? "border-blue-500 bg-blue-50/50 ring-1 ring-blue-500"
+                            : "border-slate-200 bg-white hover:border-slate-300"
                         }`}
                       >
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="mb-2 flex items-start justify-between">
                           <div
-                            className={`font-bold uppercase text-sm ${
-                              isSelected ? 'text-blue-700' : 'text-slate-800'
+                            className={`text-sm font-bold uppercase ${
+                              isSelected ? "text-blue-700" : "text-slate-800"
                             }`}
                           >
                             {p.name}
                           </div>
-                          {p.slug === 'pro' && (
-                            <Crown size={16} className="text-amber-400 fill-amber-400" />
+                          {p.slug === "pro" && (
+                            <Crown
+                              size={16}
+                              className="fill-amber-400 text-amber-400"
+                            />
                           )}
                         </div>
                         <div className="text-xs text-slate-500">
-                          <span className="font-bold text-base text-slate-900">
+                          <span className="text-base font-bold text-slate-900">
                             ${planPricing?.monthlyPrice || p.base_price}
-                          </span>{' '}
+                          </span>{" "}
                           / мес
                         </div>
                         {isSelected && (
-                          <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1">
+                          <div className="absolute -right-2 -top-2 rounded-full bg-blue-500 p-1 text-white">
                             <CheckCircle2 size={12} />
                           </div>
                         )}
@@ -298,41 +315,41 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               {/* Project Selector */}
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="mb-3 flex items-center justify-between">
                   <h4 className="text-sm font-bold text-slate-900">
-                    {t('admin.subscriptionPage.checkout.selectProjects')}
+                    {t("admin.subscriptionPage.checkout.selectProjects")}
                   </h4>
                   <span className="text-xs text-slate-500">
-                    {t('admin.subscriptionPage.checkout.projectsSelected', {
+                    {t("admin.subscriptionPage.checkout.projectsSelected", {
                       count: selectedProjectIds.length,
                     })}
                   </span>
                 </div>
 
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-3 mb-3">
-                  <Briefcase size={18} className="text-blue-600 mt-0.5" />
-                  <p className="text-xs text-blue-700 leading-relaxed">
-                    {t('admin.subscriptionPage.checkout.projectsHint')}
+                <div className="mb-3 flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                  <Briefcase size={18} className="mt-0.5 text-blue-600" />
+                  <p className="text-xs leading-relaxed text-blue-700">
+                    {t("admin.subscriptionPage.checkout.projectsHint")}
                   </p>
                 </div>
 
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="custom-scrollbar max-h-60 space-y-2 overflow-y-auto pr-2">
                   {projects.map((project) => (
                     <div
                       key={project.id}
                       onClick={() => toggleProject(project.id)}
-                      className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${
+                      className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
                         selectedProjectIds.includes(project.id)
-                          ? 'border-blue-500 bg-blue-50/30'
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? "border-blue-500 bg-blue-50/30"
+                          : "border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                          className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
                             selectedProjectIds.includes(project.id)
-                              ? 'bg-blue-600 border-blue-600'
-                              : 'border-slate-300 bg-white'
+                              ? "border-blue-600 bg-blue-600"
+                              : "border-slate-300 bg-white"
                           }`}
                         >
                           {selectedProjectIds.includes(project.id) && (
@@ -340,7 +357,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-800 text-sm">{project.name}</div>
+                          <div className="text-sm font-bold text-slate-800">
+                            {project.name}
+                          </div>
                           <div className="text-xs text-slate-500">
                             {project.user_profiles?.company_name ||
                               project.user_profiles?.full_name ||
@@ -350,13 +369,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         </div>
                       </div>
                       <div className="text-sm font-bold text-slate-900">
-                        {currentPricing ? `$${currentPricing.totalPrice}` : '—'}
+                        {currentPricing ? `$${currentPricing.totalPrice}` : "—"}
                       </div>
                     </div>
                   ))}
                   {projects.length === 0 && (
-                    <div className="text-center text-slate-500 py-8">
-                      {t('admin.subscriptionPage.checkout.noProjects')}
+                    <div className="py-8 text-center text-slate-500">
+                      {t("admin.subscriptionPage.checkout.noProjects")}
                     </div>
                   )}
                 </div>
@@ -365,36 +384,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
 
           {/* STEP 2: PAYER INFO */}
-          {step === 'payer_info' && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="grid grid-cols-2 gap-4 p-1 bg-slate-100 rounded-xl">
+          {step === "payer_info" && (
+            <div className="space-y-6 duration-300 animate-in slide-in-from-right-4">
+              <div className="grid grid-cols-2 gap-4 rounded-xl bg-slate-100 p-1">
                 <button
-                  onClick={() => setPayerType('individual')}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all ${
-                    payerType === 'individual'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                  onClick={() => setPayerType("individual")}
+                  className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
+                    payerType === "individual"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  <User size={18} /> {t('admin.subscriptionPage.checkout.payerType.individual')}
+                  <User size={18} />{" "}
+                  {t("admin.subscriptionPage.checkout.payerType.individual")}
                 </button>
                 <button
-                  onClick={() => setPayerType('company')}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all ${
-                    payerType === 'company'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                  onClick={() => setPayerType("company")}
+                  className={`flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-all ${
+                    payerType === "company"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  <Building size={18} /> {t('admin.subscriptionPage.checkout.payerType.company')}
+                  <Building size={18} />{" "}
+                  {t("admin.subscriptionPage.checkout.payerType.company")}
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">
-                      {t('admin.subscriptionPage.checkout.fields.contactName')}{' '}
+                    <label className="text-xs font-bold uppercase text-slate-500">
+                      {t("admin.subscriptionPage.checkout.fields.contactName")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -402,22 +423,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-1 transition-all ${
+                      className={`w-full rounded-lg border bg-white px-4 py-3 transition-all focus:outline-none focus:ring-1 ${
                         errors.name
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                          : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500'
+                          ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                          : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                       }`}
                       placeholder={t(
-                        'admin.subscriptionPage.checkout.placeholders.contactName',
+                        "admin.subscriptionPage.checkout.placeholders.contactName",
                       )}
                     />
                     {errors.name && (
-                      <span className="text-xs text-red-500 font-medium">{errors.name}</span>
+                      <span className="text-xs font-medium text-red-500">
+                        {errors.name}
+                      </span>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase">
-                      {t('admin.subscriptionPage.checkout.fields.email')}{' '}
+                    <label className="text-xs font-bold uppercase text-slate-500">
+                      {t("admin.subscriptionPage.checkout.fields.email")}{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -425,22 +448,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-1 transition-all ${
+                      className={`w-full rounded-lg border bg-white px-4 py-3 transition-all focus:outline-none focus:ring-1 ${
                         errors.email
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                          : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500'
+                          ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                          : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                       }`}
-                      placeholder={t('admin.subscriptionPage.checkout.placeholders.email')}
+                      placeholder={t(
+                        "admin.subscriptionPage.checkout.placeholders.email",
+                      )}
                     />
                     {errors.email && (
-                      <span className="text-xs text-red-500 font-medium">{errors.email}</span>
+                      <span className="text-xs font-medium text-red-500">
+                        {errors.email}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase">
-                    {t('admin.subscriptionPage.checkout.fields.phone')}{' '}
+                  <label className="text-xs font-bold uppercase text-slate-500">
+                    {t("admin.subscriptionPage.checkout.fields.phone")}{" "}
                     <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -448,68 +475,74 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-1 transition-all ${
+                    className={`w-full rounded-lg border bg-white px-4 py-3 transition-all focus:outline-none focus:ring-1 ${
                       errors.phone
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500'
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                     }`}
-                    placeholder={t('admin.subscriptionPage.checkout.placeholders.phone')}
+                    placeholder={t(
+                      "admin.subscriptionPage.checkout.placeholders.phone",
+                    )}
                   />
                   {errors.phone && (
-                    <span className="text-xs text-red-500 font-medium">{errors.phone}</span>
+                    <span className="text-xs font-medium text-red-500">
+                      {errors.phone}
+                    </span>
                   )}
                 </div>
 
-                {payerType === 'company' && (
-                  <div className="pt-4 border-t border-slate-100 space-y-4 animate-in fade-in">
+                {payerType === "company" && (
+                  <div className="space-y-4 border-t border-slate-100 pt-4 animate-in fade-in">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase">
-                      {t('admin.subscriptionPage.checkout.fields.companyName')}{' '}
-                      <span className="text-red-500">*</span>
+                      <label className="text-xs font-bold uppercase text-slate-500">
+                        {t(
+                          "admin.subscriptionPage.checkout.fields.companyName",
+                        )}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         name="companyName"
                         value={formData.companyName}
                         onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-1 transition-all ${
+                        className={`w-full rounded-lg border bg-white px-4 py-3 transition-all focus:outline-none focus:ring-1 ${
                           errors.companyName
-                            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                            : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500'
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                            : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                         }`}
                         placeholder={t(
-                          'admin.subscriptionPage.checkout.placeholders.companyName',
+                          "admin.subscriptionPage.checkout.placeholders.companyName",
                         )}
                       />
                       {errors.companyName && (
-                        <span className="text-xs text-red-500 font-medium">
+                        <span className="text-xs font-medium text-red-500">
                           {errors.companyName}
                         </span>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase">
-                          {t('admin.subscriptionPage.checkout.fields.taxId')}
+                        <label className="text-xs font-bold uppercase text-slate-500">
+                          {t("admin.subscriptionPage.checkout.fields.taxId")}
                         </label>
                         <input
                           type="text"
                           name="taxId"
-                          value={formData.taxId || ''}
+                          value={formData.taxId || ""}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase">
-                          {t('admin.subscriptionPage.checkout.fields.address')}
+                        <label className="text-xs font-bold uppercase text-slate-500">
+                          {t("admin.subscriptionPage.checkout.fields.address")}
                         </label>
                         <input
                           type="text"
                           name="address"
-                          value={formData.address || ''}
+                          value={formData.address || ""}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -520,22 +553,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
 
           {/* STEP 3: PAYMENT METHOD */}
-          {step === 'payment_method' && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
-                <div className="flex justify-between items-start mb-4 border-b border-slate-200 pb-4">
+          {step === "payment_method" && (
+            <div className="space-y-6 duration-300 animate-in slide-in-from-right-4">
+              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-5">
+                <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                <div className="mb-4 flex items-start justify-between border-b border-slate-200 pb-4">
                   <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold">
-                      {t('admin.subscriptionPage.checkout.summary.totalToPay')}
+                    <div className="text-xs font-bold uppercase text-slate-500">
+                      {t("admin.subscriptionPage.checkout.summary.totalToPay")}
                     </div>
-                    <div className="text-3xl font-bold text-slate-900">${finalTotal}</div>
+                    <div className="text-3xl font-bold text-slate-900">
+                      ${finalTotal}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-slate-500 uppercase font-bold mb-1">
-                      {t('admin.subscriptionPage.checkout.summary.plan')}
+                    <div className="mb-1 text-xs font-bold uppercase text-slate-500">
+                      {t("admin.subscriptionPage.checkout.summary.plan")}
                     </div>
-                    <div className="text-sm font-bold text-slate-800 uppercase">
+                    <div className="text-sm font-bold uppercase text-slate-800">
                       {currentPlan?.name}
                     </div>
                     {currentPricing && (
@@ -548,15 +583,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                 <div className="space-y-2 text-sm text-slate-600">
                   <div className="flex justify-between">
-                    <span>{t('admin.subscriptionPage.checkout.summary.projects')}</span>
+                    <span>
+                      {t("admin.subscriptionPage.checkout.summary.projects")}
+                    </span>
                     <span className="font-medium text-slate-900">
                       {selectedProjectIds.length} шт.
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>{t('admin.subscriptionPage.checkout.summary.payer')}</span>
+                    <span>
+                      {t("admin.subscriptionPage.checkout.summary.payer")}
+                    </span>
                     <span className="font-medium text-slate-900">
-                      {payerType === 'company'
+                      {payerType === "company"
                         ? formData.companyName || formData.name
                         : formData.name}
                     </span>
@@ -568,41 +607,51 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <button
                   onClick={() => {}}
                   disabled={true}
-                  className="group relative flex items-center justify-between p-5 border border-slate-200 rounded-xl bg-white opacity-60 cursor-not-allowed"
+                  className="group relative flex cursor-not-allowed items-center justify-between rounded-xl border border-slate-200 bg-white p-5 opacity-60"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600">
                       <CreditCard size={24} />
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900">
-                        {t('admin.subscriptionPage.checkout.methods.card.title')}
+                        {t(
+                          "admin.subscriptionPage.checkout.methods.card.title",
+                        )}
                       </h4>
                       <p className="text-xs text-slate-500">
-                        {t('admin.subscriptionPage.checkout.methods.card.description')}
+                        {t(
+                          "admin.subscriptionPage.checkout.methods.card.description",
+                        )}
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded uppercase">
-                    {t('admin.subscriptionPage.checkout.methods.card.unavailable')}
+                  <span className="rounded bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase text-gray-500">
+                    {t(
+                      "admin.subscriptionPage.checkout.methods.card.unavailable",
+                    )}
                   </span>
                 </button>
 
                 <button
                   onClick={handleConfirm}
                   disabled={isLoading}
-                  className="group relative flex items-center justify-between p-5 border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left bg-white"
+                  className="group relative flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-blue-500 hover:shadow-md"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
                       <FileTextIcon size={24} />
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900">
-                        {t('admin.subscriptionPage.checkout.methods.invoice.title')}
+                        {t(
+                          "admin.subscriptionPage.checkout.methods.invoice.title",
+                        )}
                       </h4>
                       <p className="text-xs text-slate-500">
-                        {t('admin.subscriptionPage.checkout.methods.invoice.description')}
+                        {t(
+                          "admin.subscriptionPage.checkout.methods.invoice.description",
+                        )}
                       </p>
                     </div>
                   </div>
@@ -615,26 +664,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
         </div>
 
-        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center shrink-0">
-          {step !== 'payment_method' ? (
+        <div className="flex shrink-0 items-center justify-between border-t border-slate-100 bg-slate-50/50 p-6">
+          {step !== "payment_method" ? (
             <>
               <div className="text-sm text-slate-500">
-                {t('admin.subscriptionPage.checkout.footer.total')}{' '}
+                {t("admin.subscriptionPage.checkout.footer.total")}{" "}
                 <span className="font-bold text-slate-900">${finalTotal}</span>
               </div>
               <button
                 onClick={handleNext}
-                className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold transition-colors shadow-sm"
+                className="rounded-lg bg-slate-900 px-8 py-3 font-bold text-white shadow-sm transition-colors hover:bg-slate-800"
               >
-                {t('admin.subscriptionPage.checkout.footer.next')}
+                {t("admin.subscriptionPage.checkout.footer.next")}
               </button>
             </>
           ) : (
-            <div className="w-full flex justify-center">
+            <div className="flex w-full justify-center">
               {isLoading && (
                 <div className="flex items-center gap-2 text-slate-600">
-                  <Loader2 size={20} className="animate-spin" />{' '}
-                  {t('admin.subscriptionPage.checkout.footer.processing')}
+                  <Loader2 size={20} className="animate-spin" />{" "}
+                  {t("admin.subscriptionPage.checkout.footer.processing")}
                 </div>
               )}
             </div>
@@ -644,4 +693,3 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     </div>
   );
 };
-

@@ -1,15 +1,15 @@
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React from "react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@gridix/ui";
-import GoogleSheetsImportDemo from '@/components/data-import/GoogleSheetsImportDemo';
-import { useNavigate } from 'react-router-dom';
+import GoogleSheetsImportDemo from "@/components/data-import/GoogleSheetsImportDemo";
+import { useNavigate } from "react-router-dom";
 
 const GoogleSheetsTestPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
+      <div className="border-b bg-white shadow-sm">
         <div className="px-4 py-4">
           <div className="flex items-center gap-4">
             <Button
@@ -25,7 +25,8 @@ const GoogleSheetsTestPage = () => {
                 Тестирование импорта Google Sheets
               </h1>
               <p className="text-gray-600">
-                Проверка функциональности преобразования и импорта данных из Google Sheets
+                Проверка функциональности преобразования и импорта данных из
+                Google Sheets
               </p>
             </div>
           </div>

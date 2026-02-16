@@ -27,7 +27,9 @@ import { Button } from "./button";
 import { MessageCircleQuestionMark } from "lucide-react";
 
 const normalizePreferredLanguage = (value: unknown): Language | null => {
-  const raw = String(value ?? "").trim().toLowerCase();
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase();
   return raw in LANGUAGE_CONFIG ? (raw as Language) : null;
 };
 
@@ -67,7 +69,10 @@ const ProfileFooterMenu = ({
       } = await supabase.auth.getUser();
 
       if (!userError && user?.id) {
-        await supabase.from("user_profiles").update({ preferred_locale: nextLanguage }).eq("id", user.id);
+        await supabase
+          .from("user_profiles")
+          .update({ preferred_locale: nextLanguage })
+          .eq("id", user.id);
       }
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
@@ -81,33 +86,45 @@ const ProfileFooterMenu = ({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`flex items-center w-full ${isCollapsed ? "justify-center flex-col p-1 gap-1" : "gap-3 p-2"
-            } rounded-md hover:bg-opacity-80 transition-colors`}
+          className={`flex w-full items-center ${
+            isCollapsed ? "flex-col justify-center gap-1 p-1" : "gap-3 p-2"
+          } hover:bg-opacity-80 rounded-md transition-colors`}
           style={{ backgroundColor: "transparent" }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
+            e.currentTarget.style.backgroundColor =
+              ADMIN_THEME.sidebarActiveBackground;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
+            className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{ backgroundColor: ADMIN_THEME.primaryActive }}
           >
-            <UserIcon className="h-4 w-4" style={{ color: ADMIN_THEME.textOnPrimary }} />
+            <UserIcon
+              className="h-4 w-4"
+              style={{ color: ADMIN_THEME.textOnPrimary }}
+            />
           </div>
 
           <div className="min-w-0 flex-1 text-left">
             <p
-              className={`font-medium text-sm ${isCollapsed ? "text-xs text-center break-words" : "whitespace-nowrap"}`}
-              style={isCollapsed ? { lineHeight: "1.2", color: ADMIN_THEME.sidebarText } : { color: ADMIN_THEME.sidebarText }}
+              className={`text-sm font-medium ${isCollapsed ? "text-center text-xs break-words" : "whitespace-nowrap"}`}
+              style={
+                isCollapsed
+                  ? { lineHeight: "1.2", color: ADMIN_THEME.sidebarText }
+                  : { color: ADMIN_THEME.sidebarText }
+              }
             >
               {username}
             </p>
 
             {!isCollapsed ? (
-              <p className="text-xs truncate" style={{ color: ADMIN_THEME.textMuted }}>
+              <p
+                className="truncate text-xs"
+                style={{ color: ADMIN_THEME.textMuted }}
+              >
                 {userEmail}
               </p>
             ) : null}
@@ -131,17 +148,29 @@ const ProfileFooterMenu = ({
           borderColor: ADMIN_THEME.sidebarBorder,
         }}
       >
-        <div className="px-3 py-2 border-b" style={{ borderColor: ADMIN_THEME.sidebarBorder }}>
-          <p className="text-sm font-semibold truncate" style={{ color: ADMIN_THEME.sidebarText }}>
+        <div
+          className="border-b px-3 py-2"
+          style={{ borderColor: ADMIN_THEME.sidebarBorder }}
+        >
+          <p
+            className="truncate text-sm font-semibold"
+            style={{ color: ADMIN_THEME.sidebarText }}
+          >
             {username}
           </p>
-          <p className="text-xs truncate" style={{ color: ADMIN_THEME.textMuted }}>
+          <p
+            className="truncate text-xs"
+            style={{ color: ADMIN_THEME.textMuted }}
+          >
             {userEmail}
           </p>
         </div>
 
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="flex items-center gap-2 cursor-pointer" style={{ color: ADMIN_THEME.sidebarText }}>
+          <DropdownMenuSubTrigger
+            className="flex cursor-pointer items-center gap-2"
+            style={{ color: ADMIN_THEME.sidebarText }}
+          >
             <Globe className="h-4 w-4" />
             <span className="flex-1">{t("common.language")}</span>
           </DropdownMenuSubTrigger>
@@ -155,8 +184,11 @@ const ProfileFooterMenu = ({
             {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
               <DropdownMenuItem
                 key={code}
-                className={`cursor-pointer pl-8 ${language === code ? "!bg-[var(--admin-sidebar-active-background)]" : "hover:!bg-[var(--admin-sidebar-active-background)]"
-                  }`}
+                className={`cursor-pointer pl-8 ${
+                  language === code
+                    ? "!bg-[var(--admin-sidebar-active-background)]"
+                    : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                }`}
                 style={{ color: ADMIN_THEME.sidebarText }}
                 onSelect={() => {
                   void handleSelectLanguage(code as Language);
@@ -171,7 +203,7 @@ const ProfileFooterMenu = ({
 
         {docsUrl ? (
           <DropdownMenuItem
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex cursor-pointer items-center gap-2"
             style={{ color: ADMIN_THEME.sidebarText }}
             onSelect={() => {
               window.open(docsUrl, "_blank", "noopener,noreferrer");
@@ -182,10 +214,12 @@ const ProfileFooterMenu = ({
           </DropdownMenuItem>
         ) : null}
 
-        <DropdownMenuSeparator style={{ backgroundColor: ADMIN_THEME.sidebarBorder }} />
+        <DropdownMenuSeparator
+          style={{ backgroundColor: ADMIN_THEME.sidebarBorder }}
+        />
 
         <DropdownMenuItem
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex cursor-pointer items-center gap-2"
           style={{ color: "#dc2626" }}
           onSelect={() => onSignOut?.()}
         >
@@ -202,7 +236,12 @@ export interface SimplifiedSidebarNavItem {
   icon: React.ReactNode;
   label: string;
   badge?: React.ReactNode;
-  children?: Array<{ id: string; icon: React.ReactNode; label: string; badge?: React.ReactNode }>;
+  children?: Array<{
+    id: string;
+    icon: React.ReactNode;
+    label: string;
+    badge?: React.ReactNode;
+  }>;
 }
 
 export function SimplifiedSidebar({
@@ -262,11 +301,17 @@ export function SimplifiedSidebar({
         } = await supabase.auth.getUser();
         if (cancelled || userError || !user?.id) return;
 
-        const { data, error } = await supabase.from("user_profiles").select("preferred_locale").eq("id", user.id).single();
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("preferred_locale")
+          .eq("id", user.id)
+          .single();
 
         if (cancelled || error) return;
 
-        const preferred = normalizePreferredLanguage((data as { preferred_locale?: unknown } | null)?.preferred_locale);
+        const preferred = normalizePreferredLanguage(
+          (data as { preferred_locale?: unknown } | null)?.preferred_locale,
+        );
         if (preferred && preferred !== languageRef.current) {
           setLanguage(preferred);
         }
@@ -288,7 +333,9 @@ export function SimplifiedSidebar({
       let next = prev;
       primaryNavItems.forEach((item) => {
         if (!item.children) return;
-        const hasActiveChild = item.children.some((child) => child.id === activeSection);
+        const hasActiveChild = item.children.some(
+          (child) => child.id === activeSection,
+        );
         if (!hasActiveChild) return;
         if (next.includes(item.id)) return;
         next = [...next, item.id];
@@ -299,7 +346,9 @@ export function SimplifiedSidebar({
 
   const toggleExpand = (id: string) => {
     if (isCollapsed && onToggleCollapse) onToggleCollapse();
-    setExpandedItems((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    setExpandedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
   };
 
   // Apply CSS variables for theme
@@ -322,12 +371,26 @@ export function SimplifiedSidebar({
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="p-4" style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}>
-        <div className={`flex items-center ${isCollapsed ? "flex-col gap-3" : "justify-between"}`}>
-          <div className={`flex items-center ${isCollapsed ? "flex-col gap-2" : "gap-4"}`}>
-            <img src="/images/logo/gridix_black_logo.svg" alt="Gridix" className="h-8 w-8" />
+      <div
+        className="p-4"
+        style={{ borderBottom: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+      >
+        <div
+          className={`flex items-center ${isCollapsed ? "flex-col gap-3" : "justify-between"}`}
+        >
+          <div
+            className={`flex items-center ${isCollapsed ? "flex-col gap-2" : "gap-4"}`}
+          >
+            <img
+              src="/images/logo/gridix_black_logo.svg"
+              alt="Gridix"
+              className="h-8 w-8"
+            />
             {!isCollapsed && !hideTitle && (
-              <span className="font-semibold whitespace-nowrap" style={{ color: ADMIN_THEME.sidebarText }}>
+              <span
+                className="font-semibold whitespace-nowrap"
+                style={{ color: ADMIN_THEME.sidebarText }}
+              >
                 {title}
               </span>
             )}
@@ -336,12 +399,18 @@ export function SimplifiedSidebar({
           {!isMobile && (
             <button
               onClick={onToggleCollapse}
-              className={`flex items-center justify-center rounded-lg transition-colors duration-200 ${isCollapsed ? "px-3 py-2" : "p-1"
-                }`}
-              style={{ color: ADMIN_THEME.sidebarText, border: `1px solid transparent` }}
+              className={`flex items-center justify-center rounded-lg transition-colors duration-200 ${
+                isCollapsed ? "px-3 py-2" : "p-1"
+              }`}
+              style={{
+                color: ADMIN_THEME.sidebarText,
+                border: `1px solid transparent`,
+              }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = ADMIN_THEME.sidebarActiveBackground;
-                e.currentTarget.style.borderColor = ADMIN_THEME.sidebarActiveBorder;
+                e.currentTarget.style.backgroundColor =
+                  ADMIN_THEME.sidebarActiveBackground;
+                e.currentTarget.style.borderColor =
+                  ADMIN_THEME.sidebarActiveBorder;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
@@ -351,8 +420,9 @@ export function SimplifiedSidebar({
               type="button"
             >
               <ChevronDownIcon
-                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "rotate-90" : "-rotate-90"
-                  }`}
+                className={`h-4 w-4 transition-transform duration-300 ${
+                  isCollapsed ? "rotate-90" : "-rotate-90"
+                }`}
               />
             </button>
           )}
@@ -365,12 +435,14 @@ export function SimplifiedSidebar({
       ) : null}
 
       {/* Navigation */}
-      <div className="flex-1 p-4 overflow-y-auto no-scrollbar">
+      <div className="no-scrollbar flex-1 overflow-y-auto p-4">
         <nav className="space-y-2">
           {primaryNavItems.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isExpanded = expandedItems.includes(item.id);
-            const isChildActive = hasChildren && item.children?.some((child) => child.id === activeSection);
+            const isChildActive =
+              hasChildren &&
+              item.children?.some((child) => child.id === activeSection);
 
             return (
               <SidebarButton
@@ -379,17 +451,25 @@ export function SimplifiedSidebar({
                 icon={item.icon}
                 badge={item.badge}
                 label={item.label}
-                isActive={hasChildren ? Boolean(isChildActive && !isExpanded) : activeSection === item.id}
+                isActive={
+                  hasChildren
+                    ? Boolean(isChildActive && !isExpanded)
+                    : activeSection === item.id
+                }
                 isCollapsed={isCollapsed}
-                onClick={hasChildren ? () => toggleExpand(item.id) : () => handleSectionChange(item.id)}
+                onClick={
+                  hasChildren
+                    ? () => toggleExpand(item.id)
+                    : () => handleSectionChange(item.id)
+                }
                 {...(hasChildren
                   ? {
-                    items: item.children!,
-                    activeItemId: activeSection,
-                    onItemClick: (id: string) => handleSectionChange(id),
-                    isExpanded,
-                    onToggleExpand: () => toggleExpand(item.id),
-                  }
+                      items: item.children!,
+                      activeItemId: activeSection,
+                      onItemClick: (id: string) => handleSectionChange(id),
+                      isExpanded,
+                      onToggleExpand: () => toggleExpand(item.id),
+                    }
                   : {})}
               />
             );
@@ -399,7 +479,10 @@ export function SimplifiedSidebar({
 
       {/* Pinned Settings (always visible) */}
       {settingsNavItem ? (
-        <div className="p-4" style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}>
+        <div
+          className="p-4"
+          style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+        >
           <SidebarButton
             id={settingsNavItem.id}
             icon={settingsNavItem.icon}
@@ -414,7 +497,10 @@ export function SimplifiedSidebar({
 
       {/* Footer */}
       {hideFooter ? null : userEmail ? (
-        <div className="p-4" style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}>
+        <div
+          className="p-4"
+          style={{ borderTop: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
+        >
           <ProfileFooterMenu
             userEmail={userEmail}
             isCollapsed={isCollapsed}
@@ -432,34 +518,37 @@ export function SimplifiedSidebar({
   const SupportButton = () => {
     return (
       <Button
-          size={"icon"}
-          className="fixed bottom-2 right-2 lg:bottom-6 lg:right-6 z-1 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 support_usertour "
-          style={{
-            backgroundColor: ADMIN_THEME.primary,
-            color: ADMIN_THEME.textOnPrimary,
-            borderColor: ADMIN_THEME.primary,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onClick={() => {
-            window.open('https://t.me/gridix_bot', '_blank');
-          }}
-        >
-          <MessageCircleQuestionMark />
-        </Button>
+        size={"icon"}
+        className="support_usertour fixed right-2 bottom-2 z-1 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
+        style={{
+          backgroundColor: ADMIN_THEME.primary,
+          color: ADMIN_THEME.textOnPrimary,
+          borderColor: ADMIN_THEME.primary,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+          e.currentTarget.style.transform = "scale(1.05)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
+          e.currentTarget.style.transform = "scale(1)";
+        }}
+        onClick={() => {
+          window.open("https://t.me/gridix_bot", "_blank");
+        }}
+      >
+        <MessageCircleQuestionMark />
+      </Button>
     );
   };
 
   if (isMobile) {
     return (
       <>
-        <aside className="flex flex-col h-full overflow-hidden" style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}>
+        <aside
+          className="flex h-full flex-col overflow-hidden"
+          style={{ backgroundColor: ADMIN_THEME.sidebarBackground }}
+        >
           {sidebarContent}
         </aside>
         {/* Support Button */}
@@ -469,16 +558,20 @@ export function SimplifiedSidebar({
   }
 
   return (
-    <><aside
-      className={`flex flex-col sidebar_usertour transition-all duration-300 h-screen fixed top-0 overflow-hidden ${isCollapsed ? "w-28" : "w-64"
+    <>
+      <aside
+        className={`sidebar_usertour fixed top-0 flex h-screen flex-col overflow-hidden transition-all duration-300 ${
+          isCollapsed ? "w-28" : "w-64"
         }`}
-      style={{ backgroundColor: ADMIN_THEME.sidebarBackground, borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}` }}
-    >
-      {sidebarContent}
-    </aside>
+        style={{
+          backgroundColor: ADMIN_THEME.sidebarBackground,
+          borderRight: `1px solid ${ADMIN_THEME.sidebarBorder}`,
+        }}
+      >
+        {sidebarContent}
+      </aside>
       {/* Support Button */}
       <SupportButton />
     </>
   );
 }
-

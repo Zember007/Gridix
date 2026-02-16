@@ -1,25 +1,21 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@gridix/ui";
 import {
   useSubscription,
   ProjectSubscription,
   BillingDetails,
-} from '@/entities/subscription/queries/useSubscription';
-import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
+} from "@/entities/subscription/queries/useSubscription";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@gridix/utils/api";
-import { toast } from 'sonner';
-import { ProjectSubscriptionsList } from './subscription/ProjectSubscriptionsList';
-import { DurationSelector } from './subscription/DurationSelector';
-import { PricingPlans } from './subscription/PricingPlans';
-import { OrderHistory } from './subscription/OrderHistory';
-import { CheckoutModal } from './subscription/CheckoutModal';
-import { trackUsertourEvent } from '@gridix/utils/integrations';
+import { toast } from "sonner";
+import { ProjectSubscriptionsList } from "./subscription/ProjectSubscriptionsList";
+import { DurationSelector } from "./subscription/DurationSelector";
+import { PricingPlans } from "./subscription/PricingPlans";
+import { OrderHistory } from "./subscription/OrderHistory";
+import { CheckoutModal } from "./subscription/CheckoutModal";
+import { trackUsertourEvent } from "@gridix/utils/integrations";
 import { Spinner } from "@/shared/ui/Spinner";
-
 
 export default function SubscriptionTab() {
   const {
@@ -38,15 +34,12 @@ export default function SubscriptionTab() {
   const { t } = useLanguage();
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<number>(1);
-
-
-
 
   if (loading || plansLoading) {
     return (
-      <div className="flex justify-center items-center py-12 h-full">
+      <div className="flex h-full items-center justify-center py-12">
         <Spinner size="md" />
       </div>
     );
@@ -55,49 +48,53 @@ export default function SubscriptionTab() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">
-          {t('admin.subscriptionPage.error') || 'Error loading subscriptions'}
+        <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
+        <h3 className="mb-2 text-lg font-semibold">
+          {t("admin.subscriptionPage.error") || "Error loading subscriptions"}
         </h3>
-        <p className="text-muted-foreground text-center mb-4">{error}</p>
+        <p className="mb-4 text-center text-muted-foreground">{error}</p>
         <Button onClick={refreshProjectSubscriptions} variant="outline">
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Try Again
         </Button>
       </div>
     );
   }
 
-  const expiredProjects = projectSubscriptions.filter((proj: ProjectSubscription) => {
-    const sub = proj.user_subscriptions?.[0];
-    const isExpired =
-      proj.subscription_expires_at && new Date(proj.subscription_expires_at) < new Date();
-    return (
-      !sub ||
-      sub.status === 'expired' ||
-      isExpired ||
-      !['active', 'trialing', 'pending_payment'].includes(sub.status)
-    );
-  });
+  const expiredProjects = projectSubscriptions.filter(
+    (proj: ProjectSubscription) => {
+      const sub = proj.user_subscriptions?.[0];
+      const isExpired =
+        proj.subscription_expires_at &&
+        new Date(proj.subscription_expires_at) < new Date();
+      return (
+        !sub ||
+        sub.status === "expired" ||
+        isExpired ||
+        !["active", "trialing", "pending_payment"].includes(sub.status)
+      );
+    },
+  );
 
   const handleViewInvoice = async (subscriptionId?: string) => {
     if (!subscriptionId) return;
     try {
-
-
       const session = await supabase.auth.getSession();
       if (!session.data.session?.access_token) {
-        toast.error('Please log in to view invoice');
+        toast.error("Please log in to view invoice");
         return;
       }
 
       // Call edge function to get invoice HTML
-      const { data, error } = await supabase.functions.invoke('generate-invoice', {
-        body: { subscription_id: subscriptionId },
-        headers: {
-          'Authorization': `Bearer ${session.data.session.access_token}`,
+      const { data, error } = await supabase.functions.invoke(
+        "generate-invoice",
+        {
+          body: { subscription_id: subscriptionId },
+          headers: {
+            Authorization: `Bearer ${session.data.session.access_token}`,
+          },
         },
-      });
+      );
 
       if (error) {
         throw error;
@@ -105,7 +102,7 @@ export default function SubscriptionTab() {
 
       // Handle specific error responses from the backend
       if (data.error) {
-        const errorMessage = t('common.invoiceGenerationFailed');
+        const errorMessage = t("common.invoiceGenerationFailed");
 
         toast.error(errorMessage);
         return;
@@ -119,39 +116,42 @@ export default function SubscriptionTab() {
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
 
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
           link.download = `invoice-${data.invoice.number}.pdf`;
-          link.style.display = 'none';
+          link.style.display = "none";
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
 
           // Clean up the blob URL
           window.URL.revokeObjectURL(url);
-          toast.success('Invoice downloaded successfully');
+          toast.success("Invoice downloaded successfully");
         } catch (fetchError) {
-          console.error('Error downloading PDF:', fetchError);
+          console.error("Error downloading PDF:", fetchError);
           // Fallback: open in new tab
-          window.open(data.invoice.url, '_blank');
-          toast.info('Invoice opened in new tab');
+          window.open(data.invoice.url, "_blank");
+          toast.info("Invoice opened in new tab");
         }
       } else {
-        toast.error(t('common.invoiceGenerationFailed'));
+        toast.error(t("common.invoiceGenerationFailed"));
       }
     } catch (error) {
-      console.error('Error opening invoice:', error);
-      toast.error(t('common.companySettingsIncomplete'));
+      console.error("Error opening invoice:", error);
+      toast.error(t("common.companySettingsIncomplete"));
     }
   };
 
   const durationOptions = [
-    { value: 1, label: t('admin.subscriptionPage.durations.1') },
-    { value: 6, label: t('admin.subscriptionPage.durations.6') },
-    { value: 12, label: t('admin.subscriptionPage.durations.12') },
+    { value: 1, label: t("admin.subscriptionPage.durations.1") },
+    { value: 6, label: t("admin.subscriptionPage.durations.6") },
+    { value: 12, label: t("admin.subscriptionPage.durations.12") },
   ];
 
-  const handleOpenInvoiceForProject = (projectId: string, currentPlanId?: string | null) => {
+  const handleOpenInvoiceForProject = (
+    projectId: string,
+    currentPlanId?: string | null,
+  ) => {
     setSelectedProjects([projectId]);
     if (currentPlanId) {
       setSelectedPlanId(currentPlanId);
@@ -164,12 +164,14 @@ export default function SubscriptionTab() {
     projectIds: string[],
   ): Promise<void> => {
     if (!selectedPlanId) {
-      toast.error(t('admin.subscriptionPage.checkout.errors.selectPlan'));
+      toast.error(t("admin.subscriptionPage.checkout.errors.selectPlan"));
       return;
     }
 
     if (projectIds.length === 0) {
-      toast.error(t('admin.subscriptionPage.checkout.errors.noProjectsSelected'));
+      toast.error(
+        t("admin.subscriptionPage.checkout.errors.noProjectsSelected"),
+      );
       return;
     }
 
@@ -179,22 +181,28 @@ export default function SubscriptionTab() {
 
       if (projectIds.length === 1) {
         const projectId = projectIds[0]!;
-        const result = await requestInvoice(projectId, selectedPlanId, selectedDuration);
+        const result = await requestInvoice(
+          projectId,
+          selectedPlanId,
+          selectedDuration,
+        );
 
         if (result?.error) {
-          toast.error(t('common.invoiceGenerationFailed'));
+          toast.error(t("common.invoiceGenerationFailed"));
           return;
         }
 
-        toast.success(t('admin.subscriptionPage.toasts.invoiceRequestedSingle'));
+        toast.success(
+          t("admin.subscriptionPage.toasts.invoiceRequestedSingle"),
+        );
         void trackUsertourEvent({
-          eventName: 'gridix_billing_invoice_requested',
+          eventName: "gridix_billing_invoice_requested",
           properties: {
             project_ids: projectIds,
             plan_id: selectedPlanId,
             duration_months: selectedDuration,
           },
-          onceKey: 'gridix_billing_invoice_requested',
+          onceKey: "gridix_billing_invoice_requested",
         });
         await refreshProjectSubscriptions();
 
@@ -215,23 +223,23 @@ export default function SubscriptionTab() {
           (res) => (res as { error?: unknown }).error,
         );
         if (errorResult) {
-          toast.error(t('common.invoiceGenerationFailed'));
+          toast.error(t("common.invoiceGenerationFailed"));
           return;
         }
 
         toast.success(
-          t('admin.subscriptionPage.toasts.invoiceRequestedMultiple', {
+          t("admin.subscriptionPage.toasts.invoiceRequestedMultiple", {
             count: projectIds.length,
           }),
         );
         void trackUsertourEvent({
-          eventName: 'gridix_billing_invoice_requested',
+          eventName: "gridix_billing_invoice_requested",
           properties: {
             project_ids: projectIds,
             plan_id: selectedPlanId,
             duration_months: selectedDuration,
           },
-          onceKey: 'gridix_billing_invoice_requested',
+          onceKey: "gridix_billing_invoice_requested",
         });
         await refreshProjectSubscriptions();
       }
@@ -239,22 +247,26 @@ export default function SubscriptionTab() {
       setIsInvoiceDialogOpen(false);
       setSelectedProjects([]);
     } catch (error) {
-      console.error('Error confirming invoice from modal:', error);
-      toast.error(t('common.invoiceGenerationFailed'));
+      console.error("Error confirming invoice from modal:", error);
+      toast.error(t("common.invoiceGenerationFailed"));
     }
   };
 
   return (
-    <div className="mx-auto flex flex-col gap-10 animate-in fade-in duration-500 pb-20">
+    <div className="mx-auto flex flex-col gap-10 pb-20 duration-500 animate-in fade-in">
       {/* Header / Active Plans (как в SubscriptionPage) */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-2xl font-bold text-slate-900">
-            {t('admin.subscriptionPage.title')}
+            {t("admin.subscriptionPage.title")}
           </h1>
-          <Button variant="outline" size="sm" onClick={refreshProjectSubscriptions}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            {t('admin.subscriptionPage.refresh')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshProjectSubscriptions}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {t("admin.subscriptionPage.refresh")}
           </Button>
         </div>
 
@@ -266,12 +278,12 @@ export default function SubscriptionTab() {
 
       {/* Pricing Section (как в SubscriptionPage) */}
       <section className="space-y-6">
-        <div className="text-center space-y-2">
+        <div className="space-y-2 text-center">
           <h2 className="text-xl font-bold text-slate-900">
-            {t('admin.subscriptionPage.pricing.availablePlansTitle')}
+            {t("admin.subscriptionPage.pricing.availablePlansTitle")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {t('admin.subscriptionPage.pricing.availablePlansDescription')}
+            {t("admin.subscriptionPage.pricing.availablePlansDescription")}
           </p>
         </div>
 
@@ -289,11 +301,11 @@ export default function SubscriptionTab() {
           onSelectPlan={setSelectedPlanId}
           onOpenCheckout={(planId) => {
             setSelectedPlanId(planId);
-                      if (selectedProjects.length === 0 && expiredProjects.length > 0) {
-                        setSelectedProjects(expiredProjects.map((p) => p.id));
-                      }
-                      setIsInvoiceDialogOpen(true);
-                    }}
+            if (selectedProjects.length === 0 && expiredProjects.length > 0) {
+              setSelectedProjects(expiredProjects.map((p) => p.id));
+            }
+            setIsInvoiceDialogOpen(true);
+          }}
           expiredProjectsCount={expiredProjects.length}
         />
       </section>
@@ -301,7 +313,7 @@ export default function SubscriptionTab() {
       {/* History Section */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-slate-900">
-          {t('admin.subscriptionPage.history.title')}
+          {t("admin.subscriptionPage.history.title")}
         </h2>
         <OrderHistory orders={orders} projects={projectSubscriptions} />
       </section>

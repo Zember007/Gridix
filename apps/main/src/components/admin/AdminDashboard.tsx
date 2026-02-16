@@ -1,37 +1,40 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {ADMIN_THEME, getAdminThemeVariables} from "@gridix/utils/lib";
-import ProjectList from '@/components/projects/ProjectList';
-import AdminSettings from './AdminSettings';
-import AdminWidgets from './AdminWidgets';
-import {LeadsManager} from './LeadsManager';
-import SubscriptionTab from './SubscriptionTab';
-import PartnersPage from '../../pages/PartnersPage';
-import {AgencyPartnersPage} from '@/components/admin/partners/AgencyPartnersPage';
-import ProjectCreationModal from '@/components/projects/ProjectCreationModal';
-import {AdminAnalytics} from './analytics/AdminAnalytics.tsx';
-import {IntegrationsTab} from './IntegrationsTab';
-import {useLocation, useNavigate} from 'react-router-dom';
-import {useLanguageNavigation} from '@gridix/utils/react';
-import {useAuth} from '@/contexts/AuthContext';
-import {useUserRole} from '@/hooks/useUserRole';
-import {useWorkspace} from '@/contexts/WorkspaceContext';
-import {AdminSidebar, ProjectEditorSidebarMenuButton} from "@/shared/ui/sidebar-component";
-import {ManagerBlockedScreen} from '@/components/Auth/ManagerBlockedScreen';
-import {useAmoWidget} from '@/hooks/useAmoWidget';
-import {useLeadsRealtime} from '@/hooks/useLeadsRealtime';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
+import ProjectList from "@/components/projects/ProjectList";
+import AdminSettings from "./AdminSettings";
+import AdminWidgets from "./AdminWidgets";
+import { LeadsManager } from "./LeadsManager";
+import SubscriptionTab from "./SubscriptionTab";
+import PartnersPage from "../../pages/PartnersPage";
+import { AgencyPartnersPage } from "@/components/admin/partners/AgencyPartnersPage";
+import ProjectCreationModal from "@/components/projects/ProjectCreationModal";
+import { AdminAnalytics } from "./analytics/AdminAnalytics.tsx";
+import { IntegrationsTab } from "./IntegrationsTab";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useLanguageNavigation } from "@gridix/utils/react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import {
+  AdminSidebar,
+  ProjectEditorSidebarMenuButton,
+} from "@/shared/ui/sidebar-component";
+import { ManagerBlockedScreen } from "@/components/Auth/ManagerBlockedScreen";
+import { useAmoWidget } from "@/hooks/useAmoWidget";
+import { useLeadsRealtime } from "@/hooks/useLeadsRealtime";
 import {
   isDevTourMode,
   startAdminChecklist,
   startAdminOnboardingTour,
   startPartnersTour,
   startProjectCreationTour,
-  waitForSelectors
-} from '@gridix/utils/integrations';
-import {AdminContactsPage} from '@/components/admin/contacts/AdminContactsPage';
-import {useLeads} from '@/entities/lead/queries/useLeads';
+  waitForSelectors,
+} from "@gridix/utils/integrations";
+import { AdminContactsPage } from "@/components/admin/contacts/AdminContactsPage";
+import { useLeads } from "@/entities/lead/queries/useLeads";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('projects');
+  const [activeTab, setActiveTab] = useState("projects");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { user, userProfile, signOut, loading } = useAuth();
@@ -51,7 +54,7 @@ const AdminDashboard = () => {
     });
 
     const queryParams = new URLSearchParams(window.location.search);
-    const tab = queryParams.get('page');
+    const tab = queryParams.get("page");
 
     if (tab) {
       setActiveTab(tab);
@@ -72,8 +75,13 @@ const AdminDashboard = () => {
         // Wait until core tour anchors are present, otherwise the tour can start "into nothing".
         // This is especially important on first load when ProjectList is still loading.
         const anchorsReady = await waitForSelectors(
-          ['.sidebar_usertour', '.projects_list_usertour', '.create_project_usertour', '.support_usertour'],
-          { timeoutMs: 8000, intervalMs: 100, debugLabel: 'admin_onboarding' },
+          [
+            ".sidebar_usertour",
+            ".projects_list_usertour",
+            ".create_project_usertour",
+            ".support_usertour",
+          ],
+          { timeoutMs: 8000, intervalMs: 100, debugLabel: "admin_onboarding" },
         );
 
         if (!anchorsReady) {
@@ -87,26 +95,28 @@ const AdminDashboard = () => {
           email: userProfile?.email ?? user.email ?? null,
           name:
             userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === 'string'
+            (typeof user.user_metadata?.full_name === "string"
               ? user.user_metadata.full_name
               : null),
           signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
           companyName:
             userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === 'string'
+            (typeof user.user_metadata?.company_name === "string"
               ? user.user_metadata.company_name
               : null),
           phone:
             userProfile?.phone ??
-            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
-          accountType:
-            (typeof user.user_metadata?.account_type === 'string'
-              ? user.user_metadata.account_type
+            (typeof user.user_metadata?.phone === "string"
+              ? user.user_metadata.phone
               : null),
+          accountType:
+            typeof user.user_metadata?.account_type === "string"
+              ? user.user_metadata.account_type
+              : null,
         });
       } catch (e) {
         // Don't block admin UX if onboarding SDK fails
-        console.warn('Failed to start admin onboarding tour:', e);
+        console.warn("Failed to start admin onboarding tour:", e);
         startedAdminTourRef.current = false;
       }
     };
@@ -128,25 +138,27 @@ const AdminDashboard = () => {
           email: userProfile?.email ?? user.email ?? null,
           name:
             userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === 'string'
+            (typeof user.user_metadata?.full_name === "string"
               ? user.user_metadata.full_name
               : null),
           signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
           companyName:
             userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === 'string'
+            (typeof user.user_metadata?.company_name === "string"
               ? user.user_metadata.company_name
               : null),
           phone:
             userProfile?.phone ??
-            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
-          accountType:
-            (typeof user.user_metadata?.account_type === 'string'
-              ? user.user_metadata.account_type
+            (typeof user.user_metadata?.phone === "string"
+              ? user.user_metadata.phone
               : null),
+          accountType:
+            typeof user.user_metadata?.account_type === "string"
+              ? user.user_metadata.account_type
+              : null,
         });
       } catch (e) {
-        console.warn('Failed to start admin checklist:', e);
+        console.warn("Failed to start admin checklist:", e);
         startedAdminChecklistRef.current = false;
       }
     };
@@ -156,7 +168,6 @@ const AdminDashboard = () => {
 
   // Project creation onboarding: once per user, when opening creation modal
   useEffect(() => {
-
     if (loading) return;
     const devTour = isDevTourMode();
     // allow re-opening in dev mode
@@ -178,25 +189,27 @@ const AdminDashboard = () => {
           email: userProfile?.email ?? user.email ?? null,
           name:
             userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === 'string'
+            (typeof user.user_metadata?.full_name === "string"
               ? user.user_metadata.full_name
               : null),
           signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
           companyName:
             userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === 'string'
+            (typeof user.user_metadata?.company_name === "string"
               ? user.user_metadata.company_name
               : null),
           phone:
             userProfile?.phone ??
-            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
-          accountType:
-            (typeof user.user_metadata?.account_type === 'string'
-              ? user.user_metadata.account_type
+            (typeof user.user_metadata?.phone === "string"
+              ? user.user_metadata.phone
               : null),
+          accountType:
+            typeof user.user_metadata?.account_type === "string"
+              ? user.user_metadata.account_type
+              : null,
         });
       } catch (e) {
-        console.warn('Failed to start project creation onboarding tour:', e);
+        console.warn("Failed to start project creation onboarding tour:", e);
       }
     };
 
@@ -223,12 +236,12 @@ const AdminDashboard = () => {
   useEffect(() => {
     const devTour = isDevTourMode();
     // allow re-opening in dev mode
-    if (devTour && activeTab !== 'partners') {
+    if (devTour && activeTab !== "partners") {
       startedPartnersTourRef.current = false;
       return;
     }
     if (loading) return;
-    if (activeTab !== 'partners') return;
+    if (activeTab !== "partners") return;
     if (!user?.id) return;
     if (startedPartnersTourRef.current) return;
 
@@ -240,25 +253,27 @@ const AdminDashboard = () => {
           email: userProfile?.email ?? user.email ?? null,
           name:
             userProfile?.full_name ??
-            (typeof user.user_metadata?.full_name === 'string'
+            (typeof user.user_metadata?.full_name === "string"
               ? user.user_metadata.full_name
               : null),
           signedUpAt: user.created_at ?? userProfile?.created_at ?? null,
           companyName:
             userProfile?.company_name ??
-            (typeof user.user_metadata?.company_name === 'string'
+            (typeof user.user_metadata?.company_name === "string"
               ? user.user_metadata.company_name
               : null),
           phone:
             userProfile?.phone ??
-            (typeof user.user_metadata?.phone === 'string' ? user.user_metadata.phone : null),
-          accountType:
-            (typeof user.user_metadata?.account_type === 'string'
-              ? user.user_metadata.account_type
+            (typeof user.user_metadata?.phone === "string"
+              ? user.user_metadata.phone
               : null),
+          accountType:
+            typeof user.user_metadata?.account_type === "string"
+              ? user.user_metadata.account_type
+              : null,
         });
       } catch (e) {
-        console.warn('Failed to start partners onboarding tour:', e);
+        console.warn("Failed to start partners onboarding tour:", e);
       }
     };
 
@@ -267,7 +282,7 @@ const AdminDashboard = () => {
 
   const handleCreateNew = () => {
     if (amoWidget) {
-      window.open('https://app.gridix.live/ru/admin', '_blank');
+      window.open("https://app.gridix.live/ru/admin", "_blank");
       return;
     }
     setShowCreateModal(true);
@@ -275,9 +290,11 @@ const AdminDashboard = () => {
 
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-
   // Проверяем, заблокирован ли менеджер
-  if (userRole.type === 'manager' && (!availableWorkspaces || availableWorkspaces.length === 0)) {
+  if (
+    userRole.type === "manager" &&
+    (!availableWorkspaces || availableWorkspaces.length === 0)
+  ) {
     return <ManagerBlockedScreen />;
   }
 
@@ -287,14 +304,14 @@ const AdminDashboard = () => {
 
   const handleManualCreate = () => {
     setShowCreateModal(false);
-    routerNavigate(getPathWithLanguage('/admin/project/new'), {
+    routerNavigate(getPathWithLanguage("/admin/project/new"), {
       state: { from: location.pathname },
     });
   };
 
   const handleEditProject = (projectId: string, isNew: boolean) => {
     const path = isNew
-      ? getPathWithLanguage('/admin/project/new')
+      ? getPathWithLanguage("/admin/project/new")
       : getPathWithLanguage(`/admin/project/${projectId}`);
     routerNavigate(path, { state: { from: location.pathname } });
   };
@@ -302,18 +319,16 @@ const AdminDashboard = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
-
-
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="flex min-h-screen bg-background">
       <AdminSidebar
-        userEmail={userProfile?.email || user?.email || 'Unknown user'}
+        userEmail={userProfile?.email || user?.email || "Unknown user"}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         isMobileOpen={isMobileOpen}
@@ -324,15 +339,17 @@ const AdminDashboard = () => {
         crmUnreadCount={crmUnreadCount}
       />
 
-      <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed ? 'md:ml-28 md:max-w-[calc(100vw-7rem)] ' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
+      <div
+        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
+      >
         {/* Floating Mobile Menu Button */}
-        <ProjectEditorSidebarMenuButton
-          setIsMobileOpen={setIsMobileOpen}
-        />
+        <ProjectEditorSidebarMenuButton setIsMobileOpen={setIsMobileOpen} />
 
-        <div className={`flex-1  overflow-y-auto ${activeTab === 'subscription' ? 'mx-auto' : ''} ${activeTab !== 'leads' ? '  px-6 py-4 lg:py-6' : ''}`}>
-          {activeTab === 'projects' && (
-            <div className="space-y-6 projects_list_usertour h-full">
+        <div
+          className={`flex-1 overflow-y-auto ${activeTab === "subscription" ? "mx-auto" : ""} ${activeTab !== "leads" ? "px-6 py-4 lg:py-6" : ""}`}
+        >
+          {activeTab === "projects" && (
+            <div className="projects_list_usertour h-full space-y-6">
               <ProjectList
                 onCreateNew={handleCreateNew}
                 onEditProject={handleEditProject}
@@ -340,61 +357,63 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'leads' && (
+          {activeTab === "leads" && (
             <LeadsManager showProjectColumn={!isManager} />
           )}
 
-          {activeTab === 'subscription' && userRole.type !== 'manager' && (
-            <div className="space-y-6 h-full">
+          {activeTab === "subscription" && userRole.type !== "manager" && (
+            <div className="h-full space-y-6">
               <SubscriptionTab />
             </div>
           )}
 
-          {activeTab === 'partners' && (
-            <div className="space-y-6 h-full">
+          {activeTab === "partners" && (
+            <div className="h-full space-y-6">
               <PartnersPage />
             </div>
           )}
 
-          {activeTab === 'agent_network' && (
+          {activeTab === "agent_network" && (
             <div className="space-y-6">
               <AgencyPartnersPage />
             </div>
           )}
 
-          {activeTab === 'contacts' && (
-            <AdminContactsPage />
-          )}
+          {activeTab === "contacts" && <AdminContactsPage />}
 
-          {activeTab === 'widgets' && (
-            <div className="space-y-6 h-full">
+          {activeTab === "widgets" && (
+            <div className="h-full space-y-6">
               <AdminWidgets />
             </div>
           )}
 
-          {activeTab === 'analytics' && (
-            <div className="space-y-6 h-full">
+          {activeTab === "analytics" && (
+            <div className="h-full space-y-6">
               <AdminAnalytics />
             </div>
           )}
 
-          {activeTab === 'integrations' && userRole.type !== 'manager' && (
+          {activeTab === "integrations" && userRole.type !== "manager" && (
             <div className="space-y-6">
               <IntegrationsTab />
             </div>
           )}
 
-          {activeTab === 'settings' && userRole.type !== 'manager' && developerId && (
-            <div className="space-y-6">
-              <AdminSettings
-                userProfile={user!}
-                loading={loading}
-                developerId={developerId}
-                isManager={isManager}
-                {...(userRole.managerData && { managerData: userRole.managerData })}
-              />
-            </div>
-          )}
+          {activeTab === "settings" &&
+            userRole.type !== "manager" &&
+            developerId && (
+              <div className="space-y-6">
+                <AdminSettings
+                  userProfile={user!}
+                  loading={loading}
+                  developerId={developerId}
+                  isManager={isManager}
+                  {...(userRole.managerData && {
+                    managerData: userRole.managerData,
+                  })}
+                />
+              </div>
+            )}
         </div>
 
         {/* Project Creation Modal */}
@@ -403,8 +422,6 @@ const AdminDashboard = () => {
           onClose={handleCloseCreateModal}
           onManualCreate={handleManualCreate}
         />
-
-      
       </div>
     </div>
   );

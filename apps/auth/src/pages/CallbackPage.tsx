@@ -22,7 +22,10 @@ export default function CallbackPage() {
     const run = async () => {
       try {
         if (ssoToken?.trim()) {
-          await exchangeAmoSsoToken(supabase as unknown as AmoSsoSupabaseClient, ssoToken.trim());
+          await exchangeAmoSsoToken(
+            supabase as unknown as AmoSsoSupabaseClient,
+            ssoToken.trim(),
+          );
         }
         await consumeSupabaseSessionFromUrl(supabase);
         const { data } = await supabase.auth.getSession();
@@ -31,7 +34,9 @@ export default function CallbackPage() {
 
         // Apply pending account type selection (Google OAuth flow)
         try {
-          const pendingAccountType = localStorage.getItem(LS_PENDING_ACCOUNT_TYPE);
+          const pendingAccountType = localStorage.getItem(
+            LS_PENDING_ACCOUNT_TYPE,
+          );
           const pendingRef = localStorage.getItem(LS_PENDING_REF);
           const pendingInvite = localStorage.getItem(LS_PENDING_INVITE);
 
@@ -40,11 +45,17 @@ export default function CallbackPage() {
             const { error: upsertError } = await supabase
               .from("user_profiles")
               .upsert(
-                { id: session.user.id, account_type: pendingAccountType } as any,
-                { onConflict: "id" }
+                {
+                  id: session.user.id,
+                  account_type: pendingAccountType,
+                } as any,
+                { onConflict: "id" },
               );
             if (upsertError) {
-              console.error("Failed to upsert user_profiles.account_type:", upsertError);
+              console.error(
+                "Failed to upsert user_profiles.account_type:",
+                upsertError,
+              );
             }
           }
 
@@ -64,17 +75,25 @@ export default function CallbackPage() {
                   status: "active",
                   accepted_at: new Date().toISOString(),
                 } as any);
-              if (linkError) console.error("Error creating partner link (oauth):", linkError);
+              if (linkError)
+                console.error(
+                  "Error creating partner link (oauth):",
+                  linkError,
+                );
             }
           }
 
           if (pendingInvite && session.user.email) {
             const { error: inviteError } = await supabase
               .from("partner_invitations")
-              .update({ status: "accepted", accepted_at: new Date().toISOString() } as any)
+              .update({
+                status: "accepted",
+                accepted_at: new Date().toISOString(),
+              } as any)
               .eq("invitation_code", pendingInvite)
               .eq("email", session.user.email);
-            if (inviteError) console.error("Error updating invitation (oauth):", inviteError);
+            if (inviteError)
+              console.error("Error updating invitation (oauth):", inviteError);
           }
 
           localStorage.removeItem(LS_PENDING_ACCOUNT_TYPE);
@@ -99,9 +118,8 @@ export default function CallbackPage() {
   }, [redirectToUrl, ssoToken]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="text-sm text-slate-600">Processing login…</div>
     </div>
   );
 }
-

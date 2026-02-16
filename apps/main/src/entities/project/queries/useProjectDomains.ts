@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@gridix/utils/api";
-import type { Tables, TablesInsert, TablesUpdate } from "@gridix/types/database";
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@gridix/types/database";
 import { toast } from "sonner";
 
-type ProjectDomain = Tables<'project_domains'>;
+type ProjectDomain = Tables<"project_domains">;
 type ProjectDomainInsert = TablesInsert<"project_domains">;
 type ProjectDomainUpdate = TablesUpdate<"project_domains">;
 
@@ -11,7 +15,9 @@ export interface UseProjectDomainsResult {
   domains: ProjectDomain[];
   loading: boolean;
   error: string | null;
-  addDomain: (domain: Omit<ProjectDomainInsert, 'id' | 'created_at' | 'updated_at'>) => Promise<ProjectDomain | null>;
+  addDomain: (
+    domain: Omit<ProjectDomainInsert, "id" | "created_at" | "updated_at">,
+  ) => Promise<ProjectDomain | null>;
   updateDomain: (id: string, updates: ProjectDomainUpdate) => Promise<boolean>;
   deleteDomain: (id: string) => Promise<boolean>;
   refresh: () => Promise<void>;
@@ -33,17 +39,17 @@ export function useProjectDomains(projectId?: string): UseProjectDomainsResult {
       setError(null);
 
       const { data, error: supabaseError } = await supabase
-        .from('project_domains')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+        .from("project_domains")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
 
       if (supabaseError) throw supabaseError;
 
       setDomains(data || []);
     } catch (e: any) {
-      console.error('Error loading project domains:', e);
-      const errorMessage = e.message || 'Ошибка загрузки доменов';
+      console.error("Error loading project domains:", e);
+      const errorMessage = e.message || "Ошибка загрузки доменов";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -51,85 +57,101 @@ export function useProjectDomains(projectId?: string): UseProjectDomainsResult {
     }
   }, [projectId]);
 
-  const addDomain = useCallback(async (domainData: Omit<ProjectDomainInsert, 'id' | 'created_at' | 'updated_at'>): Promise<ProjectDomain | null> => {
-    try {
-      // Clean and validate domain
-      const cleanDomain = domainData.domain.toLowerCase().trim();
-      
-      // Remove protocol if present
-      const domain = cleanDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-      
-      // Basic domain validation
-      if (!domain || !/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
-        throw new Error('Неверный формат домена. Используйте формат: example.com');
-      }
+  const addDomain = useCallback(
+    async (
+      domainData: Omit<ProjectDomainInsert, "id" | "created_at" | "updated_at">,
+    ): Promise<ProjectDomain | null> => {
+      try {
+        // Clean and validate domain
+        const cleanDomain = domainData.domain.toLowerCase().trim();
 
-      const { data, error } = await supabase
-        .from('project_domains')
-        .insert({
-          ...domainData,
-          domain
-        })
-        .select()
-        .single();
+        // Remove protocol if present
+        const domain = cleanDomain
+          .replace(/^https?:\/\//, "")
+          .replace(/\/.*$/, "");
 
-      if (error) {
-        if (error.code === '23505') { // unique constraint violation
-          throw new Error('Этот домен уже используется другим проектом');
+        // Basic domain validation
+        if (!domain || !/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
+          throw new Error(
+            "Неверный формат домена. Используйте формат: example.com",
+          );
         }
-        throw error;
+
+        const { data, error } = await supabase
+          .from("project_domains")
+          .insert({
+            ...domainData,
+            domain,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          if (error.code === "23505") {
+            // unique constraint violation
+            throw new Error("Этот домен уже используется другим проектом");
+          }
+          throw error;
+        }
+
+        toast.success("Домен успешно добавлен");
+        await loadDomains(); // Refresh the list
+        return data;
+      } catch (e: any) {
+        console.error("Error adding domain:", e);
+        const errorMessage = e.message || "Ошибка добавления домена";
+        toast.error(errorMessage);
+        return null;
       }
+    },
+    [loadDomains],
+  );
 
-      toast.success('Домен успешно добавлен');
-      await loadDomains(); // Refresh the list
-      return data;
-    } catch (e: any) {
-      console.error('Error adding domain:', e);
-      const errorMessage = e.message || 'Ошибка добавления домена';
-      toast.error(errorMessage);
-      return null;
-    }
-  }, [loadDomains]);
+  const updateDomain = useCallback(
+    async (id: string, updates: ProjectDomainUpdate): Promise<boolean> => {
+      try {
+        const { error } = await supabase
+          .from("project_domains")
+          .update(updates)
+          .eq("id", id);
 
-  const updateDomain = useCallback(async (id: string, updates: ProjectDomainUpdate): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('project_domains')
-        .update(updates)
-        .eq('id', id);
+        if (error) throw error;
 
-      if (error) throw error;
+        toast.success("Домен успешно обновлен");
+        await loadDomains(); // Refresh the list
+        return true;
+      } catch (e: any) {
+        console.error("Error updating domain:", e);
+        const errorMessage = e.message || "Ошибка обновления домена";
+        toast.error(errorMessage);
+        return false;
+      }
+    },
+    [loadDomains],
+  );
 
-      toast.success('Домен успешно обновлен');
-      await loadDomains(); // Refresh the list
-      return true;
-    } catch (e: any) {
-      console.error('Error updating domain:', e);
-      const errorMessage = e.message || 'Ошибка обновления домена';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [loadDomains]);
+  const deleteDomain = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const { error } = await supabase
+          .from("project_domains")
+          .delete()
+          .eq("id", id);
 
-  const deleteDomain = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase
-        .from('project_domains')
-        .delete()
-        .eq('id', id);
+        if (error) throw error;
 
-      if (error) throw error;
-
-      toast.success('Домен успешно удален');
-      await loadDomains(); // Refresh the list
-      return true;
-    } catch (e: any) {
-      console.error('Error deleting domain:', e);
-      const errorMessage = e.message || 'Ошибка удаления домена';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [loadDomains]);
+        toast.success("Домен успешно удален");
+        await loadDomains(); // Refresh the list
+        return true;
+      } catch (e: any) {
+        console.error("Error deleting domain:", e);
+        const errorMessage = e.message || "Ошибка удаления домена";
+        toast.error(errorMessage);
+        return false;
+      }
+    },
+    [loadDomains],
+  );
 
   useEffect(() => {
     loadDomains();
@@ -142,6 +164,6 @@ export function useProjectDomains(projectId?: string): UseProjectDomainsResult {
     addDomain,
     updateDomain,
     deleteDomain,
-    refresh: loadDomains
+    refresh: loadDomains,
   };
 }

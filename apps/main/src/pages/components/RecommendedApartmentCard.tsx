@@ -1,10 +1,10 @@
-import { Home } from 'lucide-react';
-import type { CSSProperties } from 'react';
-import { Badge } from '@gridix/ui';
-import { Apartment } from '@/entities/apartment/model/types';
-import type { FieldSetting } from '@/hooks/useFields';
-import { getApartmentFieldVisibility } from '@/shared/lib/fieldVisibility';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { Home } from "lucide-react";
+import type { CSSProperties } from "react";
+import { Badge } from "@gridix/ui";
+import { Apartment } from "@/entities/apartment/model/types";
+import type { FieldSetting } from "@/hooks/useFields";
+import { getApartmentFieldVisibility } from "@/shared/lib/fieldVisibility";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RecommendedApartmentCardProps {
   apartment: Apartment;
@@ -15,9 +15,9 @@ interface RecommendedApartmentCardProps {
   roomText: string;
   fieldSettings?: FieldSetting[];
   formattedPrice?: string | null;
-  getStatusColor: (status: Apartment['status']) => string;
-  getStatusStyle: (status: Apartment['status']) => CSSProperties;
-  getStatusLabel: (status: Apartment['status']) => string;
+  getStatusColor: (status: Apartment["status"]) => string;
+  getStatusStyle: (status: Apartment["status"]) => CSSProperties;
+  getStatusLabel: (status: Apartment["status"]) => string;
 }
 
 const RecommendedApartmentCard = ({
@@ -34,36 +34,38 @@ const RecommendedApartmentCard = ({
   getStatusLabel,
 }: RecommendedApartmentCardProps) => {
   const { t } = useLanguage();
-  const visibility = fieldSettings ? getApartmentFieldVisibility(fieldSettings) : { price: true, area: true };
+  const visibility = fieldSettings
+    ? getApartmentFieldVisibility(fieldSettings)
+    : { price: true, area: true };
 
   const detailsParts = [
     roomText,
     visibility.area ? `${apartment.area} m²` : null,
-    !visibility.price ? t('project.onRequest') : null,
+    !visibility.price ? t("project.onRequest") : null,
   ].filter((value): value is string => Boolean(value));
 
-  const detailsText = detailsParts.join(' • ');
+  const detailsText = detailsParts.join(" • ");
 
   return (
     <div
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+      className="cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white transition-shadow hover:shadow-lg"
       onClick={onClick}
     >
-      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
             alt={`Apartment ${apartment.apartment_number}`}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <Home className="h-12 w-12 text-gray-400" />
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute right-3 top-3">
           <Badge
-            className={`${getStatusColor(apartment.status)} px-2 py-1 rounded-full text-xs font-medium font-poppins`}
+            className={`${getStatusColor(apartment.status)} rounded-full px-2 py-1 font-poppins text-xs font-medium`}
             style={getStatusStyle(apartment.status)}
           >
             {getStatusLabel(apartment.status)}
@@ -71,15 +73,21 @@ const RecommendedApartmentCard = ({
         </div>
       </div>
       <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium text-gray-900 font-poppins">{title}</h3>
-          <span className="text-sm text-gray-500 font-poppins">
+        <div className="mb-2 flex items-start justify-between">
+          <h3 className="font-poppins font-medium text-gray-900">{title}</h3>
+          <span className="font-poppins text-sm text-gray-500">
             {apartment.floor_number} {floorLabel}
           </span>
         </div>
-        {detailsText && <div className="text-sm text-gray-600 mb-2 font-poppins">{detailsText}</div>}
+        {detailsText && (
+          <div className="mb-2 font-poppins text-sm text-gray-600">
+            {detailsText}
+          </div>
+        )}
         {visibility.price && formattedPrice && (
-          <div className="text-lg font-medium text-gray-900 font-poppins">{formattedPrice}</div>
+          <div className="font-poppins text-lg font-medium text-gray-900">
+            {formattedPrice}
+          </div>
         )}
       </div>
     </div>

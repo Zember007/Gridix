@@ -1,10 +1,19 @@
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
 import { LanguageWrapper } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AgentWorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
-import { AgentCabinetLayout, useAgentCabinetPageRouting } from "@/components/layout/AgentCabinetLayout";
+import {
+  AgentCabinetLayout,
+  useAgentCabinetPageRouting,
+} from "@/components/layout/AgentCabinetLayout";
 
 import AuthPage from "@/pages/AuthPage";
 import SetPasswordPage from "@/pages/SetPasswordPage";
@@ -42,7 +51,12 @@ function AgentCabinetRouter() {
 
 function LegacyRedirect({ page }: { page: string }) {
   const { lang } = useParams();
-  return <Navigate to={`/${lang ?? "ru"}/?page=${encodeURIComponent(page)}`} replace />;
+  return (
+    <Navigate
+      to={`/${lang ?? "ru"}/?page=${encodeURIComponent(page)}`}
+      replace
+    />
+  );
 }
 
 export default function App() {
@@ -105,4 +119,3 @@ export default function App() {
     </BaseProviders>
   );
 }
-

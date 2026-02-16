@@ -4,12 +4,15 @@ import type { BillingDetails } from "@/entities/subscription/queries/useSubscrip
 export const fetchSubscription = async (projectId: string) => {
   const session = await supabase.auth.getSession();
 
-  const { data, error } = await supabase.functions.invoke("subscription-management", {
-    body: { project_id: projectId },
-    headers: {
-      Authorization: `Bearer ${session.data.session?.access_token}`,
+  const { data, error } = await supabase.functions.invoke(
+    "subscription-management",
+    {
+      body: { project_id: projectId },
+      headers: {
+        Authorization: `Bearer ${session.data.session?.access_token}`,
+      },
     },
-  });
+  );
 
   if (error) throw error;
 
@@ -19,12 +22,15 @@ export const fetchSubscription = async (projectId: string) => {
 export const fetchProjectSubscriptions = async () => {
   const session = await supabase.auth.getSession();
 
-  const { data, error } = await supabase.functions.invoke("subscription-management", {
-    body: { action: "get-project-subscriptions" },
-    headers: {
-      Authorization: `Bearer ${session.data.session?.access_token}`,
+  const { data, error } = await supabase.functions.invoke(
+    "subscription-management",
+    {
+      body: { action: "get-project-subscriptions" },
+      headers: {
+        Authorization: `Bearer ${session.data.session?.access_token}`,
+      },
     },
-  });
+  );
 
   if (error) throw error;
 
@@ -39,10 +45,13 @@ export const fetchPlans = async () => {
     headers["Authorization"] = `Bearer ${session.data.session.access_token}`;
   }
 
-  const { data, error } = await supabase.functions.invoke("subscription-management", {
-    body: { action: "get-plans" },
-    headers,
-  });
+  const { data, error } = await supabase.functions.invoke(
+    "subscription-management",
+    {
+      body: { action: "get-plans" },
+      headers,
+    },
+  );
 
   if (error) throw error;
 
@@ -52,21 +61,24 @@ export const fetchPlans = async () => {
 export const requestInvoice = async (
   projectId: string,
   planId: string,
-  durationMonths: number
+  durationMonths: number,
 ) => {
   const session = await supabase.auth.getSession();
 
-  const { data, error } = await supabase.functions.invoke("subscription-management", {
-    body: {
-      action: "request-invoice",
-      project_id: projectId,
-      plan_id: planId,
-      duration_months: durationMonths,
+  const { data, error } = await supabase.functions.invoke(
+    "subscription-management",
+    {
+      body: {
+        action: "request-invoice",
+        project_id: projectId,
+        plan_id: planId,
+        duration_months: durationMonths,
+      },
+      headers: {
+        Authorization: `Bearer ${session.data.session?.access_token}`,
+      },
     },
-    headers: {
-      Authorization: `Bearer ${session.data.session?.access_token}`,
-    },
-  });
+  );
 
   if (error) throw error;
 
@@ -76,10 +88,12 @@ export const requestInvoice = async (
 export const requestInvoiceForMultiple = async (
   projectIds: string[],
   planId: string,
-  durationMonths: number
+  durationMonths: number,
 ) => {
   const results = await Promise.all(
-    projectIds.map((projectId) => requestInvoice(projectId, planId, durationMonths))
+    projectIds.map((projectId) =>
+      requestInvoice(projectId, planId, durationMonths),
+    ),
   );
 
   return results;
@@ -101,7 +115,10 @@ export const fetchBillingDetails = async (userId: string) => {
   return { profile, company };
 };
 
-export const saveBillingDetails = async (userId: string, details: BillingDetails) => {
+export const saveBillingDetails = async (
+  userId: string,
+  details: BillingDetails,
+) => {
   const profileUpdate: Record<string, string> = {};
 
   if (details.type === "individual") {
@@ -127,6 +144,8 @@ export const saveBillingDetails = async (userId: string, details: BillingDetails
       email: details.email,
     };
 
-    await supabase.from("company_settings").upsert(companyPayload, { onConflict: "user_id" });
+    await supabase
+      .from("company_settings")
+      .upsert(companyPayload, { onConflict: "user_id" });
   }
 };

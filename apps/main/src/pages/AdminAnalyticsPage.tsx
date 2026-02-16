@@ -20,4 +20,3 @@ const AdminAnalyticsPage = () => {
 };
 
 export default AdminAnalyticsPage;
-

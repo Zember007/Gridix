@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
-import { hasAuthTokensInHash, consumeSupabaseSessionFromUrl } from "@gridix/utils";
+import {
+  hasAuthTokensInHash,
+  consumeSupabaseSessionFromUrl,
+} from "@gridix/utils";
 import { useLanguageNavigation, useLanguage } from "@gridix/utils/react";
 import { toast } from "sonner";
 import {
@@ -25,11 +28,13 @@ function safeRedirectUrl(input: string | null): string | null {
   if (!input) return null;
   try {
     const u = new URL(input);
-    const allowed = new Set([
-      (import.meta as any).env?.VITE_MAIN_APP_URL,
-      (import.meta as any).env?.VITE_AGENT_CABINET_URL,
-      (import.meta as any).env?.VITE_PARTNERS_APP_URL,
-    ].filter(Boolean));
+    const allowed = new Set(
+      [
+        (import.meta as any).env?.VITE_MAIN_APP_URL,
+        (import.meta as any).env?.VITE_AGENT_CABINET_URL,
+        (import.meta as any).env?.VITE_PARTNERS_APP_URL,
+      ].filter(Boolean),
+    );
     // allow same-origin and known app bases
     if (u.origin === window.location.origin) return u.toString();
     for (const base of allowed) {
@@ -42,19 +47,34 @@ function safeRedirectUrl(input: string | null): string | null {
   }
 }
 
-async function redirectByAccountType(params: { redirectToUrl?: string | null; lang: string }) {
+async function redirectByAccountType(params: {
+  redirectToUrl?: string | null;
+  lang: string;
+}) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session?.user?.id) return;
 
   const userId = session.user.id;
-  const { data: profile } = await supabase.from("user_profiles").select("account_type").eq("id", userId).maybeSingle();
-  const accountType = typeof (profile as any)?.account_type === "string" ? String((profile as any).account_type) : "developer";
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("account_type")
+    .eq("id", userId)
+    .maybeSingle();
+  const accountType =
+    typeof (profile as any)?.account_type === "string"
+      ? String((profile as any).account_type)
+      : "developer";
 
-  const mainAppUrl = (import.meta as any).env?.VITE_MAIN_APP_URL || "https://app.gridix.live";
-  const agentCabinetUrl = (import.meta as any).env?.VITE_AGENT_CABINET_URL || "https://agent.gridix.live";
-  const partnersAppUrl = (import.meta as any).env?.VITE_PARTNERS_APP_URL || "https://partner.gridix.live";
+  const mainAppUrl =
+    (import.meta as any).env?.VITE_MAIN_APP_URL || "https://app.gridix.live";
+  const agentCabinetUrl =
+    (import.meta as any).env?.VITE_AGENT_CABINET_URL ||
+    "https://agent.gridix.live";
+  const partnersAppUrl =
+    (import.meta as any).env?.VITE_PARTNERS_APP_URL ||
+    "https://partner.gridix.live";
 
   let targetBase: string;
   if (accountType === "agent") {
@@ -86,7 +106,8 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
 
     const wrongTarget =
       (isAgentTarget && accountType !== "agent") ||
-      (isMainTarget && (accountType === "agent" || accountType === "partner")) ||
+      (isMainTarget &&
+        (accountType === "agent" || accountType === "partner")) ||
       (isPartnerTarget && accountType !== "partner");
 
     if (!wrongTarget) {
@@ -110,7 +131,6 @@ async function redirectByAccountType(params: { redirectToUrl?: string | null; la
 
 const SIGNIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
-
 
 export default function AuthPage() {
   const { navigate } = useLanguageNavigation();
@@ -264,15 +284,16 @@ export default function AuthPage() {
         banner={
           <>
             {refCode && partnerInfo && (
-              <Alert className="animate-element animate-delay-220">
+              <Alert className="animate-delay-220 animate-element">
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {t("auth.partnerInvitation")} {partnerInfo?.user_profiles?.full_name}
+                  {t("auth.partnerInvitation")}{" "}
+                  {partnerInfo?.user_profiles?.full_name}
                 </AlertDescription>
               </Alert>
             )}
             {checkingPartner && (
-              <div className="animate-element animate-delay-220 flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="animate-delay-220 flex animate-element items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {t("auth.checkingPartner")}
               </div>
@@ -324,7 +345,10 @@ export default function AuthPage() {
               });
               if (error) throw error;
               toast.success(t("auth.welcome"));
-              await redirectByAccountType({ redirectToUrl: redirectToUrl ?? null, lang });
+              await redirectByAccountType({
+                redirectToUrl: redirectToUrl ?? null,
+                lang,
+              });
               return;
             }
 
@@ -339,7 +363,8 @@ export default function AuthPage() {
                   phone: payload.phone,
                   account_type: payload.accountType,
                   partner_id: partnerInfo?.id || null,
-                  marketing_emails_consent: payload.marketingEmailsConsent ?? false,
+                  marketing_emails_consent:
+                    payload.marketingEmailsConsent ?? false,
                   preferred_locale: language,
                 },
               },
@@ -357,7 +382,8 @@ export default function AuthPage() {
                     status: "active",
                     accepted_at: new Date().toISOString(),
                   } as any);
-                if (linkError) console.error("Error creating partner link:", linkError);
+                if (linkError)
+                  console.error("Error creating partner link:", linkError);
               }
 
               if (inviteCode) {
@@ -369,20 +395,22 @@ export default function AuthPage() {
                   } as any)
                   .eq("invitation_code", inviteCode)
                   .eq("email", payload.email);
-                if (inviteError) console.error("Error updating invitation:", inviteError);
+                if (inviteError)
+                  console.error("Error updating invitation:", inviteError);
               }
             }
 
             toast.success(t("auth.checkEmail"));
           } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : t("auth.errorOccurred");
+            const message =
+              err instanceof Error ? err.message : t("auth.errorOccurred");
             console.error("Auth error:", err);
             toast.error(message);
           } finally {
             setAuthLoading(false);
           }
         }}
-       /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
+        /*  onGoogleSignIn={({ accountType: selectedAccountType }) => {
           try {
             localStorage.setItem(LS_PENDING_ACCOUNT_TYPE, selectedAccountType);
             if (refCode) localStorage.setItem(LS_PENDING_REF, refCode);
@@ -408,7 +436,9 @@ export default function AuthPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("auth.resetPasswordTitle")}</DialogTitle>
-            <DialogDescription>{t("auth.resetPasswordDescription")}</DialogDescription>
+            <DialogDescription>
+              {t("auth.resetPasswordDescription")}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -421,11 +451,19 @@ export default function AuthPage() {
                 onChange={(e) => setResetEmail(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" type="button" onClick={() => setResetModalOpen(false)}>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => setResetModalOpen(false)}
+              >
                 {t("auth.cancel")}
               </Button>
-              <Button type="button" onClick={handleSendReset} disabled={resetLoading}>
+              <Button
+                type="button"
+                onClick={handleSendReset}
+                disabled={resetLoading}
+              >
                 {resetLoading ? t("auth.sending") : t("auth.sendLink")}
               </Button>
             </div>
@@ -435,4 +473,3 @@ export default function AuthPage() {
     </>
   );
 }
-

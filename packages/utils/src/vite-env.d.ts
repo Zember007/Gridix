@@ -16,7 +16,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
   readonly glob?: <T = Record<string, unknown>>(
     pattern: string,
-    options?: { eager?: boolean }
+    options?: { eager?: boolean },
   ) => Record<string, T | (() => Promise<T>)>;
 }
 

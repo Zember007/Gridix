@@ -1,12 +1,11 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import { Building2 } from 'lucide-react';
-import { Apartment } from '@/entities/apartment/model/types';
-import { useLanguage } from '@/contexts/LanguageContext';
-import FloorPlanView from '@/components/visualization/FloorPlanView';
-import { Project } from '@/entities/project/queries/useProjectsManager';
-import { FieldSetting } from '@/hooks/useFields';
+import { Building2 } from "lucide-react";
+import { Apartment } from "@/entities/apartment/model/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import FloorPlanView from "@/components/visualization/FloorPlanView";
+import { Project } from "@/entities/project/queries/useProjectsManager";
+import { FieldSetting } from "@/hooks/useFields";
 
 interface ApartmentFloorPlanProps {
   projectId: string;
@@ -25,7 +24,15 @@ interface BuildingFloor {
   color: string;
 }
 
-const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect, selectedFloorNumber, visibleFields = [], selectedCurrency }: ApartmentFloorPlanProps) => {
+const ApartmentFloorPlan = ({
+  project,
+  projectId,
+  apartments,
+  onApartmentSelect,
+  selectedFloorNumber,
+  visibleFields = [],
+  selectedCurrency,
+}: ApartmentFloorPlanProps) => {
   const { t } = useLanguage();
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
 
@@ -34,10 +41,10 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
     const loadFloorsLight = async () => {
       try {
         const { data, error } = await supabase
-          .from('building_floors')
-          .select('id, floor_number')
-          .eq('project_id', projectId)
-          .order('floor_number');
+          .from("building_floors")
+          .select("id, floor_number")
+          .eq("project_id", projectId)
+          .order("floor_number");
 
         if (error) throw error;
 
@@ -45,12 +52,12 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
           id: floor.id,
           floor_number: floor.floor_number,
           polygon: [],
-          color: '#000000'
+          color: "#000000",
         }));
 
         setBuildingFloors(processedFloors);
       } catch (error) {
-        console.error('Error loading building floors:', error);
+        console.error("Error loading building floors:", error);
       }
     };
 
@@ -58,32 +65,38 @@ const ApartmentFloorPlan = ({ project, projectId, apartments, onApartmentSelect,
   }, [projectId]);
 
   // Определяем выбранный этаж: используем переданный prop или первый доступный этаж
-  const selectedFloor = typeof selectedFloorNumber  === 'number' ? selectedFloorNumber : (buildingFloors.length > 0 ? buildingFloors[0]?.floor_number ?? null : null);
+  const selectedFloor =
+    typeof selectedFloorNumber === "number"
+      ? selectedFloorNumber
+      : buildingFloors.length > 0
+        ? (buildingFloors[0]?.floor_number ?? null)
+        : null;
   // Убрали тяжёлую загрузку полигонов этажей здесь — не требуется для FloorPlanView
 
   if (!buildingFloors.length || selectedFloor === null) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <Building2 className="h-16 w-16 mb-4" />
-        <p className="text-lg font-medium">{t('project.noBuildingPlan')}</p>
-        <p className="text-sm">{t('project.contactAdmin')}</p>
+      <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+        <Building2 className="mb-4 h-16 w-16" />
+        <p className="text-lg font-medium">{t("project.noBuildingPlan")}</p>
+        <p className="text-sm">{t("project.contactAdmin")}</p>
       </div>
     );
   }
 
-  const floorApartments = apartments.filter(apt => apt.floor_number === selectedFloor);
-
+  const floorApartments = apartments.filter(
+    (apt) => apt.floor_number === selectedFloor,
+  );
 
   return (
-      <FloorPlanView
-        currency={project?.currency}
-        projectId={projectId}
-        floorNumber={selectedFloor}
-        apartments={floorApartments}
-        onApartmentSelect={onApartmentSelect}
-        visibleFields={visibleFields}
-        selectedCurrency={selectedCurrency}
-      />
+    <FloorPlanView
+      currency={project?.currency}
+      projectId={projectId}
+      floorNumber={selectedFloor}
+      apartments={floorApartments}
+      onApartmentSelect={onApartmentSelect}
+      visibleFields={visibleFields}
+      selectedCurrency={selectedCurrency}
+    />
   );
 };
 

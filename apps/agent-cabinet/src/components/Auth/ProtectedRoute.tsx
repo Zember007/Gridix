@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { getLanguageFromPath, addLanguageToPath, removeLanguageFromPath } from "@gridix/utils/lib";
+import {
+  getLanguageFromPath,
+  addLanguageToPath,
+  removeLanguageFromPath,
+} from "@gridix/utils/lib";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@gridix/utils/api";
@@ -17,7 +21,10 @@ export function ProtectedRoute({
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
-  const lang = useMemo(() => getLanguageFromPath(location.pathname), [location.pathname]);
+  const lang = useMemo(
+    () => getLanguageFromPath(location.pathname),
+    [location.pathname],
+  );
   const hasCodeInUrl = useMemo(() => {
     try {
       return new URLSearchParams(location.search).has("code");
@@ -59,7 +66,9 @@ export function ProtectedRoute({
   if (!requireAuth) return <>{children}</>;
   if (user) {
     if (passwordGateLoading) return null;
-    const isOnSetPassword = removeLanguageFromPath(location.pathname).startsWith("/set-password");
+    const isOnSetPassword = removeLanguageFromPath(
+      location.pathname,
+    ).startsWith("/set-password");
     if (needsPasswordSet && !isOnSetPassword) {
       const redirectTo = addLanguageToPath("/set-password", lang);
       const clean = removeLanguageFromPath(location.pathname);
@@ -75,10 +84,15 @@ export function ProtectedRoute({
 
   // Not authenticated but URL contains auth tokens/code:
   // don't hard-redirect to SSO yet — allow app init to consume session first.
-  if (typeof window !== "undefined" && (hasAuthTokensInHash() || hasCodeInUrl)) {
+  if (
+    typeof window !== "undefined" &&
+    (hasAuthTokensInHash() || hasCodeInUrl)
+  ) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="text-sm text-slate-600">{t("common.auth.processingLogin")}</div>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+        <div className="text-sm text-slate-600">
+          {t("common.auth.processingLogin")}
+        </div>
       </div>
     );
   }
@@ -86,8 +100,7 @@ export function ProtectedRoute({
   // Not authenticated -> redirect to global SSO.
   // (Auth flow will be migrated out of this app.)
   const ssoBase =
-    (import.meta as any).env?.VITE_SSO_URL ||
-    "https://sso.gridix.live";
+    (import.meta as any).env?.VITE_SSO_URL || "https://sso.gridix.live";
 
   // We must use a hard redirect for external domain.
   // Keep current URL as return target.
@@ -97,4 +110,3 @@ export function ProtectedRoute({
   window.location.replace(ssoUrl);
   return null;
 }
-

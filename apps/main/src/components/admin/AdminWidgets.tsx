@@ -1,17 +1,28 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Button } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import { Switch } from "@gridix/ui";
-import { Copy, ExternalLink, Eye, Code } from 'lucide-react';
+import { Copy, ExternalLink, Eye, Code } from "lucide-react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
-import { toast } from 'sonner';
-import { useUserProjects } from '@/entities/project/queries/useProjects';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from "sonner";
+import { useUserProjects } from "@/entities/project/queries/useProjects";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LANGUAGE_CONFIG, Language } from "@gridix/utils/lib";
 import { Spinner } from "@/shared/ui/Spinner";
 
@@ -22,13 +33,17 @@ import { Spinner } from "@/shared/ui/Spinner";
 // }
 
 const AdminWidgets = () => {
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [defaultLanguage, setDefaultLanguage] = useState<Language>('en');
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [defaultLanguage, setDefaultLanguage] = useState<Language>("en");
   const [showFullProject, setShowFullProject] = useState<boolean>(true);
   const [showFloatingButton, setShowFloatingButton] = useState<boolean>(true);
-  const [floatingButtonSide, setFloatingButtonSide] = useState<'left' | 'right'>('right');
-  const [floatingButtonBottomOffset, setFloatingButtonBottomOffset] = useState<number>(40);
-  const [floatingButtonSideOffset, setFloatingButtonSideOffset] = useState<number>(32);
+  const [floatingButtonSide, setFloatingButtonSide] = useState<
+    "left" | "right"
+  >("right");
+  const [floatingButtonBottomOffset, setFloatingButtonBottomOffset] =
+    useState<number>(40);
+  const [floatingButtonSideOffset, setFloatingButtonSideOffset] =
+    useState<number>(32);
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
   // Применяем CSS переменные темы
@@ -44,13 +59,16 @@ const AdminWidgets = () => {
 
   useEffect(() => {
     if (projects.length > 0) {
-      setSelectedProject(projects?.[0]?.id || '');
+      setSelectedProject(projects?.[0]?.id || "");
     }
   }, [projects]);
 
-  const ensureAtLeastOneOption = (nextShowFull: boolean, nextShowButton: boolean): boolean => {
+  const ensureAtLeastOneOption = (
+    nextShowFull: boolean,
+    nextShowButton: boolean,
+  ): boolean => {
     if (!nextShowFull && !nextShowButton) {
-      toast.error(t('adminWidgets.atLeastOneOptionRequired'));
+      toast.error(t("adminWidgets.atLeastOneOptionRequired"));
       return false;
     }
     return true;
@@ -78,17 +96,17 @@ const AdminWidgets = () => {
       floatingButtonBottomOffset,
       floatingButtonSideOffset,
     };
-    if (selectedProject !== 'all') params.projectId = selectedProject;
-/*     if (selectedProject === 'all' && user?.id) params.userId = user.id; */
+    if (selectedProject !== "all") params.projectId = selectedProject;
+    /*     if (selectedProject === 'all' && user?.id) params.userId = user.id; */
 
     const attrs = Object.entries(params)
       .map(([k, v]) => {
-        if (typeof v === 'string') {
+        if (typeof v === "string") {
           return `${k}: "${v}"`;
         }
         return `${k}: ${v}`;
       })
-      .join(', ');
+      .join(", ");
 
     return `<div id="gridix-widget-root" style="min-height: 100vh; width: 100%; position: relative; z-index: 1000;"></div>
 <script src="${scriptUrl}"></script>
@@ -101,23 +119,23 @@ const AdminWidgets = () => {
 
   const copyEmbedCode = () => {
     navigator.clipboard.writeText(generateEmbedCode());
-    toast.success(t('adminWidgets.codeCopied'));
+    toast.success(t("adminWidgets.codeCopied"));
   };
 
   const openPreview = () => {
     const baseUrl = window.location.origin;
-    let previewUrl = '';
-    if (selectedProject === 'all') {
+    let previewUrl = "";
+    if (selectedProject === "all") {
       previewUrl = `${baseUrl}/embed/projects/${user?.id}?lang=${defaultLanguage}`;
     } else {
       previewUrl = `${baseUrl}/embed/project/${selectedProject}?lang=${defaultLanguage}`;
     }
-    window.open(previewUrl, '_blank');
+    window.open(previewUrl, "_blank");
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Spinner size="md" style={{ borderColor: ADMIN_THEME.primary }} />
       </div>
     );
@@ -126,26 +144,29 @@ const AdminWidgets = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{t('adminWidgets.title')}</h1>
-        <p className="text-gray-600">{t('adminWidgets.description')}</p>
+        <h1 className="text-2xl font-bold">{t("adminWidgets.title")}</h1>
+        <p className="text-gray-600">{t("adminWidgets.description")}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('adminWidgets.settings')}</CardTitle>
-            <CardDescription>
-              {t('adminWidgets.settingsDesc')}
-            </CardDescription>
+            <CardTitle>{t("adminWidgets.settings")}</CardTitle>
+            <CardDescription>{t("adminWidgets.settingsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="project-select">{t('adminWidgets.selectProject')}</Label>
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <Label htmlFor="project-select">
+                {t("adminWidgets.selectProject")}
+              </Label>
+              <Select
+                value={selectedProject}
+                onValueChange={setSelectedProject}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={'-'} />
+                  <SelectValue placeholder={"-"} />
                 </SelectTrigger>
-                
+
                 <SelectContent>
                   {/* <SelectItem value="all">{t('adminWidgets.allProjects')}</SelectItem> */}
                   {projects.map((project) => (
@@ -158,25 +179,35 @@ const AdminWidgets = () => {
             </div>
 
             <div>
-              <Label htmlFor="default-language">{t('adminWidgets.defaultLanguage')}</Label>
-              <Select value={defaultLanguage} onValueChange={(value: Language) => setDefaultLanguage(value)}>
+              <Label htmlFor="default-language">
+                {t("adminWidgets.defaultLanguage")}
+              </Label>
+              <Select
+                value={defaultLanguage}
+                onValueChange={(value: Language) => setDefaultLanguage(value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('adminWidgets.defaultLanguage')} />
+                  <SelectValue
+                    placeholder={t("adminWidgets.defaultLanguage")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
                     <SelectItem key={code} value={code}>
-                      {config.flag} {t(`language.${code}` as keyof typeof LANGUAGE_CONFIG)}
+                      {config.flag}{" "}
+                      {t(`language.${code}` as keyof typeof LANGUAGE_CONFIG)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">{t('adminWidgets.defaultLanguageDesc')}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {t("adminWidgets.defaultLanguageDesc")}
+              </p>
             </div>
 
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <Label>{t('adminWidgets.widgetDisplay')}</Label>
+            <div className="border-t pt-2">
+              <div className="mb-2 flex items-center justify-between">
+                <Label>{t("adminWidgets.widgetDisplay")}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -188,13 +219,16 @@ const AdminWidgets = () => {
                     color: ADMIN_THEME.primary,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                    e.currentTarget.style.backgroundColor =
+                      ADMIN_THEME.backgroundHover;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  {showAdvanced ? t('adminWidgets.hideAdvanced') : t('adminWidgets.showAdvanced')}
+                  {showAdvanced
+                    ? t("adminWidgets.hideAdvanced")
+                    : t("adminWidgets.showAdvanced")}
                 </Button>
               </div>
 
@@ -202,8 +236,12 @@ const AdminWidgets = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">{t('adminWidgets.showFullProject')}</p>
-                      <p className="text-xs text-gray-500">{t('adminWidgets.showFullProjectDesc')}</p>
+                      <p className="text-sm font-medium">
+                        {t("adminWidgets.showFullProject")}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {t("adminWidgets.showFullProjectDesc")}
+                      </p>
                     </div>
                     <Switch
                       checked={showFullProject}
@@ -212,8 +250,12 @@ const AdminWidgets = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">{t('adminWidgets.showFloatingButton')}</p>
-                      <p className="text-xs text-gray-500">{t('adminWidgets.showFloatingButtonDesc')}</p>
+                      <p className="text-sm font-medium">
+                        {t("adminWidgets.showFloatingButton")}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {t("adminWidgets.showFloatingButtonDesc")}
+                      </p>
                     </div>
                     <Switch
                       checked={showFloatingButton}
@@ -222,44 +264,64 @@ const AdminWidgets = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>{t('adminWidgets.floatingButtonPosition')}</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <Label>{t("adminWidgets.floatingButtonPosition")}</Label>
+                    <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-3">
                       <div className="md:col-span-1">
-                        <Label className="text-xs text-gray-500">{t('adminWidgets.floatingButtonSide')}</Label>
+                        <Label className="text-xs text-gray-500">
+                          {t("adminWidgets.floatingButtonSide")}
+                        </Label>
                         <Select
                           value={floatingButtonSide}
-                          onValueChange={(value: 'left' | 'right') => setFloatingButtonSide(value)}
+                          onValueChange={(value: "left" | "right") =>
+                            setFloatingButtonSide(value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="left">{t('adminWidgets.floatingButtonSideLeft')}</SelectItem>
-                            <SelectItem value="right">{t('adminWidgets.floatingButtonSideRight')}</SelectItem>
+                            <SelectItem value="left">
+                              {t("adminWidgets.floatingButtonSideLeft")}
+                            </SelectItem>
+                            <SelectItem value="right">
+                              {t("adminWidgets.floatingButtonSideRight")}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">{t('adminWidgets.floatingButtonBottomOffset')}</Label>
+                        <Label className="text-xs text-gray-500">
+                          {t("adminWidgets.floatingButtonBottomOffset")}
+                        </Label>
                         <Input
                           type="number"
                           min={0}
                           value={floatingButtonBottomOffset}
-                          onChange={(e) => setFloatingButtonBottomOffset(Number(e.target.value) || 0)}
+                          onChange={(e) =>
+                            setFloatingButtonBottomOffset(
+                              Number(e.target.value) || 0,
+                            )
+                          }
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">{t('adminWidgets.floatingButtonSideOffset')}</Label>
+                        <Label className="text-xs text-gray-500">
+                          {t("adminWidgets.floatingButtonSideOffset")}
+                        </Label>
                         <Input
                           type="number"
                           min={0}
                           value={floatingButtonSideOffset}
-                          onChange={(e) => setFloatingButtonSideOffset(Number(e.target.value) || 0)}
+                          onChange={(e) =>
+                            setFloatingButtonSideOffset(
+                              Number(e.target.value) || 0,
+                            )
+                          }
                         />
                       </div>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {t('adminWidgets.floatingButtonPositionDesc')}
+                      {t("adminWidgets.floatingButtonPositionDesc")}
                     </p>
                   </div>
                 </div>
@@ -267,40 +329,42 @@ const AdminWidgets = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                onClick={openPreview} 
-                variant="outline" 
+              <Button
+                onClick={openPreview}
+                variant="outline"
                 className="flex-1"
                 style={{
                   borderColor: ADMIN_THEME.primary,
                   color: ADMIN_THEME.primary,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.backgroundHover;
+                  e.currentTarget.style.backgroundColor =
+                    ADMIN_THEME.backgroundHover;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
-                <Eye className="h-4 w-4 mr-2" />
-                {t('adminWidgets.preview')}
+                <Eye className="mr-2 h-4 w-4" />
+                {t("adminWidgets.preview")}
               </Button>
-              <Button 
-                onClick={copyEmbedCode} 
+              <Button
+                onClick={copyEmbedCode}
                 className="flex-1"
                 style={{
                   backgroundColor: ADMIN_THEME.primary,
                   color: ADMIN_THEME.textOnPrimary,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
+                  e.currentTarget.style.backgroundColor =
+                    ADMIN_THEME.primaryHover;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
                 }}
               >
-                <Copy className="h-4 w-4 mr-2" />
-                {t('adminWidgets.copyCode')}
+                <Copy className="mr-2 h-4 w-4" />
+                {t("adminWidgets.copyCode")}
               </Button>
             </div>
           </CardContent>
@@ -310,15 +374,13 @@ const AdminWidgets = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Code className="h-5 w-5" />
-              {t('adminWidgets.embedCode')}
+              {t("adminWidgets.embedCode")}
             </CardTitle>
-            <CardDescription>
-              {t('adminWidgets.embedCodeDesc')}
-            </CardDescription>
+            <CardDescription>{t("adminWidgets.embedCodeDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
+            <div className="rounded-lg bg-gray-100 p-4">
+              <pre className="overflow-x-auto whitespace-pre-wrap text-sm">
                 {generateEmbedCode()}
               </pre>
             </div>
@@ -328,13 +390,11 @@ const AdminWidgets = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('adminWidgets.links')}</CardTitle>
-          <CardDescription>
-            {t('adminWidgets.linksDesc')}
-          </CardDescription>
+          <CardTitle>{t("adminWidgets.links")}</CardTitle>
+          <CardDescription>{t("adminWidgets.linksDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-         {/*    <div className="space-y-2">
+          {/*    <div className="space-y-2">
               <Label>{t('adminWidgets.allProjects')}</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -352,9 +412,9 @@ const AdminWidgets = () => {
               </div>
             </div> */}
 
-          {selectedProject !== 'all' && (
+          {selectedProject !== "all" && (
             <div className="space-y-2">
-              <Label>{t('adminWidgets.selectedProject')}</Label>
+              <Label>{t("adminWidgets.selectedProject")}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   value={`${window.location.origin}/embed/project/${selectedProject}`}
@@ -364,7 +424,12 @@ const AdminWidgets = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`${window.location.origin}/embed/project/${selectedProject}`, '_blank')}
+                  onClick={() =>
+                    window.open(
+                      `${window.location.origin}/embed/project/${selectedProject}`,
+                      "_blank",
+                    )
+                  }
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>

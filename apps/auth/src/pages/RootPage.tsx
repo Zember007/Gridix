@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { supabase, supabaseAuthInitPromise } from "@gridix/utils/api";
-import { hasAuthTokensInHash, consumeSupabaseSessionFromUrl } from "@gridix/utils";
+import {
+  hasAuthTokensInHash,
+  consumeSupabaseSessionFromUrl,
+} from "@gridix/utils";
 import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
 
 /**
@@ -10,7 +13,9 @@ import { redirectToAppByAccountType } from "@/shared/lib/redirectByAccountType";
  * in supabaseAuthInitPromise), then redirect to the appropriate app by account_type.
  */
 export default function RootPage() {
-  const [action, setAction] = useState<"loading" | "redirect" | "to-auth">("loading");
+  const [action, setAction] = useState<"loading" | "redirect" | "to-auth">(
+    "loading",
+  );
   const { lang } = useParams();
 
   useEffect(() => {
@@ -18,7 +23,6 @@ export default function RootPage() {
 
     const run = async () => {
       const hasTokens = hasAuthTokensInHash();
-   
 
       // Consume tokens from hash immediately when landing on / with magic link / OAuth callback.
       if (hasTokens) {
@@ -43,7 +47,6 @@ export default function RootPage() {
         session = (await supabase.auth.getSession()).data.session;
       }
       if (cancelled) return;
-
 
       if (session?.user?.id) {
         try {
@@ -72,7 +75,7 @@ export default function RootPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="text-sm text-slate-600">Processing login…</div>
     </div>
   );

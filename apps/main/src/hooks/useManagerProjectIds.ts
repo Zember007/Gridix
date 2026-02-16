@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from "@/contexts/AuthContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export const getManagerProjectIds = async (
   managerId: string,
@@ -10,15 +10,15 @@ export const getManagerProjectIds = async (
 ): Promise<string[]> => {
   try {
     const { data: managerAccount, error: managerError } = await supabase
-      .from('manager_accounts')
-      .select('id')
-      .eq('manager_id', managerId)
-      .eq('developer_id', developerId)
-      .eq('status', 'active')
+      .from("manager_accounts")
+      .select("id")
+      .eq("manager_id", managerId)
+      .eq("developer_id", developerId)
+      .eq("status", "active")
       .maybeSingle();
 
     if (managerError) {
-      console.error('Error loading manager account for manager:', managerError);
+      console.error("Error loading manager account for manager:", managerError);
       return [];
     }
 
@@ -28,12 +28,12 @@ export const getManagerProjectIds = async (
     }
 
     const { data: accessRules, error: accessError } = await supabase
-      .from('manager_project_access')
-      .select('project_id')
-      .eq('manager_account_id', managerAccount.id);
+      .from("manager_project_access")
+      .select("project_id")
+      .eq("manager_account_id", managerAccount.id);
 
     if (accessError) {
-      console.error('Error loading manager project access:', accessError);
+      console.error("Error loading manager project access:", accessError);
       return [];
     }
 
@@ -43,18 +43,18 @@ export const getManagerProjectIds = async (
 
     // Если нет access rules - доступ ко всем проектам застройщика
     const { data: projects, error: projectsError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('user_id', developerId);
+      .from("projects")
+      .select("id")
+      .eq("user_id", developerId);
 
     if (projectsError) {
-      console.error('Error loading projects for manager:', projectsError);
+      console.error("Error loading projects for manager:", projectsError);
       return [];
     }
 
     return projects?.map((p) => p.id) || [];
   } catch (error) {
-    console.error('Error resolving manager project ids:', error);
+    console.error("Error resolving manager project ids:", error);
     return [];
   }
 };
@@ -71,14 +71,16 @@ export const useManagerProjectIds = (): UseManagerProjectIdsResult => {
   const { activeWorkspaceId } = useWorkspace();
   const { userRole } = useUserRole();
 
-  const enabled = Boolean(user && activeWorkspaceId && userRole.type === 'manager');
+  const enabled = Boolean(
+    user && activeWorkspaceId && userRole.type === "manager",
+  );
 
   const {
     data: projectIds = [],
     isLoading,
     error,
   } = useQuery<string[]>({
-    queryKey: ['managerProjectIds', user?.id, activeWorkspaceId],
+    queryKey: ["managerProjectIds", user?.id, activeWorkspaceId],
     enabled,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -91,8 +93,11 @@ export const useManagerProjectIds = (): UseManagerProjectIdsResult => {
   return {
     projectIds,
     loading: isLoading,
-    error: error ? (error instanceof Error ? error.message : String(error)) : null,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
     isEnabled: enabled,
   };
 };
-

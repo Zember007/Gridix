@@ -9,4 +9,3 @@ export { cn } from "./cn";
 export { generateSlug } from "./slug";
 export { formatDate, formatDateTime, getRelativeTime } from "./datetime";
 export { AMOCRM_DEVELOPER_CABINET_URL } from "../config/urls";
-

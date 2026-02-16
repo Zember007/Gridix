@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@gridix/utils/api";
-import type { Apartment } from '@/entities/apartment/model/types';
-import { normalizeApartmentData } from '@/entities/apartment/model/types';
+import type { Apartment } from "@/entities/apartment/model/types";
+import { normalizeApartmentData } from "@/entities/apartment/model/types";
 
 function isNumericLike(v: string) {
-  return v.trim() !== '' && Number.isFinite(Number(v));
+  return v.trim() !== "" && Number.isFinite(Number(v));
 }
 
 function sortByApartmentNumber(a: Apartment, b: Apartment) {
-  const an = a.apartment_number ?? '';
-  const bn = b.apartment_number ?? '';
+  const an = a.apartment_number ?? "";
+  const bn = b.apartment_number ?? "";
   if (isNumericLike(an) && isNumericLike(bn)) return Number(an) - Number(bn);
-  return an.localeCompare(bn, undefined, { numeric: true, sensitivity: 'base' });
+  return an.localeCompare(bn, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 export function ApartmentChessboard({
@@ -41,18 +44,22 @@ export function ApartmentChessboard({
     (async () => {
       try {
         const { data, error } = await supabase
-          .from('apartments')
-          .select('id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type, polygon')
-          .eq('project_id', projectId);
+          .from("apartments")
+          .select(
+            "id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type, polygon",
+          )
+          .eq("project_id", projectId);
         if (error) throw error;
         if (cancelled) return;
         const normalized = (data || []).map(normalizeApartmentData);
         setApartments(normalized);
-        const floors = Array.from(new Set(normalized.map(a => a.floor_number))).sort((a, b) => b - a);
+        const floors = Array.from(
+          new Set(normalized.map((a) => a.floor_number)),
+        ).sort((a, b) => b - a);
         setSelectedFloor(floors[0] ?? null);
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof Error ? e.message : 'Ошибка загрузки квартир');
+        setError(e instanceof Error ? e.message : "Ошибка загрузки квартир");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -65,12 +72,15 @@ export function ApartmentChessboard({
   }, [projectId]);
 
   const floors = useMemo(() => {
-    return Array.from(new Set(apartments.map(a => a.floor_number))).sort((a, b) => b - a);
+    return Array.from(new Set(apartments.map((a) => a.floor_number))).sort(
+      (a, b) => b - a,
+    );
   }, [apartments]);
 
   const floorApartments = useMemo(() => {
     const f = selectedFloor;
-    const filtered = f === null ? apartments : apartments.filter(a => a.floor_number === f);
+    const filtered =
+      f === null ? apartments : apartments.filter((a) => a.floor_number === f);
     return filtered.slice().sort(sortByApartmentNumber);
   }, [apartments, selectedFloor]);
 
@@ -104,17 +114,23 @@ export function ApartmentChessboard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-sm font-medium">Выбор апартамента</div>
-          <div className="text-xs text-muted-foreground">Этажи слева, квартиры справа.</div>
+          <div className="text-xs text-muted-foreground">
+            Этажи слева, квартиры справа.
+          </div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr]">
         {/* Floors */}
         <div className="rounded-lg border bg-card p-2">
-          <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Этаж</div>
+          <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+            Этаж
+          </div>
           <div className="max-h-[420px] overflow-auto">
             {floors.map((f) => {
-              const count = apartments.filter(a => a.floor_number === f).length;
+              const count = apartments.filter(
+                (a) => a.floor_number === f,
+              ).length;
               const isActive = f === selectedFloor;
               return (
                 <button
@@ -122,13 +138,21 @@ export function ApartmentChessboard({
                   type="button"
                   onClick={() => setSelectedFloor(f)}
                   className={[
-                    'w-full rounded-md px-3 py-2 text-left text-sm transition',
-                    isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
-                  ].join(' ')}
+                    "w-full rounded-md px-3 py-2 text-left text-sm transition",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent",
+                  ].join(" ")}
                 >
                   <div className="flex items-center justify-between">
                     <span>Этаж {f}</span>
-                    <span className={isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}>
+                    <span
+                      className={
+                        isActive
+                          ? "text-primary-foreground/80"
+                          : "text-muted-foreground"
+                      }
+                    >
                       {count}
                     </span>
                   </div>
@@ -155,18 +179,18 @@ export function ApartmentChessboard({
           <div
             className="grid gap-2"
             style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))',
+              gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))",
             }}
           >
             {floorApartments.map((apt) => {
               const isSelected = apt.id === selectedApartmentId;
-              const isAvailable = apt.status === 'available';
+              const isAvailable = apt.status === "available";
               const statusColor =
-                apt.status === 'available'
-                  ? 'border-emerald-300 bg-emerald-50 hover:bg-emerald-100'
-                  : apt.status === 'reserved'
-                    ? 'border-amber-300 bg-amber-50 hover:bg-amber-100'
-                    : 'border-gray-200 bg-gray-50';
+                apt.status === "available"
+                  ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100"
+                  : apt.status === "reserved"
+                    ? "border-amber-300 bg-amber-50 hover:bg-amber-100"
+                    : "border-gray-200 bg-gray-50";
 
               return (
                 <button
@@ -175,16 +199,20 @@ export function ApartmentChessboard({
                   disabled={!isAvailable}
                   onClick={() => onSelect(apt)}
                   className={[
-                    'rounded-lg border px-2 py-3 text-left transition',
+                    "rounded-lg border px-2 py-3 text-left transition",
                     statusColor,
-                    isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : '',
-                    !isAvailable ? 'cursor-not-allowed opacity-60' : '',
-                  ].join(' ')}
-                  title={!isAvailable ? 'Недоступно для привязки' : 'Выбрать'}
+                    isSelected
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "",
+                    !isAvailable ? "cursor-not-allowed opacity-60" : "",
+                  ].join(" ")}
+                  title={!isAvailable ? "Недоступно для привязки" : "Выбрать"}
                 >
-                  <div className="text-sm font-semibold leading-none">№{apt.apartment_number}</div>
+                  <div className="text-sm font-semibold leading-none">
+                    №{apt.apartment_number}
+                  </div>
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    {apt.area ? `${Math.round(apt.area)}м²` : '—'}
+                    {apt.area ? `${Math.round(apt.area)}м²` : "—"}
                   </div>
                 </button>
               );
@@ -195,5 +223,3 @@ export function ApartmentChessboard({
     </div>
   );
 }
-
-

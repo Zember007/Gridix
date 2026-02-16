@@ -62,4 +62,3 @@ pnpm --filter <project_name> build
 - [ ] Типы проходят: `pnpm turbo run typecheck`
 - [ ] Сборка проходит: `pnpm turbo run build`
 - [ ] Нет неуместных изменений (случайные `.turbo/**`, временные файлы, secrets)
-

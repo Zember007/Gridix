@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Map,
   BarChart3,
@@ -25,13 +25,14 @@ import {
   Sparkles,
   Check,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 type IconProps = {
   className?: string;
 };
 
-const iconDefaults = "w-[18px] h-[18px] min-w-[18px] min-h-[18px] stroke-current";
+const iconDefaults =
+  "w-[18px] h-[18px] min-w-[18px] min-h-[18px] stroke-current";
 
 export const MapIcon: React.FC<IconProps> = ({ className }) => (
   <Map className={`${iconDefaults} ${className}`} />
@@ -132,4 +133,3 @@ export const BriefcaseIcon: React.FC<IconProps> = ({ className }) => (
 export const LockIcon: React.FC<IconProps> = ({ className }) => (
   <Lock className={`${iconDefaults} ${className}`} />
 );
-

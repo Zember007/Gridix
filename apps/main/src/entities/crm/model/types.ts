@@ -1,8 +1,13 @@
-import type { Lead as DbLead } from '@/entities/lead/queries/useLeads';
+import type { Lead as DbLead } from "@/entities/lead/queries/useLeads";
 
-export type LeadSource = 'instagram' | 'website' | 'referral' | 'walk_in' | 'facebook';
+export type LeadSource =
+  | "instagram"
+  | "website"
+  | "referral"
+  | "walk_in"
+  | "facebook";
 
-export type TaskType = 'call' | 'meeting' | 'message' | 'payment' | 'other';
+export type TaskType = "call" | "meeting" | "message" | "payment" | "other";
 
 export interface LeadUser {
   id: string;
@@ -13,7 +18,13 @@ export interface LeadUser {
 
 export interface LeadHistoryItem {
   id: string;
-  type: 'status_change' | 'call' | 'note' | 'creation' | 'task_completion' | 'automation';
+  type:
+    | "status_change"
+    | "call"
+    | "note"
+    | "creation"
+    | "task_completion"
+    | "automation";
   date: string;
   text: string;
   user?: string;
@@ -32,7 +43,7 @@ export interface LeadTask {
 
 export interface ExternalCrmStatus {
   connected: boolean;
-  systemName?: 'AmoCRM' | 'Bitrix24';
+  systemName?: "AmoCRM" | "Bitrix24";
   lastSync?: string;
   id?: string;
 }
@@ -66,20 +77,20 @@ export interface FunnelStage {
   color: string;
 }
 
-export type FunnelTriggerEvent = 'on_stage_entry' | 'timer' | 'on_tag_add';
+export type FunnelTriggerEvent = "on_stage_entry" | "timer" | "on_tag_add";
 
 export interface FunnelTrigger {
   id: string;
   stageId: string;
   event: FunnelTriggerEvent;
   icon:
-  | 'distribution'
-  | 'task'
-  | 'status_change'
-  | 'edit_field'
-  | 'add_tag'
-  | 'notification'
-  | 'apartment_status';
+    | "distribution"
+    | "task"
+    | "status_change"
+    | "edit_field"
+    | "add_tag"
+    | "notification"
+    | "apartment_status";
   title: string;
   description: string;
   subtext?: string;
@@ -96,9 +107,15 @@ export interface LeadsFilters {
   assignedTo: string[];
 }
 
-export type SortOption = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc';
+export type SortOption = "date_desc" | "date_asc" | "price_desc" | "price_asc";
 
-export type CardField = 'none' | 'name' | 'project' | 'price' | 'tags' | 'assignedTo';
+export type CardField =
+  | "none"
+  | "name"
+  | "project"
+  | "price"
+  | "tags"
+  | "assignedTo";
 
 export interface CardAppearanceConfig {
   showAvatar: boolean;
@@ -108,8 +125,8 @@ export interface CardAppearanceConfig {
 
 // Temporary mock users for UI (will be replaced with real managers)
 export const MOCK_USERS: LeadUser[] = [
-  { id: 'u1', name: 'Я (Текущий)', initials: 'ME', color: 'bg-blue-600' },
-  { id: 'u2', name: 'Nina S.', initials: 'NS', color: 'bg-purple-600' },
-  { id: 'u3', name: 'David K.', initials: 'DK', color: 'bg-amber-600' },
-  { id: 'u4', name: 'Admin', initials: 'AD', color: 'bg-slate-800' },
+  { id: "u1", name: "Я (Текущий)", initials: "ME", color: "bg-blue-600" },
+  { id: "u2", name: "Nina S.", initials: "NS", color: "bg-purple-600" },
+  { id: "u3", name: "David K.", initials: "DK", color: "bg-amber-600" },
+  { id: "u4", name: "Admin", initials: "AD", color: "bg-slate-800" },
 ];

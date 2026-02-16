@@ -29,21 +29,31 @@ interface SidebarButtonProps {
 }
 
 const buttonStyles = (isActive: boolean): React.CSSProperties => ({
-  backgroundColor: isActive ? ADMIN_THEME.sidebarActiveBackground : 'transparent',
-  border: isActive ? `1px solid ${ADMIN_THEME.sidebarActiveBorder}` : '1px solid transparent',
+  backgroundColor: isActive
+    ? ADMIN_THEME.sidebarActiveBackground
+    : "transparent",
+  border: isActive
+    ? `1px solid ${ADMIN_THEME.sidebarActiveBorder}`
+    : "1px solid transparent",
   color: isActive ? ADMIN_THEME.sidebarActiveText : ADMIN_THEME.sidebarText,
 });
 
-const handleMouseEnter = (e: React.MouseEvent<HTMLElement>, isActive: boolean) => {
+const handleMouseEnter = (
+  e: React.MouseEvent<HTMLElement>,
+  isActive: boolean,
+) => {
   if (!isActive) {
     e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
     e.currentTarget.style.color = ADMIN_THEME.sidebarTextHover;
   }
 };
 
-const handleMouseLeave = (e: React.MouseEvent<HTMLElement>, isActive: boolean) => {
+const handleMouseLeave = (
+  e: React.MouseEvent<HTMLElement>,
+  isActive: boolean,
+) => {
   if (!isActive) {
-    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.backgroundColor = "transparent";
     e.currentTarget.style.color = ADMIN_THEME.sidebarText;
   }
 };
@@ -68,40 +78,38 @@ export function SidebarButton({
   const hasChildren = Boolean(items?.length);
   const isChildSize = size === "child";
 
-  const className = `w-full flex relative ${isCollapsed
+  const className = `w-full flex relative ${
+    isCollapsed
       ? "flex-col items-center gap-1 px-1 py-2"
       : `items-center gap-3 px-3 ${isChildSize ? "py-1.5" : "py-2"}`
-    } rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
+  } rounded-lg ${isCollapsed ? "text-center" : "text-left"} transition-colors duration-200`;
   const displayTitle = title || (isCollapsed ? label : undefined);
 
   const content = (
     <>
-      <div className="flex-shrink-0 relative">
-        <span className={isChildSize ? "scale-90 origin-center" : ""}>
+      <div className="relative flex-shrink-0">
+        <span className={isChildSize ? "origin-center scale-90" : ""}>
           {icon}
         </span>
         {badge && hasChildren && (
-        <div 
-        style={{ top: '-5px', right: '-7px' }}
-        className="absolute">
-          {badge}
-        </div>
-      )}
+          <div style={{ top: "-5px", right: "-7px" }} className="absolute">
+            {badge}
+          </div>
+        )}
       </div>
       <span
-        className={`font-medium ${isCollapsed
-            ? "text-xs text-center break-words"
-            : `flex-1 min-w-0 truncate text-left ${isChildSize ? "text-xs" : "text-sm"}`
-          }`}
+        className={`font-medium ${
+          isCollapsed
+            ? "text-center text-xs break-words"
+            : `min-w-0 flex-1 truncate text-left ${isChildSize ? "text-xs" : "text-sm"}`
+        }`}
         style={isCollapsed ? { lineHeight: "1.2" } : {}}
       >
         {label}
       </span>
 
       {badge && !hasChildren && (
-        <div className="absolute top-1/2 -translate-y-1/2 right-5">
-          {badge}
-        </div>
+        <div className="absolute top-1/2 right-5 -translate-y-1/2">{badge}</div>
       )}
 
       {hasChildren && !isCollapsed && (
@@ -150,7 +158,7 @@ export function SidebarButton({
       </button>
 
       {hasChildren && !isCollapsed && isExpanded && (
-        <div className="mt-1 ml-4 space-y-1 animate-in slide-in-from-top-1 duration-200">
+        <div className="animate-in slide-in-from-top-1 mt-1 ml-4 space-y-1 duration-200">
           {items?.map((child) => (
             <SidebarButton
               key={child.id}
@@ -158,7 +166,7 @@ export function SidebarButton({
               icon={child.icon}
               badge={child.badge}
               label={child.label}
-              href={child.href || ''}
+              href={child.href || ""}
               isActive={activeItemId ? child.id === activeItemId : false}
               isCollapsed={isCollapsed}
               onClick={() => onItemClick?.(child.id)}
@@ -170,4 +178,3 @@ export function SidebarButton({
     </div>
   );
 }
-

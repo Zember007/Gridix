@@ -17,5 +17,3 @@ export function useAmoWidget() {
 
   return { amoWidget };
 }
-
-

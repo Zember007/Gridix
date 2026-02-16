@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 interface UseSubscriptionStatusParams {
   project?: {
@@ -11,7 +11,10 @@ interface UseSubscriptionStatusParams {
   } | null;
 }
 
-export const useSubscriptionStatus = ({ project, user }: UseSubscriptionStatusParams) => {
+export const useSubscriptionStatus = ({
+  project,
+  user,
+}: UseSubscriptionStatusParams) => {
   const isSubscriptionExpired = useMemo(() => {
     if (!project?.subscription_expires_at) return false;
     return new Date(project.subscription_expires_at) < new Date();
@@ -19,8 +22,9 @@ export const useSubscriptionStatus = ({ project, user }: UseSubscriptionStatusPa
 
   const isSubscriptionInactive = useMemo(() => {
     return (
-      !['active', 'trialing', 'trial'].includes(project?.subscription_status || '') ||
-      isSubscriptionExpired
+      !["active", "trialing", "trial"].includes(
+        project?.subscription_status || "",
+      ) || isSubscriptionExpired
     );
   }, [project?.subscription_status, isSubscriptionExpired]);
 
@@ -34,5 +38,3 @@ export const useSubscriptionStatus = ({ project, user }: UseSubscriptionStatusPa
     isOwner,
   };
 };
-
-

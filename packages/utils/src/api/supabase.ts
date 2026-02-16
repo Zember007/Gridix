@@ -6,21 +6,26 @@
 // - For partner "login as client" links that contain `#access_token=...&refresh_token=...`,
 //   we intentionally create a tab-scoped client that uses sessionStorage instead.
 //   That keeps the partner's main session intact in other tabs.
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@gridix/types/database';
-import { consumeSupabaseSessionFromUrl, hasAuthTokensInHash } from '../auth/session';
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@gridix/types/database";
+import {
+  consumeSupabaseSessionFromUrl,
+  hasAuthTokensInHash,
+} from "../auth/session";
 
 // Get Supabase configuration from environment variables
 // Uses import.meta.env (Vite) for browser environments
 const getEnvVar = (key: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return (import.meta.env as Record<string, string | undefined>)[key] || '';
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    return (import.meta.env as Record<string, string | undefined>)[key] || "";
   }
-  return '';
+  return "";
 };
 
-const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL');
-const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || getEnvVar('VITE_SUPABASE_ANON_KEY');
+const SUPABASE_URL = getEnvVar("VITE_SUPABASE_URL");
+const SUPABASE_ANON_KEY =
+  getEnvVar("VITE_SUPABASE_PUBLISHABLE_KEY") ||
+  getEnvVar("VITE_SUPABASE_ANON_KEY");
 
 // Create the default Supabase client
 const rawSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -35,7 +40,7 @@ function hasExistingLocalSession(): boolean {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
-      if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+      if (k.startsWith("sb-") && k.endsWith("-auth-token")) {
         const v = localStorage.getItem(k);
         if (v) return true;
       }
@@ -59,23 +64,25 @@ function createTabScopedSupabaseClient(): SupabaseClientType {
 
 export const supabaseAuthInitPromise: Promise<void> = (async () => {
   // Only run in browser
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     // If URL contains hash tokens and there is already a local session:
     // - default behavior: overwrite session (re-login) so that new tokens always win.
     // - preserve legacy "login as client" behavior only when explicitly requested by URL param.
     const sp = new URLSearchParams(window.location.search);
-    const preserveLocalSession = sp.get('tab_session') === '1';
+    const preserveLocalSession = sp.get("tab_session") === "1";
 
-    if (hasAuthTokensInHash() && hasExistingLocalSession() && preserveLocalSession) {
+    if (
+      hasAuthTokensInHash() &&
+      hasExistingLocalSession() &&
+      preserveLocalSession
+    ) {
       supabase = createTabScopedSupabaseClient();
     }
 
     await consumeSupabaseSessionFromUrl(supabase as unknown as SupabaseClient);
   } catch (e) {
-    console.error('Unexpected error while initializing auth from URL:', e);
+    console.error("Unexpected error while initializing auth from URL:", e);
   }
 })();
-
-

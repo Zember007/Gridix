@@ -6,9 +6,7 @@ import { ProtectedRoute } from "@/components/Auth/ProtectedRoute";
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const ProjectEditorPage = lazy(() => import("@/pages/ProjectEditorPage"));
 
-const AdminAnalyticsPage = lazy(
-  () => import("@/pages/AdminAnalyticsPage")
-);
+const AdminAnalyticsPage = lazy(() => import("@/pages/AdminAnalyticsPage"));
 const AmoCrmLeadLinkPage = lazy(() => import("@/pages/AmoCrmLeadLinkPage"));
 
 export function AdminRoutes() {
@@ -56,4 +54,3 @@ export function AdminRoutes() {
     </Routes>
   );
 }
-

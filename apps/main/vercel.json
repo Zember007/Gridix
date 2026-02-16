@@ -1,13 +1,12 @@
 {
-    "rewrites": [
-      {
-        "source": "/widget/(.*)",
-        "destination": "/widget/$1"
-      },
-      {
-        "source": "/(.*)",
-        "destination": "/index.html"
-      }
-    ]
-  }
-  
+  "rewrites": [
+    {
+      "source": "/widget/(.*)",
+      "destination": "/widget/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

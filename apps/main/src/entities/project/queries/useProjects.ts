@@ -1,10 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useProjectsManager, Project, ProjectFilters } from './useProjectsManager';
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useProjectsManager,
+  Project,
+  ProjectFilters,
+} from "./useProjectsManager";
 
 // Хук для загрузки списка проектов
 export const useProjects = (filters: ProjectFilters = {}) => {
   const { loadProjects, projects, loading, error } = useProjectsManager();
-  const filtersRef = useRef<string>('');
+  const filtersRef = useRef<string>("");
   const mountedRef = useRef(true);
 
   // Создаем стабильный ключ для фильтров
@@ -12,17 +16,16 @@ export const useProjects = (filters: ProjectFilters = {}) => {
 
   useEffect(() => {
     mountedRef.current = true;
-    
+
     // Если фильтры не изменились, не делаем запрос
     if (filtersRef.current === filtersKey) {
       return;
     }
 
     filtersRef.current = filtersKey;
-    
+
     // Делаем запрос только если компонент еще смонтирован
     if (mountedRef.current) {
-
       loadProjects(filters);
     }
 
@@ -42,7 +45,7 @@ export const useProjects = (filters: ProjectFilters = {}) => {
     projects,
     loading,
     error,
-    refresh
+    refresh,
   };
 };
 
@@ -52,7 +55,7 @@ export const useProject = (identifier?: string) => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Рефы для отслеживания состояния
   const identifierRef = useRef<string | undefined>(undefined);
   const mountedRef = useRef(true);
@@ -90,21 +93,21 @@ export const useProject = (identifier?: string) => {
 
       setLoading(true);
       setError(null);
-      
+
       try {
-        
         const data = await loadProject(identifier);
-        
-        if ( identifierRef.current === identifier) {
+
+        if (identifierRef.current === identifier) {
           setProject(data);
           if (!data) {
-            setError('Проект не найден');
+            setError("Проект не найден");
           }
         }
       } catch (err: unknown) {
         // Обновляем состояние только если компонент смонтирован и это актуальный идентификатор
         if (mountedRef.current && identifierRef.current === identifier) {
-          const message = err instanceof Error ? err.message : 'Ошибка загрузки проекта';
+          const message =
+            err instanceof Error ? err.message : "Ошибка загрузки проекта";
           setError(message);
           setProject(null);
         }
@@ -137,27 +140,27 @@ export const useProject = (identifier?: string) => {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await loadProject(identifier);
-      
+
       if (!controller.signal.aborted && mountedRef.current) {
         setProject(data);
         if (!data) {
-          setError('Проект не найден');
+          setError("Проект не найден");
         }
       }
     } catch (err: unknown) {
       if (!controller.signal.aborted && mountedRef.current) {
-        const message = err instanceof Error ? err.message : 'Ошибка загрузки проекта';
+        const message =
+          err instanceof Error ? err.message : "Ошибка загрузки проекта";
         setError(message);
         setProject(null);
       }
     } finally {
-
       if (!controller.signal.aborted && mountedRef.current) {
         setLoading(false);
       }
@@ -168,68 +171,70 @@ export const useProject = (identifier?: string) => {
     project,
     loading,
     error,
-    refresh
+    refresh,
   };
 };
 
 // Хук для проектов пользователя с мемоизацией
 export const useUserProjects = (userId?: string) => {
   const filtersRef = useRef<ProjectFilters | null>(null);
-  
+
   // Создаем стабильный объект фильтров
   if (!filtersRef.current || filtersRef.current.userId !== userId) {
     filtersRef.current = userId ? { userId } : {};
   }
-  
+
   return useProjects(filtersRef.current);
 };
 
 // Хук для публичных проектов с мемоизацией
 export const usePublicProjects = (limit?: number) => {
   const filtersRef = useRef<ProjectFilters | null>(null);
-  
+
   // Создаем стабильный объект фильтров
   if (!filtersRef.current || filtersRef.current.limit !== limit) {
     filtersRef.current = { isPublic: true, ...(limit && { limit }) };
   }
-  
+
   return useProjects(filtersRef.current);
 };
 
 // Хук для избранных проектов с мемоизацией
 export const useFeaturedProjects = (limit?: number) => {
   const filtersRef = useRef<ProjectFilters | null>(null);
-  
+
   // Создаем стабильный объект фильтров
   if (!filtersRef.current || filtersRef.current.limit !== limit) {
     filtersRef.current = { isFeatured: true, ...(limit && { limit }) };
   }
-  
+
   return useProjects(filtersRef.current);
 };
 
 // Хук для CRUD операций с проектами
 export const useProjectCRUD = () => {
-  const { createProject, updateProject, deleteProject, incrementViewCount } = useProjectsManager();
-  
+  const { createProject, updateProject, deleteProject, incrementViewCount } =
+    useProjectsManager();
+
   // Мемоизируем объект чтобы избежать лишних перерендеров
   return useRef({
     createProject,
     updateProject,
     deleteProject,
-    incrementViewCount
+    incrementViewCount,
   }).current;
 };
 
 // Хук для управления кешем проектов
 export const useProjectCache = () => {
-  const { clearProjectsCache, clearSingleProjectCache, getProjectById } = useProjectsManager();
-  
+  const { clearProjectsCache, clearSingleProjectCache, getProjectById } =
+    useProjectsManager();
+
   // Мемоизируем объект чтобы избежать лишних перерендеров
   return useRef({
     clearProjectsCache,
     clearSingleProjectCache,
-    getProjectById
+    getProjectById,
   }).current;
 };
 

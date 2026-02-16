@@ -1,4 +1,12 @@
-import { Users, CreditCard, FolderKanban, BarChart3, Settings, Handshake, DollarSign } from 'lucide-react';
+import {
+  Users,
+  CreditCard,
+  FolderKanban,
+  BarChart3,
+  Settings,
+  Handshake,
+  DollarSign,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,43 +25,46 @@ interface SuperAdminSidebarProps {
 
 const menuItems = [
   {
-    title: 'Пользователи',
+    title: "Пользователи",
     icon: Users,
-    value: 'users',
+    value: "users",
   },
   {
-    title: 'Подписки',
+    title: "Подписки",
     icon: CreditCard,
-    value: 'subscriptions',
+    value: "subscriptions",
   },
   {
-    title: 'Проекты',
+    title: "Проекты",
     icon: FolderKanban,
-    value: 'projects',
+    value: "projects",
   },
   {
-    title: 'Статистика',
+    title: "Статистика",
     icon: BarChart3,
-    value: 'stats',
+    value: "stats",
   },
   {
-    title: 'Партнёры',
+    title: "Партнёры",
     icon: Handshake,
-    value: 'partners',
+    value: "partners",
   },
   {
-    title: 'Выплаты',
+    title: "Выплаты",
     icon: DollarSign,
-    value: 'partner-payouts',
+    value: "partner-payouts",
   },
   {
-    title: 'Настройки',
+    title: "Настройки",
     icon: Settings,
-    value: 'settings',
+    value: "settings",
   },
 ];
 
-export function SuperAdminSidebar({ activeTab, onTabChange }: SuperAdminSidebarProps) {
+export function SuperAdminSidebar({
+  activeTab,
+  onTabChange,
+}: SuperAdminSidebarProps) {
   return (
     <Sidebar>
       <SidebarContent>

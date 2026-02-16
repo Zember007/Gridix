@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProjectByDomain } from "@/entities/project/api/projectApi";
 import type { Tables } from "@gridix/types/database";
 
-type Project = Tables<'projects'>;
+type Project = Tables<"projects">;
 
 export interface ProjectByDomainResult {
   project: Project | null;
@@ -15,7 +15,9 @@ export const useProjectByDomainQuery = (hostname?: string) => {
     queryFn: async () => {
       const host = (hostname || window.location.hostname).toLowerCase();
 
-      const mainHosts = (import.meta.env.VITE_MAIN_HOSTNAMES || "localhost,127.0.0.1")
+      const mainHosts = (
+        import.meta.env.VITE_MAIN_HOSTNAMES || "localhost,127.0.0.1"
+      )
         .split(",")
         .map((x: string) => x.trim().toLowerCase())
         .filter(Boolean);

@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { DEFAULT_LANGUAGE } from "@gridix/utils/lib";
 import { useProjectByDomain } from "@/entities/project/queries/useProjectByDomain";
 import { Loader2, AlertTriangle } from "lucide-react";
-import { ProjectApartmentSelector } from '@/components';
+import { ProjectApartmentSelector } from "@/components";
 import { Alert, AlertDescription, AlertTitle } from "@gridix/ui";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ export default function DomainProjectPage() {
   // Show loading spinner while determining the domain
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -33,31 +33,34 @@ export default function DomainProjectPage() {
   }
 
   // Check subscription status
-  const isSubscriptionExpired = project.subscription_expires_at && 
+  const isSubscriptionExpired =
+    project.subscription_expires_at &&
     new Date(project.subscription_expires_at) < new Date();
-  const isSubscriptionInactive = !['active', 'trialing', 'trial'].includes(project.subscription_status || '') || isSubscriptionExpired;
+  const isSubscriptionInactive =
+    !["active", "trialing", "trial"].includes(
+      project.subscription_status || "",
+    ) || isSubscriptionExpired;
   const isOwner = user && project.user_id === user.id;
 
   // If subscription is inactive and user is not the owner, show blocking message
   if (isSubscriptionInactive && !isOwner) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md">
           <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
             <AlertTriangle className="h-5 w-5 text-red-600" />
-            <AlertTitle className="text-red-800 dark:text-red-200 text-lg mb-2">
+            <AlertTitle className="mb-2 text-lg text-red-800 dark:text-red-200">
               Project Temporarily Unavailable
             </AlertTitle>
             <AlertDescription className="text-red-700 dark:text-red-300">
-              The subscription for this project has expired. Please contact the project owner for more information.
+              The subscription for this project has expired. Please contact the
+              project owner for more information.
             </AlertDescription>
           </Alert>
         </div>
       </div>
     );
   }
-
-
 
   // If project found via custom domain, render the project directly
   return (

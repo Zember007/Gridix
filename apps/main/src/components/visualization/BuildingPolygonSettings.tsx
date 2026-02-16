@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
@@ -7,8 +6,8 @@ import { Button } from "@gridix/ui";
 import { Slider } from "@gridix/ui";
 import { Separator } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
-import { toast } from 'sonner';
-import { useProjectCRUD } from '@/entities/project/queries/useProjects';
+import { toast } from "sonner";
+import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 
 interface BuildingPolygonSettings {
   colors: {
@@ -37,29 +36,30 @@ interface BuildingPolygonSettingsProps {
 
 const defaultSettings: BuildingPolygonSettings = {
   colors: {
-    available: '#3b82f6',
-    sold: '#ef4444',
-    reserved: '#f59e0b'
+    available: "#3b82f6",
+    sold: "#ef4444",
+    reserved: "#f59e0b",
   },
   hoverEffects: {
     colorChange: true,
     opacityChange: true,
-    glow: true
+    glow: true,
   },
   display: {
-    showNumbers: true
+    showNumbers: true,
   },
   opacity: {
     normal: 0.4,
-    hover: 0.7
-  }
+    hover: 0.7,
+  },
 };
 
-const BuildingPolygonSettingsComponent = ({ 
-  projectId, 
-  onSettingsChange 
+const BuildingPolygonSettingsComponent = ({
+  projectId,
+  onSettingsChange,
 }: BuildingPolygonSettingsProps) => {
-  const [settings, setSettings] = useState<BuildingPolygonSettings>(defaultSettings);
+  const [settings, setSettings] =
+    useState<BuildingPolygonSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
   const { updateProject } = useProjectCRUD();
 
@@ -70,19 +70,19 @@ const BuildingPolygonSettingsComponent = ({
   const loadSettings = async () => {
     try {
       const { data, error } = await (supabase
-        .from('projects')
-        .select('building_polygon_settings')
-        .eq('id', projectId)
+        .from("projects")
+        .select("building_polygon_settings")
+        .eq("id", projectId)
         .single() as any);
 
       if (error) throw error;
-      
+
       const settingsFromDb = (data as any)?.building_polygon_settings;
       if (settingsFromDb) {
         setSettings(settingsFromDb as BuildingPolygonSettings);
       }
     } catch (error) {
-      console.error('Error loading building polygon settings:', error);
+      console.error("Error loading building polygon settings:", error);
     }
   };
 
@@ -94,32 +94,32 @@ const BuildingPolygonSettingsComponent = ({
       } as any);
 
       if (success) {
-        toast.success('Настройки здания сохранены');
+        toast.success("Настройки здания сохранены");
         onSettingsChange?.(settings);
       }
     } catch (error) {
-      console.error('Error saving building polygon settings:', error);
-      toast.error('Ошибка сохранения настроек');
+      console.error("Error saving building polygon settings:", error);
+      toast.error("Ошибка сохранения настроек");
     } finally {
       setLoading(false);
     }
   };
 
   const updateSettings = (path: string, value: any) => {
-    setSettings(prev => {
+    setSettings((prev) => {
       const newSettings = { ...prev };
-      const keys = path.split('.');
+      const keys = path.split(".");
       let current = newSettings as any;
-      
+
       for (let i = 0; i < keys.length - 1; i++) {
         const key = keys[i];
         if (!key) continue;
-        if (!current[key] || typeof current[key] !== 'object') {
+        if (!current[key] || typeof current[key] !== "object") {
           current[key] = {};
         }
         current = current[key];
       }
-      
+
       const lastKey = keys[keys.length - 1];
       if (lastKey) current[lastKey] = value;
       return newSettings;
@@ -129,9 +129,7 @@ const BuildingPolygonSettingsComponent = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">
-          Настройки полигонов здания
-        </CardTitle>
+        <CardTitle className="text-lg">Настройки полигонов здания</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Цвета статусов */}
@@ -144,10 +142,14 @@ const BuildingPolygonSettingsComponent = ({
                 <input
                   type="color"
                   value={settings.colors.available}
-                  onChange={(e) => updateSettings('colors.available', e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
+                  onChange={(e) =>
+                    updateSettings("colors.available", e.target.value)
+                  }
+                  className="h-8 w-8 cursor-pointer rounded border"
                 />
-                <span className="text-sm text-gray-600">{settings.colors.available}</span>
+                <span className="text-sm text-gray-600">
+                  {settings.colors.available}
+                </span>
               </div>
             </div>
             <div className="space-y-2">
@@ -156,10 +158,14 @@ const BuildingPolygonSettingsComponent = ({
                 <input
                   type="color"
                   value={settings.colors.sold}
-                  onChange={(e) => updateSettings('colors.sold', e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
+                  onChange={(e) =>
+                    updateSettings("colors.sold", e.target.value)
+                  }
+                  className="h-8 w-8 cursor-pointer rounded border"
                 />
-                <span className="text-sm text-gray-600">{settings.colors.sold}</span>
+                <span className="text-sm text-gray-600">
+                  {settings.colors.sold}
+                </span>
               </div>
             </div>
             <div className="space-y-2">
@@ -168,10 +174,14 @@ const BuildingPolygonSettingsComponent = ({
                 <input
                   type="color"
                   value={settings.colors.reserved}
-                  onChange={(e) => updateSettings('colors.reserved', e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
+                  onChange={(e) =>
+                    updateSettings("colors.reserved", e.target.value)
+                  }
+                  className="h-8 w-8 cursor-pointer rounded border"
                 />
-                <span className="text-sm text-gray-600">{settings.colors.reserved}</span>
+                <span className="text-sm text-gray-600">
+                  {settings.colors.reserved}
+                </span>
               </div>
             </div>
           </div>
@@ -187,21 +197,27 @@ const BuildingPolygonSettingsComponent = ({
               <Label>Изменение цвета</Label>
               <Switch
                 checked={settings.hoverEffects.colorChange}
-                onCheckedChange={(checked) => updateSettings('hoverEffects.colorChange', checked)}
+                onCheckedChange={(checked) =>
+                  updateSettings("hoverEffects.colorChange", checked)
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <Label>Изменение прозрачности</Label>
               <Switch
                 checked={settings.hoverEffects.opacityChange}
-                onCheckedChange={(checked) => updateSettings('hoverEffects.opacityChange', checked)}
+                onCheckedChange={(checked) =>
+                  updateSettings("hoverEffects.opacityChange", checked)
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <Label>Свечение</Label>
               <Switch
                 checked={settings.hoverEffects.glow}
-                onCheckedChange={(checked) => updateSettings('hoverEffects.glow', checked)}
+                onCheckedChange={(checked) =>
+                  updateSettings("hoverEffects.glow", checked)
+                }
               />
             </div>
           </div>
@@ -216,7 +232,9 @@ const BuildingPolygonSettingsComponent = ({
             <Label>Показывать номера этажей</Label>
             <Switch
               checked={settings.display.showNumbers}
-              onCheckedChange={(checked) => updateSettings('display.showNumbers', checked)}
+              onCheckedChange={(checked) =>
+                updateSettings("display.showNumbers", checked)
+              }
             />
           </div>
         </div>
@@ -228,10 +246,14 @@ const BuildingPolygonSettingsComponent = ({
           <h4 className="font-medium">Прозрачность</h4>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Обычное состояние: {Math.round(settings.opacity.normal * 100)}%</Label>
+              <Label>
+                Обычное состояние: {Math.round(settings.opacity.normal * 100)}%
+              </Label>
               <Slider
                 value={[settings.opacity.normal]}
-                onValueChange={([value]) => updateSettings('opacity.normal', value)}
+                onValueChange={([value]) =>
+                  updateSettings("opacity.normal", value)
+                }
                 max={1}
                 min={0}
                 step={0.1}
@@ -239,10 +261,14 @@ const BuildingPolygonSettingsComponent = ({
               />
             </div>
             <div className="space-y-2">
-              <Label>При наведении: {Math.round(settings.opacity.hover * 100)}%</Label>
+              <Label>
+                При наведении: {Math.round(settings.opacity.hover * 100)}%
+              </Label>
               <Slider
                 value={[settings.opacity.hover]}
-                onValueChange={([value]) => updateSettings('opacity.hover', value)}
+                onValueChange={([value]) =>
+                  updateSettings("opacity.hover", value)
+                }
                 max={1}
                 min={0}
                 step={0.1}
@@ -252,12 +278,8 @@ const BuildingPolygonSettingsComponent = ({
           </div>
         </div>
 
-        <Button 
-          onClick={saveSettings} 
-          disabled={loading}
-          className="w-full"
-        >
-          {loading ? 'Сохранение...' : 'Сохранить настройки'}
+        <Button onClick={saveSettings} disabled={loading} className="w-full">
+          {loading ? "Сохранение..." : "Сохранить настройки"}
         </Button>
       </CardContent>
     </Card>

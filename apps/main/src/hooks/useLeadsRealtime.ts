@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@gridix/utils/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@gridix/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 function patchLeadInCache(
   oldData: unknown,
@@ -11,7 +11,7 @@ function patchLeadInCache(
   if (!Array.isArray(oldData)) return { data: oldData, found: false };
   let found = false;
   const data = oldData.map((l) => {
-    if (!l || typeof l !== 'object') return l;
+    if (!l || typeof l !== "object") return l;
     const lead = l as Record<string, unknown>;
     if (String(lead.id) !== leadId) return l;
     found = true;
@@ -28,7 +28,7 @@ function patchReadAtInCache(
   if (!Array.isArray(oldData)) return { data: oldData, found: false };
   let found = false;
   const data = oldData.map((l) => {
-    if (!l || typeof l !== 'object') return l;
+    if (!l || typeof l !== "object") return l;
     const lead = l as Record<string, unknown>;
     if (String(lead.id) !== leadId) return l;
     found = true;
@@ -47,59 +47,73 @@ export function useLeadsRealtime() {
     const channel = supabase
       .channel(`admin-leads-realtime:${user.id}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'leads' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leads" },
         (payload) => {
           const eventType = payload.eventType;
-          const nextRow = (payload.new || null) as Record<string, unknown> | null;
-          const oldRow = (payload.old || null) as Record<string, unknown> | null;
-          const leadId = String(nextRow?.id || oldRow?.id || '');
+          const nextRow = (payload.new || null) as Record<
+            string,
+            unknown
+          > | null;
+          const oldRow = (payload.old || null) as Record<
+            string,
+            unknown
+          > | null;
+          const leadId = String(nextRow?.id || oldRow?.id || "");
           if (!leadId) return;
 
-          if (eventType === 'UPDATE' && nextRow) {
+          if (eventType === "UPDATE" && nextRow) {
             let anyNotFound = false;
-            queryClient.setQueriesData({ queryKey: ['leads'] }, (old) => {
+            queryClient.setQueriesData({ queryKey: ["leads"] }, (old) => {
               const res = patchLeadInCache(old, leadId, nextRow);
               if (!res.found) anyNotFound = true;
               return res.data;
             });
             if (anyNotFound) {
-              queryClient.invalidateQueries({ queryKey: ['leads'] });
+              queryClient.invalidateQueries({ queryKey: ["leads"] });
             }
             return;
           }
 
           // For INSERT/DELETE (and any unexpected shapes), refetch is safer (joined relations)
-          queryClient.invalidateQueries({ queryKey: ['leads'] });
+          queryClient.invalidateQueries({ queryKey: ["leads"] });
         },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'lead_reads',
+          event: "*",
+          schema: "public",
+          table: "lead_reads",
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const eventType = payload.eventType;
-          const nextRow = (payload.new || null) as Record<string, unknown> | null;
-          const oldRow = (payload.old || null) as Record<string, unknown> | null;
-          const leadId = String(nextRow?.lead_id || oldRow?.lead_id || '');
+          const nextRow = (payload.new || null) as Record<
+            string,
+            unknown
+          > | null;
+          const oldRow = (payload.old || null) as Record<
+            string,
+            unknown
+          > | null;
+          const leadId = String(nextRow?.lead_id || oldRow?.lead_id || "");
           if (!leadId) return;
 
           const readAt =
-            eventType === 'DELETE' ? null : (String(nextRow?.read_at || '') || null);
+            eventType === "DELETE"
+              ? null
+              : String(nextRow?.read_at || "") || null;
 
           let anyNotFound = false;
-          queryClient.setQueriesData({ queryKey: ['leads'] }, (old) => {
+          queryClient.setQueriesData({ queryKey: ["leads"] }, (old) => {
             const res = patchReadAtInCache(old, leadId, readAt);
             if (!res.found) anyNotFound = true;
             return res.data;
           });
 
           if (anyNotFound) {
-            queryClient.invalidateQueries({ queryKey: ['leads'] });
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
           }
         },
       )
@@ -114,4 +128,3 @@ export function useLeadsRealtime() {
     };
   }, [queryClient, user?.id]);
 }
-

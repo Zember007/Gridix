@@ -43,7 +43,7 @@ gridix-app/
 
 ### Prerequisites
 
-- **Node.js** 22+ 
+- **Node.js** 22+
 - **pnpm** 9.x (`npm install -g pnpm`)
 - **Supabase CLI** (`pnpm add -g supabase`)
 - Access to a **DEV Supabase project** (ask project owner)
@@ -79,14 +79,14 @@ pnpm dev:main
 
 ### Quick Start Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm install` | Install all dependencies |
-| `pnpm dev:main` | Start main app at http://localhost:8080 |
-| `pnpm dev:agent` | Start agent cabinet at http://localhost:8081 |
-| `pnpm turbo run build` | Build all packages and apps |
-| `pnpm turbo run typecheck` | Run TypeScript checks |
-| `pnpm turbo run lint` | Run linting |
+| Command                    | Description                                  |
+| -------------------------- | -------------------------------------------- |
+| `pnpm install`             | Install all dependencies                     |
+| `pnpm dev:main`            | Start main app at http://localhost:8080      |
+| `pnpm dev:agent`           | Start agent cabinet at http://localhost:8081 |
+| `pnpm turbo run build`     | Build all packages and apps                  |
+| `pnpm turbo run typecheck` | Run TypeScript checks                        |
+| `pnpm turbo run lint`      | Run linting                                  |
 
 ---
 
@@ -102,20 +102,20 @@ All applications require environment configuration. **Never commit `.env` files!
 
 ### Required Variables
 
-| Variable | Description | Where to Find |
-|----------|-------------|---------------|
-| `VITE_SUPABASE_PROJECT_ID` | Project reference ID | Settings → General |
-| `VITE_SUPABASE_URL` | Project URL | Settings → API → Project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Anon/public key | Settings → API → anon/public |
+| Variable                        | Description          | Where to Find                |
+| ------------------------------- | -------------------- | ---------------------------- |
+| `VITE_SUPABASE_PROJECT_ID`      | Project reference ID | Settings → General           |
+| `VITE_SUPABASE_URL`             | Project URL          | Settings → API → Project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Anon/public key      | Settings → API → anon/public |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_SSO_URL` | Auth app URL | `http://localhost:5175` |
-| `VITE_MAIN_APP_URL` | Main app URL (for auth redirects) | `http://localhost:8080` |
-| `VITE_AGENT_CABINET_URL` | Agent cabinet URL | `http://localhost:8081` |
-| `VITE_SERVER_DOMAIN` | Server domain | `localhost:8080` |
+| Variable                 | Description                       | Default                 |
+| ------------------------ | --------------------------------- | ----------------------- |
+| `VITE_SSO_URL`           | Auth app URL                      | `http://localhost:5175` |
+| `VITE_MAIN_APP_URL`      | Main app URL (for auth redirects) | `http://localhost:8080` |
+| `VITE_AGENT_CABINET_URL` | Agent cabinet URL                 | `http://localhost:8081` |
+| `VITE_SERVER_DOMAIN`     | Server domain                     | `localhost:8080`        |
 
 ### Example `.env` for Development
 
@@ -154,6 +154,7 @@ VITE_AGENT_CABINET_URL="http://localhost:8081"
 Edge Functions require secrets to be set in the Supabase Dashboard.
 
 **To deploy functions:**
+
 ```bash
 supabase functions deploy                              # Deploy all
 supabase functions deploy <function-name>             # Deploy specific
@@ -161,6 +162,7 @@ supabase functions deploy --project-ref <PROJECT_REF> # Explicit project
 ```
 
 **Setting secrets:**
+
 1. Go to Supabase Dashboard → Settings → Edge Functions
 2. Add required environment variables (e.g., `AMOCRM_*`, `JWT_SECRET`, `ONESIGNAL_*`)
 
@@ -319,6 +321,7 @@ pnpm turbo run build
 **Причина:** Workspace packages не установлены
 
 **Решение:**
+
 ```bash
 pnpm install
 ```
@@ -328,6 +331,7 @@ pnpm install
 **Причина:** Неправильные пути в tsconfig.json
 
 **Решение:** Используйте относительные пути:
+
 ```json
 {
   "extends": "../../packages/config/typescript/tsconfig.base.json"
@@ -339,14 +343,15 @@ pnpm install
 **Причина:** Неправильные импорты
 
 **Решение:** Убедитесь, что используете правильные импорты:
+
 ```typescript
 // ✅ Правильно
-import { Button } from '@gridix/ui';
-import { cn } from '@gridix/utils/lib';
+import { Button } from "@gridix/ui";
+import { cn } from "@gridix/utils/lib";
 
 // ❌ Неправильно
-import { Button } from '/ui';
-import { Button } from '@/shared/ui/button';
+import { Button } from "/ui";
+import { Button } from "@/shared/ui/button";
 ```
 
 ### 4. Ошибка сборки: "Rollup failed to resolve import"
@@ -354,6 +359,7 @@ import { Button } from '@/shared/ui/button';
 **Причина:** Неправильные пути импортов или отсутствующие зависимости
 
 **Решение:**
+
 1. Проверьте все импорты в коде
 2. Убедитесь, что все workspace packages имеют правильные `package.json`
 3. Выполните `pnpm install` заново
@@ -361,12 +367,14 @@ import { Button } from '@/shared/ui/button';
 ### 5. Supabase CLI errors
 
 **"Project not linked":**
+
 ```bash
 cd supabase
 supabase link --project-ref <YOUR_DEV_PROJECT_REF>
 ```
 
 **"Migration failed":**
+
 ```bash
 # Check status
 supabase migration list

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface FavoriteApartment {
   id: string;
@@ -13,8 +13,8 @@ interface FavoriteApartment {
   addedAt: number;
 }
 
-const FAVORITES_STORAGE_KEY = 'apartment-favorites';
-const FAVORITES_UPDATED_EVENT = 'gridix:favorites-updated';
+const FAVORITES_STORAGE_KEY = "apartment-favorites";
+const FAVORITES_UPDATED_EVENT = "gridix:favorites-updated";
 
 type FavoritesUpdatedDetail = FavoriteApartment[];
 
@@ -28,7 +28,7 @@ export const useFavorites = (projectId?: string) => {
       const parsed = JSON.parse(stored);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error('Error loading favorites from localStorage:', error);
+      console.error("Error loading favorites from localStorage:", error);
       return [];
     }
   };
@@ -51,11 +51,11 @@ export const useFavorites = (projectId?: string) => {
       }
     };
 
-    window.addEventListener('storage', handleStorage);
+    window.addEventListener("storage", handleStorage);
     window.addEventListener(FAVORITES_UPDATED_EVENT, handleCustomEvent);
 
     return () => {
-      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener("storage", handleStorage);
       window.removeEventListener(FAVORITES_UPDATED_EVENT, handleCustomEvent);
     };
   }, []);
@@ -67,20 +67,20 @@ export const useFavorites = (projectId?: string) => {
       window.dispatchEvent(
         new CustomEvent<FavoritesUpdatedDetail>(FAVORITES_UPDATED_EVENT, {
           detail: newFavorites,
-        })
+        }),
       );
     } catch (error) {
-      console.error('Error saving favorites to localStorage:', error);
+      console.error("Error saving favorites to localStorage:", error);
     }
   };
 
   // Добавить в избранное
-  const addToFavorites = (apartment: Omit<FavoriteApartment, 'addedAt'>) => {
+  const addToFavorites = (apartment: Omit<FavoriteApartment, "addedAt">) => {
     const newFavorite: FavoriteApartment = {
       ...apartment,
-      addedAt: Date.now()
+      addedAt: Date.now(),
     };
-    
+
     const newFavorites = [...favorites, newFavorite];
     setFavorites(newFavorites);
     saveFavoritesToStorage(newFavorites);
@@ -88,13 +88,13 @@ export const useFavorites = (projectId?: string) => {
 
   // Удалить из избранного
   const removeFromFavorites = (apartmentId: string) => {
-    const newFavorites = favorites.filter(fav => fav.id !== apartmentId);
+    const newFavorites = favorites.filter((fav) => fav.id !== apartmentId);
     setFavorites(newFavorites);
     saveFavoritesToStorage(newFavorites);
   };
 
   // Переключить состояние избранного
-  const toggleFavorite = (apartment: Omit<FavoriteApartment, 'addedAt'>) => {
+  const toggleFavorite = (apartment: Omit<FavoriteApartment, "addedAt">) => {
     if (isFavorite(apartment.id)) {
       removeFromFavorites(apartment.id);
     } else {
@@ -104,7 +104,7 @@ export const useFavorites = (projectId?: string) => {
 
   // Проверить, находится ли квартира в избранном
   const isFavorite = (apartmentId: string) => {
-    return favorites.some(fav => fav.id === apartmentId);
+    return favorites.some((fav) => fav.id === apartmentId);
   };
 
   // Получить избранные квартиры, отсортированные по дате добавления (новые сначала)
@@ -115,7 +115,7 @@ export const useFavorites = (projectId?: string) => {
   // Получить избранные квартиры по проекту
   const getFavoritesForProject = (id: string) => {
     return [...favorites]
-      .filter(fav => fav.project_id === id)
+      .filter((fav) => fav.project_id === id)
       .sort((a, b) => b.addedAt - a.addedAt);
   };
 
@@ -127,14 +127,16 @@ export const useFavorites = (projectId?: string) => {
 
   return {
     favorites: getFavorites(),
-    favoritesForProject: projectId ? getFavoritesForProject(projectId) : undefined,
+    favoritesForProject: projectId
+      ? getFavoritesForProject(projectId)
+      : undefined,
     addToFavorites,
     removeFromFavorites,
     toggleFavorite,
     isFavorite,
     clearFavorites,
     favoritesCount: projectId
-      ? favorites.filter(fav => fav.project_id === projectId).length
-      : favorites.length
+      ? favorites.filter((fav) => fav.project_id === projectId).length
+      : favorites.length,
   };
 };
