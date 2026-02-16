@@ -124,7 +124,7 @@ export function ContactsTab() {
 
       <Sheet open={!!openContactKey} onOpenChange={(open) => setOpenContactKey(open ? openContactKey : null)}>
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 relative custom-scrollbar">
-          <div className="pb-20">
+          <div className="max-w-[1600px] mx-auto pb-20">
             {!activeWorkspaceId ? (
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-sm text-slate-600">
                 {t("common.workspace.pickInSidebar")}
@@ -160,21 +160,23 @@ export function ContactsTab() {
                             </div>
                             <div className="min-w-0">
                               <div className="font-bold text-slate-900 truncate">{title}</div>
-                              <div className="text-xs text-slate-500 flex items-center gap-3">
-                                <span className="inline-flex items-center gap-1">
-                                  <Phone size={14} className="text-slate-400" /> {c.phone || t("common.common.empty")}
+                              <div className="text-xs text-slate-500 flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-3">
+                                <span className="inline-flex items-center gap-1 min-w-0">
+                                  <Phone size={14} className="text-slate-400 shrink-0" />
+                                  <span className="truncate">{c.phone || t("common.common.empty")}</span>
                                 </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Mail size={14} className="text-slate-400" /> {c.email || t("common.common.empty")}
+                                <span className="inline-flex items-center gap-1 min-w-0">
+                                  <Mail size={14} className="text-slate-400 shrink-0" />
+                                  <span className="truncate">{c.email || t("common.common.empty")}</span>
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-xs text-slate-600 w-24 text-right">{c.leadsCount}</div>
-                          <div className="text-xs text-slate-600 w-64 truncate text-right">
+                          <div className="text-xs text-slate-600 w-10 xl:w-14 text-center tabular-nums shrink-0">{c.leadsCount}</div>
+                          <div className="hidden xl:block text-xs text-slate-600 w-40 2xl:w-56 truncate text-left shrink-0">
                             {(c.projects ?? []).length ? c.projects.join(", ") : t("common.common.empty")}
                           </div>
-                          <div className="text-xs text-slate-500 w-48 text-right">
+                          <div className="text-xs text-slate-500 w-28 xl:w-36 text-left tabular-nums truncate shrink-0">
                             {c.lastLeadAt ? new Date(c.lastLeadAt).toLocaleString() : t("common.common.empty")}
                           </div>
                         </button>
@@ -284,4 +286,3 @@ export function ContactsTab() {
     </div>
   );
 }
-
