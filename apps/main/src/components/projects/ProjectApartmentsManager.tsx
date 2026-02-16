@@ -32,7 +32,7 @@ import {Apartment, normalizeApartmentData} from '@/entities/apartment/model/type
 import type {Json} from '@gridix/types/database';
 import {useLanguage} from '@/contexts/LanguageContext';
 import {useProject} from '@/entities/project/queries/useProjects';
-import {ADMIN_THEME} from "@gridix/utils/lib";
+import {ADMIN_THEME, cn} from "@gridix/utils/lib";
 import {trackUsertourEvent} from '@gridix/utils/integrations';
 
 interface ProjectApartmentsManagerProps {
@@ -775,19 +775,19 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                         {renderApartmentForm(editingApartment)}
                       </CardContent>
                     ) : (
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 sm:pt-4 pt-8 relative">
                         <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-4">
+                          <div className="flex-1 flex flex-col sm:flex-row gap-3 items-center">
+                            <div className="flex max-sm:w-full items-center gap-4">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-lg">
+                                <div className="flex items-center gap-2 sm:min-w-[300px]">
+                                  <h3 className="font-semibold text-lg min-w-[150px]">
                                     {
                                       projectType === 'object' ? t('buildingImage.object.objectNumber', { number: apartment.apartment_number }) :
                                         currentType === 'apartment' ? t('apartmentsManager.apartment', { number: apartment.apartment_number }) : apartment.apartment_number
                                     }
                                   </h3>
-                                  <Badge className={getStatusColor(apartment.status)}>
+                                  <Badge className={cn(getStatusColor(apartment.status),'max-sm:absolute max-sm:top-2 max-sm:left-2 ')}>
                                     {getStatusLabel(apartment.status)}
                                   </Badge>
                                 </div>
@@ -805,7 +805,7 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                                   }
                                 </p>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 flex-col lg:flex-row">
                                 <div className="text-sm">
                                   <span className="text-gray-600">{t('apartmentsManager.area')}: </span>
                                   <span>{t('apartmentsManager.areaValue', { area: apartment.area })}</span>
@@ -817,24 +817,25 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                                   </div>
                                 )}
                               </div>
-                              <div className="flex gap-2">
-                                <Button
+                            </div>
+                            <div className="max-sm:w-full grid grid-cols-4 lg:grid-cols-4 sm:grid-cols-2 gap-2 shrink-0 sm:ml-auto">
+                              <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDuplicateApartment(apartment)}
                                   title="Дублировать квартиру"
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                                <Button
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => openSyncDialog(apartment)}
                                   title="Синхронизировать данные с квартирами той же площади и планировки"
-                                >
-                                  <RefreshCw className="h-4 w-4" />
-                                </Button>
-                                <Button
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                              <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
@@ -844,17 +845,17 @@ const ProjectApartmentsManager = ({ projectId, projectType }: ProjectApartmentsM
                                       setCustomFieldsData(apartment.custom_fields as Record<string, unknown>);
                                     }
                                   }}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteApartment(apartment.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
