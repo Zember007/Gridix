@@ -587,7 +587,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 px-6 bg-white shrink-0 overflow-x-auto no-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 px-6 bg-white shrink-0 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab.id}
