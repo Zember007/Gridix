@@ -32,7 +32,9 @@ import { supabase } from "@gridix/utils/api";
 import PolygonAnnotator, {
   PolygonAnnotatorRef,
 } from "./polygon-editor/PolygonAnnotator";
-import PolygonCustomizationSettings from "./PolygonCustomizationSettings";
+import PolygonCustomizationSettings, {
+  type PolygonSettings,
+} from "./PolygonCustomizationSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProject } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@gridix/utils/react";
@@ -66,6 +68,23 @@ interface FacadeDisplaySettings {
   colors: { building: string };
   opacity: { normal: number; hover: number };
 }
+
+interface BuildingDataSnapshot {
+  floors: number;
+  facades: ProjectFacade[];
+  selectedFacadeId: string | null;
+  buildingImage: string | null;
+  buildingFloors: BuildingFloor[];
+  shapes: Shape[];
+  apartmentNumbers: number[];
+  facadeDisplaySettings: FacadeDisplaySettings;
+}
+
+const initialBuildingDataCache = new Map<string, BuildingDataSnapshot>();
+const initialBuildingDataInFlight = new Map<
+  string,
+  Promise<BuildingDataSnapshot>
+>();
 
 const BuildingImageEditor = ({
   projectId,
@@ -177,32 +196,25 @@ const BuildingImageEditor = ({
     return normalized;
   }, []);
 
-  const loadBuildingData = useCallback(async () => {
-    try {
-      // Use cached project data
-      if (project) {
-        setFloors(project.floors || 1);
-      }
+  const fetchBuildingDataSnapshot =
+    useCallback(async (): Promise<BuildingDataSnapshot> => {
+      const pid = project?.id || projectId;
+      const projectFloors = project?.floors || 1;
 
       // Load facades
       const { data: facadesData, error: facadesError } = await supabase
         .from("project_facades")
         .select("*")
-        .eq("project_id", project?.id || projectId)
+        .eq("project_id", pid)
         .order("order_index");
       if (facadesError) throw facadesError;
 
       const loadedFacades = (facadesData as unknown as ProjectFacade[]) || [];
-      setFacades(loadedFacades);
-
-      // Ensure selection
       let nextSelectedFacadeId = selectedFacadeId;
       if (!nextSelectedFacadeId) {
         nextSelectedFacadeId = loadedFacades[0]?.id ?? null;
-        setSelectedFacadeId(nextSelectedFacadeId);
       } else if (!loadedFacades.some((f) => f.id === nextSelectedFacadeId)) {
         nextSelectedFacadeId = loadedFacades[0]?.id ?? null;
-        setSelectedFacadeId(nextSelectedFacadeId);
       }
 
       const active =
@@ -214,14 +226,14 @@ const BuildingImageEditor = ({
         project?.building_image_url ??
         currentImageUrl ??
         null;
-      setBuildingImage(activeUrl);
 
       // Load apartments if this is an object project
+      let apartmentNumbersSnapshot: number[] = [];
       if (isObjectProject) {
         const { data: apartmentsData } = await supabase
           .from("apartments")
           .select("apartment_number")
-          .eq("project_id", project?.id || projectId)
+          .eq("project_id", pid)
           .order("apartment_number");
 
         const numbers = (apartmentsData || [])
@@ -231,35 +243,27 @@ const BuildingImageEditor = ({
               : Number(a.apartment_number),
           )
           .filter((n): n is number => !isNaN(n));
-        const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
-        setApartmentNumbers(uniqueNumbers);
+        apartmentNumbersSnapshot = [...new Set(numbers)].sort((a, b) => a - b);
       }
 
       // Load building floors
-      if (!nextSelectedFacadeId) {
-        setBuildingFloors([]);
-        setShapes([]);
-        return;
+      let normalizedFloors: BuildingFloor[] = [];
+      if (nextSelectedFacadeId) {
+        const { data: floorsData } = await supabase
+          .from("building_floors")
+          .select("*")
+          .eq("project_id", pid)
+          .eq("facade_id", nextSelectedFacadeId)
+          .order("floor_number");
+
+        normalizedFloors = (floorsData || []).map((floor) => ({
+          ...floor,
+          polygon: Array.isArray(floor.polygon)
+            ? (floor.polygon as { x: number; y: number }[])
+            : [],
+        }));
       }
 
-      const { data: floorsData } = await supabase
-        .from("building_floors")
-        .select("*")
-        .eq("project_id", project?.id || projectId)
-        .eq("facade_id", nextSelectedFacadeId)
-        .order("floor_number");
-
-      // Normalize the polygon data to match the expected type
-      const normalizedFloors = (floorsData || []).map((floor) => ({
-        ...floor,
-        polygon: Array.isArray(floor.polygon)
-          ? (floor.polygon as { x: number; y: number }[])
-          : [],
-      }));
-
-      setBuildingFloors(normalizedFloors);
-
-      // Convert floors to shapes for display
       const floorShapes: Shape[] = normalizedFloors.map((floor) => ({
         id: floor.id,
         type: "polygon",
@@ -268,11 +272,88 @@ const BuildingImageEditor = ({
         isSelected: false,
       }));
 
-      setShapes(floorShapes);
+      let nextFacadeDisplaySettings: FacadeDisplaySettings = {
+        colors: { building: "#3b82f6" },
+        opacity: { normal: 0.4, hover: 0.7 },
+      };
+
+      const { data: facadeSettingsData, error: facadeSettingsError } =
+        await supabase
+          .from("projects")
+          .select("polygon_settings_facade")
+          .eq("id", pid)
+          .single();
+
+      if (facadeSettingsError) throw facadeSettingsError;
+
+      if (
+        facadeSettingsData &&
+        "polygon_settings_facade" in facadeSettingsData &&
+        facadeSettingsData.polygon_settings_facade
+      ) {
+        const s = facadeSettingsData.polygon_settings_facade as Record<
+          string,
+          unknown
+        >;
+        const colors = s?.colors as Record<string, unknown> | undefined;
+        const opacity = s?.opacity as Record<string, unknown> | undefined;
+        nextFacadeDisplaySettings = {
+          colors: {
+            building:
+              typeof colors?.building === "string"
+                ? colors.building
+                : "#3b82f6",
+          },
+          opacity: {
+            normal: typeof opacity?.normal === "number" ? opacity.normal : 0.4,
+            hover: typeof opacity?.hover === "number" ? opacity.hover : 0.7,
+          },
+        };
+      }
+
+      return {
+        floors: projectFloors,
+        facades: loadedFacades,
+        selectedFacadeId: nextSelectedFacadeId,
+        buildingImage: activeUrl,
+        buildingFloors: normalizedFloors,
+        shapes: floorShapes,
+        apartmentNumbers: apartmentNumbersSnapshot,
+        facadeDisplaySettings: nextFacadeDisplaySettings,
+      };
+    }, [
+      currentImageUrl,
+      isObjectProject,
+      project?.building_image_url,
+      project?.floors,
+      project?.id,
+      projectId,
+      selectedFacadeId,
+    ]);
+
+  const applyBuildingDataSnapshot = useCallback(
+    (snapshot: BuildingDataSnapshot) => {
+      setFloors(snapshot.floors);
+      setFacades(snapshot.facades);
+      setSelectedFacadeId(snapshot.selectedFacadeId);
+      setBuildingImage(snapshot.buildingImage);
+      setBuildingFloors(snapshot.buildingFloors);
+      setShapes(snapshot.shapes);
+      setApartmentNumbers(snapshot.apartmentNumbers);
+      setFacadeDisplaySettings(snapshot.facadeDisplaySettings);
+    },
+    [],
+  );
+
+  const loadBuildingData = useCallback(async () => {
+    try {
+      const snapshot = await fetchBuildingDataSnapshot();
+      applyBuildingDataSnapshot(snapshot);
+      initialBuildingDataCache.set(projectId, snapshot);
     } catch (error) {
       console.error("Error loading building data:", error);
     }
-  }, [projectId, project, isObjectProject, selectedFacadeId, currentImageUrl]);
+  }, [applyBuildingDataSnapshot, fetchBuildingDataSnapshot, projectId]);
 
   const uploadFacadeImage = useCallback(
     async (file_get: File): Promise<string> => {
@@ -689,50 +770,41 @@ const BuildingImageEditor = ({
 
   React.useEffect(() => {
     if (projectId && project) {
-      loadBuildingData();
-    }
-  }, [loadBuildingData, projectId, project]);
-
-  // Load facade display settings from DB
-  useEffect(() => {
-    const loadFacadeSettings = async () => {
-      const pid = project?.id || projectId;
-      if (!pid) return;
-      try {
-        const { data, error } = await supabase
-          .from("projects")
-          .select("polygon_settings_facade")
-          .eq("id", pid)
-          .single();
-        if (error) throw error;
-        if (
-          data &&
-          "polygon_settings_facade" in data &&
-          data.polygon_settings_facade
-        ) {
-          const s = data.polygon_settings_facade as Record<string, unknown>;
-          const colors = s?.colors as Record<string, unknown> | undefined;
-          const opacity = s?.opacity as Record<string, unknown> | undefined;
-          setFacadeDisplaySettings({
-            colors: {
-              building:
-                typeof colors?.building === "string"
-                  ? colors.building
-                  : "#3b82f6",
-            },
-            opacity: {
-              normal:
-                typeof opacity?.normal === "number" ? opacity.normal : 0.4,
-              hover: typeof opacity?.hover === "number" ? opacity.hover : 0.7,
-            },
-          });
-        }
-      } catch (e) {
-        console.error("Error loading facade display settings:", e);
+      const cached = initialBuildingDataCache.get(projectId);
+      if (cached) {
+        applyBuildingDataSnapshot(cached);
+        return;
       }
-    };
-    void loadFacadeSettings();
-  }, [project?.id, projectId]);
+
+      const inFlight = initialBuildingDataInFlight.get(projectId);
+      if (inFlight) {
+        void inFlight.then((snapshot) => {
+          applyBuildingDataSnapshot(snapshot);
+        });
+        return;
+      }
+
+      const request = fetchBuildingDataSnapshot();
+      initialBuildingDataInFlight.set(projectId, request);
+
+      void request
+        .then((snapshot) => {
+          initialBuildingDataCache.set(projectId, snapshot);
+          applyBuildingDataSnapshot(snapshot);
+        })
+        .catch((error) => {
+          console.error("Error loading building data:", error);
+        })
+        .finally(() => {
+          initialBuildingDataInFlight.delete(projectId);
+        });
+    }
+  }, [
+    applyBuildingDataSnapshot,
+    fetchBuildingDataSnapshot,
+    project,
+    projectId,
+  ]);
 
   React.useEffect(() => {
     // Keep local image in sync if parent provides an updated legacy image URL AND we have no facade selected yet.
@@ -1154,6 +1226,32 @@ const BuildingImageEditor = ({
       <PolygonCustomizationSettings
         projectId={project?.id || projectId}
         type="building"
+        initialSettings={
+          {
+            colors: {
+              available: "#3b82f6",
+              sold: "#ef4444",
+              reserved: "#f59e0b",
+              building: facadeDisplaySettings.colors.building,
+            },
+            hoverEffects: {
+              scale: false,
+              colorChange: true,
+              opacityChange: true,
+              glow: true,
+            },
+            display: {
+              showNumbers: true,
+              showTooltip: false,
+              showArea: false,
+              showPrice: false,
+            },
+            opacity: {
+              normal: facadeDisplaySettings.opacity.normal,
+              hover: facadeDisplaySettings.opacity.hover,
+            },
+          } satisfies PolygonSettings
+        }
         onSettingsChange={(settings) => {
           // Sync local display settings from the settings panel for live preview
           setFacadeDisplaySettings({
