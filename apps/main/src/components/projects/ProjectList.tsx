@@ -862,8 +862,8 @@ const ProjectList = ({
       ) : (
         <div className="space-y-6">
           {/* Header with Create New Project Button */}
-          <div className="flex flex-wrap items-center justify-between">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className={""}>
               <h2
                 style={{ color: ADMIN_THEME.textPrimary }}
                 className="text-xl font-semibold"
