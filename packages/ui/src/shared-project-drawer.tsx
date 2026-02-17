@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {ReactNode, useState} from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
@@ -18,6 +18,7 @@ import {
   PlayCircle,
   FolderArchive,
 } from "lucide-react";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@gridix/ui";
 
 // --- Types ---
 
@@ -524,13 +525,13 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   const isDeveloper = mode === "developer";
 
   // Determine available tabs based on mode
-  const tabs: Array<{ id: SharedProjectDrawerTab; label: string; icon: React.ReactNode }> = [
+  const tabs:Array<{ id: SharedProjectDrawerTab, label: string, icon: ReactNode }> = [
     { id: "overview", label: t("drawer.tabs.overview"), icon: <Info size={16} /> },
     { id: "units", label: t("drawer.tabs.units"), icon: <LayoutGrid size={16} /> },
     { id: "media", label: t("drawer.tabs.media"), icon: <ImageIcon size={16} /> },
     { id: "construction", label: t("drawer.tabs.construction"), icon: <Hammer size={16} /> },
   ];
-
+  const active = tabs.find((x) => x.id === activeTab) ?? tabs[0];
   /*
   if (isDeveloper) {
     tabs.push({ id: "partners", label: t("drawer.tabs.partners"), icon: <Handshake size={16} /> });
@@ -587,7 +588,30 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 px-6 bg-white shrink-0 overflow-x-auto no-scrollbar">
+        <div className={'block md:hidden w-full bg-muted px-6 py-2'}>
+          <Select value={activeTab} onValueChange={(value) => setActiveTab(value as SharedProjectDrawerTab)}>
+          <SelectTrigger className="h-9 bg-white w-full">
+            <div className="flex items-center gap-2 min-w-0 w-full">
+            <SelectValue className={'flex justify-between'} placeholder={active?.label}/>
+            </div>
+          </SelectTrigger>
+          <SelectContent className={'bg-muted w-[var(--radix-select-trigger-width)]'}
+                         position="popper"
+                         sideOffset={4}>
+
+            {tabs.map((tab) => (
+                <SelectItem key={tab.id} value={tab.id}>
+                  <div className="flex items-center gap-2">
+                    {tab.icon}
+                  {tab.label}
+                  </div>
+                </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        </div>
+        <div className="md:grid hidden grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 px-6 bg-muted shrink-0 overflow-x-auto no-scrollbar">
+
           {tabs.map((tab) => (
             <button
               key={tab.id}
