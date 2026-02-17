@@ -1,64 +1,98 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@gridix/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 import type { PartnerProfile } from "../model/types";
 
+interface CachedPartnerState {
+  isPartner: boolean;
+  partnerProfile: PartnerProfile | null;
+}
+
+const partnerStateCache = new Map<string, CachedPartnerState>();
+const partnerRequestInFlight = new Map<string, Promise<CachedPartnerState>>();
+
 export function usePartner() {
+  const { user } = useAuth();
   const [isPartner, setIsPartner] = useState(false);
   const [partnerProfile, setPartnerProfile] = useState<PartnerProfile | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkPartnerStatus();
-  }, []);
-
-  const checkPartnerStatus = async () => {
+  const checkPartnerStatus = useCallback(async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!user?.id) {
         setIsPartner(false);
         setPartnerProfile(null);
         setLoading(false);
         return;
       }
 
-      const { data: profile, error } = await supabase
-        .from("partner_profiles" as any)
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error fetching partner profile:", error);
-        setIsPartner(false);
-        setPartnerProfile(null);
-      } else if (profile) {
-        setIsPartner(true);
-        setPartnerProfile(profile as any);
-      } else {
-        setIsPartner(false);
-        setPartnerProfile(null);
+      const cached = partnerStateCache.get(user.id);
+      if (cached) {
+        setIsPartner(cached.isPartner);
+        setPartnerProfile(cached.partnerProfile);
+        setLoading(false);
+        return;
       }
+
+      const inFlight = partnerRequestInFlight.get(user.id);
+      if (inFlight) {
+        const state = await inFlight;
+        setIsPartner(state.isPartner);
+        setPartnerProfile(state.partnerProfile);
+        setLoading(false);
+        return;
+      }
+
+      const request = (async (): Promise<CachedPartnerState> => {
+        const { data: profile, error } = await supabase
+          .from("partner_profiles" as any)
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
+
+        if (profile) {
+          return {
+            isPartner: true,
+            partnerProfile: profile as unknown as PartnerProfile,
+          };
+        }
+
+        return {
+          isPartner: false,
+          partnerProfile: null,
+        };
+      })();
+
+      partnerRequestInFlight.set(user.id, request);
+      const nextState = await request;
+      partnerStateCache.set(user.id, nextState);
+      setIsPartner(nextState.isPartner);
+      setPartnerProfile(nextState.partnerProfile);
     } catch (error) {
       console.error("Error checking partner status:", error);
       setIsPartner(false);
       setPartnerProfile(null);
     } finally {
+      if (user?.id) {
+        partnerRequestInFlight.delete(user.id);
+      }
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    void checkPartnerStatus();
+  }, [checkPartnerStatus]);
 
   const createPartnerProfile = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!user?.id) {
         throw new Error("User not authenticated");
       }
 
@@ -85,7 +119,13 @@ export function usePartner() {
         throw new Error("Failed to create partner profile");
       }
 
-      setPartnerProfile(profile as any);
+      const nextState: CachedPartnerState = {
+        isPartner: true,
+        partnerProfile: profile as unknown as PartnerProfile,
+      };
+
+      partnerStateCache.set(user.id, nextState);
+      setPartnerProfile(nextState.partnerProfile);
       setIsPartner(true);
 
       return profile;
