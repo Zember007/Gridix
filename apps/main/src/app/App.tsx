@@ -16,6 +16,7 @@ import {
   PublicRoutes,
 } from "@/app/router";
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
+import { SupportButton } from "@/shared/ui/SupportButton";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SuperAdminPage = lazy(() => import("@/pages/SuperAdminPage"));
@@ -95,6 +96,7 @@ export default function App() {
                 }
               />
             </Routes>
+            <SupportButton />
           </UsertourBlockingGate>
         </AuthProvider>
       </BrowserRouter>
