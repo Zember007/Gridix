@@ -47,6 +47,7 @@ const ProfileFooterMenu = ({
   setLanguage,
   docsUrl,
   t,
+  userId,
 }: {
   userEmail: string;
   isCollapsed: boolean;
@@ -55,23 +56,22 @@ const ProfileFooterMenu = ({
   setLanguage: (l: Language) => void;
   docsUrl?: string;
   t: (k: string) => string;
+  userId?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const username = userEmail.split("@")[0] ?? userEmail;
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    if (!userId) {
+      setLanguage(nextLanguage);
+      return;
+    }
 
-      if (!userError && user?.id) {
-        await supabase
-          .from("user_profiles")
-          .update({ preferred_locale: nextLanguage })
-          .eq("id", user.id);
-      }
+    try {
+      await supabase
+        .from("user_profiles")
+        .update({ preferred_locale: nextLanguage })
+        .eq("id", userId);
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
     } finally {
@@ -258,6 +258,8 @@ export function SimplifiedSidebar({
   hideFooter = false,
   docsUrl,
   syncQueryParam = true,
+  userId,
+  preferredLocale,
 }: {
   navItems: SimplifiedSidebarNavItem[];
   activeSection: string;
@@ -274,6 +276,8 @@ export function SimplifiedSidebar({
   hideFooter?: boolean;
   docsUrl?: string;
   syncQueryParam?: boolean;
+  userId?: string;
+  preferredLocale?: string;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
@@ -287,43 +291,12 @@ export function SimplifiedSidebar({
     languageRef.current = language;
   }, [language]);
 
-  // Initialize language from user profile preferred_locale
   useEffect(() => {
-    let cancelled = false;
-
-    const loadPreferredLocale = async () => {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (cancelled || userError || !user?.id) return;
-
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select("preferred_locale")
-          .eq("id", user.id)
-          .single();
-
-        if (cancelled || error) return;
-
-        const preferred = normalizePreferredLanguage(
-          (data as { preferred_locale?: unknown } | null)?.preferred_locale,
-        );
-        if (preferred && preferred !== languageRef.current) {
-          setLanguage(preferred);
-        }
-      } catch (e) {
-        console.error("Failed to load preferred locale", e);
-      }
-    };
-
-    void loadPreferredLocale();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setLanguage]);
+    const preferred = normalizePreferredLanguage(preferredLocale);
+    if (preferred && preferred !== languageRef.current) {
+      setLanguage(preferred);
+    }
+  }, [preferredLocale, setLanguage]);
 
   // Auto-expand parent if child is active
   useEffect(() => {
@@ -507,6 +480,7 @@ export function SimplifiedSidebar({
             setLanguage={setLanguage}
             docsUrl={resolvedDocsUrl}
             t={t}
+            {...(userId ? { userId } : {})}
           />
         </div>
       ) : null}
