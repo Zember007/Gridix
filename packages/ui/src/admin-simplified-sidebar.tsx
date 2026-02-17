@@ -23,8 +23,6 @@ import {
 } from "./dropdown-menu";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
-import { Button } from "./button";
-import { MessageCircleQuestionMark } from "lucide-react";
 
 const normalizePreferredLanguage = (value: unknown): Language | null => {
   const raw = String(value ?? "")
@@ -515,33 +513,6 @@ export function SimplifiedSidebar({
     </>
   );
 
-  const SupportButton = () => {
-    return (
-      <Button
-        size={"icon"}
-        className="support_usertour fixed right-2 bottom-2 z-1 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
-        style={{
-          backgroundColor: ADMIN_THEME.primary,
-          color: ADMIN_THEME.textOnPrimary,
-          borderColor: ADMIN_THEME.primary,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-          e.currentTarget.style.transform = "scale(1.05)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-        onClick={() => {
-          window.open("https://t.me/gridix_bot", "_blank");
-        }}
-      >
-        <MessageCircleQuestionMark />
-      </Button>
-    );
-  };
-
   if (isMobile) {
     return (
       <>
@@ -551,8 +522,6 @@ export function SimplifiedSidebar({
         >
           {sidebarContent}
         </aside>
-        {/* Support Button */}
-        <SupportButton />
       </>
     );
   }
@@ -570,8 +539,6 @@ export function SimplifiedSidebar({
       >
         {sidebarContent}
       </aside>
-      {/* Support Button */}
-      <SupportButton />
     </>
   );
 }
