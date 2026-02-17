@@ -1,4 +1,10 @@
-import { useRef, useState, useEffect, type ChangeEvent } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  type ChangeEvent,
+} from "react";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
@@ -44,6 +50,11 @@ import { AdminSettingsCompanyTab } from "@/components/admin/settings/AdminSettin
 import { AdminSettingsDataTab } from "@/components/admin/settings/AdminSettingsDataTab";
 import { AdminSettingsNotificationsTab } from "@/components/admin/settings/AdminSettingsNotificationsTab";
 import { AdminSettingsTemplatesTab } from "@/components/admin/settings/AdminSettingsTemplatesTab";
+import {
+  GlobalAccountProfileSection,
+  GlobalAccountSecuritySection,
+  GlobalNotificationSettingsSection,
+} from "@gridix/utils/react";
 
 interface AdminSettings {
   id?: string;
@@ -65,7 +76,7 @@ type NotificationPreferencesForm = Omit<
 >;
 
 const TELEGRAM_BOT_USERNAME = "gridix_bot";
-const SUPPORTED_LOCALES = ["en", "ru", "ka", "he", "ar"] as const;
+const SUPPORTED_LOCALES = ["en", "ru", "ka", "he", "ar", "tr"] as const;
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 type TabValue =
@@ -168,6 +179,23 @@ const AdminSettings = ({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  const profileSaveFnRef = useRef<(() => Promise<void>) | null>(null);
+  const notificationSaveFnRef = useRef<(() => Promise<void>) | null>(null);
+
+  const onProfileReady = useCallback(
+    (api: { saveProfile: () => Promise<void> }) => {
+      profileSaveFnRef.current = api.saveProfile;
+    },
+    [],
+  );
+
+  const onNotificationReady = useCallback(
+    (api: { saveNotificationPreferences: () => Promise<void> }) => {
+      notificationSaveFnRef.current = api.saveNotificationPreferences;
+    },
+    [],
+  );
 
   // Apply theme variables
   useEffect(() => {
@@ -710,25 +738,12 @@ const AdminSettings = ({
 
     setSaving(true);
     try {
-      const profileData = {
-        company_name: settings.company_name,
-        full_name: settings.full_name,
-        phone: settings.phone,
-        preferred_locale: preferredLocale,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: profileResult, error: profileError } = await supabase
-        .from("user_profiles")
-        .update(profileData)
-        .eq("id", userProfile.id)
-        .select();
-
-      if (profileError) {
-        console.error("Supabase profile error:", profileError);
-        throw profileError;
+      // Save profile via shared hook
+      if (profileSaveFnRef.current) {
+        await profileSaveFnRef.current();
       }
 
+      // Save company settings (admin-specific)
       const companyData: TablesInsert<"company_settings"> = {
         user_id: userProfile.id,
         company_name: companySettings.company_name,
@@ -759,32 +774,6 @@ const AdminSettings = ({
         throw companyError;
       }
 
-      const notifData = {
-        ...notificationPreferences,
-        user_id: userProfile.id,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: notifResult, error: notifError } = await supabase
-        .from("user_notification_preferences")
-        .upsert(notifData, { onConflict: "user_id" })
-        .select()
-        .single();
-
-      if (notifError) {
-        console.error("Supabase notification preferences error:", notifError);
-        throw notifError;
-      }
-
-      if (profileResult && profileResult.length > 0) {
-        setSettings((prev) => ({
-          ...prev,
-          company_name: profileResult[0]?.company_name || "",
-          full_name: profileResult[0]?.full_name || "",
-          phone: profileResult[0]?.phone || "",
-        }));
-      }
-
       if (companyResult) {
         setCompanySettings((prev) => ({
           ...prev,
@@ -793,21 +782,9 @@ const AdminSettings = ({
         }));
       }
 
-      if (notifResult) {
-        setNotificationPreferences({
-          user_id: userProfile.id,
-          channel_email: notifResult.channel_email,
-          channel_push: notifResult.channel_push,
-          channel_telegram: notifResult.channel_telegram,
-          telegram_username: notifResult.telegram_username,
-          telegram_verified: notifResult.telegram_verified,
-          telegram_last_checked_at: notifResult.telegram_last_checked_at,
-          telegram_last_error: notifResult.telegram_last_error,
-          notify_new_lead: notifResult.notify_new_lead,
-          notify_task_due: notifResult.notify_task_due,
-          notify_payment_received: notifResult.notify_payment_received,
-          notify_system_update: notifResult.notify_system_update,
-        });
+      // Save notification preferences via shared hook
+      if (notificationSaveFnRef.current) {
+        await notificationSaveFnRef.current();
       }
 
       toast.success(t("adminSettings.settingsSaved"));
@@ -1159,199 +1136,16 @@ const AdminSettings = ({
 
         <TabsContent value="account">
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("adminSettings.profileInfo")}</CardTitle>
-                <CardDescription>
-                  {t("adminSettings.profileInfoDesc")}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="full_name">
-                      {t("adminSettings.fullName")}
-                    </Label>
-                    <Input
-                      id="full_name"
-                      value={settings.full_name}
-                      onChange={(e) =>
-                        handleInputChange("full_name", e.target.value)
-                      }
-                      placeholder={t("adminSettings.fullNamePlaceholder")}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="profile_phone">
-                      {t("adminSettings.phone")}
-                    </Label>
-                    <Input
-                      id="profile_phone"
-                      value={settings.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      placeholder={t("adminSettings.phonePlaceholder")}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred_locale">Language</Label>
-                    <Select
-                      value={preferredLocale}
-                      onValueChange={(v) =>
-                        setPreferredLocale(v as SupportedLocale)
-                      }
-                    >
-                      <SelectTrigger id="preferred_locale">
-                        <SelectValue placeholder="en" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SUPPORTED_LOCALES.map((loc) => (
-                          <SelectItem key={loc} value={loc}>
-                            {loc.toUpperCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <div className="text-xs text-muted-foreground">
-                      Used for emails and default UI language.
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("adminSettings.changeEmail")}</CardTitle>
-                <CardDescription>
-                  {t("adminSettings.accountInfoDesc")}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="current_email">
-                    {t("adminSettings.currentEmail")}
-                  </Label>
-                  <Input
-                    id="current_email"
-                    type="email"
-                    value={userProfile?.email || ""}
-                    disabled
-                    className="bg-muted"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="new_email">
-                    {t("adminSettings.newEmail")}
-                  </Label>
-                  <Input
-                    id="new_email"
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder={"email@example.com"}
-                  />
-                </div>
-
-                <Button
-                  onClick={handleUpdateEmail}
-                  disabled={updatingEmail || !newEmail}
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!updatingEmail && newEmail) {
-                      e.currentTarget.style.backgroundColor =
-                        ADMIN_THEME.primaryHover;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!updatingEmail && newEmail) {
-                      e.currentTarget.style.backgroundColor =
-                        ADMIN_THEME.primary;
-                    }
-                  }}
-                >
-                  {updatingEmail
-                    ? t("adminSettings.saving")
-                    : t("adminSettings.updateEmail")}
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("adminSettings.changePassword")}</CardTitle>
-                <CardDescription>
-                  {t("adminSettings.accountInfoDesc")}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="new_password">
-                    {t("adminSettings.newPassword")}
-                  </Label>
-                  <Input
-                    id="new_password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={t("adminSettings.newPasswordPlaceholder")}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="confirm_password">
-                    {t("adminSettings.confirmNewPassword")}
-                  </Label>
-                  <Input
-                    id="confirm_password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder={t("adminSettings.confirmPasswordPlaceholder")}
-                  />
-                </div>
-
-                <Button
-                  onClick={handleUpdatePassword}
-                  disabled={
-                    updatingPassword || !newPassword || !confirmPassword
-                  }
-                  style={{
-                    backgroundColor: ADMIN_THEME.primary,
-                    color: ADMIN_THEME.textOnPrimary,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!updatingPassword && newPassword && confirmPassword) {
-                      e.currentTarget.style.backgroundColor =
-                        ADMIN_THEME.primaryHover;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!updatingPassword && newPassword && confirmPassword) {
-                      e.currentTarget.style.backgroundColor =
-                        ADMIN_THEME.primary;
-                    }
-                  }}
-                >
-                  {updatingPassword
-                    ? t("adminSettings.saving")
-                    : t("adminSettings.updatePassword")}
-                </Button>
-              </CardContent>
-            </Card>
+            <GlobalAccountProfileSection
+              userId={userProfile?.id}
+              onReady={onProfileReady}
+            />
+            <GlobalAccountSecuritySection
+              userEmail={userProfile?.email || ""}
+              primaryColor={ADMIN_THEME.primary}
+              primaryHoverColor={ADMIN_THEME.primaryHover}
+              textOnPrimaryColor={ADMIN_THEME.textOnPrimary}
+            />
           </div>
         </TabsContent>
 
@@ -1386,43 +1180,11 @@ const AdminSettings = ({
         </TabsContent>
 
         <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {t("adminSettings.notificationPreferences")}
-              </CardTitle>
-              <CardDescription>
-                {t("adminSettings.notificationPreferencesDesc")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminSettingsNotificationsTab
-                loading={loadingNotificationPreferences}
-                channelEmail={notificationPreferences.channel_email}
-                channelPush={notificationPreferences.channel_push}
-                channelTelegram={notificationPreferences.channel_telegram}
-                telegramUsername={
-                  notificationPreferences.telegram_username || ""
-                }
-                telegramVerified={notificationPreferences.telegram_verified}
-                notifyNewLead={notificationPreferences.notify_new_lead}
-                notifyTaskDue={notificationPreferences.notify_task_due}
-                notifyPaymentReceived={
-                  notificationPreferences.notify_payment_received
-                }
-                notifySystemUpdate={
-                  notificationPreferences.notify_system_update
-                }
-                userEmail={userProfile?.email || ""}
-                onToggle={(field, checked) =>
-                  handleNotificationPreferenceChange(field as any, checked)
-                }
-                onTelegramUsernameChange={handleTelegramUsernameChange}
-                onTelegramUsernameBlur={verifyTelegramOnBlur}
-                t={t}
-              />
-            </CardContent>
-          </Card>
+          <GlobalNotificationSettingsSection
+            userId={userProfile?.id}
+            userEmail={userProfile?.email || ""}
+            onReady={onNotificationReady}
+          />
         </TabsContent>
 
         <TabsContent value="templates">

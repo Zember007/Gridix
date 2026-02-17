@@ -4,6 +4,7 @@ import enShared from "../locales/shared/en.json";
 import heShared from "../locales/shared/he.json";
 import kaShared from "../locales/shared/ka.json";
 import ruShared from "../locales/shared/ru.json";
+import trShared from "../locales/shared/tr.json";
 
 const SHARED_LOCALES = {
   ar: arShared as Record<string, unknown>,
@@ -11,6 +12,7 @@ const SHARED_LOCALES = {
   he: heShared as Record<string, unknown>,
   ka: kaShared as Record<string, unknown>,
   ru: ruShared as Record<string, unknown>,
+  tr: trShared as Record<string, unknown>,
 } as const;
 
 function flattenTranslations(

@@ -23,6 +23,7 @@ import { AnalyticsTab } from "@/pages/tabs/AnalyticsTab";
 import { ContactsTab } from "@/pages/tabs/ContactsTab";
 import { CatalogTab } from "@/pages/tabs/CatalogTab";
 import { PartnerProgramTab } from "@/pages/tabs/PartnerProgramTab";
+import { AgentSettingsTab } from "@/pages/tabs/AgentSettingsTab";
 
 function AgentCabinetRouter() {
   const { activePage, setActivePage } = useAgentCabinetPageRouting();
@@ -39,6 +40,8 @@ function AgentCabinetRouter() {
         return <CatalogTab />;
       case "partnerProgram":
         return <PartnerProgramTab />;
+      case "settings":
+        return <AgentSettingsTab />;
     }
   })();
 

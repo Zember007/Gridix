@@ -15,6 +15,7 @@ import {
   UserCircle as UserIcon,
   Stack as Layers3,
   Handshake,
+  GearSix,
 } from "@phosphor-icons/react";
 import { Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,7 +27,8 @@ export type AgentCabinetPage =
   | "analytics"
   | "contacts"
   | "catalog"
-  | "partnerProgram";
+  | "partnerProgram"
+  | "settings";
 
 const getQueryPage = (search: string): AgentCabinetPage | null => {
   const page = new URLSearchParams(search).get("page");
@@ -35,7 +37,8 @@ const getQueryPage = (search: string): AgentCabinetPage | null => {
     page === "analytics" ||
     page === "contacts" ||
     page === "catalog" ||
-    page === "partnerProgram"
+    page === "partnerProgram" ||
+    page === "settings"
   )
     return page;
   return null;
@@ -93,6 +96,11 @@ export function AgentCabinetLayout({
         id: "partnerProgram",
         icon: <Handshake size={20} />,
         label: t("common.nav.partnerProgram"),
+      },
+      {
+        id: "settings",
+        icon: <GearSix size={20} />,
+        label: t("common.nav.settings"),
       },
     ],
     [t],

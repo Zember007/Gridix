@@ -1,0 +1,12 @@
+{
+  "app": {
+    "title": "ortaklık"
+  },
+  "nav": {
+    "overview": "Genel Bakış",
+    "referrals": "Tavsiyeler",
+    "clients": "Müşteriler",
+    "instructions": "Talimatlar",
+    "account": "Hesap"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "myWorkspace": "Çalışma Alanım",
+  "managerMode": "Müdür",
+  "switchWorkspace": "Çalışma alanını değiştir",
+  "projectAccess": "Proje Erişimi",
+  "selectProjects": "Projeleri Seçin",
+  "allProjects": "Tüm Projeler",
+  "customAccess": "Özel Erişim",
+  "manageAccess": "Erişimi Yönet",
+  "noProjectsSelected": "Hiçbir proje seçilmedi",
+  "accessUpdated": "Erişim güncellendi",
+  "errorUpdatingAccess": "Erişim güncellenirken hata oluştu",
+  "grantAccessToProjects": "Projelere erişim izni verin",
+  "managerWillSeeProjects": "Yönetici yalnızca seçilen projeleri görecek",
+  "leaveEmptyForAll": "Tüm projelere erişim için boş bırakın"
+}

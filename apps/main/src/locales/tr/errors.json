@@ -1,0 +1,8 @@
+{
+  "file": {
+    "noData": "Dosya veri içermiyor",
+    "process": "Dosya işlenirken hata oluştu",
+    "read": "Dosya okunurken hata oluştu",
+    "upload": "Dosya yüklenirken hata oluştu"
+  }
+}

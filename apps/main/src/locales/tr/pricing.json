@@ -1,0 +1,85 @@
+{
+  "title": "Fiyatlandırma ve Abonelikler",
+  "subtitle": "Fiyat 1 proje başınadır",
+  "pricePeriod": "proje başına / ay",
+  "loadingError": "Fiyatlandırma planları yüklenemedi",
+  "included": "Dahil:",
+  "limitationsLabel": "Sınırlamalar:",
+  "allFromBasic": "BASIC'ten her şeye ek olarak:",
+  "cta": {
+    "basic": "Temel ile başlayın",
+    "pro": "Pro'yu seçin"
+  },
+  "suitability": {
+    "basic": "Demo, pilot ve küçük konut kompleksleri, yerleşim yerleri ve apartman projeleri için mükemmeldir.",
+    "pro": "Birden fazla projeye sahip aktif geliştiriciler, ajanslar ve mülk yönetimi şirketleri için mükemmeldir."
+  },
+  "features": {
+    "interactive_floor_plan": "İnteraktif kat planı oluşturucu",
+    "apartment_management": "Yönetim (apartmanlar, evler, otoparklar ve ticari alanlar) — her tür mülk için birleşik yapı",
+    "lead_management": "Potansiyel müşteriler (mini CRM) — müşteri taleplerinin alınması ve işlenmesi",
+    "pdf_presentations": "Daire veya evlerin PDF sunumları",
+    "public_link": "Herkese açık proje bağlantısı — müşterilere ve ortaklara tanıtım için",
+    "widget_embedding": "Web sitesi widget'ı — kat planını herhangi bir web sitesine yerleştirin",
+    "analytics": "Analizler ve raporlar — görüntülemeler, potansiyel müşteriler, popüler mülkler, kullanılabilirlik ve diğer veriler",
+    "project_types": "Çeşitli proje türleri - konut kompleksleri, şehir evleri, kır evleri, apartmanlar",
+    "bulk_import": "Toplu içe aktarma — tek tıklamayla Google E-Tablolar/Excel",
+    "gridix_label": "\"GRIDIX ile üretilmiştir\" etiketi",
+    "support": "Teknik destek",
+    "team_management": "Yönetici ekibi ekleyin — kat planlarını yönetmek ve verileri güncellemek için",
+    "crm_integration": "CRM entegrasyonu (amoCRM, Bitrix24 ve diğerleri) — müşteri adayı senkronizasyonu",
+    "custom_domain": "Özel alan adı bağlantısı — www.sirketiniz.com",
+    "branding": "Marka stiline uyacak şekilde tasarım özelleştirmesi (renkler, logo, marka öğeleri)",
+    "api_access": "API erişimi — dahili sistemlerle entegrasyonlar için",
+    "white_label": "Beyaz Etiket — GRIDIX'ten bahsedilmeden",
+    "priority_support": "Öncelikli destek"
+  },
+  "limitations": {
+    "no_crm": "CRM ve API entegrasyonu yok",
+    "no_custom_domain": "Özel etki alanı bağlantısı yok",
+    "no_branding": "Markalama için tasarım özelleştirmesi yok",
+    "no_team": "Yönetici ekibi ekleme yeteneği yok"
+  },
+  "duration": {
+    "1": "1 ay",
+    "3": "3 ay",
+    "6": "6 ay",
+    "12": "1 yıl",
+    "24": "2 yıl",
+    "36": "3 yıl",
+    "months": "aylar"
+  },
+  "infoCards": {
+    "discounts": {
+      "title": "İndirim Sistemi",
+      "description": "Uzun vadeli abonelikle tasarruf edin:",
+      "paymentNote": "Aylık veya seçilen dönem için ödeme yapın. Otomatik yenileme hesabınızda devre dışı bırakılabilir."
+    },
+    "trial": {
+      "title": "Ücretsiz Deneme Süresi",
+      "item1": "14 gün Pro ücretsiz",
+      "item2": "Kart gerekmez",
+      "item3": "Tüm özelliklere tam erişim"
+    },
+    "payment": {
+      "title": "Ödeme Yöntemleri",
+      "item1": "Banka kartları – Visa, Mastercard, Apple Pay, Google Pay",
+      "item2": "Tüzel kişiler için faturalar",
+      "item3": "Güvenli veri iletimi (PCI DSS sertifikalı)"
+    }
+  },
+  "dialog": {
+    "title": "Fatura İste",
+    "description": "Bu abonelik için bir proje seçin",
+    "selectProject": "Proje seçin",
+    "selectProjectPlaceholder": "Proje seçin",
+    "selectedProject": "Seçilen proje:",
+    "selectedProjectDefault": "Seçilen proje",
+    "requestButton": "Fatura İste"
+  },
+  "toast": {
+    "selectProjectAndPlan": "Lütfen bir proje seçin ve planlayın",
+    "invoiceRequestSuccess": "Fatura talebi başarıyla gönderildi!",
+    "invoiceRequestError": "Fatura isteğinde bulunulamadı"
+  }
+}

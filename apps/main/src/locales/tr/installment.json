@@ -1,0 +1,20 @@
+{
+  "apply": "Taksit Başvurusu",
+  "calculator": "Taksit Hesaplayıcı",
+  "downPayment": "Peşinat",
+  "downPaymentFrom": "Peşinat",
+  "info": {
+    "contactManager": "Başvurmak için yöneticiyle iletişime geçin",
+    "earlyPayment": "Erken ödeme seçeneği mevcut",
+    "noInterest": "Faizsiz taksit"
+  },
+  "low": "Taksit %0",
+  "maximum": "Maksimum",
+  "minimum": "Asgari",
+  "month": "ay",
+  "monthlyPayment": "Aylık Ödeme",
+  "months": "aylar",
+  "period": "Açık",
+  "perMonth": "ay",
+  "remainingAmount": "Kalan Tutar"
+}

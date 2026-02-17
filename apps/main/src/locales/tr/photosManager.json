@@ -1,0 +1,21 @@
+{
+  "apartmentOption": "Daire {{number}} (Kat {{kat}})",
+  "authRequired": "Fotoğraf yüklemek için kimlik doğrulama gerekiyor",
+  "deleteError": "Fotoğraf silinirken hata oluştu",
+  "deleteSuccess": "Fotoğraf silindi",
+  "description": "Belirli daireler için ayrı fotoğraflar yükleyin",
+  "duplicateError": "Fotoğraflar çoğaltılırken hata oluştu",
+  "duplicateSuccess": "{{count}} benzer dairenin fotoğrafları kopyalandı",
+  "duplicateToSimilar": "Benzer dairelere kopya",
+  "individualPhotos": "Bireysel Fotoğraflar",
+  "layoutPhotos": "Düzen Fotoğrafları",
+  "noPhotos": "Fotoğraf yüklenmedi",
+  "noPhotosDesc": "Seçilen daire için fotoğraf yükleyin",
+  "selectApartment": "Daire Seçiniz",
+  "selectApartmentPlaceholder": "Düzenlenecek daireyi seçin",
+  "title": "Apartman Fotoğraf Yönetimi",
+  "uploadError": "Fotoğraflar yüklenirken hata oluştu",
+  "uploadMultiple": "Aynı anda birden fazla dosya seçebilirsiniz",
+  "uploadPhotos": "Fotoğraf Yükle",
+  "uploadSuccess": "Fotoğraflar yüklendi"
+}

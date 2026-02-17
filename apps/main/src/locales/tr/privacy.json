@@ -1,0 +1,118 @@
+{
+  "title": "Gizlilik Politikası",
+  "lastUpdated": "Son güncelleme:",
+  "introduction": {
+    "title": "giriiş",
+    "text1": "Gridix şirketi (bundan böyle - \"biz\", \"bize\", \"bizim\") gizliliğinizin korunmasını ciddiye alır. Bu Gizlilik Politikası, FloorPlan Sihirbazı hizmetimizi kullanırken kişisel bilgilerinizi nasıl topladığımızı, kullandığımızı, sakladığımızı ve koruduğumuzu açıklamaktadır.",
+    "text2": "Hizmetimizi kullanarak bu Gizlilik Politikasının şartlarını kabul etmiş olursunuz."
+  },
+  "companyInfo": {
+    "title": "Şirket Bilgileri",
+    "name": "İsim:",
+    "nameValue": "Izgara",
+    "address": "Adres:",
+    "addressValue": "Gürcistan, Batum, Leselidze St.3",
+    "email": "E-posta:",
+    "emailValue": "gelen kutusu@gridix.live"
+  },
+  "dataCollection": {
+    "title": "Hangi Verileri Topluyoruz",
+    "personal": {
+      "title": "Kişisel Veriler:",
+      "item1": "Ad ve soyadı",
+      "item2": "E-posta adresi",
+      "item3": "Telefon numarası (varsa)",
+      "item4": "Şirket bilgileri (kayıt sırasında)"
+    },
+    "technical": {
+      "title": "Teknik Bilgi:",
+      "item1": "IP adresi",
+      "item2": "Tarayıcı türü ve sürümü",
+      "item3": "İşletim sistemi",
+      "item4": "Çerezler ve oturum verileri",
+      "item5": "Hizmet kullanım günlükleri"
+    },
+    "content": {
+      "title": "Kullanıcı İçeriği:",
+      "item1": "Yüklenen bina planları",
+      "item2": "Daire ve proje verileri",
+      "item3": "Proje ayarları",
+      "item4": "Fotoğraflar ve görseller"
+    }
+  },
+  "dataUsage": {
+    "title": "Verilerinizi Nasıl Kullanıyoruz?",
+    "text": "Toplanan bilgileri aşağıdaki amaçlarla kullanırız:",
+    "item1": "Hizmet işlevselliğinin sağlanması ve desteklenmesi",
+    "item2": "Hesabınızı oluşturma ve yönetme",
+    "item3": "Taleplerinizin ve destek sorularınızın işlenmesi",
+    "item4": "Önemli hizmet bildirimlerinin gönderilmesi",
+    "item5": "Hizmet kalitesinin ve kullanıcı deneyiminin iyileştirilmesi",
+    "item6": "Güvenliğin sağlanması ve dolandırıcılığın önlenmesi",
+    "item7": "Yasal yükümlülüklere uymak"
+  },
+  "dataSharing": {
+    "title": "Üçüncü Taraflarla Veri Paylaşımı",
+    "text": "Aşağıdaki durumlar haricinde kişisel verilerinizi üçüncü kişilere satmıyor, kiralamıyor veya aktarmıyoruz:",
+    "item1": "Açık rızanız ile",
+    "item2": "Talep ettiğiniz hizmetleri sağlamak için",
+    "item3": "Güvenilir hizmet sağlayıcıları (barındırma, analiz) kullanırken",
+    "item4": "Yasal zorunluluk veya mahkeme kararı durumunda",
+    "item5": "Haklarımızı ve kullanıcı güvenliğimizi korumak için"
+  },
+  "dataSecurity": {
+    "title": "Veri Güvenliği",
+    "text": "Verilerinizi korumak için makul teknik ve organizasyonel önlemler alıyoruz:",
+    "item1": "İletim sırasında veri şifreleme (SSL/TLS)",
+    "item2": "Kullanımda olmayan hassas verilerin şifrelenmesi",
+    "item3": "Kişisel verilere sınırlı erişim",
+    "item4": "Düzenli güvenlik denetimleri",
+    "item5": "Gizlilik konularında çalışanlara eğitim"
+  },
+  "userRights": {
+    "title": "Haklarınız",
+    "text": "Kişisel verilerinizle ilgili olarak aşağıdaki haklara sahipsiniz:",
+    "access": "Erişim hakkı:",
+    "accessDesc": "hangi verileri işlediğimiz hakkında bilgi edinmek",
+    "rectification": "Düzeltme hakkı:",
+    "rectificationDesc": "Yanlış veya eksik verileri düzeltme",
+    "erasure": "Silme hakkı:",
+    "erasureDesc": "kişisel verilerinizi silin",
+    "restriction": "Kısıtlama hakkı:",
+    "restrictionDesc": "belirli durumlarda işlemeyi kısıtlama",
+    "portability": "Taşınabilirlik hakkı:",
+    "portabilityDesc": "Verileri yapılandırılmış bir biçimde alın",
+    "objection": "İtiraz hakkı:",
+    "objectionDesc": "veri işlemeye itiraz",
+    "contact": "Haklarınızı kullanmak için bizimle şu adresten iletişime geçin: inbox@gridix.live"
+  },
+  "cookies": {
+    "title": "Çerezlerin Kullanımı",
+    "text": "Hizmet işlevselliğini geliştirmek için çerezleri ve benzer teknolojileri kullanıyoruz:",
+    "necessary": "Gerekli çerezler:",
+    "necessaryDesc": "temel site işlevselliği için",
+    "functional": "İşlevsel çerezler:",
+    "functionalDesc": "ayarlarınızı hatırlamak için",
+    "analytical": "Analitik çerezler:",
+    "analyticalDesc": "hizmet kullanımını analiz etmek",
+    "manage": "Çerez ayarlarını tarayıcınızda yönetebilirsiniz."
+  },
+  "dataRetention": {
+    "title": "Veri Saklama",
+    "text": "Kişisel verilerinizi yalnızca gerekli süre boyunca saklıyoruz:",
+    "account": "Hesap verileri: hesap silinene veya 3 yıl boyunca işlem yapılmayana kadar",
+    "projects": "Proje verileri: kullanıcı tarafından projenin silinmesine kadar",
+    "logs": "Sistem günlükleri: 12 aya kadar",
+    "support": "Destek verileri: vakanın kapanmasından sonraki 3 yıla kadar"
+  },
+  "changes": {
+    "title": "Politika Değişiklikleri",
+    "text": "Bu Gizlilik Politikasını periyodik olarak güncelleyebiliriz. Önemli değişiklikleri e-posta veya hizmet bildirimleri yoluyla size bildireceğiz. Son güncelleme tarihi belgenin başında belirtilir."
+  },
+  "contact": {
+    "title": "İletişim Bilgileri",
+    "text": "Bu Gizlilik Politikası veya veri işlemeyle ilgili sorularınız varsa bizimle iletişime geçin:",
+    "email": "E-posta: inbox@gridix.live",
+    "address": "Adres: Gürcistan, Batum, Leselidze St. 3"
+  }
+}

@@ -695,6 +695,7 @@ export function SystemSettings() {
                     <SelectItem value="ka">ქართული</SelectItem>
                     <SelectItem value="ar">العربية</SelectItem>
                     <SelectItem value="he">עברית</SelectItem>
+                    <SelectItem value="tr">Türkçe</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1158,6 +1159,7 @@ export function SystemSettings() {
                     <SelectContent>
                       <SelectItem value="ka">Грузинский</SelectItem>
                       <SelectItem value="en">Английский</SelectItem>
+                      <SelectItem value="tr">Турецкий</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

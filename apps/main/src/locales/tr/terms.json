@@ -1,0 +1,174 @@
+{
+  "title": "Hizmet Şartları",
+  "lastUpdated": "Son güncelleme:",
+  "general": {
+    "title": "Genel Hükümler",
+    "text1": "Bu Kullanıcı Sözleşmesi (bundan böyle - \"Sözleşme\" olarak anılacaktır), Gridix şirketi (bundan sonra - \"Şirket\", \"biz\") ile FloorPlan Sihirbazı hizmetinin (bundan sonra - \"Hizmet\", \"Platform\" olarak anılacaktır) kullanıcıları arasındaki ilişkiyi yönetir.",
+    "text2": "Hizmetimizi kullanarak bu Sözleşmenin şartlarını kabul etmiş olursunuz. Herhangi bir şartı kabul etmiyorsanız lütfen Hizmeti kullanmayın.",
+    "important": "Önemli:",
+    "importantText": "Hizmeti kullanmaya başlamadan önce lütfen tüm koşulları dikkatlice okuyun."
+  },
+  "companyInfo": {
+    "title": "Şirket Bilgileri",
+    "name": "İsim:",
+    "nameValue": "Izgara",
+    "address": "Adres:",
+    "addressValue": "Gürcistan, Batum, Leselidze St.3",
+    "email": "E-posta:",
+    "emailValue": "gelen kutusu@gridix.live"
+  },
+  "serviceDescription": {
+    "title": "Hizmet Açıklaması",
+    "text": "FloorPlan Sihirbazı, aşağıdaki özellikleri sağlayan, etkileşimli emlak planları oluşturmaya yönelik bir bulut platformudur:",
+    "item1": "Bina planlarını yükleyin ve düzenleyin",
+    "item2": "Etkileşimli apartman haritaları oluşturun",
+    "item3": "Daire durumlarını ve özelliklerini yönetin",
+    "item4": "Dış sistemlerle entegrasyon (Excel, CRM)",
+    "item5": "Web siteleri için yerleştirilebilir widget'lar oluşturun",
+    "item6": "Analitik ve raporlama"
+  },
+  "userAccounts": {
+    "title": "Kullanıcı Hesapları",
+    "registration": {
+      "title": "Kayıt:",
+      "item1": "Hizmeti kullanmak için bir hesap gereklidir",
+      "item2": "Doğru ve güncel bilgi vermelisiniz",
+      "item3": "Şifrenizin gizliliğinden siz sorumlusunuz",
+      "item4": "Bir kişinin yalnızca bir hesabı olabilir"
+    },
+    "requirements": {
+      "title": "Kullanıcı Gereksinimleri:",
+      "item1": "18 yaş ve üzeri veya ebeveyn/vasi onayı",
+      "item2": "Sözleşme yapma konusunda hukuki ehliyet",
+      "item3": "Yürürlükteki yasalara uygunluk"
+    }
+  },
+  "userObligations": {
+    "title": "Kullanıcı Yükümlülükleri",
+    "text": "Hizmeti kullanarak şunları kabul etmiş olursunuz:",
+    "item1": "Hizmeti yalnızca yasal amaçlarla kullanın",
+    "item2": "Üçüncü tarafların haklarını ihlal etmemek",
+    "item3": "Kötü amaçlı içerik yüklemeyin",
+    "item4": "Sisteme yetkisiz erişim girişiminde bulunmayın",
+    "item5": "Hizmeti spam veya dolandırıcılık amacıyla kullanmayın",
+    "item6": "Yüklenen materyallerin telif haklarına saygı gösterin",
+    "item7": "Hizmete erişimi izinsiz olarak yeniden satmamak"
+  },
+  "prohibitedUses": {
+    "title": "Yasaklanmış Kullanımlar",
+    "warning": "Kesinlikle yasaktır:",
+    "item1": "Hizmeti yasa dışı faaliyetler için kullanmak",
+    "item2": "Fikri mülkiyet haklarının ihlali",
+    "item3": "Kötü amaçlı yazılım dağıtımı",
+    "item4": "Güvenlik sistemlerini hackleme veya atlama girişimleri",
+    "item5": "Sahte hesaplar oluşturma",
+    "item6": "Spam ve izinsiz reklam",
+    "item7": "Diğer kullanıcıların kişisel verilerinin toplanması",
+    "item8": "Otomatik araçların izinsiz kullanılması"
+  },
+  "intellectualProperty": {
+    "title": "Fikri Mülkiyet",
+    "companyRights": {
+      "title": "Şirket Hakları:",
+      "text": "Yazılım, tasarım, ticari markalar ve içerik de dahil olmak üzere Hizmete ilişkin tüm haklar Şirkete aittir."
+    },
+    "userRights": {
+      "title": "Kullanıcı Hakları:",
+      "item1": "Yüklediğiniz içeriğin hakları size aittir",
+      "item2": "Şirkete, Hizmetin işletilmesi amacıyla içeriği kullanması için bir lisans veriyorsunuz",
+      "item3": "Yüklenen materyaller üzerinde haklara sahip olduğunuzu garanti edersiniz"
+    }
+  },
+  "paymentTerms": {
+    "title": "Ödeme Koşulları",
+    "pricing": {
+      "title": "Fiyatlandırma ve Ödeme:",
+      "item1": "Hizmet abonelik esasına göre sağlanır",
+      "item2": "Fiyatlar resmi web sitesinde listelenmiştir ve değişebilir",
+      "item3": "Ödeme seçilen dönem için peşin olarak yapılır",
+      "item4": "Çeşitli ödeme yöntemleri mevcuttur"
+    },
+    "refunds": {
+      "title": "Geri ödemeler:",
+      "item1": "Ödeme yapıldıktan sonraki 14 gün içinde geri ödeme yapılabilir",
+      "item2": "Şirket tarafından önemli ihlallerin olması durumunda",
+      "item3": "Aboneliğin kullanılmayan kısmı, erken sonlandırma durumunda iade edilmez"
+    },
+    "suspension": {
+      "title": "Hizmetin Askıya Alınması:",
+      "item1": "Ödemenin 7 günden fazla gecikmesi",
+      "item2": "Sözleşme şartlarının ihlali",
+      "item3": "Teknik nedenlerden dolayı (bildirim ile)"
+    }
+  },
+  "liability": {
+    "title": "Sorumluluk ve Garantiler",
+    "limitation": {
+      "title": "Sorumluluğun Sınırlandırılması:",
+      "item1": "Hizmet herhangi bir garanti olmaksızın \"olduğu gibi\" sağlanır",
+      "item2": "Dolaylı zararlardan Şirket sorumlu değildir",
+      "item3": "Azami sorumluluk, Hizmet için ödenen tutarla sınırlıdır",
+      "item4": "Şirket, Hizmetin kesintisiz çalışmasını garanti etmez"
+    },
+    "userLiability": {
+      "title": "Kullanıcı Sorumluluğu:",
+      "item1": "Hesap kimlik bilgilerinin güvenliği için",
+      "item2": "Yüklenen içeriğin yasallığı için",
+      "item3": "Sözleşmenin ihlalinden kaynaklanan zararlar için"
+    }
+  },
+  "dataProcessing": {
+    "title": "Veri İşleme",
+    "text": "Kişisel verilerin işlenmesi tarafımızca yönetilmektedir.",
+    "linkText": "Gizlilik Politikası",
+    "principles": "Temel ilkeler:",
+    "item1": "Yalnızca gerekli verilerin toplanması",
+    "item2": "Veri güvenliğinin sağlanması",
+    "item3": "Veri sahibi haklarına saygı",
+    "item4": "İşleme şeffaflığı"
+  },
+  "termination": {
+    "title": "Sözleşmenin Feshi",
+    "byUser": {
+      "title": "Kullanıcı Tarafından Fesih:",
+      "item1": "Dilediğiniz zaman hesabı silerek",
+      "item2": "Veriler 30 gün içinde silinebilir",
+      "item3": "Aboneliğin kullanılmayan kısmı iade edilmez"
+    },
+    "byCompany": {
+      "title": "Şirket Tarafından Fesih:",
+      "item1": "Sözleşme şartlarının ihlali durumunda",
+      "item2": "Hizmetlerin ödenmemesi",
+      "item3": "Hizmetin durdurulması (30 gün önceden bildirimde bulunmak kaydıyla)"
+    }
+  },
+  "changes": {
+    "title": "Sözleşmedeki Değişiklikler",
+    "text": "Şirket bu Sözleşmenin hükümlerini değiştirme hakkını saklı tutar. Kullanıcılara önemli değişiklikleri en az 30 gün önceden bildireceğiz:",
+    "item1": "E-postayla",
+    "item2": "Hizmet bildirimleri aracılığıyla",
+    "item3": "Resmi web sitesinde",
+    "continuation": "Değişiklikler yürürlüğe girdikten sonra Hizmeti kullanmaya devam etmeniz, yeni şartları kabul ettiğiniz anlamına gelir."
+  },
+  "applicableLaw": {
+    "title": "Geçerli Hukuk ve Uyuşmazlık Çözümü",
+    "law": {
+      "title": "Geçerli Kanun:",
+      "text": "Bu Sözleşme Gürcistan yasalarına tabidir."
+    },
+    "disputes": {
+      "title": "Uyuşmazlık Çözümü:",
+      "item1": "Duruşma öncesi uzlaşmaya öncelik veriliyor",
+      "item2": "Anlaşmazlıklar Gürcistan mahkemeleri tarafından çözümlenir",
+      "item3": "Arabuluculuk kullanılabilir"
+    }
+  },
+  "contact": {
+    "title": "İletişim Bilgileri",
+    "text": "Bu Sözleşmeyle ilgili tüm sorularınız için bizimle iletişime geçin:",
+    "email": "E-posta: inbox@gridix.live",
+    "address": "Adres: Gürcistan, Batum, Leselidze St. 3",
+    "responseTime": "Tepki Süresi:",
+    "responseTimeText": "İş günlerinde tüm sorulara 24 saat içinde yanıt vermeye çalışıyoruz."
+  }
+}

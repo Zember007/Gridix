@@ -1,0 +1,13 @@
+{
+  "floors": "Zeminler",
+  "listView": "Liste görünümü",
+  "noProjects": "Hiçbir proje bulunamadı",
+  "onMap": "Haritada",
+  "projects": "Projeler ({{count}})",
+  "resetFilters": "Filtreleri sıfırla",
+  "subtitle": "Mevcut daireleri görüntülemek için bir proje seçin",
+  "title": "Gayrimenkul Projeleri",
+  "userNotFound": "Kullanıcı bulunamadı",
+  "userNotFoundDesc": "Belirtilen kullanıcı mevcut değil veya genel projesi yok.",
+  "viewApartments": "Daireleri görüntüle"
+}

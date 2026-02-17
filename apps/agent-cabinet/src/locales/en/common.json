@@ -10,7 +10,8 @@
     "leads": "Leads",
     "payouts": "Payouts",
     "analytics": "Analytics",
-    "partnerProgram": "Partner Program"
+    "partnerProgram": "Partner Program",
+    "settings": "Settings"
   },
   "common": {
     "loading": "Loading...",
@@ -257,5 +258,32 @@
       "approved": "Approved",
       "rejected": "Rejected"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account, notifications and contract details",
+    "contractTitle": "Contract details",
+    "contractDesc": "Information from your agent agreement",
+    "fullName": "Full name",
+    "companyName": "Company name",
+    "type": "Type",
+    "taxId": "Tax ID",
+    "legalAddress": "Legal address",
+    "phone": "Phone",
+    "bankDetails": "Bank details",
+    "agentCompanyType": "Company type",
+    "agentRegisteredOffice": "Registered office",
+    "agentRepresentativeName": "Representative name",
+    "agentRepresentativeTitle": "Representative title",
+    "status": "Status",
+    "agreementSignedAt": "Agreement signed",
+    "commissionRate": "Commission rate",
+    "savingProfile": "Saving…",
+    "profileSaved": "Profile saved",
+    "profileSaveError": "Failed to save profile",
+    "notificationsSaved": "Notification preferences saved",
+    "notificationsSaveError": "Failed to save notification preferences",
+    "saveAll": "Save all",
+    "loadError": "Failed to load contract data"
   }
 }

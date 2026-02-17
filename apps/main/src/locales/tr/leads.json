@@ -1,0 +1,388 @@
+{
+  "actions": {
+    "cancel": "İptal etmek",
+    "copy": "Kopyala",
+    "editNotes": "Notları düzenle",
+    "openInCrm": "CRM'de aç"
+  },
+  "cancel": "İptal etmek",
+  "crm": {
+    "notSent": "Gönderilmedi",
+    "connected": "Bağlı",
+    "lastSync": "Son senkronizasyon",
+    "systemName": "Sistem"
+  },
+  "description": "CRM teslim durumuna sahip tüm müşteri istekleri",
+  "empty": "Potansiyel müşteri bulunamadı",
+  "error": "Hata",
+  "filters": {
+    "dateFrom": "Başlangıç ​​tarihi",
+    "dateTo": "Tarih",
+    "status": "Durum",
+    "title": "Filtreler",
+    "search": "Ara ve filtrele",
+    "searchPlaceholder": "Ada, başlığa göre arayın...",
+    "source": "Kaynak",
+    "allSources": "Tüm kaynaklar",
+    "budgetFrom": "Bütçe şu tarihten itibaren:",
+    "budgetTo": "ile",
+    "stages": "Aşamalar",
+    "allStages": "Tüm aşamalar",
+    "selectedStages": "Seçilen aşamalar",
+    "managers": "Yöneticiler",
+    "allManagers": "Tüm yöneticiler",
+    "selectedManagers": "Seçildi",
+    "apply": "Uygula",
+    "reset": "Sıfırla",
+    "clearAll": "Tümünü temizle",
+    "found": "Kurmak"
+  },
+  "loading": "Potansiyel müşteriler yükleniyor...",
+  "notes": {
+    "client": "Müşteri",
+    "placeholder": "Notları girin...",
+    "title": "Kurşun notları"
+  },
+  "save": "Kaydetmek",
+  "stats": {
+    "cancelled": "İptal edildi",
+    "failed": "Arızalı",
+    "pending": "Askıda olması",
+    "savedOnly": "Yalnızca kaydedildi",
+    "sent": "CRM'e gönderildi",
+    "total": "Toplam potansiyel müşteri",
+    "deals": "fırsatlar"
+  },
+  "status": {
+    "all": "Tüm",
+    "cancelled": "İptal edildi",
+    "failed": "Arızalı",
+    "pending": "Askıda olması",
+    "saved_only": "Yalnızca kaydedildi",
+    "sent_to_crm": "CRM'e gönderildi"
+  },
+  "table": {
+    "actions": "Eylemler",
+    "apartment": "Daire",
+    "client": "Müşteri",
+    "contacts": "Kişiler",
+    "crm": "CRM",
+    "date": "Tarih",
+    "project": "Proje",
+    "status": "Durum"
+  },
+  "title": "Potansiyel müşteriler",
+  "toast": {
+    "cancelError": {
+      "desc": "Potansiyel müşteri iptal edilemedi",
+      "title": "Hata"
+    },
+    "cancelled": {
+      "desc": "Potansiyel müşteri iptal edildi",
+      "title": "Başarı"
+    },
+    "copied": {
+      "desc": "Potansiyel müşteri bilgileri panoya kopyalandı",
+      "title": "Kopyalandı"
+    },
+    "copyError": {
+      "desc": "Bilgi kopyalanamadı",
+      "title": "Hata"
+    },
+    "notesError": {
+      "desc": "Notlar güncellenemedi",
+      "title": "Hata"
+    },
+    "notesSaved": {
+      "desc": "Notlar güncellendi",
+      "title": "Başarı"
+    },
+    "leadCreated": {
+      "title": "Başarı",
+      "desc": "Yeni anlaşma oluşturuldu"
+    },
+    "leadUpdated": {
+      "title": "Başarı",
+      "desc": "Fırsat güncellendi"
+    },
+    "statusChanged": {
+      "title": "Durum değiştirildi",
+      "desc": "Anlaşma aşaması güncellendi"
+    },
+    "funnelSaved": {
+      "title": "Başarı",
+      "desc": "Dönüşüm hunisi ayarları kaydedildi"
+    },
+    "exportDone": {
+      "title": "Tamamlamak",
+      "desc": "İndirilen dosyayı dışa aktar"
+    },
+    "importDone": {
+      "title": "İçe aktarma tamamlandı",
+      "desc": "Kişiler yüklendi"
+    },
+    "nothingToExport": {
+      "title": "Veri yok",
+      "desc": "Liste boş, dışa aktarılacak bir şey yok."
+    },
+    "duplicatesNotFound": {
+      "title": "Temiz",
+      "desc": "Kopya bulunamadı"
+    }
+  },
+  "kanban": {
+    "noDeals": "Fırsat yok",
+    "dragHere": "Buraya sürükleyin",
+    "createDeal": "Anlaşma oluştur",
+    "changeStage": "Aşamayı değiştir",
+    "budget": "Bütçe",
+    "noTasks": "Görev yok",
+    "empty": "Boş",
+    "moveHere": "Buraya taşın",
+    "quickAdd": "+ Hızlı ekle..."
+  },
+  "list": {
+    "selectAll": "Tümünü seç",
+    "selected": "seçilmiş",
+    "client": "Müşteri",
+    "status": "Durum",
+    "task": "Görev",
+    "project": "Proje",
+    "budget": "Bütçe",
+    "unknown": "Bilinmiyor",
+    "noTasks": "Görev yok",
+    "call": "Arama",
+    "whatsapp": "WhatsApp",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "daysAgo": "günler önce"
+  },
+  "drawer": {
+    "contact": "Temas etmek",
+    "details": "Fırsat ayrıntıları",
+    "tasks": "Görevler",
+    "history": "Tarih",
+    "addTask": "Görev ekle",
+    "addNote": "Not ekle",
+    "tags": "Etiketler",
+    "source": "Kaynak",
+    "budget": "Bütçe",
+    "apartment": "Daire",
+    "created": "Oluşturuldu",
+    "close": "Kapalı",
+    "edit": "Düzenlemek",
+    "save": "Kaydetmek",
+    "info": "Bilgi",
+    "call": "Arama",
+    "whatsapp": "WhatsApp",
+    "editing": "Düzenleme",
+    "phone": "Telefon",
+    "project": "Proje",
+    "addTag": "+ Etiket ekle",
+    "overdue": "vadesi geçmiş",
+    "today": "Bugün",
+    "future": "Gelecek",
+    "completed": "Tamamlanmış",
+    "noPlannedTasks": "Planlanmış görev yok",
+    "writeNote": "Bir not yazın...",
+    "ctrlEnterToSend": "Göndermek için Ctrl+Enter"
+  },
+  "createModal": {
+    "title": "Yeni anlaşma",
+    "name": "Müşteri adı",
+    "phone": "Telefon",
+    "email": "E-posta (isteğe bağlı)",
+    "create": "Yaratmak",
+    "cancel": "İptal etmek",
+    "duplicateWarning": "Benzer ipucu bulundu!",
+    "duplicateDesc": "Bu telefon numarasına sahip bir müşteri adayı sistemde zaten mevcut:",
+    "clientLabel": "Müşteri",
+    "namePlaceholder": "Adı ve Soyadı",
+    "phonePlaceholder": "+1 555 000 0000",
+    "duplicateFound": "Kopya bulundu",
+    "duplicateExists": "İstemci {{name}} zaten veritabanında mevcut.",
+    "goToCard": "Karta git",
+    "budgetLabel": "Bütçe",
+    "sourceLabel": "Kaynak",
+    "tagsLabel": "Etiketler",
+    "tagPlaceholder": "Etiketi girin ve Enter'a basın",
+    "duplicateNotAllowed": "Kopyalamaya izin verilmiyor",
+    "createDeal": "Anlaşma oluştur"
+  },
+  "funnel": {
+    "title": "Dönüşüm hunisi kurulumu",
+    "funnels": "Huniler",
+    "addFunnel": "Huni ekle",
+    "archived": "Arşivlenen dönüşüm hunileri",
+    "addStage": "Aşama ekle",
+    "deleteStage": "Aşamayı sil",
+    "rename": "Yeniden isimlendirmek",
+    "triggers": "Otomasyonlar",
+    "addTrigger": "Tetikleyici ekle",
+    "noAutomations": "Otomasyon yok",
+    "automationDesc": "Bu aşamaya girerken eylemleri ekleyin",
+    "back": "Geri",
+    "save": "Kaydetmek",
+    "deleteAllTriggers": "Tüm tetikleyicileri sil",
+    "moveHere": "Buraya taşın",
+    "doubleClickToEdit": "Adı değiştirmek için çift tıklayın",
+    "insertStage": "Aşama ekle"
+  },
+  "settings": {
+    "import": "İçe aktarmak",
+    "export": "Dışa aktar (CSV)",
+    "funnelSetup": "Dönüşüm hunisi kurulumu",
+    "cardAppearance": "Kart görünümü",
+    "findDuplicates": "Yinelenenleri bul",
+    "massActions": "Kitlesel eylemler"
+  },
+  "sources": {
+    "instagram": "instagram",
+    "website": "Web sitesi",
+    "referral": "Yönlendirme",
+    "walk_in": "Walk-in",
+    "facebook": "Facebook",
+    "admin": "Yönetici"
+  },
+  "toolbar": {
+    "selected": "seçilmiş",
+    "changeStatus": "Durumu değiştir",
+    "assign": "Atamak",
+    "delete": "Silmek",
+    "manager": "Müdür"
+  },
+  "emptyState": {
+    "notFound": "Hiçbir şey bulunamadı",
+    "tryChangingFilters": "Arama parametrelerini veya filtrelerini değiştirmeyi deneyin.",
+    "resetFilters": "Filtreleri sıfırla"
+  },
+  "warnings": {
+    "funnelTriggersTitle": "Uyarı: gerekli apartman durumu tetikleyicileri eksik",
+    "funnelTriggersDesc": "Rezervasyonları ve satışları doğru bir şekilde yönetmek için her dönüşüm hunisinde bağlı daire durumunu \"Rezerve edildi\" ve \"Satıldı\" olarak değiştiren tetikleyicileri ayarlayın.",
+    "missingFunnels": "Dönüşüm hunilerinde tetikleyiciler eksik",
+    "funnelTriggersCta": "Dönüşüm hunisi kurulumunu aç"
+  },
+  "cardAppearance": {
+    "title": "Kart görünümü",
+    "options": "Seçenekler",
+    "showAvatar": "Kişi avatarını göster",
+    "showDate": "Oluşturulma tarihini göster",
+    "fieldsInCard": "Karttaki alanlar",
+    "preview": "Önizleme",
+    "today": "Bugün",
+    "cancel": "İptal etmek",
+    "save": "Kaydetmek"
+  },
+  "import": {
+    "title": "Kişileri içe aktar",
+    "step": "Adım {adım}/3",
+    "dragFile": "Dosyayı buraya sürükleyin",
+    "orClick": "veya seçmek için tıklayın",
+    "supportedFormats": "Desteklenen: .csv, .xlsx, .xls",
+    "important": "Önemli:",
+    "headersNote": "Dosyanın ilk satırda başlıklar içerdiğinden emin olun. Bu, verileri doğru şekilde tanımamıza yardımcı olacaktır.",
+    "downloadTemplate": "Dosya şablonunu indir",
+    "fieldMapping": "Alan haritalama",
+    "importing": "Veriler içe aktarılıyor...",
+    "dontClose": "Lütfen pencereyi kapatmayın.",
+    "done": "Tamamlamak!",
+    "successfullyAdded": "{count} kişi başarıyla eklendi.",
+    "backToList": "Listeye geri dön",
+    "cancel": "İptal etmek",
+    "next": "Sonraki",
+    "startImport": "İçe aktarmayı başlat",
+    "fields": {
+      "name": "İsim",
+      "phone": "Telefon",
+      "email": "E-posta",
+      "price": "Bütçe",
+      "project": "Proje",
+      "source": "Kaynak",
+      "skip": "İçe aktarma"
+    }
+  },
+  "duplicates": {
+    "title": "Yinelenenleri bulma ve birleştirme",
+    "scanning": "Veritabanı taranıyor...",
+    "foundGroups": "Yinelenen gruplar bulundu: {{count}}",
+    "searching": "Eşleşmeler aranıyor...",
+    "noDuplicates": "Kopya yok",
+    "perfectOrder": "İletişim veri tabanınız mükemmel durumda.",
+    "scanAgain": "Tekrar tarayın",
+    "selectMaster": "Ana kart (Ana) olarak kalacak kartı seçin. Diğerleri silinecek ve geçmişleri birleştirilecek.",
+    "created": "Oluşturuldu:",
+    "project": "Proje:",
+    "budget": "Bütçe:",
+    "keepThis": "Bunu sakla (Birleştir)",
+    "selectGroup": "Karşılaştırmak için soldan yinelenen bir grup seçin"
+  },
+  "tasks": {
+    "types": {
+      "call": "Temas etmek",
+      "meeting": "Toplantı",
+      "message": "Yazmak",
+      "payment": "Ödeme",
+      "other": "Diğer"
+    },
+    "newTask": "Yeni görev",
+    "example": "Örneğin: Müşteriyle iletişime geçin ve bütçeyi netleştirin...",
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "plus3Days": "+3 gün",
+    "addTask": "Görev ekle",
+    "result": "Tamamlama sonucu",
+    "whatHappened": "Ne oldu? (örneğin: bir toplantıda anlaşmaya varıldı)",
+    "completeTask": "Görevi tamamla",
+    "return": "Geri dönmek",
+    "edit": "Düzenlemek",
+    "delete": "Silmek",
+    "responsible": "Sorumlu:",
+    "recipient": "Alıcı:",
+    "task": "Görev",
+    "noSettings": "Ayar yok"
+  },
+  "triggers": {
+    "onStageEntry": "Sahne girişinde",
+    "through": "{delay} {unit} içinde",
+    "tag": "Etiket: {tagName}",
+    "trigger": "Tetiklemek",
+    "edit": "Düzenlemek",
+    "delete": "Silmek",
+    "whenToRun": "Tetikleyici her dakika çalışır",
+    "whatToDo": "Ne yapalım",
+    "description": "Eylem açıklaması",
+    "minutes": "dakika",
+    "hours": "saat",
+    "days": "günler",
+    "tagNamePlaceholder": "Etiket adı",
+    "willTrigger": "Lead bu aşamaya girdiğinde hemen tetiklenecektir.",
+    "taskText": "Görev metni",
+    "notificationText": "Bildirim metni",
+    "assignResponsible": "Sorumluyu atayın",
+    "selectStage": "Taşınacak aşamayı seçin",
+    "noAdditionalSettings": "Bu eylem türü için ek ayar yok.",
+    "descriptionRequired": "Açıklama boş olamaz.",
+    "tagsToAddPlaceholder": "Eklenecek etiketler (virgülle ayrılmış)",
+    "apartmentStatusReserved": "Rezerve",
+    "apartmentStatusSold": "Satılmış",
+    "apartmentStatusAvailable": "Mevcut",
+    "icons": {
+      "clock": "Gecikme",
+      "distribution": "Dağıtım",
+      "task": "Görev",
+      "statusChange": "Durum değişikliği",
+      "editField": "Alanı düzenle",
+      "addTag": "Etiket ekle",
+      "notification": "Bildiri",
+      "apartmentStatus": "Daire durumu"
+    }
+  },
+  "cardFields": {
+    "none": "Değer yok",
+    "name": "Anlaşma adı",
+    "project": "Proje",
+    "price": "Bütçe",
+    "tags": "Etiketler",
+    "assignedTo": "Sorumlu"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "app": {
+    "title": "Acente Dolabı"
+  },
+  "nav": {
+    "dashboard": "Kontrol Paneli",
+    "application": "Başvuru",
+    "projects": "Katalog",
+    "contacts": "Kişiler",
+    "leads": "Potansiyel müşteriler",
+    "payouts": "Ödemeler",
+    "analytics": "Analitik",
+    "partnerProgram": "Ortak Programı",
+    "settings": "Ayarlar"
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "save": "Kaydetmek",
+    "cancel": "İptal etmek",
+    "continue": "Devam etmek",
+    "empty": "—"
+  },
+  "auth": {
+    "email": "E-posta",
+    "sendLink": "Sihirli bağlantı gönder",
+    "signOut": "oturumu Kapat",
+    "checkEmailTitle": "E-postanızı kontrol edin",
+    "magicLinkSent": "Sihirli bağlantı gönderildi.",
+    "processingLogin": "Giriş işleniyor…",
+    "setPasswordTitle": "Şifreyi ayarla",
+    "setPasswordDescription": "Şifreniz henüz belirlenmedi. Devam etmek için lütfen bir şifre oluşturun.",
+    "password": "Şifre",
+    "confirmPassword": "Şifreyi onayla",
+    "savePassword": "Şifreyi kaydet",
+    "passwordUpdated": "Şifre güncellendi"
+  },
+  "errors": {
+    "emailRequired": "E-posta gerekli.",
+    "failedToSendLink": "Bağlantı gönderilemedi.",
+    "passwordMinLength": "Şifre en az 8 karakter olmalıdır.",
+    "passwordsDontMatch": "Şifreler eşleşmiyor.",
+    "failedToUpdatePassword": "Şifre güncellenemedi."
+  },
+  "notFound": {
+    "title": "Sayfa bulunamadı",
+    "goHome": "Eve git"
+  },
+  "workspace": {
+    "noActiveTitle": "Etkin çalışma alanı yok",
+    "pickInSidebar": "Kenar çubuğundan bir çalışma alanı seçin."
+  },
+  "moduleHeader": {
+    "searchPlaceholder": "Aramak…",
+    "financeTitle": "Finans",
+    "balanceLabel": "Bakiyeniz",
+    "create": "Yaratmak"
+  },
+  "dashboard": {
+    "title": "Gösterge tablom",
+    "subtitleWorkspace": "Çalışma alanı: {{çalışma alanı}}",
+    "subtitleNoWorkspace": "Bir çalışma alanı seçin",
+    "metrics": {
+      "leads": "Potansiyel müşteriler",
+      "contactsSubtext": "Kişiler: {{count}}",
+      "commissionPaid": "Komisyon ödendi",
+      "commissionPending": "Komisyon beklemede",
+      "projectsSubtext": "Projeler: {{count}}",
+      "catalog": "Katalog",
+      "availableProjects": "Mevcut projeler"
+    },
+    "blocks": {
+      "dynamicsTitle": "Dinamik",
+      "inProgress": "Devam etmekte",
+      "pulseTitle": "Nabız",
+      "latestEvents": "En son etkinlikler",
+      "pulseLeads": "Potansiyel müşteriler: {{count}}",
+      "pulsePayouts": "Ödemeler:"
+    },
+    "chart": {
+      "title": "Gelir dinamikleri",
+      "subtitle": "6 aylık komisyon geliri"
+    },
+    "activity": {
+      "title": "Etkinlik feed'i",
+      "empty": "Yakın zamanda etkinlik yok",
+      "system": "Sistem",
+      "newLead": "yeni potansiyel müşteri",
+      "leadsLabel": "potansiyel müşteriler",
+      "commissionPaid": "ödenen komisyon",
+      "pendingPayout": "bekleyen ödeme",
+      "recent": "son zamanlarda",
+      "thisMonth": "bu ay",
+      "inPipeline": "boru hattında"
+    }
+  },
+  "catalog": {
+    "title": "Katalog",
+    "subtitle": "Birleşik yeni yapı kataloğu",
+    "subtitleWithWorkspace": "Birleştirilmiş yeni yapı kataloğu • {{workspace}}",
+    "searchPlaceholder": "Proje adına göre ara…",
+    "filtersPlaceholder": "Filtreler \"gridix-visual\"dan (konum/fiyatlar/durumlar) 1:1 oranında taşınacaktır.",
+    "noProjects": "Seçilen çalışma alanı için henüz genel proje yok.",
+    "open": "Açık",
+    "details": "Detaylar",
+    "share": "Paylaşmak",
+    "clientLinkPrompt": "Müşteri bağlantısı"
+  },
+  "drawer": {
+    "tabs": {
+      "overview": "Genel Bakış",
+      "units": "Birimler",
+      "construction": "Yapı",
+      "media": "Medya",
+      "partners": "Ortaklar",
+      "settings": "Ayarlar"
+    },
+    "commission": {
+      "title": "Komisyonunuz",
+      "active": "Aktif",
+      "requiresContract": "Sözleşme gerektirir",
+      "condition": "Ödeme koşulu",
+      "signOffer": "Müşterileri kilitlemek ve komisyon almak için teklifi geliştiriciyle imzalayın."
+    },
+    "stats": {
+      "roi": "yatırım getirisi",
+      "completion": "Tamamlama",
+      "priceFrom": "Başlangıç ​​fiyatı",
+      "units": "Birimler"
+    },
+    "about": {
+      "title": "Proje hakkında",
+      "description": "Prestijli bir bölgede modern konut kompleksi. Yaşamak ve yatırım için idealdir."
+    },
+    "quickAccess": "Hızlı erişim",
+    "media": {
+      "title": "Proje medya bankası",
+      "downloadAll": "Tümünü indir (ZIP)",
+      "renders": "renderlar",
+      "videos": "Videolar",
+      "presentations": "Sunumlar",
+      "noMaterials": "Malzeme yok",
+      "restricted": "Erişim kısıtlı",
+      "signToAccess": "Medya bankasına erişmek için geliştiriciyle sözleşmeyi imzalayın.",
+      "connect": "Bağlamak"
+    },
+    "construction": {
+      "title": "İnşaat ilerlemesi",
+      "noUpdates": "Güncelleme yok"
+    },
+    "units": {
+      "legend": {
+        "available": "Mevcut",
+        "booked": "Rezerve edildi",
+        "sold": "Satılmış"
+      },
+      "downloadPdf": "PDF'yi indir"
+    },
+    "actions": {
+      "lock": "İstemciyi kilitle",
+      "favorite": "Koleksiyona ekle",
+      "share": "Paylaşmak",
+      "becomePartner": "Ortak olun",
+      "pendingConfirmation": "Onay bekleniyor",
+      "partnershipUnavailable": "Ortaklık mevcut değil",
+      "openPage": "Sayfayı aç"
+    }
+  },
+  "contacts": {
+    "title": "Kişiler",
+    "subtitle": "{{count}} kişi",
+    "subtitleWithWorkspace": "{{count}} kişi • {{workspace}}",
+    "searchPlaceholder": "Ara ve filtrele",
+    "notFound": "Hiçbir kişi bulunamadı.",
+    "columns": {
+      "contact": "Temas etmek"
+    },
+    "drawer": {
+      "leadsAndLast": "Potansiyel Müşteriler: {{count}} • Son: {{last}}",
+      "contactsSection": "Kişiler",
+      "projectsSection": "Projeler",
+      "notSelected": "Kişi seçilmedi."
+    }
+  },
+  "analytics": {
+    "title": "Analitik",
+    "subtitle": "Temel performansa genel bakış",
+    "subtitleWithWorkspace": "Temel metriklere genel bakış • {{workspace}}",
+    "export": "İhracat",
+    "views": {
+      "sales": "Satış",
+      "finance": "Finans",
+      "crm": "CRM"
+    },
+    "period": {
+      "last7": "Son 7 gün",
+      "last30": "Son 30 gün",
+      "quarter": "Bu çeyrek",
+      "year": "Bu yıl"
+    },
+    "loadError": "Analizler yüklenemedi.",
+    "sales": {
+      "totalLeads": "Toplam potansiyel müşteri",
+      "funnelByStage": "Huni (aşamaya göre)",
+      "noStageData": "Aşama verisi yok.",
+      "sources": "Kaynaklar",
+      "noSourceData": "Kaynak verisi yok."
+    },
+    "crm": {
+      "totalLeads": "Toplam potansiyel müşteri",
+      "inFunnel": "Dönüşüm hunisinde",
+      "conversion": "Dönüşüm",
+      "sources": "Kaynaklar",
+      "funnelTitle": "Satış hunisi",
+      "sourceBreakdown": "Potansiyel müşteri kaynakları"
+    },
+    "finance": {
+      "paid": "Paralı",
+      "pending": "Askıda olması",
+      "payoutsCount": "Ödemeler",
+      "registry": "Ödeme kaydı",
+      "registryTitle": "Komisyon kaydı",
+      "registryDescription": "Geliştiricilerin komisyon ödeme durumlarını takip edin. Anlaşma durumu değiştiğinde veriler otomatik olarak güncellenir.",
+      "noPayouts": "Ödeme yok.",
+      "pipeline": "Boru hattı",
+      "inProgress": "Devam etmekte",
+      "dealsInWork": "iş anlaşmaları",
+      "received": "Kabul edilmiş",
+      "success": "Başarı",
+      "successDeals": "Başarılı anlaşmalar",
+      "total": "Toplam",
+      "allTime": "Tüm zamanlar",
+      "export": "İhracat",
+      "colAmount": "Miktar",
+      "colProject": "Proje",
+      "colDate": "Tarih",
+      "colStatus": "Durum",
+      "statusPaid": "Paralı",
+      "statusPending": "Askıda olması"
+    }
+  },
+  "agent": {
+    "selectDeveloper": "Geliştirici Kimliği (davet bağlantısından)",
+    "application": {
+      "title": "Geliştiriciye uygula",
+      "fullName": "Ad Soyad",
+      "phone": "Telefon",
+      "bankDetails": "Banka ayrıntıları",
+      "agreements": "Anlaşmalar",
+      "signature": "İmza",
+      "drawSignature": "Çizmek",
+      "uploadSignature": "Yüklemek",
+      "clear": "Temizlemek",
+      "sign": "Sözleşme imzala",
+      "submit": "Başvuruyu gönder"
+    },
+    "status": {
+      "pending": "Askıda olması",
+      "approved": "Onaylı",
+      "rejected": "Reddedilmiş"
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "subtitle": "Hesabınızı, bildirimlerinizi ve sözleşme ayrıntılarınızı yönetin",
+    "contractTitle": "Sözleşme ayrıntıları",
+    "contractDesc": "Acente sözleşmenizdeki bilgiler",
+    "fullName": "Ad Soyad",
+    "companyName": "Firma Adı",
+    "type": "Tip",
+    "taxId": "Vergi Numarası",
+    "legalAddress": "Yasal adres",
+    "phone": "Telefon",
+    "bankDetails": "Banka ayrıntıları",
+    "agentCompanyType": "Şirket türü",
+    "agentRegisteredOffice": "Kayıtlı ofis",
+    "agentRepresentativeName": "Temsilci adı",
+    "agentRepresentativeTitle": "Temsilci unvanı",
+    "status": "Durum",
+    "agreementSignedAt": "Anlaşma imzalandı",
+    "commissionRate": "Komisyon oranı",
+    "savingProfile": "Kaydediliyor…",
+    "profileSaved": "Profil kaydedildi",
+    "profileSaveError": "Profil kaydedilemedi",
+    "notificationsSaved": "Bildirim tercihleri ​​kaydedildi",
+    "notificationsSaveError": "Bildirim tercihleri ​​kaydedilemedi",
+    "saveAll": "Tümünü kaydet",
+    "loadError": "Sözleşme verileri yüklenemedi"
+  }
+}

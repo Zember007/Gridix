@@ -10,7 +10,8 @@
     "leads": "לידים",
     "payouts": "תשלומים",
     "analytics": "אנליטיקס",
-    "partnerProgram": "תוכנית שותפים"
+    "partnerProgram": "תוכנית שותפים",
+    "settings": "הגדרות"
   },
   "common": {
     "loading": "טְעִינָה...",
@@ -257,5 +258,32 @@
       "approved": "מְאוּשָׁר",
       "rejected": "נִדחֶה"
     }
+  },
+  "settings": {
+    "title": "הגדרות",
+    "subtitle": "נהל את החשבון, ההודעות ופרטי החוזה שלך",
+    "contractTitle": "פרטי החוזה",
+    "contractDesc": "מידע מהסכם הסוכן שלך",
+    "fullName": "שם מלא",
+    "companyName": "שם החברה",
+    "type": "סוּג",
+    "taxId": "מזהה מס",
+    "legalAddress": "כתובת חוקית",
+    "phone": "טֵלֵפוֹן",
+    "bankDetails": "פרטי הבנק",
+    "agentCompanyType": "סוג חברה",
+    "agentRegisteredOffice": "משרד רשום",
+    "agentRepresentativeName": "שם נציג",
+    "agentRepresentativeTitle": "תואר מייצג",
+    "status": "סטָטוּס",
+    "agreementSignedAt": "הסכם נחתם",
+    "commissionRate": "שיעור עמלה",
+    "savingProfile": "חִסָכוֹן…",
+    "profileSaved": "הפרופיל נשמר",
+    "profileSaveError": "שמירת הפרופיל נכשלה",
+    "notificationsSaved": "העדפות ההתראות נשמרו",
+    "notificationsSaveError": "שמירת העדפות ההתראות נכשלה",
+    "saveAll": "שמור הכל",
+    "loadError": "טעינת נתוני החוזה נכשלה"
   }
 }

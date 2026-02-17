@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       agent_application_contracts: {
@@ -74,15 +99,15 @@ export type Database = {
       agent_applications: {
         Row: {
           agent_company_type: string | null;
-          agent_user_id: string | null;
           agent_registered_office: string | null;
           agent_representative_name: string | null;
           agent_representative_title: string | null;
+          agent_user_id: string | null;
           agreement_signed: boolean | null;
           agreement_signed_at: string | null;
           bank_details: Json | null;
-          company_name: string | null;
           commission_rate: number | null;
+          company_name: string | null;
           contract_template_path: string | null;
           created_at: string;
           developer_user_id: string | null;
@@ -105,15 +130,15 @@ export type Database = {
         };
         Insert: {
           agent_company_type?: string | null;
-          agent_user_id?: string | null;
           agent_registered_office?: string | null;
           agent_representative_name?: string | null;
           agent_representative_title?: string | null;
+          agent_user_id?: string | null;
           agreement_signed?: boolean | null;
           agreement_signed_at?: string | null;
           bank_details?: Json | null;
-          company_name?: string | null;
           commission_rate?: number | null;
+          company_name?: string | null;
           contract_template_path?: string | null;
           created_at?: string;
           developer_user_id?: string | null;
@@ -136,15 +161,15 @@ export type Database = {
         };
         Update: {
           agent_company_type?: string | null;
-          agent_user_id?: string | null;
           agent_registered_office?: string | null;
           agent_representative_name?: string | null;
           agent_representative_title?: string | null;
+          agent_user_id?: string | null;
           agreement_signed?: boolean | null;
           agreement_signed_at?: string | null;
           bank_details?: Json | null;
-          company_name?: string | null;
           commission_rate?: number | null;
+          company_name?: string | null;
           contract_template_path?: string | null;
           created_at?: string;
           developer_user_id?: string | null;
@@ -255,8 +280,8 @@ export type Database = {
           force_majeure_weeks: number;
           lead_lock_days: number;
           originals_count: number;
-          products_description: string | null;
           payout_terms: string | null;
+          products_description: string | null;
           territory: string | null;
           updated_at: string;
         };
@@ -276,8 +301,8 @@ export type Database = {
           force_majeure_weeks?: number;
           lead_lock_days?: number;
           originals_count?: number;
-          products_description?: string | null;
           payout_terms?: string | null;
+          products_description?: string | null;
           territory?: string | null;
           updated_at?: string;
         };
@@ -297,8 +322,8 @@ export type Database = {
           force_majeure_weeks?: number;
           lead_lock_days?: number;
           originals_count?: number;
-          products_description?: string | null;
           payout_terms?: string | null;
+          products_description?: string | null;
           territory?: string | null;
           updated_at?: string;
         };
@@ -2093,6 +2118,47 @@ export type Database = {
           },
         ];
       };
+      project_construction_updates: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          date: string;
+          description: string;
+          id: string;
+          images: string[] | null;
+          project_id: string;
+          title: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          date: string;
+          description: string;
+          id?: string;
+          images?: string[] | null;
+          project_id: string;
+          title: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          date?: string;
+          description?: string;
+          id?: string;
+          images?: string[] | null;
+          project_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_construction_updates_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       project_crm_settings: {
         Row: {
           created_at: string | null;
@@ -2347,6 +2413,94 @@ export type Database = {
             foreignKeyName: "project_field_settings_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_media_items: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          kind: string;
+          project_id: string;
+          sort_index: number;
+          thumbnail_url: string | null;
+          title: string | null;
+          url: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          kind: string;
+          project_id: string;
+          sort_index?: number;
+          thumbnail_url?: string | null;
+          title?: string | null;
+          url: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          kind?: string;
+          project_id?: string;
+          sort_index?: number;
+          thumbnail_url?: string | null;
+          title?: string | null;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_media_items_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      project_partnership_settings: {
+        Row: {
+          allow_partner_connect: boolean;
+          commission_type: string;
+          commission_value: number;
+          contract_url: string | null;
+          is_enabled: boolean;
+          payout_condition: string | null;
+          project_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          allow_partner_connect?: boolean;
+          commission_type?: string;
+          commission_value?: number;
+          contract_url?: string | null;
+          is_enabled?: boolean;
+          payout_condition?: string | null;
+          project_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          allow_partner_connect?: boolean;
+          commission_type?: string;
+          commission_value?: number;
+          contract_url?: string | null;
+          is_enabled?: boolean;
+          payout_condition?: string | null;
+          project_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_partnership_settings_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
             referencedRelation: "projects";
             referencedColumns: ["id"];
           },
@@ -2865,8 +3019,8 @@ export type Database = {
           avatar_url: string | null;
           bank_name: string | null;
           billing_currency: string | null;
-          company_type: string | null;
           company_name: string | null;
+          company_type: string | null;
           created_at: string;
           email: string | null;
           full_name: string | null;
@@ -2883,6 +3037,9 @@ export type Database = {
           registered_office: string | null;
           representative_name: string | null;
           representative_title: string | null;
+          signature_meta: Json;
+          signature_method: string | null;
+          signature_path: string | null;
           tax_id: string | null;
           updated_at: string;
         };
@@ -2891,8 +3048,8 @@ export type Database = {
           avatar_url?: string | null;
           bank_name?: string | null;
           billing_currency?: string | null;
-          company_type?: string | null;
           company_name?: string | null;
+          company_type?: string | null;
           created_at?: string;
           email?: string | null;
           full_name?: string | null;
@@ -2909,6 +3066,9 @@ export type Database = {
           registered_office?: string | null;
           representative_name?: string | null;
           representative_title?: string | null;
+          signature_meta?: Json;
+          signature_method?: string | null;
+          signature_path?: string | null;
           tax_id?: string | null;
           updated_at?: string;
         };
@@ -2917,8 +3077,8 @@ export type Database = {
           avatar_url?: string | null;
           bank_name?: string | null;
           billing_currency?: string | null;
-          company_type?: string | null;
           company_name?: string | null;
+          company_type?: string | null;
           created_at?: string;
           email?: string | null;
           full_name?: string | null;
@@ -2935,6 +3095,9 @@ export type Database = {
           registered_office?: string | null;
           representative_name?: string | null;
           representative_title?: string | null;
+          signature_meta?: Json;
+          signature_method?: string | null;
+          signature_path?: string | null;
           tax_id?: string | null;
           updated_at?: string;
         };
@@ -3094,6 +3257,7 @@ export type Database = {
           updated_subscriptions: string[];
         }[];
       };
+      check_if_user_has_password: { Args: never; Returns: boolean };
       cleanup_expired_invitations: { Args: never; Returns: number };
       create_default_manager_permissions: {
         Args: { manager_account_id: string };
@@ -3292,6 +3456,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       apartment_type: ["apartment", "commercial", "parking"],

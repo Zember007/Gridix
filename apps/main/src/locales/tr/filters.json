@@ -1,0 +1,12 @@
+{
+  "allCities": "Tüm şehirler",
+  "allStatuses": "Tüm durumlar",
+  "applyFilters": "Filtreleri uygula",
+  "city": "Şehir",
+  "maxPrice": "Maksimum fiyat",
+  "minPrice": "Minimum fiyat",
+  "priceRange": "Fiyat aralığı",
+  "resetFilters": "Filtreleri sıfırla",
+  "search": "Aramak...",
+  "status": "Durum"
+}

@@ -818,7 +818,7 @@ export function LeadsManager({
                         <p className="mt-1 text-xs text-amber-800">
                           {t("leads.warnings.funnelTriggersDesc")}
                         </p>
-                        <p className="mt-2 truncate text-xs text-amber-800">
+                        <p className="mt-2 text-xs text-amber-800 sm:truncate">
                           <span className="font-bold">
                             {t("leads.warnings.missingFunnels")}:
                           </span>{" "}

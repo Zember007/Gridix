@@ -1,0 +1,22 @@
+{
+  "buildingTitle": "Çokgen Ayarları Oluşturma",
+  "floorTitle": "Kat Poligon Ayarları",
+  "colors": "Renkler",
+  "buildingColor": "Bina Rengi",
+  "hoverEffects": "Vurgulu Efektler",
+  "colorChange": "Renk Değişimi",
+  "opacityChange": "Opaklık Değişikliği",
+  "glow": "Parıltı",
+  "display": "Görüntülemek",
+  "showNumbers": "Numaraları Göster",
+  "showTooltip": "Araç İpuçlarını Göster",
+  "showArea": "Alanı Göster",
+  "showPrice": "Fiyatı Göster",
+  "opacity": "Opaklık",
+  "normalOpacity": "Normal Durum",
+  "hoverOpacity": "Fareyle üzerine gelindiğinde",
+  "save": "Ayarları Kaydet",
+  "saving": "Kaydediliyor...",
+  "saved": "Ayarlar kaydedildi",
+  "saveError": "Ayarlar kaydedilirken hata oluştu"
+}

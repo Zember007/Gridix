@@ -1,0 +1,116 @@
+{
+  "mapper": {
+    "actions": {
+      "createProject": "Verilerle proje oluştur"
+    },
+    "preview": {
+      "description": "Verileriniz nasıl içe aktarılacak ({{count}} kayıt)",
+      "title": "Veri önizlemesi",
+      "moreRecords": "... ve {{count}} kayıt daha"
+    },
+    "project": {
+      "description": "Tanım",
+      "floors": {
+        "hint": "Tablodaki verilere göre ayarlanacak"
+      },
+      "name": "Proje adı*",
+      "type": "Proje türü*",
+      "types": {
+        "building": "Bina (apartmanlar)",
+        "object": "Nesne (ticari gayrimenkul)"
+      }
+    },
+    "projectInfo": {
+      "description": "Projeniz hakkında temel bilgiler",
+      "title": "Proje bilgileri"
+    },
+    "validation": {
+      "description": "Excel değerlerini standart formatlarla eşleme",
+      "rooms": {
+        "title": "Oda sayısını yapılandırın",
+        "distribution": "Verilerdeki oda dağılımı:",
+        "unknown": "Bilinmiyor",
+        "addMapping": "Yeni oda eşlemesi ekleyin:",
+        "warning": "Odalar hakkında uyarı!",
+        "warningMessage": "Bilinmeyen oda değerleri bulundu: {rooms}. Değeri bilinmeyen daireler 1 odalı ithal edilecektir."
+      },
+      "status": {
+        "title": "Daire durumlarını yapılandırma",
+        "distribution": "Verilerdeki durum dağılımı:",
+        "addMapping": "Yeni durum eşlemesi ekleyin:",
+        "warning": "Durumlarla ilgili uyarı!",
+        "warningMessage": "Bilinmeyen durumlar bulundu: {statuses}. Durumu bilinmeyen daireler \"Müsait\" statüsüyle ithal edilecektir."
+      },
+      "title": "Veri doğrulama",
+      "unknown": "bilinmiyor",
+      "validValues": "Geçerli değerler",
+      "invalidValues": "Bilinmeyen değerler",
+      "uniqueValues": "Benzersiz değerler",
+      "hideDetails": "Ayrıntıları gizle",
+      "showDetails": "Ayrıntıları göster",
+      "count": "öğeler",
+      "unknownValue": "Bilinmiyor",
+      "ignore": "Görmezden gelmek",
+      "valueFromExcel": "Excel'den değer"
+    },
+    "noData": "Veri yok",
+    "required": "Gerekli",
+    "errors": {
+      "fillRequiredFields": "Lütfen gerekli tüm alanları doldurun",
+      "configureUnknownStatuses": "ve tüm bilinmeyen durumları yapılandırın",
+      "configureUnknownRooms": "ve tüm bilinmeyen oda değerlerini yapılandırın",
+      "duplicateApartmentNumbers": "Verilerde yinelenen daire numaraları bulundu. Lütfen benzersiz daire numaraları için Excel dosyasını kontrol edin."
+    },
+    "columns": {
+      "description": "Excel dosyanızdaki hangi sütunların apartman alanlarına karşılık geldiğini belirtin",
+      "title": "Excel sütunlarını eşleme",
+      "selectColumn": "Sütun seç",
+      "selectColumnPlaceholder": "-- Sütun seç --"
+    }
+  },
+  "url": {
+    "autoConvert": "Bağlantı, veri içe aktarımı için otomatik olarak dönüştürülecek",
+    "check": "Kontrol etmek",
+    "checking": "Kontrol ediliyor...",
+    "desc": {
+      "googleSheets": "Verileri doğrudan bir Google E-Tablolar belgesinden içe aktarın",
+      "link": "Verileri bir Excel dosyasından bağlantıyla içe aktarın"
+    },
+    "detectedGs": "Google E-Tablolar algılandı",
+    "howToSetup": "Erişim nasıl kurulur:",
+    "importData": "Verileri içe aktar",
+    "importedCount": "{{count}} kayıt içe aktarıldı",
+    "importing": "İçe aktarılıyor...",
+    "input": {
+      "excel": "Excel dosya bağlantısı*",
+      "gs": "Google E-Tablolar bağlantısı*"
+    },
+    "link": {
+      "fail": "✗ Bağlantıya erişilemiyor",
+      "ok": "✓ Bağlantıya erişilebilir"
+    },
+    "req": {
+      "p1": "Dosya herkesin erişimine açık olmalıdır (kimlik doğrulama yok)",
+      "p2": "Desteklenen: Excel (.xlsx, .xls) ve Google E-Tablolar",
+      "p3": "İlk satırda sütun başlıkları bulunmalıdır",
+      "p4": "Otomatik senkronizasyon için dosya taşınmamalıdır",
+      "title": "Dosya gereksinimleri:"
+    },
+    "title": {
+      "googleSheets": "Google E-Tablolar'dan içe aktar",
+      "link": "Bağlantıyla içe aktar"
+    },
+    "toast": {
+      "checkError": "Bağlantı kontrol edilirken hata oluştu. Dosyanın herkese açık olduğundan emin olun",
+      "enterLink": "Dosyanın bağlantısını girin",
+      "fetchFailed": "Dosya yüklenemedi",
+      "fileInaccessible": "Dosyaya sağlanan bağlantı üzerinden erişilemiyor",
+      "gsAccessible": "Google E-Tablolar'a içe aktarma için erişilebilir",
+      "invalidGs": "Geçersiz Google E-Tablolar bağlantısı",
+      "linkAccessible": "Bağlantıya içe aktarma için erişilebilir",
+      "projectCreated": "\"{{name}}\" projesi, {{floors}} katta {{count}} daireyle oluşturuldu",
+      "projectCreatedObjects": "\"{{name}}\" projesi {{count}} nesneyle oluşturuldu",
+      "projectCreationError": "Proje oluşturulurken hata oluştu"
+    }
+  }
+}
