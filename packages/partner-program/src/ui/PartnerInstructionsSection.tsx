@@ -150,7 +150,7 @@ export const PartnerInstructionsSection: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm text-blue-600">
               <ExternalLink size={20} />

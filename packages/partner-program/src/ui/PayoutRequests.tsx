@@ -32,7 +32,7 @@ export function PayoutRequests() {
   const fetchPayouts = async () => {
     try {
       setLoading(true);
-      
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -67,7 +67,7 @@ export function PayoutRequests() {
 
   const handleCreatePayout = async () => {
     const amount = parseFloat(payoutAmount);
-    
+
     if (!amount || amount <= 0) {
       toast.error(t('partners.invalidAmount'));
       return;
@@ -107,7 +107,7 @@ export function PayoutRequests() {
       setPaymentMethod('');
       setContactInfo('');
       setIsDialogOpen(false);
-      
+
       // Обновляем список
       await fetchPayouts();
     } catch (error) {
@@ -178,7 +178,7 @@ export function PayoutRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">{t('partners.payoutRequests')}</h2>
           <p className="text-muted-foreground">
@@ -266,13 +266,13 @@ export function PayoutRequests() {
 
       {/* Информация о балансе */}
       <Alert>
-        <DollarSign className="h-4 w-4" />
-        <AlertDescription>
-          <strong>{t('partners.availableForWithdrawal')}:</strong> ${stats?.available_for_withdrawal?.toFixed(2) || '0'} | {' '}
-          <strong>{t('partners.totalEarned')}:</strong> ${stats?.total_earned?.toFixed(2) || '0'} | {' '}
-          <strong>{t('partners.totalWithdrawn')}:</strong> ${stats?.total_withdrawn?.toFixed(2) || '0'}
-        </AlertDescription>
-      </Alert>
+      <DollarSign className="h-4 w-4" />
+      <AlertDescription className="flex flex-wrap gap-x-3">
+        <span><strong>{t('partners.availableForWithdrawal')}:</strong> ${stats?.available_for_withdrawal?.toFixed(2) || '0'}</span>
+        <span><strong>{t('partners.totalEarned')}:</strong> ${stats?.total_earned?.toFixed(2) || '0'}</span>
+        <span><strong>{t('partners.totalWithdrawn')}:</strong> ${stats?.total_withdrawn?.toFixed(2) || '0'}</span>
+      </AlertDescription>
+    </Alert>
 
       {/* Список запросов */}
       <div className="space-y-4">
@@ -324,7 +324,7 @@ export function PayoutRequests() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <Badge variant={getStatusVariant(payout.status)}>
                       <div className="flex items-center gap-1">
@@ -332,7 +332,7 @@ export function PayoutRequests() {
                         {getStatusText(payout.status)}
                       </div>
                     </Badge>
-                    
+
                     <div className="text-right">
                       <p className="font-bold">
                         ${payout.amount.toFixed(2)}
@@ -345,7 +345,7 @@ export function PayoutRequests() {
                     </div>
                   </div>
                 </div>
-                
+
                 {payout.notes && (
                   <div className="mt-4 p-3 bg-muted rounded-lg">
                     <p className="text-sm">

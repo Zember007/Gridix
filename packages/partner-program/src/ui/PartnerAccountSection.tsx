@@ -46,6 +46,7 @@ export const PartnerAccountSection: React.FC = () => {
     accountBalance,
     commissionPercentage,
   } = usePartnerAccountData();
+  const hasTransactions = filteredTransactions.length > 0;
 
   if (loading) {
     return (
@@ -142,9 +143,9 @@ export const PartnerAccountSection: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-56">
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col lg:flex-row gap-4 items-center">
+        <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+          <div className="relative w-full lg:w-56">
             <Filter
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -174,8 +175,8 @@ export const PartnerAccountSection: React.FC = () => {
               </SelectContent>
             </ShadcnSelect>
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:flex-none group">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="relative flex-1 lg:flex-none group">
               <Calendar
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
@@ -185,11 +186,12 @@ export const PartnerAccountSection: React.FC = () => {
                 value={startDate}
                 max={endDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
+                onClick={(e) => (e.currentTarget).showPicker?.()}
+                className="w-full lg:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
               />
             </div>
             <span className="text-gray-400 font-medium">-</span>
-            <div className="relative flex-1 md:flex-none group">
+            <div className="relative flex-1 lg:flex-none group">
               <Calendar
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
@@ -199,7 +201,8 @@ export const PartnerAccountSection: React.FC = () => {
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
+                onClick={(e) => (e.currentTarget).showPicker?.()}
+                className="w-full lg:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
               />
             </div>
           </div>
@@ -207,7 +210,7 @@ export const PartnerAccountSection: React.FC = () => {
         <button
           onClick={resetFilters}
           disabled={!hasFilters}
-          className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
+          className={`w-full lg:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
             hasFilters
               ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black cursor-pointer'
               : 'bg-gray-50 text-gray-300 cursor-not-allowed'
@@ -220,6 +223,7 @@ export const PartnerAccountSection: React.FC = () => {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        {hasTransactions ? (
         <div className="overflow-x-auto custom-scrollbar pb-2 sm:pb-0">
           <div className="min-w-[800px]">
             <table className="w-full text-left border-collapse">
@@ -349,7 +353,7 @@ export const PartnerAccountSection: React.FC = () => {
             </table>
           </div>
         </div>
-        {filteredTransactions.length === 0 && (
+        ) : (
           <div className="p-12 text-center text-gray-500 flex flex-col items-center">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
               <Filter size={20} className="text-gray-400" />
@@ -368,6 +372,3 @@ export const PartnerAccountSection: React.FC = () => {
     </div>
   );
 };
-
-
-

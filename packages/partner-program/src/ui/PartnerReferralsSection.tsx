@@ -368,7 +368,7 @@ export const PartnerReferralsSection: React.FC = () => {
       </div>
 
       {/* Карточки статистики */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4 transition-all hover:shadow-md hover:border-blue-200 group">
           <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <MousePointerClick size={24} />
@@ -576,5 +576,3 @@ export const PartnerReferralsSection: React.FC = () => {
     </div>
   );
 };
-
-

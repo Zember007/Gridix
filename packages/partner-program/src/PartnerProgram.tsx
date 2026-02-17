@@ -182,7 +182,7 @@ export const PartnerProgram: React.FC<PartnerProgramProps> = ({
             <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-tight truncate">
               {t('partners.title')}
             </h1>
-            <p className="text-xs md:text-sm text-slate-500 font-medium truncate">
+            <p className="text-xs md:text-sm text-slate-500 font-medium">
               {t('partners.subtitle')}
             </p>
           </div>
@@ -297,7 +297,7 @@ const TabButton: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex-none py-1.5 px-4 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${
+      className={`flex-none py-1.5 px-2.5 sm:px-5 text-sm font-semibold rounded-md transition-all whitespace-nowrap ${
         isActive
           ? 'bg-white text-slate-900 shadow-sm'
           : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200/50'

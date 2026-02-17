@@ -444,7 +444,7 @@ export const PartnerClientsSection: React.FC = () => {
 
       {/* Шапка секции */}
       <div className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
               {t('partners.clients')}
