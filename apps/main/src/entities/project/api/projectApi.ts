@@ -18,7 +18,9 @@ export interface ProjectFilters {
   offset?: number;
 }
 
-export const fetchProjects = async (filters: ProjectFilters = {}): Promise<Project[]> => {
+export const fetchProjects = async (
+  filters: ProjectFilters = {},
+): Promise<Project[]> => {
   let query = supabase.from("projects").select("*");
 
   if (filters.userId) {
@@ -36,7 +38,10 @@ export const fetchProjects = async (filters: ProjectFilters = {}): Promise<Proje
   }
 
   if (filters.offset) {
-    query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+    query = query.range(
+      filters.offset,
+      filters.offset + (filters.limit || 50) - 1,
+    );
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -47,9 +52,13 @@ export const fetchProjects = async (filters: ProjectFilters = {}): Promise<Proje
 };
 
 const isUUID = (identifier: string) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(identifier);
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    identifier,
+  );
 
-export const fetchProjectByIdOrSlug = async (identifier: string): Promise<Project | null> => {
+export const fetchProjectByIdOrSlug = async (
+  identifier: string,
+): Promise<Project | null> => {
   if (!identifier) return null;
 
   let query = supabase.from("projects").select("*");
@@ -74,7 +83,10 @@ export const fetchProjectByIdOrSlug = async (identifier: string): Promise<Projec
 
 export const createProject = async (
   userId: string,
-  projectData: Omit<Project, "id" | "created_at" | "updated_at" | "view_count" | "user_id">
+  projectData: Omit<
+    Project,
+    "id" | "created_at" | "updated_at" | "view_count" | "user_id"
+  >,
 ): Promise<Project> => {
   const { data, error } = await supabase
     .from("projects")
@@ -93,7 +105,7 @@ export const createProject = async (
 export const updateProject = async (
   userId: string,
   projectId: string,
-  updates: Partial<Project>
+  updates: Partial<Project>,
 ): Promise<Project> => {
   const { data, error } = await supabase
     .from("projects")
@@ -108,7 +120,10 @@ export const updateProject = async (
   return data as Project;
 };
 
-export const deleteProject = async (userId: string, projectId: string): Promise<void> => {
+export const deleteProject = async (
+  userId: string,
+  projectId: string,
+): Promise<void> => {
   const { error } = await supabase
     .from("projects")
     .delete()
@@ -118,14 +133,18 @@ export const deleteProject = async (userId: string, projectId: string): Promise<
   if (error) throw error;
 };
 
-export const incrementProjectView = async (projectId: string, userId?: string | null) => {
+export const incrementProjectView = async (
+  projectId: string,
+  userId?: string | null,
+) => {
   try {
     await supabase.from("project_views").insert({
       project_id: projectId,
       user_id: userId || null,
       ip_address: null,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+      referrer:
+        typeof document !== "undefined" ? document.referrer || null : null,
     });
 
     const { error } = await supabase.rpc("increment_view_count", {
@@ -155,7 +174,7 @@ export const fetchProjectByDomain = async (host: string) => {
         subscription_expires_at,
         is_public_visible
       )
-    `
+    `,
     )
     .eq("domain", host)
     .eq("status", "active")

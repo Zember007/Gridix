@@ -1,25 +1,37 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from 'sonner';
+import { useLanguage } from "@/contexts/LanguageContext";
+import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { SuccessNotification } from "@gridix/ui";
 
 interface ApartmentReservationFormProps {
   apartmentId: string;
   projectId: string;
-  onSubmit?: (payload: { name: string; email: string; phone: string; apartmentId: string; projectId: string }) => void;
+  onSubmit?: (payload: {
+    name: string;
+    email: string;
+    phone: string;
+    apartmentId: string;
+    projectId: string;
+  }) => void;
   onCancel?: () => void;
   themeColor?: string;
 }
 
-const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, themeColor = '#000000' }: ApartmentReservationFormProps) => {
+const ApartmentReservationForm = ({
+  apartmentId,
+  projectId,
+  onSubmit,
+  onCancel,
+  themeColor = "#000000",
+}: ApartmentReservationFormProps) => {
   const { t } = useLanguage();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -35,26 +47,34 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
       }
 
       // Send lead to CRM(s) via Edge Function
-      const { data, error } = await supabase.functions.invoke('crm-create-lead', {
-        body: {
-          name,
-          email,
-          phone,
-          apartmentId,
-          projectId,
-          agentId: (new URLSearchParams(window.location.search)).get('agent_id') ||
-            JSON.parse(localStorage.getItem(`agent_context:${projectId}`) || '{}')?.agent_id
-        }
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "crm-create-lead",
+        {
+          body: {
+            name,
+            email,
+            phone,
+            apartmentId,
+            projectId,
+            agentId:
+              new URLSearchParams(window.location.search).get("agent_id") ||
+              JSON.parse(
+                localStorage.getItem(`agent_context:${projectId}`) || "{}",
+              )?.agent_id,
+          },
+        },
+      );
 
       if (error) {
-        console.error('Error creating lead:', error);
-        toast.error('Произошла ошибка при отправке заявки. Попробуйте еще раз.');
+        console.error("Error creating lead:", error);
+        toast.error(
+          "Произошла ошибка при отправке заявки. Попробуйте еще раз.",
+        );
         return;
       }
 
       if (data?.error) {
-        console.error('AmoCRM API error:', data.error);
+        console.error("AmoCRM API error:", data.error);
         toast.error(`Ошибка: ${data.error}`);
         return;
       }
@@ -63,13 +83,12 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
       setShowSuccess(true);
 
       // Clear form
-      setName('');
-      setEmail('');
-      setPhone('');
-
+      setName("");
+      setEmail("");
+      setPhone("");
     } catch (error) {
-      console.error('Unexpected error:', error);
-      toast.error('Произошла неожиданная ошибка. Попробуйте еще раз.');
+      console.error("Unexpected error:", error);
+      toast.error("Произошла неожиданная ошибка. Попробуйте еще раз.");
     } finally {
       setSubmitting(false);
     }
@@ -87,28 +106,32 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="reservation-name">{t('managerAccounts.fullName')}</Label>
+          <Label htmlFor="reservation-name">
+            {t("managerAccounts.fullName")}
+          </Label>
           <Input
             id="reservation-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={t('managerAccounts.fullNamePlaceholder')}
+            placeholder={t("managerAccounts.fullNamePlaceholder")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="reservation-email">{t('auth.email')}</Label>
+          <Label htmlFor="reservation-email">{t("auth.email")}</Label>
           <Input
             id="reservation-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={t('managerAccounts.emailPlaceholder')}
+            placeholder={t("managerAccounts.emailPlaceholder")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="reservation-phone">{t('managerAccounts.phone')}</Label>
+          <Label htmlFor="reservation-phone">
+            {t("managerAccounts.phone")}
+          </Label>
           <Input
             id="reservation-phone"
             type="tel"
@@ -120,7 +143,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            {t('managerAccounts.cancel')}
+            {t("managerAccounts.cancel")}
           </Button>
           <Button
             type="submit"
@@ -128,7 +151,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
             className="text-white hover:opacity-90"
             style={{ backgroundColor: themeColor }}
           >
-            {submitting ? t('auth.sending') : t('apartment.sendRequest')}
+            {submitting ? t("auth.sending") : t("apartment.sendRequest")}
           </Button>
         </div>
       </form>
@@ -136,7 +159,7 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
       <SuccessNotification
         isVisible={showSuccess}
         onClose={handleSuccessClose}
-        message={t('apartment.requestSent')}
+        message={t("apartment.requestSent")}
         duration={2500}
       />
     </>
@@ -144,5 +167,3 @@ const ApartmentReservationForm = ({ apartmentId, projectId, onSubmit, onCancel, 
 };
 
 export default ApartmentReservationForm;
-
-

@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import { CrmProjectLite } from "@/pages/bitrix/hooks/useCrmProjectsLite";
 
 function toPositiveInt(v: string | null): number | null {
@@ -26,12 +32,19 @@ type BitrixCrmTopBarProps = {
   activeProjectId?: string | null;
 };
 
-export function BitrixCrmTopBar({ projects, loading, dealId, activeProjectId }: BitrixCrmTopBarProps) {
+export function BitrixCrmTopBar({
+  projects,
+  loading,
+  dealId,
+  activeProjectId,
+}: BitrixCrmTopBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const dealIdResolved = useMemo(() => {
-    const fromUrl = toPositiveInt(new URLSearchParams(location.search).get("deal_id"));
+    const fromUrl = toPositiveInt(
+      new URLSearchParams(location.search).get("deal_id"),
+    );
     return dealId ?? fromUrl;
   }, [dealId, location.search]);
 
@@ -47,14 +60,20 @@ export function BitrixCrmTopBar({ projects, loading, dealId, activeProjectId }: 
     const p = projects.find((x) => x.id === next) ?? null;
     if (!p) return;
 
-    const pathname = p.slug ? `/embed/project/${p.slug}` : `/embed/project/id/${p.id}`;
+    const pathname = p.slug
+      ? `/embed/project/${p.slug}`
+      : `/embed/project/id/${p.id}`;
     navigate({ pathname, search: `?${sp.toString()}` });
   };
 
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0 flex-1">
-        <Select value={value} onValueChange={onValueChange} disabled={!!loading}>
+        <Select
+          value={value}
+          onValueChange={onValueChange}
+          disabled={!!loading}
+        >
           <SelectTrigger className="h-9">
             <SelectValue placeholder="Каталог объектов" />
           </SelectTrigger>
@@ -71,10 +90,10 @@ export function BitrixCrmTopBar({ projects, loading, dealId, activeProjectId }: 
 
       {dealIdResolved ? (
         <div className="shrink-0 rounded-md border bg-muted/30 px-2 py-1 text-xs text-muted-foreground">
-          Сейчас открыта сделка <span className="font-mono text-foreground">{dealIdResolved}</span>
+          Сейчас открыта сделка{" "}
+          <span className="font-mono text-foreground">{dealIdResolved}</span>
         </div>
       ) : null}
     </div>
   );
 }
-

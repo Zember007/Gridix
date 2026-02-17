@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import { Slider } from "@gridix/ui";
 import { Button } from "@gridix/ui";
-import { Calculator, CreditCard } from 'lucide-react';
+import { Calculator, CreditCard } from "lucide-react";
 import { formatPriceWithCurrency } from "@gridix/utils/lib";
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InstallmentCalculatorProps {
   apartmentPrice: number;
@@ -33,17 +33,21 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
   maxInstallmentMonths,
   applyInstallment,
   onCalculate,
-  themeColor = '#000000'
+  themeColor = "#000000",
 }) => {
   const { t } = useLanguage();
 
   const sliderStyle = {
-    '--slider-thumb-color': themeColor,
-    '--slider-range-color': themeColor,
+    "--slider-thumb-color": themeColor,
+    "--slider-range-color": themeColor,
   } as React.CSSProperties;
-  
-  const [downPaymentPercent, setDownPaymentPercent] = useState(minDownPaymentPercent);
-  const [installmentMonths, setInstallmentMonths] = useState(Math.min(12, maxInstallmentMonths));
+
+  const [downPaymentPercent, setDownPaymentPercent] = useState(
+    minDownPaymentPercent,
+  );
+  const [installmentMonths, setInstallmentMonths] = useState(
+    Math.min(12, maxInstallmentMonths),
+  );
 
   const calculation = useMemo(() => {
     const downPayment = Math.round((apartmentPrice * downPaymentPercent) / 100);
@@ -56,7 +60,7 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
       downPaymentPercent,
       remainingAmount,
       monthlyPayment,
-      installmentMonths
+      installmentMonths,
     };
   }, [apartmentPrice, downPaymentPercent, installmentMonths]);
 
@@ -68,28 +72,34 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-4">
-        
-      </CardHeader>
+      <CardHeader className="pb-4"></CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-          <span className="font-medium text-gray-700">{t('apartment.price')}</span>
+        <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+          <span className="font-medium text-gray-700">
+            {t("apartment.price")}
+          </span>
           <span className="text-lg font-semibold">
             {formatPriceWithCurrency(apartmentPrice, currency)}
           </span>
         </div>
 
         <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <Label className="text-sm font-medium">{t('installment.downPayment')}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">
+              {t("installment.downPayment")}
+            </Label>
             <div className="text-right">
-              <div className="font-semibold">{formatPriceWithCurrency(downPayment, currency)}</div>
+              <div className="font-semibold">
+                {formatPriceWithCurrency(downPayment, currency)}
+              </div>
               <div className="text-sm text-gray-500">{downPaymentPercent}%</div>
             </div>
           </div>
           <Slider
             value={[downPaymentPercent]}
-            onValueChange={(value) => setDownPaymentPercent(value[0] ?? downPaymentPercent)}
+            onValueChange={(value) =>
+              setDownPaymentPercent(value[0] ?? downPaymentPercent)
+            }
             min={minDownPaymentPercent}
             max={100}
             step={5}
@@ -97,21 +107,29 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
             style={sliderStyle}
           />
           <div className="flex justify-between text-xs text-gray-500">
-            <span>{t('installment.minimum')}: {minDownPaymentPercent}%</span>
-            <span>{t('installment.maximum')}: 100%</span>
+            <span>
+              {t("installment.minimum")}: {minDownPaymentPercent}%
+            </span>
+            <span>{t("installment.maximum")}: 100%</span>
           </div>
         </div>
 
         <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <Label className="text-sm font-medium">{t('installment.period')}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">
+              {t("installment.period")}
+            </Label>
             <div className="text-right">
-              <div className="font-semibold">{installmentMonths} {t('installment.months')}</div>
+              <div className="font-semibold">
+                {installmentMonths} {t("installment.months")}
+              </div>
             </div>
           </div>
           <Slider
             value={[installmentMonths]}
-            onValueChange={(value) => setInstallmentMonths(value[0] ?? installmentMonths)}
+            onValueChange={(value) =>
+              setInstallmentMonths(value[0] ?? installmentMonths)
+            }
             min={1}
             max={maxInstallmentMonths}
             step={1}
@@ -119,39 +137,47 @@ const InstallmentCalculator: React.FC<InstallmentCalculatorProps> = ({
             style={sliderStyle}
           />
           <div className="flex justify-between text-xs text-gray-500">
-            <span>1 {t('installment.month')}</span>
-            <span>{maxInstallmentMonths} {t('installment.months')}</span>
+            <span>1 {t("installment.month")}</span>
+            <span>
+              {maxInstallmentMonths} {t("installment.months")}
+            </span>
           </div>
         </div>
 
-        <div className="space-y-3 pt-4 border-t">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700">{t('installment.remainingAmount')}</span>
-            <span className="font-medium">{formatPriceWithCurrency(remainingAmount, currency)}</span>
+        <div className="space-y-3 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700">
+              {t("installment.remainingAmount")}
+            </span>
+            <span className="font-medium">
+              {formatPriceWithCurrency(remainingAmount, currency)}
+            </span>
           </div>
-          <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-            <span className="font-medium text-blue-900">{t('installment.monthlyPayment')}</span>
+          <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
+            <span className="font-medium text-blue-900">
+              {t("installment.monthlyPayment")}
+            </span>
             <span className="text-xl font-bold text-blue-900">
               {formatPriceWithCurrency(monthlyPayment, currency)}
             </span>
           </div>
         </div>
 
-        <Button 
-          className="w-full gap-2 text-white hover:opacity-90" 
+        <Button
+          className="w-full gap-2 text-white hover:opacity-90"
           size="lg"
           onClick={applyInstallment}
           style={{ backgroundColor: themeColor }}
         >
           <CreditCard className="h-4 w-4" />
-          {t('installment.apply')}
+          {t("installment.apply")}
         </Button>
 
         {/* Дополнительная информация */}
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>• {t('installment.info.noInterest')}</p>
-          <p>• {t('installment.info.earlyPayment')}</p>
-          <p>• {t('installment.info.contactManager')}</p>
+        <div className="space-y-1 text-xs text-gray-500">
+          <p>• {t("installment.info.noInterest")}</p>
+          <p>• {t("installment.info.earlyPayment")}</p>
+          <p>• {t("installment.info.contactManager")}</p>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Copy,
   Users,
@@ -13,16 +13,16 @@ import {
   Wallet,
   ArrowRight,
   Award,
-} from 'lucide-react';
-import { IncomeChart } from './IncomeChart';
-import { usePartner } from '../queries/usePartner';
-import { usePartnerStats } from '../queries/usePartnerStats';
-import { useLanguage } from '@gridix/utils/react';
+} from "lucide-react";
+import { IncomeChart } from "./IncomeChart";
+import { usePartner } from "../queries/usePartner";
+import { usePartnerStats } from "../queries/usePartnerStats";
+import { useLanguage } from "@gridix/utils/react";
 import { Badge } from "@gridix/ui";
 
 interface PartnerOverviewSectionProps {
   onNavigate?: (
-    tab: 'account' | 'overview' | 'referrals' | 'clients' | 'instructions',
+    tab: "account" | "overview" | "referrals" | "clients" | "instructions",
   ) => void;
 }
 
@@ -33,7 +33,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   const { stats, loading } = usePartnerStats();
   const { language, t } = useLanguage();
 
-  const referralCode = partnerProfile?.partner_code ?? '—';
+  const referralCode = partnerProfile?.partner_code ?? "—";
 
   const incomeHistory = stats?.income_history ?? [];
   const chartData = incomeHistory.map((point) => point.amount);
@@ -47,33 +47,40 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
     let total = 0;
 
     for (const client of clients) {
-      const rawSource = (client.utm_source || '').trim().toLowerCase();
-      const source = rawSource || 'direct';
+      const rawSource = (client.utm_source || "").trim().toLowerCase();
+      const source = rawSource || "direct";
       counts[source] = (counts[source] || 0) + 1;
       total += 1;
     }
 
     if (!total) return [];
 
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-    const colors = ['bg-red-500', 'bg-blue-500', 'bg-gray-800', 'bg-purple-500'];
+    const entries = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+    const colors = [
+      "bg-red-500",
+      "bg-blue-500",
+      "bg-gray-800",
+      "bg-purple-500",
+    ];
 
     return entries.map(([source, count], index) => {
       let label = source;
-      if (source === 'direct') {
-        label = t('partners.sourceDirect');
-      } else if (source === 'youtube') {
-        label = 'YouTube';
-      } else if (source === 'telegram') {
-        label = 'Telegram';
-      } else if (source === 'instagram') {
-        label = 'Instagram';
-      } else if (source === 'facebook') {
-        label = 'Facebook';
-      } else if (source === 'blog') {
-        label = t('partners.sourceBlog');
-      } else if (source === 'email_newsletter') {
-        label = t('partners.sourceEmail');
+      if (source === "direct") {
+        label = t("partners.sourceDirect");
+      } else if (source === "youtube") {
+        label = "YouTube";
+      } else if (source === "telegram") {
+        label = "Telegram";
+      } else if (source === "instagram") {
+        label = "Instagram";
+      } else if (source === "facebook") {
+        label = "Facebook";
+      } else if (source === "blog") {
+        label = t("partners.sourceBlog");
+      } else if (source === "email_newsletter") {
+        label = t("partners.sourceEmail");
       } else {
         label = source.charAt(0).toUpperCase() + source.slice(1);
       }
@@ -83,7 +90,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       return {
         label,
         percent,
-        color: colors[index] || 'bg-gray-500',
+        color: colors[index] || "bg-gray-500",
       };
     });
   }, [stats?.clients]);
@@ -99,7 +106,8 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   const earned = stats?.total_earned ?? 0;
   const available = stats?.available_for_withdrawal ?? earned;
   const totalClicks = stats?.total_clicks ?? 0;
-  const registrations = stats?.funnel_registrations ?? stats?.total_clients ?? 0;
+  const registrations =
+    stats?.funnel_registrations ?? stats?.total_clients ?? 0;
   const payingClients = stats?.funnel_paying_clients ?? 0;
   const registrationsConversion =
     totalClicks > 0 ? Math.round((registrations / totalClicks) * 1000) / 10 : 0;
@@ -124,58 +132,55 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
     stats?.total_projects ?? stats?.active_clients ?? payingClients;
   const nextLevelTarget = stats?.next_level_required_active_clients ?? null;
   const clientsToNextLevel = stats?.clients_to_next_level ?? null;
-  const partnerLevelTitle = stats?.partner_level ?? 'Bronze Partner';
+  const partnerLevelTitle = stats?.partner_level ?? "Bronze Partner";
   const nextLevelName = stats?.next_level_name ?? null;
 
   const levelProgress =
     nextLevelTarget && nextLevelTarget > 0
-      ? Math.min(
-          Math.round((totalProjectsLevel / nextLevelTarget) * 100),
-          100,
-        )
+      ? Math.min(Math.round((totalProjectsLevel / nextLevelTarget) * 100), 100)
       : 100;
 
   if (loading && !stats) {
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="animate-in fade-in space-y-6 duration-500">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           {[0, 1, 2].map((idx) => (
             <div
               key={idx}
-              className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm"
+              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6"
             >
-              <div className="h-4 w-24 bg-gray-200 rounded mb-3 animate-pulse" />
-              <div className="h-8 w-20 bg-gray-200 rounded mb-2 animate-pulse" />
-              <div className="h-3 w-32 bg-gray-100 rounded animate-pulse" />
+              <div className="mb-3 h-4 w-24 animate-pulse rounded bg-gray-200" />
+              <div className="mb-2 h-8 w-20 animate-pulse rounded bg-gray-200" />
+              <div className="h-3 w-32 animate-pulse rounded bg-gray-100" />
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <div className="h-5 w-40 bg-gray-200 rounded mb-2 animate-pulse" />
-          <div className="h-4 w-64 bg-gray-100 rounded mb-4 animate-pulse" />
-          <div className="h-40 w-full bg-gray-100 rounded animate-pulse" />
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-2 h-5 w-40 animate-pulse rounded bg-gray-200" />
+          <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-100" />
+          <div className="h-40 w-full animate-pulse rounded bg-gray-100" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <div className="h-5 w-40 bg-gray-200 rounded mb-4 animate-pulse" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 h-5 w-40 animate-pulse rounded bg-gray-200" />
             <div className="space-y-4">
               {[0, 1, 2].map((idx) => (
                 <div
                   key={idx}
-                  className="h-10 w-full bg-gray-100 rounded animate-pulse"
+                  className="h-10 w-full animate-pulse rounded bg-gray-100"
                 />
               ))}
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <div className="h-5 w-40 bg-gray-200 rounded mb-4 animate-pulse" />
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 h-5 w-40 animate-pulse rounded bg-gray-200" />
             <div className="space-y-3">
               {[0, 1, 2, 3].map((idx) => (
                 <div
                   key={idx}
-                  className="h-4 w-full bg-gray-100 rounded animate-pulse"
+                  className="h-4 w-full animate-pulse rounded bg-gray-100"
                 />
               ))}
             </div>
@@ -186,55 +191,56 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="animate-in fade-in space-y-6 duration-500">
       {/* Gamification / Level Card */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white shadow-lg">
+        <div className="pointer-events-none absolute top-0 right-0 -mt-16 -mr-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+        <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-white/10 rounded-lg">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="rounded-lg bg-white/10 p-1.5">
                 <Award size={18} className="text-yellow-400" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                {t('partners.levelLabel')}
+              <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                {t("partners.levelLabel")}
               </span>
             </div>
-            <h2 className="text-2xl font-bold mb-1">
-              {partnerLevelTitle}{' '}
+            <h2 className="mb-1 text-2xl font-bold">
+              {partnerLevelTitle}{" "}
               <span className="text-lg font-normal text-slate-400">
-                {currentCommission !== null ? `(${currentCommission}%)` : ''}
+                {currentCommission !== null ? `(${currentCommission}%)` : ""}
               </span>
             </h2>
-            {nextLevelName && clientsToNextLevel !== null && clientsToNextLevel > 0 ? (
-              <p className="text-sm text-slate-300 max-w-lg">
-                {t('partners.levelHintPrefix')}{' '}
-                <span className="text-white font-bold">
-                  {clientsToNextLevel}{' '}
-                  {t('partners.levelHintProjects')}
+            {nextLevelName &&
+            clientsToNextLevel !== null &&
+            clientsToNextLevel > 0 ? (
+              <p className="max-w-lg text-sm text-slate-300">
+                {t("partners.levelHintPrefix")}{" "}
+                <span className="font-bold text-white">
+                  {clientsToNextLevel} {t("partners.levelHintProjects")}
                 </span>
-                ,{' '}
-                <span className="text-yellow-400 font-bold">
-                  {t('partners.levelHintReach', { level: nextLevelName })}
+                ,{" "}
+                <span className="font-bold text-yellow-400">
+                  {t("partners.levelHintReach", { level: nextLevelName })}
                 </span>
                 .
               </p>
             ) : (
-              <p className="text-sm text-slate-300 max-w-lg">
-                {t('partners.levelMax')}
+              <p className="max-w-lg text-sm text-slate-300">
+                {t("partners.levelMax")}
               </p>
             )}
           </div>
           {nextLevelTarget && nextLevelTarget > 0 && (
             <div className="w-full md:w-64">
-              <div className="flex justify-between text-xs font-semibold text-slate-400 mb-2">
-                <span>{t('partners.levelProgress')}</span>
+              <div className="mb-2 flex justify-between text-xs font-semibold text-slate-400">
+                <span>{t("partners.levelProgress")}</span>
                 <span>
-                  {totalProjectsLevel} / {nextLevelTarget}{' '}
-                  {t('partners.levelProjectsShort')}
+                  {totalProjectsLevel} / {nextLevelTarget}{" "}
+                  {t("partners.levelProjectsShort")}
                 </span>
               </div>
-              <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden border border-slate-600">
+              <div className="h-3 w-full overflow-hidden rounded-full border border-slate-600 bg-slate-700">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                   style={{ width: `${levelProgress}%` }}
@@ -246,58 +252,57 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <div className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-5 right-5 text-gray-300 group-hover:text-black transition-colors">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-black">
             <Users size={20} />
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-500 mb-1">
-              {t('partners.totalClients')}
+            <div className="mb-1 text-sm font-semibold text-gray-500">
+              {t("partners.totalClients")}
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="mb-2 text-3xl font-bold text-gray-900">
               {totalClients}
             </div>
             <div className="text-xs text-gray-400">
-              {referralClients} {t('partners.referralClients')},{' '}
-              {managedClients} {t('partners.managedClients')}
+              {referralClients} {t("partners.referralClients")},{" "}
+              {managedClients} {t("partners.managedClients")}
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-5 right-5 text-gray-300 group-hover:text-green-600 transition-colors">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-green-600">
             <DollarSign size={20} />
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-500 mb-1">
-              {t('partners.earned')}
+            <div className="mb-1 text-sm font-semibold text-gray-500">
+              {t("partners.earned")}
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="mb-2 text-3xl font-bold text-gray-900">
               ${earned.toFixed(2)}
             </div>
             <div className="text-xs text-gray-400">
-              {t('partners.availableForWithdrawal')}: $
-              {available.toFixed(2)}
+              {t("partners.availableForWithdrawal")}: ${available.toFixed(2)}
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 md:p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-5 right-5 text-gray-300 group-hover:text-black transition-colors">
+        <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+          <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-black">
             <TrendingUp size={20} />
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-500 mb-1">
-              {t('partners.partnerCode')}
+            <div className="mb-1 text-sm font-semibold text-gray-500">
+              {t("partners.partnerCode")}
             </div>
-            <div className="flex items-center gap-3 mt-2">
-              <Badge className="bg-gray-100 text-gray-800 font-mono">
+            <div className="mt-2 flex items-center gap-3">
+              <Badge className="bg-gray-100 font-mono text-gray-800">
                 {referralCode}
               </Badge>
               <button
                 onClick={() => navigator.clipboard.writeText(referralCode)}
-                className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-black transition-colors"
+                className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-black"
               >
                 <Copy size={16} />
               </button>
@@ -307,49 +312,53 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       </div>
 
       {/* Income Chart */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-hidden">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
               <Activity size={20} className="text-green-500" />
-              {t('partners.incomeDynamics')}
+              {t("partners.incomeDynamics")}
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              {t('partners.incomeLast30d')}
+            <p className="mt-1 text-sm text-gray-500">
+              {t("partners.incomeLast30d")}
             </p>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-green-100">
+          <div className="flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700">
             <TrendingUp size={16} />
-            {t('partners.income30d')}: ${totalIncome30d.toFixed(2)}
+            {t("partners.income30d")}: ${totalIncome30d.toFixed(2)}
           </div>
         </div>
 
         <div className="w-full">
-          <IncomeChart data={chartData} dates={chartDates} language={language} />
+          <IncomeChart
+            data={chartData}
+            dates={chartDates}
+            language={language}
+          />
         </div>
       </div>
 
       {/* Funnel & sources */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
             <MousePointerClick size={20} className="text-gray-400" />
-            {t('partners.funnelTitle')}
+            {t("partners.funnelTitle")}
           </h3>
-          <div className="space-y-6 relative">
-            <div className="absolute left-[19px] top-8 bottom-8 w-0.5 bg-gray-100 -z-10" />
+          <div className="relative space-y-6">
+            <div className="absolute top-8 bottom-8 left-[19px] -z-10 w-0.5 bg-gray-100" />
 
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-110 transition-transform">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-sm transition-transform group-hover:scale-110">
                   <MousePointerClick size={18} />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {t('partners.funnelClicks')}
+                    {t("partners.funnelClicks")}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {t('partners.funnelClicksDesc')}
+                    {t("partners.funnelClicksDesc")}
                   </div>
                 </div>
               </div>
@@ -360,21 +369,21 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shadow-sm group-hover:scale-110 transition-transform">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-600 shadow-sm transition-transform group-hover:scale-110">
                   <UserCheck size={18} />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {t('partners.funnelRegistrations')}
+                    {t("partners.funnelRegistrations")}
                   </div>
                   <div className="text-xs text-gray-500">
                     {totalClicks > 0
-                      ? t('partners.funnelFromClicks', {
+                      ? t("partners.funnelFromClicks", {
                           value: registrationsConversion,
                         })
-                      : t('partners.funnelFromClicksEmpty')}
+                      : t("partners.funnelFromClicksEmpty")}
                   </div>
                 </div>
               </div>
@@ -385,21 +394,21 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between group">
+            <div className="group flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-green-600 shadow-sm group-hover:scale-110 transition-transform">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-green-100 bg-green-50 text-green-600 shadow-sm transition-transform group-hover:scale-110">
                   <DollarSign size={18} />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {t('partners.funnelPayments')}
+                    {t("partners.funnelPayments")}
                   </div>
                   <div className="text-xs text-gray-500">
                     {registrations > 0
-                      ? t('partners.funnelFromRegistrations', {
+                      ? t("partners.funnelFromRegistrations", {
                           value: paymentsConversion,
                         })
-                      : t('partners.funnelFromRegistrationsEmpty')}
+                      : t("partners.funnelFromRegistrationsEmpty")}
                   </div>
                 </div>
               </div>
@@ -412,14 +421,14 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
             <PieChart size={20} className="text-gray-400" />
-            {t('partners.trafficTitle')}
+            {t("partners.trafficTitle")}
           </h3>
           {trafficStats.length === 0 ? (
             <p className="text-sm text-gray-400">
-              {t('partners.trafficEmpty')}
+              {t("partners.trafficEmpty")}
             </p>
           ) : (
             <div className="space-y-4">
@@ -438,64 +447,61 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
       {/* Quick actions (навигация по вкладкам партнёрки) */}
       <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-4">
-          {t('partners.quickActionsTitle')}
+        <h3 className="mb-4 text-lg font-bold text-slate-900">
+          {t("partners.quickActionsTitle")}
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div
-            onClick={() => onNavigate && onNavigate('referrals')}
-            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+            onClick={() => onNavigate && onNavigate("referrals")}
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
           >
-            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
               <Link size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">
-              {t('partners.quickActionsRefLinkTitle')}
+            <h4 className="mb-1 font-bold text-slate-900">
+              {t("partners.quickActionsRefLinkTitle")}
             </h4>
-            <p className="text-xs text-slate-500 mb-4 flex-1">
-              {t('partners.quickActionsRefLinkDesc')}
+            <p className="mb-4 flex-1 text-xs text-slate-500">
+              {t("partners.quickActionsRefLinkDesc")}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-blue-600">
-              {t('partners.quickActionsRefLinkCta')}{' '}
-              <ArrowRight size={12} />
+              {t("partners.quickActionsRefLinkCta")} <ArrowRight size={12} />
             </div>
           </div>
 
           <div
-            onClick={() => onNavigate && onNavigate('clients')}
-            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+            onClick={() => onNavigate && onNavigate("clients")}
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-purple-300 hover:shadow-md"
           >
-            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-600 group-hover:text-white">
               <UserPlus size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">
-              {t('partners.quickActionsClientsTitle')}
+            <h4 className="mb-1 font-bold text-slate-900">
+              {t("partners.quickActionsClientsTitle")}
             </h4>
-            <p className="text-xs text-slate-500 mb-4 flex-1">
-              {t('partners.quickActionsClientsDesc')}
+            <p className="mb-4 flex-1 text-xs text-slate-500">
+              {t("partners.quickActionsClientsDesc")}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-purple-600">
-              {t('partners.quickActionsClientsCta')}{' '}
-              <ArrowRight size={12} />
+              {t("partners.quickActionsClientsCta")} <ArrowRight size={12} />
             </div>
           </div>
 
           <div
-            onClick={() => onNavigate && onNavigate('account')}
-            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:border-green-300 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full"
+            onClick={() => onNavigate && onNavigate("account")}
+            className="group flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-green-300 hover:shadow-md"
           >
-            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-600 group-hover:text-white transition-colors">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 text-green-600 transition-colors group-hover:bg-green-600 group-hover:text-white">
               <Wallet size={20} />
             </div>
-            <h4 className="font-bold text-slate-900 mb-1">
-              {t('partners.quickActionsAccountTitle')}
+            <h4 className="mb-1 font-bold text-slate-900">
+              {t("partners.quickActionsAccountTitle")}
             </h4>
-            <p className="text-xs text-slate-500 mb-4 flex-1">
-              {t('partners.quickActionsAccountDesc')}
+            <p className="mb-4 flex-1 text-xs text-slate-500">
+              {t("partners.quickActionsAccountDesc")}
             </p>
             <div className="flex items-center gap-2 text-xs font-bold text-green-600">
-              {t('partners.quickActionsAccountCta')}{' '}
-              <ArrowRight size={12} />
+              {t("partners.quickActionsAccountCta")} <ArrowRight size={12} />
             </div>
           </div>
         </div>
@@ -503,7 +509,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
 
       {loading && (
         <div className="text-sm text-gray-400">
-          {t('partners.loadingStats')}
+          {t("partners.loadingStats")}
         </div>
       )}
     </div>
@@ -516,14 +522,15 @@ const TrafficRow: React.FC<{
   color: string;
 }> = ({ label, percent, color }) => (
   <div>
-    <div className="flex justify-between items-center text-sm mb-2">
+    <div className="mb-2 flex items-center justify-between text-sm">
       <span className="font-medium text-gray-700">{label}</span>
-      <span className="text-gray-900 font-bold">{percent}%</span>
+      <span className="font-bold text-gray-900">{percent}%</span>
     </div>
-    <div className="w-full bg-gray-100 rounded-full h-2">
-      <div className={`${color} h-2 rounded-full`} style={{ width: `${percent}%` }} />
+    <div className="h-2 w-full rounded-full bg-gray-100">
+      <div
+        className={`${color} h-2 rounded-full`}
+        style={{ width: `${percent}%` }}
+      />
     </div>
   </div>
 );
-
-

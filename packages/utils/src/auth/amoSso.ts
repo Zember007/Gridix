@@ -32,4 +32,3 @@ export async function exchangeAmoSsoToken(
   });
   if (setError) throw setError;
 }
-

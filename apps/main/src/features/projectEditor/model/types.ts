@@ -44,5 +44,3 @@ export const DEFAULT_PROJECT_EDITOR_PROJECT: ProjectEditorProject = {
   facade_open: false,
   available_languages: SUPPORTED_LANGUAGES,
 };
-
-

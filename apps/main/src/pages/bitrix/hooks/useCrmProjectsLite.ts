@@ -43,7 +43,8 @@ export function useCrmProjectsLite(enabled: boolean = true) {
         if (!cancelled) setProjects((data ?? []) as CrmProjectLite[]);
       } catch (e: any) {
         console.error(e);
-        if (!cancelled) setError(e?.message ? String(e.message) : "Failed to load projects");
+        if (!cancelled)
+          setError(e?.message ? String(e.message) : "Failed to load projects");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -58,4 +59,3 @@ export function useCrmProjectsLite(enabled: boolean = true) {
 
   return { projects, loading, error };
 }
-

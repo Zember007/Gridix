@@ -13,7 +13,13 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-export type ViewMode = "list" | "kanban" | "grid" | "map" | "calendar" | "workload";
+export type ViewMode =
+  | "list"
+  | "kanban"
+  | "grid"
+  | "map"
+  | "calendar"
+  | "workload";
 
 export interface ModuleHeaderProps {
   title: string;
@@ -67,7 +73,8 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const effectiveSearchPlaceholder = searchPlaceholder ?? t("common.moduleHeader.searchPlaceholder");
+  const effectiveSearchPlaceholder =
+    searchPlaceholder ?? t("common.moduleHeader.searchPlaceholder");
   const financeTitle = t("common.moduleHeader.financeTitle");
   const balanceLabel = t("common.moduleHeader.balanceLabel");
   const createLabel = t("common.moduleHeader.create");
@@ -83,19 +90,19 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
   }, []);
 
   return (
-    <div className="h-auto min-h-[72px] px-4 md:px-6 py-3 bg-white border-b border-slate-200 sticky top-0 z-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+    <div className="sticky top-0 z-20 flex h-auto min-h-[72px] flex-col items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3 transition-all md:flex-row md:items-center md:px-6">
       {/* Top Row: Title & Mobile Actions */}
-      <div className="flex items-center justify-between w-full md:w-auto">
-        <div className="flex flex-col min-w-0">
+      <div className="flex w-full items-center justify-between md:w-auto">
+        <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight leading-none truncate">
+            <h1 className="truncate text-lg font-bold leading-none tracking-tight text-slate-900 md:text-xl">
               {title}
             </h1>
             {funnelName ? (
               <button
                 type="button"
                 onClick={onFunnelClick}
-                className="flex items-center gap-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors text-xs md:text-sm font-bold text-slate-700 ml-2 truncate max-w-[120px] md:max-w-none"
+                className="ml-2 flex max-w-[120px] items-center gap-1 truncate rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200 md:max-w-none md:text-sm"
               >
                 {funnelName}
                 <ChevronDown size={14} className="opacity-50" />
@@ -103,22 +110,26 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
             ) : null}
           </div>
           {subtitle ? (
-            <p className="text-xs text-slate-500 font-medium mt-1 truncate max-w-[200px] md:max-w-md">
+            <p className="mt-1 max-w-[200px] truncate text-xs font-medium text-slate-500 md:max-w-md">
               {subtitle}
             </p>
           ) : null}
         </div>
 
         {/* Mobile Only: Balance & Menu */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex items-center gap-2 md:hidden">
           {balance !== undefined ? (
             <div
               onClick={onBalanceClick}
-              className="flex items-center gap-1.5 bg-slate-100/70 border border-slate-200/80 px-2 py-1 rounded-lg cursor-pointer active:bg-slate-200"
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-100/70 px-2 py-1 active:bg-slate-200"
             >
               <Wallet size={14} className="text-slate-500" />
               <span className="text-xs font-bold text-slate-900">
-                ${balance.toLocaleString("en-US", { compactDisplay: "short", notation: "compact" })}
+                $
+                {balance.toLocaleString("en-US", {
+                  compactDisplay: "short",
+                  notation: "compact",
+                })}
               </span>
             </div>
           ) : null}
@@ -127,14 +138,16 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 border rounded-lg transition-all shadow-sm ${
-                  isMenuOpen ? "bg-slate-100 border-slate-300 text-slate-900" : "bg-white border-slate-200 text-slate-600"
+                className={`rounded-lg border p-2 shadow-sm transition-all ${
+                  isMenuOpen
+                    ? "border-slate-300 bg-slate-100 text-slate-900"
+                    : "border-slate-200 bg-white text-slate-600"
                 }`}
               >
                 <MoreHorizontal size={18} />
               </button>
               {isMenuOpen ? (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-30 py-1.5 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 top-full z-30 mt-2 w-48 rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl animate-in fade-in zoom-in-95">
                   {actionsMenu}
                 </div>
               ) : null}
@@ -144,46 +157,51 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
       </div>
 
       {/* Bottom Row (Mobile) / Right Side (Desktop): Controls */}
-      <div className="flex items-center gap-3 w-full md:w-auto">
+      <div className="flex w-full items-center gap-3 md:w-auto">
         {!hideSearch ? (
-          <div className="relative group flex-1 md:w-64 md:flex-none">
+          <div className="group relative flex-1 md:w-64 md:flex-none">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-hover:text-blue-500"
             />
             <input
               type="text"
               placeholder={effectiveSearchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all font-medium"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 hover:bg-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
             />
             {onFilterClick ? (
               <button
                 type="button"
                 onClick={onFilterClick}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white transition-colors ${
+                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors hover:bg-white ${
                   activeFiltersCount > 0 ? "text-blue-600" : "text-slate-400"
                 }`}
               >
                 <Filter size={14} />
                 {activeFiltersCount > 0 ? (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-600 rounded-full border border-white" />
+                  <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full border border-white bg-blue-600" />
                 ) : null}
               </button>
             ) : null}
           </div>
         ) : null}
 
-        {viewMode && onViewModeChange && availableViews && availableViews.length > 1 ? (
-          <div className="hidden md:flex p-1 bg-slate-100 rounded-lg border border-slate-200">
+        {viewMode &&
+        onViewModeChange &&
+        availableViews &&
+        availableViews.length > 1 ? (
+          <div className="hidden rounded-lg border border-slate-200 bg-slate-100 p-1 md:flex">
             {availableViews.map((view) => (
               <button
                 key={view}
                 type="button"
                 onClick={() => onViewModeChange(view)}
-                className={`p-1.5 rounded-md transition-all ${
-                  viewMode === view ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                className={`rounded-md p-1.5 transition-all ${
+                  viewMode === view
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600"
                 }`}
                 title={view.charAt(0).toUpperCase() + view.slice(1)}
               >
@@ -199,19 +217,24 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
         ) : null}
 
         {/* Desktop Balance & Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden items-center gap-3 md:flex">
           {balance !== undefined ? (
             <div
               onClick={onBalanceClick}
-              className="flex items-center gap-2 bg-slate-100/70 border border-slate-200/80 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-200/70 transition-colors"
+              className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-100/70 px-3 py-1.5 transition-colors hover:bg-slate-200/70"
               title={financeTitle}
             >
               <Wallet size={16} className="text-slate-500" />
               <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-slate-900 leading-none">
-                  ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                <span className="text-sm font-bold leading-none text-slate-900">
+                  $
+                  {balance.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium leading-none">{balanceLabel}</span>
+                <span className="text-[10px] font-medium leading-none text-slate-400">
+                  {balanceLabel}
+                </span>
               </div>
             </div>
           ) : null}
@@ -222,16 +245,16 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className={`p-2 border rounded-lg transition-all shadow-sm ${
+                  className={`rounded-lg border p-2 shadow-sm transition-all ${
                     isMenuOpen
-                      ? "bg-slate-100 border-slate-300 text-slate-900"
-                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                      ? "border-slate-300 bg-slate-100 text-slate-900"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <MoreHorizontal size={18} />
                 </button>
                 {isMenuOpen ? (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-30 py-1.5 animate-in fade-in zoom-in-95">
+                  <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl animate-in fade-in zoom-in-95">
                     {actionsMenu}
                   </div>
                 ) : null}
@@ -242,7 +265,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
               <button
                 type="button"
                 onClick={primaryAction.onClick}
-                className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-slate-900/10 transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap"
+                className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-95"
               >
                 {primaryAction.icon || <Plus size={18} />}
                 <span className="hidden lg:inline">{primaryAction.label}</span>
@@ -254,7 +277,11 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 
         {/* Mobile Primary Action */}
         {primaryAction ? (
-          <button type="button" onClick={primaryAction.onClick} className="md:hidden bg-slate-900 text-white p-2 rounded-lg shadow-sm">
+          <button
+            type="button"
+            onClick={primaryAction.onClick}
+            className="rounded-lg bg-slate-900 p-2 text-white shadow-sm md:hidden"
+          >
             <Plus size={20} />
           </button>
         ) : null}
@@ -262,4 +289,3 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
     </div>
   );
 };
-

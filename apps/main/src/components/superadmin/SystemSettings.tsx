@@ -1,12 +1,34 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
-import { toast } from '@gridix/ui';
-import { Save, Database, Mail, Shield, Globe, Bell, Palette, FileText, Upload, X, Loader2, Percent, Plus, Trash2, Edit } from 'lucide-react';
+import { toast } from "@gridix/ui";
+import {
+  Save,
+  Database,
+  Mail,
+  Shield,
+  Globe,
+  Bell,
+  Palette,
+  FileText,
+  Upload,
+  X,
+  Loader2,
+  Percent,
+  Plus,
+  Trash2,
+  Edit,
+} from "lucide-react";
 import { Textarea } from "@gridix/ui";
 import { Switch } from "@gridix/ui";
 import {
@@ -77,31 +99,31 @@ export function SystemSettings() {
     emailVerificationRequired: true,
     maxProjectsPerUser: 10,
     maxApartmentsPerProject: 1000,
-    defaultCurrency: 'USD',
-    defaultLanguage: 'ru',
-    smtpHost: '',
-    smtpPort: '587',
-    smtpUser: '',
-    smtpPassword: '',
+    defaultCurrency: "USD",
+    defaultLanguage: "ru",
+    smtpHost: "",
+    smtpPort: "587",
+    smtpUser: "",
+    smtpPassword: "",
     enableNotifications: true,
-    notificationEmail: '',
-    supportEmail: '',
-    companyName: 'Gridix',
-    companyAddress: '',
-    privacyPolicyUrl: '/privacy',
-    termsOfServiceUrl: '/terms',
-    platformTheme: 'light',
+    notificationEmail: "",
+    supportEmail: "",
+    companyName: "Gridix",
+    companyAddress: "",
+    privacyPolicyUrl: "/privacy",
+    termsOfServiceUrl: "/terms",
+    platformTheme: "light",
   });
   const [invoiceConfig, setInvoiceConfig] = useState<InvoiceConfig>({
-    company_name: 'GRIDIX LLC',
-    tax_id: '',
-    bank_name: 'Bank of Georgia',
-    iban: '',
-    currency: 'GEL',
-    logo_url: '',
-    stamp_url: '',
-    language: 'ka',
-    finance_email: 'finance@gridix.io',
+    company_name: "GRIDIX LLC",
+    tax_id: "",
+    bank_name: "Bank of Georgia",
+    iban: "",
+    currency: "GEL",
+    logo_url: "",
+    stamp_url: "",
+    language: "ka",
+    finance_email: "finance@gridix.io",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,41 +151,46 @@ export function SystemSettings() {
     try {
       // Загружаем общие настройки
       const { data: generalSettings, error: generalError } = await supabase
-        .from('system_settings')
-        .select('setting_value')
-        .eq('setting_key', 'general_settings')
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "general_settings")
         .single();
 
-      if (generalError && generalError.code !== 'PGRST116') {
+      if (generalError && generalError.code !== "PGRST116") {
         throw generalError;
       }
 
       if (generalSettings?.setting_value) {
-        setSettings(prev => ({ ...prev, ...(generalSettings.setting_value as unknown as SystemSettings) }));
+        setSettings((prev) => ({
+          ...prev,
+          ...(generalSettings.setting_value as unknown as SystemSettings),
+        }));
       }
 
       // Загружаем настройки счетов
       const { data: invoiceSettings, error: invoiceError } = await supabase
-        .from('system_settings')
-        .select('setting_value')
-        .eq('setting_key', 'invoice_config')
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "invoice_config")
         .single();
 
-      if (invoiceError && invoiceError.code !== 'PGRST116') {
+      if (invoiceError && invoiceError.code !== "PGRST116") {
         throw invoiceError;
       }
 
       if (invoiceSettings?.setting_value) {
-        setInvoiceConfig(invoiceSettings.setting_value as unknown as InvoiceConfig);
+        setInvoiceConfig(
+          invoiceSettings.setting_value as unknown as InvoiceConfig,
+        );
       }
 
       setLoading(false);
     } catch (error) {
-      console.error('Error loading settings:', error);
+      console.error("Error loading settings:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить настройки',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось загрузить настройки",
+        variant: "destructive",
       });
       setLoading(false);
     }
@@ -174,14 +201,17 @@ export function SystemSettings() {
     try {
       // Сохраняем общие настройки
       const { error: generalError } = await supabase
-        .from('system_settings')
-        .upsert({
-          setting_key: 'general_settings',
-          setting_value: JSON.parse(JSON.stringify(settings)),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'setting_key'
-        });
+        .from("system_settings")
+        .upsert(
+          {
+            setting_key: "general_settings",
+            setting_value: JSON.parse(JSON.stringify(settings)),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "setting_key",
+          },
+        );
 
       if (generalError) {
         throw generalError;
@@ -189,29 +219,32 @@ export function SystemSettings() {
 
       // Сохраняем настройки счетов
       const { error: invoiceError } = await supabase
-        .from('system_settings')
-        .upsert({
-          setting_key: 'invoice_config',
-          setting_value: JSON.parse(JSON.stringify(invoiceConfig)),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'setting_key'
-        });
+        .from("system_settings")
+        .upsert(
+          {
+            setting_key: "invoice_config",
+            setting_value: JSON.parse(JSON.stringify(invoiceConfig)),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "setting_key",
+          },
+        );
 
       if (invoiceError) {
         throw invoiceError;
       }
 
       toast({
-        title: 'Успешно',
-        description: 'Настройки сохранены',
+        title: "Успешно",
+        description: "Настройки сохранены",
       });
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error("Error saving settings:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить настройки',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось сохранить настройки",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -221,29 +254,29 @@ export function SystemSettings() {
   const handleDatabaseBackup = async () => {
     try {
       toast({
-        title: 'Создание резервной копии',
-        description: 'Процесс создания резервной копии начат...',
+        title: "Создание резервной копии",
+        description: "Процесс создания резервной копии начат...",
       });
-      
+
       // Вызываем Edge Function для создания резервной копии
-      const { error } = await supabase.functions.invoke('database-backup', {
-        body: { action: 'create_backup' }
+      const { error } = await supabase.functions.invoke("database-backup", {
+        body: { action: "create_backup" },
       });
 
       if (error) {
         throw error;
       }
-      
+
       toast({
-        title: 'Успешно',
-        description: 'Резервная копия создана',
+        title: "Успешно",
+        description: "Резервная копия создана",
       });
     } catch (error) {
-      console.error('Error creating backup:', error);
+      console.error("Error creating backup:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать резервную копию',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось создать резервную копию",
+        variant: "destructive",
       });
     }
   };
@@ -251,33 +284,33 @@ export function SystemSettings() {
   const handleClearCache = async () => {
     try {
       toast({
-        title: 'Очистка кэша',
-        description: 'Очистка кэша начата...',
+        title: "Очистка кэша",
+        description: "Очистка кэша начата...",
       });
-      
+
       // Очищаем кэш в localStorage и sessionStorage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Вызываем Edge Function для очистки серверного кэша
-      const { error } = await supabase.functions.invoke('cache-clear', {
-        body: { action: 'clear_cache' }
+      const { error } = await supabase.functions.invoke("cache-clear", {
+        body: { action: "clear_cache" },
       });
 
       if (error) {
         throw error;
       }
-      
+
       toast({
-        title: 'Успешно',
-        description: 'Кэш очищен',
+        title: "Успешно",
+        description: "Кэш очищен",
       });
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      console.error("Error clearing cache:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось очистить кэш',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось очистить кэш",
+        variant: "destructive",
       });
     }
   };
@@ -285,54 +318,54 @@ export function SystemSettings() {
   const handleTestEmail = async () => {
     try {
       toast({
-        title: 'Отправка тестового письма',
-        description: 'Проверка SMTP настроек...',
+        title: "Отправка тестового письма",
+        description: "Проверка SMTP настроек...",
       });
-      
-      const { error } = await supabase.functions.invoke('test-email', {
+
+      const { error } = await supabase.functions.invoke("test-email", {
         body: {
           smtpHost: settings.smtpHost,
           smtpPort: settings.smtpPort,
           smtpUser: settings.smtpUser,
           smtpPassword: settings.smtpPassword,
-          to: settings.notificationEmail || settings.supportEmail
-        }
+          to: settings.notificationEmail || settings.supportEmail,
+        },
       });
 
       if (error) {
         throw error;
       }
-      
+
       toast({
-        title: 'Успешно',
-        description: 'Тестовое письмо отправлено',
+        title: "Успешно",
+        description: "Тестовое письмо отправлено",
       });
     } catch (error) {
-      console.error('Error sending test email:', error);
+      console.error("Error sending test email:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить тестовое письмо',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось отправить тестовое письмо",
+        variant: "destructive",
       });
     }
   };
 
-  const handleFileUpload = async (file: File, type: 'logo' | 'stamp') => {
+  const handleFileUpload = async (file: File, type: "logo" | "stamp") => {
     try {
-      if (type === 'logo') {
+      if (type === "logo") {
         setUploadingLogo(true);
       } else {
         setUploadingStamp(true);
       }
 
       // Создаем уникальное имя файла
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${type}_${Date.now()}.${fileExt}`;
       const filePath = `invoice-assets/${fileName}`;
 
       // Загружаем файл в Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('invoices')
+        .from("invoices")
         .upload(filePath, file);
 
       if (uploadError) {
@@ -340,30 +373,28 @@ export function SystemSettings() {
       }
 
       // Получаем публичный URL
-      const { data } = supabase.storage
-        .from('invoices')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from("invoices").getPublicUrl(filePath);
 
       // Обновляем соответствующий URL в конфигурации
-      if (type === 'logo') {
-        setInvoiceConfig(prev => ({ ...prev, logo_url: data.publicUrl }));
+      if (type === "logo") {
+        setInvoiceConfig((prev) => ({ ...prev, logo_url: data.publicUrl }));
       } else {
-        setInvoiceConfig(prev => ({ ...prev, stamp_url: data.publicUrl }));
+        setInvoiceConfig((prev) => ({ ...prev, stamp_url: data.publicUrl }));
       }
 
       toast({
-        title: 'Успешно',
-        description: `${type === 'logo' ? 'Логотип' : 'Печать'} загружена`,
+        title: "Успешно",
+        description: `${type === "logo" ? "Логотип" : "Печать"} загружена`,
       });
     } catch (error) {
       console.error(`Error uploading ${type}:`, error);
       toast({
-        title: 'Ошибка',
-        description: `Не удалось загрузить ${type === 'logo' ? 'логотип' : 'печать'}`,
-        variant: 'destructive',
+        title: "Ошибка",
+        description: `Не удалось загрузить ${type === "logo" ? "логотип" : "печать"}`,
+        variant: "destructive",
       });
     } finally {
-      if (type === 'logo') {
+      if (type === "logo") {
         setUploadingLogo(false);
       } else {
         setUploadingStamp(false);
@@ -382,14 +413,16 @@ export function SystemSettings() {
   const handleLogoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleFileUpload(file, 'logo');
+      handleFileUpload(file, "logo");
     }
   };
 
-  const handleStampFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStampFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleFileUpload(file, 'stamp');
+      handleFileUpload(file, "stamp");
     }
   };
 
@@ -397,18 +430,18 @@ export function SystemSettings() {
     setLoadingTiers(true);
     try {
       const { data, error } = await supabase
-        .from('commission_tiers')
-        .select('*')
-        .order('min_projects', { ascending: true });
+        .from("commission_tiers")
+        .select("*")
+        .order("min_projects", { ascending: true });
 
       if (error) throw error;
       setCommissionTiers(data || []);
     } catch (error) {
-      console.error('Error loading commission tiers:', error);
+      console.error("Error loading commission tiers:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить настройки комиссий',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось загрузить настройки комиссий",
+        variant: "destructive",
       });
     } finally {
       setLoadingTiers(false);
@@ -420,36 +453,36 @@ export function SystemSettings() {
       if (editingTier) {
         // Обновление существующего tier
         const { error } = await supabase
-          .from('commission_tiers')
+          .from("commission_tiers")
           .update({
             min_projects: tier.min_projects,
-            max_projects: tier.max_projects === undefined ? null : tier.max_projects,
+            max_projects:
+              tier.max_projects === undefined ? null : tier.max_projects,
             commission_percentage: tier.commission_percentage,
             is_active: tier.is_active ?? true,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', editingTier.id);
+          .eq("id", editingTier.id);
 
         if (error) throw error;
         toast({
-          title: 'Успешно',
-          description: 'Настройка комиссии обновлена',
+          title: "Успешно",
+          description: "Настройка комиссии обновлена",
         });
       } else {
         // Создание нового tier
-        const { error } = await supabase
-          .from('commission_tiers')
-          .insert({
-            min_projects: tier.min_projects || 0,
-            max_projects: tier.max_projects === undefined ? null : tier.max_projects,
-            commission_percentage: tier.commission_percentage || 20,
-            is_active: tier.is_active ?? true,
-          });
+        const { error } = await supabase.from("commission_tiers").insert({
+          min_projects: tier.min_projects || 0,
+          max_projects:
+            tier.max_projects === undefined ? null : tier.max_projects,
+          commission_percentage: tier.commission_percentage || 20,
+          is_active: tier.is_active ?? true,
+        });
 
         if (error) throw error;
         toast({
-          title: 'Успешно',
-          description: 'Новая настройка комиссии добавлена',
+          title: "Успешно",
+          description: "Новая настройка комиссии добавлена",
         });
       }
 
@@ -463,38 +496,38 @@ export function SystemSettings() {
       });
       await loadCommissionTiers();
     } catch (error) {
-      console.error('Error saving tier:', error);
+      console.error("Error saving tier:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить настройку комиссии',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось сохранить настройку комиссии",
+        variant: "destructive",
       });
     }
   };
 
   const handleDeleteTier = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить эту настройку комиссии?')) {
+    if (!confirm("Вы уверены, что хотите удалить эту настройку комиссии?")) {
       return;
     }
 
     try {
       const { error } = await supabase
-        .from('commission_tiers')
+        .from("commission_tiers")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
       toast({
-        title: 'Успешно',
-        description: 'Настройка комиссии удалена',
+        title: "Успешно",
+        description: "Настройка комиссии удалена",
       });
       await loadCommissionTiers();
     } catch (error) {
-      console.error('Error deleting tier:', error);
+      console.error("Error deleting tier:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить настройку комиссии',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось удалить настройку комиссии",
+        variant: "destructive",
       });
     }
   };
@@ -502,76 +535,80 @@ export function SystemSettings() {
   const handleToggleTierActive = async (tier: CommissionTier) => {
     try {
       const { error } = await supabase
-        .from('commission_tiers')
+        .from("commission_tiers")
         .update({
           is_active: !tier.is_active,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', tier.id);
+        .eq("id", tier.id);
 
       if (error) throw error;
       await loadCommissionTiers();
     } catch (error) {
-      console.error('Error toggling tier:', error);
+      console.error("Error toggling tier:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить статус настройки',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось изменить статус настройки",
+        variant: "destructive",
       });
     }
   };
 
   if (loading) {
-    return <div className="p-6"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+    return (
+      <div className="p-6">
+        <Loader2 className="h-4 w-4 animate-spin" />
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold mb-2">Системные настройки</h2>
+          <h2 className="mb-2 text-3xl font-bold">Системные настройки</h2>
           <p className="text-muted-foreground">
             Управление глобальными настройками платформы
           </p>
         </div>
         <Button onClick={saveSettings} disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Сохранение...' : 'Сохранить все'}
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Сохранение..." : "Сохранить все"}
         </Button>
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">
-            <Globe className="h-4 w-4 mr-2" />
+            <Globe className="mr-2 h-4 w-4" />
             Общие
           </TabsTrigger>
           <TabsTrigger value="security">
-            <Shield className="h-4 w-4 mr-2" />
+            <Shield className="mr-2 h-4 w-4" />
             Безопасность
           </TabsTrigger>
           <TabsTrigger value="email">
-            <Mail className="h-4 w-4 mr-2" />
+            <Mail className="mr-2 h-4 w-4" />
             Email
           </TabsTrigger>
           <TabsTrigger value="database">
-            <Database className="h-4 w-4 mr-2" />
+            <Database className="mr-2 h-4 w-4" />
             База данных
           </TabsTrigger>
           <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4 mr-2" />
+            <Bell className="mr-2 h-4 w-4" />
             Уведомления
           </TabsTrigger>
           <TabsTrigger value="appearance">
-            <Palette className="h-4 w-4 mr-2" />
+            <Palette className="mr-2 h-4 w-4" />
             Внешний вид
           </TabsTrigger>
           <TabsTrigger value="invoices">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             Счета
           </TabsTrigger>
           <TabsTrigger value="commissions">
-            <Percent className="h-4 w-4 mr-2" />
+            <Percent className="mr-2 h-4 w-4" />
             Комиссии
           </TabsTrigger>
         </TabsList>
@@ -759,29 +796,42 @@ export function SystemSettings() {
                 <Switch
                   checked={settings.emailVerificationRequired}
                   onCheckedChange={(checked) =>
-                    setSettings({ ...settings, emailVerificationRequired: checked })
+                    setSettings({
+                      ...settings,
+                      emailVerificationRequired: checked,
+                    })
                   }
                 />
               </div>
 
               <div className="space-y-2 pt-4">
-                <Label htmlFor="privacyPolicy">URL политики конфиденциальности</Label>
+                <Label htmlFor="privacyPolicy">
+                  URL политики конфиденциальности
+                </Label>
                 <Input
                   id="privacyPolicy"
                   value={settings.privacyPolicyUrl}
                   onChange={(e) =>
-                    setSettings({ ...settings, privacyPolicyUrl: e.target.value })
+                    setSettings({
+                      ...settings,
+                      privacyPolicyUrl: e.target.value,
+                    })
                   }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="termsOfService">URL условий использования</Label>
+                <Label htmlFor="termsOfService">
+                  URL условий использования
+                </Label>
                 <Input
                   id="termsOfService"
                   value={settings.termsOfServiceUrl}
                   onChange={(e) =>
-                    setSettings({ ...settings, termsOfServiceUrl: e.target.value })
+                    setSettings({
+                      ...settings,
+                      termsOfServiceUrl: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -849,12 +899,16 @@ export function SystemSettings() {
                 />
               </div>
 
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleTestEmail}
-                disabled={!settings.smtpHost || !settings.smtpUser || !settings.smtpPassword}
+                disabled={
+                  !settings.smtpHost ||
+                  !settings.smtpUser ||
+                  !settings.smtpPassword
+                }
               >
-                <Mail className="h-4 w-4 mr-2" />
+                <Mail className="mr-2 h-4 w-4" />
                 Отправить тестовое письмо
               </Button>
             </CardContent>
@@ -879,7 +933,7 @@ export function SystemSettings() {
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline">
-                      <Database className="h-4 w-4 mr-2" />
+                      <Database className="mr-2 h-4 w-4" />
                       Создать резервную копию
                     </Button>
                   </DialogTrigger>
@@ -887,13 +941,11 @@ export function SystemSettings() {
                     <DialogHeader>
                       <DialogTitle>Создать резервную копию?</DialogTitle>
                       <DialogDescription>
-                        Будет создана полная резервная копия базы данных. Это может
-                        занять несколько минут.
+                        Будет создана полная резервная копия базы данных. Это
+                        может занять несколько минут.
                       </DialogDescription>
                     </DialogHeader>
-                    <Button onClick={handleDatabaseBackup}>
-                      Подтвердить
-                    </Button>
+                    <Button onClick={handleDatabaseBackup}>Подтвердить</Button>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -916,9 +968,7 @@ export function SystemSettings() {
           <Card>
             <CardHeader>
               <CardTitle>Уведомления</CardTitle>
-              <CardDescription>
-                Настройка системных уведомлений
-              </CardDescription>
+              <CardDescription>Настройка системных уведомлений</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -944,7 +994,10 @@ export function SystemSettings() {
                   placeholder="admin@example.com"
                   value={settings.notificationEmail}
                   onChange={(e) =>
-                    setSettings({ ...settings, notificationEmail: e.target.value })
+                    setSettings({
+                      ...settings,
+                      notificationEmail: e.target.value,
+                    })
                   }
                   disabled={!settings.enableNotifications}
                 />
@@ -995,14 +1048,19 @@ export function SystemSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="invoice_company_name">Название получателя</Label>
+                  <Label htmlFor="invoice_company_name">
+                    Название получателя
+                  </Label>
                   <Input
                     id="invoice_company_name"
                     value={invoiceConfig.company_name}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, company_name: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        company_name: e.target.value,
+                      })
                     }
                     placeholder="GRIDIX LLC"
                   />
@@ -1014,7 +1072,10 @@ export function SystemSettings() {
                     id="invoice_tax_id"
                     value={invoiceConfig.tax_id}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, tax_id: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        tax_id: e.target.value,
+                      })
                     }
                     placeholder="Код компании GRIDIX"
                   />
@@ -1026,7 +1087,10 @@ export function SystemSettings() {
                     id="invoice_bank_name"
                     value={invoiceConfig.bank_name}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, bank_name: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        bank_name: e.target.value,
+                      })
                     }
                     placeholder="Bank of Georgia"
                   />
@@ -1038,7 +1102,10 @@ export function SystemSettings() {
                     id="invoice_iban"
                     value={invoiceConfig.iban}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, iban: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        iban: e.target.value,
+                      })
                     }
                     placeholder="Основной расчётный счёт"
                   />
@@ -1050,20 +1117,28 @@ export function SystemSettings() {
                     id="invoice_currency"
                     value={invoiceConfig.currency}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, currency: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        currency: e.target.value,
+                      })
                     }
                     placeholder="GEL"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="invoice_finance_email">Email для уведомлений</Label>
+                  <Label htmlFor="invoice_finance_email">
+                    Email для уведомлений
+                  </Label>
                   <Input
                     id="invoice_finance_email"
                     type="email"
                     value={invoiceConfig.finance_email}
                     onChange={(e) =>
-                      setInvoiceConfig({ ...invoiceConfig, finance_email: e.target.value })
+                      setInvoiceConfig({
+                        ...invoiceConfig,
+                        finance_email: e.target.value,
+                      })
                     }
                     placeholder="finance@gridix.io"
                   />
@@ -1095,24 +1170,29 @@ export function SystemSettings() {
                     <Input
                       value={invoiceConfig.logo_url}
                       onChange={(e) =>
-                        setInvoiceConfig({ ...invoiceConfig, logo_url: e.target.value })
+                        setInvoiceConfig({
+                          ...invoiceConfig,
+                          logo_url: e.target.value,
+                        })
                       }
                       placeholder="URL логотипа или загрузите файл"
                     />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={handleLogoUpload}
                       disabled={uploadingLogo}
                     >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploadingLogo ? 'Загрузка...' : 'Загрузить'}
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploadingLogo ? "Загрузка..." : "Загрузить"}
                     </Button>
                     {invoiceConfig.logo_url && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setInvoiceConfig({ ...invoiceConfig, logo_url: '' })}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setInvoiceConfig({ ...invoiceConfig, logo_url: "" })
+                        }
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -1127,10 +1207,10 @@ export function SystemSettings() {
                   />
                   {invoiceConfig.logo_url && (
                     <div className="mt-2">
-                      <img 
-                        src={invoiceConfig.logo_url} 
-                        alt="Логотип" 
-                        className="h-16 w-auto object-contain border rounded"
+                      <img
+                        src={invoiceConfig.logo_url}
+                        alt="Логотип"
+                        className="h-16 w-auto rounded border object-contain"
                       />
                     </div>
                   )}
@@ -1142,24 +1222,29 @@ export function SystemSettings() {
                     <Input
                       value={invoiceConfig.stamp_url}
                       onChange={(e) =>
-                        setInvoiceConfig({ ...invoiceConfig, stamp_url: e.target.value })
+                        setInvoiceConfig({
+                          ...invoiceConfig,
+                          stamp_url: e.target.value,
+                        })
                       }
                       placeholder="URL печати или загрузите файл"
                     />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={handleStampUpload}
                       disabled={uploadingStamp}
                     >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploadingStamp ? 'Загрузка...' : 'Загрузить'}
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploadingStamp ? "Загрузка..." : "Загрузить"}
                     </Button>
                     {invoiceConfig.stamp_url && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setInvoiceConfig({ ...invoiceConfig, stamp_url: '' })}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setInvoiceConfig({ ...invoiceConfig, stamp_url: "" })
+                        }
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -1174,10 +1259,10 @@ export function SystemSettings() {
                   />
                   {invoiceConfig.stamp_url && (
                     <div className="mt-2">
-                      <img 
-                        src={invoiceConfig.stamp_url} 
-                        alt="Печать" 
-                        className="h-16 w-auto object-contain border rounded"
+                      <img
+                        src={invoiceConfig.stamp_url}
+                        alt="Печать"
+                        className="h-16 w-auto rounded border object-contain"
                       />
                     </div>
                   )}
@@ -1193,8 +1278,9 @@ export function SystemSettings() {
             <CardHeader>
               <CardTitle>Настройки комиссий партнёров</CardTitle>
               <CardDescription>
-                Управление процентами комиссии в зависимости от суммарного количества проектов
-                всех клиентов партнёра (для реферальных и управляемых клиентов одновременно)
+                Управление процентами комиссии в зависимости от суммарного
+                количества проектов всех клиентов партнёра (для реферальных и
+                управляемых клиентов одновременно)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1205,8 +1291,10 @@ export function SystemSettings() {
               ) : (
                 <>
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Текущие настройки</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">
+                        Текущие настройки
+                      </h3>
                       <Button
                         onClick={() => {
                           setEditingTier(null);
@@ -1214,48 +1302,63 @@ export function SystemSettings() {
                             min_projects: 0,
                             max_projects: null,
                             commission_percentage: 20,
-                            link_type: 'referral',
+                            link_type: "referral",
                             is_active: true,
                           });
                           setIsTierDialogOpen(true);
                         }}
                         size="sm"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         Добавить
                       </Button>
                     </div>
 
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm text-muted-foreground">
-                        Комиссии партнёрской программы (общие для рефералов и управляемых клиентов)
+                      <h4 className="text-sm font-medium text-muted-foreground">
+                        Комиссии партнёрской программы (общие для рефералов и
+                        управляемых клиентов)
                       </h4>
                       <div className="space-y-2">
                         {commissionTiers
-                          .sort((a, b) => (a.min_projects ?? 0) - (b.min_projects ?? 0))
+                          .sort(
+                            (a, b) =>
+                              (a.min_projects ?? 0) - (b.min_projects ?? 0),
+                          )
                           .map((tier) => (
                             <div
                               key={tier.id}
-                              className="flex items-center justify-between p-3 border rounded-lg"
+                              className="flex items-center justify-between rounded-lg border p-3"
                             >
-                              <div className="flex-1 grid grid-cols-4 gap-4 items-center">
+                              <div className="grid flex-1 grid-cols-4 items-center gap-4">
                                 <div>
                                   <span className="text-sm font-medium">
-                                    {tier.min_projects} - {tier.max_projects === null ? '∞' : tier.max_projects}
+                                    {tier.min_projects} -{" "}
+                                    {tier.max_projects === null
+                                      ? "∞"
+                                      : tier.max_projects}
                                   </span>
-                                  <p className="text-xs text-muted-foreground">проектов</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    проектов
+                                  </p>
                                 </div>
                                 <div>
-                                  <span className="text-sm font-medium">{tier.commission_percentage}%</span>
-                                  <p className="text-xs text-muted-foreground">комиссия</p>
+                                  <span className="text-sm font-medium">
+                                    {tier.commission_percentage}%
+                                  </span>
+                                  <p className="text-xs text-muted-foreground">
+                                    комиссия
+                                  </p>
                                 </div>
                                 <div>
                                   <Switch
                                     checked={tier.is_active}
-                                    onCheckedChange={() => handleToggleTierActive(tier)}
+                                    onCheckedChange={() =>
+                                      handleToggleTierActive(tier)
+                                    }
                                   />
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {tier.is_active ? 'Активна' : 'Неактивна'}
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {tier.is_active ? "Активна" : "Неактивна"}
                                   </p>
                                 </div>
                                 <div className="flex gap-2">
@@ -1285,11 +1388,16 @@ export function SystemSettings() {
                   </div>
 
                   {/* Add/Edit Tier Dialog */}
-                  <Dialog open={isTierDialogOpen} onOpenChange={setIsTierDialogOpen}>
+                  <Dialog
+                    open={isTierDialogOpen}
+                    onOpenChange={setIsTierDialogOpen}
+                  >
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle>
-                          {editingTier ? 'Редактировать настройку' : 'Добавить настройку комиссии'}
+                          {editingTier
+                            ? "Редактировать настройку"
+                            : "Добавить настройку комиссии"}
                         </DialogTitle>
                         <DialogDescription>
                           Укажите диапазон проектов и процент комиссии
@@ -1298,37 +1406,64 @@ export function SystemSettings() {
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="tier_min_projects">Мин. проектов</Label>
+                            <Label htmlFor="tier_min_projects">
+                              Мин. проектов
+                            </Label>
                             <Input
                               id="tier_min_projects"
                               type="number"
                               min="0"
-                              value={editingTier?.min_projects ?? newTier.min_projects ?? 0}
+                              value={
+                                editingTier?.min_projects ??
+                                newTier.min_projects ??
+                                0
+                              }
                               onChange={(e) => {
                                 const value = parseInt(e.target.value) || 0;
                                 if (editingTier) {
-                                  setEditingTier({ ...editingTier, min_projects: value });
+                                  setEditingTier({
+                                    ...editingTier,
+                                    min_projects: value,
+                                  });
                                 } else {
-                                  setNewTier({ ...newTier, min_projects: value });
+                                  setNewTier({
+                                    ...newTier,
+                                    min_projects: value,
+                                  });
                                 }
                               }}
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="tier_max_projects">Макс. проектов (оставьте пустым для ∞)</Label>
+                            <Label htmlFor="tier_max_projects">
+                              Макс. проектов (оставьте пустым для ∞)
+                            </Label>
                             <Input
                               id="tier_max_projects"
                               type="number"
                               min="0"
                               placeholder="∞"
-                              value={editingTier?.max_projects ?? newTier.max_projects ?? ''}
+                              value={
+                                editingTier?.max_projects ??
+                                newTier.max_projects ??
+                                ""
+                              }
                               onChange={(e) => {
-                                const value = e.target.value === '' ? null : (parseInt(e.target.value) || null);
+                                const value =
+                                  e.target.value === ""
+                                    ? null
+                                    : parseInt(e.target.value) || null;
                                 if (editingTier) {
-                                  setEditingTier({ ...editingTier, max_projects: value });
+                                  setEditingTier({
+                                    ...editingTier,
+                                    max_projects: value,
+                                  });
                                 } else {
-                                  setNewTier({ ...newTier, max_projects: value });
+                                  setNewTier({
+                                    ...newTier,
+                                    max_projects: value,
+                                  });
                                 }
                               }}
                             />
@@ -1336,20 +1471,32 @@ export function SystemSettings() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="tier_percentage">Процент комиссии (%)</Label>
+                          <Label htmlFor="tier_percentage">
+                            Процент комиссии (%)
+                          </Label>
                           <Input
                             id="tier_percentage"
                             type="number"
                             min="0"
                             max="100"
                             step="0.01"
-                            value={editingTier?.commission_percentage ?? newTier.commission_percentage ?? 20}
+                            value={
+                              editingTier?.commission_percentage ??
+                              newTier.commission_percentage ??
+                              20
+                            }
                             onChange={(e) => {
                               const value = parseFloat(e.target.value) || 0;
                               if (editingTier) {
-                                setEditingTier({ ...editingTier, commission_percentage: value });
+                                setEditingTier({
+                                  ...editingTier,
+                                  commission_percentage: value,
+                                });
                               } else {
-                                setNewTier({ ...newTier, commission_percentage: value });
+                                setNewTier({
+                                  ...newTier,
+                                  commission_percentage: value,
+                                });
                               }
                             }}
                           />
@@ -1359,10 +1506,17 @@ export function SystemSettings() {
                           <Label htmlFor="tier_active">Активна</Label>
                           <Switch
                             id="tier_active"
-                            checked={editingTier?.is_active ?? newTier.is_active ?? true}
+                            checked={
+                              editingTier?.is_active ??
+                              newTier.is_active ??
+                              true
+                            }
                             onCheckedChange={(checked) => {
                               if (editingTier) {
-                                setEditingTier({ ...editingTier, is_active: checked });
+                                setEditingTier({
+                                  ...editingTier,
+                                  is_active: checked,
+                                });
                               } else {
                                 setNewTier({ ...newTier, is_active: checked });
                               }
@@ -1380,7 +1534,7 @@ export function SystemSettings() {
                                 min_projects: 0,
                                 max_projects: null,
                                 commission_percentage: 20,
-                                link_type: 'referral',
+                                link_type: "referral",
                                 is_active: true,
                               });
                             }}
@@ -1390,7 +1544,10 @@ export function SystemSettings() {
                           <Button
                             onClick={() => {
                               const tierToSave = editingTier || newTier;
-                              if (tierToSave.min_projects !== undefined && tierToSave.commission_percentage !== undefined) {
+                              if (
+                                tierToSave.min_projects !== undefined &&
+                                tierToSave.commission_percentage !== undefined
+                              ) {
                                 handleSaveTier(tierToSave);
                               }
                             }}
@@ -1410,4 +1567,3 @@ export function SystemSettings() {
     </div>
   );
 }
-

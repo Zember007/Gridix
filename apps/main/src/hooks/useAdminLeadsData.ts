@@ -1,11 +1,15 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@gridix/utils/api";
-import { useLeads, Lead as DbLead, LeadFilters as DbLeadFilters } from '@/entities/lead/queries/useLeads';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
+import {
+  useLeads,
+  Lead as DbLead,
+  LeadFilters as DbLeadFilters,
+} from "@/entities/lead/queries/useLeads";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { getManagerProjectIds } from "@/hooks/useManagerProjectIds";
 import { showToast } from "@gridix/utils/lib";
 import {
   ExtendedLead,
@@ -19,18 +23,23 @@ import {
   CardAppearanceConfig,
   MOCK_USERS,
   TaskType,
-} from '@/entities/crm/model/types';
+} from "@/entities/crm/model/types";
 
 type DbLeadPatch = Record<string, unknown>;
 
-function buildDueDateIso(dateInput: string, timeInput: string | undefined): string {
-  const rawYmd = dateInput.includes('T') ? dateInput.split('T')[0] || '' : dateInput;
+function buildDueDateIso(
+  dateInput: string,
+  timeInput: string | undefined,
+): string {
+  const rawYmd = dateInput.includes("T")
+    ? dateInput.split("T")[0] || ""
+    : dateInput;
   const ymdOk = /^\d{4}-\d{2}-\d{2}$/.test(rawYmd);
   const ymd = ymdOk ? rawYmd : new Date(dateInput).toISOString().slice(0, 10);
 
-  const rawTime = (timeInput || '').trim();
+  const rawTime = (timeInput || "").trim();
   const timeOk = /^\d{2}:\d{2}$/.test(rawTime);
-  const time = timeOk ? rawTime : '12:00';
+  const time = timeOk ? rawTime : "12:00";
 
   const dt = new Date(`${ymd}T${time}:00`);
   if (Number.isNaN(dt.getTime())) {
@@ -46,14 +55,14 @@ function patchDbLeadsArray(
 ): unknown {
   if (!Array.isArray(oldData)) return oldData;
   return oldData.map((l) => {
-    if (!l || typeof l !== 'object') return l;
+    if (!l || typeof l !== "object") return l;
     const lead = l as Record<string, unknown>;
     if (String(lead.id) !== leadId) return l;
     return {
       ...lead,
       ...patch,
       updated_at:
-        typeof patch.updated_at === 'string'
+        typeof patch.updated_at === "string"
           ? patch.updated_at
           : new Date().toISOString(),
     };
@@ -67,10 +76,12 @@ function patchLeadTasksInCache(
 ): unknown {
   if (!Array.isArray(oldData)) return oldData;
   return oldData.map((l) => {
-    if (!l || typeof l !== 'object') return l;
+    if (!l || typeof l !== "object") return l;
     const lead = l as Record<string, unknown>;
     if (String(lead.id) !== leadId) return l;
-    const prevTasks = Array.isArray(lead.tasks) ? (lead.tasks as LeadTask[]) : [];
+    const prevTasks = Array.isArray(lead.tasks)
+      ? (lead.tasks as LeadTask[])
+      : [];
     return {
       ...lead,
       tasks: updater(prevTasks),
@@ -86,11 +97,11 @@ function getLeadReadAtFromQueries(
   for (const [, data] of queries) {
     if (!Array.isArray(data)) continue;
     const match = (data as Array<unknown>).find((l) => {
-      if (!l || typeof l !== 'object') return false;
+      if (!l || typeof l !== "object") return false;
       return String((l as Record<string, unknown>).id) === leadId;
     }) as Record<string, unknown> | undefined;
     if (!match) continue;
-    if (!Object.prototype.hasOwnProperty.call(match, 'read_at')) return null;
+    if (!Object.prototype.hasOwnProperty.call(match, "read_at")) return null;
     return (match.read_at as string | null) ?? null;
   }
   return undefined;
@@ -105,35 +116,37 @@ function patchSelectedExtendedLead(
 
   const next: ExtendedLead = { ...prev } as ExtendedLead;
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'pipeline_stage_id')) {
+  if (Object.prototype.hasOwnProperty.call(patch, "pipeline_stage_id")) {
     const pipeline_stage_id = patch.pipeline_stage_id as string | null;
     // keep db field (spread exists on ExtendedLead)
-    (next as unknown as { pipeline_stage_id?: string | null }).pipeline_stage_id =
-      pipeline_stage_id;
+    (
+      next as unknown as { pipeline_stage_id?: string | null }
+    ).pipeline_stage_id = pipeline_stage_id;
     next.status = pipeline_stage_id ?? null;
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'assigned_to_user_id')) {
+  if (Object.prototype.hasOwnProperty.call(patch, "assigned_to_user_id")) {
     const assigned_to_user_id = patch.assigned_to_user_id as string | null;
-    (next as unknown as { assigned_to_user_id?: string | null }).assigned_to_user_id =
-      assigned_to_user_id;
+    (
+      next as unknown as { assigned_to_user_id?: string | null }
+    ).assigned_to_user_id = assigned_to_user_id;
     next.assignedTo = assigned_to_user_id ?? undefined;
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'tags')) {
+  if (Object.prototype.hasOwnProperty.call(patch, "tags")) {
     next.tags = (patch.tags as string[] | null) || [];
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'name')) {
-    next.name = String(patch.name || '');
+  if (Object.prototype.hasOwnProperty.call(patch, "name")) {
+    next.name = String(patch.name || "");
   }
-  if (Object.prototype.hasOwnProperty.call(patch, 'email')) {
-    next.email = String(patch.email || '');
+  if (Object.prototype.hasOwnProperty.call(patch, "email")) {
+    next.email = String(patch.email || "");
   }
-  if (Object.prototype.hasOwnProperty.call(patch, 'phone')) {
-    next.phone = String(patch.phone || '');
+  if (Object.prototype.hasOwnProperty.call(patch, "phone")) {
+    next.phone = String(patch.phone || "");
   }
-  if (Object.prototype.hasOwnProperty.call(patch, 'notes')) {
+  if (Object.prototype.hasOwnProperty.call(patch, "notes")) {
     next.notes = patch.notes as string | null;
   }
 
@@ -144,18 +157,18 @@ function patchSelectedExtendedLead(
 
 // Map DB lead to ExtendedLead used by UI
 function mapDbLeadToExtended(dbLead: DbLead): ExtendedLead {
-  const projectName = dbLead.projects?.name || 'Не указан';
+  const projectName = dbLead.projects?.name || "Не указан";
   const apt = dbLead.apartments;
 
   const apartment = apt
-    ? `№${apt.apartment_number}${apt.area ? ` (${apt.area}м²)` : ''}`
+    ? `№${apt.apartment_number}${apt.area ? ` (${apt.area}м²)` : ""}`
     : undefined;
 
   const price = apt?.price ?? undefined;
 
   const crmStatus = {
     connected: !!dbLead.amocrm_lead_id,
-    systemName: dbLead.amocrm_lead_id ? 'AmoCRM' : undefined,
+    systemName: dbLead.amocrm_lead_id ? "AmoCRM" : undefined,
     lastSync: dbLead.amocrm_sent_at || undefined,
     id: dbLead.amocrm_lead_id ? String(dbLead.amocrm_lead_id) : undefined,
   };
@@ -194,7 +207,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const { leads: dbLeads, loading: leadsLoading } = useLeads(filtersOverride);
 
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('kanban');
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
   const [selectedLead, setSelectedLead] = useState<ExtendedLead | null>(null);
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [activeFunnelId, setActiveFunnelId] = useState<string | null>(null);
@@ -202,75 +215,80 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const [funnelTriggers, setFunnelTriggers] = useState<FunnelTrigger[]>([]);
 
   const [editingFunnelId, setEditingFunnelId] = useState<string | null>(null);
-  const [editingFunnelName, setEditingFunnelName] = useState('');
+  const [editingFunnelName, setEditingFunnelName] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [filters, setFilters] = useState<LeadsFilters>({
-    source: 'all',
-    minBudget: '',
-    maxBudget: '',
-    dateFrom: '',
-    dateTo: '',
+    source: "all",
+    minBudget: "",
+    maxBudget: "",
+    dateFrom: "",
+    dateTo: "",
     stages: [],
     assignedTo: [],
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('date_desc');
+  const [sortOption, setSortOption] = useState<SortOption>("date_desc");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [cardConfig, setCardConfig] = useState<CardAppearanceConfig>({
     showAvatar: true,
     showDate: true,
-    fields: ['name', 'assignedTo', 'price', 'project', 'tags'],
+    fields: ["name", "assignedTo", "price", "project", "tags"],
   }); // reserved for future automations
 
   // Load funnels for current owner (developer/workspace)
   const funnelsQuery = useQuery({
-    queryKey: ['crm_funnels', activeWorkspaceId, user?.id],
+    queryKey: ["crm_funnels", activeWorkspaceId, user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('crm_funnels')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: true });
+        .from("crm_funnels")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return (data || []).map(d => ({ id: d.id, name: d.name })) as Funnel[];
+      return (data || []).map((d) => ({ id: d.id, name: d.name })) as Funnel[];
     },
   });
 
   const funnelAutomationComplianceQuery = useQuery({
-    queryKey: ['crm_funnel_triggers', 'apartment_status_compliance', user?.id],
+    queryKey: ["crm_funnel_triggers", "apartment_status_compliance", user?.id],
     enabled: !!user && !!funnelsQuery.data && funnelsQuery.data.length > 0,
     queryFn: async () => {
       const funnelIds = (funnelsQuery.data || []).map((f) => f.id);
-      if (funnelIds.length === 0) return [] as Array<{ id: string; name: string }>;
+      if (funnelIds.length === 0)
+        return [] as Array<{ id: string; name: string }>;
 
       const { data: triggers, error } = await supabase
-        .from('crm_funnel_triggers')
-        .select('funnel_id, icon, config')
-        .in('funnel_id', funnelIds);
+        .from("crm_funnel_triggers")
+        .select("funnel_id, icon, config")
+        .in("funnel_id", funnelIds);
 
       if (error) throw error;
 
       const byFunnel = new Map<string, { reserved: boolean; sold: boolean }>();
-      funnelIds.forEach((id) => byFunnel.set(id, { reserved: false, sold: false }));
+      funnelIds.forEach((id) =>
+        byFunnel.set(id, { reserved: false, sold: false }),
+      );
 
       (triggers || []).forEach((tr) => {
-        if (tr.icon !== 'apartment_status') return;
+        if (tr.icon !== "apartment_status") return;
         const cfg = (tr.config as Record<string, unknown>) || {};
-        const status = String((cfg as any).apartmentStatus || 'reserved');
+        const status = String((cfg as any).apartmentStatus || "reserved");
         const entry = byFunnel.get(tr.funnel_id);
         if (!entry) return;
-        if (status === 'reserved') entry.reserved = true;
-        if (status === 'sold') entry.sold = true;
+        if (status === "reserved") entry.reserved = true;
+        if (status === "sold") entry.sold = true;
       });
 
-      const funnelNameById = new Map((funnelsQuery.data || []).map((f) => [f.id, f.name]));
+      const funnelNameById = new Map(
+        (funnelsQuery.data || []).map((f) => [f.id, f.name]),
+      );
 
       return funnelIds
         .filter((id) => {
@@ -282,16 +300,17 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   });
 
   const allFunnelStagesQuery = useQuery({
-    queryKey: ['crm_funnel_stages', 'by_funnel', user?.id],
+    queryKey: ["crm_funnel_stages", "by_funnel", user?.id],
     enabled: !!user && !!funnelsQuery.data && funnelsQuery.data.length > 0,
     queryFn: async () => {
       const funnelIds = (funnelsQuery.data || []).map((f) => f.id);
-      if (funnelIds.length === 0) return [] as Array<{ id: string; funnel_id: string }>;
+      if (funnelIds.length === 0)
+        return [] as Array<{ id: string; funnel_id: string }>;
 
       const { data, error } = await supabase
-        .from('crm_funnel_stages')
-        .select('id, funnel_id')
-        .in('funnel_id', funnelIds);
+        .from("crm_funnel_stages")
+        .select("id, funnel_id")
+        .in("funnel_id", funnelIds);
 
       if (error) throw error;
       return (data || []) as Array<{ id: string; funnel_id: string }>;
@@ -305,14 +324,17 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       if (!activeFunnelId) {
         // Try to load from localStorage first
         try {
-          const savedFunnelId = localStorage.getItem('admin_active_funnel_id');
+          const savedFunnelId = localStorage.getItem("admin_active_funnel_id");
           if (savedFunnelId && data.some((f) => f.id === savedFunnelId)) {
             setActiveFunnelId(savedFunnelId);
           } else if (data[0]) {
             setActiveFunnelId(data[0].id);
           }
         } catch (error) {
-          console.error('Failed to load active funnel from localStorage', error);
+          console.error(
+            "Failed to load active funnel from localStorage",
+            error,
+          );
           if (data[0]) {
             setActiveFunnelId(data[0].id);
           }
@@ -328,31 +350,31 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     const load = async () => {
       const [{ data: stages }, { data: triggers }] = await Promise.all([
         supabase
-          .from('crm_funnel_stages')
-          .select('*')
-          .eq('funnel_id', activeFunnelId)
-          .order('order_index', { ascending: true }),
+          .from("crm_funnel_stages")
+          .select("*")
+          .eq("funnel_id", activeFunnelId)
+          .order("order_index", { ascending: true }),
         supabase
-          .from('crm_funnel_triggers')
-          .select('*')
-          .eq('funnel_id', activeFunnelId)
-          .order('stage_id', { ascending: true })
-          .order('order_index', { ascending: true }),
+          .from("crm_funnel_triggers")
+          .select("*")
+          .eq("funnel_id", activeFunnelId)
+          .order("stage_id", { ascending: true })
+          .order("order_index", { ascending: true }),
       ]);
 
       setFunnelStages(
-        (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color }))
+        (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
       );
       setFunnelTriggers(
         (triggers || []).map((t) => ({
           id: t.id,
           stageId: t.stage_id,
           event: t.event,
-          icon: t.icon as FunnelTrigger['icon'],
+          icon: t.icon as FunnelTrigger["icon"],
           title: t.title,
           description: t.description,
           config: (t.config as Record<string, unknown>) || {},
-        }))
+        })),
       );
     };
 
@@ -367,59 +389,59 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       try {
         const [{ data: tasks }, { data: history }] = await Promise.all([
           supabase
-            .from('lead_tasks')
-            .select('*')
-            .eq('lead_id', selectedLead.id)
-            .order('due_date', { ascending: true }),
+            .from("lead_tasks")
+            .select("*")
+            .eq("lead_id", selectedLead.id)
+            .order("due_date", { ascending: true }),
           supabase
-            .from('lead_activities')
-            .select('*')
-            .eq('lead_id', selectedLead.id)
-            .order('created_at', { ascending: false })
+            .from("lead_activities")
+            .select("*")
+            .eq("lead_id", selectedLead.id)
+            .order("created_at", { ascending: false }),
         ]);
 
         // Fetch partner info if agent_id is present
         let partnerInfo = null;
         if (selectedLead.agent_id) {
           const { data: partner } = await supabase
-            .from('agent_applications')
-            .select('id, full_name, email, phone')
-            .eq('id', selectedLead.agent_id)
+            .from("agent_applications")
+            .select("id, full_name, email, phone")
+            .eq("id", selectedLead.agent_id)
             .maybeSingle();
           if (partner) {
             partnerInfo = {
               id: partner.id,
               name: partner.full_name,
               email: partner.email,
-              phone: partner.phone
+              phone: partner.phone,
             };
           }
         }
 
-        setSelectedLead(prev => {
+        setSelectedLead((prev) => {
           if (!prev || prev.id !== selectedLead.id) return prev;
           return {
             ...prev,
-            tasks: (tasks || []).map(t => ({
+            tasks: (tasks || []).map((t) => ({
               id: t.id,
               text: t.text,
               date: t.due_date,
-              type: 'other', // Default type
+              type: "other", // Default type
               completed: t.completed,
-              assignedTo: MOCK_USERS[0] // Default
+              assignedTo: MOCK_USERS[0], // Default
             })),
-            history: (history || []).map(h => ({
+            history: (history || []).map((h) => ({
               id: h.id,
               type: h.type as any,
               date: h.created_at,
               text: h.description,
-              user: h.user_id || undefined
+              user: h.user_id || undefined,
             })),
-            partner: partnerInfo || undefined
+            partner: partnerInfo || undefined,
           };
         });
       } catch (err) {
-        console.error('Failed to load lead details', err);
+        console.error("Failed to load lead details", err);
       }
     };
 
@@ -431,14 +453,15 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     if (!user?.id) return;
     if (!selectedLead?.id) return;
 
-    const readAt = (selectedLead as unknown as { read_at?: string | null }).read_at;
+    const readAt = (selectedLead as unknown as { read_at?: string | null })
+      .read_at;
     if (readAt) return;
 
     const leadId = selectedLead.id;
     const optimisticReadAt = new Date().toISOString();
 
     // Optimistic UI update: patch cached leads + selectedLead
-    queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+    queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
       patchDbLeadsArray(old, leadId, { read_at: optimisticReadAt }),
     );
     setSelectedLead((prev) =>
@@ -446,19 +469,19 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     );
 
     (async () => {
-      const { error } = await supabase.from('lead_reads').upsert(
+      const { error } = await supabase.from("lead_reads").upsert(
         {
           lead_id: leadId,
           user_id: user.id,
           read_at: optimisticReadAt,
         },
-        { onConflict: 'lead_id,user_id' },
+        { onConflict: "lead_id,user_id" },
       );
 
       if (!error) return;
 
       // Rollback only read state (drawer open should not break other changes)
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
         patchDbLeadsArray(old, leadId, { read_at: null }),
       );
       setSelectedLead((prev) =>
@@ -470,12 +493,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   // Map DB leads to extended leads with computed fields
   const leads: ExtendedLead[] = useMemo(
     () => dbLeads.map(mapDbLeadToExtended),
-    [dbLeads]
+    [dbLeads],
   );
 
   const totalUnreadCount = useMemo(() => {
-    return leads.filter((l) => !(l as unknown as { read_at?: string | null }).read_at)
-      .length;
+    return leads.filter(
+      (l) => !(l as unknown as { read_at?: string | null }).read_at,
+    ).length;
   }, [leads]);
 
   const unreadCountByFunnelId = useMemo(() => {
@@ -493,8 +517,8 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       const readAt = (lead as unknown as { read_at?: string | null }).read_at;
       if (readAt) return;
       const stageId =
-        (lead as unknown as { pipeline_stage_id?: string | null }).pipeline_stage_id ||
-        lead.status;
+        (lead as unknown as { pipeline_stage_id?: string | null })
+          .pipeline_stage_id || lead.status;
       if (!stageId) return;
       const funnelId = stageIdToFunnelId.get(stageId);
       if (!funnelId) return;
@@ -511,7 +535,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         lead.project.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesSource =
-        filters.source === 'all' || lead.source === filters.source;
+        filters.source === "all" || lead.source === filters.source;
 
       const price = lead.price || 0;
       const minB = filters.minBudget ? Number(filters.minBudget) : 0;
@@ -533,7 +557,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
       const matchesStages =
         filters.stages.length === 0 ||
-        (lead.status && typeof lead.status === 'string' && filters.stages.includes(lead.status));
+        (lead.status &&
+          typeof lead.status === "string" &&
+          filters.stages.includes(lead.status));
 
       const matchesAssignedTo =
         filters.assignedTo.length === 0 ||
@@ -550,12 +576,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     });
 
     return result.sort((a, b) => {
-      if (sortOption === 'date_desc')
+      if (sortOption === "date_desc")
         return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortOption === 'date_asc')
+      if (sortOption === "date_asc")
         return new Date(a.date).getTime() - new Date(b.date).getTime();
-      if (sortOption === 'price_desc') return (b.price || 0) - (a.price || 0);
-      if (sortOption === 'price_asc') return (a.price || 0) - (b.price || 0);
+      if (sortOption === "price_desc") return (b.price || 0) - (a.price || 0);
+      if (sortOption === "price_asc") return (a.price || 0) - (b.price || 0);
       return 0;
     });
   }, [
@@ -573,41 +599,41 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const totalLeadsSum = useMemo(
     () => leads.reduce((acc, lead) => acc + (lead.price || 0), 0),
-    [leads]
+    [leads],
   );
 
   const activeFiltersCount = [
-    filters.source !== 'all',
-    filters.minBudget !== '',
-    filters.maxBudget !== '',
-    filters.dateFrom !== '',
-    filters.dateTo !== '',
+    filters.source !== "all",
+    filters.minBudget !== "",
+    filters.maxBudget !== "",
+    filters.dateFrom !== "",
+    filters.dateTo !== "",
     filters.stages.length > 0,
     filters.assignedTo.length > 0,
   ].filter(Boolean).length;
 
   const resetFilters = () => {
     setFilters({
-      source: 'all',
-      minBudget: '',
-      maxBudget: '',
-      dateFrom: '',
-      dateTo: '',
+      source: "all",
+      minBudget: "",
+      maxBudget: "",
+      dateFrom: "",
+      dateTo: "",
       stages: [],
       assignedTo: [],
     });
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   // --- Card appearance persistence (localStorage for now) ---
   const loadCardConfiguration = useCallback(() => {
     try {
-      const savedConfig = localStorage.getItem('card_appearance_config');
+      const savedConfig = localStorage.getItem("card_appearance_config");
       if (savedConfig) {
         setCardConfig(JSON.parse(savedConfig));
       }
     } catch (error) {
-      console.error('Failed to load card configuration', error);
+      console.error("Failed to load card configuration", error);
     }
   }, []);
 
@@ -617,10 +643,10 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleSaveCardConfig = (newConfig: CardAppearanceConfig) => {
     try {
-      localStorage.setItem('card_appearance_config', JSON.stringify(newConfig));
+      localStorage.setItem("card_appearance_config", JSON.stringify(newConfig));
       setCardConfig(newConfig);
     } catch (error) {
-      console.error('Failed to save card configuration', error);
+      console.error("Failed to save card configuration", error);
     }
   };
 
@@ -629,81 +655,99 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const createLeadMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       const { data, error } = await supabase
-        .from('leads')
+        .from("leads")
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(payload as any)
-        .select('*')
+        .select("*")
         .single();
       if (error) throw error;
       return data as DbLead;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
   });
 
   const updateLeadMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
-      console.debug('updateLeadMutation', id, data);
-      const shouldSyncWithAmo = Object.prototype.hasOwnProperty.call(data, 'pipeline_stage_id') ||
-        Object.prototype.hasOwnProperty.call(data, 'name');
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Record<string, unknown>;
+    }) => {
+      console.debug("updateLeadMutation", id, data);
+      const shouldSyncWithAmo =
+        Object.prototype.hasOwnProperty.call(data, "pipeline_stage_id") ||
+        Object.prototype.hasOwnProperty.call(data, "name");
 
       if (shouldSyncWithAmo) {
-        const { data: fnData, error: fnError } = await supabase.functions.invoke('amocrm-api', {
-          body: {
-            action: 'update_lead',
-            lead_id: id,
-            data,
-          },
-        });
+        const { data: fnData, error: fnError } =
+          await supabase.functions.invoke("amocrm-api", {
+            body: {
+              action: "update_lead",
+              lead_id: id,
+              data,
+            },
+          });
         if (fnError) throw fnError;
         if (fnData?.error) throw new Error(fnData.error);
       } else {
-        const { error } = await supabase.from('leads').update(data).eq('id', id);
+        const { error } = await supabase
+          .from("leads")
+          .update(data)
+          .eq("id", id);
         if (error) throw error;
       }
 
       // Best-effort Bitrix sync (do NOT block UI if not connected / no mapping / no link)
-      if (Object.prototype.hasOwnProperty.call(data, 'pipeline_stage_id')) {
+      if (Object.prototype.hasOwnProperty.call(data, "pipeline_stage_id")) {
         try {
-          await supabase.functions.invoke('bitrix-app', {
+          await supabase.functions.invoke("bitrix-app", {
             body: {
-              action: 'push_lead_status_to_bitrix',
+              action: "push_lead_status_to_bitrix",
               lead_id: id,
             },
           });
         } catch (e) {
-          console.debug('Bitrix sync skipped/failed (non-blocking):', e);
+          console.debug("Bitrix sync skipped/failed (non-blocking):", e);
         }
       }
     },
     onMutate: async ({ id, data }) => {
-      await queryClient.cancelQueries({ queryKey: ['leads'] });
-      const previousQueries = queryClient.getQueriesData({ queryKey: ['leads'] });
+      await queryClient.cancelQueries({ queryKey: ["leads"] });
+      const previousQueries = queryClient.getQueriesData({
+        queryKey: ["leads"],
+      });
       const previousSelectedLead = selectedLead;
 
       const previousReadAt = getLeadReadAtFromQueries(previousQueries, id);
       const optimisticReadAt = user?.id ? new Date().toISOString() : null;
       const uiPatch = user?.id ? { ...data, read_at: optimisticReadAt } : data;
 
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
         patchDbLeadsArray(old, id, uiPatch),
       );
       setSelectedLead((prev) => patchSelectedExtendedLead(prev, id, uiPatch));
 
-      return { previousQueries, previousSelectedLead, previousReadAt, optimisticReadAt };
+      return {
+        previousQueries,
+        previousSelectedLead,
+        previousReadAt,
+        optimisticReadAt,
+      };
     },
     onSuccess: async (_data, variables, context) => {
       if (!user?.id) return;
       if (!context?.optimisticReadAt) return;
 
-      const { error } = await supabase.from('lead_reads').upsert(
+      const { error } = await supabase.from("lead_reads").upsert(
         {
           lead_id: variables.id,
           user_id: user.id,
           read_at: context.optimisticReadAt,
         },
-        { onConflict: 'lead_id,user_id' },
+        { onConflict: "lead_id,user_id" },
       );
 
       if (!error) return;
@@ -712,11 +756,13 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       const rollbackReadAt =
         context.previousReadAt === undefined ? null : context.previousReadAt;
 
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
         patchDbLeadsArray(old, variables.id, { read_at: rollbackReadAt }),
       );
       setSelectedLead((prev) =>
-        patchSelectedExtendedLead(prev, variables.id, { read_at: rollbackReadAt }),
+        patchSelectedExtendedLead(prev, variables.id, {
+          read_at: rollbackReadAt,
+        }),
       );
     },
     onError: (err, _variables, context) => {
@@ -729,27 +775,35 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         setSelectedLead(context.previousSelectedLead);
       }
 
-      console.error('Failed to update lead', err);
+      console.error("Failed to update lead", err);
       showToast(
-        'error',
-        t('leads.toast.error.title'),
-        t('leads.toast.error.updateFailed'),
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.updateFailed"),
       );
     },
     onSettled: () => {
       // Keep UI responsive, but ensure server truth eventually wins
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
   });
 
   const handleCreateLead = async (newLeadData: Partial<ExtendedLead>) => {
     if (!newLeadData.name) {
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.missingFields'));
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.missingFields"),
+      );
       return;
     }
 
     if (!user) {
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.notAuthenticated'));
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.notAuthenticated"),
+      );
       return;
     }
 
@@ -758,45 +812,64 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     // Get accessible project based on user role
     if (isManagerMode && activeWorkspaceId) {
       // Manager mode: get accessible projects for this developer
-      const accessibleProjectIds = await getManagerProjectIds(user.id, activeWorkspaceId);
+      const accessibleProjectIds = await getManagerProjectIds(
+        user.id,
+        activeWorkspaceId,
+      );
       if (accessibleProjectIds.length === 0) {
-        showToast('error', t('leads.toast.error.title'), t('leads.toast.error.noAccessToProjects'));
+        showToast(
+          "error",
+          t("leads.toast.error.title"),
+          t("leads.toast.error.noAccessToProjects"),
+        );
         return;
       }
       projectId = accessibleProjectIds[0] || null;
     } else {
       // Owner mode: get user's own projects
       const { data: userProjects, error: projectsError } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('user_id', user.id)
+        .from("projects")
+        .select("id")
+        .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
 
       if (projectsError || !userProjects) {
-        showToast('error', t('leads.toast.error.title'), t('leads.toast.error.noProjects'));
-        console.error('No projects found', projectsError);
+        showToast(
+          "error",
+          t("leads.toast.error.title"),
+          t("leads.toast.error.noProjects"),
+        );
+        console.error("No projects found", projectsError);
         return;
       }
       projectId = userProjects.id;
     }
 
     if (!projectId) {
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.noProjects'));
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.noProjects"),
+      );
       return;
     }
 
     // Get first apartment for the project
     const { data: apartments, error: apartmentsError } = await supabase
-      .from('apartments')
-      .select('id')
-      .eq('project_id', projectId)
+      .from("apartments")
+      .select("id")
+      .eq("project_id", projectId)
       .limit(1)
       .maybeSingle();
 
     if (apartmentsError || !apartments) {
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.noApartments'));
-      console.error('No apartments found', apartmentsError);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.noApartments"),
+      );
+      console.error("No apartments found", apartmentsError);
       return;
     }
 
@@ -804,12 +877,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     const payload: Record<string, unknown> = {
       name: newLeadData.name.trim(),
-      email: newLeadData.email?.trim() || '',
-      phone: newLeadData.phone?.trim() || '',
+      email: newLeadData.email?.trim() || "",
+      phone: newLeadData.phone?.trim() || "",
       project_id: projectId,
       apartment_id: apartments.id,
-      source: newLeadData.source || 'admin',
-      status: 'saved_only',
+      source: newLeadData.source || "admin",
+      status: "saved_only",
       pipeline_stage_id: firstStageId || null,
       tags: newLeadData.tags || [],
     };
@@ -817,14 +890,25 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     try {
       await createLeadMutation.mutateAsync(payload);
       setIsCreateModalOpen(false);
-      showToast('success', t('leads.toast.leadCreated.title'), t('leads.toast.leadCreated.desc'));
+      showToast(
+        "success",
+        t("leads.toast.leadCreated.title"),
+        t("leads.toast.leadCreated.desc"),
+      );
     } catch (error) {
-      console.error('Failed to create lead', error);
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.createFailed'));
+      console.error("Failed to create lead", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.createFailed"),
+      );
     }
   };
 
-  const handleUpdateLead = async (leadId: string, data: Partial<ExtendedLead>) => {
+  const handleUpdateLead = async (
+    leadId: string,
+    data: Partial<ExtendedLead>,
+  ) => {
     const dbPatch: Record<string, unknown> = {};
 
     if (data.name !== undefined) dbPatch.name = data.name;
@@ -854,21 +938,21 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       try {
         const dueDateIso = buildDueDateIso(date, time);
         const { data, error } = await supabase
-          .from('lead_tasks')
+          .from("lead_tasks")
           .insert({
             lead_id: leadId,
             text: text,
             due_date: dueDateIso,
             completed: false,
-            type: type
+            type: type,
           })
-          .select('*')
+          .select("*")
           .single();
 
         if (error) throw error;
 
         // Add history entry
-        await handleAddNote(leadId, `Created task: ${text}`, 'task_creation');
+        await handleAddNote(leadId, `Created task: ${text}`, "task_creation");
 
         const newTask: LeadTask = {
           id: data.id,
@@ -881,7 +965,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         };
 
         // Update list/kanban cache immediately so cards show tasks
-        queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+        queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
           patchLeadTasksInCache(old, leadId, (prev) => [...prev, newTask]),
         );
 
@@ -891,115 +975,151 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
             ...selectedLead,
             tasks: [...(selectedLead.tasks || []), newTask],
             history: [
-              { id: `h_${Date.now()}`, type: 'note', date: new Date().toISOString(), text: `Created task: ${text}` },
-              ...(selectedLead.history || [])
-            ]
+              {
+                id: `h_${Date.now()}`,
+                type: "note",
+                date: new Date().toISOString(),
+                text: `Created task: ${text}`,
+              },
+              ...(selectedLead.history || []),
+            ],
           });
         }
       } catch (err) {
-        console.error('Failed to add task', err);
-        showToast('error', t('leads.toast.error.title'), t('leads.toast.error.updateFailed'));
+        console.error("Failed to add task", err);
+        showToast(
+          "error",
+          t("leads.toast.error.title"),
+          t("leads.toast.error.updateFailed"),
+        );
       }
     },
-    [queryClient, selectedLead, user?.id]
+    [queryClient, selectedLead, user?.id],
   );
 
-  const handleCompleteTask = async (leadId: string, taskId: string, result: string) => {
+  const handleCompleteTask = async (
+    leadId: string,
+    taskId: string,
+    result: string,
+  ) => {
     try {
       const { error } = await supabase
-        .from('lead_tasks')
+        .from("lead_tasks")
         .update({ completed: true })
-        .eq('id', taskId);
+        .eq("id", taskId);
 
       if (error) throw error;
 
-      await handleAddNote(leadId, `Completed task. Result: ${result}`, 'task_completion');
+      await handleAddNote(
+        leadId,
+        `Completed task. Result: ${result}`,
+        "task_completion",
+      );
 
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
         patchLeadTasksInCache(old, leadId, (prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, completed: true, result } : t)),
+          prev.map((t) =>
+            t.id === taskId ? { ...t, completed: true, result } : t,
+          ),
         ),
       );
 
       if (selectedLead?.id === leadId) {
         setSelectedLead({
           ...selectedLead,
-          tasks: (selectedLead.tasks || []).map(t => t.id === taskId ? { ...t, completed: true, result } : t),
+          tasks: (selectedLead.tasks || []).map((t) =>
+            t.id === taskId ? { ...t, completed: true, result } : t,
+          ),
           history: [
-            { id: `h_${Date.now()}`, type: 'task_completion', date: new Date().toISOString(), text: `Completed task. Result: ${result}` },
-            ...(selectedLead.history || [])
-          ]
+            {
+              id: `h_${Date.now()}`,
+              type: "task_completion",
+              date: new Date().toISOString(),
+              text: `Completed task. Result: ${result}`,
+            },
+            ...(selectedLead.history || []),
+          ],
         });
       }
     } catch (err) {
-      console.error('Failed to complete task', err);
+      console.error("Failed to complete task", err);
     }
   };
 
   const handleToggleTask = async (leadId: string, taskId: string) => {
-    const task = selectedLead?.tasks?.find(t => t.id === taskId);
+    const task = selectedLead?.tasks?.find((t) => t.id === taskId);
     if (!task) return;
 
     try {
       const { error } = await supabase
-        .from('lead_tasks')
+        .from("lead_tasks")
         .update({ completed: !task.completed })
-        .eq('id', taskId);
+        .eq("id", taskId);
 
       if (error) throw error;
 
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
         patchLeadTasksInCache(old, leadId, (prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t)),
+          prev.map((t) =>
+            t.id === taskId ? { ...t, completed: !t.completed } : t,
+          ),
         ),
       );
 
       if (selectedLead?.id === leadId) {
         setSelectedLead({
           ...selectedLead,
-          tasks: (selectedLead.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+          tasks: (selectedLead.tasks || []).map((t) =>
+            t.id === taskId ? { ...t, completed: !t.completed } : t,
+          ),
         });
       }
     } catch (err) {
-      console.error('Failed to toggle task', err);
+      console.error("Failed to toggle task", err);
     }
   };
 
   const handleDeleteTask = async (leadId: string, taskId: string) => {
     try {
       const { error } = await supabase
-        .from('lead_tasks')
+        .from("lead_tasks")
         .delete()
-        .eq('id', taskId);
+        .eq("id", taskId);
 
       if (error) throw error;
 
-      queryClient.setQueriesData({ queryKey: ['leads'] }, (old) =>
-        patchLeadTasksInCache(old, leadId, (prev) => prev.filter((t) => t.id !== taskId)),
+      queryClient.setQueriesData({ queryKey: ["leads"] }, (old) =>
+        patchLeadTasksInCache(old, leadId, (prev) =>
+          prev.filter((t) => t.id !== taskId),
+        ),
       );
 
       if (selectedLead?.id === leadId) {
         setSelectedLead({
           ...selectedLead,
-          tasks: (selectedLead.tasks || []).filter(t => t.id !== taskId)
+          tasks: (selectedLead.tasks || []).filter((t) => t.id !== taskId),
         });
       }
     } catch (err) {
-      console.error('Failed to delete task', err);
+      console.error("Failed to delete task", err);
     }
   };
 
-  const handleAddNote = async (leadId: string, note: string, type: string = 'note') => {
+  const handleAddNote = async (
+    leadId: string,
+    note: string,
+    type: string = "note",
+  ) => {
     try {
       const { data, error } = await supabase
-        .from('lead_activities')
+        .from("lead_activities")
         .insert({
           lead_id: leadId,
           user_id: user?.id,
           type,
-          description: note
+          description: note,
         })
-        .select('*')
+        .select("*")
         .single();
 
       if (error) throw error;
@@ -1008,13 +1128,18 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         setSelectedLead({
           ...selectedLead,
           history: [
-            { id: data.id, type: data.type as any, date: data.created_at, text: data.description },
-            ...(selectedLead.history || [])
-          ]
+            {
+              id: data.id,
+              type: data.type as any,
+              date: data.created_at,
+              text: data.description,
+            },
+            ...(selectedLead.history || []),
+          ],
         });
       }
     } catch (err) {
-      console.error('Failed to add note', err);
+      console.error("Failed to add note", err);
     }
   };
 
@@ -1032,8 +1157,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         data: { tags: updatedTags },
       });
     } catch (error) {
-      console.error('Failed to add tag', error);
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.addTagFailed'));
+      console.error("Failed to add tag", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.addTagFailed"),
+      );
     }
   };
 
@@ -1049,17 +1178,21 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         data: { tags: updatedTags },
       });
     } catch (error) {
-      console.error('Failed to remove tag', error);
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.removeTagFailed'));
+      console.error("Failed to remove tag", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.removeTagFailed"),
+      );
     }
   };
 
   const handleDeleteSelected = () => {
-    console.log('Delete selected not implemented yet', Array.from(selectedIds));
+    console.log("Delete selected not implemented yet", Array.from(selectedIds));
   };
 
   const handleMassAssign = (assignedToId: string) => {
-    console.log('Mass assign to', assignedToId, Array.from(selectedIds));
+    console.log("Mass assign to", assignedToId, Array.from(selectedIds));
   };
 
   const handleMergeLeads = async (masterId: string, duplicateIds: string[]) => {
@@ -1067,8 +1200,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     const masterLead = leads.find((l) => l.id === masterId);
     if (!masterLead) {
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.masterNotFound'));
-      throw new Error('Master lead not found');
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.masterNotFound"),
+      );
+      throw new Error("Master lead not found");
     }
 
     const duplicateLeads = leads.filter((l) => duplicateIds.includes(l.id));
@@ -1083,7 +1220,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       // 2. Merge Notes - combine notes if they exist
       const notes = [masterLead.notes, ...duplicateLeads.map((d) => d.notes)]
         .filter((n): n is string => !!n)
-        .join('\n\n---\n\n');
+        .join("\n\n---\n\n");
 
       // 3. Update master lead with merged data
       const updateData: Record<string, unknown> = {
@@ -1102,12 +1239,16 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       // Tasks
       {
         const { error } = await supabase
-          .from('lead_tasks')
+          .from("lead_tasks")
           .update({ lead_id: masterId })
-          .in('lead_id', duplicateIds);
+          .in("lead_id", duplicateIds);
         if (error) {
-          console.error('Failed to move lead_tasks to master lead', error);
-          showToast('error', t('leads.toast.error.title'), t('leads.toast.error.mergeFailed'));
+          console.error("Failed to move lead_tasks to master lead", error);
+          showToast(
+            "error",
+            t("leads.toast.error.title"),
+            t("leads.toast.error.mergeFailed"),
+          );
           throw error;
         }
       }
@@ -1115,58 +1256,74 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       // Activities / history
       {
         const { error } = await supabase
-          .from('lead_activities')
+          .from("lead_activities")
           .update({ lead_id: masterId })
-          .in('lead_id', duplicateIds);
+          .in("lead_id", duplicateIds);
         if (error) {
-          console.error('Failed to move lead_activities to master lead', error);
-          showToast('error', t('leads.toast.error.title'), t('leads.toast.error.mergeFailed'));
+          console.error("Failed to move lead_activities to master lead", error);
+          showToast(
+            "error",
+            t("leads.toast.error.title"),
+            t("leads.toast.error.mergeFailed"),
+          );
           throw error;
         }
       }
 
       // 5. Delete duplicate leads
       const { error } = await supabase
-        .from('leads')
+        .from("leads")
         .delete()
-        .in('id', duplicateIds);
+        .in("id", duplicateIds);
 
       if (error) {
-        console.error('Failed to delete duplicate leads', error);
-        showToast('error', t('leads.toast.error.title'), t('leads.toast.error.mergeFailed'));
+        console.error("Failed to delete duplicate leads", error);
+        showToast(
+          "error",
+          t("leads.toast.error.title"),
+          t("leads.toast.error.mergeFailed"),
+        );
         throw error;
       }
 
       // Invalidate queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
 
-      showToast('success', t('leads.toast.mergeSuccess.title'), t('leads.toast.mergeSuccess.desc', { count: duplicateIds.length }));
+      showToast(
+        "success",
+        t("leads.toast.mergeSuccess.title"),
+        t("leads.toast.mergeSuccess.desc", { count: duplicateIds.length }),
+      );
     } catch (error) {
-      console.error('Failed to merge leads', error);
-      showToast('error', t('leads.toast.error.title'), t('leads.toast.error.mergeFailed'));
+      console.error("Failed to merge leads", error);
+      showToast(
+        "error",
+        t("leads.toast.error.title"),
+        t("leads.toast.error.mergeFailed"),
+      );
       throw error;
     }
   };
 
   const handleImportLeads = () => {
-    console.log('Import leads not implemented yet');
+    console.log("Import leads not implemented yet");
   };
 
   const handleSelectFunnel = (id: string) => {
     setActiveFunnelId(id);
     try {
-      localStorage.setItem('admin_active_funnel_id', id);
+      localStorage.setItem("admin_active_funnel_id", id);
     } catch (error) {
-      console.error('Failed to save active funnel to localStorage', error);
+      console.error("Failed to save active funnel to localStorage", error);
     }
   };
 
   const handleAddFunnel = async () => {
     if (!user) return;
     const { data, error } = await supabase
-      .from('crm_funnels')
-      .insert({ user_id: user.id, name: 'Новая воронка' })
-      .select('*')
+      .from("crm_funnels")
+      .insert({ user_id: user.id, name: "Новая воронка" })
+      .select("*")
       .single();
     if (error) {
       console.error(error);
@@ -1179,7 +1336,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   };
 
   const handleDeleteFunnel = async (id: string) => {
-    await supabase.from('crm_funnels').delete().eq('id', id);
+    await supabase.from("crm_funnels").delete().eq("id", id);
     setFunnels((prev) => prev.filter((f) => f.id !== id));
   };
 
@@ -1190,18 +1347,21 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleSaveFunnel = async (id: string) => {
     await supabase
-      .from('crm_funnels')
+      .from("crm_funnels")
       .update({ name: editingFunnelName })
-      .eq('id', id);
+      .eq("id", id);
     setFunnels((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, name: editingFunnelName } : f))
+      prev.map((f) => (f.id === id ? { ...f, name: editingFunnelName } : f)),
     );
     setEditingFunnelId(null);
   };
 
   const handleCancelEditFunnel = () => setEditingFunnelId(null);
 
-  const handleUpdateStage = async (stageId: string, updates: Partial<FunnelStage>) => {
+  const handleUpdateStage = async (
+    stageId: string,
+    updates: Partial<FunnelStage>,
+  ) => {
     // Persist to Supabase
     const dbPatch: Record<string, unknown> = {};
     if (updates.name !== undefined) dbPatch.name = updates.name;
@@ -1209,17 +1369,17 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     if (Object.keys(dbPatch).length > 0) {
       const { error } = await supabase
-        .from('crm_funnel_stages')
+        .from("crm_funnel_stages")
         .update(dbPatch)
-        .eq('id', stageId);
+        .eq("id", stageId);
       if (error) {
-        console.error('Failed to update funnel stage', error);
+        console.error("Failed to update funnel stage", error);
       }
     }
 
     // Update local state
     setFunnelStages((stages) =>
-      stages.map((s) => (s.id === stageId ? { ...s, ...updates } : s))
+      stages.map((s) => (s.id === stageId ? { ...s, ...updates } : s)),
     );
   };
 
@@ -1228,22 +1388,23 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     const baseStages = [...funnelStages];
     const targetIndex = baseStages.findIndex((s) => s.id === insertAfterId);
-    const insertIndex = targetIndex === -1 ? baseStages.length : targetIndex + 1;
+    const insertIndex =
+      targetIndex === -1 ? baseStages.length : targetIndex + 1;
 
     // Compute order_index so that we keep stages in order
     const { error, data } = await supabase
-      .from('crm_funnel_stages')
+      .from("crm_funnel_stages")
       .insert({
         funnel_id: activeFunnelId,
-        name: 'Новый этап',
-        color: 'slate',
+        name: "Новый этап",
+        color: "slate",
         order_index: insertIndex,
       })
-      .select('*')
+      .select("*")
       .single();
 
     if (error || !data) {
-      console.error('Failed to add funnel stage', error);
+      console.error("Failed to add funnel stage", error);
       return;
     }
 
@@ -1261,9 +1422,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     await Promise.all(
       newStages.map((stage, index) =>
         supabase
-          .from('crm_funnel_stages')
+          .from("crm_funnel_stages")
           .update({ order_index: index })
-          .eq('id', stage.id),
+          .eq("id", stage.id),
       ),
     );
 
@@ -1273,24 +1434,24 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
   const handleDeleteStage = async (stageId: string) => {
     // Delete triggers for this stage first (foreign key)
     const { error: triggersError } = await supabase
-      .from('crm_funnel_triggers')
+      .from("crm_funnel_triggers")
       .delete()
-      .eq('stage_id', stageId);
+      .eq("stage_id", stageId);
     if (triggersError) {
-      console.error('Failed to delete triggers for stage', triggersError);
+      console.error("Failed to delete triggers for stage", triggersError);
     }
 
     const { error: stageError } = await supabase
-      .from('crm_funnel_stages')
+      .from("crm_funnel_stages")
       .delete()
-      .eq('id', stageId);
+      .eq("id", stageId);
     if (stageError) {
-      console.error('Failed to delete funnel stage', stageError);
+      console.error("Failed to delete funnel stage", stageError);
     }
 
     setFunnelStages((stages) => stages.filter((s) => s.id !== stageId));
     setFunnelTriggers((triggers) =>
-      triggers.filter((t) => t.stageId !== stageId)
+      triggers.filter((t) => t.stageId !== stageId),
     );
   };
 
@@ -1309,9 +1470,9 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     await Promise.all(
       newStages.map((stage, index) =>
         supabase
-          .from('crm_funnel_stages')
+          .from("crm_funnel_stages")
           .update({ order_index: index })
-          .eq('id', stage.id),
+          .eq("id", stage.id),
       ),
     );
 
@@ -1320,12 +1481,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleAddTrigger = async (
     stageId: string,
-    triggerData: Omit<FunnelTrigger, 'id' | 'stageId'>,
+    triggerData: Omit<FunnelTrigger, "id" | "stageId">,
   ) => {
     if (!activeFunnelId) return;
 
     const { data, error } = await supabase
-      .from('crm_funnel_triggers')
+      .from("crm_funnel_triggers")
       .insert({
         funnel_id: activeFunnelId,
         stage_id: stageId,
@@ -1335,11 +1496,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         description: triggerData.description,
         config: triggerData.config || {},
       })
-      .select('*')
+      .select("*")
       .single();
 
     if (error || !data) {
-      console.error('Failed to add funnel trigger', error);
+      console.error("Failed to add funnel trigger", error);
       return;
     }
 
@@ -1347,7 +1508,7 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       id: data.id,
       stageId,
       event: data.event,
-      icon: data.icon as FunnelTrigger['icon'],
+      icon: data.icon as FunnelTrigger["icon"],
       title: data.title,
       description: data.description,
       config: (data.config as Record<string, unknown>) || {},
@@ -1358,37 +1519,38 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleUpdateTrigger = async (
     triggerId: string,
-    updates: Partial<Omit<FunnelTrigger, 'id' | 'stageId'>>,
+    updates: Partial<Omit<FunnelTrigger, "id" | "stageId">>,
   ) => {
     const dbPatch: Record<string, unknown> = {};
     if (updates.event !== undefined) dbPatch.event = updates.event;
     if (updates.icon !== undefined) dbPatch.icon = updates.icon;
     if (updates.title !== undefined) dbPatch.title = updates.title;
-    if (updates.description !== undefined) dbPatch.description = updates.description;
+    if (updates.description !== undefined)
+      dbPatch.description = updates.description;
     if (updates.config !== undefined) dbPatch.config = updates.config;
 
     if (Object.keys(dbPatch).length > 0) {
       const { error } = await supabase
-        .from('crm_funnel_triggers')
+        .from("crm_funnel_triggers")
         .update(dbPatch)
-        .eq('id', triggerId);
+        .eq("id", triggerId);
       if (error) {
-        console.error('Failed to update funnel trigger', error);
+        console.error("Failed to update funnel trigger", error);
       }
     }
 
     setFunnelTriggers((prev) =>
-      prev.map((t) => (t.id === triggerId ? { ...t, ...updates } : t))
+      prev.map((t) => (t.id === triggerId ? { ...t, ...updates } : t)),
     );
   };
 
   const handleDeleteTrigger = async (triggerId: string) => {
     const { error } = await supabase
-      .from('crm_funnel_triggers')
+      .from("crm_funnel_triggers")
       .delete()
-      .eq('id', triggerId);
+      .eq("id", triggerId);
     if (error) {
-      console.error('Failed to delete funnel trigger', error);
+      console.error("Failed to delete funnel trigger", error);
     }
 
     setFunnelTriggers((prev) => prev.filter((t) => t.id !== triggerId));
@@ -1396,11 +1558,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
   const handleDeleteAllTriggers = async (funnelId: string) => {
     const { error } = await supabase
-      .from('crm_funnel_triggers')
+      .from("crm_funnel_triggers")
       .delete()
-      .eq('funnel_id', funnelId);
+      .eq("funnel_id", funnelId);
     if (error) {
-      console.error('Failed to delete all triggers for funnel', error);
+      console.error("Failed to delete all triggers for funnel", error);
     }
 
     if (activeFunnelId === funnelId) {
@@ -1417,14 +1579,21 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
     let computedStageIds: string[] = [];
 
     setFunnelTriggers((prevTriggers) => {
-      const draggedTrigger = prevTriggers.find((t) => t.id === draggedTriggerId);
+      const draggedTrigger = prevTriggers.find(
+        (t) => t.id === draggedTriggerId,
+      );
       if (!draggedTrigger) return prevTriggers;
 
       const fromStageId = draggedTrigger.stageId;
       const stageIds = new Set<string>([fromStageId, targetStageId]);
 
-      const triggersWithoutDragged = prevTriggers.filter((t) => t.id !== draggedTriggerId);
-      const updatedDraggedTrigger = { ...draggedTrigger, stageId: targetStageId };
+      const triggersWithoutDragged = prevTriggers.filter(
+        (t) => t.id !== draggedTriggerId,
+      );
+      const updatedDraggedTrigger = {
+        ...draggedTrigger,
+        stageId: targetStageId,
+      };
 
       let next: FunnelTrigger[];
       if (targetTriggerId === null) {
@@ -1434,7 +1603,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         const targetStageTriggers = triggersWithoutDragged.filter(
           (t) => t.stageId === targetStageId,
         );
-        next = [...otherStageTriggers, ...targetStageTriggers, updatedDraggedTrigger];
+        next = [
+          ...otherStageTriggers,
+          ...targetStageTriggers,
+          updatedDraggedTrigger,
+        ];
       } else {
         const targetIndex = triggersWithoutDragged.findIndex(
           (t) => t.id === targetTriggerId,
@@ -1455,7 +1628,11 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
       try {
         if (!computedNext || computedStageIds.length === 0) return;
 
-        const updates: Array<{ id: string; stage_id: string; order_index: number }> = [];
+        const updates: Array<{
+          id: string;
+          stage_id: string;
+          order_index: number;
+        }> = [];
         computedStageIds.forEach((sid) => {
           const stageTriggers = computedNext!.filter((t) => t.stageId === sid);
           stageTriggers.forEach((t, idx) => {
@@ -1464,12 +1641,12 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
         });
 
         if (updates.length > 0) {
-          await supabase.from('crm_funnel_triggers').upsert(updates as any, {
-            onConflict: 'id',
+          await supabase.from("crm_funnel_triggers").upsert(updates as any, {
+            onConflict: "id",
           });
         }
       } catch (e) {
-        console.error('Failed to persist trigger reorder', e);
+        console.error("Failed to persist trigger reorder", e);
       }
     })();
   };
@@ -1480,31 +1657,31 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     const [{ data: stages }, { data: triggers }] = await Promise.all([
       supabase
-        .from('crm_funnel_stages')
-        .select('*')
-        .eq('funnel_id', activeFunnelId)
-        .order('order_index', { ascending: true }),
+        .from("crm_funnel_stages")
+        .select("*")
+        .eq("funnel_id", activeFunnelId)
+        .order("order_index", { ascending: true }),
       supabase
-        .from('crm_funnel_triggers')
-        .select('*')
-        .eq('funnel_id', activeFunnelId)
-        .order('stage_id', { ascending: true })
-        .order('order_index', { ascending: true }),
+        .from("crm_funnel_triggers")
+        .select("*")
+        .eq("funnel_id", activeFunnelId)
+        .order("stage_id", { ascending: true })
+        .order("order_index", { ascending: true }),
     ]);
 
     setFunnelStages(
-      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color }))
+      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
     );
     setFunnelTriggers(
       (triggers || []).map((t) => ({
         id: t.id,
         stageId: t.stage_id,
         event: t.event,
-        icon: t.icon as FunnelTrigger['icon'],
+        icon: t.icon as FunnelTrigger["icon"],
         title: t.title,
         description: t.description,
         config: (t.config as Record<string, unknown>) || {},
-      }))
+      })),
     );
   };
 
@@ -1514,31 +1691,31 @@ export function useAdminLeadsData(filtersOverride?: DbLeadFilters) {
 
     const [{ data: stages }, { data: triggers }] = await Promise.all([
       supabase
-        .from('crm_funnel_stages')
-        .select('*')
-        .eq('funnel_id', activeFunnelId)
-        .order('order_index', { ascending: true }),
+        .from("crm_funnel_stages")
+        .select("*")
+        .eq("funnel_id", activeFunnelId)
+        .order("order_index", { ascending: true }),
       supabase
-        .from('crm_funnel_triggers')
-        .select('*')
-        .eq('funnel_id', activeFunnelId)
-        .order('stage_id', { ascending: true })
-        .order('order_index', { ascending: true }),
+        .from("crm_funnel_triggers")
+        .select("*")
+        .eq("funnel_id", activeFunnelId)
+        .order("stage_id", { ascending: true })
+        .order("order_index", { ascending: true }),
     ]);
 
     setFunnelStages(
-      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color }))
+      (stages || []).map((s) => ({ id: s.id, name: s.name, color: s.color })),
     );
     setFunnelTriggers(
       (triggers || []).map((t) => ({
         id: t.id,
         stageId: t.stage_id,
         event: t.event,
-        icon: t.icon as FunnelTrigger['icon'],
+        icon: t.icon as FunnelTrigger["icon"],
         title: t.title,
         description: t.description,
         config: (t.config as Record<string, unknown>) || {},
-      }))
+      })),
     );
   };
 

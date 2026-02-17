@@ -1,6 +1,6 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useLanguageNavigation } from '@gridix/utils/react';
-import ProjectEditor from '@/components/projects/ProjectEditor';
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLanguageNavigation } from "@gridix/utils/react";
+import ProjectEditor from "@/components/projects/ProjectEditor";
 
 interface ProjectEditorPageProps {
   useId?: boolean;
@@ -25,14 +25,17 @@ function getSafeBackTarget(currentPathname: string): string | null {
 }
 
 const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
-  const { projectId, projectSlug } = useParams<{ projectId?: string; projectSlug?: string }>();
+  const { projectId, projectSlug } = useParams<{
+    projectId?: string;
+    projectSlug?: string;
+  }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { navigate: navigateWithLanguage } = useLanguageNavigation();
 
-  const projectIdentifier = useId ? projectId : (projectSlug || projectId);
-  const isNew = !projectIdentifier || projectIdentifier === 'new';
-  const actualProjectId = isNew ? '' : projectIdentifier;
+  const projectIdentifier = useId ? projectId : projectSlug || projectId;
+  const isNew = !projectIdentifier || projectIdentifier === "new";
+  const actualProjectId = isNew ? "" : projectIdentifier;
 
   const goBack = () => {
     const fromState = (location.state as { from?: string } | null)?.from;
@@ -45,15 +48,11 @@ const ProjectEditorPage = ({ useId = false }: ProjectEditorPageProps) => {
       navigate(safeTarget);
       return;
     }
-    navigateWithLanguage('/admin');
+    navigateWithLanguage("/admin");
   };
 
   return (
-    <ProjectEditor 
-      projectId={actualProjectId}
-      isNew={isNew}
-      onBack={goBack}
-    />
+    <ProjectEditor projectId={actualProjectId} isNew={isNew} onBack={goBack} />
   );
 };
 

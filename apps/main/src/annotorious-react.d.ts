@@ -7,12 +7,15 @@
 // We declare the minimal surface we use in the Gridix app, mapped to the
 // underlying @annotorious/* packages so our code stays type-safe.
 
-declare module '@annotorious/react' {
-  import type * as React from 'react';
-  import type { Annotation as CoreAnnotation, DrawingStyle } from '@annotorious/core';
-  import { UserSelectAction } from '@annotorious/core';
-  import type { ImageAnnotation } from '@annotorious/annotorious';
-  import type { Viewer } from 'openseadragon';
+declare module "@annotorious/react" {
+  import type * as React from "react";
+  import type {
+    Annotation as CoreAnnotation,
+    DrawingStyle,
+  } from "@annotorious/core";
+  import { UserSelectAction } from "@annotorious/core";
+  import type { ImageAnnotation } from "@annotorious/annotorious";
+  import type { Viewer } from "openseadragon";
 
   export { UserSelectAction };
 
@@ -25,13 +28,16 @@ declare module '@annotorious/react' {
   export const OpenSeadragonViewer: React.ComponentType<any>;
 
   // Hooks
-  export function useAnnotations<T extends CoreAnnotation = ImageAnnotation>(debounce?: number): T[];
+  export function useAnnotations<T extends CoreAnnotation = ImageAnnotation>(
+    debounce?: number,
+  ): T[];
   export function useAnnotator<T = any>(): T;
   export function useViewer(): Viewer;
-  export function useHover<T extends CoreAnnotation = ImageAnnotation>(): T | undefined;
+  export function useHover<T extends CoreAnnotation = ImageAnnotation>():
+    | T
+    | undefined;
 
   // Types we use in the app
   export type Annotation = CoreAnnotation;
   export type { DrawingStyle, ImageAnnotation };
 }
-

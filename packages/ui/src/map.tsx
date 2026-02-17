@@ -17,13 +17,13 @@ interface MapProps {
   loop?: boolean;
 }
 
-export function WorldMap({ 
-  dots = [], 
+export function WorldMap({
+  dots = [],
   lineColor = "#0ea5e9",
   showLabels = true,
   labelClassName = "text-xs",
   animationDuration = 2,
-  loop = true
+  loop = true,
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
@@ -31,17 +31,18 @@ export function WorldMap({
 
   const map = useMemo(
     () => new DottedMap({ height: 100, grid: "diagonal" }),
-    []
+    [],
   );
 
   const svgMap = useMemo(
-    () => map.getSVG({
-      radius: 0.22,
-      color: theme === "dark" ? "#FFFF7F40" : "#00000040",
-      shape: "circle",
-      backgroundColor: theme === "dark" ? "black" : "white",
-    }),
-    [map, theme]
+    () =>
+      map.getSVG({
+        radius: 0.22,
+        color: theme === "dark" ? "#FFFF7F40" : "#00000040",
+        shape: "circle",
+        backgroundColor: theme === "dark" ? "black" : "white",
+      }),
+    [map, theme],
   );
 
   const projectPoint = (lat: number, lng: number) => {
@@ -52,7 +53,7 @@ export function WorldMap({
 
   const createCurvedPath = (
     start: { x: number; y: number },
-    end: { x: number; y: number }
+    end: { x: number; y: number },
   ) => {
     const midX = (start.x + end.x) / 2;
     const midY = Math.min(start.y, end.y) - 50;
@@ -66,20 +67,19 @@ export function WorldMap({
   const fullCycleDuration = totalAnimationTime + pauseTime;
 
   return (
-    <div className="w-full aspect-[2/1] md:aspect-[2.5/1] lg:aspect-[2/1] dark:bg-black bg-white rounded-lg relative font-sans overflow-hidden">
+    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-white font-sans md:aspect-[2.5/1] lg:aspect-[2/1] dark:bg-black">
       <img
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none object-cover"
+        className="pointer-events-none h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] object-cover select-none"
         alt="world map"
         height="495"
         width="1056"
         draggable={false}
-        
       />
       <svg
         ref={svgRef}
         viewBox="0 0 800 400"
-        className="w-full h-full absolute inset-0 pointer-events-auto select-none"
+        className="pointer-events-auto absolute inset-0 h-full w-full select-none"
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -89,7 +89,7 @@ export function WorldMap({
             <stop offset="95%" stopColor={lineColor} stopOpacity="1" />
             <stop offset="100%" stopColor="white" stopOpacity="0" />
           </linearGradient>
-          
+
           <filter id="glow">
             <feMorphology operator="dilate" radius="0.5" />
             <feGaussianBlur stdDeviation="1" result="coloredBlur" />
@@ -103,12 +103,13 @@ export function WorldMap({
         {dots.map((dot, i) => {
           const startPoint = projectPoint(dot.start.lat, dot.start.lng);
           const endPoint = projectPoint(dot.end.lat, dot.end.lng);
-          
+
           // Calculate keyframe times for this specific path
           const startTime = (i * staggerDelay) / fullCycleDuration;
-          const endTime = (i * staggerDelay + animationDuration) / fullCycleDuration;
+          const endTime =
+            (i * staggerDelay + animationDuration) / fullCycleDuration;
           const resetTime = totalAnimationTime / fullCycleDuration;
-          
+
           return (
             <g key={`path-group-${i}`}>
               <motion.path
@@ -117,24 +118,32 @@ export function WorldMap({
                 stroke="url(#path-gradient)"
                 strokeWidth="1"
                 initial={{ pathLength: 0 }}
-                animate={loop ? {
-                  pathLength: [0, 0, 1, 1, 0],
-                } : {
-                  pathLength: 1
-                }}
-                transition={loop ? {
-                  duration: fullCycleDuration,
-                  times: [0, startTime, endTime, resetTime, 1],
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                  repeatDelay: 0,
-                } : {
-                  duration: animationDuration,
-                  delay: i * staggerDelay,
-                  ease: "easeInOut",
-                }}
+                animate={
+                  loop
+                    ? {
+                        pathLength: [0, 0, 1, 1, 0],
+                      }
+                    : {
+                        pathLength: 1,
+                      }
+                }
+                transition={
+                  loop
+                    ? {
+                        duration: fullCycleDuration,
+                        times: [0, startTime, endTime, resetTime, 1],
+                        ease: "easeInOut",
+                        repeat: Infinity,
+                        repeatDelay: 0,
+                      }
+                    : {
+                        duration: animationDuration,
+                        delay: i * staggerDelay,
+                        ease: "easeInOut",
+                      }
+                }
               />
-              
+
               {loop && (
                 <motion.circle
                   r="2"
@@ -163,13 +172,15 @@ export function WorldMap({
         {dots.map((dot, i) => {
           const startPoint = projectPoint(dot.start.lat, dot.start.lng);
           const endPoint = projectPoint(dot.end.lat, dot.end.lng);
-          
+
           return (
             <g key={`points-group-${i}`}>
               {/* Start Point */}
               <g key={`start-${i}`}>
                 <motion.g
-                  onHoverStart={() => setHoveredLocation(dot.start.label || `Location ${i}`)}
+                  onHoverStart={() =>
+                    setHoveredLocation(dot.start.label || `Location ${i}`)
+                  }
                   onHoverEnd={() => setHoveredLocation(null)}
                   className="cursor-pointer"
                   whileHover={{ scale: 1.2 }}
@@ -208,7 +219,7 @@ export function WorldMap({
                     />
                   </circle>
                 </motion.g>
-                
+
                 {showLabels && dot.start.label && (
                   <motion.g
                     initial={{ opacity: 0, y: 3 }}
@@ -223,8 +234,10 @@ export function WorldMap({
                       height="20"
                       className="block"
                     >
-                      <div className="flex items-center justify-center h-full">
-                        <span className={`font-medium px-1 py-0.5 rounded bg-white/90 dark:bg-black/90 text-black dark:text-white border border-gray-200 dark:border-gray-700 shadow-sm whitespace-nowrap ${labelClassName}`}>
+                      <div className="flex h-full items-center justify-center">
+                        <span
+                          className={`rounded border border-gray-200 bg-white/90 px-1 py-0.5 font-medium whitespace-nowrap text-black shadow-sm dark:border-gray-700 dark:bg-black/90 dark:text-white ${labelClassName}`}
+                        >
                           {dot.start.label}
                         </span>
                       </div>
@@ -232,11 +245,13 @@ export function WorldMap({
                   </motion.g>
                 )}
               </g>
-              
+
               {/* End Point */}
               <g key={`end-${i}`}>
                 <motion.g
-                  onHoverStart={() => setHoveredLocation(dot.end.label || `Destination ${i}`)}
+                  onHoverStart={() =>
+                    setHoveredLocation(dot.end.label || `Destination ${i}`)
+                  }
                   onHoverEnd={() => setHoveredLocation(null)}
                   className="cursor-pointer"
                   whileHover={{ scale: 1.2 }}
@@ -275,7 +290,7 @@ export function WorldMap({
                     />
                   </circle>
                 </motion.g>
-                
+
                 {showLabels && dot.end.label && (
                   <motion.g
                     initial={{ opacity: 0, y: 3 }}
@@ -290,8 +305,10 @@ export function WorldMap({
                       height="20"
                       className="block"
                     >
-                      <div className="flex items-center justify-center h-full">
-                        <span className={`font-medium px-1 py-0.5 rounded bg-white/90 dark:bg-black/90 text-black dark:text-white border border-gray-200 dark:border-gray-700 shadow-sm whitespace-nowrap ${labelClassName}`}>
+                      <div className="flex h-full items-center justify-center">
+                        <span
+                          className={`rounded border border-gray-200 bg-white/90 px-1 py-0.5 font-medium whitespace-nowrap text-black shadow-sm dark:border-gray-700 dark:bg-black/90 dark:text-white ${labelClassName}`}
+                        >
                           {dot.end.label}
                         </span>
                       </div>
@@ -303,7 +320,7 @@ export function WorldMap({
           );
         })}
       </svg>
-      
+
       {/* Mobile Tooltip */}
       <AnimatePresence>
         {hoveredLocation && (
@@ -311,7 +328,7 @@ export function WorldMap({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-4 left-4 bg-white/90 dark:bg-black/90 text-black dark:text-white px-3 py-2 rounded-lg text-sm font-medium backdrop-blur-sm sm:hidden border border-gray-200 dark:border-gray-700"
+            className="absolute bottom-4 left-4 rounded-lg border border-gray-200 bg-white/90 px-3 py-2 text-sm font-medium text-black backdrop-blur-sm sm:hidden dark:border-gray-700 dark:bg-black/90 dark:text-white"
           >
             {hoveredLocation}
           </motion.div>

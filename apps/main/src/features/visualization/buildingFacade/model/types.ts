@@ -55,21 +55,3 @@ export interface BuildingFacadeViewProps {
   activeFacadeIndex?: number;
   onFacadeChange?: (nextIndex: number) => void;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,22 +1,28 @@
-import {RefObject, useEffect} from 'react';
-import {Button, LanguageToggle, Sheet, SheetContent, SheetTrigger} from "@gridix/ui";
-import {SlidersHorizontal} from 'lucide-react';
-import {useLanguage} from '@gridix/utils/react';
-import {AdvancedFilters, CompactFilters, ViewModeButtons} from '@/components';
-import type {Project} from '@/entities/project/queries/useProjects';
-import type {ProjectFilters} from './hooks/useProjectFilters';
-import {cn, Language, LANGUAGE_CONFIG} from "@gridix/utils/lib";
+import { RefObject, useEffect } from "react";
+import {
+  Button,
+  LanguageToggle,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@gridix/ui";
+import { SlidersHorizontal } from "lucide-react";
+import { useLanguage } from "@gridix/utils/react";
+import { AdvancedFilters, CompactFilters, ViewModeButtons } from "@/components";
+import type { Project } from "@/entities/project/queries/useProjects";
+import type { ProjectFilters } from "./hooks/useProjectFilters";
+import { cn, Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
 
 interface ProjectHeaderProps {
   project: Project;
   filtersRef: RefObject<HTMLDivElement>;
   isWidget: boolean;
   isMobile: boolean;
-  viewMode: 'facade' | 'floor-plan' | 'list' | 'map' | 'favorites' | 'chess';
-  setViewMode: (mode: ProjectHeaderProps['viewMode']) => void;
+  viewMode: "facade" | "floor-plan" | "list" | "map" | "favorites" | "chess";
+  setViewMode: (mode: ProjectHeaderProps["viewMode"]) => void;
   favoritesCount: number;
   mapVisible: boolean;
-  projectType: 'building' | 'object' | null;
+  projectType: "building" | "object" | null;
   themeColor: string;
   filters: ProjectFilters;
   isFiltersOpen: boolean;
@@ -41,10 +47,15 @@ export const ProjectHeader = ({
   const { language, setLanguage } = useLanguage();
 
   const allowedLanguages: Language[] | null = Array.isArray(
-    (project as unknown as { available_languages?: unknown }).available_languages
+    (project as unknown as { available_languages?: unknown })
+      .available_languages,
   )
-    ? ((project as unknown as { available_languages?: unknown }).available_languages as unknown[])
-        .filter((v): v is Language => typeof v === 'string' && v in LANGUAGE_CONFIG)
+    ? (
+        (project as unknown as { available_languages?: unknown })
+          .available_languages as unknown[]
+      ).filter(
+        (v): v is Language => typeof v === "string" && v in LANGUAGE_CONFIG,
+      )
     : null;
 
   // If current language is not allowed for this project, redirect to the first allowed language.
@@ -53,25 +64,30 @@ export const ProjectHeader = ({
     if (allowedLanguages.includes(language)) return;
     const first = allowedLanguages[0];
     if (first) setLanguage(first);
-  }, [allowedLanguages?.join(','), language, setLanguage]);
+  }, [allowedLanguages?.join(","), language, setLanguage]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('en-US').format(Math.round(price));
+    new Intl.NumberFormat("en-US").format(Math.round(price));
   return (
-    <div ref={filtersRef} className="bg-white sticky top-0 z-40">
-      <div className="container mx-auto md:px-6 md:py-3 py-2 flex flex-col">
-        <div className={cn("flex items-center  gap-4 justify-between ", isWidget && 'justify-end')}>
-          { !isWidget &&
-            (<h1
-                className="font-bold text-gray-900 whitespace-nowrap min-w-0 truncate"
-                style={{fontSize: 'clamp(14px, 2vw, 18px)'}}
-                title={project?.name}
+    <div ref={filtersRef} className="sticky top-0 z-40 bg-white">
+      <div className="container mx-auto flex flex-col py-2 md:px-6 md:py-3">
+        <div
+          className={cn(
+            "flex items-center justify-between gap-4",
+            isWidget && "justify-end",
+          )}
+        >
+          {!isWidget && (
+            <h1
+              className="min-w-0 truncate whitespace-nowrap font-bold text-gray-900"
+              style={{ fontSize: "clamp(14px, 2vw, 18px)" }}
+              title={project?.name}
             >
               {project?.name}
-            </h1>)
-          }
+            </h1>
+          )}
           {!isMobile && (
-            <div className={cn("min-w-0", !isWidget && 'flex-1')}>
+            <div className={cn("min-w-0", !isWidget && "flex-1")}>
               <CompactFilters
                 {...filters}
                 getUniqueRoomCounts={filters.getUniqueRoomCounts}
@@ -87,10 +103,12 @@ export const ProjectHeader = ({
               />
             </div>
           )}
-          {isWidget && !isMobile && <div className="flex justify-around flex-1">
-
-            <ViewModeButtons
-                className={'flex-1 justify-around flex-wrap gap-1 max-lg:grid max-lg:grid-cols-3 lg:border-b-2 lg:border-gray-200  max-lg:[&>*]:border-b-2 max-lg:[&>*]:border-gray-200'}
+          {isWidget && !isMobile && (
+            <div className="flex flex-1 justify-around">
+              <ViewModeButtons
+                className={
+                  "flex-1 flex-wrap justify-around gap-1 max-lg:grid max-lg:grid-cols-3 lg:border-b-2 lg:border-gray-200 max-lg:[&>*]:border-b-2 max-lg:[&>*]:border-gray-200"
+                }
                 isWidget={isWidget}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
@@ -99,21 +117,24 @@ export const ProjectHeader = ({
                 mapVisible={mapVisible}
                 projectType={projectType}
                 themeColor={themeColor}
-            />
-
-          </div>}
+              />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             {isMobile && (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2">
                 <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-xs px-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="px-2 text-xs"
+                    >
                       <SlidersHorizontal className="h-3 w-3" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="top" className="h-[90dvh] p-0">
-
-                    <div className="mt-6 overflow-y-auto h-full">
+                    <div className="mt-6 h-full overflow-y-auto">
                       <AdvancedFilters
                         open={isFiltersOpen}
                         onClose={() => setIsFiltersOpen(false)}
@@ -140,7 +161,9 @@ export const ProjectHeader = ({
                         resetFilters={filters.resetFilters}
                         getUniqueRoomCounts={filters.getUniqueRoomCounts}
                         getUniqueFloors={filters.getUniqueFloors}
-                        {...(filters.hasFreeLayout ? { hasFreeLayout: filters.hasFreeLayout } : {})}
+                        {...(filters.hasFreeLayout
+                          ? { hasFreeLayout: filters.hasFreeLayout }
+                          : {})}
                         project={project}
                         viewMode={viewMode}
                         setViewMode={setViewMode}
@@ -155,44 +178,43 @@ export const ProjectHeader = ({
               </div>
             )}
 
-            {isMobile && <div className="flex md:justify-start justify-end ">
+            {isMobile && (
+              <div className="flex justify-end md:justify-start">
+                <ViewModeButtons
+                  isWidget={isWidget}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  favoritesCount={favoritesCount}
+                  isMobile={isMobile}
+                  mapVisible={mapVisible}
+                  projectType={projectType}
+                  themeColor={themeColor}
+                />
+              </div>
+            )}
 
-              <ViewModeButtons
-                isWidget={isWidget}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                favoritesCount={favoritesCount}
-                isMobile={isMobile}
-                mapVisible={mapVisible}
-                projectType={projectType}
-                themeColor={themeColor}
+            {isWidget ? null : (
+              <LanguageToggle
+                allowedLanguages={allowedLanguages ?? undefined}
               />
-
-            </div>}
-
-            {isWidget ? null : <LanguageToggle allowedLanguages={allowedLanguages ?? undefined} />}
+            )}
           </div>
         </div>
 
-
-
-        {!isMobile && !isWidget && <div className="flex  max-w-full overflow-x-auto pt-4 custom-scrollbar">
-
-          <ViewModeButtons
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            favoritesCount={favoritesCount}
-            isMobile={isMobile}
-            mapVisible={mapVisible}
-            projectType={projectType}
-            themeColor={themeColor}
-          />
-
-        </div>}
+        {!isMobile && !isWidget && (
+          <div className="custom-scrollbar flex max-w-full overflow-x-auto pt-4">
+            <ViewModeButtons
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              favoritesCount={favoritesCount}
+              isMobile={isMobile}
+              mapVisible={mapVisible}
+              projectType={projectType}
+              themeColor={themeColor}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-
-

@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
 import { LanguageWrapper, NoWorkspaceProvider } from "@gridix/utils/react";
 import { BaseProviders } from "@/app/providers/BaseProviders";
 import { AuthProvider } from "@/contexts/AuthContext";

@@ -1,3 +1,3 @@
-import { LanguageWrapper } from "@gridix/utils/react"
+import { LanguageWrapper } from "@gridix/utils/react";
 
-export default LanguageWrapper
+export default LanguageWrapper;

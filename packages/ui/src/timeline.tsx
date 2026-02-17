@@ -1,8 +1,4 @@
-import {
-  useScroll,
-  useTransform,
-  motion,
-} from "framer-motion";
+import { useScroll, useTransform, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TimelineEntry {
@@ -10,7 +6,13 @@ interface TimelineEntry {
   content: React.ReactNode;
 }
 
-export const Timeline = ({ data, title }: { data: TimelineEntry[], title?: string | React.ReactNode }) => {
+export const Timeline = ({
+  data,
+  title,
+}: {
+  data: TimelineEntry[];
+  title?: string | React.ReactNode;
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
@@ -32,30 +34,29 @@ export const Timeline = ({ data, title }: { data: TimelineEntry[], title?: strin
 
   return (
     <section
-    id="features"
-      className="w-full py-20 container mx-auto"
+      id="features"
+      className="container mx-auto w-full py-20"
       ref={containerRef}
     >
-      <div className="  text-center">{title}</div>
-      
+      <div className="text-center">{title}</div>
 
       <div ref={ref} className="relative">
         {data.map((item, index) => (
           <div
             key={index}
-            className="flex justify-start pt-10 md:pt-40 md:gap-10"
+            className="flex justify-start pt-10 md:gap-10 md:pt-40"
           >
-            <div className="sticky flex flex-col md:flex-row z-40 items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
-              <div className="h-10 absolute -left-[40px] md:left-3 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center">
-                <div className="h-4 w-4 rounded-full bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 p-2" />
+            <div className="sticky top-40 z-40 flex max-w-xs flex-col items-center self-start md:w-full md:flex-row lg:max-w-sm">
+              <div className="absolute -left-[40px] flex h-10 w-10 items-center justify-center rounded-full bg-white md:left-3 dark:bg-black">
+                <div className="h-4 w-4 rounded-full border border-neutral-300 bg-neutral-200 p-2 dark:border-neutral-700 dark:bg-neutral-800" />
               </div>
-              <h3 className="hidden md:block text-xl md:pl-20 md:text-3xl font-bold text-neutral-500 dark:text-neutral-500 ">
+              <h3 className="hidden text-xl font-bold text-neutral-500 md:block md:pl-20 md:text-3xl dark:text-neutral-500">
                 {item.title}
               </h3>
             </div>
 
-            <div className="relative md:pl-20 md:pr-4 md:pl-4 w-full">
-              <h3 className="md:hidden block text-2xl mb-4 text-left font-bold text-neutral-500 dark:text-neutral-500">
+            <div className="relative w-full md:pr-4 md:pl-4 md:pl-20">
+              <h3 className="mb-4 block text-left text-2xl font-bold text-neutral-500 md:hidden dark:text-neutral-500">
                 {item.title}
               </h3>
               {item.content}{" "}
@@ -66,14 +67,14 @@ export const Timeline = ({ data, title }: { data: TimelineEntry[], title?: strin
           style={{
             height: height + "px",
           }}
-          className="absolute md:left-8 -left-[22px] top-0 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-200 dark:via-neutral-700 to-transparent to-[99%]  [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)] "
+          className="absolute top-0 -left-[22px] w-[2px] overflow-hidden bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-200 to-transparent to-[99%] [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)] md:left-8 dark:via-neutral-700"
         >
           <motion.div
             style={{
               height: heightTransform,
               opacity: opacityTransform,
             }}
-            className="absolute inset-x-0 top-0  w-[2px] bg-gradient-to-t from-purple-500 via-blue-500 to-transparent from-[0%] via-[10%] rounded-full"
+            className="absolute inset-x-0 top-0 w-[2px] rounded-full bg-gradient-to-t from-purple-500 from-[0%] via-blue-500 via-[10%] to-transparent"
           />
         </div>
       </div>

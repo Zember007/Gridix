@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseAsyncActionOptions<TResult> {
   onSuccess?: (result: TResult) => void;
@@ -12,7 +12,7 @@ interface UseAsyncActionResult<TArgs extends unknown[], TResult> {
 
 export function useAsyncAction<TArgs extends unknown[], TResult>(
   action: (...args: TArgs) => Promise<TResult>,
-  options?: UseAsyncActionOptions<TResult>
+  options?: UseAsyncActionOptions<TResult>,
 ): UseAsyncActionResult<TArgs, TResult> {
   const [isRunning, setIsRunning] = useState(false);
   const isMountedRef = useRef(true);

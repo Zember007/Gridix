@@ -146,4 +146,3 @@ const downloadPdf = async () => {
 
 - Подпись агента хранится как PNG в `project-images` (как и сейчас для `agent_applications.signature_path`).
 - Signed contracts храним в `project-files` и выдаём **signed URLs** через edge function (не public urls).
-

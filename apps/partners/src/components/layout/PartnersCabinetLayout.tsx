@@ -9,7 +9,13 @@ import {
   SimplifiedSidebar,
   type SimplifiedSidebarNavItem,
 } from "@gridix/ui";
-import { ChartBar, UserCircle as UserIcon, Users, BookOpen, Eye } from "@phosphor-icons/react";
+import {
+  ChartBar,
+  UserCircle as UserIcon,
+  Users,
+  BookOpen,
+  Eye,
+} from "@phosphor-icons/react";
 import { Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,8 +24,15 @@ import type { PartnerSection } from "@gridix/partner-program";
 
 const getQueryPage = (search: string): PartnerSection | null => {
   const page = new URLSearchParams(search).get("page");
-  const validPages: PartnerSection[] = ["overview", "referrals", "clients", "instructions", "account"];
-  if (validPages.includes(page as PartnerSection)) return page as PartnerSection;
+  const validPages: PartnerSection[] = [
+    "overview",
+    "referrals",
+    "clients",
+    "instructions",
+    "account",
+  ];
+  if (validPages.includes(page as PartnerSection))
+    return page as PartnerSection;
   return null;
 };
 
@@ -51,11 +64,31 @@ export function PartnersCabinetLayout({
 
   const navItems = useMemo<SimplifiedSidebarNavItem[]>(
     () => [
-      { id: "overview", icon: <Eye size={20} />, label: t("partners.overview") },
-      { id: "referrals", icon: <Users size={20} />, label: t("partners.referrals") },
-      { id: "clients", icon: <ChartBar size={20} />, label: t("partners.clients") },
-      { id: "instructions", icon: <BookOpen size={20} />, label: t("partners.instructions") },
-      { id: "account", icon: <UserIcon size={20} />, label: t("partners.account") },
+      {
+        id: "overview",
+        icon: <Eye size={20} />,
+        label: t("partners.overview"),
+      },
+      {
+        id: "referrals",
+        icon: <Users size={20} />,
+        label: t("partners.referrals"),
+      },
+      {
+        id: "clients",
+        icon: <ChartBar size={20} />,
+        label: t("partners.clients"),
+      },
+      {
+        id: "instructions",
+        icon: <BookOpen size={20} />,
+        label: t("partners.instructions"),
+      },
+      {
+        id: "account",
+        icon: <UserIcon size={20} />,
+        label: t("partners.account"),
+      },
     ],
     [t],
   );
@@ -83,10 +116,10 @@ export function PartnersCabinetLayout({
   );
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="flex min-h-screen bg-background">
       {isMobile ? (
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetContent side="left" className="p-0 w-80">
+          <SheetContent side="left" className="w-80 p-0">
             {sidebar}
           </SheetContent>
         </Sheet>
@@ -95,22 +128,28 @@ export function PartnersCabinetLayout({
       )}
 
       <div
-        className={`flex-1 bg-background flex flex-col transition-all duration-300 ${
+        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${
           isCollapsed && !isMobile
             ? "md:ml-28 md:max-w-[calc(100vw-7rem)]"
             : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
         }`}
       >
         {isMobile ? (
-          <div className="p-4 border-b flex items-center bg-white sticky top-0 z-20">
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)}>
+          <div className="sticky top-0 z-20 flex items-center border-b bg-white p-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileOpen(true)}
+            >
               <Menu className="h-6 w-6" />
             </Button>
             <span className="ml-2 font-semibold">{t("partners.title")}</span>
           </div>
         ) : null}
 
-        <main className="flex-1 overflow-auto h-screen bg-[#F8FAFC]">{children}</main>
+        <main className="h-screen flex-1 overflow-auto bg-[#F8FAFC]">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -120,8 +159,10 @@ export function usePartnersCabinetPageRouting() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const activePage: PartnerSection = getQueryPage(location.search) ?? "overview";
-  const setActivePage = (p: PartnerSection) => setQueryPage(navigate, location, p);
+  const activePage: PartnerSection =
+    getQueryPage(location.search) ?? "overview";
+  const setActivePage = (p: PartnerSection) =>
+    setQueryPage(navigate, location, p);
 
   return { activePage, setActivePage };
 }

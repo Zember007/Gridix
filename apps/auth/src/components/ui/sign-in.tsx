@@ -6,7 +6,11 @@ import heroVideoSrc from "@/assets/gridix-intro.webm";
 // --- HELPER COMPONENTS (ICONS) ---
 
 const GoogleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 48 48">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    viewBox="0 0 48 48"
+  >
     <path
       fill="#FFC107"
       d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s12-5.373 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.743z"
@@ -74,7 +78,10 @@ export interface SignInPageProps {
   /**
    * Starts Google OAuth. Component guarantees that accountType is provided.
    */
-  onGoogleSignIn?: (payload: { mode: AuthMode; accountType: AccountType }) => void;
+  onGoogleSignIn?: (payload: {
+    mode: AuthMode;
+    accountType: AccountType;
+  }) => void;
   defaultMode?: AuthMode;
   accountType?: AccountType;
   onAccountTypeChange?: (accountType: AccountType) => void;
@@ -131,11 +138,11 @@ const TestimonialCard = ({
   delay: string;
 }) => (
   <div
-    className={`animate-testimonial ${delay} flex items-start gap-3 rounded-3xl bg-card/40 dark:bg-zinc-800/40 backdrop-blur-xl border border-white/10 p-5 w-64`}
+    className={`animate-testimonial ${delay} flex w-64 items-start gap-3 rounded-3xl border border-white/10 bg-card/40 p-5 backdrop-blur-xl dark:bg-zinc-800/40`}
   >
     <img
       src={testimonial.avatarSrc}
-      className="h-10 w-10 object-cover rounded-2xl"
+      className="h-10 w-10 rounded-2xl object-cover"
       alt=""
     />
     <div className="text-sm leading-snug">
@@ -165,13 +172,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>(defaultMode);
-  const [internalAccountType, setInternalAccountType] = useState<AccountType>("developer");
+  const [internalAccountType, setInternalAccountType] =
+    useState<AccountType>("developer");
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (videoReady && videoRef.current) {
-      videoRef.current.play().catch(() => { });
+      videoRef.current.play().catch(() => {});
     }
   }, [videoReady]);
 
@@ -215,7 +223,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const computedTitle = useMemo(() => {
     if (title != null) return title;
     return (
-      <span className="font-light text-foreground tracking-tighter">
+      <span className="font-light tracking-tighter text-foreground">
         {mode === "signin" ? signInTitle : signUpTitle}
       </span>
     );
@@ -227,16 +235,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   }, [description, mode, signInDescription, signUpDescription]);
 
   return (
-    <div className="h-[100dvh] flex flex-col md:flex-row font-sans w-[100dvw]">
+    <div className="flex h-[100dvh] w-[100dvw] flex-col font-sans md:flex-row">
       {/* Left column: auth form */}
-      <section className="flex-1 flex items-center justify-center p-8">
+      <section className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-6">
-            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
+            <h1 className="animate-delay-100 animate-element text-4xl font-semibold leading-tight md:text-5xl">
               {computedTitle}
             </h1>
             {computedDescription && (
-              <p className="animate-element animate-delay-200 text-muted-foreground">
+              <p className="animate-delay-200 animate-element text-muted-foreground">
                 {computedDescription}
               </p>
             )}
@@ -248,13 +256,42 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               onSubmit={async (e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
-                const email = (form.elements.namedItem("email") as HTMLInputElement | null)?.value?.trim() ?? "";
-                const password = (form.elements.namedItem("password") as HTMLInputElement | null)?.value ?? "";
-                const fullName = (form.elements.namedItem("fullName") as HTMLInputElement | null)?.value?.trim() ?? "";
-                const companyName = (form.elements.namedItem("companyName") as HTMLInputElement | null)?.value?.trim() ?? "";
-                const phone = (form.elements.namedItem("phone") as HTMLInputElement | null)?.value?.trim() ?? "";
-                const marketingEmailsConsent = (form.elements.namedItem("marketingEmailsConsent") as HTMLInputElement | null)?.checked;
-                const rememberMe = (form.elements.namedItem("rememberMe") as HTMLInputElement | null)?.checked;
+                const email =
+                  (
+                    form.elements.namedItem("email") as HTMLInputElement | null
+                  )?.value?.trim() ?? "";
+                const password =
+                  (
+                    form.elements.namedItem(
+                      "password",
+                    ) as HTMLInputElement | null
+                  )?.value ?? "";
+                const fullName =
+                  (
+                    form.elements.namedItem(
+                      "fullName",
+                    ) as HTMLInputElement | null
+                  )?.value?.trim() ?? "";
+                const companyName =
+                  (
+                    form.elements.namedItem(
+                      "companyName",
+                    ) as HTMLInputElement | null
+                  )?.value?.trim() ?? "";
+                const phone =
+                  (
+                    form.elements.namedItem("phone") as HTMLInputElement | null
+                  )?.value?.trim() ?? "";
+                const marketingEmailsConsent = (
+                  form.elements.namedItem(
+                    "marketingEmailsConsent",
+                  ) as HTMLInputElement | null
+                )?.checked;
+                const rememberMe = (
+                  form.elements.namedItem(
+                    "rememberMe",
+                  ) as HTMLInputElement | null
+                )?.checked;
 
                 if (!email || !password) return;
                 if (mode === "signup" && !fullName) return;
@@ -267,7 +304,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   ...(mode === "signup" ? { fullName } : {}),
                   ...(companyName ? { companyName } : {}),
                   ...(phone ? { phone } : {}),
-                  ...(marketingEmailsConsent !== undefined ? { marketingEmailsConsent } : {}),
+                  ...(marketingEmailsConsent !== undefined
+                    ? { marketingEmailsConsent }
+                    : {}),
                   ...(rememberMe !== undefined ? { rememberMe } : {}),
                 };
 
@@ -275,9 +314,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               }}
             >
               {mode === "signup" && (
-                <div className="animate-element animate-delay-250 space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">{accountTypeLabel}</div>
-                  <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border p-1 bg-foreground/5 backdrop-blur-sm">
+                <div className="animate-delay-250 animate-element space-y-2">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {accountTypeLabel}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-foreground/5 p-1 backdrop-blur-sm">
                     <button
                       type="button"
                       onClick={() => setAccountType("developer")}
@@ -307,7 +348,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {mode === "signup" && (
-                <div className="animate-element animate-delay-300">
+                <div className="animate-delay-300 animate-element">
                   <label className="text-sm font-medium text-muted-foreground">
                     {fullNameLabel}
                   </label>
@@ -316,7 +357,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="fullName"
                       type="text"
                       placeholder={fullNamePlaceholder}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
                       autoComplete="name"
                       required
                     />
@@ -325,7 +366,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {mode === "signup" && resolvedAccountType === "developer" && (
-                <div className="animate-element animate-delay-320">
+                <div className="animate-delay-320 animate-element">
                   <label className="text-sm font-medium text-muted-foreground">
                     {companyNameLabel}
                   </label>
@@ -334,7 +375,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="companyName"
                       type="text"
                       placeholder={companyNamePlaceholder}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
                       autoComplete="organization"
                     />
                   </GlassInputWrapper>
@@ -342,7 +383,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {mode === "signup" && (
-                <div className="animate-element animate-delay-340">
+                <div className="animate-delay-340 animate-element">
                   <label className="text-sm font-medium text-muted-foreground">
                     {phoneLabel}
                   </label>
@@ -351,14 +392,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="phone"
                       type="tel"
                       placeholder={phonePlaceholder}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                      className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
                       autoComplete="tel"
                     />
                   </GlassInputWrapper>
                 </div>
               )}
 
-              <div className="animate-element animate-delay-360">
+              <div className="animate-delay-360 animate-element">
                 <label className="text-sm font-medium text-muted-foreground">
                   {emailLabel}
                 </label>
@@ -367,14 +408,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     name="email"
                     type="email"
                     placeholder={emailPlaceholder}
-                    className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+                    className="w-full rounded-2xl bg-transparent p-4 text-sm focus:outline-none"
                     autoComplete="email"
                     required
                   />
                 </GlassInputWrapper>
               </div>
 
-              <div className="animate-element animate-delay-400">
+              <div className="animate-delay-400 animate-element">
                 <label className="text-sm font-medium text-muted-foreground">
                   {passwordLabel}
                 </label>
@@ -384,8 +425,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder={passwordPlaceholder}
-                      className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none"
-                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm focus:outline-none"
+                      autoComplete={
+                        mode === "signup" ? "new-password" : "current-password"
+                      }
                       minLength={6}
                       required
                     />
@@ -393,12 +436,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-3 flex items-center"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                        <EyeOff className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
                       ) : (
-                        <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
+                        <Eye className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
                       )}
                     </button>
                   </div>
@@ -406,18 +451,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </div>
 
               {mode === "signup" ? (
-                <label className="animate-element animate-delay-500 flex items-start gap-3 cursor-pointer text-sm">
+                <label className="animate-delay-500 flex animate-element cursor-pointer items-start gap-3 text-sm">
                   <input
                     type="checkbox"
                     name="marketingEmailsConsent"
                     className="custom-checkbox mt-0.5"
                   />
-                  <span className="text-foreground/90">{marketingEmailsConsent}</span>
+                  <span className="text-foreground/90">
+                    {marketingEmailsConsent}
+                  </span>
                 </label>
               ) : (
-                <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="rememberMe" className="custom-checkbox" />
+                <div className="animate-delay-500 flex animate-element items-center justify-between text-sm">
+                  <label className="flex cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="rememberMe"
+                      className="custom-checkbox"
+                    />
                     <span className="text-foreground/90">{rememberMe}</span>
                   </label>
                   <button
@@ -426,7 +477,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       e.preventDefault();
                       onResetPassword?.();
                     }}
-                    className="hover:underline text-violet-400 transition-colors"
+                    className="text-violet-400 transition-colors hover:underline"
                   >
                     {resetPassword}
                   </button>
@@ -436,40 +487,45 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="animate-element animate-delay-600 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="animate-delay-600 w-full animate-element rounded-2xl bg-primary py-4 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {mode === "signin" ? signInButton : signUpButton}
               </button>
             </form>
 
-            {onGoogleSignIn &&
+            {onGoogleSignIn && (
               <>
-                <div className="animate-element animate-delay-700 relative flex items-center justify-center">
+                <div className="animate-delay-700 relative flex animate-element items-center justify-center">
                   <span className="w-full border-t border-border"></span>
-                  <span className="px-4 text-sm text-muted-foreground bg-background absolute">
+                  <span className="absolute bg-background px-4 text-sm text-muted-foreground">
                     {orContinueWith}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => onGoogleSignIn?.({ mode, accountType: resolvedAccountType })}
-                  className="animate-element animate-delay-800 w-full flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors"
+                  onClick={() =>
+                    onGoogleSignIn?.({ mode, accountType: resolvedAccountType })
+                  }
+                  className="animate-delay-800 flex w-full animate-element items-center justify-center gap-3 rounded-2xl border border-border py-4 transition-colors hover:bg-secondary"
                 >
                   <GoogleIcon />
                   {continueWithGoogle}
                 </button>
-              </>}
+              </>
+            )}
 
-            <p className="animate-element animate-delay-900 text-center text-sm text-muted-foreground">
-              {mode === "signin" ? createAccountPrompt : alreadyHaveAccountPrompt}{" "}
+            <p className="animate-delay-900 animate-element text-center text-sm text-muted-foreground">
+              {mode === "signin"
+                ? createAccountPrompt
+                : alreadyHaveAccountPrompt}{" "}
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   setMode(mode === "signin" ? "signup" : "signin");
                 }}
-                className="text-violet-400 hover:underline transition-colors"
+                className="text-violet-400 transition-colors hover:underline"
               >
                 {mode === "signin" ? createAccountLink : alreadyHaveAccountLink}
               </button>
@@ -480,16 +536,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       {/* Right column: hero video (async) / image fallback + testimonials */}
       {heroImageSrc && (
-        <section className="hidden md:block flex-1 relative p-4">
+        <section className="relative hidden flex-1 p-4 md:block">
           {/* Fallback/initial background */}
           <div
-            className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center"
+            className="animate-delay-300 absolute inset-4 animate-slide-right rounded-3xl bg-cover bg-center"
             style={{ backgroundImage: `url(${heroImageSrc})` }}
           >
             <video
               ref={videoRef}
               src={heroVideoSrc}
-              className={` inset-4 h-full rounded-3xl object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
+              className={`inset-4 h-full rounded-3xl object-cover transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
               loop
               muted
               playsInline
@@ -501,7 +557,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           {/* Video loads async and fades in when ready */}
 
           {testimonials.length > 0 && testimonials[0] && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">
+            <div className="absolute bottom-8 left-1/2 flex w-full -translate-x-1/2 justify-center gap-4 px-8">
               <TestimonialCard
                 testimonial={testimonials[0]}
                 delay="animate-delay-1000"

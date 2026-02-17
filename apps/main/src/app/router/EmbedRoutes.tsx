@@ -10,10 +10,12 @@ export function EmbedRoutes() {
       {/* Embed project routes */}
       <Route path="projects/:userId" element={<EmbedProjectsPage />} />
       <Route path="project/:projectSlug" element={<ProjectWidgetPage />} />
-      <Route path="project/id/:projectId" element={<ProjectWidgetPage useId />} />
+      <Route
+        path="project/id/:projectId"
+        element={<ProjectWidgetPage useId />}
+      />
       <Route path="connect/bitrix24" element={<BitrixInstallPage />} />
       <Route path="bitrix" element={<BitrixPage />} />
     </Routes>
   );
 }
-

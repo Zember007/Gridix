@@ -1,9 +1,9 @@
-import type i18n from 'i18next';
-import arShared from '../locales/shared/ar.json';
-import enShared from '../locales/shared/en.json';
-import heShared from '../locales/shared/he.json';
-import kaShared from '../locales/shared/ka.json';
-import ruShared from '../locales/shared/ru.json';
+import type i18n from "i18next";
+import arShared from "../locales/shared/ar.json";
+import enShared from "../locales/shared/en.json";
+import heShared from "../locales/shared/he.json";
+import kaShared from "../locales/shared/ka.json";
+import ruShared from "../locales/shared/ru.json";
 
 const SHARED_LOCALES = {
   ar: arShared as Record<string, unknown>,
@@ -15,7 +15,7 @@ const SHARED_LOCALES = {
 
 function flattenTranslations(
   obj: Record<string, unknown>,
-  prefix = ''
+  prefix = "",
 ): Record<string, string> {
   const flattened: Record<string, string> = {};
 
@@ -24,10 +24,14 @@ function flattenTranslations(
       const value = obj[key];
       const newKey = prefix ? `${prefix}.${key}` : key;
 
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         Object.assign(
           flattened,
-          flattenTranslations(value as Record<string, unknown>, newKey)
+          flattenTranslations(value as Record<string, unknown>, newKey),
         );
       } else {
         flattened[newKey] = String(value);
@@ -41,7 +45,7 @@ function flattenTranslations(
 const SHARED_RESOURCES: Record<string, Record<string, string>> = {};
 
 for (const [lng, data] of Object.entries(SHARED_LOCALES)) {
-  SHARED_RESOURCES[lng] = flattenTranslations(data, '');
+  SHARED_RESOURCES[lng] = flattenTranslations(data, "");
 }
 
 /**
@@ -50,6 +54,12 @@ for (const [lng, data] of Object.entries(SHARED_LOCALES)) {
  */
 export function addSharedResources(i18nInstance: typeof i18n): void {
   for (const [lng, translations] of Object.entries(SHARED_RESOURCES)) {
-    i18nInstance.addResourceBundle(lng, 'translation', translations, true, false);
+    i18nInstance.addResourceBundle(
+      lng,
+      "translation",
+      translations,
+      true,
+      false,
+    );
   }
 }

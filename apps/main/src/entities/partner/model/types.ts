@@ -4,7 +4,7 @@ export interface PartnerProfile {
   partner_code: string;
   total_earned: number;
   total_withdrawn: number;
-  status: 'active' | 'suspended' | 'inactive';
+  status: "active" | "suspended" | "inactive";
   created_at: string;
   updated_at: string;
 }
@@ -13,8 +13,8 @@ export interface PartnerLink {
   id: string;
   partner_id: string;
   client_id: string;
-  type: 'referral' | 'managed';
-  status: 'active' | 'suspended' | 'terminated';
+  type: "referral" | "managed";
+  status: "active" | "suspended" | "terminated";
   created_at: string;
   accepted_at?: string;
 }
@@ -26,8 +26,8 @@ export interface PartnerCommission {
   subscription_id: string;
   amount: number;
   percentage: number;
-  type: 'referral' | 'managed';
-  status: 'pending' | 'paid' | 'cancelled';
+  type: "referral" | "managed";
+  status: "pending" | "paid" | "cancelled";
   paid_at?: string;
   created_at: string;
 }
@@ -36,7 +36,7 @@ export interface PartnerPayout {
   id: string;
   partner_id: string;
   amount: number;
-  status: 'pending' | 'approved' | 'paid' | 'rejected';
+  status: "pending" | "approved" | "paid" | "rejected";
   requested_at: string;
   processed_at?: string;
   payment_method?: string;
@@ -81,13 +81,13 @@ export interface PartnerStats {
   total_projects?: number;
   active_clients?: number;
   partner_level?: string | null;
-  partner_level_key?: 'bronze' | 'silver' | 'gold' | null;
+  partner_level_key?: "bronze" | "silver" | "gold" | null;
   next_level_name?: string | null;
   next_level_required_active_clients?: number | null;
   clients_to_next_level?: number | null;
   clients: Array<{
     id: string;
-    type: 'referral' | 'managed';
+    type: "referral" | "managed";
     status: string;
     created_at: string;
     client_id: string;
@@ -113,7 +113,7 @@ export interface PartnerStats {
 
 export interface PartnerClient {
   id: string;
-  type: 'referral' | 'managed';
+  type: "referral" | "managed";
   status: string;
   created_at: string;
   client_id: string;
@@ -122,7 +122,7 @@ export interface PartnerClient {
   utm_source?: string | null;
   utm_medium?: string | null;
   utm_campaign?: string | null;
-   // Детальная информация по проектам клиента (для вкладки «Клиенты» в партнёрском кабинете)
+  // Детальная информация по проектам клиента (для вкладки «Клиенты» в партнёрском кабинете)
   projects?: Array<{
     id: string;
     name: string;
@@ -137,14 +137,20 @@ export interface PartnerClient {
 }
 
 export interface PartnerProgramRequest {
-  action: 'track_click' | 'track_referral' | 'get_stats' | 'admin_manage' | 'impersonate' | 'payout_request';
+  action:
+    | "track_click"
+    | "track_referral"
+    | "get_stats"
+    | "admin_manage"
+    | "impersonate"
+    | "payout_request";
   partner_code?: string;
   partner_id?: string;
   client_id?: string;
   amount?: number;
   payment_method?: string;
   contact_info?: string;
-  admin_action?: 'list' | 'update_percentage' | 'suspend' | 'activate';
+  admin_action?: "list" | "update_percentage" | "suspend" | "activate";
   payout_percentage?: number;
   utm_source?: string | null;
   utm_medium?: string | null;
@@ -180,7 +186,7 @@ export interface PartnerProgramResponse {
   total_projects?: number;
   active_clients?: number;
   partner_level?: string | null;
-  partner_level_key?: 'bronze' | 'silver' | 'gold' | null;
+  partner_level_key?: "bronze" | "silver" | "gold" | null;
   next_level_name?: string | null;
   next_level_required_active_clients?: number | null;
   clients_to_next_level?: number | null;

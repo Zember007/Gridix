@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Button } from "@gridix/ui";
 import { Card } from "@gridix/ui";
@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@gridix/ui";
-import { Eye, CheckCircle, XCircle, Trash2 } from 'lucide-react';
-import { toast } from '@gridix/ui';
+import { Eye, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { toast } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 
 interface Project {
@@ -39,21 +39,23 @@ export function ProjectsManagement() {
   const fetchProjects = async () => {
     try {
       const { data, error } = await supabase
-        .from('projects')
-        .select(`
+        .from("projects")
+        .select(
+          `
           *,
           user_profiles (email, full_name)
-        `)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setProjects(data || []);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить проекты',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось загрузить проекты",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -63,24 +65,24 @@ export function ProjectsManagement() {
   const togglePublic = async (projectId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('projects')
+        .from("projects")
         .update({ is_public: !currentStatus })
-        .eq('id', projectId);
+        .eq("id", projectId);
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: `Проект ${!currentStatus ? 'опубликован' : 'скрыт'}`,
+        title: "Успешно",
+        description: `Проект ${!currentStatus ? "опубликован" : "скрыт"}`,
       });
 
       fetchProjects();
     } catch (error) {
-      console.error('Error toggling project visibility:', error);
+      console.error("Error toggling project visibility:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить видимость проекта',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось изменить видимость проекта",
+        variant: "destructive",
       });
     }
   };
@@ -88,51 +90,51 @@ export function ProjectsManagement() {
   const toggleFeatured = async (projectId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('projects')
+        .from("projects")
         .update({ is_featured: !currentStatus })
-        .eq('id', projectId);
+        .eq("id", projectId);
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: `Проект ${!currentStatus ? 'добавлен в избранное' : 'удален из избранного'}`,
+        title: "Успешно",
+        description: `Проект ${!currentStatus ? "добавлен в избранное" : "удален из избранного"}`,
       });
 
       fetchProjects();
     } catch (error) {
-      console.error('Error toggling featured status:', error);
+      console.error("Error toggling featured status:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить статус проекта',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось изменить статус проекта",
+        variant: "destructive",
       });
     }
   };
 
   const deleteProject = async (projectId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот проект?')) return;
+    if (!confirm("Вы уверены, что хотите удалить этот проект?")) return;
 
     try {
       const { error } = await supabase
-        .from('projects')
+        .from("projects")
         .delete()
-        .eq('id', projectId);
+        .eq("id", projectId);
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'Проект удален',
+        title: "Успешно",
+        description: "Проект удален",
       });
 
       fetchProjects();
     } catch (error) {
-      console.error('Error deleting project:', error);
+      console.error("Error deleting project:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить проект',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось удалить проект",
+        variant: "destructive",
       });
     }
   };
@@ -142,8 +144,8 @@ export function ProjectsManagement() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Управление проектами</h2>
       </div>
 
@@ -165,7 +167,7 @@ export function ProjectsManagement() {
                 <TableCell className="font-medium">{project.name}</TableCell>
                 <TableCell>
                   <div>
-                    <div>{project.user_profiles?.full_name || '—'}</div>
+                    <div>{project.user_profiles?.full_name || "—"}</div>
                     <div className="text-sm text-muted-foreground">
                       {project.user_profiles?.email}
                     </div>
@@ -173,7 +175,7 @@ export function ProjectsManagement() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
+                    <Eye className="mr-1 h-4 w-4 text-muted-foreground" />
                     {project.view_count}
                   </div>
                 </TableCell>
@@ -188,23 +190,25 @@ export function ProjectsManagement() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {new Date(project.created_at).toLocaleDateString('en-US')}
+                  {new Date(project.created_at).toLocaleDateString("en-US")}
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => togglePublic(project.id, project.is_public)}
+                      onClick={() =>
+                        togglePublic(project.id, project.is_public)
+                      }
                     >
                       {project.is_public ? (
                         <>
-                          <XCircle className="h-4 w-4 mr-1" />
+                          <XCircle className="mr-1 h-4 w-4" />
                           Скрыть
                         </>
                       ) : (
                         <>
-                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <CheckCircle className="mr-1 h-4 w-4" />
                           Публ.
                         </>
                       )}
@@ -212,7 +216,9 @@ export function ProjectsManagement() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => toggleFeatured(project.id, project.is_featured)}
+                      onClick={() =>
+                        toggleFeatured(project.id, project.is_featured)
+                      }
                     >
                       Избр.
                     </Button>

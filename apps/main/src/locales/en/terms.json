@@ -1,175 +1,174 @@
 {
-    "title": "Terms of Service",
-    "lastUpdated": "Last updated:",
-    "general": {
-      "title": "General Provisions",
-      "text1": "This User Agreement (hereinafter - \"Agreement\") governs the relationship between Gridix company (hereinafter - \"Company\", \"we\") and users of the FloorPlan Wizard service (hereinafter - \"Service\", \"Platform\").",
-      "text2": "By using our Service, you agree to the terms of this Agreement. If you do not agree with any terms, please do not use the Service.",
-      "important": "Important:",
-      "importantText": "Please read all terms carefully before starting to use the Service."
+  "title": "Terms of Service",
+  "lastUpdated": "Last updated:",
+  "general": {
+    "title": "General Provisions",
+    "text1": "This User Agreement (hereinafter - \"Agreement\") governs the relationship between Gridix company (hereinafter - \"Company\", \"we\") and users of the FloorPlan Wizard service (hereinafter - \"Service\", \"Platform\").",
+    "text2": "By using our Service, you agree to the terms of this Agreement. If you do not agree with any terms, please do not use the Service.",
+    "important": "Important:",
+    "importantText": "Please read all terms carefully before starting to use the Service."
+  },
+  "companyInfo": {
+    "title": "Company Information",
+    "name": "Name:",
+    "nameValue": "Gridix",
+    "address": "Address:",
+    "addressValue": "Georgia, Batumi, Leselidze St. 3",
+    "email": "Email:",
+    "emailValue": "inbox@gridix.live"
+  },
+  "serviceDescription": {
+    "title": "Service Description",
+    "text": "FloorPlan Wizard is a cloud platform for creating interactive real estate plans, providing the following features:",
+    "item1": "Upload and edit building plans",
+    "item2": "Create interactive apartment maps",
+    "item3": "Manage apartment statuses and characteristics",
+    "item4": "Integration with external systems (Excel, CRM)",
+    "item5": "Create embeddable widgets for websites",
+    "item6": "Analytics and reporting"
+  },
+  "userAccounts": {
+    "title": "User Accounts",
+    "registration": {
+      "title": "Registration:",
+      "item1": "An account is required to use the Service",
+      "item2": "You must provide accurate and current information",
+      "item3": "You are responsible for the confidentiality of your password",
+      "item4": "One person may have only one account"
     },
-    "companyInfo": {
-      "title": "Company Information",
-      "name": "Name:",
-      "nameValue": "Gridix",
-      "address": "Address:",
-      "addressValue": "Georgia, Batumi, Leselidze St. 3",
-      "email": "Email:",
-      "emailValue": "inbox@gridix.live"
-    },
-    "serviceDescription": {
-      "title": "Service Description",
-      "text": "FloorPlan Wizard is a cloud platform for creating interactive real estate plans, providing the following features:",
-      "item1": "Upload and edit building plans",
-      "item2": "Create interactive apartment maps",
-      "item3": "Manage apartment statuses and characteristics",
-      "item4": "Integration with external systems (Excel, CRM)",
-      "item5": "Create embeddable widgets for websites",
-      "item6": "Analytics and reporting"
-    },
-    "userAccounts": {
-      "title": "User Accounts",
-      "registration": {
-        "title": "Registration:",
-        "item1": "An account is required to use the Service",
-        "item2": "You must provide accurate and current information",
-        "item3": "You are responsible for the confidentiality of your password",
-        "item4": "One person may have only one account"
-      },
-      "requirements": {
-        "title": "User Requirements:",
-        "item1": "Age 18 or older, or parental/guardian consent",
-        "item2": "Legal capacity to enter into contracts",
-        "item3": "Compliance with applicable law"
-      }
-    },
-    "userObligations": {
-      "title": "User Obligations",
-      "text": "By using the Service, you agree to:",
-      "item1": "Use the Service only for lawful purposes",
-      "item2": "Not violate the rights of third parties",
-      "item3": "Not upload malicious content",
-      "item4": "Not attempt unauthorized access to the system",
-      "item5": "Not use the Service for spam or fraud",
-      "item6": "Respect copyrights on uploaded materials",
-      "item7": "Not resell access to the Service without permission"
-    },
-    "prohibitedUses": {
-      "title": "Prohibited Uses",
-      "warning": "Strictly prohibited:",
-      "item1": "Using the Service for illegal activities",
-      "item2": "Violation of intellectual property rights",
-      "item3": "Distribution of malware",
-      "item4": "Attempts to hack or bypass security systems",
-      "item5": "Creating fake accounts",
-      "item6": "Spam and intrusive advertising",
-      "item7": "Collection of personal data of other users",
-      "item8": "Use of automated tools without permission"
-    },
-    "intellectualProperty": {
-      "title": "Intellectual Property",
-      "companyRights": {
-        "title": "Company Rights:",
-        "text": "All rights to the Service, including software, design, trademarks and content, belong to the Company."
-      },
-      "userRights": {
-        "title": "User Rights:",
-        "item1": "You retain rights to content you upload",
-        "item2": "You grant the Company a license to use content for Service operation",
-        "item3": "You warrant that you have rights to uploaded materials"
-      }
-    },
-    "paymentTerms": {
-      "title": "Payment Terms",
-      "pricing": {
-        "title": "Pricing and Payment:",
-        "item1": "Service is provided on a subscription basis",
-        "item2": "Prices are listed on the official website and may change",
-        "item3": "Payment is made in advance for the selected period",
-        "item4": "Various payment methods are available"
-      },
-      "refunds": {
-        "title": "Refunds:",
-        "item1": "Refund available within 14 days of payment",
-        "item2": "In case of significant violations by the Company",
-        "item3": "Unused portion of subscription is not refunded upon early termination"
-      },
-      "suspension": {
-        "title": "Service Suspension:",
-        "item1": "Payment overdue more than 7 days",
-        "item2": "Violation of Agreement terms",
-        "item3": "For technical reasons (with notification)"
-      }
-    },
-    "liability": {
-      "title": "Liability and Warranties",
-      "limitation": {
-        "title": "Limitation of Liability:",
-        "item1": "Service is provided \"as is\" without any warranties",
-        "item2": "Company is not liable for indirect damages",
-        "item3": "Maximum liability is limited to amount paid for the Service",
-        "item4": "Company does not guarantee uninterrupted Service operation"
-      },
-      "userLiability": {
-        "title": "User Liability:",
-        "item1": "For security of account credentials",
-        "item2": "For legality of uploaded content",
-        "item3": "For damages caused by violation of the Agreement"
-      }
-    },
-    "dataProcessing": {
-      "title": "Data Processing",
-      "text": "Personal data processing is governed by our",
-      "linkText": "Privacy Policy",
-      "principles": "Basic principles:",
-      "item1": "Collection of only necessary data",
-      "item2": "Ensuring data security",
-      "item3": "Respect for data subject rights",
-      "item4": "Processing transparency"
-    },
-    "termination": {
-      "title": "Agreement Termination",
-      "byUser": {
-        "title": "Termination by User:",
-        "item1": "At any time by deleting the account",
-        "item2": "Data may be deleted within 30 days",
-        "item3": "Unused portion of subscription is not refunded"
-      },
-      "byCompany": {
-        "title": "Termination by Company:",
-        "item1": "Upon violation of Agreement terms",
-        "item2": "Non-payment of services",
-        "item3": "Service discontinuation (with 30 days notice)"
-      }
-    },
-    "changes": {
-      "title": "Changes to Agreement",
-      "text": "The Company reserves the right to change the terms of this Agreement. We will notify users of significant changes at least 30 days in advance:",
-      "item1": "By email",
-      "item2": "Through Service notifications",
-      "item3": "On the official website",
-      "continuation": "Continued use of the Service after changes take effect means your acceptance of the new terms."
-    },
-    "applicableLaw": {
-      "title": "Applicable Law and Dispute Resolution",
-      "law": {
-        "title": "Applicable Law:",
-        "text": "This Agreement is governed by the laws of Georgia."
-      },
-      "disputes": {
-        "title": "Dispute Resolution:",
-        "item1": "Priority is given to pre-trial settlement",
-        "item2": "Disputes are resolved by courts of Georgia",
-        "item3": "Mediation may be used"
-      }
-    },
-    "contact": {
-      "title": "Contact Information",
-      "text": "For all questions related to this Agreement, contact us:",
-      "email": "Email: inbox@gridix.live",
-      "address": "Address: Georgia, Batumi, Leselidze St. 3",
-      "responseTime": "Response Time:",
-      "responseTimeText": "We strive to respond to all inquiries within 24 hours on business days."
+    "requirements": {
+      "title": "User Requirements:",
+      "item1": "Age 18 or older, or parental/guardian consent",
+      "item2": "Legal capacity to enter into contracts",
+      "item3": "Compliance with applicable law"
     }
+  },
+  "userObligations": {
+    "title": "User Obligations",
+    "text": "By using the Service, you agree to:",
+    "item1": "Use the Service only for lawful purposes",
+    "item2": "Not violate the rights of third parties",
+    "item3": "Not upload malicious content",
+    "item4": "Not attempt unauthorized access to the system",
+    "item5": "Not use the Service for spam or fraud",
+    "item6": "Respect copyrights on uploaded materials",
+    "item7": "Not resell access to the Service without permission"
+  },
+  "prohibitedUses": {
+    "title": "Prohibited Uses",
+    "warning": "Strictly prohibited:",
+    "item1": "Using the Service for illegal activities",
+    "item2": "Violation of intellectual property rights",
+    "item3": "Distribution of malware",
+    "item4": "Attempts to hack or bypass security systems",
+    "item5": "Creating fake accounts",
+    "item6": "Spam and intrusive advertising",
+    "item7": "Collection of personal data of other users",
+    "item8": "Use of automated tools without permission"
+  },
+  "intellectualProperty": {
+    "title": "Intellectual Property",
+    "companyRights": {
+      "title": "Company Rights:",
+      "text": "All rights to the Service, including software, design, trademarks and content, belong to the Company."
+    },
+    "userRights": {
+      "title": "User Rights:",
+      "item1": "You retain rights to content you upload",
+      "item2": "You grant the Company a license to use content for Service operation",
+      "item3": "You warrant that you have rights to uploaded materials"
+    }
+  },
+  "paymentTerms": {
+    "title": "Payment Terms",
+    "pricing": {
+      "title": "Pricing and Payment:",
+      "item1": "Service is provided on a subscription basis",
+      "item2": "Prices are listed on the official website and may change",
+      "item3": "Payment is made in advance for the selected period",
+      "item4": "Various payment methods are available"
+    },
+    "refunds": {
+      "title": "Refunds:",
+      "item1": "Refund available within 14 days of payment",
+      "item2": "In case of significant violations by the Company",
+      "item3": "Unused portion of subscription is not refunded upon early termination"
+    },
+    "suspension": {
+      "title": "Service Suspension:",
+      "item1": "Payment overdue more than 7 days",
+      "item2": "Violation of Agreement terms",
+      "item3": "For technical reasons (with notification)"
+    }
+  },
+  "liability": {
+    "title": "Liability and Warranties",
+    "limitation": {
+      "title": "Limitation of Liability:",
+      "item1": "Service is provided \"as is\" without any warranties",
+      "item2": "Company is not liable for indirect damages",
+      "item3": "Maximum liability is limited to amount paid for the Service",
+      "item4": "Company does not guarantee uninterrupted Service operation"
+    },
+    "userLiability": {
+      "title": "User Liability:",
+      "item1": "For security of account credentials",
+      "item2": "For legality of uploaded content",
+      "item3": "For damages caused by violation of the Agreement"
+    }
+  },
+  "dataProcessing": {
+    "title": "Data Processing",
+    "text": "Personal data processing is governed by our",
+    "linkText": "Privacy Policy",
+    "principles": "Basic principles:",
+    "item1": "Collection of only necessary data",
+    "item2": "Ensuring data security",
+    "item3": "Respect for data subject rights",
+    "item4": "Processing transparency"
+  },
+  "termination": {
+    "title": "Agreement Termination",
+    "byUser": {
+      "title": "Termination by User:",
+      "item1": "At any time by deleting the account",
+      "item2": "Data may be deleted within 30 days",
+      "item3": "Unused portion of subscription is not refunded"
+    },
+    "byCompany": {
+      "title": "Termination by Company:",
+      "item1": "Upon violation of Agreement terms",
+      "item2": "Non-payment of services",
+      "item3": "Service discontinuation (with 30 days notice)"
+    }
+  },
+  "changes": {
+    "title": "Changes to Agreement",
+    "text": "The Company reserves the right to change the terms of this Agreement. We will notify users of significant changes at least 30 days in advance:",
+    "item1": "By email",
+    "item2": "Through Service notifications",
+    "item3": "On the official website",
+    "continuation": "Continued use of the Service after changes take effect means your acceptance of the new terms."
+  },
+  "applicableLaw": {
+    "title": "Applicable Law and Dispute Resolution",
+    "law": {
+      "title": "Applicable Law:",
+      "text": "This Agreement is governed by the laws of Georgia."
+    },
+    "disputes": {
+      "title": "Dispute Resolution:",
+      "item1": "Priority is given to pre-trial settlement",
+      "item2": "Disputes are resolved by courts of Georgia",
+      "item3": "Mediation may be used"
+    }
+  },
+  "contact": {
+    "title": "Contact Information",
+    "text": "For all questions related to this Agreement, contact us:",
+    "email": "Email: inbox@gridix.live",
+    "address": "Address: Georgia, Batumi, Leselidze St. 3",
+    "responseTime": "Response Time:",
+    "responseTimeText": "We strive to respond to all inquiries within 24 hours on business days."
+  }
 }
-

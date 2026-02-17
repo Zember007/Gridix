@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Invoice {
   id: string;
@@ -41,8 +41,9 @@ export function useInvoices(projectId?: string) {
 
     try {
       const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select(`
+        .from("user_subscriptions")
+        .select(
+          `
           id,
           invoice_number,
           invoice_url,
@@ -55,11 +56,12 @@ export function useInvoices(projectId?: string) {
           payment_method,
           subscription_plans (name),
           projects (name)
-        `)
-        .eq('user_id', user.id)
-        .eq('project_id', projectIdToUse)
-        .eq('payment_method', 'invoice')
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .eq("user_id", user.id)
+        .eq("project_id", projectIdToUse)
+        .eq("payment_method", "invoice")
+        .order("created_at", { ascending: false });
 
       if (error) {
         throw error;
@@ -67,8 +69,8 @@ export function useInvoices(projectId?: string) {
 
       setInvoices(data || []);
     } catch (err) {
-      console.error('Error fetching invoices:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch invoices');
+      console.error("Error fetching invoices:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch invoices");
     } finally {
       setLoading(false);
     }
@@ -76,19 +78,22 @@ export function useInvoices(projectId?: string) {
 
   const generateInvoice = async (subscriptionId: string) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { 
-          action: 'generate-invoice',
-          subscription_id: subscriptionId
+      const { data, error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: {
+            action: "generate-invoice",
+            subscription_id: subscriptionId,
+          },
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      );
 
       if (error) {
         throw error;
@@ -98,28 +103,28 @@ export function useInvoices(projectId?: string) {
       await fetchInvoices();
       return data;
     } catch (err) {
-      console.error('Error generating invoice:', err);
+      console.error("Error generating invoice:", err);
       throw err;
     }
   };
 
   const downloadInvoice = async (invoiceUrl: string) => {
     try {
-      window.open(invoiceUrl, '_blank');
+      window.open(invoiceUrl, "_blank");
     } catch (err) {
-      console.error('Error downloading invoice:', err);
+      console.error("Error downloading invoice:", err);
       throw err;
     }
   };
 
   const getInvoiceStatus = (invoice: Invoice) => {
-    if (invoice.status === 'active' && invoice.invoice_paid_at) {
-      return 'paid';
+    if (invoice.status === "active" && invoice.invoice_paid_at) {
+      return "paid";
     }
-    if (invoice.invoice_url && invoice.status === 'pending_payment') {
-      return 'pending';
+    if (invoice.invoice_url && invoice.status === "pending_payment") {
+      return "pending";
     }
-    return 'draft';
+    return "draft";
   };
 
   useEffect(() => {

@@ -1,6 +1,6 @@
-import React from 'react';
-import { useProjectsWithPrices } from '@/entities/project/queries/useProjectsWithPrices';
-import { useProjectCache } from '@/entities/project/queries/useProjectCache';
+import React from "react";
+import { useProjectsWithPrices } from "@/entities/project/queries/useProjectsWithPrices";
+import { useProjectCache } from "@/entities/project/queries/useProjectCache";
 import { Card, CardContent, CardHeader, CardTitle } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 
@@ -15,7 +15,8 @@ interface OptimizedRequestsDemoProps {
  */
 const OptimizedRequestsDemo = ({ userId }: OptimizedRequestsDemoProps) => {
   // Этот хук делает объединенный запрос: проверка пользователя + проекты с ценами
-  const { projects, loading, userExists, error } = useProjectsWithPrices(userId);
+  const { projects, loading, userExists, error } =
+    useProjectsWithPrices(userId);
 
   return (
     <div className="space-y-4">
@@ -28,10 +29,14 @@ const OptimizedRequestsDemo = ({ userId }: OptimizedRequestsDemoProps) => {
             <div className="flex items-center gap-2">
               <span className="font-medium">Пользователь:</span>
               <Badge variant={userExists ? "default" : "destructive"}>
-                {userExists === null ? "Проверяется..." : userExists ? "Найден" : "Не найден"}
+                {userExists === null
+                  ? "Проверяется..."
+                  : userExists
+                    ? "Найден"
+                    : "Не найден"}
               </Badge>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="font-medium">Проекты:</span>
               <Badge variant={projects.length > 0 ? "default" : "secondary"}>
@@ -50,7 +55,7 @@ const OptimizedRequestsDemo = ({ userId }: OptimizedRequestsDemoProps) => {
       </Card>
 
       {/* Демонстрируем множественное использование - эти компоненты будут переиспользовать кешированные данные */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <ProjectCacheDemo projectId={projects[0]?.id} />
         <ProjectCacheDemo projectId={projects[1]?.id} />
         <ProjectCacheDemo projectId={projects[2]?.id} />
@@ -70,7 +75,7 @@ const ProjectCacheDemo = ({ projectId }: { projectId?: string }) => {
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="text-gray-500 text-sm">Проект не выбран</div>
+          <div className="text-sm text-gray-500">Проект не выбран</div>
         </CardContent>
       </Card>
     );
@@ -80,7 +85,7 @@ const ProjectCacheDemo = ({ projectId }: { projectId?: string }) => {
     <Card>
       <CardContent className="p-4">
         <div className="space-y-2">
-          <div className="font-medium text-sm">
+          <div className="text-sm font-medium">
             {loading ? "Загрузка..." : project?.name || "Проект не найден"}
           </div>
           <div className="text-xs text-gray-500">

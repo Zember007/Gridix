@@ -1,8 +1,9 @@
 export function formatDate(
   dateString: string | Date,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ): string {
-  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  const date =
+    typeof dateString === "string" ? new Date(dateString) : dateString;
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -16,9 +17,10 @@ export function formatDate(
 
 export function formatDateTime(
   dateString: string | Date,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ): string {
-  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  const date =
+    typeof dateString === "string" ? new Date(dateString) : dateString;
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -33,7 +35,8 @@ export function formatDateTime(
 }
 
 export function getRelativeTime(dateString: string | Date): string {
-  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  const date =
+    typeof dateString === "string" ? new Date(dateString) : dateString;
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -52,22 +55,3 @@ export function getRelativeTime(dateString: string | Date): string {
     return formatDate(date, { day: "numeric", month: "short" });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,21 +1,45 @@
-
-import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import { Button } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Upload, Save, Trash2, Image as ImageIcon, Edit3, X, Plus, Check, Undo2, Redo2 } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Upload,
+  Save,
+  Trash2,
+  Image as ImageIcon,
+  Edit3,
+  X,
+  Plus,
+  Check,
+  Undo2,
+  Redo2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import PolygonAnnotator, { PolygonAnnotatorRef } from './polygon-editor/PolygonAnnotator';
-import PolygonCustomizationSettings from './PolygonCustomizationSettings';
-import { useAuth } from '@/contexts/AuthContext';
-import { useProject } from '@/entities/project/queries/useProjects';
-import { useLanguage } from '@gridix/utils/react';
-import { Shape } from './polygon-editor/GeometryShapes';
-import { compressToWebP } from '@gridix/utils/lib';
-import { trackUsertourEvent } from '@gridix/utils/integrations';
-import PolygonAnnotatorTest from '@/components/visualization/polygon-editor/PolygonAnnotatorTest'
+import PolygonAnnotator, {
+  PolygonAnnotatorRef,
+} from "./polygon-editor/PolygonAnnotator";
+import PolygonCustomizationSettings from "./PolygonCustomizationSettings";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProject } from "@/entities/project/queries/useProjects";
+import { useLanguage } from "@gridix/utils/react";
+import { Shape } from "./polygon-editor/GeometryShapes";
+import { compressToWebP } from "@gridix/utils/lib";
+import { trackUsertourEvent } from "@gridix/utils/integrations";
+import PolygonAnnotatorTest from "@/components/visualization/polygon-editor/PolygonAnnotatorTest";
 
 interface BuildingImageEditorProps {
   projectId: string;
@@ -43,10 +67,16 @@ interface FacadeDisplaySettings {
   opacity: { normal: number; hover: number };
 }
 
-const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: BuildingImageEditorProps) => {
+const BuildingImageEditor = ({
+  projectId,
+  currentImageUrl,
+  onImageUpdate,
+}: BuildingImageEditorProps) => {
   const [facades, setFacades] = useState<ProjectFacade[]>([]);
   const [selectedFacadeId, setSelectedFacadeId] = useState<string | null>(null);
-  const [buildingImage, setBuildingImage] = useState<string | null>(currentImageUrl || null);
+  const [buildingImage, setBuildingImage] = useState<string | null>(
+    currentImageUrl || null,
+  );
   const [buildingFloors, setBuildingFloors] = useState<BuildingFloor[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<number>(1);
   const [isEditing, setIsEditing] = useState(false);
@@ -58,15 +88,16 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const [isCreatingNewFloor, setIsCreatingNewFloor] = useState(false);
   const [apartmentNumbers, setApartmentNumbers] = useState<number[]>([]);
   const [isAddingFacade, setIsAddingFacade] = useState(false);
-  const [newFacadeName, setNewFacadeName] = useState('');
+  const [newFacadeName, setNewFacadeName] = useState("");
   const [newFacadeFile, setNewFacadeFile] = useState<File | null>(null);
   const [savingFacade, setSavingFacade] = useState(false);
 
   // Facade polygon display settings (loaded from projects.polygon_settings_facade)
-  const [facadeDisplaySettings, setFacadeDisplaySettings] = useState<FacadeDisplaySettings>({
-    colors: { building: '#3b82f6' },
-    opacity: { normal: 0.4, hover: 0.7 },
-  });
+  const [facadeDisplaySettings, setFacadeDisplaySettings] =
+    useState<FacadeDisplaySettings>({
+      colors: { building: "#3b82f6" },
+      opacity: { normal: 0.4, hover: 0.7 },
+    });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newFacadeFileInputRef = useRef<HTMLInputElement>(null);
   const polygonAnnotatorRef = useRef<PolygonAnnotatorRef>(null);
@@ -79,7 +110,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const { t } = useLanguage();
 
   // Determine if this is an object project (villas/townhouses) or building
-  const isObjectProject = (project)?.project_type === 'object';
+  const isObjectProject = project?.project_type === "object";
 
   const activeFacade = useMemo(
     () => facades.find((f) => f.id === selectedFacadeId) ?? facades[0] ?? null,
@@ -88,49 +119,58 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
   const facadeConfigured =
     !!buildingImage &&
-    buildingFloors.some((f) => Array.isArray(f.polygon) && f.polygon.length > 0);
+    buildingFloors.some(
+      (f) => Array.isArray(f.polygon) && f.polygon.length > 0,
+    );
 
   React.useEffect(() => {
     if (!facadeConfigured) return;
     void trackUsertourEvent({
-      eventName: 'gridix_project_facade_configured',
+      eventName: "gridix_project_facade_configured",
       properties: { project_id: project?.id || projectId },
-      onceKey: 'gridix_project_facade_configured',
+      onceKey: "gridix_project_facade_configured",
     });
   }, [facadeConfigured, project?.id, projectId]);
 
-  const syncPrimaryFacadeToProject = useCallback(async (nextFacades?: ProjectFacade[]) => {
-    const list = nextFacades ?? facades;
-    const primary = list.slice().sort((a, b) => a.order_index - b.order_index)[0];
-    const primaryUrl = primary?.image_url ?? null;
+  const syncPrimaryFacadeToProject = useCallback(
+    async (nextFacades?: ProjectFacade[]) => {
+      const list = nextFacades ?? facades;
+      const primary = list
+        .slice()
+        .sort((a, b) => a.order_index - b.order_index)[0];
+      const primaryUrl = primary?.image_url ?? null;
 
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ building_image_url: primaryUrl })
-        .eq('id', project?.id || projectId);
-      if (error) throw error;
-      if (primaryUrl) onImageUpdate?.(primaryUrl);
-    } catch (e) {
-      console.error('Error syncing primary facade to project:', e);
-    }
-  }, [facades, onImageUpdate, project?.id, projectId]);
+      try {
+        const { error } = await supabase
+          .from("projects")
+          .update({ building_image_url: primaryUrl })
+          .eq("id", project?.id || projectId);
+        if (error) throw error;
+        if (primaryUrl) onImageUpdate?.(primaryUrl);
+      } catch (e) {
+        console.error("Error syncing primary facade to project:", e);
+      }
+    },
+    [facades, onImageUpdate, project?.id, projectId],
+  );
 
   const normalizeFacadeOrder = useCallback(async (list: ProjectFacade[]) => {
     const sorted = list.slice().sort((a, b) => a.order_index - b.order_index);
     const normalized = sorted.map((f, idx) => ({ ...f, order_index: idx }));
 
     // Update DB only if something changed
-    const changed = normalized.some((f, idx) => f.order_index !== sorted[idx]?.order_index);
+    const changed = normalized.some(
+      (f, idx) => f.order_index !== sorted[idx]?.order_index,
+    );
     if (!changed) return normalized;
 
     await Promise.all(
       normalized.map((f) =>
         supabase
           // Cast because generated types may not yet include this table; fixed later in types update.
-            .from('project_facades')
+          .from("project_facades")
           .update({ order_index: f.order_index })
-          .eq('id', f.id),
+          .eq("id", f.id),
       ),
     );
 
@@ -146,10 +186,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
       // Load facades
       const { data: facadesData, error: facadesError } = await supabase
-        .from('project_facades')
-        .select('*')
-        .eq('project_id', project?.id || projectId)
-        .order('order_index');
+        .from("project_facades")
+        .select("*")
+        .eq("project_id", project?.id || projectId)
+        .order("order_index");
       if (facadesError) throw facadesError;
 
       const loadedFacades = (facadesData as unknown as ProjectFacade[]) || [];
@@ -165,20 +205,31 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         setSelectedFacadeId(nextSelectedFacadeId);
       }
 
-      const active = loadedFacades.find((f) => f.id === nextSelectedFacadeId) ?? loadedFacades[0] ?? null;
-      const activeUrl = active?.image_url ?? project?.building_image_url ?? currentImageUrl ?? null;
+      const active =
+        loadedFacades.find((f) => f.id === nextSelectedFacadeId) ??
+        loadedFacades[0] ??
+        null;
+      const activeUrl =
+        active?.image_url ??
+        project?.building_image_url ??
+        currentImageUrl ??
+        null;
       setBuildingImage(activeUrl);
 
       // Load apartments if this is an object project
       if (isObjectProject) {
         const { data: apartmentsData } = await supabase
-          .from('apartments')
-          .select('apartment_number')
-          .eq('project_id', project?.id || projectId)
-          .order('apartment_number');
+          .from("apartments")
+          .select("apartment_number")
+          .eq("project_id", project?.id || projectId)
+          .order("apartment_number");
 
         const numbers = (apartmentsData || [])
-          .map(a => typeof a.apartment_number === 'number' ? a.apartment_number : Number(a.apartment_number))
+          .map((a) =>
+            typeof a.apartment_number === "number"
+              ? a.apartment_number
+              : Number(a.apartment_number),
+          )
           .filter((n): n is number => !isNaN(n));
         const uniqueNumbers = [...new Set(numbers)].sort((a, b) => a - b);
         setApartmentNumbers(uniqueNumbers);
@@ -192,90 +243,103 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       }
 
       const { data: floorsData } = await supabase
-        .from('building_floors')
-        .select('*')
-        .eq('project_id', project?.id || projectId)
-        .eq('facade_id', nextSelectedFacadeId)
-        .order('floor_number');
+        .from("building_floors")
+        .select("*")
+        .eq("project_id", project?.id || projectId)
+        .eq("facade_id", nextSelectedFacadeId)
+        .order("floor_number");
 
       // Normalize the polygon data to match the expected type
-      const normalizedFloors = (floorsData || []).map(floor => ({
+      const normalizedFloors = (floorsData || []).map((floor) => ({
         ...floor,
-        polygon: Array.isArray(floor.polygon) ? floor.polygon as { x: number; y: number }[] : []
+        polygon: Array.isArray(floor.polygon)
+          ? (floor.polygon as { x: number; y: number }[])
+          : [],
       }));
 
       setBuildingFloors(normalizedFloors);
 
       // Convert floors to shapes for display
-      const floorShapes: Shape[] = normalizedFloors.map(floor => ({
+      const floorShapes: Shape[] = normalizedFloors.map((floor) => ({
         id: floor.id,
-        type: 'polygon',
+        type: "polygon",
         points: floor.polygon,
-        color: floor.color || '#3b82f6',
-        isSelected: false
+        color: floor.color || "#3b82f6",
+        isSelected: false,
       }));
 
       setShapes(floorShapes);
     } catch (error) {
-      console.error('Error loading building data:', error);
+      console.error("Error loading building data:", error);
     }
   }, [projectId, project, isObjectProject, selectedFacadeId, currentImageUrl]);
 
-  const uploadFacadeImage = useCallback(async (file_get: File): Promise<string> => {
-    const file = await compressToWebP(file_get);
-    const fileName = `${project?.id || projectId}-facade-${Date.now()}.webp`;
+  const uploadFacadeImage = useCallback(
+    async (file_get: File): Promise<string> => {
+      const file = await compressToWebP(file_get);
+      const fileName = `${project?.id || projectId}-facade-${Date.now()}.webp`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('project-images')
-      .upload(fileName, file, { upsert: true });
-    if (uploadError) throw uploadError;
+      const { error: uploadError } = await supabase.storage
+        .from("project-images")
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('project-images')
-      .getPublicUrl(fileName);
-    return publicUrl;
-  }, [project?.id, projectId]);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("project-images").getPublicUrl(fileName);
+      return publicUrl;
+    },
+    [project?.id, projectId],
+  );
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file_get = event.target.files?.[0];
     if (!file_get || !projectId) return;
 
     // Проверяем аутентификацию пользователя
     if (!user) {
-      toast.error(t('buildingImage.authRequired'));
+      toast.error(t("buildingImage.authRequired"));
       return;
     }
 
     setUploading(true);
     try {
       if (!activeFacade?.id) {
-        toast.error(t('buildingImage.facades.selectFirst'));
+        toast.error(t("buildingImage.facades.selectFirst"));
         return;
       }
 
       const publicUrl = await uploadFacadeImage(file_get);
 
       const { error: updateFacadeError } = await supabase
-        .from('project_facades')
+        .from("project_facades")
         .update({ image_url: publicUrl })
-        .eq('id', activeFacade.id);
+        .eq("id", activeFacade.id);
       if (updateFacadeError) throw updateFacadeError;
 
       // Update local state
-      setFacades((prev) => prev.map((f) => (f.id === activeFacade.id ? { ...f, image_url: publicUrl } : f)));
+      setFacades((prev) =>
+        prev.map((f) =>
+          f.id === activeFacade.id ? { ...f, image_url: publicUrl } : f,
+        ),
+      );
       setBuildingImage(publicUrl);
 
       // Keep legacy field in sync (primary facade => projects.building_image_url)
       if (activeFacade.order_index === 0) {
         await syncPrimaryFacadeToProject(
-          facades.map((f) => (f.id === activeFacade.id ? { ...f, image_url: publicUrl } : f)),
+          facades.map((f) =>
+            f.id === activeFacade.id ? { ...f, image_url: publicUrl } : f,
+          ),
         );
       }
 
-      toast.success(t('buildingImage.facades.uploadSuccess'));
+      toast.success(t("buildingImage.facades.uploadSuccess"));
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(t('buildingImage.facades.uploadError'));
+      console.error("Error uploading image:", error);
+      toast.error(t("buildingImage.facades.uploadError"));
     } finally {
       setUploading(false);
     }
@@ -283,31 +347,34 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
   const handleCreateFacade = async () => {
     if (!user) {
-      toast.error(t('buildingImage.authRequired'));
+      toast.error(t("buildingImage.authRequired"));
       return;
     }
     if (!newFacadeName.trim()) {
-      toast.error(t('buildingImage.facades.nameRequired'));
+      toast.error(t("buildingImage.facades.nameRequired"));
       return;
     }
     if (!newFacadeFile) {
-      toast.error(t('buildingImage.facades.imageRequired'));
+      toast.error(t("buildingImage.facades.imageRequired"));
       return;
     }
 
     setSavingFacade(true);
     try {
-      const nextOrderIndex = (facades.length > 0 ? Math.max(...facades.map((f) => f.order_index)) : -1) + 1;
+      const nextOrderIndex =
+        (facades.length > 0
+          ? Math.max(...facades.map((f) => f.order_index))
+          : -1) + 1;
 
       const { data: inserted, error: insertError } = await supabase
-        .from('project_facades')
+        .from("project_facades")
         .insert({
           project_id: project?.id || projectId,
           name: newFacadeName.trim(),
           image_url: null,
           order_index: nextOrderIndex,
         })
-        .select('*')
+        .select("*")
         .single();
       if (insertError) throw insertError;
 
@@ -315,12 +382,15 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       const publicUrl = await uploadFacadeImage(newFacadeFile);
 
       const { error: updateError } = await supabase
-        .from('project_facades')
+        .from("project_facades")
         .update({ image_url: publicUrl })
-        .eq('id', insertedFacade.id);
+        .eq("id", insertedFacade.id);
       if (updateError) throw updateError;
 
-      const nextFacades = [...facades, { ...insertedFacade, image_url: publicUrl }];
+      const nextFacades = [
+        ...facades,
+        { ...insertedFacade, image_url: publicUrl },
+      ];
       setFacades(nextFacades);
       setSelectedFacadeId(insertedFacade.id);
       setBuildingImage(publicUrl);
@@ -329,14 +399,15 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       setCurrentShape(null);
 
       setIsAddingFacade(false);
-      setNewFacadeName('');
+      setNewFacadeName("");
       setNewFacadeFile(null);
-      if (newFacadeFileInputRef.current) newFacadeFileInputRef.current.value = '';
+      if (newFacadeFileInputRef.current)
+        newFacadeFileInputRef.current.value = "";
 
-      toast.success(t('buildingImage.facades.created'));
+      toast.success(t("buildingImage.facades.created"));
     } catch (e) {
-      console.error('Error creating facade:', e);
-      toast.error(t('buildingImage.facades.createError'));
+      console.error("Error creating facade:", e);
+      toast.error(t("buildingImage.facades.createError"));
     } finally {
       setSavingFacade(false);
     }
@@ -347,14 +418,16 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     if (!trimmed) return;
     try {
       const { error } = await supabase
-        .from('project_facades')
+        .from("project_facades")
         .update({ name: trimmed })
-        .eq('id', facadeId);
+        .eq("id", facadeId);
       if (error) throw error;
-      setFacades((prev) => prev.map((f) => (f.id === facadeId ? { ...f, name: trimmed } : f)));
+      setFacades((prev) =>
+        prev.map((f) => (f.id === facadeId ? { ...f, name: trimmed } : f)),
+      );
     } catch (e) {
-      console.error('Error renaming facade:', e);
-      toast.error(t('buildingImage.facades.renameError'));
+      console.error("Error renaming facade:", e);
+      toast.error(t("buildingImage.facades.renameError"));
     }
   };
 
@@ -362,16 +435,19 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     const facade = facades.find((f) => f.id === facadeId);
     if (!facade) return;
     if (facades.length <= 1) {
-      toast.error(t('buildingImage.facades.cantDeleteLast'));
+      toast.error(t("buildingImage.facades.cantDeleteLast"));
       return;
     }
-    if (!confirm(t('buildingImage.facades.deleteConfirm', { name: facade.name }))) return;
+    if (
+      !confirm(t("buildingImage.facades.deleteConfirm", { name: facade.name }))
+    )
+      return;
 
     try {
       const { error } = await supabase
-        .from('project_facades')
+        .from("project_facades")
         .delete()
-        .eq('id', facadeId);
+        .eq("id", facadeId);
       if (error) throw error;
 
       let next = facades.filter((f) => f.id !== facadeId);
@@ -383,16 +459,16 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       setBuildingImage(next[0]?.image_url ?? null);
 
       await syncPrimaryFacadeToProject(next);
-      toast.success(t('buildingImage.facades.deleted'));
+      toast.success(t("buildingImage.facades.deleted"));
       await loadBuildingData();
     } catch (e) {
-      console.error('Error deleting facade:', e);
-      toast.error(t('buildingImage.facades.deleteError'));
+      console.error("Error deleting facade:", e);
+      toast.error(t("buildingImage.facades.deleteError"));
     }
   };
 
   const startEditingFloor = (floorId: string) => {
-    const floor = buildingFloors.find(f => f.id === floorId);
+    const floor = buildingFloors.find((f) => f.id === floorId);
     if (floor) {
       setEditingFloorId(floorId);
       setSelectedFloor(floor.floor_number);
@@ -405,10 +481,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       // Set current shape for editing
       const editingShape: Shape = {
         id: floor.id,
-        type: 'polygon',
+        type: "polygon",
         points: floor.polygon,
-        color: floor.color || '#3b82f6',
-        isSelected: true
+        color: floor.color || "#3b82f6",
+        isSelected: true,
       };
       setCurrentShape(editingShape);
     }
@@ -429,21 +505,22 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     setCurrentShape(null);
   };
 
-
-
   // Provide annotation styles based on facade display settings
-  const getStyleById = useCallback((_id: string) => {
-    return {
-      fill: facadeDisplaySettings.colors.building,
-      fillOpacity: facadeDisplaySettings.opacity.normal,
-      stroke: facadeDisplaySettings.colors.building,
-      strokeOpacity: 1,
-      strokeWidth: 2,
-    };
-  }, [facadeDisplaySettings]);
+  const getStyleById = useCallback(
+    (_id: string) => {
+      return {
+        fill: facadeDisplaySettings.colors.building,
+        fillOpacity: facadeDisplaySettings.opacity.normal,
+        stroke: facadeDisplaySettings.colors.building,
+        strokeOpacity: 1,
+        strokeWidth: 2,
+      };
+    },
+    [facadeDisplaySettings],
+  );
 
   const handleCurrentShapeUpdate = useCallback((shape: Shape | null) => {
-    setCurrentShape(prev => {
+    setCurrentShape((prev) => {
       // Push previous version onto undo stack if points actually changed
       if (prev && shape && prev.id === shape.id) {
         const prevPts = JSON.stringify(prev.points);
@@ -458,14 +535,12 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     });
   }, []);
 
-
-
   const handleUndo = useCallback(() => {
     if (undoStackRef.current.length === 0) return;
     const prev = undoStackRef.current[undoStackRef.current.length - 1];
     if (!prev) return;
     undoStackRef.current = undoStackRef.current.slice(0, -1);
-    setCurrentShape(cur => {
+    setCurrentShape((cur) => {
       if (cur) {
         redoStackRef.current = [...redoStackRef.current, cur];
       }
@@ -478,7 +553,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     const next = redoStackRef.current[redoStackRef.current.length - 1];
     if (!next) return;
     redoStackRef.current = redoStackRef.current.slice(0, -1);
-    setCurrentShape(cur => {
+    setCurrentShape((cur) => {
       if (cur) {
         undoStackRef.current = [...undoStackRef.current, cur];
       }
@@ -494,17 +569,17 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       const isMod = e.metaKey || e.ctrlKey;
       if (!isMod) return;
 
-      if (e.key === 'z' && !e.shiftKey) {
+      if (e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
-      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+      } else if ((e.key === "z" && e.shiftKey) || e.key === "y") {
         e.preventDefault();
         handleRedo();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isEditing, handleUndo, handleRedo]);
 
   const handlePolygonSave = async () => {
@@ -523,40 +598,45 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
 
       if (isCreatingNewFloor) {
         // Create or update floor polygon for this facade
-        const { error } = await supabase
-          .from('building_floors')
-          .upsert({
+        const { error } = await supabase.from("building_floors").upsert(
+          {
             project_id: project?.id || projectId,
             facade_id: activeFacade.id,
             floor_number: selectedFloor,
             polygon: shapeToSave.points as { x: number; y: number }[],
-            color: shapeToSave.color
-          }, { onConflict: 'project_id,facade_id,floor_number' });
+            color: shapeToSave.color,
+          },
+          { onConflict: "project_id,facade_id,floor_number" },
+        );
 
         if (error) throw error;
         // Update project floors count if this is higher than current max
         if (project && selectedFloor > project.floors) {
           const { error: projectError } = await supabase
-            .from('projects')
+            .from("projects")
             .update({ floors: selectedFloor })
-            .eq('id', project?.id || projectId);
+            .eq("id", project?.id || projectId);
 
           if (projectError) throw projectError;
         }
 
-        toast.success(t('buildingImage.polygon.createSuccess', { floor: selectedFloor }));
+        toast.success(
+          t("buildingImage.polygon.createSuccess", { floor: selectedFloor }),
+        );
       } else if (editingFloorId) {
         // Update existing floor (persist both polygon and color)
         const { error } = await supabase
-          .from('building_floors')
+          .from("building_floors")
           .update({
             polygon: shapeToSave.points as { x: number; y: number }[],
             color: shapeToSave.color,
           })
-          .eq('id', editingFloorId);
+          .eq("id", editingFloorId);
 
         if (error) throw error;
-        toast.success(t('buildingImage.polygon.saveSuccess', { floor: selectedFloor }));
+        toast.success(
+          t("buildingImage.polygon.saveSuccess", { floor: selectedFloor }),
+        );
       }
 
       // Перезагружаем данные из БД
@@ -570,8 +650,12 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       undoStackRef.current = [];
       redoStackRef.current = [];
     } catch (error) {
-      console.error('Error saving polygon:', error);
-      toast.error(isCreatingNewFloor ? t('buildingImage.polygon.createError') : t('buildingImage.polygon.saveError'));
+      console.error("Error saving polygon:", error);
+      toast.error(
+        isCreatingNewFloor
+          ? t("buildingImage.polygon.createError")
+          : t("buildingImage.polygon.saveError"),
+      );
     }
   };
 
@@ -589,17 +673,17 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
   const deleteFloorPolygon = async (floorId: string) => {
     try {
       const { error } = await supabase
-        .from('building_floors')
+        .from("building_floors")
         .delete()
-        .eq('id', floorId);
+        .eq("id", floorId);
 
       if (error) throw error;
 
       await loadBuildingData();
-      toast.success(t('buildingImage.polygon.deleteSuccess'));
+      toast.success(t("buildingImage.polygon.deleteSuccess"));
     } catch (error) {
-      console.error('Error deleting polygon:', error);
-      toast.error(t('buildingImage.polygon.deleteError'));
+      console.error("Error deleting polygon:", error);
+      toast.error(t("buildingImage.polygon.deleteError"));
     }
   };
 
@@ -616,27 +700,35 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
       if (!pid) return;
       try {
         const { data, error } = await supabase
-          .from('projects')
-          .select('polygon_settings_facade')
-          .eq('id', pid)
+          .from("projects")
+          .select("polygon_settings_facade")
+          .eq("id", pid)
           .single();
         if (error) throw error;
-        if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
+        if (
+          data &&
+          "polygon_settings_facade" in data &&
+          data.polygon_settings_facade
+        ) {
           const s = data.polygon_settings_facade as Record<string, unknown>;
           const colors = s?.colors as Record<string, unknown> | undefined;
           const opacity = s?.opacity as Record<string, unknown> | undefined;
           setFacadeDisplaySettings({
             colors: {
-              building: (typeof colors?.building === 'string' ? colors.building : '#3b82f6'),
+              building:
+                typeof colors?.building === "string"
+                  ? colors.building
+                  : "#3b82f6",
             },
             opacity: {
-              normal: typeof opacity?.normal === 'number' ? opacity.normal : 0.4,
-              hover: typeof opacity?.hover === 'number' ? opacity.hover : 0.7,
+              normal:
+                typeof opacity?.normal === "number" ? opacity.normal : 0.4,
+              hover: typeof opacity?.hover === "number" ? opacity.hover : 0.7,
             },
           });
         }
       } catch (e) {
-        console.error('Error loading facade display settings:', e);
+        console.error("Error loading facade display settings:", e);
       }
     };
     void loadFacadeSettings();
@@ -653,20 +745,20 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-4">
-          <CardDescription>
-            {t('buildingImage.description')}
-          </CardDescription>
+          <CardDescription>{t("buildingImage.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {facades.map((f) => (
                   <button
                     key={f.id}
                     type="button"
-                    className={`px-3 py-1.5 rounded border text-sm flex items-center gap-2 ${
-                      (activeFacade?.id === f.id) ? 'bg-white border-primary' : 'bg-muted/30 hover:bg-muted/50'
+                    className={`flex items-center gap-2 rounded border px-3 py-1.5 text-sm ${
+                      activeFacade?.id === f.id
+                        ? "border-primary bg-white"
+                        : "bg-muted/30 hover:bg-muted/50"
                     }`}
                     onClick={() => {
                       if (isEditing) return;
@@ -680,9 +772,13 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                     disabled={isEditing}
                     title={f.name}
                   >
-                    <span className="font-medium truncate max-w-[180px]">{f.name}</span>
+                    <span className="max-w-[180px] truncate font-medium">
+                      {f.name}
+                    </span>
                     {f.order_index === 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted border">primary</span>
+                      <span className="rounded border bg-muted px-1.5 py-0.5 text-[10px]">
+                        primary
+                      </span>
                     )}
                   </button>
                 ))}
@@ -695,8 +791,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   onClick={() => setIsAddingFacade((v) => !v)}
                   disabled={isEditing}
                 >
-                  <Plus className="h-3 w-3 mr-1" />
-                  {t('buildingImage.facades.add')}
+                  <Plus className="mr-1 h-3 w-3" />
+                  {t("buildingImage.facades.add")}
                 </Button>
               </div>
 
@@ -714,33 +810,41 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading || !activeFacade?.id}
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {uploading ? t('buildingImage.uploading') : t('buildingImage.facades.upload')}
+                  <Upload className="mr-2 h-4 w-4" />
+                  {uploading
+                    ? t("buildingImage.uploading")
+                    : t("buildingImage.facades.upload")}
                 </Button>
               </div>
             </div>
 
             {isAddingFacade && (
-              <div className="border rounded-lg p-3 bg-muted/20 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
+                <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-3">
                   <div className="md:col-span-2">
-                    <Label htmlFor="new-facade-name">{t('buildingImage.facades.name')}</Label>
+                    <Label htmlFor="new-facade-name">
+                      {t("buildingImage.facades.name")}
+                    </Label>
                     <Input
                       id="new-facade-name"
                       value={newFacadeName}
                       onChange={(e) => setNewFacadeName(e.target.value)}
-                      placeholder={t('buildingImage.facades.namePlaceholder')}
+                      placeholder={t("buildingImage.facades.namePlaceholder")}
                       disabled={savingFacade}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="new-facade-file">{t('buildingImage.facades.image')}</Label>
+                    <Label htmlFor="new-facade-file">
+                      {t("buildingImage.facades.image")}
+                    </Label>
                     <Input
                       id="new-facade-file"
                       ref={newFacadeFileInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setNewFacadeFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) =>
+                        setNewFacadeFile(e.target.files?.[0] ?? null)
+                      }
                       disabled={savingFacade}
                     />
                   </div>
@@ -752,8 +856,10 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                     onClick={handleCreateFacade}
                     disabled={savingFacade}
                   >
-                    <Check className="h-4 w-4 mr-2" />
-                    {savingFacade ? t('buildingImage.facades.creating') : t('buildingImage.facades.create')}
+                    <Check className="mr-2 h-4 w-4" />
+                    {savingFacade
+                      ? t("buildingImage.facades.creating")
+                      : t("buildingImage.facades.create")}
                   </Button>
                   <Button
                     type="button"
@@ -761,22 +867,23 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                     variant="outline"
                     onClick={() => {
                       setIsAddingFacade(false);
-                      setNewFacadeName('');
+                      setNewFacadeName("");
                       setNewFacadeFile(null);
-                      if (newFacadeFileInputRef.current) newFacadeFileInputRef.current.value = '';
+                      if (newFacadeFileInputRef.current)
+                        newFacadeFileInputRef.current.value = "";
                     }}
                     disabled={savingFacade}
                   >
-                    {t('buildingImage.facades.cancel')}
+                    {t("buildingImage.facades.cancel")}
                   </Button>
                 </div>
               </div>
             )}
 
             {activeFacade && (
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <Label htmlFor="facade-name" className="text-sm font-medium">
-                  {t('buildingImage.facades.current')}
+                  {t("buildingImage.facades.current")}
                 </Label>
                 <Input
                   id="facade-name"
@@ -784,9 +891,15 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   value={activeFacade.name}
                   onChange={(e) => {
                     const nextName = e.target.value;
-                    setFacades((prev) => prev.map((f) => (f.id === activeFacade.id ? { ...f, name: nextName } : f)));
+                    setFacades((prev) =>
+                      prev.map((f) =>
+                        f.id === activeFacade.id ? { ...f, name: nextName } : f,
+                      ),
+                    );
                   }}
-                  onBlur={(e) => void handleRenameFacade(activeFacade.id, e.target.value)}
+                  onBlur={(e) =>
+                    void handleRenameFacade(activeFacade.id, e.target.value)
+                  }
                   disabled={isEditing}
                 />
                 <Button
@@ -797,19 +910,19 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   onClick={() => void handleDeleteFacade(activeFacade.id)}
                   disabled={isEditing || facades.length <= 1}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {t('buildingImage.facades.delete')}
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t("buildingImage.facades.delete")}
                 </Button>
               </div>
             )}
           </div>
 
           {buildingImage && (
-            <div className="border rounded-lg p-3 bg-muted/30">
+            <div className="rounded-lg border bg-muted/30 p-3">
               <img
                 src={buildingImage}
                 alt="Здание"
-                className="max-w-full h-auto max-h-48 object-contain mx-auto rounded"
+                className="mx-auto h-auto max-h-48 max-w-full rounded object-contain"
               />
             </div>
           )}
@@ -820,52 +933,68 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">
-              {isObjectProject ? t('buildingImage.object.polygonsTitle') : t('buildingImage.floors.title')}
+              {isObjectProject
+                ? t("buildingImage.object.polygonsTitle")
+                : t("buildingImage.floors.title")}
             </CardTitle>
             <CardDescription>
               {isObjectProject
-                ? t('buildingImage.object.polygonsDescription')
-                : t('buildingImage.floors.description')
-              }
+                ? t("buildingImage.object.polygonsDescription")
+                : t("buildingImage.floors.description")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <Label htmlFor="floor-select" className="text-sm font-medium">
-                  {isObjectProject ? t('buildingImage.object.number') : t('buildingImage.floors.floor')}
+                  {isObjectProject
+                    ? t("buildingImage.object.number")
+                    : t("buildingImage.floors.floor")}
                 </Label>
                 <select
                   id="floor-select"
                   value={selectedFloor}
                   onChange={(e) => setSelectedFloor(Number(e.target.value))}
-                  className="px-2 py-1 border rounded text-sm min-w-[80px]"
+                  className="min-w-[80px] rounded border px-2 py-1 text-sm"
                   disabled={isEditing}
                 >
-                  {isObjectProject ? (
-                    // For object projects, show actual apartment numbers
-                    apartmentNumbers.length > 0 ? (
-                      apartmentNumbers.map(num => (
-                        <option key={num} value={num}>
-                          {num}
+                  {isObjectProject
+                    ? // For object projects, show actual apartment numbers
+                      apartmentNumbers.length > 0
+                      ? apartmentNumbers.map((num) => (
+                          <option key={num} value={num}>
+                            {num}
+                          </option>
+                        ))
+                      : // If no apartments yet, show range 1-20
+                        Array.from({ length: 20 }, (_, i) => i + 1).map(
+                          (num) => (
+                            <option key={num} value={num}>
+                              {num}
+                            </option>
+                          ),
+                        )
+                    : // For building projects, show floors from 0 to max + 2
+                      Array.from(
+                        {
+                          length:
+                            Math.max(
+                              floors,
+                              buildingFloors.length > 0
+                                ? Math.max(
+                                    ...buildingFloors.map(
+                                      (f) => f.floor_number,
+                                    ),
+                                  )
+                                : 0,
+                            ) + 3,
+                        },
+                        (_, i) => i,
+                      ).map((floor) => (
+                        <option key={floor} value={floor}>
+                          {floor}
                         </option>
-                      ))
-                    ) : (
-                      // If no apartments yet, show range 1-20
-                      Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
-                        <option key={num} value={num}>
-                          {num}
-                        </option>
-                      ))
-                    )
-                  ) : (
-                    // For building projects, show floors from 0 to max + 2
-                    Array.from({ length: Math.max(floors, buildingFloors.length > 0 ? Math.max(...buildingFloors.map(f => f.floor_number)) : 0) + 3 }, (_, i) => i).map(floor => (
-                      <option key={floor} value={floor}>
-                        {floor}
-                      </option>
-                    ))
-                  )}
+                      ))}
                 </select>
               </div>
 
@@ -876,23 +1005,29 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                   variant="outline"
                   className="h-8"
                 >
-                  <ImageIcon className="h-3 w-3 mr-1" />
-                  {isObjectProject ? t('buildingImage.object.addNew') : t('buildingImage.floors.addNew')}
+                  <ImageIcon className="mr-1 h-3 w-3" />
+                  {isObjectProject
+                    ? t("buildingImage.object.addNew")
+                    : t("buildingImage.floors.addNew")}
                 </Button>
               )}
             </div>
 
             {/* Canvas with all polygons */}
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-sm">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="text-sm font-medium">
                   {isCreatingNewFloor
-                    ? (isObjectProject
-                      ? t('buildingImage.object.creating', { number: selectedFloor })
-                      : t('buildingImage.floors.creatingNew', { floor: selectedFloor })
-                    )
-                    : (isObjectProject ? t('buildingImage.object.plan') : t('buildingImage.floors.canvas'))
-                  }
+                    ? isObjectProject
+                      ? t("buildingImage.object.creating", {
+                          number: selectedFloor,
+                        })
+                      : t("buildingImage.floors.creatingNew", {
+                          floor: selectedFloor,
+                        })
+                    : isObjectProject
+                      ? t("buildingImage.object.plan")
+                      : t("buildingImage.floors.canvas")}
                 </h4>
                 {(isEditing || currentShape) && (
                   <div className="flex items-center gap-2">
@@ -920,10 +1055,14 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                       onClick={handlePolygonSave}
                       size="sm"
                       className="h-8"
-                      disabled={isCreatingNewFloor && currentShape?.points.length === 0}
+                      disabled={
+                        isCreatingNewFloor && currentShape?.points.length === 0
+                      }
                     >
-                      <Save className="h-3 w-3 mr-1" />
-                      {isCreatingNewFloor ? t('buildingImage.polygon.create') : t('buildingImage.polygon.save')}
+                      <Save className="mr-1 h-3 w-3" />
+                      {isCreatingNewFloor
+                        ? t("buildingImage.polygon.create")
+                        : t("buildingImage.polygon.save")}
                     </Button>
                     <Button
                       onClick={handlePolygonCancel}
@@ -931,8 +1070,8 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                       size="sm"
                       className="h-8"
                     >
-                      <X className="h-3 w-3 mr-1" />
-                      {t('buildingImage.polygon.cancel')}
+                      <X className="mr-1 h-3 w-3" />
+                      {t("buildingImage.polygon.cancel")}
                     </Button>
                   </div>
                 )}
@@ -946,35 +1085,42 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
                 shapes={shapes}
                 currentShape={currentShape}
                 onCurrentShapeUpdate={handleCurrentShapeUpdate}
-                mode={isEditing ? 'edit' : 'view'}
+                mode={isEditing ? "edit" : "view"}
                 drawingEnabled={isEditing}
                 getStyleById={getStyleById}
                 onSelectAnnotationId={(id) => {
                   // In view mode, clicking a polygon enters editing for that floor
                   if (!isEditing && id) {
-                    const floor = buildingFloors.find(f => f.id === id);
+                    const floor = buildingFloors.find((f) => f.id === id);
                     if (floor) {
                       startEditingFloor(floor.id);
                     }
                   }
                 }}
               />
-
             </div>
 
             {buildingFloors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">
-                  {isObjectProject ? t('buildingImage.object.configured') : t('buildingImage.floors.configured')}
+                <h4 className="text-sm font-medium">
+                  {isObjectProject
+                    ? t("buildingImage.object.configured")
+                    : t("buildingImage.floors.configured")}
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
                   {buildingFloors.map((floor) => (
-                    <div key={floor.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+                    <div
+                      key={floor.id}
+                      className="flex items-center justify-between rounded bg-muted/50 p-2 text-sm"
+                    >
                       <span>
                         {isObjectProject
-                          ? t('buildingImage.object.objectNumber', { number: floor.floor_number })
-                          : t('buildingImage.floors.floorNumber', { floor: floor.floor_number })
-                        }
+                          ? t("buildingImage.object.objectNumber", {
+                              number: floor.floor_number,
+                            })
+                          : t("buildingImage.floors.floorNumber", {
+                              floor: floor.floor_number,
+                            })}
                       </span>
                       <div className="flex items-center gap-1">
                         <Button
@@ -1012,7 +1158,7 @@ const BuildingImageEditor = ({ projectId, currentImageUrl, onImageUpdate }: Buil
           // Sync local display settings from the settings panel for live preview
           setFacadeDisplaySettings({
             colors: {
-              building: settings.colors.building || '#3b82f6',
+              building: settings.colors.building || "#3b82f6",
             },
             opacity: {
               normal: settings.opacity.normal,

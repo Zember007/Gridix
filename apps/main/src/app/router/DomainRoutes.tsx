@@ -14,4 +14,3 @@ export function DomainRoutes() {
     </Routes>
   );
 }
-

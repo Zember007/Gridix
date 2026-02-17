@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface InfoCardProps {
   icon: React.ReactNode;
@@ -7,14 +7,13 @@ interface InfoCardProps {
 }
 
 const InfoCard: React.FC<InfoCardProps> = ({ icon, title, children }) => (
-  <div className="bg-white border border-gray-200 rounded-xl p-6 h-full">
-    <div className="flex items-center gap-3 mb-4">
-      <span className="flex-shrink-0 bg-gray-100 p-2 rounded-md">{icon}</span>
+  <div className="h-full rounded-xl border border-gray-200 bg-white p-6">
+    <div className="mb-4 flex items-center gap-3">
+      <span className="flex-shrink-0 rounded-md bg-gray-100 p-2">{icon}</span>
       <h3 className="text-xl font-bold text-gray-900">{title}</h3>
     </div>
-    <div className="text-gray-600 space-y-2">{children}</div>
+    <div className="space-y-2 text-gray-600">{children}</div>
   </div>
 );
 
 export default InfoCard;
-

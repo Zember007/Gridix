@@ -9,9 +9,7 @@ interface AdminProvidersProps {
 export function AdminProviders({ children }: AdminProvidersProps) {
   return (
     <WorkspaceProvider>
-      <LanguageWrapper>
-        {children}
-      </LanguageWrapper>
+      <LanguageWrapper>{children}</LanguageWrapper>
     </WorkspaceProvider>
   );
 }

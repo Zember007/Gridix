@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type WorkspaceType = "developer" | "agent";
 
@@ -31,11 +37,14 @@ export interface WorkspaceContextType {
   reloadWorkspaces: () => Promise<void>;
 }
 
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
+const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
+  undefined,
+);
 
 export const useWorkspace = (): WorkspaceContextType => {
   const ctx = useContext(WorkspaceContext);
-  if (!ctx) throw new Error("useWorkspace must be used within a WorkspaceProvider");
+  if (!ctx)
+    throw new Error("useWorkspace must be used within a WorkspaceProvider");
   return ctx;
 };
 
@@ -92,9 +101,12 @@ export function WorkspaceProvider({
   storageKey,
   migrateFromStorageKey,
 }: WorkspaceProviderProps) {
-  const effectiveStorageKey = storageKey ?? `gridix_active_workspace_id:${type}`;
+  const effectiveStorageKey =
+    storageKey ?? `gridix_active_workspace_id:${type}`;
 
-  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(() => {
+  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<
+    string | null
+  >(() => {
     if (typeof window === "undefined") return null;
     const current = loadFromStorage(effectiveStorageKey);
     if (current !== null || !migrateFromStorageKey) return current;
@@ -103,7 +115,9 @@ export function WorkspaceProvider({
     return legacy;
   });
 
-  const [availableWorkspaces, setAvailableWorkspaces] = useState<WorkspaceOption[]>([]);
+  const [availableWorkspaces, setAvailableWorkspaces] = useState<
+    WorkspaceOption[]
+  >([]);
 
   const setActiveWorkspaceId = (id: string | null) => {
     setActiveWorkspaceIdState(id);
@@ -117,7 +131,10 @@ export function WorkspaceProvider({
     setAvailableWorkspaces(workspaces);
 
     // Restore stored selection if still available; otherwise reset or auto-pick.
-    const storedId = typeof window === "undefined" ? null : loadFromStorage(effectiveStorageKey);
+    const storedId =
+      typeof window === "undefined"
+        ? null
+        : loadFromStorage(effectiveStorageKey);
     const isStoredAvailable =
       storedId === null
         ? workspaces.some((w) => w.id === null)
@@ -141,7 +158,11 @@ export function WorkspaceProvider({
       } else {
         setActiveWorkspaceId(null);
       }
-    } else if (autoSelectFirst && activeWorkspaceId === null && !workspaces.some((w) => w.id === null)) {
+    } else if (
+      autoSelectFirst &&
+      activeWorkspaceId === null &&
+      !workspaces.some((w) => w.id === null)
+    ) {
       // No "own" workspace exists (agents), but active is null -> pick first.
       const first = workspaces[0];
       if (first) setActiveWorkspaceId(first.id);
@@ -179,7 +200,11 @@ export function WorkspaceProvider({
     [type, activeWorkspaceId, availableWorkspaces],
   );
 
-  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+  return (
+    <WorkspaceContext.Provider value={value}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
 }
 
 /**
@@ -196,11 +221,14 @@ const NO_WORKSPACE_VALUE: WorkspaceContextType = {
   reloadWorkspaces: async () => {},
 };
 
-export function NoWorkspaceProvider({ children }: { children: React.ReactNode }) {
+export function NoWorkspaceProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <WorkspaceContext.Provider value={NO_WORKSPACE_VALUE}>
       {children}
     </WorkspaceContext.Provider>
   );
 }
-

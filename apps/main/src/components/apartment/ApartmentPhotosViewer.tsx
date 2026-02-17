@@ -1,9 +1,8 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Card, CardContent } from "@gridix/ui";
 import { Button } from "@gridix/ui";
-import { Image as ImageIcon, Expand } from 'lucide-react';
+import { Image as ImageIcon, Expand } from "lucide-react";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import {
@@ -37,7 +36,7 @@ interface CombinedPhoto {
   image_url: string;
   description?: string | null;
   order_index: number;
-  type: 'layout' | 'apartment';
+  type: "layout" | "apartment";
 }
 
 interface ApartmentPhotosViewerProps {
@@ -46,13 +45,21 @@ interface ApartmentPhotosViewerProps {
   preloadedLayoutPhotos?: CombinedPhoto[]; // если переданы, используем их без запросов
 }
 
-const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }: ApartmentPhotosViewerProps) => {
+const ApartmentPhotosViewer = ({
+  projectId,
+  apartmentId,
+  preloadedLayoutPhotos,
+}: ApartmentPhotosViewerProps) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null,
+  );
   const [minPhotoHeight, setMinPhotoHeight] = useState<number | null>(null);
-  const [photos, setPhotos] = useState<CombinedPhoto[]>(preloadedLayoutPhotos ?? []);
+  const [photos, setPhotos] = useState<CombinedPhoto[]>(
+    preloadedLayoutPhotos ?? [],
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -88,21 +95,25 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
         if (layoutRes.error) throw layoutRes.error;
         if (apartmentRes.error) throw apartmentRes.error;
 
-        const layoutPhotos: CombinedPhoto[] = (layoutRes.data ?? []).map((p: any) => ({
-          id: p.id,
-          image_url: p.image_url,
-          description: p.description ?? null,
-          order_index: p.order_index ?? 0,
-          type: "layout",
-        }));
+        const layoutPhotos: CombinedPhoto[] = (layoutRes.data ?? []).map(
+          (p: any) => ({
+            id: p.id,
+            image_url: p.image_url,
+            description: p.description ?? null,
+            order_index: p.order_index ?? 0,
+            type: "layout",
+          }),
+        );
 
-        const apartmentPhotos: CombinedPhoto[] = (apartmentRes.data ?? []).map((p: any) => ({
-          id: p.id,
-          image_url: p.image_url,
-          description: p.description ?? null,
-          order_index: p.order_index ?? 0,
-          type: "apartment",
-        }));
+        const apartmentPhotos: CombinedPhoto[] = (apartmentRes.data ?? []).map(
+          (p: any) => ({
+            id: p.id,
+            image_url: p.image_url,
+            description: p.description ?? null,
+            order_index: p.order_index ?? 0,
+            type: "apartment",
+          }),
+        );
 
         setPhotos([...apartmentPhotos, ...layoutPhotos]);
       } catch (e) {
@@ -117,18 +128,16 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
   }, [apartmentId, projectId, preloadedLayoutPhotos]);
 
   useEffect(() => {
-    const currentElement = document.getElementById('gridix-widget-root');
+    const currentElement = document.getElementById("gridix-widget-root");
     if (currentElement?.shadowRoot) {
-      const container = currentElement.shadowRoot.getElementById('gridix-portal-container');
+      const container = currentElement.shadowRoot.getElementById(
+        "gridix-portal-container",
+      );
       if (container) {
         setPortalContainer(container as HTMLElement);
       }
     }
   }, []);
-
-
-
-  
 
   // Синхронизируем индекс активного слайда с Embla-каруселью
   useEffect(() => {
@@ -165,8 +174,8 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col items-center justify-center h-[340px] text-muted-foreground">
-            <ImageIcon className="h-12 w-12 mb-2" />
+          <div className="flex h-[340px] flex-col items-center justify-center text-muted-foreground">
+            <ImageIcon className="mb-2 h-12 w-12" />
             <p>Загрузка...</p>
           </div>
         </CardContent>
@@ -178,8 +187,8 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
     return (
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col items-center justify-center h-[340px] text-muted-foreground">
-            <ImageIcon className="h-12 w-12 mb-2" />
+          <div className="flex h-[340px] flex-col items-center justify-center text-muted-foreground">
+            <ImageIcon className="mb-2 h-12 w-12" />
             <p>Фотографии не загружены</p>
           </div>
         </CardContent>
@@ -188,11 +197,9 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
   }
 
   return (
-    <Card className='border-none'>
+    <Card className="border-none">
       <CardContent className="p-0">
-        <div
-          className="relative"
-        >
+        <div className="relative">
           <Carousel
             className="w-full"
             opts={{
@@ -206,9 +213,11 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
                 <CarouselItem key={photo.id}>
                   <img
                     src={photo.image_url}
-                    alt={photo.description || 'Apartment photo'}
-                    className="w-full h-auto object-cover lg:rounded-lg cursor-pointer md:max-h-[500px] max-h-[340px]"
-                    style={{ height: minPhotoHeight != null ? minPhotoHeight : 'auto' }}
+                    alt={photo.description || "Apartment photo"}
+                    className="h-auto max-h-[340px] w-full cursor-pointer object-cover md:max-h-[500px] lg:rounded-lg"
+                    style={{
+                      height: minPhotoHeight != null ? minPhotoHeight : "auto",
+                    }}
                     onClick={() => {
                       setCurrentPhotoIndex(index);
                       openLightbox();
@@ -217,7 +226,7 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
                       const height = e.currentTarget.clientHeight;
                       if (!height) return;
                       setMinPhotoHeight((prev) =>
-                        prev == null ? height : Math.min(prev, height)
+                        prev == null ? height : Math.min(prev, height),
                       );
                     }}
                     loading={index === 0 ? "eager" : "lazy"}
@@ -228,10 +237,10 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
 
             {photos.length > 1 && (
               <>
-                <CarouselPrevious className="bg-white/80 hover:bg-white shadow-md left-4 md:flex hidden" />
-                <CarouselNext className="bg-white/80 hover:bg-white shadow-md right-4 md:flex hidden" />
+                <CarouselPrevious className="left-4 hidden bg-white/80 shadow-md hover:bg-white md:flex" />
+                <CarouselNext className="right-4 hidden bg-white/80 shadow-md hover:bg-white md:flex" />
 
-                <div className="absolute lg:bottom-2 bottom-10 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 transform rounded bg-black/50 px-2 py-1 text-sm text-white lg:bottom-2">
                   {currentPhotoIndex + 1} / {photos.length}
                 </div>
               </>
@@ -241,31 +250,31 @@ const ApartmentPhotosViewer = ({ projectId, apartmentId, preloadedLayoutPhotos }
           <Button
             variant="outline"
             size="sm"
-            className="absolute lg:top-2 bottom-10 lg:bottom-auto right-2 bg-white/80 hover:bg-white"
+            className="absolute bottom-10 right-2 bg-white/80 hover:bg-white lg:bottom-auto lg:top-2"
             onClick={openLightbox}
           >
             <Expand className="h-4 w-4" />
           </Button>
         </div>
-        
+
         {photos[currentPhotoIndex]?.description && (
           <p className="mt-2 text-sm text-muted-foreground">
-            {photos[currentPhotoIndex]?.description || ''}
+            {photos[currentPhotoIndex]?.description || ""}
           </p>
         )}
       </CardContent>
-      
+
       <Lightbox
         open={isLightboxOpen}
         close={closeLightbox}
         index={currentPhotoIndex}
         slides={photos.map((photo) => ({
           src: photo.image_url,
-          alt: photo.description || 'Фото квартиры',
-          title: photo.type === 'layout' ? 'Планировка' : 'Квартира',
+          alt: photo.description || "Фото квартиры",
+          title: photo.type === "layout" ? "Планировка" : "Квартира",
         }))}
         on={{
-          view: ({ index }) => setCurrentPhotoIndex(index)
+          view: ({ index }) => setCurrentPhotoIndex(index),
         }}
         portal={{ root: portalContainer ?? null }}
       />

@@ -1,32 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Button } from "@gridix/ui";
-import { ArrowLeft, House } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useProject } from '@/entities/project/queries/useProjects';
+import { ArrowLeft, House } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useProject } from "@/entities/project/queries/useProjects";
 import { supabase } from "@gridix/utils/api";
 
 export interface FloatingProjectButtonProps {
   projectId: string;
-  side?: 'left' | 'right' | undefined;
+  side?: "left" | "right" | undefined;
   bottomOffset?: number | undefined;
   sideOffset?: number | undefined;
 }
 
 export const FloatingProjectButton = ({
   projectId,
-  side = 'right',
+  side = "right",
   bottomOffset = 40,
   sideOffset = 32,
 }: FloatingProjectButtonProps) => {
   const { language, t } = useLanguage();
   const { project } = useProject(projectId);
-  const [themeColor, setThemeColor] = useState<string>('#000000');
+  const [themeColor, setThemeColor] = useState<string>("#000000");
   const [isIframeOpen, setIsIframeOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (project && (project as unknown as Record<string, unknown>)?.theme_color) {
-      setThemeColor((project as unknown as Record<string, unknown>).theme_color as string);
+    if (
+      project &&
+      (project as unknown as Record<string, unknown>)?.theme_color
+    ) {
+      setThemeColor(
+        (project as unknown as Record<string, unknown>).theme_color as string,
+      );
     }
   }, [project]);
 
@@ -36,14 +41,14 @@ export const FloatingProjectButton = ({
 
     // Получаем домены проекта из project_domains
     const { data: projectDomains } = await supabase
-      .from('project_domains')
-      .select('domain, is_primary, status')
-      .eq('project_id', project?.id || projectId)
-      .eq('status', 'active');
+      .from("project_domains")
+      .select("domain, is_primary, status")
+      .eq("project_id", project?.id || projectId)
+      .eq("status", "active");
 
     // Проверяем, есть ли текущий домен среди доменов проекта
     const isProjectDomain = projectDomains?.some(
-      (pd) => pd.domain.toLowerCase() === currentHostname.toLowerCase()
+      (pd) => pd.domain.toLowerCase() === currentHostname.toLowerCase(),
     );
 
     // Определяем базовый домен
@@ -53,10 +58,10 @@ export const FloatingProjectButton = ({
     } else {
       const primaryDomain = projectDomains?.find((pd) => pd.is_primary)?.domain;
       if (primaryDomain) {
-        baseDomain = 'https://' + primaryDomain;
+        baseDomain = "https://" + primaryDomain;
       } else {
         baseDomain =
-          'https://' + (import.meta.env.VITE_SERVER_DOMAIN || 'gridix.live');
+          "https://" + (import.meta.env.VITE_SERVER_DOMAIN || "gridix.live");
       }
     }
 
@@ -66,7 +71,7 @@ export const FloatingProjectButton = ({
   const openFullProjectPage = async () => {
     try {
       const baseDomain =
-        process.env.NODE_ENV === 'production' ? await getBaseDomain() : '';
+        process.env.NODE_ENV === "production" ? await getBaseDomain() : "";
       const projectPath = project?.slug
         ? project.slug
         : `id/${project?.id || projectId}`;
@@ -74,9 +79,9 @@ export const FloatingProjectButton = ({
       setIframeUrl(url);
       setIsIframeOpen(true);
     } catch (error) {
-      console.error('Error opening full project page:', error);
+      console.error("Error opening full project page:", error);
       const fallbackDomain =
-        import.meta.env.VITE_SERVER_DOMAIN || 'https://gridix.live';
+        import.meta.env.VITE_SERVER_DOMAIN || "https://gridix.live";
       const projectPath = project?.slug
         ? project.slug
         : `id/${project?.id || projectId}`;
@@ -87,17 +92,16 @@ export const FloatingProjectButton = ({
   };
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-
+    if (typeof document === "undefined") return;
 
     if (isIframeOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isIframeOpen]);
 
@@ -118,7 +122,7 @@ export const FloatingProjectButton = ({
       >
         <div className="relative">
           <span
-            className="absolute top-[10%] left-[10%] right-[10%] bottom-[10%] rounded-full border-2  animate-ping"
+            className="absolute bottom-[10%] left-[10%] right-[10%] top-[10%] animate-ping rounded-full border-2"
             style={{ borderColor: themeColor }}
             aria-hidden="true"
           />
@@ -126,11 +130,11 @@ export const FloatingProjectButton = ({
             size="icon-lg"
             onClick={openFullProjectPage}
             style={{ backgroundColor: themeColor }}
-            className="relative shadow-[0_4px_20px_rgba(0,0,0,0.6)] rounded-full px-4 py-2 text-sm p-0 flex flex-col items-center justify-center gap-1"
+            className="relative flex flex-col items-center justify-center gap-1 rounded-full p-0 px-4 py-2 text-sm shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
           >
             <House />
-            <span className="text-[8px] leading-[1] whitespace-normal text-center px-[6px]">
-              {t('project.chooseApartment')}
+            <span className="whitespace-normal px-[6px] text-center text-[8px] leading-[1]">
+              {t("project.chooseApartment")}
             </span>
           </Button>
         </div>
@@ -138,13 +142,12 @@ export const FloatingProjectButton = ({
 
       {isIframeOpen && iframeUrl && (
         <div className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/70">
-          <div className="relative w-full h-full">
+          <div className="relative h-full w-full">
             <Button
               variant="ghost"
               size="icon"
               onClick={closeIframe}
-              className="absolute bottom-4 left-4 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200 bg-black text-white"
-
+              className="absolute bottom-4 left-4 z-50 h-12 w-12 rounded-full bg-black text-white shadow-lg transition-all duration-200 hover:shadow-xl"
             >
               <ArrowLeft />
             </Button>
@@ -158,5 +161,3 @@ export const FloatingProjectButton = ({
     </>
   );
 };
-
-

@@ -65,34 +65,52 @@ const MetricCard = ({
   };
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-slate-300/80 transition-all duration-300 group relative overflow-hidden">
-      <div className="flex justify-between items-start mb-3 relative z-10">
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-slate-300/80 hover:shadow-lg">
+      <div className="relative z-10 mb-3 flex items-start justify-between">
         <div
-          className={`p-2.5 rounded-xl transition-transform group-hover:scale-110 ${bgColors[color] ?? bgColors.blue}`}
+          className={`rounded-xl p-2.5 transition-transform group-hover:scale-110 ${bgColors[color] ?? bgColors.blue}`}
         >
           {icon}
         </div>
         {trend ? (
           <div
-            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${
+            className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${
               trendUp ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
             }`}
           >
-            {trendUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {trendUp ? (
+              <ArrowUpRight size={12} />
+            ) : (
+              <ArrowDownRight size={12} />
+            )}
             {trend}
           </div>
         ) : null}
       </div>
 
       <div className="relative z-10">
-        <p className="text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-1">{title}</p>
-        <h3 className="text-2xl font-black text-slate-900 tracking-tight">{value}</h3>
-        {subtext ? <p className="text-[10px] text-slate-400 mt-1 font-medium">{subtext}</p> : null}
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          {title}
+        </p>
+        <h3 className="text-2xl font-black tracking-tight text-slate-900">
+          {value}
+        </h3>
+        {subtext ? (
+          <p className="mt-1 text-[10px] font-medium text-slate-400">
+            {subtext}
+          </p>
+        ) : null}
       </div>
 
       {chartData && chartData.length > 1 && (
-        <div className="absolute bottom-4 right-4 w-24 h-8 opacity-20 group-hover:opacity-50 transition-opacity">
-          <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none" className="overflow-visible">
+        <div className="absolute bottom-4 right-4 h-8 w-24 opacity-20 transition-opacity group-hover:opacity-50">
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 100 30"
+            preserveAspectRatio="none"
+            className="overflow-visible"
+          >
             <polyline
               points={sparklinePath}
               fill="none"
@@ -109,7 +127,13 @@ const MetricCard = ({
 };
 
 // Revenue Chart Component
-const RevenueChart = ({ data, t }: { data: number[]; t: (key: string) => string }) => {
+const RevenueChart = ({
+  data,
+  t,
+}: {
+  data: number[];
+  t: (key: string) => string;
+}) => {
   const generatePath = (points: number[], width: number, height: number) => {
     if (points.length === 0) return "";
     const max = Math.max(...points) * 1.1 || 1;
@@ -138,20 +162,31 @@ const RevenueChart = ({ data, t }: { data: number[]; t: (key: string) => string 
   const area = path ? `${path} L 800,250 L 0,250 Z` : "";
 
   return (
-    <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm h-full relative overflow-hidden flex flex-col">
-      <div className="flex justify-between items-center mb-6 z-10">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white p-6 shadow-sm">
+      <div className="z-10 mb-6 flex items-center justify-between">
         <div>
-          <h3 className="font-bold text-slate-900 text-base">{t("common.dashboard.chart.title")}</h3>
-          <p className="text-xs text-slate-500 mt-1">{t("common.dashboard.chart.subtitle")}</p>
+          <h3 className="text-base font-bold text-slate-900">
+            {t("common.dashboard.chart.title")}
+          </h3>
+          <p className="mt-1 text-xs text-slate-500">
+            {t("common.dashboard.chart.subtitle")}
+          </p>
         </div>
-        <div className="bg-slate-50 p-1 rounded-lg border border-slate-100">
-          <button type="button" className="px-3 py-1 bg-white shadow-sm rounded text-xs font-bold text-slate-800">
+        <div className="rounded-lg border border-slate-100 bg-slate-50 p-1">
+          <button
+            type="button"
+            className="rounded bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow-sm"
+          >
             2025
           </button>
         </div>
       </div>
-      <div className="flex-1 relative w-full min-h-[200px]">
-        <svg viewBox="0 0 800 250" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+      <div className="relative min-h-[200px] w-full flex-1">
+        <svg
+          viewBox="0 0 800 250"
+          className="h-full w-full overflow-visible"
+          preserveAspectRatio="none"
+        >
           <defs>
             <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
@@ -160,13 +195,28 @@ const RevenueChart = ({ data, t }: { data: number[]; t: (key: string) => string 
           </defs>
           {/* Grid */}
           {[0, 50, 100, 150, 200].map((y) => (
-            <line key={y} x1="0" y1={y} x2="800" y2={y} stroke="#f1f5f9" strokeDasharray="4 4" />
+            <line
+              key={y}
+              x1="0"
+              y1={y}
+              x2="800"
+              y2={y}
+              stroke="#f1f5f9"
+              strokeDasharray="4 4"
+            />
           ))}
           <path d={area} fill="url(#revGradient)" />
-          <path d={path} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <path
+            d={path}
+            fill="none"
+            stroke="#10b981"
+            strokeWidth="3"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       </div>
-      <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase mt-2 tracking-wider">
+      <div className="mt-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
         {["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m) => (
           <span key={m}>{m}</span>
         ))}
@@ -185,41 +235,57 @@ interface ActivityItem {
   type: "success" | "info" | "warning";
 }
 
-const LiveActivityFeed = ({ activities, t }: { activities: ActivityItem[]; t: (key: string) => string }) => {
+const LiveActivityFeed = ({
+  activities,
+  t,
+}: {
+  activities: ActivityItem[];
+  t: (key: string) => string;
+}) => {
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center backdrop-blur-sm sticky top-0 z-10">
-        <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm">
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-50 bg-slate-50/30 p-6 backdrop-blur-sm">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
           <Activity size={18} className="text-blue-500" />
           {t("common.dashboard.activity.title")}
         </h3>
-        <div className="flex items-center gap-2 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
-          <span className="text-[10px] font-bold text-blue-700 uppercase">Live</span>
+        <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-2 py-1">
+          <span className="text-[10px] font-bold uppercase text-blue-700">
+            Live
+          </span>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+      <div className="custom-scrollbar flex-1 space-y-2 overflow-y-auto p-4">
         {activities.length === 0 ? (
-          <div className="p-4 text-center text-sm text-slate-400">{t("common.dashboard.activity.empty")}</div>
+          <div className="p-4 text-center text-sm text-slate-400">
+            {t("common.dashboard.activity.empty")}
+          </div>
         ) : (
           activities.map((act) => (
             <div
               key={act.id}
-              className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group border border-transparent hover:border-slate-100"
+              className="group flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-3 transition-colors hover:border-slate-100 hover:bg-slate-50"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm text-white ${
-                    act.type === "success" ? "bg-green-500" : act.type === "info" ? "bg-blue-500" : "bg-amber-500"
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm ${
+                    act.type === "success"
+                      ? "bg-green-500"
+                      : act.type === "info"
+                        ? "bg-blue-500"
+                        : "bg-amber-500"
                   }`}
                 >
                   {act.user.charAt(0)}
                 </div>
                 <div>
-                  <div className="text-xs text-slate-800 leading-none mb-1">
+                  <div className="mb-1 text-xs leading-none text-slate-800">
                     <span className="font-bold">{act.user}</span>{" "}
                     <span className="text-slate-500">{act.action}</span>
                   </div>
-                  <div className="text-[10px] font-medium text-slate-900">{act.target}</div>
+                  <div className="text-[10px] font-medium text-slate-900">
+                    {act.target}
+                  </div>
                 </div>
               </div>
               <span className="text-[10px] text-slate-400">{act.time}</span>
@@ -234,14 +300,18 @@ const LiveActivityFeed = ({ activities, t }: { activities: ActivityItem[]; t: (k
 export function DashboardTab() {
   const { t } = useLanguage();
   const { activeWorkspaceId, availableWorkspaces } = useWorkspace();
-  const selected = availableWorkspaces.find((w) => w.id === activeWorkspaceId) ?? null;
+  const selected =
+    availableWorkspaces.find((w) => w.id === activeWorkspaceId) ?? null;
 
   const dashboardQuery = useQuery({
     queryKey: ["agent_dashboard", activeWorkspaceId],
     enabled: !!activeWorkspaceId,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("agent-program", {
-        body: { action: "get_agent_dashboard", application_id: activeWorkspaceId },
+        body: {
+          action: "get_agent_dashboard",
+          application_id: activeWorkspaceId,
+        },
       });
       if (error) throw error;
       return data as Record<string, unknown>;
@@ -262,14 +332,7 @@ export function DashboardTab() {
   // Generate mock revenue data based on real metrics
   const revenueData = useMemo(() => {
     const base = metrics.paid || 1000;
-    return [
-      base * 0.3,
-      base * 0.5,
-      base * 0.4,
-      base * 0.7,
-      base * 0.6,
-      base,
-    ];
+    return [base * 0.3, base * 0.5, base * 0.4, base * 0.7, base * 0.6, base];
   }, [metrics.paid]);
 
   // Generate activity feed from dashboard data
@@ -309,33 +372,41 @@ export function DashboardTab() {
   }, [metrics, t]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-full flex-col overflow-hidden bg-[#F8FAFC]">
       <ModuleHeader
         title={t("common.dashboard.title")}
         subtitle={
           selected
-            ? t("common.dashboard.subtitleWorkspace", { workspace: selected.label })
+            ? t("common.dashboard.subtitleWorkspace", {
+                workspace: selected.label,
+              })
             : t("common.dashboard.subtitleNoWorkspace")
         }
         hideSearch
       />
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-        <div className="max-w-[1600px] mx-auto space-y-6 pb-20">
+      <div className="custom-scrollbar flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="mx-auto max-w-[1600px] space-y-6 pb-20">
           {!activeWorkspaceId ? (
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <Lock size={18} className="text-slate-400" />
               <div>
-                <div className="font-bold text-slate-900">{t("common.workspace.noActiveTitle")}</div>
-                <div className="text-sm text-slate-600">{t("common.workspace.pickInSidebar")}</div>
+                <div className="font-bold text-slate-900">
+                  {t("common.workspace.noActiveTitle")}
+                </div>
+                <div className="text-sm text-slate-600">
+                  {t("common.workspace.pickInSidebar")}
+                </div>
               </div>
             </div>
           ) : dashboardQuery.isLoading ? (
-            <div className="text-sm text-slate-500">{t("common.common.loading")}</div>
+            <div className="text-sm text-slate-500">
+              {t("common.common.loading")}
+            </div>
           ) : (
             <>
               {/* 1. Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   title={t("common.dashboard.metrics.commissionPaid")}
                   value={`$${metrics.paid.toLocaleString()}`}
@@ -352,7 +423,9 @@ export function DashboardTab() {
                   trendUp={true}
                   icon={<Handshake size={22} />}
                   color="purple"
-                  subtext={t("common.dashboard.metrics.projectsSubtext", { count: metrics.projects })}
+                  subtext={t("common.dashboard.metrics.projectsSubtext", {
+                    count: metrics.projects,
+                  })}
                 />
                 <MetricCard
                   title={t("common.dashboard.metrics.leads")}
@@ -362,7 +435,13 @@ export function DashboardTab() {
                   icon={<Zap size={22} />}
                   color="blue"
                   chartData={[10, 12, 15, 14, 18, metrics.leads || 22]}
-                  subtext={metrics.contacts ? t("common.dashboard.metrics.contactsSubtext", { count: metrics.contacts }) : undefined}
+                  subtext={
+                    metrics.contacts
+                      ? t("common.dashboard.metrics.contactsSubtext", {
+                          count: metrics.contacts,
+                        })
+                      : undefined
+                  }
                 />
                 <MetricCard
                   title={t("common.dashboard.metrics.catalog")}
@@ -377,8 +456,8 @@ export function DashboardTab() {
               </div>
 
               {/* 2. Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[400px]">
-                <div className="lg:col-span-2 h-full">
+              <div className="grid h-auto grid-cols-1 gap-6 lg:h-[400px] lg:grid-cols-3">
+                <div className="h-full lg:col-span-2">
                   <RevenueChart data={revenueData} t={t} />
                 </div>
                 <div className="h-full">
@@ -392,4 +471,3 @@ export function DashboardTab() {
     </div>
   );
 }
-

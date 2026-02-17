@@ -1,6 +1,6 @@
-import { Tables } from '@gridix/types/database';
+import { Tables } from "@gridix/types/database";
 
-type Project = Tables<'projects'>;
+type Project = Tables<"projects">;
 /**
  * Provides helpers to calculate zero-interest installment monthly payment
  * using project configuration.
@@ -11,7 +11,8 @@ export function useInstallment(project?: Project) {
    * Consumers should convert/format to target currency as needed.
    */
   const calculateMonthlyPayment = (price: number): number => {
-    if (!project?.installment_enabled || !project.max_installment_months) return 0;
+    if (!project?.installment_enabled || !project.max_installment_months)
+      return 0;
 
     const minDownPaymentPercent = project.min_down_payment_percent ?? 20;
     const maxAllowedDownPaymentPercent = 50;
@@ -19,7 +20,7 @@ export function useInstallment(project?: Project) {
 
     const effectiveDownPaymentPercent = Math.min(
       Math.max(targetDownPaymentPercent, minDownPaymentPercent),
-      maxAllowedDownPaymentPercent
+      maxAllowedDownPaymentPercent,
     );
 
     const downPayment = (price * effectiveDownPaymentPercent) / 100;
@@ -33,5 +34,3 @@ export function useInstallment(project?: Project) {
 }
 
 export default useInstallment;
-
-

@@ -1,17 +1,49 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@gridix/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import { Textarea } from "@gridix/ui";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@gridix/ui";
-import { Search, Filter, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gridix/ui";
+import {
+  Search,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerPayout } from '@/entities/partner/model/types';
+import type { PartnerPayout } from "@/entities/partner/model/types";
 
 interface PayoutWithPartner extends PartnerPayout {
   contact_info?: string;
@@ -29,12 +61,17 @@ interface PayoutWithPartner extends PartnerPayout {
 export function PartnerPayoutsManagement() {
   const [payouts, setPayouts] = useState<PayoutWithPartner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'paid' | 'rejected'>('all');
-  const [selectedPayout, setSelectedPayout] = useState<PayoutWithPartner | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "pending" | "approved" | "paid" | "rejected"
+  >("all");
+  const [selectedPayout, setSelectedPayout] =
+    useState<PayoutWithPartner | null>(null);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
-  const [action, setAction] = useState<'approve' | 'reject' | 'mark_paid' | null>(null);
-  const [notes, setNotes] = useState('');
+  const [action, setAction] = useState<
+    "approve" | "reject" | "mark_paid" | null
+  >(null);
+  const [notes, setNotes] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -46,8 +83,9 @@ export function PartnerPayoutsManagement() {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from('partner_payouts')
-        .select(`
+        .from("partner_payouts")
+        .select(
+          `
           *,
           partner_profiles!partner_payouts_partner_id_fkey (
             id,
@@ -58,100 +96,117 @@ export function PartnerPayoutsManagement() {
               email
             )
           )
-        `)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .order("created_at", { ascending: false });
 
       if (error) {
         throw new Error(error.message);
       }
 
-      setPayouts(data as PayoutWithPartner[] || [] );
+      setPayouts((data as PayoutWithPartner[]) || []);
     } catch (error) {
-      console.error('Error fetching payouts:', error);
+      console.error("Error fetching payouts:", error);
       toast.error("Не удалось загрузить список выплат");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePayoutAction = async (payoutId: string, action: 'approve' | 'reject' | 'mark_paid') => {
+  const handlePayoutAction = async (
+    payoutId: string,
+    action: "approve" | "reject" | "mark_paid",
+  ) => {
     try {
       setIsProcessing(true);
 
       let newStatus: string;
       switch (action) {
-        case 'approve':
-          newStatus = 'approved';
+        case "approve":
+          newStatus = "approved";
           break;
-        case 'reject':
-          newStatus = 'rejected';
+        case "reject":
+          newStatus = "rejected";
           break;
-        case 'mark_paid':
-          newStatus = 'paid';
+        case "mark_paid":
+          newStatus = "paid";
           break;
         default:
-          throw new Error('Invalid action');
+          throw new Error("Invalid action");
       }
 
       // Обновляем статус выплаты
       const { error } = await supabase
-        .from('partner_payouts')
+        .from("partner_payouts")
         .update({
           status: newStatus,
           processed_at: new Date().toISOString(),
-          notes: notes || null
+          notes: notes || null,
         })
-        .eq('id', payoutId);
+        .eq("id", payoutId);
 
       if (error) {
         throw new Error(error.message);
       }
 
       // Если выплата отмечена как оплаченная, увеличиваем total_withdrawn у партнёра
-      if (action === 'mark_paid' && selectedPayout) {
+      if (action === "mark_paid" && selectedPayout) {
         // Сначала получаем текущее значение total_withdrawn
         const { data: partnerData, error: fetchError } = await supabase
-          .from('partner_profiles')
-          .select('total_withdrawn')
-          .eq('id', selectedPayout.partner_id)
+          .from("partner_profiles")
+          .select("total_withdrawn")
+          .eq("id", selectedPayout.partner_id)
           .single();
 
         if (fetchError) {
-          console.error('Error fetching partner data:', fetchError);
+          console.error("Error fetching partner data:", fetchError);
         } else {
           // Обновляем total_withdrawn, добавляя сумму выплаты
-          const newTotalWithdrawn = (partnerData.total_withdrawn || 0) + selectedPayout.amount;
-          
+          const newTotalWithdrawn =
+            (partnerData.total_withdrawn || 0) + selectedPayout.amount;
+
           const { error: updateError } = await supabase
-            .from('partner_profiles')
+            .from("partner_profiles")
             .update({
-              total_withdrawn: newTotalWithdrawn
+              total_withdrawn: newTotalWithdrawn,
             })
-            .eq('id', selectedPayout.partner_id);
+            .eq("id", selectedPayout.partner_id);
 
           if (updateError) {
-            console.error('Error updating partner total_withdrawn:', updateError);
+            console.error(
+              "Error updating partner total_withdrawn:",
+              updateError,
+            );
             // Не прерываем выполнение, так как основное действие уже выполнено
           }
         }
       }
 
-      toast.success(`Выплата ${action === 'approve' ? 'одобрена' : action === 'reject' ? 'отклонена' : 'отмечена как выплаченная'}`);
+      toast.success(
+        `Выплата ${action === "approve" ? "одобрена" : action === "reject" ? "отклонена" : "отмечена как выплаченная"}`,
+      );
 
       // Обновляем список
       await fetchPayouts();
       setIsActionDialogOpen(false);
       setSelectedPayout(null);
-      setNotes('');
+      setNotes("");
     } catch (error) {
-      console.error('Error updating payout:', error);
-      toast.error(error instanceof Error ? error.message : "Не удалось обновить статус выплаты");
+      console.error("Error updating payout:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Не удалось обновить статус выплаты",
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const openActionDialog = (payout: PayoutWithPartner, action: 'approve' | 'reject' | 'mark_paid') => {
+  const openActionDialog = (
+    payout: PayoutWithPartner,
+    action: "approve" | "reject" | "mark_paid",
+  ) => {
     setSelectedPayout(payout);
     setAction(action);
     setIsActionDialogOpen(true);
@@ -159,13 +214,13 @@ export function PartnerPayoutsManagement() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
+      case "pending":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'approved':
+      case "approved":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'paid':
+      case "paid":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'rejected':
+      case "rejected":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
@@ -174,57 +229,67 @@ export function PartnerPayoutsManagement() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'Ожидает рассмотрения';
-      case 'approved':
-        return 'Одобрено';
-      case 'paid':
-        return 'Выплачено';
-      case 'rejected':
-        return 'Отклонено';
+      case "pending":
+        return "Ожидает рассмотрения";
+      case "approved":
+        return "Одобрено";
+      case "paid":
+        return "Выплачено";
+      case "rejected":
+        return "Отклонено";
       default:
-        return 'Неизвестно';
+        return "Неизвестно";
     }
   };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'secondary';
-      case 'approved':
-        return 'default';
-      case 'paid':
-        return 'default';
-      case 'rejected':
-        return 'destructive';
+      case "pending":
+        return "secondary";
+      case "approved":
+        return "default";
+      case "paid":
+        return "default";
+      case "rejected":
+        return "destructive";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
-  const filteredPayouts = payouts.filter(payout => {
-    const matchesSearch = 
-      payout.partner_profiles.user_profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payout.partner_profiles.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payout.partner_profiles.partner_code.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = statusFilter === 'all' || payout.status === statusFilter;
-    
+  const filteredPayouts = payouts.filter((payout) => {
+    const matchesSearch =
+      payout.partner_profiles.user_profiles.full_name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      payout.partner_profiles.user_profiles.email
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      payout.partner_profiles.partner_code
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesFilter =
+      statusFilter === "all" || payout.status === statusFilter;
+
     return matchesSearch && matchesFilter;
   });
 
-  const totalPending = payouts.filter(p => p.status === 'pending').length;
+  const totalPending = payouts.filter((p) => p.status === "pending").length;
   const totalPendingAmount = payouts
-    .filter(p => p.status === 'pending')
+    .filter((p) => p.status === "pending")
     .reduce((sum, p) => sum + p.amount, 0);
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+        <div className="h-8 w-1/4 animate-pulse rounded bg-gray-200"></div>
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+            <div
+              key={i}
+              className="h-16 animate-pulse rounded bg-gray-200"
+            ></div>
           ))}
         </div>
       </div>
@@ -243,10 +308,12 @@ export function PartnerPayoutsManagement() {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ожидают рассмотрения</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Ожидают рассмотрения
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -264,11 +331,9 @@ export function PartnerPayoutsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {payouts.filter(p => p.status === 'approved').length}
+              {payouts.filter((p) => p.status === "approved").length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Ожидают выплаты
-            </p>
+            <p className="text-xs text-muted-foreground">Ожидают выплаты</p>
           </CardContent>
         </Card>
 
@@ -279,11 +344,9 @@ export function PartnerPayoutsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {payouts.filter(p => p.status === 'paid').length}
+              {payouts.filter((p) => p.status === "paid").length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Завершённых выплат
-            </p>
+            <p className="text-xs text-muted-foreground">Завершённых выплат</p>
           </CardContent>
         </Card>
 
@@ -294,7 +357,7 @@ export function PartnerPayoutsManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {payouts.filter(p => p.status === 'rejected').length}
+              {payouts.filter((p) => p.status === "rejected").length}
             </div>
             <p className="text-xs text-muted-foreground">
               Отклонённых запросов
@@ -312,11 +375,11 @@ export function PartnerPayoutsManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="search">Поиск</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                 <Input
                   id="search"
                   placeholder="Поиск по партнёру..."
@@ -329,7 +392,12 @@ export function PartnerPayoutsManagement() {
 
             <div className="space-y-2">
               <Label htmlFor="status">Статус</Label>
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'pending' | 'approved' | 'paid' | 'rejected') => setStatusFilter(value)}>
+              <Select
+                value={statusFilter}
+                onValueChange={(
+                  value: "all" | "pending" | "approved" | "paid" | "rejected",
+                ) => setStatusFilter(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -373,18 +441,18 @@ export function PartnerPayoutsManagement() {
                   <TableCell>
                     <div>
                       <p className="font-medium">
-                        {payout.partner_profiles.user_profiles.full_name} 
+                        {payout.partner_profiles.user_profiles.full_name}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {payout.partner_profiles.user_profiles.email}
                       </p>
-                      <Badge variant="outline" className="text-xs font-mono">
+                      <Badge variant="outline" className="font-mono text-xs">
                         {payout.partner_profiles.partner_code}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-bold text-lg">
+                    <span className="text-lg font-bold">
                       ${payout.amount.toFixed(2)}
                     </span>
                   </TableCell>
@@ -396,9 +464,7 @@ export function PartnerPayoutsManagement() {
                       </div>
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {payout.payment_method || 'Не указан'}
-                  </TableCell>
+                  <TableCell>{payout.payment_method || "Не указан"}</TableCell>
                   <TableCell>
                     <div className="max-w-xs">
                       {payout.contact_info ? (
@@ -406,48 +472,50 @@ export function PartnerPayoutsManagement() {
                           <p className="break-words">{payout.contact_info}</p>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">Не указана</span>
+                        <span className="text-sm text-muted-foreground">
+                          Не указана
+                        </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(payout.requested_at).toLocaleDateString('ru-RU', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
+                    {new Date(payout.requested_at).toLocaleDateString("ru-RU", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {payout.status === 'pending' && (
+                      {payout.status === "pending" && (
                         <>
                           <Button
                             size="sm"
                             variant="default"
-                            onClick={() => openActionDialog(payout, 'approve')}
+                            onClick={() => openActionDialog(payout, "approve")}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
+                            <CheckCircle className="mr-1 h-4 w-4" />
                             Одобрить
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => openActionDialog(payout, 'reject')}
+                            onClick={() => openActionDialog(payout, "reject")}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
+                            <XCircle className="mr-1 h-4 w-4" />
                             Отклонить
                           </Button>
                         </>
                       )}
-                      {payout.status === 'approved' && (
+                      {payout.status === "approved" && (
                         <Button
                           size="sm"
                           variant="default"
-                          onClick={() => openActionDialog(payout, 'mark_paid')}
+                          onClick={() => openActionDialog(payout, "mark_paid")}
                         >
-                          <DollarSign className="h-4 w-4 mr-1" />
+                          <DollarSign className="mr-1 h-4 w-4" />
                           Отметить выплаченным
                         </Button>
                       )}
@@ -465,21 +533,25 @@ export function PartnerPayoutsManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {action === 'approve' ? 'Одобрить выплату' : 
-               action === 'reject' ? 'Отклонить выплату' : 
-               'Отметить как выплаченную'}
+              {action === "approve"
+                ? "Одобрить выплату"
+                : action === "reject"
+                  ? "Отклонить выплату"
+                  : "Отметить как выплаченную"}
             </DialogTitle>
             <DialogDescription>
-              {action === 'approve' ? 'Вы уверены, что хотите одобрить эту выплату?' :
-               action === 'reject' ? 'Вы уверены, что хотите отклонить эту выплату?' :
-               'Вы уверены, что выплата была произведена?'}
+              {action === "approve"
+                ? "Вы уверены, что хотите одобрить эту выплату?"
+                : action === "reject"
+                  ? "Вы уверены, что хотите отклонить эту выплату?"
+                  : "Вы уверены, что выплата была произведена?"}
             </DialogDescription>
           </DialogHeader>
           {selectedPayout && (
             <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
+              <div className="rounded-lg bg-muted p-4">
                 <p className="font-medium">
-                  {selectedPayout.partner_profiles.user_profiles.full_name} 
+                  {selectedPayout.partner_profiles.user_profiles.full_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {selectedPayout.partner_profiles.user_profiles.email}
@@ -487,7 +559,7 @@ export function PartnerPayoutsManagement() {
                 <p className="text-sm text-muted-foreground">
                   Код: {selectedPayout.partner_profiles.partner_code}
                 </p>
-                <p className="font-bold text-lg">
+                <p className="text-lg font-bold">
                   Сумма: ${selectedPayout.amount.toFixed(2)}
                 </p>
                 {selectedPayout.payment_method && (
@@ -496,13 +568,17 @@ export function PartnerPayoutsManagement() {
                   </p>
                 )}
                 {selectedPayout.contact_info && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-400">
-                    <p className="text-sm font-medium text-blue-800">Контактная информация:</p>
-                    <p className="text-sm text-blue-700 break-words">{selectedPayout.contact_info}</p>
+                  <div className="mt-2 rounded border-l-4 border-blue-400 bg-blue-50 p-2">
+                    <p className="text-sm font-medium text-blue-800">
+                      Контактная информация:
+                    </p>
+                    <p className="break-words text-sm text-blue-700">
+                      {selectedPayout.contact_info}
+                    </p>
                   </div>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="notes">Примечание (необязательно)</Label>
                 <Textarea
@@ -512,23 +588,29 @@ export function PartnerPayoutsManagement() {
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
-              
+
               <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsActionDialogOpen(false)}
                 >
                   Отмена
                 </Button>
-                <Button 
-                  variant={action === 'reject' ? 'destructive' : 'default'}
-                  onClick={() => selectedPayout && handlePayoutAction(selectedPayout.id, action!)}
+                <Button
+                  variant={action === "reject" ? "destructive" : "default"}
+                  onClick={() =>
+                    selectedPayout &&
+                    handlePayoutAction(selectedPayout.id, action!)
+                  }
                   disabled={isProcessing}
                 >
-                  {isProcessing ? "Обработка..." : 
-                   action === 'approve' ? "Одобрить" : 
-                   action === 'reject' ? "Отклонить" : 
-                   "Отметить выплаченным"}
+                  {isProcessing
+                    ? "Обработка..."
+                    : action === "approve"
+                      ? "Одобрить"
+                      : action === "reject"
+                        ? "Отклонить"
+                        : "Отметить выплаченным"}
                 </Button>
               </div>
             </div>

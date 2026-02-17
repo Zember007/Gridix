@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerStats } from '../model/types';
+import type { PartnerStats } from "../model/types";
 
 export function usePartnerStats(partnerId?: string) {
   const [stats, setStats] = useState<PartnerStats | null>(null);
@@ -12,12 +12,15 @@ export function usePartnerStats(partnerId?: string) {
       setLoading(true);
       setError(null);
 
-      const { data, error: functionError } = await supabase.functions.invoke('partner-program', {
-        body: {
-          action: 'get_stats',
-          partner_id: partnerId
-        }
-      });
+      const { data, error: functionError } = await supabase.functions.invoke(
+        "partner-program",
+        {
+          body: {
+            action: "get_stats",
+            partner_id: partnerId,
+          },
+        },
+      );
 
       if (functionError) {
         throw new Error(functionError.message);
@@ -29,8 +32,8 @@ export function usePartnerStats(partnerId?: string) {
 
       setStats(data);
     } catch (err) {
-      console.error('Error fetching partner stats:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch stats');
+      console.error("Error fetching partner stats:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch stats");
     } finally {
       setLoading(false);
     }
@@ -44,6 +47,6 @@ export function usePartnerStats(partnerId?: string) {
     stats,
     loading,
     error,
-    refetch: fetchStats
+    refetch: fetchStats,
   };
 }

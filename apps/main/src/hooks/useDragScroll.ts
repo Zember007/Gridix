@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback } from "react";
 
 export function useDragScroll<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -17,7 +17,7 @@ export function useDragScroll<T extends HTMLElement>() {
     }
 
     isDown.current = true;
-    ref.current.classList.add('cursor-grabbing');
+    ref.current.classList.add("cursor-grabbing");
     startX.current = e.pageX - ref.current.offsetLeft;
     scrollLeft.current = ref.current.scrollLeft;
   }, []);
@@ -25,13 +25,13 @@ export function useDragScroll<T extends HTMLElement>() {
   const onMouseLeave = useCallback(() => {
     if (!ref.current) return;
     isDown.current = false;
-    ref.current.classList.remove('cursor-grabbing');
+    ref.current.classList.remove("cursor-grabbing");
   }, []);
 
   const onMouseUp = useCallback(() => {
     if (!ref.current) return;
     isDown.current = false;
-    ref.current.classList.remove('cursor-grabbing');
+    ref.current.classList.remove("cursor-grabbing");
   }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {

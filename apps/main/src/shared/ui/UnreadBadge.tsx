@@ -1,17 +1,17 @@
-import React from 'react';
+import React from "react";
 
-type Variant = 'dot' | 'pulse';
+type Variant = "dot" | "pulse";
 
 export function UnreadBadge({
   count,
   variant,
-  className = '',
+  className = "",
 }: {
   count?: number;
   variant: Variant;
   className?: string;
 }) {
-  if (variant === 'dot') {
+  if (variant === "dot") {
     return (
       <span
         className={`flex h-2.5 w-2.5 rounded-full bg-red-500 ${className}`}
@@ -20,10 +20,10 @@ export function UnreadBadge({
     );
   }
 
-  const safeCount = typeof count === 'number' ? count : 0;
+  const safeCount = typeof count === "number" ? count : 0;
   if (safeCount <= 0) return null;
 
-  const label = safeCount > 99 ? '99+' : String(safeCount);
+  const label = safeCount > 99 ? "99+" : String(safeCount);
 
   return (
     <span
@@ -38,4 +38,3 @@ export function UnreadBadge({
     </span>
   );
 }
-

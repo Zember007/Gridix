@@ -1,37 +1,58 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
 import { Checkbox } from "@gridix/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gridix/ui";
 import { Alert, AlertDescription } from "@gridix/ui";
-import { Eye, EyeOff, Mail, Lock, User, Building, CheckCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Building,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AuthFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
-  defaultMode?: 'signin' | 'signup' | undefined;
+  defaultMode?: "signin" | "signup" | undefined;
 }
 
-export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) => {
+export const AuthForm = ({
+  onSuccess,
+  redirectTo,
+  defaultMode,
+}: AuthFormProps) => {
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode || 'signin');
+  const [mode, setMode] = useState<"signin" | "signup">(
+    defaultMode || "signin",
+  );
   const [resetLoading, setResetLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState("");
   const [showReset, setShowReset] = useState(false);
   const [marketingEmailsConsent, setMarketingEmailsConsent] = useState(false);
-  
+
   // Реферальный код и партнер
-  const refCode = searchParams.get('ref');
-  const inviteCode = searchParams.get('invite');
+  const refCode = searchParams.get("ref");
+  const inviteCode = searchParams.get("invite");
   const [partnerInfo, setPartnerInfo] = useState<{
     id: string;
     partner_code: string;
@@ -41,45 +62,46 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
     };
   } | null>(null);
   const [checkingPartner, setCheckingPartner] = useState(false);
-  
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-    companyName: '',
-    phone: ''
+    email: "",
+    password: "",
+    fullName: "",
+    companyName: "",
+    phone: "",
   });
 
   // Проверяем партнера по реферальному коду
   useEffect(() => {
     const checkPartner = async () => {
       if (!refCode) return;
-      
+
       setCheckingPartner(true);
       try {
         const { data, error } = await supabase
-          .from('partner_profiles')
-          .select(`
+          .from("partner_profiles")
+          .select(
+            `
             id,
             partner_code,
             user_profiles!partner_profiles_user_id_fkey (
               full_name,
               email
             )
-          `)
-          .eq('partner_code', refCode)
+          `,
+          )
+          .eq("partner_code", refCode)
           .single();
 
-
         if (error || !data) {
-          toast.error(t('auth.invalidReferralCode'));
+          toast.error(t("auth.invalidReferralCode"));
           return;
         }
 
         setPartnerInfo(data);
       } catch (error) {
-        console.error('Error checking partner:', error);
-        toast.error(t('auth.failedToCheckPartner'));
+        console.error("Error checking partner:", error);
+        toast.error(t("auth.failedToCheckPartner"));
       } finally {
         setCheckingPartner(false);
       }
@@ -88,16 +110,13 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
     checkPartner();
   }, [refCode, t]);
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    
     setLoading(true);
 
     try {
-      if (mode === 'signup') {
+      if (mode === "signup") {
         const { data: authData, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -106,12 +125,12 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
               full_name: formData.fullName,
               company_name: formData.companyName,
               phone: formData.phone,
-              account_type: 'developer',
+              account_type: "developer",
               partner_id: partnerInfo?.id || null,
               marketing_emails_consent: marketingEmailsConsent,
               preferred_locale: language,
-            }
-          }
+            },
+          },
         });
 
         if (error) throw error;
@@ -120,38 +139,38 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
           // Если есть реферальный код, создаем связь с партнером
           if (refCode && partnerInfo) {
             const { error: linkError } = await supabase
-              .from('partner_links')
+              .from("partner_links")
               .insert({
                 partner_id: partnerInfo.id,
                 client_id: authData.user.id,
-                type: 'referral',
-                status: 'active',
-                accepted_at: new Date().toISOString()
+                type: "referral",
+                status: "active",
+                accepted_at: new Date().toISOString(),
               });
 
             if (linkError) {
-              console.error('Error creating partner link:', linkError);
+              console.error("Error creating partner link:", linkError);
             }
           }
 
           // Если есть код приглашения, обновляем статус приглашения
           if (inviteCode) {
             const { error: inviteError } = await supabase
-              .from('partner_invitations')
-              .update({ 
-                status: 'accepted',
-                accepted_at: new Date().toISOString()
+              .from("partner_invitations")
+              .update({
+                status: "accepted",
+                accepted_at: new Date().toISOString(),
               })
-              .eq('invitation_code', inviteCode)
-              .eq('email', formData.email);
+              .eq("invitation_code", inviteCode)
+              .eq("email", formData.email);
 
             if (inviteError) {
-              console.error('Error updating invitation:', inviteError);
+              console.error("Error updating invitation:", inviteError);
             }
           }
         }
 
-        toast.success(t('auth.checkEmail'));
+        toast.success(t("auth.checkEmail"));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -160,12 +179,13 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
 
         if (error) throw error;
 
-        toast.success(t('auth.welcome'));
+        toast.success(t("auth.welcome"));
         onSuccess?.();
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('auth.errorOccurred');
-      console.error('Auth error:', error);
+      const message =
+        error instanceof Error ? error.message : t("auth.errorOccurred");
+      console.error("Auth error:", error);
       toast.error(message);
     } finally {
       setLoading(false);
@@ -175,23 +195,24 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
   const handleGoogleAuth = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: redirectTo || window.location.origin
-        }
+          redirectTo: redirectTo || window.location.origin,
+        },
       });
 
       if (error) throw error;
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('auth.googleAuthError');
-      console.error('Google auth error:', error);
+      const message =
+        error instanceof Error ? error.message : t("auth.googleAuthError");
+      console.error("Google auth error:", error);
       toast.error(message);
     }
   };
 
   const handleSendReset = async () => {
     if (!resetEmail) {
-      toast.error(t('auth.enterEmail'));
+      toast.error(t("auth.enterEmail"));
       return;
     }
     setResetLoading(true);
@@ -200,86 +221,97 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
         redirectTo: `${window.location.origin}/en/set-password`,
       });
       if (error) throw error;
-      toast.success(t('auth.resetEmailSent'));
+      toast.success(t("auth.resetEmailSent"));
       setShowReset(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('auth.failedToSendEmail');
-      console.error('Reset email error:', err);
+      const message =
+        err instanceof Error ? err.message : t("auth.failedToSendEmail");
+      console.error("Reset email error:", err);
       toast.error(message);
     } finally {
       setResetLoading(false);
     }
   };
 
-
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12  sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">
-            {mode === 'signin' ? t('auth.signInTitle') : t('auth.signUpTitle')}
+          <CardTitle className="text-center text-2xl">
+            {mode === "signin" ? t("auth.signInTitle") : t("auth.signUpTitle")}
           </CardTitle>
           <CardDescription className="text-center">
-            {mode === 'signin' 
-              ? t('auth.signInDescription')
-              : t('auth.signUpDescription')
-            }
+            {mode === "signin"
+              ? t("auth.signInDescription")
+              : t("auth.signUpDescription")}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {refCode && partnerInfo && (
             <Alert className="mb-4">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                {t('auth.partnerInvitation')} {partnerInfo?.user_profiles?.full_name}
+                {t("auth.partnerInvitation")}{" "}
+                {partnerInfo?.user_profiles?.full_name}
               </AlertDescription>
             </Alert>
           )}
 
           {checkingPartner && (
-            <div className="flex items-center justify-center py-4 mb-4">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              {t('auth.checkingPartner')}
+            <div className="mb-4 flex items-center justify-center py-4">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("auth.checkingPartner")}
             </div>
           )}
 
-          <Tabs value={mode} onValueChange={(value) => setMode(value as 'signin' | 'signup')}>
+          <Tabs
+            value={mode}
+            onValueChange={(value) => setMode(value as "signin" | "signup")}
+          >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
-              <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+              <TabsTrigger value="signin">{t("auth.signIn")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("auth.signUp")}</TabsTrigger>
             </TabsList>
-            
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <TabsContent value="signin" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('auth.email')}</Label>
+                  <Label htmlFor="email">{t("auth.email")}</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder={t('auth.emailPlaceholder')}
+                      placeholder={t("auth.emailPlaceholder")}
                       value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       className="pl-10"
                       required
                     />
                   </div>
                 </div>
-               
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">{t('auth.password')}</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder={t('auth.passwordPlaceholder')}
+                      type={showPassword ? "text" : "password"}
+                      placeholder={t("auth.passwordPlaceholder")}
                       value={formData.password}
-                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       className="pl-10 pr-10"
                       required
                     />
@@ -290,7 +322,11 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -298,15 +334,20 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
 
               <TabsContent value="signup" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">{t('auth.fullName')}</Label>
+                  <Label htmlFor="fullName">{t("auth.fullName")}</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder={t('auth.fullNamePlaceholder')}
+                      placeholder={t("auth.fullNamePlaceholder")}
                       value={formData.fullName}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          fullName: e.target.value,
+                        }))
+                      }
                       className="pl-10"
                       required
                     />
@@ -314,30 +355,40 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">{t('auth.companyName')}</Label>
+                  <Label htmlFor="companyName">{t("auth.companyName")}</Label>
                   <div className="relative">
-                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="companyName"
                       type="text"
-                      placeholder={t('auth.companyNamePlaceholder')}
+                      placeholder={t("auth.companyNamePlaceholder")}
                       value={formData.companyName}
-                      onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          companyName: e.target.value,
+                        }))
+                      }
                       className="pl-10"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">{t('auth.email')}</Label>
+                  <Label htmlFor="signup-email">{t("auth.email")}</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder={t('auth.emailPlaceholder')}
+                      placeholder={t("auth.emailPlaceholder")}
                       value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       className="pl-10"
                       required
                     />
@@ -345,15 +396,20 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">{t('auth.password')}</Label>
+                  <Label htmlFor="signup-password">{t("auth.password")}</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <Input
                       id="signup-password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder={t('auth.passwordPlaceholder')}
+                      type={showPassword ? "text" : "password"}
+                      placeholder={t("auth.passwordPlaceholder")}
                       value={formData.password}
-                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       className="pl-10 pr-10"
                       required
                       minLength={6}
@@ -365,7 +421,11 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -374,44 +434,49 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
                   <Checkbox
                     id="marketing-consent"
                     checked={marketingEmailsConsent}
-                    onCheckedChange={(checked) => setMarketingEmailsConsent(checked === true)}
+                    onCheckedChange={(checked) =>
+                      setMarketingEmailsConsent(checked === true)
+                    }
                   />
                   <Label
                     htmlFor="marketing-consent"
-                    className="text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    className="cursor-pointer text-xs font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {t('auth.marketingEmailsConsent')}
+                    {t("auth.marketingEmailsConsent")}
                   </Label>
                 </div>
               </TabsContent>
 
-              <Button type="submit" className="w-full" disabled={loading || checkingPartner}>
-                {loading 
-                  ? t('auth.loading') 
-                  : mode === 'signin' 
-                    ? t('auth.signInButton') 
-                    : t('auth.signUpButton')
-                }
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || checkingPartner}
+              >
+                {loading
+                  ? t("auth.loading")
+                  : mode === "signin"
+                    ? t("auth.signInButton")
+                    : t("auth.signUpButton")}
               </Button>
 
               <div className="flex items-center justify-between text-sm">
-                  <button
-                    type="button"
-                    className="text-primary hover:underline"
-                    onClick={() => setShowReset(true)}
-                  >
-                    {t('auth.forgotPassword')}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="text-primary hover:underline"
+                  onClick={() => setShowReset(true)}
+                >
+                  {t("auth.forgotPassword")}
+                </button>
+              </div>
             </form>
 
-            {mode === 'signup' && (
-              <p className="text-xs text-muted-foreground mt-4 text-center">
-                {t('auth.essentialEmailsNote')}
+            {mode === "signup" && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                {t("auth.essentialEmailsNote")}
               </p>
             )}
 
-           {/*  <div className="mt-6">
+            {/*  <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -454,27 +519,41 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
 
       {showReset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-background rounded-lg shadow-lg w-full max-w-md">
-            <div className="p-6 border-b">
-              <h2 className="text-lg font-semibold">{t('auth.resetPasswordTitle')}</h2>
-              <p className="text-sm text-muted-foreground mt-1">{t('auth.resetPasswordDescription')}</p>
+          <div className="w-full max-w-md rounded-lg bg-background shadow-lg">
+            <div className="border-b p-6">
+              <h2 className="text-lg font-semibold">
+                {t("auth.resetPasswordTitle")}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("auth.resetPasswordDescription")}
+              </p>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="space-y-4 p-6">
               <div className="space-y-2">
-                <Label htmlFor="reset-email">{t('auth.resetEmail')}</Label>
+                <Label htmlFor="reset-email">{t("auth.resetEmail")}</Label>
                 <Input
                   id="reset-email"
                   type="email"
-                  placeholder={t('auth.emailPlaceholder')}
+                  placeholder={t("auth.emailPlaceholder")}
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   required
                 />
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" type="button" onClick={() => setShowReset(false)}>{t('auth.cancel')}</Button>
-                <Button type="button" onClick={handleSendReset} disabled={resetLoading}>
-                  {resetLoading ? t('auth.sending') : t('auth.sendLink')}
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => setShowReset(false)}
+                >
+                  {t("auth.cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSendReset}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? t("auth.sending") : t("auth.sendLink")}
                 </Button>
               </div>
             </div>
@@ -483,4 +562,4 @@ export const AuthForm = ({ onSuccess, redirectTo, defaultMode }: AuthFormProps) 
       )}
     </div>
   );
-}; 
+};

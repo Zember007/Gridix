@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@gridix/ui";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Check, Crown, Zap } from 'lucide-react';
-import { useSubscription } from '@/entities/subscription/queries/useSubscription';
+import { Check, Crown, Zap } from "lucide-react";
+import { useSubscription } from "@/entities/subscription/queries/useSubscription";
 import { cn } from "@gridix/utils/lib";
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Spinner } from "@/shared/ui/Spinner";
 
 declare global {
@@ -32,38 +38,41 @@ interface PurchaseLink {
 
 export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
   const { subscription, loading, getPurchaseLinks } = useSubscription();
-  const [purchaseLinks, setPurchaseLinks] = useState<{basic: PurchaseLink, pro: PurchaseLink} | null>(null);
+  const [purchaseLinks, setPurchaseLinks] = useState<{
+    basic: PurchaseLink;
+    pro: PurchaseLink;
+  } | null>(null);
   const [linksLoading, setLinksLoading] = useState(true);
   const { language } = useLanguage();
 
   const t = {
     ru: {
-      title: 'Выберите тарифный план',
-      recommended: 'Рекомендуется',
-      currentPlan: 'Текущий план',
-      choosePlan: 'Выбрать план',
+      title: "Выберите тарифный план",
+      recommended: "Рекомендуется",
+      currentPlan: "Текущий план",
+      choosePlan: "Выбрать план",
     },
     en: {
-      title: 'Choose your plan',
-      recommended: 'Recommended',
-      currentPlan: 'Current plan',
-      choosePlan: 'Choose plan',
+      title: "Choose your plan",
+      recommended: "Recommended",
+      currentPlan: "Current plan",
+      choosePlan: "Choose plan",
     },
     ka: {
-      title: 'აირჩიეთ ტარიფი',
-      recommended: 'რეკომენდებულია',
-      currentPlan: 'მიმდინარე გეგმა',
-      choosePlan: 'გეგმის არჩევა',
+      title: "აირჩიეთ ტარიფი",
+      recommended: "რეკომენდებულია",
+      currentPlan: "მიმდინარე გეგმა",
+      choosePlan: "გეგმის არჩევა",
     },
     ar: {
-      title: 'اختر خطتك',
-      recommended: 'موصى به',
-      currentPlan: 'الخطة الحالية',
-      choosePlan: 'اختر الخطة',
+      title: "اختر خطتك",
+      recommended: "موصى به",
+      currentPlan: "الخطة الحالية",
+      choosePlan: "اختر الخطة",
     },
   } as const;
 
-  const langKey = (language in t ? language : 'en') as keyof typeof t;
+  const langKey = (language in t ? language : "en") as keyof typeof t;
 
   useEffect(() => {
     const loadPurchaseLinks = async () => {
@@ -71,14 +80,13 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
         const links = await getPurchaseLinks();
         setPurchaseLinks(links);
       } catch (error) {
-        console.error('Failed to load purchase links:', error);
+        console.error("Failed to load purchase links:", error);
       } finally {
         setLinksLoading(false);
       }
     };
 
     loadPurchaseLinks();
-    
   }, [getPurchaseLinks]);
 
   const handlePlanSelect = (planSlug: string) => {
@@ -88,7 +96,10 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
     }
 
     // Find the purchase link for this plan
-    const link = planSlug === 'basic' ? purchaseLinks?.basic.link : purchaseLinks?.pro.link;
+    const link =
+      planSlug === "basic"
+        ? purchaseLinks?.basic.link
+        : purchaseLinks?.pro.link;
     if (link) {
       window.LemonSqueezy?.Url?.Open(link);
     }
@@ -96,15 +107,17 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
 
   const isCurrentPlan = (planSlug: string) => {
     if (!subscription) return false;
-    
+
     // Check if it's the current active plan
-    return subscription.subscription.subscription_plans.slug === planSlug &&
-           ['active', 'trialing'].includes(subscription.subscription.status);
+    return (
+      subscription.subscription.subscription_plans.slug === planSlug &&
+      ["active", "trialing"].includes(subscription.subscription.status)
+    );
   };
 
   if (loading || linksLoading) {
     return (
-      <div className={cn('flex justify-center items-center py-12', className)}>
+      <div className={cn("flex items-center justify-center py-12", className)}>
         <Spinner size="md" />
       </div>
     );
@@ -112,86 +125,89 @@ export function PricingPlans({ className, onPlanSelect }: PricingPlansProps) {
 
   if (!purchaseLinks) {
     return (
-      <div className={cn('text-center py-12', className)}>
-        <p className="text-muted-foreground">Не удалось загрузить тарифные планы</p>
+      <div className={cn("py-12 text-center", className)}>
+        <p className="text-muted-foreground">
+          Не удалось загрузить тарифные планы
+        </p>
       </div>
     );
   }
 
   const plans = [
-    { slug: 'basic', ...purchaseLinks.basic },
-    { slug: 'pro', ...purchaseLinks.pro }
+    { slug: "basic", ...purchaseLinks.basic },
+    { slug: "pro", ...purchaseLinks.pro },
   ];
 
   return (
-    <div className={cn('space-y-8', className)}>
+    <div className={cn("space-y-8", className)}>
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold tracking-tight">{t[langKey].title}</h2>
+      <div className="space-y-4 text-center">
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t[langKey].title}
+        </h2>
       </div>
 
-
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrentUserPlan = isCurrentPlan(plan.slug);
-          const isPro = plan.slug === 'pro';
-          
+          const isPro = plan.slug === "pro";
+
           return (
-            <Card 
-              key={plan.slug} 
+            <Card
+              key={plan.slug}
               className={cn(
-                'relative',
-                isPro && 'border-primary shadow-lg scale-105',
-                isCurrentUserPlan && 'ring-2 ring-primary'
+                "relative",
+                isPro && "scale-105 border-primary shadow-lg",
+                isCurrentUserPlan && "ring-2 ring-primary",
               )}
             >
               {isPro && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground px-3 py-1">
-                    <Crown className="w-3 h-3 mr-1" />
+                  <Badge className="bg-primary px-3 py-1 text-primary-foreground">
+                    <Crown className="mr-1 h-3 w-3" />
                     {t[langKey].recommended}
                   </Badge>
                 </div>
               )}
-              
-              <CardHeader className="text-center pb-4">
-                <div className="flex items-center justify-center mb-2">
+
+              <CardHeader className="pb-4 text-center">
+                <div className="mb-2 flex items-center justify-center">
                   {isPro ? (
-                    <Zap className="w-6 h-6 text-primary mr-2" />
+                    <Zap className="mr-2 h-6 w-6 text-primary" />
                   ) : (
-                    <div className="w-6 h-6 mr-2" />
+                    <div className="mr-2 h-6 w-6" />
                   )}
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 </div>
-                
+
                 <div className="space-y-2 pt-4">
-                  <div className="text-4xl font-bold">
-                    {plan.price}
-                  </div>
+                  <div className="text-4xl font-bold">{plan.price}</div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <ul className="space-y-2">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start space-x-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                       <span className="text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
-              
+
               <CardFooter>
                 <Button
                   className="w-full"
-                  variant={isPro ? 'default' : 'outline'}
+                  variant={isPro ? "default" : "outline"}
                   size="lg"
                   disabled={isCurrentUserPlan}
                   onClick={() => handlePlanSelect(plan.slug)}
                 >
-                  {isCurrentUserPlan ? t[langKey].currentPlan : t[langKey].choosePlan}
+                  {isCurrentUserPlan
+                    ? t[langKey].currentPlan
+                    : t[langKey].choosePlan}
                 </Button>
               </CardFooter>
             </Card>

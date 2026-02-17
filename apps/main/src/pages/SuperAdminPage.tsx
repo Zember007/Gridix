@@ -1,20 +1,30 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { SimplifiedSidebar } from "@/shared/ui/sidebar-component";
-import { UsersManagement } from '@/components/superadmin/UsersManagement';
-import { SubscriptionsManagement } from '@/components/superadmin/SubscriptionsManagement';
-import { ProjectsManagement } from '@/components/superadmin/ProjectsManagement';
-import { SystemSettings } from '@/components/superadmin/SystemSettings';
-import { PartnersManagement } from '@/components/superadmin/PartnersManagement';
-import { PartnerPayoutsManagement } from '@/components/superadmin/PartnerPayoutsManagement';
-import { EmailTemplatesManagement } from '@/components/superadmin/EmailTemplatesManagement';
-import { Loader2, Users, CreditCard, FolderKanban, BarChart3, Settings, Handshake, DollarSign, Mail } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useIsMobile } from '@gridix/ui';
+import { UsersManagement } from "@/components/superadmin/UsersManagement";
+import { SubscriptionsManagement } from "@/components/superadmin/SubscriptionsManagement";
+import { ProjectsManagement } from "@/components/superadmin/ProjectsManagement";
+import { SystemSettings } from "@/components/superadmin/SystemSettings";
+import { PartnersManagement } from "@/components/superadmin/PartnersManagement";
+import { PartnerPayoutsManagement } from "@/components/superadmin/PartnerPayoutsManagement";
+import { EmailTemplatesManagement } from "@/components/superadmin/EmailTemplatesManagement";
+import {
+  Loader2,
+  Users,
+  CreditCard,
+  FolderKanban,
+  BarChart3,
+  Settings,
+  Handshake,
+  DollarSign,
+  Mail,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@gridix/ui";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Button } from "@gridix/ui";
-import { Menu } from 'lucide-react';
+import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@gridix/ui";
 
 const SuperAdminPage = () => {
@@ -22,7 +32,7 @@ const SuperAdminPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'users';
+  const initialTab = searchParams.get("tab") || "users";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -30,7 +40,7 @@ const SuperAdminPage = () => {
 
   useEffect(() => {
     if (!loading && !isSuperAdmin) {
-      navigate('/');
+      navigate("/");
     }
   }, [isSuperAdmin, loading, navigate]);
 
@@ -49,50 +59,50 @@ const SuperAdminPage = () => {
 
   const menuItems = [
     {
-      id: 'users',
-      label: 'Пользователи',
+      id: "users",
+      label: "Пользователи",
       icon: <Users size={20} />,
     },
     {
-      id: 'subscriptions',
-      label: 'Подписки',
+      id: "subscriptions",
+      label: "Подписки",
       icon: <CreditCard size={20} />,
     },
     {
-      id: 'projects',
-      label: 'Проекты',
+      id: "projects",
+      label: "Проекты",
       icon: <FolderKanban size={20} />,
     },
     {
-      id: 'stats',
-      label: 'Статистика',
+      id: "stats",
+      label: "Статистика",
       icon: <BarChart3 size={20} />,
     },
     {
-      id: 'partners',
-      label: 'Партнёры',
+      id: "partners",
+      label: "Партнёры",
       icon: <Handshake size={20} />,
     },
     {
-      id: 'partner-payouts',
-      label: 'Выплаты',
+      id: "partner-payouts",
+      label: "Выплаты",
       icon: <DollarSign size={20} />,
     },
     {
-      id: 'templates',
-      label: 'Email Templates',
+      id: "templates",
+      label: "Email Templates",
       icon: <Mail size={20} />,
     },
     {
-      id: 'settings',
-      label: 'Настройки',
+      id: "settings",
+      label: "Настройки",
       icon: <Settings size={20} />,
     },
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -104,19 +114,19 @@ const SuperAdminPage = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'users':
+      case "users":
         return <UsersManagement />;
-      case 'subscriptions':
+      case "subscriptions":
         return <SubscriptionsManagement />;
-      case 'projects':
+      case "projects":
         return <ProjectsManagement />;
-      case 'partners':
+      case "partners":
         return <PartnersManagement />;
-      case 'partner-payouts':
+      case "partner-payouts":
         return <PartnerPayoutsManagement />;
-      case 'templates':
+      case "templates":
         return <EmailTemplatesManagement />;
-      case 'settings':
+      case "settings":
         return <SystemSettings />;
       default:
         return <UsersManagement />;
@@ -136,11 +146,11 @@ const SuperAdminPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="flex min-h-screen bg-background">
       {/* Mobile Sidebar */}
       {isMobile ? (
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetContent side="left" className="p-0 w-80">
+          <SheetContent side="left" className="w-80 p-0">
             <SimplifiedSidebar {...sidebarProps} />
           </SheetContent>
         </Sheet>
@@ -149,19 +159,24 @@ const SuperAdminPage = () => {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 bg-background flex flex-col transition-all duration-300 ${isCollapsed && !isMobile ? 'md:ml-28 md:max-w-[calc(100vw-7rem)]' : 'md:ml-64 md:max-w-[calc(100vw-16rem)]'}`}>
-
+      <div
+        className={`flex flex-1 flex-col bg-background transition-all duration-300 ${isCollapsed && !isMobile ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"}`}
+      >
         {/* Mobile Toggle */}
         {isMobile && (
-          <div className="p-4 border-b flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)}>
+          <div className="flex items-center border-b p-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileOpen(true)}
+            >
               <Menu className="h-6 w-6" />
             </Button>
             <span className="ml-2 font-semibold">SuperAdmin</span>
           </div>
         )}
 
-        <main className="flex-1 overflow-auto h-screen bg-slate-50/50">
+        <main className="h-screen flex-1 overflow-auto bg-slate-50/50">
           {renderContent()}
         </main>
       </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface SubscriptionPlan {
   id: string;
@@ -75,7 +75,7 @@ export interface SubscriptionData {
   trialDaysRemaining: number;
 }
 
-export type BillingPayerType = 'individual' | 'company';
+export type BillingPayerType = "individual" | "company";
 
 export interface BillingDetails {
   type: BillingPayerType;
@@ -103,13 +103,19 @@ export interface SubscriptionOrder {
 
 export function useSubscription(projectId?: string) {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
-  const [projectSubscriptions, setProjectSubscriptions] = useState<ProjectSubscription[]>([]);
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(
+    null,
+  );
+  const [projectSubscriptions, setProjectSubscriptions] = useState<
+    ProjectSubscription[]
+  >([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null);
+  const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(
+    null,
+  );
   const [billingLoading, setBillingLoading] = useState(false);
 
   const fetchSubscription = async (specificProjectId?: string) => {
@@ -125,12 +131,15 @@ export function useSubscription(projectId?: string) {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { project_id: targetProjectId },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+      const { data, error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: { project_id: targetProjectId },
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
         },
-      });
+      );
 
       if (error) {
         throw error;
@@ -138,8 +147,10 @@ export function useSubscription(projectId?: string) {
 
       setSubscription(data);
     } catch (err) {
-      console.error('Error fetching subscription:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch subscription');
+      console.error("Error fetching subscription:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch subscription",
+      );
     } finally {
       setLoading(false);
     }
@@ -151,17 +162,18 @@ export function useSubscription(projectId?: string) {
       return;
     }
 
-    
     try {
       const session = await supabase.auth.getSession();
-      
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { action: 'get-project-subscriptions' },
-        headers: {
-          'Authorization': `Bearer ${session.data.session?.access_token}`,
-        },
-      });
 
+      const { data, error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: { action: "get-project-subscriptions" },
+          headers: {
+            Authorization: `Bearer ${session.data.session?.access_token}`,
+          },
+        },
+      );
 
       if (error) {
         throw error;
@@ -169,8 +181,12 @@ export function useSubscription(projectId?: string) {
 
       setProjectSubscriptions(data.projects || []);
     } catch (err) {
-      console.error('Error fetching project subscriptions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch project subscriptions');
+      console.error("Error fetching project subscriptions:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch project subscriptions",
+      );
     } finally {
       setLoading(false);
     }
@@ -181,46 +197,57 @@ export function useSubscription(projectId?: string) {
     try {
       const session = await supabase.auth.getSession();
       const headers: Record<string, string> = {};
-      
+
       // Add authorization header only if user is logged in
       if (session.data.session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.data.session.access_token}`;
+        headers["Authorization"] =
+          `Bearer ${session.data.session.access_token}`;
       }
 
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { action: 'get-plans' },
-        headers,
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: { action: "get-plans" },
+          headers,
+        },
+      );
 
       if (error) {
         throw error;
       }
       setPlans(data.plans || []);
     } catch (err) {
-      console.error('Error fetching plans:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch plans');
+      console.error("Error fetching plans:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch plans");
     } finally {
       setPlansLoading(false);
     }
   };
 
-  const requestInvoice = async (targetProjectId: string, planId: string, durationMonths: number) => {
+  const requestInvoice = async (
+    targetProjectId: string,
+    planId: string,
+    durationMonths: number,
+  ) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { 
-          action: 'request-invoice',
-          project_id: targetProjectId,
-          plan_id: planId,
-          duration_months: durationMonths
+      const { data, error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: {
+            action: "request-invoice",
+            project_id: targetProjectId,
+            plan_id: planId,
+            duration_months: durationMonths,
+          },
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      );
 
       if (error) {
         throw error;
@@ -228,62 +255,68 @@ export function useSubscription(projectId?: string) {
 
       return data;
     } catch (err) {
-      console.error('Error requesting invoice:', err);
+      console.error("Error requesting invoice:", err);
       throw err;
     }
   };
 
-  const requestInvoiceForMultiple = async (projectIds: string[], planId: string, durationMonths: number) => {
+  const requestInvoiceForMultiple = async (
+    projectIds: string[],
+    planId: string,
+    durationMonths: number,
+  ) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       const results = await Promise.all(
-        projectIds.map(projectId => requestInvoice(projectId, planId, durationMonths))
+        projectIds.map((projectId) =>
+          requestInvoice(projectId, planId, durationMonths),
+        ),
       );
       return results;
     } catch (err) {
-      console.error('Error requesting invoices for multiple projects:', err);
+      console.error("Error requesting invoices for multiple projects:", err);
       throw err;
     }
   };
 
   const hasFeature = (feature: string): boolean => {
     if (!subscription) return false;
-    
+
     const plan = subscription.subscription.subscription_plans;
     return plan.features.includes(feature);
   };
 
   const isActive = (): boolean => {
     if (!subscription) return false;
-    
+
     const { status, current_period_end } = subscription.subscription;
-    
+
     // Check if subscription is in active status
-    if (['active', 'trialing'].includes(status)) {
+    if (["active", "trialing"].includes(status)) {
       return true;
     }
-    
+
     // Check if subscription is cancelled but still in paid period
     if (subscription.subscription.cancel_at_period_end && current_period_end) {
       return new Date(current_period_end) > new Date();
     }
-    
+
     return false;
   };
 
   const isPro = (): boolean => {
     if (!subscription) return false;
-    
-    return subscription.subscription.subscription_plans.slug === 'pro';
+
+    return subscription.subscription.subscription_plans.slug === "pro";
   };
 
   const isBasic = (): boolean => {
     if (!subscription) return false;
-    
-    return subscription.subscription.subscription_plans.slug === 'basic';
+
+    return subscription.subscription.subscription_plans.slug === "basic";
   };
 
   const fetchBillingDetails = async () => {
@@ -296,46 +329,46 @@ export function useSubscription(projectId?: string) {
     try {
       // Load user profile (individual details)
       const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('full_name, email, phone, tax_id, legal_address')
-        .eq('id', user.id)
+        .from("user_profiles")
+        .select("full_name, email, phone, tax_id, legal_address")
+        .eq("id", user.id)
         .single();
 
       // Load company settings (company payer details)
       const { data: company } = await supabase
-        .from('company_settings')
-        .select('company_name, tax_id, address, phone, email')
-        .eq('user_id', user.id)
+        .from("company_settings")
+        .select("company_name, tax_id, address, phone, email")
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (company) {
         setBillingDetails({
-          type: 'company',
-          name: profile?.full_name || company.company_name || '',
-          email: company.email || profile?.email || '',
-          phone: company.phone || profile?.phone || '',
-          companyName: company.company_name || '',
-          taxId: company.tax_id || profile?.tax_id || '',
-          address: company.address || profile?.legal_address || '',
+          type: "company",
+          name: profile?.full_name || company.company_name || "",
+          email: company.email || profile?.email || "",
+          phone: company.phone || profile?.phone || "",
+          companyName: company.company_name || "",
+          taxId: company.tax_id || profile?.tax_id || "",
+          address: company.address || profile?.legal_address || "",
         });
       } else if (profile) {
         setBillingDetails({
-          type: 'individual',
+          type: "individual",
           name:
             profile.full_name ||
-            (profile.email ? profile.email.split('@')[0] : '') ||
-            '',
-          email: profile.email || '',
-          phone: profile.phone || '',
-          companyName: '',
-          taxId: profile.tax_id || '',
-          address: profile.legal_address || '',
+            (profile.email ? profile.email.split("@")[0] : "") ||
+            "",
+          email: profile.email || "",
+          phone: profile.phone || "",
+          companyName: "",
+          taxId: profile.tax_id || "",
+          address: profile.legal_address || "",
         });
       } else {
         setBillingDetails(null);
       }
     } catch (err) {
-      console.error('Error fetching billing details:', err);
+      console.error("Error fetching billing details:", err);
       // Do not surface as global error, keep separate
     } finally {
       setBillingLoading(false);
@@ -344,13 +377,13 @@ export function useSubscription(projectId?: string) {
 
   const saveBillingDetails = async (details: BillingDetails) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       // Always keep basic contact info in user_profiles
       const profileUpdate: Record<string, string> = {};
-      if (details.type === 'individual') {
+      if (details.type === "individual") {
         if (details.name) profileUpdate.full_name = details.name;
         if (details.taxId) profileUpdate.tax_id = details.taxId;
         if (details.address) profileUpdate.legal_address = details.address;
@@ -360,13 +393,13 @@ export function useSubscription(projectId?: string) {
 
       if (Object.keys(profileUpdate).length > 0) {
         await supabase
-          .from('user_profiles')
+          .from("user_profiles")
           .update(profileUpdate)
-          .eq('id', user.id);
+          .eq("id", user.id);
       }
 
       // For companies, also upsert company_settings
-      if (details.type === 'company') {
+      if (details.type === "company") {
         const companyPayload = {
           user_id: user.id,
           company_name: details.companyName || details.name,
@@ -377,13 +410,13 @@ export function useSubscription(projectId?: string) {
         };
 
         await supabase
-          .from('company_settings')
-          .upsert(companyPayload, { onConflict: 'user_id' });
+          .from("company_settings")
+          .upsert(companyPayload, { onConflict: "user_id" });
       }
 
       await fetchBillingDetails();
     } catch (err) {
-      console.error('Error saving billing details:', err);
+      console.error("Error saving billing details:", err);
       throw err;
     }
   };
@@ -392,17 +425,21 @@ export function useSubscription(projectId?: string) {
     .flatMap((project) =>
       (project.user_subscriptions || []).map((sub) => ({
         id: sub.id,
-        date: sub.invoice_requested_at || sub.current_period_start || sub.created_at || null,
+        date:
+          sub.invoice_requested_at ||
+          sub.current_period_start ||
+          sub.created_at ||
+          null,
         projectId: project.id,
         projectName: project.name,
         status: sub.status,
         planName: sub.subscription_plans?.name,
         durationMonths: sub.duration_months,
         amount: sub.final_price,
-        paymentMethod: sub.payment_method || 'invoice',
+        paymentMethod: sub.payment_method || "invoice",
         invoiceUrl: sub.invoice_url || null,
         projectIds: [project.id],
-      }))
+      })),
     )
     .sort((a, b) => {
       if (!a.date || !b.date) return 0;
@@ -417,10 +454,13 @@ export function useSubscription(projectId?: string) {
       headers["Authorization"] = `Bearer ${session.data.session.access_token}`;
     }
 
-    const { data, error } = await supabase.functions.invoke("subscription-management", {
-      body: { action: "get-purchase-links" },
-      headers,
-    });
+    const { data, error } = await supabase.functions.invoke(
+      "subscription-management",
+      {
+        body: { action: "get-purchase-links" },
+        headers,
+      },
+    );
 
     if (error) throw error;
     return (data as any) ?? null;

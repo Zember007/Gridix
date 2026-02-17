@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   MoreVertical,
   Filter,
@@ -7,11 +7,11 @@ import {
   Sparkles,
   ArrowUpCircle,
   ArrowDownCircle,
-} from 'lucide-react';
-import { usePartnerAccountData } from '../queries/usePartnerAccountData';
-import { PartnerTopUpModal } from './PartnerTopUpModal';
-import { WithdrawalRequestsModal } from './WithdrawalRequestsModal';
-import { useLanguage } from '@gridix/utils/react';
+} from "lucide-react";
+import { usePartnerAccountData } from "../queries/usePartnerAccountData";
+import { PartnerTopUpModal } from "./PartnerTopUpModal";
+import { WithdrawalRequestsModal } from "./WithdrawalRequestsModal";
+import { useLanguage } from "@gridix/utils/react";
 import { Input } from "@gridix/ui";
 import {
   Select as ShadcnSelect,
@@ -49,33 +49,33 @@ export const PartnerAccountSection: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 lg:gap-12 w-full lg:w-auto">
+      <div className="animate-in fade-in space-y-6 duration-500">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+            <div className="flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8 lg:w-auto lg:gap-12">
               <div>
-                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
-                <div className="h-8 w-40 bg-gray-200 rounded animate-pulse" />
+                <div className="mb-2 h-3 w-32 animate-pulse rounded bg-gray-200" />
+                <div className="h-8 w-40 animate-pulse rounded bg-gray-200" />
               </div>
-              <div className="h-px w-full sm:h-12 sm:w-px bg-gray-100 sm:bg-gray-200" />
+              <div className="h-px w-full bg-gray-100 sm:h-12 sm:w-px sm:bg-gray-200" />
               <div>
-                <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
-                <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="mb-2 h-3 w-32 animate-pulse rounded bg-gray-200" />
+                <div className="h-8 w-24 animate-pulse rounded bg-gray-200" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="h-10 w-full bg-gray-100 rounded mb-3 animate-pulse" />
-          <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 h-10 w-full animate-pulse rounded bg-gray-100" />
+          <div className="h-10 w-full animate-pulse rounded bg-gray-100" />
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-6 space-y-3">
-            <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
-            <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
-            <div className="h-4 w-5/6 bg-gray-100 rounded animate-pulse" />
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="space-y-3 p-6">
+            <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100" />
+            <div className="h-4 w-full animate-pulse rounded bg-gray-100" />
+            <div className="h-4 w-5/6 animate-pulse rounded bg-gray-100" />
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export const PartnerAccountSection: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="animate-in fade-in space-y-6 duration-500">
       <PartnerTopUpModal
         isOpen={isTopUpOpen}
         onClose={() => setIsTopUpOpen(false)}
@@ -94,43 +94,45 @@ export const PartnerAccountSection: React.FC = () => {
       />
 
       {error && (
-        <div className="bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg px-4 py-3">
-          {t('partners.error')}: {error}
+        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {t("partners.error")}: {error}
         </div>
       )}
 
       {/* Stats */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 lg:gap-12 w-full lg:w-auto">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+          <div className="flex w-full flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8 lg:w-auto lg:gap-12">
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                {t('partners.accountBalance')}
+              <div className="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                {t("partners.accountBalance")}
               </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-                {/* Реальный доступный баланс партнёра из Supabase */}
-                ${accountBalance.toFixed(2)}
+              <div className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                {/* Реальный доступный баланс партнёра из Supabase */}$
+                {accountBalance.toFixed(2)}
               </div>
             </div>
-            <div className="h-px w-full sm:h-12 sm:w-px bg-gray-100 sm:bg-gray-200" />
+            <div className="h-px w-full bg-gray-100 sm:h-12 sm:w-px sm:bg-gray-200" />
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                {t('partners.accountDiscount')}
+              <div className="mb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                {t("partners.accountDiscount")}
               </div>
-              <div className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
+              <div className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 {/* Комиссия партнёра по тем же правилам, что и calculate_and_award_partner_commission */}
-                {commissionPercentage !== null ? `${commissionPercentage}%` : '—'}
+                {commissionPercentage !== null
+                  ? `${commissionPercentage}%`
+                  : "—"}
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto mt-2 lg:mt-0">
+          <div className="mt-2 flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-0 lg:w-auto">
             <button
               onClick={() => setIsWithdrawalOpen(true)}
-              className="flex-1 lg:flex-none py-3 px-6 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 uppercase tracking-wider transition-colors border border-gray-200 sm:border-transparent hover:border-gray-200 text-center"
+              className="flex-1 rounded-lg border border-gray-200 px-6 py-3 text-center text-sm font-bold tracking-wider text-gray-500 uppercase transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-800 sm:border-transparent lg:flex-none"
             >
-              {t('partners.withdrawMoney')}
+              {t("partners.withdrawMoney")}
             </button>
-        {/*     <button
+            {/*     <button
               onClick={() => setIsTopUpOpen(true)}
               className="flex-1 lg:flex-none py-3 px-8 rounded-lg bg-[#4CAF50] hover:bg-[#43A047] text-white text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all uppercase tracking-wider flex justify-center items-center gap-2 text-center"
             >
@@ -142,64 +144,64 @@ export const PartnerAccountSection: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:flex-row">
+        <div className="flex w-full flex-col items-center gap-3 md:w-auto md:flex-row">
           <div className="relative w-full md:w-56">
             <Filter
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
             />
             <ShadcnSelect
               value={filterType}
               onValueChange={(value) => setFilterType(value)}
             >
-              <SelectTrigger className="w-full bg-gray-50 border-gray-200 pl-9">
+              <SelectTrigger className="w-full border-gray-200 bg-gray-50 pl-9">
                 <SelectValue
-                  placeholder={t('partners.transactionsFilterAll')}
+                  placeholder={t("partners.transactionsFilterAll")}
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {t('partners.transactionsFilterAll')}
+                  {t("partners.transactionsFilterAll")}
                 </SelectItem>
                 <SelectItem value="income">
-                  {t('partners.transactionsFilterIncome')}
+                  {t("partners.transactionsFilterIncome")}
                 </SelectItem>
                 <SelectItem value="expense">
-                  {t('partners.transactionsFilterExpense')}
+                  {t("partners.transactionsFilterExpense")}
                 </SelectItem>
                 <SelectItem value="commission">
-                  {t('partners.transactionsFilterCommission')}
+                  {t("partners.transactionsFilterCommission")}
                 </SelectItem>
               </SelectContent>
             </ShadcnSelect>
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:flex-none group">
+          <div className="flex w-full items-center gap-2 md:w-auto">
+            <div className="group relative flex-1 md:flex-none">
               <Calendar
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-gray-600"
               />
               <Input
                 type="date"
                 value={startDate}
                 max={endDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
+                className="w-full cursor-pointer rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 md:w-auto"
               />
             </div>
-            <span className="text-gray-400 font-medium">-</span>
-            <div className="relative flex-1 md:flex-none group">
+            <span className="font-medium text-gray-400">-</span>
+            <div className="group relative flex-1 md:flex-none">
               <Calendar
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors pointer-events-none"
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-gray-600"
               />
               <Input
                 type="date"
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full md:w-auto bg-gray-50 border-gray-200 text-gray-700 text-sm rounded-lg pl-10 cursor-pointer"
+                className="w-full cursor-pointer rounded-lg border-gray-200 bg-gray-50 pl-10 text-sm text-gray-700 md:w-auto"
               />
             </div>
           </div>
@@ -207,93 +209,90 @@ export const PartnerAccountSection: React.FC = () => {
         <button
           onClick={resetFilters}
           disabled={!hasFilters}
-          className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
+          className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all md:w-auto ${
             hasFilters
-              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black cursor-pointer'
-              : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+              ? "cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-black"
+              : "cursor-not-allowed bg-gray-50 text-gray-300"
           }`}
         >
           <X size={16} />
-          {t('partners.transactionsReset')}
+          {t("partners.transactionsReset")}
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto custom-scrollbar pb-2 sm:pb-0">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="custom-scrollbar overflow-x-auto pb-2 sm:pb-0">
           <div className="min-w-[800px]">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">
-                    {t('partners.transactionsDate')}
+                  <th className="w-40 px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                    {t("partners.transactionsDate")}
                   </th>
-                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider w-32 text-right">
-                    {t('partners.transactionsAmount')}
+                  <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                    {t("partners.transactionsAmount")}
                   </th>
-                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider w-32 text-right">
-                    {t('partners.transactionsBalance')}
+                  <th className="w-32 px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                    {t("partners.transactionsBalance")}
                   </th>
-                  <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {t('partners.transactionsComment')}
+                  <th className="px-6 py-4 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                    {t("partners.transactionsComment")}
                   </th>
-                  <th className="py-4 px-4 w-12" />
+                  <th className="w-12 px-4 py-4" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredTransactions.map((tx, idx) => {
-                  let type: 'topup' | 'expense' | 'commission' = 'commission';
-                  if (tx.sum < 0) type = 'expense';
+                  let type: "topup" | "expense" | "commission" = "commission";
+                  if (tx.sum < 0) type = "expense";
                   else if (
-                    tx.comment.toLowerCase().includes('комиссия') ||
-                    tx.comment.toLowerCase().includes('бонус')
+                    tx.comment.toLowerCase().includes("комиссия") ||
+                    tx.comment.toLowerCase().includes("бонус")
                   )
-                    type = 'commission';
+                    type = "commission";
 
-                  const rowStyles =
-                    {
-                      expense:
-                        'border-l-4 border-l-red-300 bg-red-50/20 hover:bg-red-50/50',
-                      commission:
-                        'border-l-4 border-l-emerald-400 bg-emerald-50/20 hover:bg-emerald-50/50',
-                      topup:
-                        'border-l-4 border-l-blue-400 bg-blue-50/20 hover:bg-blue-50/50',
-                    }[type];
-                  const sumStyles =
-                    {
-                      expense: 'text-red-600',
-                      commission: 'text-emerald-600',
-                      topup: 'text-blue-600',
-                    }[type];
-                  const iconConfig =
-                    {
-                      expense: {
-                        Icon: ArrowUpCircle,
-                        bg: 'bg-red-100',
-                        text: 'text-red-600',
-                      },
-                      commission: {
-                        Icon: Sparkles,
-                        bg: 'bg-emerald-100',
-                        text: 'text-emerald-600',
-                      },
-                      topup: {
-                        Icon: ArrowDownCircle,
-                        bg: 'bg-blue-100',
-                        text: 'text-blue-600',
-                      },
-                    }[type];
+                  const rowStyles = {
+                    expense:
+                      "border-l-4 border-l-red-300 bg-red-50/20 hover:bg-red-50/50",
+                    commission:
+                      "border-l-4 border-l-emerald-400 bg-emerald-50/20 hover:bg-emerald-50/50",
+                    topup:
+                      "border-l-4 border-l-blue-400 bg-blue-50/20 hover:bg-blue-50/50",
+                  }[type];
+                  const sumStyles = {
+                    expense: "text-red-600",
+                    commission: "text-emerald-600",
+                    topup: "text-blue-600",
+                  }[type];
+                  const iconConfig = {
+                    expense: {
+                      Icon: ArrowUpCircle,
+                      bg: "bg-red-100",
+                      text: "text-red-600",
+                    },
+                    commission: {
+                      Icon: Sparkles,
+                      bg: "bg-emerald-100",
+                      text: "text-emerald-600",
+                    },
+                    topup: {
+                      Icon: ArrowDownCircle,
+                      bg: "bg-blue-100",
+                      text: "text-blue-600",
+                    },
+                  }[type];
                   const IconComponent = iconConfig.Icon;
 
                   return (
                     <tr
                       key={idx}
-                      className={`${rowStyles} transition-colors group relative`}
+                      className={`${rowStyles} group relative transition-colors`}
                     >
-                      <td className="py-4 px-6 text-sm text-gray-900 whitespace-nowrap">
+                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`p-2 rounded-full ${iconConfig.bg} ${iconConfig.text} shrink-0`}
+                            className={`rounded-full p-2 ${iconConfig.bg} ${iconConfig.text} shrink-0`}
                           >
                             <IconComponent size={14} />
                           </div>
@@ -301,28 +300,26 @@ export const PartnerAccountSection: React.FC = () => {
                         </div>
                       </td>
                       <td
-                        className={`py-4 px-6 text-sm font-bold text-right whitespace-nowrap ${sumStyles}`}
+                        className={`px-6 py-4 text-right text-sm font-bold whitespace-nowrap ${sumStyles}`}
                       >
-                        {tx.sum > 0
-                          ? `+ $${tx.sum}`
-                          : `- $${Math.abs(tx.sum)}`}
+                        {tx.sum > 0 ? `+ $${tx.sum}` : `- $${Math.abs(tx.sum)}`}
                       </td>
-                      <td className="py-4 px-6 text-sm text-gray-500 text-right whitespace-nowrap font-mono">
+                      <td className="px-6 py-4 text-right font-mono text-sm whitespace-nowrap text-gray-500">
                         $ {tx.balance.toFixed(2)}
                       </td>
                       <td
-                        className="py-4 px-6 text-sm text-gray-700 truncate max-w-xs sm:max-w-md md:max-w-xl"
+                        className="max-w-xs truncate px-6 py-4 text-sm text-gray-700 sm:max-w-md md:max-w-xl"
                         title={tx.comment}
                       >
                         {tx.comment}
                       </td>
-                      <td className="py-4 px-4 text-center relative">
+                      <td className="relative px-4 py-4 text-center">
                         <button
                           onClick={(e) => toggleMenu(idx, e)}
-                          className={`p-1 rounded-full transition-colors ${
+                          className={`rounded-full p-1 transition-colors ${
                             openMenuIndex === idx
-                              ? 'bg-gray-100 text-gray-900'
-                              : 'text-gray-300 hover:text-gray-600'
+                              ? "bg-gray-100 text-gray-900"
+                              : "text-gray-300 hover:text-gray-600"
                           }`}
                         >
                           <MoreVertical size={18} />
@@ -330,14 +327,14 @@ export const PartnerAccountSection: React.FC = () => {
                         {openMenuIndex === idx && (
                           <div
                             ref={menuRef}
-                            className="absolute right-8 top-1/2 -translate-y-1/2 z-20 w-48 bg-white rounded-lg shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-100 origin-right"
+                            className="animate-in fade-in zoom-in-95 absolute top-1/2 right-8 z-20 w-48 origin-right -translate-y-1/2 rounded-lg border border-gray-100 bg-white shadow-xl duration-100"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               onClick={handleDownloadInvoice}
-                              className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors first:rounded-t-lg last:rounded-b-lg flex items-center gap-2"
+                              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50 hover:text-black"
                             >
-                              {t('partners.transactionsDownloadInvoice')}
+                              {t("partners.transactionsDownloadInvoice")}
                             </button>
                           </div>
                         )}
@@ -350,24 +347,20 @@ export const PartnerAccountSection: React.FC = () => {
           </div>
         </div>
         {filteredTransactions.length === 0 && (
-          <div className="p-12 text-center text-gray-500 flex flex-col items-center">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+          <div className="flex flex-col items-center p-12 text-center text-gray-500">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
               <Filter size={20} className="text-gray-400" />
             </div>
-            <span>{t('partners.transactionsNoData')}</span>
+            <span>{t("partners.transactionsNoData")}</span>
             <button
               onClick={resetFilters}
-              className="text-sm text-blue-600 hover:underline mt-2"
+              className="mt-2 text-sm text-blue-600 hover:underline"
             >
-              {t('partners.transactionsResetFilters')}
+              {t("partners.transactionsResetFilters")}
             </button>
           </div>
         )}
       </div>
-
     </div>
   );
 };
-
-
-

@@ -1,6 +1,10 @@
-import React from 'react';
+import React from "react";
 import { ToggleGroup, ToggleGroupItem } from "@gridix/ui";
-import { CurrencyType, getCurrencySymbol, isValidCurrency } from "@gridix/utils/lib";
+import {
+  CurrencyType,
+  getCurrencySymbol,
+  isValidCurrency,
+} from "@gridix/utils/lib";
 
 export interface CurrencyToggleProps {
   selectedCurrency: string;
@@ -14,20 +18,20 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
   selectedCurrency,
   onChange,
   projectCurrency,
-  themeColor = '#000000',
-  className = 'gap-2'
+  themeColor = "#000000",
+  className = "gap-2",
 }) => {
   type Currency = CurrencyType;
-  const preferredOrder: Array<Exclude<Currency, 'RUB'>> = ['USD', 'GEL', 'EUR'];
+  const preferredOrder: Array<Exclude<Currency, "RUB">> = ["USD", "GEL", "EUR"];
   const baseProjectCurrency: Currency = isValidCurrency(String(projectCurrency))
     ? (projectCurrency as Currency)
-    : 'RUB';
+    : "RUB";
 
   const list: Currency[] = [
     ...preferredOrder,
-    ...(preferredOrder.includes(baseProjectCurrency as Exclude<Currency, 'RUB'>)
+    ...(preferredOrder.includes(baseProjectCurrency as Exclude<Currency, "RUB">)
       ? []
-      : [baseProjectCurrency])
+      : [baseProjectCurrency]),
   ];
 
   const currenciesToShow = list.filter((c, i) => list.indexOf(c) === i);
@@ -45,11 +49,13 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
           value={c}
           size="sm"
           aria-label={c}
-          className="rounded-full h-9 w-9 p-0 text-base bg-gray-100 text-gray-600 data-[state=on]:text-white"
-          style={{
-            '--tw-bg-opacity': selectedCurrency === c ? '1' : undefined,
-            backgroundColor: selectedCurrency === c ? themeColor : undefined
-          } as React.CSSProperties}
+          className="h-9 w-9 rounded-full bg-gray-100 p-0 text-base text-gray-600 data-[state=on]:text-white"
+          style={
+            {
+              "--tw-bg-opacity": selectedCurrency === c ? "1" : undefined,
+              backgroundColor: selectedCurrency === c ? themeColor : undefined,
+            } as React.CSSProperties
+          }
         >
           {getCurrencySymbol(c)}
         </ToggleGroupItem>
@@ -59,5 +65,3 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
 };
 
 export default CurrencyToggle;
-
-

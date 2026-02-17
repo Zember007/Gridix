@@ -1,1 +1,1 @@
-export { useEmbedLanguage, useLanguage } from "@gridix/utils/react"
+export { useEmbedLanguage, useLanguage } from "@gridix/utils/react";

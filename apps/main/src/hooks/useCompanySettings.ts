@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface CompanySettings {
   id?: string;
@@ -32,41 +32,49 @@ export function useCompanySettings() {
 
     try {
       const { data, error } = await supabase
-        .from('company_settings')
-        .select('*')
-        .eq('user_id', user.id)
+        .from("company_settings")
+        .select("*")
+        .eq("user_id", user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows returned
         throw error;
       }
 
       setSettings(data);
     } catch (err) {
-      console.error('Error fetching company settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch company settings');
+      console.error("Error fetching company settings:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch company settings",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const saveSettings = async (settingsData: Omit<CompanySettings, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const saveSettings = async (
+    settingsData: Omit<
+      CompanySettings,
+      "id" | "user_id" | "created_at" | "updated_at"
+    >,
+  ) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       setError(null);
-      
+
       const settingsToSave = {
         ...settingsData,
         user_id: user.id,
       };
 
       const { data, error } = await supabase
-        .from('company_settings')
+        .from("company_settings")
         .upsert(settingsToSave, {
-          onConflict: 'user_id'
+          onConflict: "user_id",
         })
         .select()
         .single();
@@ -78,24 +86,30 @@ export function useCompanySettings() {
       setSettings(data);
       return data;
     } catch (err) {
-      console.error('Error saving company settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save company settings');
+      console.error("Error saving company settings:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to save company settings",
+      );
       throw err;
     }
   };
 
-  const updateSettings = async (updates: Partial<Omit<CompanySettings, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+  const updateSettings = async (
+    updates: Partial<
+      Omit<CompanySettings, "id" | "user_id" | "created_at" | "updated_at">
+    >,
+  ) => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       setError(null);
-      
+
       const { data, error } = await supabase
-        .from('company_settings')
+        .from("company_settings")
         .update(updates)
-        .eq('user_id', user.id)
+        .eq("user_id", user.id)
         .select()
         .single();
 
@@ -106,24 +120,28 @@ export function useCompanySettings() {
       setSettings(data);
       return data;
     } catch (err) {
-      console.error('Error updating company settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update company settings');
+      console.error("Error updating company settings:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update company settings",
+      );
       throw err;
     }
   };
 
   const deleteSettings = async () => {
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     try {
       setError(null);
-      
+
       const { error } = await supabase
-        .from('company_settings')
+        .from("company_settings")
         .delete()
-        .eq('user_id', user.id);
+        .eq("user_id", user.id);
 
       if (error) {
         throw error;
@@ -131,15 +149,19 @@ export function useCompanySettings() {
 
       setSettings(null);
     } catch (err) {
-      console.error('Error deleting company settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete company settings');
+      console.error("Error deleting company settings:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete company settings",
+      );
       throw err;
     }
   };
 
   const isSettingsComplete = (): boolean => {
     if (!settings) return false;
-    
+
     return !!(
       settings.company_name &&
       settings.tax_id &&

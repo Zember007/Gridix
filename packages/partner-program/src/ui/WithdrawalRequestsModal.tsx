@@ -1,6 +1,6 @@
-import React from 'react';
-import { X } from 'lucide-react';
-import { PayoutRequests } from './PayoutRequests';
+import React from "react";
+import { X } from "lucide-react";
+import { PayoutRequests } from "./PayoutRequests";
 
 interface Props {
   isOpen: boolean;
@@ -14,12 +14,12 @@ export const WithdrawalRequestsModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl overflow-hidden h-[80vh] flex flex-col">
-        <div className="flex items-center justify-end p-4 border-b border-gray-100">
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+      <div className="flex h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+        <div className="flex items-center justify-end border-b border-gray-100 p-4">
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1.5 transition-colors"
+            className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
             aria-label="Close"
           >
             <X size={20} />
@@ -32,6 +32,3 @@ export const WithdrawalRequestsModal: React.FC<Props> = ({
     </div>
   );
 };
-
-
-

@@ -1,20 +1,25 @@
-import { Button } from '@gridix/ui';
-import type { Apartment } from '@/entities/apartment/model/types';
-import type { Project } from '@/entities/project/queries/useProjects';
-import { generateApartmentPdf } from '@/features/apartment/lib/generateApartmentPdf';
-import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { Button } from "@gridix/ui";
+import type { Apartment } from "@/entities/apartment/model/types";
+import type { Project } from "@/entities/project/queries/useProjects";
+import { generateApartmentPdf } from "@/features/apartment/lib/generateApartmentPdf";
+import { useAsyncAction } from "@/shared/hooks/useAsyncAction";
 
 interface ApartmentPdfButtonProps {
   apartment: Apartment;
-  project: Pick<Project, 'id' | 'slug' | 'pdf_presentation_url'>;
+  project: Pick<Project, "id" | "slug" | "pdf_presentation_url">;
   language: string;
   label?: string;
 }
 
-export function ApartmentPdfButton({ apartment, project, language, label = 'PDF' }: ApartmentPdfButtonProps) {
+export function ApartmentPdfButton({
+  apartment,
+  project,
+  language,
+  label = "PDF",
+}: ApartmentPdfButtonProps) {
   const { run, isRunning } = useAsyncAction(generateApartmentPdf, {
     onError: (error) => {
-      console.error('PDF generation failed', error);
+      console.error("PDF generation failed", error);
     },
   });
 
@@ -24,7 +29,7 @@ export function ApartmentPdfButton({ apartment, project, language, label = 'PDF'
 
   return (
     <Button type="button" onClick={handleClick} disabled={isRunning}>
-      {isRunning ? 'PDF...' : label}
+      {isRunning ? "PDF..." : label}
     </Button>
   );
 }

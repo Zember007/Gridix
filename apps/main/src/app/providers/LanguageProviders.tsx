@@ -6,9 +6,5 @@ interface LanguageProvidersProps {
 }
 
 export function LanguageProviders({ children }: LanguageProvidersProps) {
-  return (
-    <LanguageWrapper>
-      {children}
-    </LanguageWrapper>
-  );
+  return <LanguageWrapper>{children}</LanguageWrapper>;
 }

@@ -39,7 +39,7 @@ export const LoaderView = ({
     <div
       className={cn(
         loading ? "translate-y-0" : "-translate-y-full !bg-white/80",
-        "transition-all ease-out duration-500 fixed z-50 inset-0 bg-white backdrop-blur-sm flex flex-col items-center justify-center gap-4",
+        "fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white backdrop-blur-sm transition-all duration-500 ease-out",
         className,
       )}
     >
@@ -54,4 +54,3 @@ export const FullPageLoaderView = (props: Omit<LoaderViewProps, "loading">) => {
 };
 
 export default LoaderView;
-

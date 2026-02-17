@@ -40,9 +40,9 @@
 ## Настройка в Usertour UI
 
 В Usertour:
+
 - Создайте два контента типа **Checklist**:
   - ID контента чеклиста аккаунта → установите `VITE_USERTOUR_ADMIN_CHECKLIST_CONTENT_ID`
   - ID контента чеклиста проекта → установите `VITE_USERTOUR_PROJECT_CHECKLIST_CONTENT_ID`
 - Для каждого пункта: в **Mark completed → If** выберите **Attribute** и проверьте, что атрибут с именем события (например `gridix_project_created`) равен `true`.
 - При клике на пункт: настройте "**Запустить flow**" (существующие туры) или "**Открыть URL**" (видео).
-

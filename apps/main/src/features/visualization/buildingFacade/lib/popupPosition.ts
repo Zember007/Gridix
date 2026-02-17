@@ -1,7 +1,12 @@
 import type { BuildingFloor } from "@/features/visualization/buildingFacade/model/types";
 
 export type PolygonPointPct = { x: number; y: number };
-export type PolygonBoundsPct = { minX: number; maxX: number; minY: number; maxY: number };
+export type PolygonBoundsPct = {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+};
 export type PopupSize = { width: number; height: number };
 export type PopupPosition = { x: number; y: number };
 export type ImageRectInContainer = {
@@ -11,7 +16,9 @@ export type ImageRectInContainer = {
 
 type Rect = { x: number; y: number; width: number; height: number };
 
-export function getPolygonBoundsPct(polygon: PolygonPointPct[]): PolygonBoundsPct {
+export function getPolygonBoundsPct(
+  polygon: PolygonPointPct[],
+): PolygonBoundsPct {
   let minX = 100,
     maxX = 0,
     minY = 100,
@@ -35,9 +42,15 @@ const rectOverlapArea = (a: Rect, b: Rect) => {
   return w > 0 && h > 0 ? w * h : 0;
 };
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
 
-const clampWithin = (pos: number, popupSize: number, containerSize: number, pad: number) => {
+const clampWithin = (
+  pos: number,
+  popupSize: number,
+  containerSize: number,
+  pad: number,
+) => {
   const maxPos = Math.max(pad, containerSize - popupSize - pad);
   return clamp(pos, pad, maxPos);
 };
@@ -51,7 +64,13 @@ export function computeMobileDockPosition(args: {
 }): PopupPosition | null {
   const { containerEl, isExpanded, imageRect, visibleFloors, size } = args;
   if (!containerEl) return null;
-  if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return null;
+  if (
+    !isExpanded ||
+    !imageRect ||
+    imageRect.size.width === 0 ||
+    imageRect.size.height === 0
+  )
+    return null;
 
   const containerRect = containerEl.getBoundingClientRect();
   const containerWidth = containerRect.width;
@@ -80,8 +99,18 @@ export function computeMobileDockPosition(args: {
     });
 
   if (polygonRects.length === 0) {
-    const x = clampWithin(containerWidth - popupW - padding, popupW, containerWidth, padding);
-    const y = clampWithin(containerHeight / 2 - popupH / 2, popupH, containerHeight, padding);
+    const x = clampWithin(
+      containerWidth - popupW - padding,
+      popupW,
+      containerWidth,
+      padding,
+    );
+    const y = clampWithin(
+      containerHeight / 2 - popupH / 2,
+      popupH,
+      containerHeight,
+      padding,
+    );
     return { x, y };
   }
 
@@ -121,7 +150,8 @@ export function computeMobileDockPosition(args: {
     }
 
     const dist =
-      Math.abs(rect.x + popupW / 2 - polyCenterX) + Math.abs(rect.y + popupH / 2 - polyCenterY);
+      Math.abs(rect.x + popupW / 2 - polyCenterX) +
+      Math.abs(rect.y + popupH / 2 - polyCenterY);
     return { rect, overlapCount, overlapArea, dist };
   };
 
@@ -134,7 +164,8 @@ export function computeMobileDockPosition(args: {
     }
     const better =
       s.overlapCount < best.overlapCount ||
-      (s.overlapCount === best.overlapCount && s.overlapArea < best.overlapArea) ||
+      (s.overlapCount === best.overlapCount &&
+        s.overlapArea < best.overlapArea) ||
       (s.overlapCount === best.overlapCount &&
         s.overlapArea === best.overlapArea &&
         s.dist < best.dist);
@@ -153,7 +184,13 @@ export function computePopupPositionForPolygon(args: {
 }): PopupPosition | null {
   const { containerEl, isExpanded, imageRect, polygonBoundsPct, size } = args;
   if (!containerEl) return null;
-  if (!isExpanded || !imageRect || imageRect.size.width === 0 || imageRect.size.height === 0) return null;
+  if (
+    !isExpanded ||
+    !imageRect ||
+    imageRect.size.width === 0 ||
+    imageRect.size.height === 0
+  )
+    return null;
 
   const padding = 8;
   const offset = 12;
@@ -203,21 +240,3 @@ export function computePopupPositionForPolygon(args: {
 
   return { x, y };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

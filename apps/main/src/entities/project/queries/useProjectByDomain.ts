@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@gridix/utils/api";
 import type { Tables } from "@gridix/types/database";
 
-type Project = Tables<'projects'>;
+type Project = Tables<"projects">;
 
 export interface ProjectByDomainResult {
   project: Project | null;
@@ -22,11 +22,13 @@ export function useProjectByDomain(hostname?: string): ProjectByDomainResult {
       try {
         setLoading(true);
         setError(null);
-        
+
         const host = (hostname || window.location.hostname).toLowerCase();
 
         // List of main application hostnames (can be configured via env)
-        const mainHosts = (import.meta.env.VITE_MAIN_HOSTNAMES || "localhost,127.0.0.1")
+        const mainHosts = (
+          import.meta.env.VITE_MAIN_HOSTNAMES || "localhost,127.0.0.1"
+        )
           .split(",")
           .map((x: string) => x.trim().toLowerCase())
           .filter(Boolean);
@@ -41,7 +43,8 @@ export function useProjectByDomain(hostname?: string): ProjectByDomainResult {
         // Try to find a project by domain - include subscription fields
         const { data, error: domainError } = await supabase
           .from("project_domains")
-          .select(`
+          .select(
+            `
             project_id,
             domain,
             is_primary,
@@ -52,13 +55,14 @@ export function useProjectByDomain(hostname?: string): ProjectByDomainResult {
               subscription_expires_at,
               is_public_visible
             )
-          `)
+          `,
+          )
           .eq("domain", host)
           .eq("status", "active")
           .single();
 
         if (domainError) {
-          if (domainError.code === 'PGRST116') {
+          if (domainError.code === "PGRST116") {
             // No matching domain found - this is normal for non-custom domains
             setProject(null);
             setIsDomainProject(false);
