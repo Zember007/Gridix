@@ -23,8 +23,6 @@ import {
 } from "./dropdown-menu";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { SidebarButton } from "./sidebar-button";
-import { Button } from "./button";
-import { MessageCircleQuestionMark } from "lucide-react";
 
 const normalizePreferredLanguage = (value: unknown): Language | null => {
   const raw = String(value ?? "")
@@ -49,6 +47,7 @@ const ProfileFooterMenu = ({
   setLanguage,
   docsUrl,
   t,
+  userId,
 }: {
   userEmail: string;
   isCollapsed: boolean;
@@ -57,23 +56,22 @@ const ProfileFooterMenu = ({
   setLanguage: (l: Language) => void;
   docsUrl?: string;
   t: (k: string) => string;
+  userId?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const username = userEmail.split("@")[0] ?? userEmail;
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    if (!userId) {
+      setLanguage(nextLanguage);
+      return;
+    }
 
-      if (!userError && user?.id) {
-        await supabase
-          .from("user_profiles")
-          .update({ preferred_locale: nextLanguage })
-          .eq("id", user.id);
-      }
+    try {
+      await supabase
+        .from("user_profiles")
+        .update({ preferred_locale: nextLanguage })
+        .eq("id", userId);
     } catch (e) {
       console.error("Failed to persist preferred locale", e);
     } finally {
@@ -260,6 +258,8 @@ export function SimplifiedSidebar({
   hideFooter = false,
   docsUrl,
   syncQueryParam = true,
+  userId,
+  preferredLocale,
 }: {
   navItems: SimplifiedSidebarNavItem[];
   activeSection: string;
@@ -276,6 +276,8 @@ export function SimplifiedSidebar({
   hideFooter?: boolean;
   docsUrl?: string;
   syncQueryParam?: boolean;
+  userId?: string;
+  preferredLocale?: string;
 }) {
   const { t, language, setLanguage } = useLanguage();
   const { availableWorkspaces } = useWorkspace();
@@ -289,43 +291,12 @@ export function SimplifiedSidebar({
     languageRef.current = language;
   }, [language]);
 
-  // Initialize language from user profile preferred_locale
   useEffect(() => {
-    let cancelled = false;
-
-    const loadPreferredLocale = async () => {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (cancelled || userError || !user?.id) return;
-
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select("preferred_locale")
-          .eq("id", user.id)
-          .single();
-
-        if (cancelled || error) return;
-
-        const preferred = normalizePreferredLanguage(
-          (data as { preferred_locale?: unknown } | null)?.preferred_locale,
-        );
-        if (preferred && preferred !== languageRef.current) {
-          setLanguage(preferred);
-        }
-      } catch (e) {
-        console.error("Failed to load preferred locale", e);
-      }
-    };
-
-    void loadPreferredLocale();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setLanguage]);
+    const preferred = normalizePreferredLanguage(preferredLocale);
+    if (preferred && preferred !== languageRef.current) {
+      setLanguage(preferred);
+    }
+  }, [preferredLocale, setLanguage]);
 
   // Auto-expand parent if child is active
   useEffect(() => {
@@ -509,38 +480,12 @@ export function SimplifiedSidebar({
             setLanguage={setLanguage}
             docsUrl={resolvedDocsUrl}
             t={t}
+            {...(userId ? { userId } : {})}
           />
         </div>
       ) : null}
     </>
   );
-
-  const SupportButton = () => {
-    return (
-      <Button
-        size={"icon"}
-        className="support_usertour fixed right-2 bottom-2 z-1 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
-        style={{
-          backgroundColor: ADMIN_THEME.primary,
-          color: ADMIN_THEME.textOnPrimary,
-          borderColor: ADMIN_THEME.primary,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-          e.currentTarget.style.transform = "scale(1.05)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-        onClick={() => {
-          window.open("https://t.me/gridix_bot", "_blank");
-        }}
-      >
-        <MessageCircleQuestionMark />
-      </Button>
-    );
-  };
 
   if (isMobile) {
     return (
@@ -551,8 +496,6 @@ export function SimplifiedSidebar({
         >
           {sidebarContent}
         </aside>
-        {/* Support Button */}
-        <SupportButton />
       </>
     );
   }
@@ -570,8 +513,6 @@ export function SimplifiedSidebar({
       >
         {sidebarContent}
       </aside>
-      {/* Support Button */}
-      <SupportButton />
     </>
   );
 }

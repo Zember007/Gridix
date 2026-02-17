@@ -19,6 +19,7 @@ export interface UserProfile {
   avatar_url: string | null;
   company_name: string | null;
   phone: string | null;
+  preferred_locale?: string;
   onboarding?: {
     admin_main_done?: boolean;
     project_creation_done?: boolean;
@@ -66,7 +67,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const loadingProfileRef = useRef<Set<string>>(new Set());
   const currentUserIdRef = useRef<string | null>(null);
+  const loadedProfileUserIdRef = useRef<string | null>(null);
+  const userProfileRef = useRef<UserProfile | null>(null);
+  const didInitRef = useRef(false);
   const didPreloadUsertourRef = useRef(false);
+
+  const applyUserProfile = useCallback((profile: UserProfile | null) => {
+    userProfileRef.current = profile;
+    loadedProfileUserIdRef.current = profile?.id ?? null;
+    setUserProfile(profile);
+  }, []);
 
   const createFallbackProfile = (
     userId: string,
@@ -95,6 +105,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Проверяем, что userId все еще актуален
       if (currentUserIdRef.current !== userId) {
         // Пользователь изменился, не загружаем профиль
+        return;
+      }
+
+      if (
+        loadedProfileUserIdRef.current === userId &&
+        userProfileRef.current?.id === userId
+      ) {
+        setLoading(false);
         return;
       }
 
@@ -184,34 +202,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
               if (createError) {
                 console.error("Error creating profile:", createError);
-                setUserProfile(createFallbackProfile(userId, currentUser));
+                applyUserProfile(createFallbackProfile(userId, currentUser));
               } else {
-                setUserProfile(newProfile);
+                applyUserProfile(newProfile);
               }
             } catch (createErr) {
               if (signal.aborted || currentUserIdRef.current !== userId) {
                 return;
               }
               console.error("Error creating profile:", createErr);
-              setUserProfile(createFallbackProfile(userId, currentUser));
+              applyUserProfile(createFallbackProfile(userId, currentUser));
             }
           } else {
             console.error("Error loading profile:", error);
-            setUserProfile(createFallbackProfile(userId, currentUser));
+            applyUserProfile(createFallbackProfile(userId, currentUser));
           }
         } else if (data) {
           // Успешно загружен профиль
-          setUserProfile(data);
+          applyUserProfile(data);
         } else {
           // Данные не получены, используем fallback
-          setUserProfile(createFallbackProfile(userId, currentUser));
+          applyUserProfile(createFallbackProfile(userId, currentUser));
         }
       } catch (error) {
         if (signal.aborted || currentUserIdRef.current !== userId) {
           return;
         }
         console.error("Error loading user profile:", error);
-        setUserProfile(createFallbackProfile(userId, currentUser));
+        applyUserProfile(createFallbackProfile(userId, currentUser));
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
         loadingProfileRef.current.delete(userId);
@@ -222,7 +240,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       }
     },
-    [],
+    [applyUserProfile],
   );
 
   useEffect(() => {
@@ -261,6 +279,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (abortController.signal.aborted) return;
         console.error("Error initializing auth:", error);
         setLoading(false);
+      } finally {
+        didInitRef.current = true;
       }
     };
 
@@ -268,8 +288,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (abortController.signal.aborted) return;
+
+      if (event === "INITIAL_SESSION" && didInitRef.current) {
+        return;
+      }
 
       const newUserId = newSession?.user?.id ?? null;
       const previousUserId = currentUserIdRef.current;
@@ -278,6 +302,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (previousUserId !== null && previousUserId !== newUserId) {
         // Не очищаем сразу - дождемся загрузки нового профиля
         currentUserIdRef.current = newUserId;
+        loadedProfileUserIdRef.current = null;
+        userProfileRef.current = null;
         loadingProfileRef.current.clear();
       } else if (newUserId) {
         currentUserIdRef.current = newUserId;
@@ -288,11 +314,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
+      if (event === "TOKEN_REFRESHED") {
+        return;
+      }
+
       if (newSession?.user) {
         // Проверяем, требуется ли установка пароля
         const requiresPassword =
           newSession.user.user_metadata?.requires_password_setup === true;
-        console.log("requiresPassword", requiresPassword);
         setRequiresPasswordSetup(requiresPassword);
 
         await loadUserProfile(
@@ -302,7 +331,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         );
       } else {
         // Очищаем только если точно нет пользователя
-        setUserProfile(null);
+        applyUserProfile(null);
         setRequiresPasswordSetup(false);
         loadingProfileRef.current.clear();
         setLoading(false);
@@ -313,7 +342,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       abortController.abort();
       subscription.unsubscribe();
     };
-  }, [loadUserProfile]);
+  }, [applyUserProfile, loadUserProfile]);
 
   // Usertour: initialize/identify only after auth + profile are ready.
   useEffect(() => {
@@ -355,7 +384,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) throw error;
 
-      setUserProfile(data);
+      applyUserProfile(data);
     } catch (error) {
       console.error("Error updating profile:", error);
       throw error;

@@ -105,7 +105,7 @@ export function ProjectPriceManager({ projectId }: ProjectPriceManagerProps) {
             <Label className="mb-2 block">
               {t("projectEditor.operation") || "Operation"}
             </Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant={operation === "increase" ? "default" : "outline"}
