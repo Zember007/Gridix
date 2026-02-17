@@ -1,6 +1,6 @@
-import React from 'react';
-import { Apartment } from '@/entities/apartment/model/types';
-import { useLanguage } from '@/contexts/LanguageContext';
+import React from "react";
+import { Apartment } from "@/entities/apartment/model/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn, convertPrice, formatMoney } from "@gridix/utils/lib";
 
 type PopupSettings = {
@@ -22,19 +22,19 @@ type CommonProps = {
    * - `absolute` (default): requires `position`
    * - `static`: renders as a normal block (e.g. inside TooltipContent)
    */
-  variant?: 'absolute' | 'static';
+  variant?: "absolute" | "static";
   /** Optional visibility toggles for compact contexts (e.g. chess tooltip) */
   showStatus?: boolean;
   showFloor?: boolean;
 };
 
 type AbsoluteVariantProps = CommonProps & {
-  variant?: 'absolute';
+  variant?: "absolute";
   position: { x: number; y: number };
 };
 
 type StaticVariantProps = CommonProps & {
-  variant: 'static';
+  variant: "static";
   position?: never;
 };
 
@@ -54,98 +54,130 @@ export const hasAnyPopupContent = (
   if (options.showStatus) return true;
   if (options.showFloor) return true;
   if (settings.showArea) return true;
-  if (settings.showRooms !== false && apartment.rooms !== null && apartment.rooms !== undefined) return true;
+  if (
+    settings.showRooms !== false &&
+    apartment.rooms !== null &&
+    apartment.rooms !== undefined
+  )
+    return true;
   // Keep popup useful when price is hidden: show "on request" fallback.
   if (!settings.showPrice) return true;
-  if (typeof apartment.price === 'number' && apartment.price > 0) return true;
+  if (typeof apartment.price === "number" && apartment.price > 0) return true;
   return false;
 };
 
-const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(({
-                                                                                apartment,
-                                                                                settings,
-                                                                                currency,
-                                                                                selectedCurrency,
-                                                                                className,
-                                                                                variant = 'absolute',
-                                                                                showStatus = true,
-                                                                                showFloor = true,
-                                                                                ...rest
-                                                                              }, ref) => {
-  const { t } = useLanguage();
+const ApartmentPopup = React.forwardRef<HTMLDivElement, ApartmentPopupProps>(
+  (
+    {
+      apartment,
+      settings,
+      currency,
+      selectedCurrency,
+      className,
+      variant = "absolute",
+      showStatus = true,
+      showFloor = true,
+      ...rest
+    },
+    ref,
+  ) => {
+    const { t } = useLanguage();
 
-  if (!settings.showTooltip || !hasAnyPopupContent(settings, apartment, { showStatus, showFloor })) return null;
+    if (
+      !settings.showTooltip ||
+      !hasAnyPopupContent(settings, apartment, { showStatus, showFloor })
+    )
+      return null;
 
-  const isAbsolute = variant !== 'static';
-  const position = isAbsolute ? (rest as AbsoluteVariantProps).position : undefined;
+    const isAbsolute = variant !== "static";
+    const position = isAbsolute
+      ? (rest as AbsoluteVariantProps).position
+      : undefined;
 
-  return (
+    return (
       <div
-          ref={ref}
-          className={cn(
-              isAbsolute
-                  ? 'absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs'
-                  : 'bg-white rounded-lg shadow-xl border border-gray-200 md:p-3 p-2 max-w-xs',
-              className,
-          )}
-          style={isAbsolute && position ? { left: position.x, top: position.y } : undefined}
-          onClick={(e) => e.stopPropagation()}
+        ref={ref}
+        className={cn(
+          isAbsolute
+            ? "absolute z-50 max-w-xs rounded-lg border border-gray-200 bg-white p-2 shadow-xl md:p-3"
+            : "max-w-xs rounded-lg border border-gray-200 bg-white p-2 shadow-xl md:p-3",
+          className,
+        )}
+        style={
+          isAbsolute && position
+            ? { left: position.x, top: position.y }
+            : undefined
+        }
+        onClick={(e) => e.stopPropagation()}
       >
-
-        <div className="space-y-1 flex flex-col">
+        <div className="flex flex-col space-y-1">
           {/* Apartment number */}
-          <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
             {settings.showNumbers && (
-                <div className="md:text-lg text-sm font-bold text-gray-900">
-                  № {apartment.apartment_number}
-                </div>
+              <div className="text-sm font-bold text-gray-900 md:text-lg">
+                № {apartment.apartment_number}
+              </div>
             )}
 
             {showStatus && (
-                <span className={`px-2 py-1 rounded text-xs ${apartment.status === 'available' ? 'bg-green-100 text-green-800' :
-                    apartment.status === 'reserved' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                }`}>
-              {t(`project.${apartment.status}`)}
-            </span>
+              <span
+                className={`rounded px-2 py-1 text-xs ${
+                  apartment.status === "available"
+                    ? "bg-green-100 text-green-800"
+                    : apartment.status === "reserved"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                }`}
+              >
+                {t(`project.${apartment.status}`)}
+              </span>
             )}
           </div>
 
           {/* Floor */}
           {showFloor && (
-              <div className="text-sm text-gray-600">
-                {t('project.floor')}: {apartment.floor_number}
-              </div>
+            <div className="text-sm text-gray-600">
+              {t("project.floor")}: {apartment.floor_number}
+            </div>
           )}
 
           {/* Area */}
           {settings.showArea && (
-              <div className="text-sm text-gray-600">
-                {t('project.area')}: {apartment.area} m²
-              </div>
+            <div className="text-sm text-gray-600">
+              {t("project.area")}: {apartment.area} m²
+            </div>
           )}
 
           {/* Price */}
           {(settings.showPrice ? !!apartment.price : true) && (
-              <div className="text-sm font-semibold text-green-600">
-                {t('project.price')}: {settings.showPrice && apartment.price
-                  ? formatMoney(
-                    convertPrice(apartment.price, currency || null, selectedCurrency || currency || null),
+            <div className="text-sm font-semibold text-green-600">
+              {t("project.price")}:{" "}
+              {settings.showPrice && apartment.price
+                ? formatMoney(
+                    convertPrice(
+                      apartment.price,
+                      currency || null,
+                      selectedCurrency || currency || null,
+                    ),
                     selectedCurrency || currency || null,
                   )
-                  : t('project.onRequest')}
-              </div>
+                : t("project.onRequest")}
+            </div>
           )}
 
           {/* Rooms */}
-          {settings.showRooms !== false && apartment.rooms !== null && apartment.rooms !== undefined && (
+          {settings.showRooms !== false &&
+            apartment.rooms !== null &&
+            apartment.rooms !== undefined && (
               <div className="text-sm text-gray-600">
-                {t('project.rooms')}: {apartment.rooms === 0 ? 'S' : apartment.rooms}
+                {t("project.rooms")}:{" "}
+                {apartment.rooms === 0 ? "S" : apartment.rooms}
               </div>
-          )}
+            )}
         </div>
       </div>
-  );
-});
+    );
+  },
+);
 
 export default ApartmentPopup;

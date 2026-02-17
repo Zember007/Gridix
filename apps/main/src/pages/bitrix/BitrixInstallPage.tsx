@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Loader } from "@gridix/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Loader,
+} from "@gridix/ui";
 import { toast } from "sonner";
 import { useBitrixConnect } from "@/pages/bitrix/hooks/useBitrixConnect";
 
@@ -8,7 +15,10 @@ export default function BitrixInstallPage() {
   const domain = qp.get("domain") ?? qp.get("DOMAIN") ?? "";
   const memberId = qp.get("member_id") ?? qp.get("memberId") ?? "";
 
-  const { status, user, error, claimInstall, buildAuthUrl } = useBitrixConnect(domain, memberId);
+  const { status, user, error, claimInstall, buildAuthUrl } = useBitrixConnect(
+    domain,
+    memberId,
+  );
   const claimAttemptedRef = useRef(false);
   const bxReadyRef = useRef(false);
 
@@ -74,11 +84,13 @@ export default function BitrixInstallPage() {
   const needsInstall = status === "needs_install";
 
   return (
-    <div className="min-h-screen bg-white p-4 flex items-start justify-center">
+    <div className="flex min-h-screen items-start justify-center bg-white p-4">
       <div className="w-full max-w-lg space-y-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Gridix • Подключение Bitrix24</CardTitle>
+            <CardTitle className="text-base">
+              Gridix • Подключение Bitrix24
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {domain && memberId ? (
@@ -93,7 +105,8 @@ export default function BitrixInstallPage() {
               </div>
             ) : (
               <div className="text-muted-foreground">
-                Эта страница — точка входа для подключения Bitrix24. Перейдите сюда с параметрами domain и member_id.
+                Эта страница — точка входа для подключения Bitrix24. Перейдите
+                сюда с параметрами domain и member_id.
               </div>
             )}
           </CardContent>
@@ -101,7 +114,9 @@ export default function BitrixInstallPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Привязка к аккаунту Gridix</CardTitle>
+            <CardTitle className="text-base">
+              Привязка к аккаунту Gridix
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
@@ -110,35 +125,51 @@ export default function BitrixInstallPage() {
               </div>
             ) : claimed ? (
               <div className="space-y-3">
-                <div className="text-sm text-green-600 font-medium">Готово. Интеграция привязана к вашему аккаунту.</div>
+                <div className="text-sm font-medium text-green-600">
+                  Готово. Интеграция привязана к вашему аккаунту.
+                </div>
               </div>
             ) : needsInstall ? (
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">
-                  Сначала установите приложение Gridix из маркетплейса Bitrix24. После установки вы попадёте на страницу завершения.
+                  Сначала установите приложение Gridix из маркетплейса Bitrix24.
+                  После установки вы попадёте на страницу завершения.
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Если вы уже установили — переустановите приложение или обновите страницу.
+                  Если вы уже установили — переустановите приложение или
+                  обновите страницу.
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                {error && <div className="text-sm text-destructive">{error}</div>}
+                {error && (
+                  <div className="text-sm text-destructive">{error}</div>
+                )}
                 {!user ? (
                   <>
                     <div className="text-sm text-muted-foreground">
-                      Войдите или зарегистрируйтесь в Gridix — привязка выполнится автоматически.
+                      Войдите или зарегистрируйтесь в Gridix — привязка
+                      выполнится автоматически.
                     </div>
-                    <Button onClick={handleLogin} className="w-full" disabled={!domain || !memberId}>
+                    <Button
+                      onClick={handleLogin}
+                      className="w-full"
+                      disabled={!domain || !memberId}
+                    >
                       Войти в Gridix
                     </Button>
                   </>
                 ) : (
                   <>
                     <div className="text-sm text-muted-foreground">
-                      Нажмите кнопку ниже, чтобы привязать установку Bitrix к аккаунту {user.email ?? ""}.
+                      Нажмите кнопку ниже, чтобы привязать установку Bitrix к
+                      аккаунту {user.email ?? ""}.
                     </div>
-                    <Button onClick={handleClaim} className="w-full" disabled={!domain || !memberId}>
+                    <Button
+                      onClick={handleClaim}
+                      className="w-full"
+                      disabled={!domain || !memberId}
+                    >
                       Привязать установку Bitrix к аккаунту
                     </Button>
                   </>

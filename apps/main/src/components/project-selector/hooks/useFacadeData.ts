@@ -1,17 +1,20 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@gridix/utils/api';
-import type { Tables } from '@gridix/types/database';
-import type { BuildingFloor, FacadeSettings } from '@/features/visualization/buildingFacade/model/types';
-import type { ProjectFacade } from '../types';
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@gridix/utils/api";
+import type { Tables } from "@gridix/types/database";
+import type {
+  BuildingFloor,
+  FacadeSettings,
+} from "@/features/visualization/buildingFacade/model/types";
+import type { ProjectFacade } from "../types";
 
-type BuildingFloorRow = Tables<'building_floors'>;
-type ProjectFacadeRow = Tables<'project_facades'>;
+type BuildingFloorRow = Tables<"building_floors">;
+type ProjectFacadeRow = Tables<"project_facades">;
 
 // ── Default facade settings ──
 
 const DEFAULT_FACADE_SETTINGS: FacadeSettings = {
-  colors: { building: '#3b82f6' },
+  colors: { building: "#3b82f6" },
   opacity: { normal: 0.4, hover: 0.7 },
   hoverEffects: { glow: true, colorChange: true, opacityChange: true },
   display: { showNumbers: true, showTooltip: false },
@@ -29,18 +32,22 @@ function rowToFacade(row: ProjectFacadeRow): ProjectFacade {
   };
 }
 
-async function fetchProjectFacades(projectId: string): Promise<ProjectFacade[]> {
+async function fetchProjectFacades(
+  projectId: string,
+): Promise<ProjectFacade[]> {
   const { data, error } = await supabase
-    .from('project_facades')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('order_index');
+    .from("project_facades")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("order_index");
 
   if (error) throw error;
   return (data ?? []).map(rowToFacade);
 }
 
-function rowToFloor(row: BuildingFloorRow): BuildingFloor & { facade_id: string | null } {
+function rowToFloor(
+  row: BuildingFloorRow,
+): BuildingFloor & { facade_id: string | null } {
   return {
     id: row.id,
     floor_number: row.floor_number,
@@ -56,17 +63,17 @@ async function fetchBuildingFloors(
   projectId: string,
 ): Promise<Record<string, BuildingFloor[]>> {
   const { data, error } = await supabase
-    .from('building_floors')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('floor_number');
+    .from("building_floors")
+    .select("*")
+    .eq("project_id", projectId)
+    .order("floor_number");
 
   if (error) throw error;
 
   const grouped: Record<string, BuildingFloor[]> = {};
   (data ?? []).forEach((raw) => {
     const floor = rowToFloor(raw);
-    const key = floor.facade_id ?? '__legacy__';
+    const key = floor.facade_id ?? "__legacy__";
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(floor);
   });
@@ -75,7 +82,7 @@ async function fetchBuildingFloors(
 }
 
 function parseFacadeSettings(raw: unknown): FacadeSettings {
-  if (!raw || typeof raw !== 'object') return DEFAULT_FACADE_SETTINGS;
+  if (!raw || typeof raw !== "object") return DEFAULT_FACADE_SETTINGS;
 
   const s = raw as Record<string, unknown>;
   const colors = s.colors as Record<string, unknown> | undefined;
@@ -85,11 +92,12 @@ function parseFacadeSettings(raw: unknown): FacadeSettings {
 
   return {
     colors: {
-      building: (typeof colors?.building === 'string' ? colors.building : '#3b82f6'),
+      building:
+        typeof colors?.building === "string" ? colors.building : "#3b82f6",
     },
     opacity: {
-      normal: typeof opacity?.normal === 'number' ? opacity.normal : 0.4,
-      hover: typeof opacity?.hover === 'number' ? opacity.hover : 0.7,
+      normal: typeof opacity?.normal === "number" ? opacity.normal : 0.4,
+      hover: typeof opacity?.hover === "number" ? opacity.hover : 0.7,
     },
     hoverEffects: {
       glow: !!hoverEffects?.glow,
@@ -105,14 +113,18 @@ function parseFacadeSettings(raw: unknown): FacadeSettings {
 
 async function fetchFacadeSettings(projectId: string): Promise<FacadeSettings> {
   const { data, error } = await supabase
-    .from('projects')
-    .select('polygon_settings_facade')
-    .eq('id', projectId)
+    .from("projects")
+    .select("polygon_settings_facade")
+    .eq("id", projectId)
     .single();
 
   if (error) throw error;
 
-  if (data && 'polygon_settings_facade' in data && data.polygon_settings_facade) {
+  if (
+    data &&
+    "polygon_settings_facade" in data &&
+    data.polygon_settings_facade
+  ) {
     return parseFacadeSettings(data.polygon_settings_facade);
   }
 
@@ -146,21 +158,21 @@ export const useFacadeData = ({
 
   // ── Facades ──
   const facadesQuery = useQuery({
-    queryKey: ['project-facades', projectId],
+    queryKey: ["project-facades", projectId],
     queryFn: () => fetchProjectFacades(projectId!),
     enabled: queryEnabled,
   });
 
   // ── Building floors ──
   const floorsQuery = useQuery({
-    queryKey: ['building-floors', projectId],
+    queryKey: ["building-floors", projectId],
     queryFn: () => fetchBuildingFloors(projectId!),
     enabled: queryEnabled,
   });
 
   // ── Facade settings ──
   const settingsQuery = useQuery({
-    queryKey: ['facade-settings', projectId],
+    queryKey: ["facade-settings", projectId],
     queryFn: () => fetchFacadeSettings(projectId!),
     enabled: queryEnabled,
   });

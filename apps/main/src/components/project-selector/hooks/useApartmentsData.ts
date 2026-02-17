@@ -1,20 +1,23 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@gridix/utils/api';
-import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
-import type { LayoutPhoto } from '../types';
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@gridix/utils/api";
+import {
+  Apartment,
+  normalizeApartmentData,
+} from "@/entities/apartment/model/types";
+import type { LayoutPhoto } from "../types";
 
 // ── Pure helpers ──
 
 /** Compute unique layout type keys from a list of apartments. */
 export function getUniqueLayoutTypes(apartments: Apartment[]): string[] {
   const set = new Set<string>(
-    apartments.map(a =>
-      a.type === 'apartment'
+    apartments.map((a) =>
+      a.type === "apartment"
         ? a.rooms == 0
-          ? 'studio'
-          : a.rooms === 'free_layout'
-            ? 'free_layout'
+          ? "studio"
+          : a.rooms === "free_layout"
+            ? "free_layout"
             : `${Number(a.rooms)}-room`
         : a.type,
     ),
@@ -26,11 +29,11 @@ export function getUniqueLayoutTypes(apartments: Apartment[]): string[] {
 
 async function fetchApartments(projectId: string): Promise<Apartment[]> {
   const { data, error } = await supabase
-    .from('apartments')
+    .from("apartments")
     .select(
-      'id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type',
+      "id, apartment_number, floor_number, rooms, area, price, status, project_id, created_at, updated_at, floor_plan_id, custom_fields, type",
     )
-    .eq('project_id', projectId);
+    .eq("project_id", projectId);
 
   if (error) throw error;
   return (data || []).map(normalizeApartmentData);
@@ -43,23 +46,23 @@ async function fetchLayoutPhotos(
   if (layoutTypes.length === 0) return {};
 
   const { data, error } = await supabase
-    .from('layout_photos')
-    .select('id, project_id, layout_type, image_url, description, order_index')
-    .eq('project_id', projectId)
-    .in('layout_type', layoutTypes)
-    .order('order_index', { ascending: true });
+    .from("layout_photos")
+    .select("id, project_id, layout_type, image_url, description, order_index")
+    .eq("project_id", projectId)
+    .in("layout_type", layoutTypes)
+    .order("order_index", { ascending: true });
 
   if (error) throw error;
 
   const grouped: Record<string, LayoutPhoto[]> = {};
-  (data || []).forEach(p => {
+  (data || []).forEach((p) => {
     const key = p.layout_type;
     if (!grouped[key]) grouped[key] = [];
     const item: LayoutPhoto = {
       id: p.id,
       image_url: p.image_url,
       order_index: p.order_index,
-      type: 'layout',
+      type: "layout",
     };
     if (p.description) {
       item.description = p.description;
@@ -90,7 +93,7 @@ export const useApartmentsData = ({
 }: UseApartmentsDataParams): UseApartmentsDataResult => {
   // ── Apartments query ──
   const apartmentsQuery = useQuery({
-    queryKey: ['project-apartments', projectId],
+    queryKey: ["project-apartments", projectId],
     queryFn: () => fetchApartments(projectId!),
     enabled: !!projectId,
   });
@@ -108,12 +111,13 @@ export const useApartmentsData = ({
 
   // ── Layout photos query (depends on apartments) ──
   const layoutTypes = useMemo(
-    () => (apartmentsQuery.data ? getUniqueLayoutTypes(apartmentsQuery.data) : []),
+    () =>
+      apartmentsQuery.data ? getUniqueLayoutTypes(apartmentsQuery.data) : [],
     [apartmentsQuery.data],
   );
 
   const layoutPhotosQuery = useQuery({
-    queryKey: ['project-layout-photos', projectId, layoutTypes],
+    queryKey: ["project-layout-photos", projectId, layoutTypes],
     queryFn: () => fetchLayoutPhotos(projectId!, layoutTypes),
     enabled: !!projectId && layoutTypes.length > 0,
   });

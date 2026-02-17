@@ -1,12 +1,17 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import { Switch } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Language } from "@gridix/utils/lib";
 
 interface CustomField {
@@ -14,7 +19,7 @@ interface CustomField {
   field_name: string;
   field_label: string;
   field_label_translations?: Partial<Record<Language, string>>;
-  field_type: 'text' | 'number' | 'select' | 'boolean';
+  field_type: "text" | "number" | "select" | "boolean";
   is_required: boolean;
   field_options?: string[];
   sort_order: number;
@@ -29,11 +34,11 @@ interface ApartmentCustomFieldsProps {
   readOnly?: boolean;
 }
 
-const  ApartmentCustomFields = ({ 
-  projectId, 
-  customFieldsData, 
+const ApartmentCustomFields = ({
+  projectId,
+  customFieldsData,
   onCustomFieldsChange,
-  readOnly = false 
+  readOnly = false,
 }: ApartmentCustomFieldsProps) => {
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +46,10 @@ const  ApartmentCustomFields = ({
 
   // Функция для получения локализованного названия поля
   const getFieldLabel = (field: CustomField) => {
-    if (field.field_label_translations && field.field_label_translations[language]) {
+    if (
+      field.field_label_translations &&
+      field.field_label_translations[language]
+    ) {
       return field.field_label_translations[language];
     }
     return field.field_label;
@@ -54,29 +62,36 @@ const  ApartmentCustomFields = ({
   const loadCustomFields = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_custom_fields')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('is_visible', true)
-        .order('sort_order');
+        .from("project_custom_fields")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("is_visible", true)
+        .order("sort_order");
 
       if (error) throw error;
 
-      const formattedFields = data.map(field => ({
+      const formattedFields = data.map((field) => ({
         id: field.id,
         field_name: field.field_name,
         field_label: field.field_label,
-        field_label_translations: field.field_label_translations as Partial<Record<Language, string>> || {},
-        field_type: field.field_type as 'text' | 'number' | 'select' | 'boolean',
+        field_label_translations:
+          (field.field_label_translations as Partial<
+            Record<Language, string>
+          >) || {},
+        field_type: field.field_type as
+          | "text"
+          | "number"
+          | "select"
+          | "boolean",
         is_required: field.is_required,
-        field_options: field.field_options as string[] || [],
+        field_options: (field.field_options as string[]) || [],
         sort_order: field.sort_order || 0,
-        is_visible: field.is_visible !== false
+        is_visible: field.is_visible !== false,
       }));
 
       setCustomFields(formattedFields);
     } catch (error) {
-      console.error('Error loading custom fields:', error);
+      console.error("Error loading custom fields:", error);
     } finally {
       setLoading(false);
     }
@@ -88,43 +103,58 @@ const  ApartmentCustomFields = ({
   };
 
   const renderField = (field: CustomField) => {
-    
     const fieldValue = customFieldsData[field.field_name];
 
     switch (field.field_type) {
-      case 'text':
+      case "text":
         return (
           <Input
-            value={fieldValue || ''}
-            onChange={(e) => handleFieldChange(field.field_name, e.target.value)}
+            value={fieldValue || ""}
+            onChange={(e) =>
+              handleFieldChange(field.field_name, e.target.value)
+            }
             disabled={readOnly}
-            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
+            placeholder={`${t("apartment.enter")} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
-      case 'number':
+      case "number":
         return (
           <Input
             type="number"
-            value={fieldValue || ''}
-            onChange={(e) => handleFieldChange(field.field_name, parseFloat(e.target.value) || 0)}
+            value={fieldValue || ""}
+            onChange={(e) =>
+              handleFieldChange(
+                field.field_name,
+                parseFloat(e.target.value) || 0,
+              )
+            }
             disabled={readOnly}
-            placeholder={`${t('apartment.enter')} ${getFieldLabel(field).toLowerCase()}`}
+            placeholder={`${t("apartment.enter")} ${getFieldLabel(field).toLowerCase()}`}
           />
         );
 
-      case 'select':
+      case "select":
         return (
           <Select
-            value={fieldValue || 'not-selected'}
-            onValueChange={(value) => handleFieldChange(field.field_name, value === 'not-selected' ? '' : value)}
+            value={fieldValue || "not-selected"}
+            onValueChange={(value) =>
+              handleFieldChange(
+                field.field_name,
+                value === "not-selected" ? "" : value,
+              )
+            }
             disabled={readOnly}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`${t('apartment.select')} ${getFieldLabel(field).toLowerCase()}`} />
+              <SelectValue
+                placeholder={`${t("apartment.select")} ${getFieldLabel(field).toLowerCase()}`}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="not-selected">{t('apartment.notSelected')}</SelectItem>
+              <SelectItem value="not-selected">
+                {t("apartment.notSelected")}
+              </SelectItem>
               {field.field_options?.map((option) => (
                 <SelectItem key={option} value={option}>
                   {option}
@@ -134,16 +164,18 @@ const  ApartmentCustomFields = ({
           </Select>
         );
 
-      case 'boolean':
+      case "boolean":
         return (
           <div className="flex items-center space-x-2">
             <Switch
               checked={fieldValue || false}
-              onCheckedChange={(checked) => handleFieldChange(field.field_name, checked)}
+              onCheckedChange={(checked) =>
+                handleFieldChange(field.field_name, checked)
+              }
               disabled={readOnly}
             />
             <span className="text-sm text-gray-600">
-              {fieldValue ? t('apartment.yes') : t('apartment.no')}
+              {fieldValue ? t("apartment.yes") : t("apartment.no")}
             </span>
           </div>
         );
@@ -154,28 +186,32 @@ const  ApartmentCustomFields = ({
   };
 
   if (loading) {
-    return <div className="text-sm text-gray-500">{t('customFields.loading')}</div>;
+    return (
+      <div className="text-sm text-gray-500">{t("customFields.loading")}</div>
+    );
   }
 
   if (customFields.length === 0) {
     return (
-      <div className="text-sm text-gray-500 italic">
-        {t('customFields.noFields')}
+      <div className="text-sm italic text-gray-500">
+        {t("customFields.noFields")}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium text-real-estate-900">{t('apartment.additionalFields')}</h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <h4 className="font-medium text-real-estate-900">
+        {t("apartment.additionalFields")}
+      </h4>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {customFields.map((field) => (
           <div key={field.id} className="space-y-2">
             <Label className="flex items-center gap-2">
               {getFieldLabel(field)}
               {field.is_required && (
                 <Badge variant="destructive" className="text-xs">
-                  {t('customFields.requiredBadge')}
+                  {t("customFields.requiredBadge")}
                 </Badge>
               )}
             </Label>

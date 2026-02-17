@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
-import type { PartnerClient } from '../model/types';
+import type { PartnerClient } from "../model/types";
 
 export function usePartnerClients() {
   const [clients, setClients] = useState<PartnerClient[]>([]);
@@ -12,11 +12,14 @@ export function usePartnerClients() {
       setLoading(true);
       setError(null);
 
-      const { data, error: functionError } = await supabase.functions.invoke('partner-program', {
-        body: {
-          action: 'get_stats'
-        }
-      });
+      const { data, error: functionError } = await supabase.functions.invoke(
+        "partner-program",
+        {
+          body: {
+            action: "get_stats",
+          },
+        },
+      );
 
       if (functionError) {
         throw new Error(functionError.message);
@@ -28,8 +31,8 @@ export function usePartnerClients() {
 
       setClients(data.clients || []);
     } catch (err) {
-      console.error('Error fetching partner clients:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch clients');
+      console.error("Error fetching partner clients:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch clients");
     } finally {
       setLoading(false);
     }
@@ -41,34 +44,37 @@ export function usePartnerClients() {
 
   const addManagedClient = async (clientId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
 
       // Получаем ID партнёра
       const { data: partnerProfile } = await supabase
-        .from('partner_profiles')
-        .select('id')
-        .eq('user_id', user.id)
+        .from("partner_profiles")
+        .select("id")
+        .eq("user_id", user.id)
         .single();
 
       if (!partnerProfile) {
-        throw new Error('Partner profile not found');
+        throw new Error("Partner profile not found");
       }
 
       // Создаём связь типа 'managed'
       const { data: link, error: linkError } = await supabase
-        .from('partner_links')
+        .from("partner_links")
         .insert({
           partner_id: partnerProfile.id,
           client_id: clientId,
-          type: 'managed',
-          status: 'active',
-          accepted_at: new Date().toISOString()
+          type: "managed",
+          status: "active",
+          accepted_at: new Date().toISOString(),
         })
-        .select(`
+        .select(
+          `
           id,
           type,
           status,
@@ -80,19 +86,20 @@ export function usePartnerClients() {
             last_name,
             email
           )
-        `)
+        `,
+        )
         .single();
 
       if (linkError) {
-        throw new Error('Failed to create managed relationship');
+        throw new Error("Failed to create managed relationship");
       }
 
       // Обновляем список клиентов
       await fetchClients();
-      
+
       return link;
     } catch (err) {
-      console.error('Error adding managed client:', err);
+      console.error("Error adding managed client:", err);
       throw err;
     }
   };
@@ -102,6 +109,6 @@ export function usePartnerClients() {
     loading,
     error,
     refetch: fetchClients,
-    addManagedClient
+    addManagedClient,
   };
 }

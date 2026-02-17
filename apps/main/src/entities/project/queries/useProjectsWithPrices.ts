@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@gridix/utils/api";
-import { Tables } from '@gridix/types/database';
+import { Tables } from "@gridix/types/database";
 
 export type ProjectWithMinPrice = Pick<
-  Tables<'projects'>,
-  | 'id'
-  | 'name'
-  | 'description'
-  | 'address'
-  | 'building_image_url'
-  | 'latitude'
-  | 'longitude'
-  | 'currency'
-  | 'slug'
+  Tables<"projects">,
+  | "id"
+  | "name"
+  | "description"
+  | "address"
+  | "building_image_url"
+  | "latitude"
+  | "longitude"
+  | "currency"
+  | "slug"
 > & { min_price: number | null };
 
 /**
@@ -30,11 +30,13 @@ export const useProjectsWithPrices = (userId?: string) => {
     if (!userId) return;
 
     const { data: projectsData, error: projectsError } = await supabase
-      .from('projects')
-      .select('id, name, description, address, building_image_url, latitude, longitude, currency, slug')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
+      .from("projects")
+      .select(
+        "id, name, description, address, building_image_url, latitude, longitude, currency, slug",
+      )
+      .eq("user_id", userId)
+      .eq("is_public", true)
+      .order("created_at", { ascending: false });
 
     if (projectsError) throw projectsError;
 
@@ -43,19 +45,19 @@ export const useProjectsWithPrices = (userId?: string) => {
       return;
     }
 
-    const projectIds = projectsData.map(p => p.id);
+    const projectIds = projectsData.map((p) => p.id);
     const { data: pricesData, error: pricesError } = await supabase
-      .from('apartments')
-      .select('project_id, price')
-      .in('project_id', projectIds)
-      .not('price', 'is', null)
-      .order('price', { ascending: true });
+      .from("apartments")
+      .select("project_id, price")
+      .in("project_id", projectIds)
+      .not("price", "is", null)
+      .order("price", { ascending: true });
 
     if (pricesError) throw pricesError;
 
     const minPricesByProject = new Map<string, number>();
     if (pricesData) {
-      pricesData.forEach(apartment => {
+      pricesData.forEach((apartment) => {
         const currentMin = minPricesByProject.get(apartment.project_id);
         const price = Number(apartment.price);
         if (currentMin === undefined || price < currentMin) {
@@ -64,10 +66,12 @@ export const useProjectsWithPrices = (userId?: string) => {
       });
     }
 
-    const projectsWithPrices: ProjectWithMinPrice[] = projectsData.map(project => ({
-      ...project,
-      min_price: minPricesByProject.get(project.id) || null
-    }));
+    const projectsWithPrices: ProjectWithMinPrice[] = projectsData.map(
+      (project) => ({
+        ...project,
+        min_price: minPricesByProject.get(project.id) || null,
+      }),
+    );
 
     setProjects(projectsWithPrices);
   }, [userId]);
@@ -91,17 +95,20 @@ export const useProjectsWithPrices = (userId?: string) => {
       const rpcClient = supabase as unknown as {
         rpc: (
           fn: string,
-          args: unknown
+          args: unknown,
         ) => Promise<{ data: unknown; error: { code?: string } | null }>;
       };
-      const { data, error: supabaseError } = await rpcClient.rpc('get_projects_with_min_prices', {
-        user_id_param: userId
-      });
+      const { data, error: supabaseError } = await rpcClient.rpc(
+        "get_projects_with_min_prices",
+        {
+          user_id_param: userId,
+        },
+      );
 
       if (supabaseError) {
         // Если RPC функция не существует, используем запасной вариант
-        if (supabaseError.code === '42883') {
-          console.warn('RPC function not found, using fallback method');
+        if (supabaseError.code === "42883") {
+          console.warn("RPC function not found, using fallback method");
           await loadProjectsWithPricesFallback();
           return;
         }
@@ -111,15 +118,16 @@ export const useProjectsWithPrices = (userId?: string) => {
       const typedData = (data as ProjectWithMinPrice[]) || [];
       setProjects(typedData);
     } catch (err: unknown) {
-      console.error('Error loading projects with prices:', err);
-      const message = err instanceof Error ? err.message : 'Ошибка загрузки проектов';
+      console.error("Error loading projects with prices:", err);
+      const message =
+        err instanceof Error ? err.message : "Ошибка загрузки проектов";
       setError(message);
-      
+
       // Используем запасной метод в случае ошибки
       try {
         await loadProjectsWithPricesFallback();
       } catch (fallbackError) {
-        console.error('Fallback method also failed:', fallbackError);
+        console.error("Fallback method also failed:", fallbackError);
       }
     } finally {
       setLoading(false);
@@ -135,7 +143,7 @@ export const useProjectsWithPrices = (userId?: string) => {
     loading,
     error,
     userExists,
-    refresh: loadProjectsWithPrices
+    refresh: loadProjectsWithPrices,
   };
 };
 
@@ -144,7 +152,9 @@ export const useProjectsWithPrices = (userId?: string) => {
  * Оставлен для обратной совместимости
  */
 export const useUserExists = (userId?: string) => {
-  console.warn('useUserExists is deprecated, use useProjectsWithPrices instead');
+  console.warn(
+    "useUserExists is deprecated, use useProjectsWithPrices instead",
+  );
   const { userExists: exists, loading } = useProjectsWithPrices(userId);
   return { exists, loading };
 };

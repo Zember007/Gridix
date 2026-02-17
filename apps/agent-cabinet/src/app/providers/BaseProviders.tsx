@@ -21,4 +21,3 @@ export function BaseProviders({ children }: { children: ReactNode }) {
     </I18nextProvider>
   );
 }
-

@@ -1,2 +1,2 @@
-export * from './queryClient';
-export * from './supabase';
+export * from "./queryClient";
+export * from "./supabase";

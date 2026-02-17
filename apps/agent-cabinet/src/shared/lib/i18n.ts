@@ -63,4 +63,3 @@ void i18n.use(initReactI18next).init({
 addSharedResources(i18n);
 
 export default i18n;
-

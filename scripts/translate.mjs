@@ -1,17 +1,17 @@
-import { createRequire } from 'module';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createRequire } from "module";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const require = createRequire(import.meta.url);
-const fs = require('fs-extra');
-const translate = require('google-translate-api-x');
+const fs = require("fs-extra");
+const translate = require("google-translate-api-x");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, "..");
 
-const DRY_RUN = process.argv.includes('--dry-run');
+const DRY_RUN = process.argv.includes("--dry-run");
 
-const SOURCE_LANG = 'en';
+const SOURCE_LANG = "en";
 const RATE_LIMIT_DELAY_MS = 300;
 const RATE_LIMIT_BACKOFF_MS = 10000;
 
@@ -24,7 +24,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 function discoverLocaleRoots() {
   const roots = [];
-  const dirs = ['apps', 'packages'];
+  const dirs = ["apps", "packages"];
 
   for (const dir of dirs) {
     const base = path.join(ROOT, dir);
@@ -33,19 +33,19 @@ function discoverLocaleRoots() {
     const walk = (current) => {
       const entries = fs.readdirSync(current, { withFileTypes: true });
       for (const e of entries) {
-        if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+        if (e.name === "node_modules" || e.name.startsWith(".")) continue;
         const full = path.join(current, e.name);
         if (e.isDirectory()) {
-          if (e.name === 'locales') {
+          if (e.name === "locales") {
             const sub = fs.readdirSync(full);
-            if (sub.includes('en')) {
-              roots.push({ root: full, type: 'folder-per-lang' });
+            if (sub.includes("en")) {
+              roots.push({ root: full, type: "folder-per-lang" });
             }
-            const sharedPath = path.join(full, 'shared');
-            if (sub.includes('shared') && fs.existsSync(sharedPath)) {
+            const sharedPath = path.join(full, "shared");
+            if (sub.includes("shared") && fs.existsSync(sharedPath)) {
               const sharedFiles = fs.readdirSync(sharedPath);
-              if (sharedFiles.includes('en.json')) {
-                roots.push({ root: sharedPath, type: 'flat' });
+              if (sharedFiles.includes("en.json")) {
+                roots.push({ root: sharedPath, type: "flat" });
               }
             }
           } else {
@@ -64,16 +64,16 @@ function discoverLocaleRoots() {
  * Get target locales (all except source).
  */
 function getTargetLangs(localeRoot, type) {
-  if (type === 'folder-per-lang') {
+  if (type === "folder-per-lang") {
     const dirs = fs.readdirSync(localeRoot, { withFileTypes: true });
     return dirs
       .filter((d) => d.isDirectory() && d.name !== SOURCE_LANG)
       .map((d) => d.name);
   }
-  if (type === 'flat') {
-    const files = fs.readdirSync(localeRoot).filter((f) => f.endsWith('.json'));
+  if (type === "flat") {
+    const files = fs.readdirSync(localeRoot).filter((f) => f.endsWith(".json"));
     return files
-      .map((f) => f.replace('.json', ''))
+      .map((f) => f.replace(".json", ""))
       .filter((lang) => lang !== SOURCE_LANG);
   }
   return [];
@@ -83,17 +83,17 @@ function getTargetLangs(localeRoot, type) {
  * Get file pairs (source, target) for a locale root.
  */
 function getFilePairs(localeRoot, type, targetLang) {
-  if (type === 'folder-per-lang') {
+  if (type === "folder-per-lang") {
     const enDir = path.join(localeRoot, SOURCE_LANG);
     const targetDir = path.join(localeRoot, targetLang);
-    const files = fs.readdirSync(enDir).filter((f) => f.endsWith('.json'));
+    const files = fs.readdirSync(enDir).filter((f) => f.endsWith(".json"));
     return files.map((f) => ({
       sourcePath: path.join(enDir, f),
       targetPath: path.join(targetDir, f),
       name: f,
     }));
   }
-  if (type === 'flat') {
+  if (type === "flat") {
     return [
       {
         sourcePath: path.join(localeRoot, `${SOURCE_LANG}.json`),
@@ -117,36 +117,48 @@ async function mergeAndTranslate(source, target, targetLang, onTranslate) {
     const srcVal = source[key];
     const tgtVal = target[key];
 
-    if (typeof srcVal === 'object' && srcVal !== null && !Array.isArray(srcVal)) {
-      const subTarget = typeof tgtVal === 'object' && tgtVal !== null ? tgtVal : {};
-      const { merged: subMerged, translatedCount: subCount } = await mergeAndTranslate(
-        srcVal,
-        subTarget,
-        targetLang,
-        onTranslate
-      );
+    if (
+      typeof srcVal === "object" &&
+      srcVal !== null &&
+      !Array.isArray(srcVal)
+    ) {
+      const subTarget =
+        typeof tgtVal === "object" && tgtVal !== null ? tgtVal : {};
+      const { merged: subMerged, translatedCount: subCount } =
+        await mergeAndTranslate(srcVal, subTarget, targetLang, onTranslate);
       merged[key] = subMerged;
       translatedCount += subCount;
-    } else if (typeof srcVal === 'string') {
-      if (typeof tgtVal === 'string' && tgtVal.trim() !== '') {
+    } else if (typeof srcVal === "string") {
+      if (typeof tgtVal === "string" && tgtVal.trim() !== "") {
         merged[key] = tgtVal;
       } else if (DRY_RUN) {
         merged[key] = `[MISSING: ${srcVal.substring(0, 30)}...]`;
         translatedCount++;
       } else {
         try {
-          const res = await translate(srcVal, { to: targetLang, forceBatch: false });
+          const res = await translate(srcVal, {
+            to: targetLang,
+            forceBatch: false,
+          });
           merged[key] = res.text;
           translatedCount++;
           onTranslate?.(key, res.text);
           await delay(RATE_LIMIT_DELAY_MS);
         } catch (err) {
           console.error(`   ERROR [${key}]:`, err.message);
-          if (err.message.includes('429') || err.message.includes('Too Many Requests')) {
-            console.log(`   Rate limit hit. Waiting ${RATE_LIMIT_BACKOFF_MS / 1000}s...`);
+          if (
+            err.message.includes("429") ||
+            err.message.includes("Too Many Requests")
+          ) {
+            console.log(
+              `   Rate limit hit. Waiting ${RATE_LIMIT_BACKOFF_MS / 1000}s...`,
+            );
             await delay(RATE_LIMIT_BACKOFF_MS);
             try {
-              const retry = await translate(srcVal, { to: targetLang, forceBatch: false });
+              const retry = await translate(srcVal, {
+                to: targetLang,
+                forceBatch: false,
+              });
               merged[key] = retry.text;
               translatedCount++;
               onTranslate?.(key, retry.text);
@@ -180,7 +192,7 @@ async function processFile(sourcePath, targetPath, targetLang, relativeName) {
     source,
     target,
     targetLang,
-    (key, text) => console.log(`   + ${key}: ${text.substring(0, 40)}...`)
+    (key, text) => console.log(`   + ${key}: ${text.substring(0, 40)}...`),
   );
 
   if (!DRY_RUN) {
@@ -191,13 +203,13 @@ async function processFile(sourcePath, targetPath, targetLang, relativeName) {
 
 async function run() {
   if (DRY_RUN) {
-    console.log('--- DRY RUN: no translations or writes ---\n');
+    console.log("--- DRY RUN: no translations or writes ---\n");
   }
-  console.log('Scanning monorepo for locale roots...\n');
+  console.log("Scanning monorepo for locale roots...\n");
 
   const roots = discoverLocaleRoots();
   if (roots.length === 0) {
-    console.log('No locale roots found.');
+    console.log("No locale roots found.");
     return;
   }
 
@@ -209,7 +221,7 @@ async function run() {
 
     const targetLangs = getTargetLangs(root, type);
     if (targetLangs.length === 0) {
-      console.log('  No target locales.');
+      console.log("  No target locales.");
       continue;
     }
 
@@ -218,7 +230,12 @@ async function run() {
       for (const { sourcePath, targetPath, name } of pairs) {
         if (!fs.existsSync(sourcePath)) continue;
 
-        const count = await processFile(sourcePath, targetPath, targetLang, name);
+        const count = await processFile(
+          sourcePath,
+          targetPath,
+          targetLang,
+          name,
+        );
         if (count > 0) {
           console.log(`  ${name} (${targetLang}): ${count} new translations`);
           totalTranslated += count;
@@ -227,11 +244,11 @@ async function run() {
     }
   }
 
-  console.log('\n--- Translation complete ---');
+  console.log("\n--- Translation complete ---");
   console.log(`Total new translations: ${totalTranslated}`);
 }
 
 run().catch((err) => {
-  console.error('Fatal error:', err);
+  console.error("Fatal error:", err);
   process.exit(1);
 });

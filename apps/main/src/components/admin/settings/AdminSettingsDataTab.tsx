@@ -12,23 +12,44 @@ export type AdminSettingsDataTabProps = {
 export function AdminSettingsDataTab(props: AdminSettingsDataTabProps) {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border p-5 space-y-3">
-        <div className="font-semibold">{props.t("adminSettings.backupTitle")}</div>
-        <div className="text-sm text-muted-foreground">{props.t("adminSettings.backupDesc")}</div>
-        <Button type="button" variant="outline" onClick={props.onExportBackup} disabled={props.exportingBackup}>
-          <Database className="h-4 w-4 mr-2" />
-          {props.exportingBackup ? props.t("adminSettings.saving") : props.t("adminSettings.downloadBackup")}
+      <div className="space-y-3 rounded-xl border p-5">
+        <div className="font-semibold">
+          {props.t("adminSettings.backupTitle")}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {props.t("adminSettings.backupDesc")}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={props.onExportBackup}
+          disabled={props.exportingBackup}
+        >
+          <Database className="mr-2 h-4 w-4" />
+          {props.exportingBackup
+            ? props.t("adminSettings.saving")
+            : props.t("adminSettings.downloadBackup")}
         </Button>
       </div>
 
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 space-y-3">
-        <div className="font-semibold text-destructive">{props.t("adminSettings.dangerZone")}</div>
-        <div className="text-sm text-muted-foreground">{props.t("adminSettings.resetDesc")}</div>
-        <Button type="button" variant="destructive" onClick={props.onResetSettings} disabled={props.resettingSettings}>
-          {props.resettingSettings ? props.t("adminSettings.saving") : props.t("adminSettings.resetButton")}
+      <div className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+        <div className="font-semibold text-destructive">
+          {props.t("adminSettings.dangerZone")}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {props.t("adminSettings.resetDesc")}
+        </div>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={props.onResetSettings}
+          disabled={props.resettingSettings}
+        >
+          {props.resettingSettings
+            ? props.t("adminSettings.saving")
+            : props.t("adminSettings.resetButton")}
         </Button>
       </div>
     </div>
   );
 }
-

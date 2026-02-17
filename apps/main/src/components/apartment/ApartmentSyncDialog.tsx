@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@gridix/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@gridix/ui";
 import { Checkbox } from "@gridix/ui";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
-import { Apartment, normalizeApartmentData } from '@/entities/apartment/model/types';
+import {
+  Apartment,
+  normalizeApartmentData,
+} from "@/entities/apartment/model/types";
 
 interface ApartmentSyncDialogProps {
   open: boolean;
@@ -17,31 +26,39 @@ interface ApartmentSyncDialogProps {
   getStatusLabel?: (status: string) => string;
 }
 
-const ApartmentSyncDialog = ({ 
-  open, 
-  onOpenChange, 
-  sourceApartment, 
-  targetApartments, 
+const ApartmentSyncDialog = ({
+  open,
+  onOpenChange,
+  sourceApartment,
+  targetApartments,
   onSyncComplete,
   getStatusColor = (status: string) => {
     switch (status) {
-      case 'sold': return 'bg-red-100 text-red-800';
-      case 'reserved': return 'bg-yellow-100 text-yellow-800';
-      case 'available': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "sold":
+        return "bg-red-100 text-red-800";
+      case "reserved":
+        return "bg-yellow-100 text-yellow-800";
+      case "available":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   },
   getStatusLabel = (status: string) => {
     switch (status) {
-      case 'sold': return 'Продано';
-      case 'reserved': return 'Забронировано';
-      case 'available': return 'Доступно';
-      default: return status;
+      case "sold":
+        return "Продано";
+      case "reserved":
+        return "Забронировано";
+      case "available":
+        return "Доступно";
+      default:
+        return status;
     }
-  }
+  },
 }: ApartmentSyncDialogProps) => {
   const [selectedApartments, setSelectedApartments] = useState<Set<string>>(
-    new Set(targetApartments.map(apt => apt.id))
+    new Set(targetApartments.map((apt) => apt.id)),
   );
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -59,7 +76,7 @@ const ApartmentSyncDialog = ({
     if (selectedApartments.size === targetApartments.length) {
       setSelectedApartments(new Set());
     } else {
-      setSelectedApartments(new Set(targetApartments.map(apt => apt.id)));
+      setSelectedApartments(new Set(targetApartments.map((apt) => apt.id)));
     }
   };
 
@@ -70,42 +87,51 @@ const ApartmentSyncDialog = ({
     try {
       // Подготовить данные для синхронизации (исключаем уникальные поля)
       const syncData = {
-        rooms: typeof sourceApartment.rooms === 'number' ? String(sourceApartment.rooms) : sourceApartment.rooms,
+        rooms:
+          typeof sourceApartment.rooms === "number"
+            ? String(sourceApartment.rooms)
+            : sourceApartment.rooms,
         area: sourceApartment.area,
         custom_fields: sourceApartment.custom_fields,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Получить выбранные квартиры для синхронизации
-      const apartmentsToSync = targetApartments.filter(apt => selectedApartments.has(apt.id));
+      const apartmentsToSync = targetApartments.filter((apt) =>
+        selectedApartments.has(apt.id),
+      );
 
       // Обновить все выбранные квартиры
-      const updatePromises = apartmentsToSync.map(apartment => 
+      const updatePromises = apartmentsToSync.map((apartment) =>
         supabase
-          .from('apartments')
+          .from("apartments")
           .update(syncData)
-          .eq('id', apartment.id)
+          .eq("id", apartment.id)
           .select()
-          .single()
+          .single(),
       );
 
       const results = await Promise.all(updatePromises);
-      
+
       // Проверить наличие ошибок
-      const errors = results.filter(result => result.error);
+      const errors = results.filter((result) => result.error);
       if (errors.length > 0) {
         throw new Error(`Ошибка при обновлении ${errors.length} квартир`);
       }
 
       // Обновить локальное состояние
-      const updatedApartments = results.map(result => normalizeApartmentData(result.data));
+      const updatedApartments = results.map((result) =>
+        normalizeApartmentData(result.data),
+      );
       onSyncComplete(updatedApartments);
 
       onOpenChange(false);
-      toast.success(`Данные синхронизированы с ${selectedApartments.size} квартирами`);
+      toast.success(
+        `Данные синхронизированы с ${selectedApartments.size} квартирами`,
+      );
     } catch (error) {
-      console.error('Error syncing apartment data:', error);
-      toast.error('Ошибка при синхронизации данных квартир');
+      console.error("Error syncing apartment data:", error);
+      toast.error("Ошибка при синхронизации данных квартир");
     } finally {
       setIsSyncing(false);
     }
@@ -114,32 +140,53 @@ const ApartmentSyncDialog = ({
   const handleClose = () => {
     onOpenChange(false);
     // Сбросить выбор при закрытии
-    setSelectedApartments(new Set(targetApartments.map(apt => apt.id)));
+    setSelectedApartments(new Set(targetApartments.map((apt) => apt.id)));
   };
 
   if (!sourceApartment) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Синхронизация данных квартиры</DialogTitle>
           <DialogDescription>
             Выберите квартиры для синхронизации данных
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Исходная квартира */}
-          <div className="p-4 bg-blue-50 rounded-lg border">
-            <h4 className="font-semibold text-blue-800 mb-2">Исходная квартира:</h4>
-            <div className="text-sm space-y-1">
-              <p><strong>Номер:</strong> {sourceApartment.apartment_number}</p>
-              <p><strong>Этаж:</strong> {sourceApartment.floor_number}</p>
-              <p><strong>Комнаты:</strong> {sourceApartment.rooms == 0 ? 'Студия' : sourceApartment.rooms}</p>
-              <p><strong>Площадь:</strong> {sourceApartment.area} м²</p>
-              <p><strong>Цена:</strong> {sourceApartment.price ? sourceApartment.price.toLocaleString() + ' ₽' : 'Не указана'}</p>
-              <p><strong>Статус:</strong> <Badge className={getStatusColor(sourceApartment.status)}>{getStatusLabel(sourceApartment.status)}</Badge></p>
+          <div className="rounded-lg border bg-blue-50 p-4">
+            <h4 className="mb-2 font-semibold text-blue-800">
+              Исходная квартира:
+            </h4>
+            <div className="space-y-1 text-sm">
+              <p>
+                <strong>Номер:</strong> {sourceApartment.apartment_number}
+              </p>
+              <p>
+                <strong>Этаж:</strong> {sourceApartment.floor_number}
+              </p>
+              <p>
+                <strong>Комнаты:</strong>{" "}
+                {sourceApartment.rooms == 0 ? "Студия" : sourceApartment.rooms}
+              </p>
+              <p>
+                <strong>Площадь:</strong> {sourceApartment.area} м²
+              </p>
+              <p>
+                <strong>Цена:</strong>{" "}
+                {sourceApartment.price
+                  ? sourceApartment.price.toLocaleString() + " ₽"
+                  : "Не указана"}
+              </p>
+              <p>
+                <strong>Статус:</strong>{" "}
+                <Badge className={getStatusColor(sourceApartment.status)}>
+                  {getStatusLabel(sourceApartment.status)}
+                </Badge>
+              </p>
             </div>
           </div>
 
@@ -147,20 +194,22 @@ const ApartmentSyncDialog = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-gray-800">
-                Квартиры для синхронизации ({selectedApartments.size} из {targetApartments.length}):
+                Квартиры для синхронизации ({selectedApartments.size} из{" "}
+                {targetApartments.length}):
               </h4>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSelectAll}
-              >
-                {selectedApartments.size === targetApartments.length ? 'Снять все' : 'Выбрать все'}
+              <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                {selectedApartments.size === targetApartments.length
+                  ? "Снять все"
+                  : "Выбрать все"}
               </Button>
             </div>
-            
-            <div className="max-h-64 overflow-y-auto space-y-2 border rounded-lg p-3">
+
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border p-3">
               {targetApartments.map((apartment) => (
-                <div key={apartment.id} className="flex items-start gap-4 p-3 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
+                <div
+                  key={apartment.id}
+                  className="flex items-start gap-4 rounded border bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+                >
                   <Checkbox
                     id={`apartment-${apartment.id}`}
                     checked={selectedApartments.has(apartment.id)}
@@ -168,26 +217,45 @@ const ApartmentSyncDialog = ({
                     className="mt-1"
                   />
                   <div className="flex-1 space-y-1">
-                    <label 
+                    <label
                       htmlFor={`apartment-${apartment.id}`}
-                      className="text-sm font-medium cursor-pointer"
+                      className="cursor-pointer text-sm font-medium"
                     >
-                      <strong>Квартира {apartment.apartment_number}</strong> (Этаж {apartment.floor_number})
+                      <strong>Квартира {apartment.apartment_number}</strong>{" "}
+                      (Этаж {apartment.floor_number})
                     </label>
-                    <div className="text-xs text-gray-600 space-y-1">
+                    <div className="space-y-1 text-xs text-gray-600">
                       <div className="flex justify-between">
-                        <span>Текущая цена: {apartment.price ? apartment.price.toLocaleString() + ' ₽' : 'Не указана'}</span>
+                        <span>
+                          Текущая цена:{" "}
+                          {apartment.price
+                            ? apartment.price.toLocaleString() + " ₽"
+                            : "Не указана"}
+                        </span>
                         {apartment.price !== sourceApartment.price && (
                           <span className="text-blue-600">
-                            → {sourceApartment.price ? sourceApartment.price.toLocaleString() + ' ₽' : 'Не указана'}
+                            →{" "}
+                            {sourceApartment.price
+                              ? sourceApartment.price.toLocaleString() + " ₽"
+                              : "Не указана"}
                           </span>
                         )}
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span>Статус: <Badge className={getStatusColor(apartment.status)}>{getStatusLabel(apartment.status)}</Badge></span>
+                      <div className="flex items-center justify-between">
+                        <span>
+                          Статус:{" "}
+                          <Badge className={getStatusColor(apartment.status)}>
+                            {getStatusLabel(apartment.status)}
+                          </Badge>
+                        </span>
                         {apartment.status !== sourceApartment.status && (
                           <span>
-                            → <Badge className={getStatusColor(sourceApartment.status)}>{getStatusLabel(sourceApartment.status)}</Badge>
+                            →{" "}
+                            <Badge
+                              className={getStatusColor(sourceApartment.status)}
+                            >
+                              {getStatusLabel(sourceApartment.status)}
+                            </Badge>
                           </span>
                         )}
                       </div>
@@ -199,15 +267,18 @@ const ApartmentSyncDialog = ({
           </div>
 
           {/* Информация о синхронизации */}
-          <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h4 className="font-semibold text-yellow-800 mb-2">Будут синхронизированы:</h4>
-            <ul className="text-sm text-yellow-700 space-y-1">
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <h4 className="mb-2 font-semibold text-yellow-800">
+              Будут синхронизированы:
+            </h4>
+            <ul className="space-y-1 text-sm text-yellow-700">
               <li>• Цена</li>
               <li>• Статус продажи</li>
               <li>• Пользовательские поля</li>
             </ul>
-            <p className="text-xs text-yellow-600 mt-2">
-              Номер квартиры, этаж, площадь и количество комнат останутся без изменений
+            <p className="mt-2 text-xs text-yellow-600">
+              Номер квартиры, этаж, площадь и количество комнат останутся без
+              изменений
             </p>
           </div>
 
@@ -218,7 +289,9 @@ const ApartmentSyncDialog = ({
               disabled={selectedApartments.size === 0 || isSyncing}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isSyncing ? 'Синхронизация...' : `Синхронизировать ${selectedApartments.size} квартир`}
+              {isSyncing
+                ? "Синхронизация..."
+                : `Синхронизировать ${selectedApartments.size} квартир`}
             </Button>
             <Button
               variant="outline"

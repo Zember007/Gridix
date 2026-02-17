@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Button } from "@gridix/ui";
 import { Card } from "@gridix/ui";
@@ -10,8 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from "@gridix/ui";
-import { Plus, X, Check, Loader2, ExternalLink, FileText, Download, Eye, AlertCircle, Edit } from 'lucide-react';
-import { toast } from '@gridix/ui';
+import {
+  Plus,
+  X,
+  Check,
+  Loader2,
+  ExternalLink,
+  FileText,
+  Download,
+  Eye,
+  AlertCircle,
+  Edit,
+} from "lucide-react";
+import { toast } from "@gridix/ui";
 import {
   Dialog,
   DialogContent,
@@ -66,31 +77,33 @@ interface Project {
 export function SubscriptionsManagement() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
-  const [plans, setPlans] = useState<Array<{id: string, name: string, base_price: number}>>([]);
+  const [plans, setPlans] = useState<
+    Array<{ id: string; name: string; base_price: number }>
+  >([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [selectedSubscription, setSelectedSubscription] =
+    useState<Subscription | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   // Form states for creating subscription
   const [createForm, setCreateForm] = useState({
-    userEmail: '',
-    projectId: '',
-    planId: '',
+    userEmail: "",
+    projectId: "",
+    planId: "",
     durationMonths: 1,
-    invoiceNumber: '',
-    invoiceUrl: '',
+    invoiceNumber: "",
+    invoiceUrl: "",
   });
-  
 
   // Form states for editing subscription
   const [editForm, setEditForm] = useState({
-    planId: '',
-    status: 'active',
+    planId: "",
+    status: "active",
     durationMonths: 1,
     isInfinite: false,
-    customEndDate: '',
+    customEndDate: "",
   });
 
   useEffect(() => {
@@ -102,18 +115,20 @@ export function SubscriptionsManagement() {
   const fetchSubscriptions = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select(`
+        .from("user_subscriptions")
+        .select(
+          `
           *,
           subscription_plans (name, slug),
           projects!user_subscriptions_project_id_fkey (name)
-        `)
-        .not('status', 'eq', 'migrated')
-        .not('project_id', 'is', null)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .not("status", "eq", "migrated")
+        .not("project_id", "is", null)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error("Supabase error:", error);
         throw error;
       }
 
@@ -121,25 +136,30 @@ export function SubscriptionsManagement() {
       const subscriptionsWithProfiles = await Promise.all(
         (data || []).map(async (sub) => {
           const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('email, full_name')
-            .eq('id', sub.user_id)
+            .from("user_profiles")
+            .select("email, full_name")
+            .eq("id", sub.user_id)
             .single();
-          
+
           return {
             ...sub,
-            user_profiles: profile || { email: 'Unknown', full_name: 'Unknown' }
+            user_profiles: profile || {
+              email: "Unknown",
+              full_name: "Unknown",
+            },
           };
-        })
+        }),
       );
 
-      setSubscriptions((subscriptionsWithProfiles as unknown as Subscription[]) || []);
+      setSubscriptions(
+        (subscriptionsWithProfiles as unknown as Subscription[]) || [],
+      );
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
+      console.error("Error fetching subscriptions:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить подписки',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось загрузить подписки",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -149,37 +169,37 @@ export function SubscriptionsManagement() {
   const fetchPlans = async () => {
     try {
       const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('is_active', true);
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true);
 
       if (error) throw error;
       setPlans(data || []);
     } catch (error) {
-      console.error('Error fetching plans:', error);
+      console.error("Error fetching plans:", error);
     }
   };
 
   const fetchProjects = async () => {
     try {
       const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, user_id')
-        .order('name');
+        .from("projects")
+        .select("id, name, user_id")
+        .order("name");
 
       if (error) throw error;
-      setProjects(data as Project[] || []);
+      setProjects((data as Project[]) || []);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
     }
   };
 
   const handleCreateSubscription = async () => {
     if (!createForm.userEmail || !createForm.projectId || !createForm.planId) {
       toast({
-        title: 'Ошибка',
-        description: 'Заполните все обязательные поля',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Заполните все обязательные поля",
+        variant: "destructive",
       });
       return;
     }
@@ -188,25 +208,25 @@ export function SubscriptionsManagement() {
     try {
       // Get user by email
       const { data: userData, error: userError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('email', createForm.userEmail)
+        .from("user_profiles")
+        .select("id")
+        .eq("email", createForm.userEmail)
         .single();
 
       if (userError || !userData) {
-        throw new Error('User not found with this email');
+        throw new Error("User not found with this email");
       }
 
       // Verify project belongs to user
       const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('id', createForm.projectId)
-        .eq('user_id', userData.id)
+        .from("projects")
+        .select("id")
+        .eq("id", createForm.projectId)
+        .eq("user_id", userData.id)
         .single();
 
       if (projectError || !projectData) {
-        throw new Error('Project not found or does not belong to this user');
+        throw new Error("Project not found or does not belong to this user");
       }
 
       // Calculate end date
@@ -216,12 +236,12 @@ export function SubscriptionsManagement() {
 
       // Create subscription
       const { error: insertError } = await supabase
-        .from('user_subscriptions')
+        .from("user_subscriptions")
         .insert({
           user_id: userData.id,
           project_id: createForm.projectId,
           plan_id: createForm.planId,
-          status: 'active',
+          status: "active",
           duration_months: createForm.durationMonths,
           current_period_start: startDate.toISOString(),
           current_period_end: endDate.toISOString(),
@@ -232,19 +252,29 @@ export function SubscriptionsManagement() {
       if (insertError) throw insertError;
 
       toast({
-        title: 'Успешно',
-        description: 'Подписка создана',
+        title: "Успешно",
+        description: "Подписка создана",
       });
 
-      setCreateForm({ userEmail: '', projectId: '', planId: '', durationMonths: 1, invoiceNumber: '', invoiceUrl: '' });
+      setCreateForm({
+        userEmail: "",
+        projectId: "",
+        planId: "",
+        durationMonths: 1,
+        invoiceNumber: "",
+        invoiceUrl: "",
+      });
       setIsCreateDialogOpen(false);
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error creating subscription:', error);
+      console.error("Error creating subscription:", error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось создать подписку',
-        variant: 'destructive',
+        title: "Ошибка",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Не удалось создать подписку",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -254,30 +284,36 @@ export function SubscriptionsManagement() {
   const handleGenerateInvoice = async (subscriptionId: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('subscription-management', {
-        body: { 
-          action: 'generate-invoice',
-          subscription_id: subscriptionId
+      const { error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: {
+            action: "generate-invoice",
+            subscription_id: subscriptionId,
+          },
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      );
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'PDF-счет сгенерирован и отправлен',
+        title: "Успешно",
+        description: "PDF-счет сгенерирован и отправлен",
       });
 
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error generating invoice:', error);
+      console.error("Error generating invoice:", error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось сгенерировать счет',
-        variant: 'destructive',
+        title: "Ошибка",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Не удалось сгенерировать счет",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -287,31 +323,37 @@ export function SubscriptionsManagement() {
   const handleActivateSubscription = async (subscriptionId: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.functions.invoke('subscription-management', {
-        body: { 
-          action: 'confirm-payment',
-          subscription_id: subscriptionId
+      const { error } = await supabase.functions.invoke(
+        "subscription-management",
+        {
+          body: {
+            action: "confirm-payment",
+            subscription_id: subscriptionId,
+          },
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
         },
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      );
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'Оплата подтверждена, подписка активирована',
+        title: "Успешно",
+        description: "Оплата подтверждена, подписка активирована",
       });
 
       setSelectedSubscription(null);
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error activating subscription:', error);
+      console.error("Error activating subscription:", error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось активировать подписку',
-        variant: 'destructive',
+        title: "Ошибка",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Не удалось активировать подписку",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -322,27 +364,27 @@ export function SubscriptionsManagement() {
     setIsProcessing(true);
     try {
       const { error } = await supabase
-        .from('user_subscriptions')
+        .from("user_subscriptions")
         .update({
-          status: 'cancelled',
+          status: "cancelled",
           cancelled_at: new Date().toISOString(),
         })
-        .eq('id', subscriptionId);
+        .eq("id", subscriptionId);
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'Подписка отменена',
+        title: "Успешно",
+        description: "Подписка отменена",
       });
 
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
+      console.error("Error cancelling subscription:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отменить подписку',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось отменить подписку",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -352,32 +394,39 @@ export function SubscriptionsManagement() {
   const handleEditSubscription = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
     // Заполняем форму текущими значениями
-    const currentEndDate = subscription.current_period_end 
-      ? new Date(subscription.current_period_end).toISOString().split('T')[0]
-      : '';
-    
+    const currentEndDate = subscription.current_period_end
+      ? new Date(subscription.current_period_end).toISOString().split("T")[0]
+      : "";
+
     // Проверяем, является ли подписка "бесконечной" (дата после 2090 года)
-    const isInfinite = subscription.current_period_end 
-      ? new Date(subscription.current_period_end) > new Date('2090-01-01')
+    const isInfinite = subscription.current_period_end
+      ? new Date(subscription.current_period_end) > new Date("2090-01-01")
       : false;
 
     let durationMonths = 1;
-    if (subscription.current_period_start && subscription.current_period_end && !isInfinite) {
+    if (
+      subscription.current_period_start &&
+      subscription.current_period_end &&
+      !isInfinite
+    ) {
       const start = new Date(subscription.current_period_start);
       const end = new Date(subscription.current_period_end);
-      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      const months =
+        (end.getFullYear() - start.getFullYear()) * 12 +
+        (end.getMonth() - start.getMonth());
       durationMonths = Math.max(1, months);
     }
 
     // Получаем plan_id из данных подписки
-    const planId = ('plan_id' in subscription ? subscription.plan_id : '') || '';
-    
+    const planId =
+      ("plan_id" in subscription ? subscription.plan_id : "") || "";
+
     setEditForm({
       planId,
-      status: subscription.status ?? 'active',
+      status: subscription.status ?? "active",
       durationMonths,
       isInfinite,
-      customEndDate: isInfinite ? '' : (currentEndDate || ''),
+      customEndDate: isInfinite ? "" : currentEndDate || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -388,20 +437,24 @@ export function SubscriptionsManagement() {
     setIsProcessing(true);
     try {
       let endDate: string;
-      
+
       if (editForm.isInfinite) {
         // Бесконечная подписка - устанавливаем дату на 2099 год
-        endDate = new Date('2099-12-31T23:59:59.999Z').toISOString();
+        endDate = new Date("2099-12-31T23:59:59.999Z").toISOString();
       } else if (editForm.customEndDate) {
         // Используем указанную дату
-        endDate = new Date(editForm.customEndDate + 'T23:59:59.999Z').toISOString();
+        endDate = new Date(
+          editForm.customEndDate + "T23:59:59.999Z",
+        ).toISOString();
       } else {
         // Вычисляем дату окончания на основе длительности
-        const startDate = selectedSubscription.current_period_start 
+        const startDate = selectedSubscription.current_period_start
           ? new Date(selectedSubscription.current_period_start)
           : new Date();
         const calculatedEndDate = new Date(startDate);
-        calculatedEndDate.setMonth(calculatedEndDate.getMonth() + editForm.durationMonths);
+        calculatedEndDate.setMonth(
+          calculatedEndDate.getMonth() + editForm.durationMonths,
+        );
         endDate = calculatedEndDate.toISOString();
       }
 
@@ -421,31 +474,34 @@ export function SubscriptionsManagement() {
       };
 
       // Если устанавливаем статус active, обновляем current_period_start
-      if (editForm.status === 'active' && !selectedSubscription.current_period_start) {
+      if (
+        editForm.status === "active" &&
+        !selectedSubscription.current_period_start
+      ) {
         updateData.current_period_start = new Date().toISOString();
       }
 
       const { error } = await supabase
-        .from('user_subscriptions')
+        .from("user_subscriptions")
         .update(updateData)
-        .eq('id', selectedSubscription.id);
+        .eq("id", selectedSubscription.id);
 
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'Подписка обновлена',
+        title: "Успешно",
+        description: "Подписка обновлена",
       });
 
       setIsEditDialogOpen(false);
       setSelectedSubscription(null);
       fetchSubscriptions();
     } catch (error) {
-      console.error('Error updating subscription:', error);
+      console.error("Error updating subscription:", error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить подписку',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось обновить подписку",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -454,16 +510,16 @@ export function SubscriptionsManagement() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <Badge className="bg-green-500">Active</Badge>;
-      case 'trialing':
-      case 'trial':
+      case "trialing":
+      case "trial":
         return <Badge className="bg-blue-500">Trial</Badge>;
-      case 'pending_payment':
+      case "pending_payment":
         return <Badge className="bg-yellow-500">Pending Payment</Badge>;
-      case 'expired':
+      case "expired":
         return <Badge variant="destructive">Expired</Badge>;
-      case 'cancelled':
+      case "cancelled":
         return <Badge variant="outline">Cancelled</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -474,15 +530,17 @@ export function SubscriptionsManagement() {
     return <div className="p-6">Загрузка...</div>;
   }
 
-  const pendingSubscriptions = subscriptions.filter(s => s.status === 'pending_payment');
+  const pendingSubscriptions = subscriptions.filter(
+    (s) => s.status === "pending_payment",
+  );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold">Управление подписками</h2>
           {pendingSubscriptions.length > 0 && (
-            <p className="text-sm text-yellow-600 mt-1">
+            <p className="mt-1 text-sm text-yellow-600">
               {pendingSubscriptions.length} запрос(ов) на счет ожидает обработки
             </p>
           )}
@@ -490,7 +548,7 @@ export function SubscriptionsManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Создать подписку
             </Button>
           </DialogTrigger>
@@ -501,18 +559,25 @@ export function SubscriptionsManagement() {
             <div className="space-y-4">
               <div>
                 <Label>Email пользователя *</Label>
-                <Input 
-                  type="email" 
-                  placeholder="user@example.com" 
+                <Input
+                  type="email"
+                  placeholder="user@example.com"
                   value={createForm.userEmail}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, userEmail: e.target.value }))}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({
+                      ...prev,
+                      userEmail: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
                 <Label>Проект *</Label>
-                <Select 
+                <Select
                   value={createForm.projectId}
-                  onValueChange={(value) => setCreateForm(prev => ({ ...prev, projectId: value }))}
+                  onValueChange={(value) =>
+                    setCreateForm((prev) => ({ ...prev, projectId: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите проект" />
@@ -528,9 +593,11 @@ export function SubscriptionsManagement() {
               </div>
               <div>
                 <Label>План *</Label>
-                <Select 
+                <Select
                   value={createForm.planId}
-                  onValueChange={(value) => setCreateForm(prev => ({ ...prev, planId: value }))}
+                  onValueChange={(value) =>
+                    setCreateForm((prev) => ({ ...prev, planId: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите план" />
@@ -546,36 +613,53 @@ export function SubscriptionsManagement() {
               </div>
               <div>
                 <Label>Длительность (месяцев) *</Label>
-                <Input 
-                  type="number" 
-                  placeholder="1" 
-                  min="1" 
+                <Input
+                  type="number"
+                  placeholder="1"
+                  min="1"
                   value={createForm.durationMonths}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({
+                      ...prev,
+                      durationMonths: parseInt(e.target.value) || 1,
+                    }))
+                  }
                 />
               </div>
               <div>
                 <Label>Номер счета</Label>
-                <Input 
-                  placeholder="INV-12345" 
+                <Input
+                  placeholder="INV-12345"
                   value={createForm.invoiceNumber}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({
+                      ...prev,
+                      invoiceNumber: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
                 <Label>URL счета</Label>
-                <Input 
-                  placeholder="https://..." 
+                <Input
+                  placeholder="https://..."
                   value={createForm.invoiceUrl}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, invoiceUrl: e.target.value }))}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({
+                      ...prev,
+                      invoiceUrl: e.target.value,
+                    }))
+                  }
                 />
               </div>
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={handleCreateSubscription}
                 disabled={isProcessing}
               >
-                {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {isProcessing && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Создать подписку
               </Button>
             </div>
@@ -591,21 +675,39 @@ export function SubscriptionsManagement() {
           </DialogHeader>
           {selectedSubscription && (
             <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p><strong>Пользователь:</strong> {selectedSubscription.user_profiles?.full_name} ({selectedSubscription.user_profiles?.email})</p>
-                <p><strong>Проект:</strong> {selectedSubscription.projects?.name}</p>
-                <p><strong>Текущий план:</strong> {selectedSubscription.subscription_plans?.name}</p>
-                <p><strong>Текущий статус:</strong> {selectedSubscription.status}</p>
+              <div className="rounded-lg bg-muted p-4">
+                <p>
+                  <strong>Пользователь:</strong>{" "}
+                  {selectedSubscription.user_profiles?.full_name} (
+                  {selectedSubscription.user_profiles?.email})
+                </p>
+                <p>
+                  <strong>Проект:</strong> {selectedSubscription.projects?.name}
+                </p>
+                <p>
+                  <strong>Текущий план:</strong>{" "}
+                  {selectedSubscription.subscription_plans?.name}
+                </p>
+                <p>
+                  <strong>Текущий статус:</strong> {selectedSubscription.status}
+                </p>
                 {selectedSubscription.current_period_end && (
-                  <p><strong>Окончание:</strong> {new Date(selectedSubscription.current_period_end).toLocaleDateString()}</p>
+                  <p>
+                    <strong>Окончание:</strong>{" "}
+                    {new Date(
+                      selectedSubscription.current_period_end,
+                    ).toLocaleDateString()}
+                  </p>
                 )}
               </div>
 
               <div>
                 <Label>Тариф (план) *</Label>
-                <Select 
+                <Select
                   value={editForm.planId}
-                  onValueChange={(value) => setEditForm(prev => ({ ...prev, planId: value }))}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, planId: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите план" />
@@ -622,9 +724,11 @@ export function SubscriptionsManagement() {
 
               <div>
                 <Label>Статус *</Label>
-                <Select 
+                <Select
                   value={editForm.status}
-                  onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}
+                  onValueChange={(value) =>
+                    setEditForm((prev) => ({ ...prev, status: value }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -632,7 +736,9 @@ export function SubscriptionsManagement() {
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="trialing">Trialing</SelectItem>
-                    <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                    <SelectItem value="pending_payment">
+                      Pending Payment
+                    </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                     <SelectItem value="trial_expired">Trial Expired</SelectItem>
@@ -645,10 +751,10 @@ export function SubscriptionsManagement() {
                   id="isInfinite"
                   checked={editForm.isInfinite}
                   onCheckedChange={(checked) => {
-                    setEditForm(prev => ({ 
-                      ...prev, 
+                    setEditForm((prev) => ({
+                      ...prev,
                       isInfinite: checked as boolean,
-                      customEndDate: checked ? '' : prev.customEndDate
+                      customEndDate: checked ? "" : prev.customEndDate,
                     }));
                   }}
                 />
@@ -661,27 +767,39 @@ export function SubscriptionsManagement() {
                 <>
                   <div>
                     <Label>Длительность (месяцев)</Label>
-                    <Input 
-                      type="number" 
-                      placeholder="1" 
-                      min="1" 
+                    <Input
+                      type="number"
+                      placeholder="1"
+                      min="1"
                       value={editForm.durationMonths}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, durationMonths: parseInt(e.target.value) || 1 }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          durationMonths: parseInt(e.target.value) || 1,
+                        }))
+                      }
                     />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Дата окончания будет вычислена автоматически от текущей даты начала
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Дата окончания будет вычислена автоматически от текущей
+                      даты начала
                     </p>
                   </div>
 
                   <div>
                     <Label>Или укажите дату окончания вручную</Label>
-                    <Input 
-                      type="date" 
+                    <Input
+                      type="date"
                       value={editForm.customEndDate}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, customEndDate: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          customEndDate: e.target.value,
+                        }))
+                      }
                     />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Если указана дата, она будет использована вместо вычисления по длительности
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Если указана дата, она будет использована вместо
+                      вычисления по длительности
                     </p>
                   </div>
                 </>
@@ -690,11 +808,12 @@ export function SubscriptionsManagement() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Изменения вступят в силу немедленно. Будьте осторожны при изменении статуса и даты окончания.
+                  Изменения вступят в силу немедленно. Будьте осторожны при
+                  изменении статуса и даты окончания.
                 </AlertDescription>
               </Alert>
 
-              <div className="flex gap-2 justify-end">
+              <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -705,11 +824,13 @@ export function SubscriptionsManagement() {
                 >
                   Отмена
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSaveSubscription}
                   disabled={isProcessing || !editForm.planId}
                 >
-                  {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {isProcessing && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Сохранить изменения
                 </Button>
               </div>
@@ -720,9 +841,9 @@ export function SubscriptionsManagement() {
 
       {/* Pending Requests */}
       {pendingSubscriptions.length > 0 && (
-        <Card className="p-4 border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+        <Card className="border-yellow-200 bg-yellow-50 p-4 dark:bg-yellow-950">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+            <FileText className="h-5 w-5" />
             Запросы на счет
           </h3>
           <Table>
@@ -742,17 +863,23 @@ export function SubscriptionsManagement() {
                   <TableRow key={sub.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
-                        <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
+                        <div className="font-medium">
+                          {sub.user_profiles?.full_name || "—"}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {sub.user_profiles?.email}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>{sub.projects?.name || '—'}</TableCell>
+                    <TableCell>{sub.projects?.name || "—"}</TableCell>
                     <TableCell>{sub.subscription_plans?.name}</TableCell>
-                    <TableCell>${sub.final_price?.toFixed(2) || '—'}</TableCell>
+                    <TableCell>${sub.final_price?.toFixed(2) || "—"}</TableCell>
                     <TableCell>
                       {sub.invoice_requested_at
-                        ? new Date(sub.invoice_requested_at).toLocaleDateString()
-                        : '—'}
+                        ? new Date(
+                            sub.invoice_requested_at,
+                          ).toLocaleDateString()
+                        : "—"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -763,7 +890,7 @@ export function SubscriptionsManagement() {
                             onClick={() => handleGenerateInvoice(sub.id)}
                             disabled={isProcessing}
                           >
-                            <FileText className="h-4 w-4 mr-1" />
+                            <FileText className="mr-1 h-4 w-4" />
                             Сгенерировать PDF
                           </Button>
                         ) : (
@@ -771,22 +898,26 @@ export function SubscriptionsManagement() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(sub.invoice_url!, '_blank')}
+                              onClick={() =>
+                                window.open(sub.invoice_url!, "_blank")
+                              }
                             >
-                              <Eye className="h-4 w-4 mr-1" />
+                              <Eye className="mr-1 h-4 w-4" />
                               Просмотр
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(sub.invoice_url!, '_blank')}
+                              onClick={() =>
+                                window.open(sub.invoice_url!, "_blank")
+                              }
                             >
-                              <Download className="h-4 w-4 mr-1" />
+                              <Download className="mr-1 h-4 w-4" />
                               Скачать
                             </Button>
                           </>
                         )}
-                        
+
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -794,7 +925,7 @@ export function SubscriptionsManagement() {
                               size="sm"
                               disabled={!sub.invoice_url || isProcessing}
                             >
-                              <Check className="h-4 w-4 mr-1" />
+                              <Check className="mr-1 h-4 w-4" />
                               Подтвердить оплату
                             </Button>
                           </DialogTrigger>
@@ -803,53 +934,76 @@ export function SubscriptionsManagement() {
                               <DialogTitle>Подтвердить оплату</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
-                              <div className="p-4 bg-muted rounded-lg">
-                                <p><strong>Проект:</strong> {sub.projects?.name}</p>
-                                <p><strong>Пользователь:</strong> {sub.user_profiles?.full_name}</p>
-                                <p><strong>План:</strong> {sub.subscription_plans?.name}</p>
-                                <p><strong>Сумма:</strong> {sub.final_price?.toFixed(2)} GEL</p>
+                              <div className="rounded-lg bg-muted p-4">
+                                <p>
+                                  <strong>Проект:</strong> {sub.projects?.name}
+                                </p>
+                                <p>
+                                  <strong>Пользователь:</strong>{" "}
+                                  {sub.user_profiles?.full_name}
+                                </p>
+                                <p>
+                                  <strong>План:</strong>{" "}
+                                  {sub.subscription_plans?.name}
+                                </p>
+                                <p>
+                                  <strong>Сумма:</strong>{" "}
+                                  {sub.final_price?.toFixed(2)} GEL
+                                </p>
                                 {sub.invoice_number && (
-                                  <p><strong>Номер счета:</strong> {sub.invoice_number}</p>
+                                  <p>
+                                    <strong>Номер счета:</strong>{" "}
+                                    {sub.invoice_number}
+                                  </p>
                                 )}
                               </div>
-                              
+
                               {sub.invoice_url && (
-                                <div className="p-4 border rounded-lg">
-                                  <p className="font-medium mb-2">Счет:</p>
+                                <div className="rounded-lg border p-4">
+                                  <p className="mb-2 font-medium">Счет:</p>
                                   <div className="flex items-center gap-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(sub.invoice_url!, '_blank')}
+                                      onClick={() =>
+                                        window.open(sub.invoice_url!, "_blank")
+                                      }
                                     >
-                                      <Eye className="h-4 w-4 mr-1" />
+                                      <Eye className="mr-1 h-4 w-4" />
                                       Просмотр PDF
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(sub.invoice_url!, '_blank')}
+                                      onClick={() =>
+                                        window.open(sub.invoice_url!, "_blank")
+                                      }
                                     >
-                                      <Download className="h-4 w-4 mr-1" />
+                                      <Download className="mr-1 h-4 w-4" />
                                       Скачать
                                     </Button>
                                   </div>
                                 </div>
                               )}
-                              
+
                               <Alert>
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>
-                                  Убедитесь, что оплата поступила на счет, прежде чем подтверждать активацию подписки.
+                                  Убедитесь, что оплата поступила на счет,
+                                  прежде чем подтверждать активацию подписки.
                                 </AlertDescription>
                               </Alert>
-                              
-                              <Button 
-                                onClick={() => handleActivateSubscription(sub.id)}
+
+                              <Button
+                                onClick={() =>
+                                  handleActivateSubscription(sub.id)
+                                }
                                 disabled={isProcessing}
                                 className="w-full"
                               >
-                                {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                {isProcessing && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
                                 Подтвердить оплату и активировать
                               </Button>
                             </div>
@@ -858,7 +1012,7 @@ export function SubscriptionsManagement() {
                       </div>
                     </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </TableBody>
           </Table>
@@ -867,7 +1021,7 @@ export function SubscriptionsManagement() {
 
       {/* All Subscriptions */}
       <Card className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Все подписки</h3>
+        <h3 className="mb-4 text-lg font-semibold">Все подписки</h3>
         <Table>
           <TableHeader>
             <TableRow>
@@ -885,30 +1039,38 @@ export function SubscriptionsManagement() {
               <TableRow key={sub.id}>
                 <TableCell>
                   <div>
-                    <div className="font-medium">{sub.user_profiles?.full_name || '—'}</div>
-                    <div className="text-sm text-muted-foreground">{sub.user_profiles?.email}</div>
+                    <div className="font-medium">
+                      {sub.user_profiles?.full_name || "—"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {sub.user_profiles?.email}
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>{sub.projects?.name || '—'}</TableCell>
+                <TableCell>{sub.projects?.name || "—"}</TableCell>
                 <TableCell>{sub.subscription_plans?.name}</TableCell>
                 <TableCell>{getStatusBadge(sub.status)}</TableCell>
                 <TableCell>
                   {sub.current_period_end
                     ? new Date(sub.current_period_end).toLocaleDateString()
-                    : '—'}
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   {sub.invoice_number ? (
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{sub.invoice_number}</span>
                       {sub.invoice_url && (
-                        <a href={sub.invoice_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-3 h-3" />
+                        <a
+                          href={sub.invoice_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
                   ) : (
-                    '—'
+                    "—"
                   )}
                 </TableCell>
                 <TableCell>
@@ -920,17 +1082,17 @@ export function SubscriptionsManagement() {
                       disabled={isProcessing}
                       title="Редактировать подписку"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="mr-1 h-4 w-4" />
                       Редактировать
                     </Button>
-                    {sub.status === 'active' && (
+                    {sub.status === "active" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleCancelSubscription(sub.id)}
                         disabled={isProcessing}
                       >
-                        <X className="h-4 w-4 mr-1" />
+                        <X className="mr-1 h-4 w-4" />
                         Отменить
                       </Button>
                     )}

@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
 import {
   computeMobileDockPosition,
   computePopupPositionForPolygon,
   type ImageRectInContainer,
-} from '@/features/visualization/buildingFacade/lib/popupPosition';
-import type { BuildingFloor } from '@/features/visualization/buildingFacade/model/types';
+} from "@/features/visualization/buildingFacade/lib/popupPosition";
+import type { BuildingFloor } from "@/features/visualization/buildingFacade/model/types";
 
 function createContainer(width: number, height: number): HTMLElement {
   return {
@@ -28,8 +28,8 @@ const imageRect: ImageRectInContainer = {
   size: { width: 800, height: 600 },
 };
 
-describe('popupPosition utils', () => {
-  it('places popup in container coordinates using image offset', () => {
+describe("popupPosition utils", () => {
+  it("places popup in container coordinates using image offset", () => {
     const container = createContainer(1000, 600);
 
     const position = computePopupPositionForPolygon({
@@ -56,11 +56,11 @@ describe('popupPosition utils', () => {
     expect(position.y).toBeGreaterThanOrEqual(0);
   });
 
-  it('computes mobile dock relative to image rect and remains in container bounds', () => {
+  it("computes mobile dock relative to image rect and remains in container bounds", () => {
     const container = createContainer(1000, 600);
 
     const floor: BuildingFloor = {
-      id: 'floor-1',
+      id: "floor-1",
       floor_number: 1,
       polygon: [
         { x: 45, y: 20 },
@@ -68,7 +68,7 @@ describe('popupPosition utils', () => {
         { x: 55, y: 30 },
         { x: 45, y: 30 },
       ],
-      color: '#3b82f6',
+      color: "#3b82f6",
     };
 
     const position = computeMobileDockPosition({

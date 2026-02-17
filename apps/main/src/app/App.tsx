@@ -9,7 +9,12 @@ import {
   EmbedProviders,
   LanguageProviders,
 } from "@/app/providers";
-import { AdminRoutes, DomainRoutes, EmbedRoutes, PublicRoutes } from "@/app/router";
+import {
+  AdminRoutes,
+  DomainRoutes,
+  EmbedRoutes,
+  PublicRoutes,
+} from "@/app/router";
 import { UsertourBlockingGate } from "@gridix/utils/integrations";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -96,22 +101,3 @@ export default function App() {
     </BaseProviders>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

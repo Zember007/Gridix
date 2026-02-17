@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@gridix/utils/api";
 
 interface Project {
@@ -29,7 +29,10 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 минут в миллисекунд�
 
 // Глобальные состояния загрузки для предотвращения дублирования запросов
 const loadingProjects = new Set<string>();
-const projectSubscribers = new Map<string, Set<(project: Project | null) => void>>();
+const projectSubscribers = new Map<
+  string,
+  Set<(project: Project | null) => void>
+>();
 
 /**
  * Оптимизированный хук для работы с данными проекта с кешированием
@@ -73,17 +76,17 @@ export const useProjectCache = (projectId?: string) => {
       // Подписываемся на результат загрузки
       setLoading(true);
       setError(null);
-      
+
       if (!projectSubscribers.has(id)) {
         projectSubscribers.set(id, new Set());
       }
-      
+
       const subscribers = projectSubscribers.get(id)!;
       const subscriber = (loadedProject: Project | null) => {
         setProject(loadedProject);
         setLoading(false);
       };
-      
+
       subscribers.add(subscriber);
       subscriberRef.current = subscriber;
       return;
@@ -96,14 +99,14 @@ export const useProjectCache = (projectId?: string) => {
 
     try {
       const { data, error: supabaseError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
+        .from("projects")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (supabaseError) {
-        if (supabaseError.code === 'PGRST116') {
-          setError('Проект не найден');
+        if (supabaseError.code === "PGRST116") {
+          setError("Проект не найден");
         } else {
           throw supabaseError;
         }
@@ -113,7 +116,7 @@ export const useProjectCache = (projectId?: string) => {
       // Сохраняем в кеш
       projectCache.set(id, {
         data: data as Project,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Обновляем состояние
@@ -123,19 +126,18 @@ export const useProjectCache = (projectId?: string) => {
       // Уведомляем всех подписчиков
       const subscribers = projectSubscribers.get(id);
       if (subscribers) {
-        subscribers.forEach(callback => callback(data as Project));
+        subscribers.forEach((callback) => callback(data as Project));
         projectSubscribers.delete(id);
       }
-
     } catch (err: any) {
-      console.error('Error loading project:', err);
-      setError(err.message || 'Ошибка загрузки проекта');
+      console.error("Error loading project:", err);
+      setError(err.message || "Ошибка загрузки проекта");
       setProject(null);
 
       // Уведомляем подписчиков об ошибке
       const subscribers = projectSubscribers.get(id);
       if (subscribers) {
-        subscribers.forEach(callback => callback(null));
+        subscribers.forEach((callback) => callback(null));
         projectSubscribers.delete(id);
       }
     } finally {
@@ -176,11 +178,14 @@ export const useProjectCache = (projectId?: string) => {
     clearCache: () => projectId && clearCache(projectId),
     // Утилитарные функции для работы с валютой
     getCurrency: () => project?.currency || null,
-    getProjectInfo: () => project ? {
-      id: project.id,
-      currency: project.currency,
-      name: project.name
-    } : null
+    getProjectInfo: () =>
+      project
+        ? {
+            id: project.id,
+            currency: project.currency,
+            name: project.name,
+          }
+        : null,
   };
 };
 
@@ -190,11 +195,11 @@ export const useProjectCache = (projectId?: string) => {
  */
 export const useProjectCurrency = (projectId?: string) => {
   const { project, loading, error } = useProjectCache(projectId);
-  
+
   return {
     currency: project?.currency || null,
     loading,
-    error
+    error,
   };
 };
 
@@ -204,7 +209,7 @@ export const useProjectCurrency = (projectId?: string) => {
  */
 export const preloadProject = async (projectId: string): Promise<void> => {
   if (!projectId) return;
-  
+
   // Проверяем, есть ли актуальные данные в кеше
   const cached = projectCache.get(projectId);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -218,21 +223,21 @@ export const preloadProject = async (projectId: string): Promise<void> => {
 
   try {
     loadingProjects.add(projectId);
-    
+
     const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
       .single();
 
     if (!error && data) {
       projectCache.set(projectId, {
         data: data as Project,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   } catch (error) {
-    console.error('Error preloading project:', error);
+    console.error("Error preloading project:", error);
   } finally {
     loadingProjects.delete(projectId);
   }

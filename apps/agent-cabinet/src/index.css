@@ -1,33 +1,31 @@
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Poppins';
-  src: url('./assets/fonts/Poppins-Regular.ttf') format('truetype');
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Poppins';
-  src: url('./assets/fonts/Poppins-Medium.ttf') format('truetype');
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Poppins';
-  src: url('./assets/fonts/Poppins-SemiBold.ttf') format('truetype');
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Poppins';
-  src: url('./assets/fonts/Poppins-Bold.ttf') format('truetype');
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
 }
@@ -50,7 +48,7 @@
 }
 .ql-container {
   border: none !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   font-size: 14px !important;
 }
 .ql-editor {
@@ -96,9 +94,9 @@
 
 /* Map controls styling */
 .leaflet-control-zoom a {
-  background-color: #1E1E1E !important;
+  background-color: #1e1e1e !important;
   color: white !important;
-  border: 2px solid #1E1E1E !important;
+  border: 2px solid #1e1e1e !important;
 }
 
 .leaflet-control-zoom a:hover {
@@ -167,7 +165,6 @@
 }
 
 @layer base {
-
   :root,
   :host {
     --background: 0 0% 100%;
@@ -330,7 +327,6 @@ svg text {
 
 /* Mobile interactive elements */
 @media (max-width: 768px) {
-
   .apartment-available,
   .apartment-sold,
   .apartment-reserved {
@@ -473,21 +469,19 @@ svg text {
     }
   }
   @keyframes accordion-down {
-  from {
-    height: 0;
+    from {
+      height: 0;
     }
-  to {
-    height: var(--radix-accordion-content-height);
+    to {
+      height: var(--radix-accordion-content-height);
     }
   }
   @keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
+    from {
+      height: var(--radix-accordion-content-height);
     }
-  to {
-    height: 0;
+    to {
+      height: 0;
     }
   }
 }
-
-

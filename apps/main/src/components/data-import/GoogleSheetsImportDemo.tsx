@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Button } from "@gridix/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import { Label } from "@gridix/ui";
-import { FileSpreadsheet, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { 
-  convertGoogleSheetsUrl, 
-  isGoogleSheetsUrl, 
+import {
+  FileSpreadsheet,
+  ExternalLink,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  convertGoogleSheetsUrl,
+  isGoogleSheetsUrl,
   parseGoogleSheetsUrl,
-  validateGoogleSheetsAccess 
+  validateGoogleSheetsAccess,
 } from "@gridix/utils/lib";
 
 /**
  * Демонстрационный компонент для тестирования импорта Google Sheets
  */
 const GoogleSheetsImportDemo = () => {
-  const [testUrl, setTestUrl] = useState('');
+  const [testUrl, setTestUrl] = useState("");
   const [results, setResults] = useState<{
     isGoogleSheets: boolean;
     parsedInfo: any;
@@ -28,22 +39,22 @@ const GoogleSheetsImportDemo = () => {
   // Примеры URL для тестирования
   const exampleUrls = [
     {
-      name: 'Стандартный Google Sheets URL',
-      url: 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=0'
+      name: "Стандартный Google Sheets URL",
+      url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit#gid=0",
     },
     {
-      name: 'URL без gid',
-      url: 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit'
+      name: "URL без gid",
+      url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
     },
     {
-      name: 'URL просмотра',
-      url: 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view'
-    }
+      name: "URL просмотра",
+      url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view",
+    },
   ];
 
   const testGoogleSheetsUrl = async () => {
     if (!testUrl.trim()) {
-      toast.error('Введите URL для тестирования');
+      toast.error("Введите URL для тестирования");
       return;
     }
 
@@ -51,13 +62,13 @@ const GoogleSheetsImportDemo = () => {
     try {
       // Проверяем, является ли это Google Sheets URL
       const isGoogleSheets = isGoogleSheetsUrl(testUrl);
-      
+
       // Парсим информацию из URL
       const parsedInfo = parseGoogleSheetsUrl(testUrl);
-      
-      let convertedUrl = '';
+
+      let convertedUrl = "";
       let validationResult = null;
-      
+
       if (isGoogleSheets) {
         // Преобразуем URL
         try {
@@ -65,7 +76,7 @@ const GoogleSheetsImportDemo = () => {
         } catch (error) {
           convertedUrl = `Ошибка: ${error}`;
         }
-        
+
         // Валидируем доступ
         validationResult = await validateGoogleSheetsAccess(testUrl);
       }
@@ -74,16 +85,16 @@ const GoogleSheetsImportDemo = () => {
         isGoogleSheets,
         parsedInfo,
         convertedUrl,
-        validationResult
+        validationResult,
       });
 
       if (isGoogleSheets) {
-        toast.success('Анализ Google Sheets URL завершен');
+        toast.success("Анализ Google Sheets URL завершен");
       } else {
-        toast.info('Это не Google Sheets URL');
+        toast.info("Это не Google Sheets URL");
       }
     } catch (error) {
-      toast.error('Ошибка при анализе URL');
+      toast.error("Ошибка при анализе URL");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -92,11 +103,11 @@ const GoogleSheetsImportDemo = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Скопировано в буфер обмена');
+    toast.success("Скопировано в буфер обмена");
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-6">
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -104,13 +115,14 @@ const GoogleSheetsImportDemo = () => {
             Тестирование Google Sheets Import
           </CardTitle>
           <CardDescription>
-            Проверьте, как работает импорт с различными форматами Google Sheets URL
+            Проверьте, как работает импорт с различными форматами Google Sheets
+            URL
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="test-url">URL для тестирования</Label>
-            <div className="flex gap-2 mt-1">
+            <div className="mt-1 flex gap-2">
               <Input
                 id="test-url"
                 value={testUrl}
@@ -122,7 +134,7 @@ const GoogleSheetsImportDemo = () => {
                 onClick={testGoogleSheetsUrl}
                 disabled={isLoading || !testUrl.trim()}
               >
-                {isLoading ? 'Анализ...' : 'Анализировать'}
+                {isLoading ? "Анализ..." : "Анализировать"}
               </Button>
             </div>
           </div>
@@ -130,12 +142,17 @@ const GoogleSheetsImportDemo = () => {
           {/* Примеры URL */}
           <div>
             <Label>Примеры URL для тестирования:</Label>
-            <div className="grid gap-2 mt-2">
+            <div className="mt-2 grid gap-2">
               {exampleUrls.map((example, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded bg-gray-50 p-2"
+                >
                   <div>
-                    <p className="font-medium text-sm">{example.name}</p>
-                    <p className="text-xs text-gray-600 truncate max-w-md">{example.url}</p>
+                    <p className="text-sm font-medium">{example.name}</p>
+                    <p className="max-w-md truncate text-xs text-gray-600">
+                      {example.url}
+                    </p>
                   </div>
                   <Button
                     variant="outline"
@@ -153,7 +170,7 @@ const GoogleSheetsImportDemo = () => {
           {results && (
             <div className="space-y-4 border-t pt-4">
               <h3 className="font-semibold">Результаты анализа:</h3>
-              
+
               {/* Проверка типа URL */}
               <div className="flex items-center gap-2">
                 {results.isGoogleSheets ? (
@@ -161,8 +178,14 @@ const GoogleSheetsImportDemo = () => {
                 ) : (
                   <AlertCircle className="h-4 w-4 text-red-600" />
                 )}
-                <span className={results.isGoogleSheets ? 'text-green-700' : 'text-red-700'}>
-                  {results.isGoogleSheets ? 'Это Google Sheets URL' : 'Это НЕ Google Sheets URL'}
+                <span
+                  className={
+                    results.isGoogleSheets ? "text-green-700" : "text-red-700"
+                  }
+                >
+                  {results.isGoogleSheets
+                    ? "Это Google Sheets URL"
+                    : "Это НЕ Google Sheets URL"}
                 </span>
               </div>
 
@@ -171,20 +194,22 @@ const GoogleSheetsImportDemo = () => {
                   {/* Информация о документе */}
                   <Card className="bg-blue-50">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Информация о документе</CardTitle>
+                      <CardTitle className="text-sm">
+                        Информация о документе
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <Label>ID документа:</Label>
-                          <p className="font-mono bg-white p-1 rounded text-xs break-all">
-                            {results.parsedInfo.documentId || 'Не найден'}
+                          <p className="break-all rounded bg-white p-1 font-mono text-xs">
+                            {results.parsedInfo.documentId || "Не найден"}
                           </p>
                         </div>
                         <div>
                           <Label>ID листа:</Label>
-                          <p className="font-mono bg-white p-1 rounded text-xs">
-                            {results.parsedInfo.sheetId || '0 (первый лист)'}
+                          <p className="rounded bg-white p-1 font-mono text-xs">
+                            {results.parsedInfo.sheetId || "0 (первый лист)"}
                           </p>
                         </div>
                       </div>
@@ -194,7 +219,9 @@ const GoogleSheetsImportDemo = () => {
                   {/* Преобразованный URL */}
                   <Card className="bg-green-50">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Преобразованный URL для экспорта</CardTitle>
+                      <CardTitle className="text-sm">
+                        Преобразованный URL для экспорта
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-2">
@@ -213,7 +240,9 @@ const GoogleSheetsImportDemo = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(results.convertedUrl, '_blank')}
+                          onClick={() =>
+                            window.open(results.convertedUrl, "_blank")
+                          }
                         >
                           <ExternalLink className="h-3 w-3" />
                         </Button>
@@ -222,9 +251,15 @@ const GoogleSheetsImportDemo = () => {
                   </Card>
 
                   {/* Результат валидации */}
-                  <Card className={results.validationResult?.isAccessible ? 'bg-green-50' : 'bg-red-50'}>
+                  <Card
+                    className={
+                      results.validationResult?.isAccessible
+                        ? "bg-green-50"
+                        : "bg-red-50"
+                    }
+                  >
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
                         {results.validationResult?.isAccessible ? (
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         ) : (
@@ -234,11 +269,13 @@ const GoogleSheetsImportDemo = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className={`text-sm ${results.validationResult?.isAccessible ? 'text-green-700' : 'text-red-700'}`}>
-                        {results.validationResult?.isAccessible 
-                          ? 'Документ доступен для импорта' 
-                          : results.validationResult?.error || 'Ошибка проверки доступности'
-                        }
+                      <p
+                        className={`text-sm ${results.validationResult?.isAccessible ? "text-green-700" : "text-red-700"}`}
+                      >
+                        {results.validationResult?.isAccessible
+                          ? "Документ доступен для импорта"
+                          : results.validationResult?.error ||
+                            "Ошибка проверки доступности"}
                       </p>
                     </CardContent>
                   </Card>

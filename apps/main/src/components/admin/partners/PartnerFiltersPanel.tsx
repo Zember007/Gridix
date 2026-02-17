@@ -1,5 +1,14 @@
 import React, { useMemo } from "react";
-import { Button, Input, PopoverContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gridix/ui";
+import {
+  Button,
+  Input,
+  PopoverContent,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gridix/ui";
 import type { PartnerFilter } from "./types";
 
 interface Props {
@@ -39,11 +48,21 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
           <div className="text-sm font-black text-slate-900">Фильтры</div>
           <div className="flex items-center gap-2">
             {activeFiltersCount > 0 ? (
-              <Button variant="ghost" size="sm" onClick={reset} className="font-bold">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={reset}
+                className="font-bold"
+              >
                 Сбросить ({activeFiltersCount})
               </Button>
             ) : null}
-            <Button variant="ghost" size="sm" onClick={onClose} className="font-bold">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="font-bold"
+            >
               Закрыть
             </Button>
           </div>
@@ -51,10 +70,17 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Статус</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Статус
+            </div>
             <Select
               value={filters.status}
-              onValueChange={(v) => setFilters((prev) => ({ ...prev, status: v as PartnerFilter["status"] }))}
+              onValueChange={(v) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  status: v as PartnerFilter["status"],
+                }))
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Статус" />
@@ -70,10 +96,17 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Тип</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Тип
+            </div>
             <Select
               value={filters.type}
-              onValueChange={(v) => setFilters((prev) => ({ ...prev, type: v as PartnerFilter["type"] }))}
+              onValueChange={(v) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  type: v as PartnerFilter["type"],
+                }))
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Тип" />
@@ -89,25 +122,43 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Комиссия от (%)</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Комиссия от (%)
+            </div>
             <Input
               type="number"
-              value={typeof filters.minCommission === "number" ? String(filters.minCommission) : ""}
+              value={
+                typeof filters.minCommission === "number"
+                  ? String(filters.minCommission)
+                  : ""
+              }
               onChange={(e) => {
                 const v = e.target.value.trim();
-                setFilters((prev) => ({ ...prev, minCommission: v ? Number(v) : undefined }));
+                setFilters((prev) => ({
+                  ...prev,
+                  minCommission: v ? Number(v) : undefined,
+                }));
               }}
               placeholder="0"
             />
           </div>
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Комиссия до (%)</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Комиссия до (%)
+            </div>
             <Input
               type="number"
-              value={typeof filters.maxCommission === "number" ? String(filters.maxCommission) : ""}
+              value={
+                typeof filters.maxCommission === "number"
+                  ? String(filters.maxCommission)
+                  : ""
+              }
               onChange={(e) => {
                 const v = e.target.value.trim();
-                setFilters((prev) => ({ ...prev, maxCommission: v ? Number(v) : undefined }));
+                setFilters((prev) => ({
+                  ...prev,
+                  maxCommission: v ? Number(v) : undefined,
+                }));
               }}
               placeholder="10"
             />
@@ -116,19 +167,33 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Дата от</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Дата от
+            </div>
             <Input
               type="date"
               value={filters.dateFrom ?? ""}
-              onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value || undefined }))}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  dateFrom: e.target.value || undefined,
+                }))
+              }
             />
           </div>
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase">Дата до</div>
+            <div className="text-[10px] font-bold uppercase text-slate-500">
+              Дата до
+            </div>
             <Input
               type="date"
               value={filters.dateTo ?? ""}
-              onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value || undefined }))}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  dateTo: e.target.value || undefined,
+                }))
+              }
             />
           </div>
         </div>
@@ -136,4 +201,3 @@ export function PartnerFiltersPanel({ filters, setFilters, onClose }: Props) {
     </PopoverContent>
   );
 }
-

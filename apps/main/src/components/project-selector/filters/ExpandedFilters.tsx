@@ -1,6 +1,6 @@
 import { Label } from "@gridix/ui";
 import { Slider } from "@gridix/ui";
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getCurrencySymbolSafe } from "@gridix/utils/lib";
 
 interface ExpandedFiltersProps {
@@ -28,21 +28,23 @@ export const ExpandedFilters = ({
   minArea,
   maxArea,
   formatPrice,
-  themeColor = '#000000'
+  themeColor = "#000000",
 }: ExpandedFiltersProps) => {
   const { t } = useLanguage();
 
   const sliderStyle = {
-    '--slider-thumb-color': themeColor,
-    '--slider-range-color': themeColor,
+    "--slider-thumb-color": themeColor,
+    "--slider-range-color": themeColor,
   } as React.CSSProperties;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {/* Price range */}
       <div className="space-y-2">
         <Label>
-          {t('project.price')}: {formatPrice(priceRange[0] ?? minPrice)} - {formatPrice(priceRange[1] ?? maxPrice)} {getCurrencySymbolSafe(selectedCurrency)}
+          {t("project.price")}: {formatPrice(priceRange[0] ?? minPrice)} -{" "}
+          {formatPrice(priceRange[1] ?? maxPrice)}{" "}
+          {getCurrencySymbolSafe(selectedCurrency)}
         </Label>
         <Slider
           value={priceRange}
@@ -57,7 +59,10 @@ export const ExpandedFilters = ({
 
       {/* Area range */}
       <div className="space-y-2">
-        <Label>{t('project.area')}: {areaRange[0] ?? minArea} - {areaRange[1] ?? maxArea} м²</Label>
+        <Label>
+          {t("project.area")}: {areaRange[0] ?? minArea} -{" "}
+          {areaRange[1] ?? maxArea} м²
+        </Label>
         <Slider
           value={areaRange}
           onValueChange={setAreaRange}

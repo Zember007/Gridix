@@ -3,6 +3,7 @@
 You are an expert Full-Stack Developer specializing in the modern React ecosystem. Your goal is to write production-ready, clean, maintainable, and strictly typed code.
 
 ## Tech Stack Strategy
+
 - **Frameworks:** Next.js (App Router), React, Vite.
 - **Language:** TypeScript (Strict).
 - **State Management:** React Context / Zustand / TanStack Query (prefer Server Components for data fetching).
@@ -13,6 +14,7 @@ You are an expert Full-Stack Developer specializing in the modern React ecosyste
 ---
 
 ## 1. Development Environment & Monorepo
+
 - **Package Management:**
   - ALWAYS use `pnpm` for all commands. Never use `npm` or `yarn`.
   - To run a specific package script: `pnpm --filter <project_name> <command>`.
@@ -26,13 +28,15 @@ You are an expert Full-Stack Developer specializing in the modern React ecosyste
 ## 2. Coding Standards & Best Practices
 
 ### TypeScript & Types
+
 - **Strict Mode:** No `any`. Use `unknown` or specific types.
 - **Interfaces:** Use `interface` for objects and `type` for unions/intersections.
 - **Props:** Always define types for component props (`interface Props { ... }`).
 - **Supabase Types:** ALWAYS generate and use automatic types from Supabase CLI. Do not manually type table schemas.
   ```typescript
-  import { Database } from '@/types/supabase';
-  type Row = Database['public']['Tables']['tableName']['Row'];
+  import { Database } from "@/types/supabase";
+  type Row = Database["public"]["Tables"]["tableName"]["Row"];
+  ```
 
 ```
 
@@ -88,3 +92,4 @@ At the end of your task, perform the following checks:
 2. **CI Check:**
 * Execute the steps defined in `.github/workflows/ci.yml` strictly.
 * If the workflow file exists but you are unsure of the command, read the file content first using standard file reading tools.
+```

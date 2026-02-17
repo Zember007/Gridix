@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@gridix/utils/react";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -44,66 +43,131 @@ const getAdminNavItems = (
   crmUnreadCount: number = 0,
 ) => {
   const items = [
-    { id: "projects", icon: <Building2 size={20} />, label: t('admin.projects') },
-    ...(!amoWidget ? [
-      {
-        id: "crm",
-        icon: <Briefcase size={20} />,
-        badge: crmUnreadCount > 0 ? <UnreadBadge variant="dot" /> : undefined,
-        label: t('admin.crm') || 'CRM',
-        children: [
+    {
+      id: "projects",
+      icon: <Building2 size={20} />,
+      label: t("admin.projects"),
+    },
+    ...(!amoWidget
+      ? [
           {
-            id: "leads",
-            icon: <UserCheck size={18} />,
-            label: t('admin.leads'),
+            id: "crm",
+            icon: <Briefcase size={20} />,
             badge:
-              crmUnreadCount > 0 ? (
-                <UnreadBadge variant="pulse" count={crmUnreadCount} />
-              ) : undefined,
+              crmUnreadCount > 0 ? <UnreadBadge variant="dot" /> : undefined,
+            label: t("admin.crm") || "CRM",
+            children: [
+              {
+                id: "leads",
+                icon: <UserCheck size={18} />,
+                label: t("admin.leads"),
+                badge:
+                  crmUnreadCount > 0 ? (
+                    <UnreadBadge variant="pulse" count={crmUnreadCount} />
+                  ) : undefined,
+              },
+              {
+                id: "contacts",
+                icon: <UserIcon size={18} />,
+                label: t("admin.contacts") || "Контакты",
+              },
+              {
+                id: "agent_network",
+                icon: <Handshake size={18} />,
+                label: t("admin.agent_network") || "Агентская сеть",
+              },
+            ],
           },
-          { id: "contacts", icon: <UserIcon size={18} />, label: t('admin.contacts') || 'Контакты' },
-          { id: "agent_network", icon: <Handshake size={18} />, label: t('admin.agent_network') || 'Агентская сеть' },
         ]
-      }
-    ] : []),
-    { id: "subscription", icon: <Crown size={20} />, label: t('admin.subscription') },
-    { id: "widgets", icon: <Code size={20} />, label: t('admin.widgets') },
-    { id: "integrations", icon: <Integration size={20} />, label: t('admin.integrations') },
-    { id: "analytics", icon: <BarChart3 size={20} />, label: t('admin.analytics.title') },
-    { id: "settings", icon: <SettingsIcon size={20} />, label: t('admin.settings') },
-    { id: "partners", icon: <Handshake size={20} />, label: t('admin.partners') }
+      : []),
+    {
+      id: "subscription",
+      icon: <Crown size={20} />,
+      label: t("admin.subscription"),
+    },
+    { id: "widgets", icon: <Code size={20} />, label: t("admin.widgets") },
+    {
+      id: "integrations",
+      icon: <Integration size={20} />,
+      label: t("admin.integrations"),
+    },
+    {
+      id: "analytics",
+      icon: <BarChart3 size={20} />,
+      label: t("admin.analytics.title"),
+    },
+    {
+      id: "settings",
+      icon: <SettingsIcon size={20} />,
+      label: t("admin.settings"),
+    },
+    {
+      id: "partners",
+      icon: <Handshake size={20} />,
+      label: t("admin.partners"),
+    },
   ];
 
   // Убрать подписки и настройки для менеджеров
   if (isManager) {
-    return items.filter(item => item.id !== 'subscription' && item.id !== 'settings');
+    return items.filter(
+      (item) => item.id !== "subscription" && item.id !== "settings",
+    );
   }
 
   return items;
 };
 
 // Simplified project editor navigation items
-const getProjectEditorNavItems = (t: (k: string) => string, projectType?: 'building' | 'object' | null) => {
+const getProjectEditorNavItems = (
+  t: (k: string) => string,
+  projectType?: "building" | "object" | null,
+) => {
   const items = [
-    { id: "general", icon: <Building2 size={20} />, label: t('projectEditor.general') },
-    { id: "apartments", icon: <Layers3 size={20} />, label: projectType === 'object' ? t('projectEditor.objects') : t('projectEditor.apartmentsTab') },
-    { id: "floorplan", icon: <Folder size={20} />, label: t('projectEditor.floorplan') },
-    { id: "photos", icon: <Camera size={20} />, label: t('projectEditor.photosTab') },
-    { id: "fields", icon: <DocumentAdd size={20} />, label: t('projectEditor.fieldsTab') },
-    { id: "domains", icon: <Globe size={20} />, label: t('projectEditor.domains') },
+    {
+      id: "general",
+      icon: <Building2 size={20} />,
+      label: t("projectEditor.general"),
+    },
+    {
+      id: "apartments",
+      icon: <Layers3 size={20} />,
+      label:
+        projectType === "object"
+          ? t("projectEditor.objects")
+          : t("projectEditor.apartmentsTab"),
+    },
+    {
+      id: "floorplan",
+      icon: <Folder size={20} />,
+      label: t("projectEditor.floorplan"),
+    },
+    {
+      id: "photos",
+      icon: <Camera size={20} />,
+      label: t("projectEditor.photosTab"),
+    },
+    {
+      id: "fields",
+      icon: <DocumentAdd size={20} />,
+      label: t("projectEditor.fieldsTab"),
+    },
+    {
+      id: "domains",
+      icon: <Globe size={20} />,
+      label: t("projectEditor.domains"),
+    },
   ];
 
   // Hide floorplan tab for object projects (villas/townhouses)
-  if (projectType === 'object') {
-    return items.filter(item => item.id !== 'floorplan');
+  if (projectType === "object") {
+    return items.filter((item) => item.id !== "floorplan");
   }
 
   return items;
 };
 
 export { SimplifiedSidebar };
-
-
 
 /* --------------------------------- Layout -------------------------------- */
 
@@ -131,7 +195,9 @@ export function AdminSidebar({
   const { t } = useLanguage();
   const { userRole } = useUserRole();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState(() => activeTab || getQueryPage() || "projects");
+  const [activeSection, setActiveSection] = useState(
+    () => activeTab || getQueryPage() || "projects",
+  );
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -157,11 +223,9 @@ export function AdminSidebar({
 
   const { amoWidget } = useAmoWidget();
 
-
-
   const navItems = getAdminNavItems(
     t,
-    userRole.type === 'manager',
+    userRole.type === "manager",
     amoWidget,
     crmUnreadCount,
   );
@@ -171,11 +235,11 @@ export function AdminSidebar({
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
-      userEmail={userEmail || ''}
+      userEmail={userEmail || ""}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      title={t('adminSidebar.title')}
-      showWorkspaceSwitcher={userRole.type === 'manager'}
+      title={t("adminSidebar.title")}
+      showWorkspaceSwitcher={userRole.type === "manager"}
       isMobile={isMobile ?? false}
       onMobileClose={() => {
         if (setIsMobileOpen) {
@@ -241,14 +305,15 @@ export function ProjectEditorSidebar({
   onSectionChange: (section: string) => void;
   activeTab?: string;
   userEmail?: string;
-  projectType?: 'building' | 'object' | null;
+  projectType?: "building" | "object" | null;
   isMobileOpen?: boolean;
   setIsMobileOpen?: (open: boolean) => void;
 }) {
   const { t } = useLanguage();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState(() => activeTab || getQueryPage() || "general");
-
+  const [activeSection, setActiveSection] = useState(
+    () => activeTab || getQueryPage() || "general",
+  );
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -272,7 +337,6 @@ export function ProjectEditorSidebar({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [onSectionChange]);
 
-
   const navItems = getProjectEditorNavItems(t, projectType);
 
   const sidebar = (
@@ -280,10 +344,10 @@ export function ProjectEditorSidebar({
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={handleSectionChange}
-      userEmail={userEmail || ''}
+      userEmail={userEmail || ""}
       isCollapsed={isCollapsed}
       onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      title={t('projectEditorSidebar.title')}
+      title={t("projectEditorSidebar.title")}
       isMobile={isMobile ?? false}
       onMobileClose={() => {
         if (setIsMobileOpen) {
@@ -311,12 +375,11 @@ export function ProjectEditorSidebarMenuButton({
 }: {
   setIsMobileOpen?: (open: boolean) => void;
 }) {
-
   return (
     <Button
       variant="ghost"
       size="icon"
-      className="md:hidden fixed bottom-2 left-2 z-50 rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-200"
+      className="fixed bottom-2 left-2 z-50 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl md:hidden"
       style={{
         backgroundColor: ADMIN_THEME.primary,
         color: ADMIN_THEME.textOnPrimary,
@@ -324,11 +387,11 @@ export function ProjectEditorSidebarMenuButton({
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = ADMIN_THEME.primaryHover;
-        e.currentTarget.style.transform = 'scale(1.05)';
+        e.currentTarget.style.transform = "scale(1.05)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = ADMIN_THEME.primary;
-        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.transform = "scale(1)";
       }}
       onClick={() => setIsMobileOpen?.(true)}
     >

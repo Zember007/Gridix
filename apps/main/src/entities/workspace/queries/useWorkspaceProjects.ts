@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@gridix/utils/api";
-import { useAuth } from '@/contexts/AuthContext';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useUserRole } from '@/hooks/useUserRole';
-import { getManagerProjectIds } from '@/hooks/useManagerProjectIds';
+import { useAuth } from "@/contexts/AuthContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { getManagerProjectIds } from "@/hooks/useManagerProjectIds";
 
 export interface Project {
   id: string;
@@ -37,8 +37,8 @@ export const useWorkspaceProjects = () => {
     error: queryError,
     refetch: refresh,
   } = useQuery<Project[]>({
-    queryKey: ['workspaceProjects', user?.id, activeWorkspaceId, isManagerMode],
-    enabled: !!user && userRole.type !== 'loading',
+    queryKey: ["workspaceProjects", user?.id, activeWorkspaceId, isManagerMode],
+    enabled: !!user && userRole.type !== "loading",
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -50,7 +50,10 @@ export const useWorkspaceProjects = () => {
           // Менеджер работает в чужом workspace
 
           // Получаем список доступных проектов для этого застройщика
-          const managerProjectIds = await getManagerProjectIds(user.id, activeWorkspaceId);
+          const managerProjectIds = await getManagerProjectIds(
+            user.id,
+            activeWorkspaceId,
+          );
 
           // Если у менеджера нет доступа ни к одному проекту
           if (!managerProjectIds || managerProjectIds.length === 0) {
@@ -59,44 +62,49 @@ export const useWorkspaceProjects = () => {
 
           // Загружаем проекты застройщика, ограниченные списком доступных проектов
           const query = supabase
-            .from('projects')
-            .select(`
+            .from("projects")
+            .select(
+              `
               *,
               user_profiles!fk_projects_user_profile (
                 full_name,
                 company_name
               )
-            `)
-            .eq('user_id', activeWorkspaceId)
-            .in('id', managerProjectIds);
+            `,
+            )
+            .eq("user_id", activeWorkspaceId)
+            .in("id", managerProjectIds);
 
-          const { data: projectsData, error: projectsError } = await query.order('created_at', {
-            ascending: false,
-          });
+          const { data: projectsData, error: projectsError } =
+            await query.order("created_at", {
+              ascending: false,
+            });
 
           if (projectsError) throw projectsError;
 
-          const projectsWithDeveloper = (projectsData || []).map((project: any) => ({
-            ...project,
-            developer_info: project.user_profiles,
-          }));
+          const projectsWithDeveloper = (projectsData || []).map(
+            (project: any) => ({
+              ...project,
+              developer_info: project.user_profiles,
+            }),
+          );
 
           return projectsWithDeveloper;
         } else {
           // Собственный workspace - загружаем проекты текущего пользователя
 
           const { data: projectsData, error: projectsError } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+            .from("projects")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
 
           if (projectsError) throw projectsError;
 
           return projectsData || [];
         }
       } catch (err: any) {
-        console.error('Error loading workspace projects:', err);
+        console.error("Error loading workspace projects:", err);
         throw err;
       }
     },
@@ -105,7 +113,11 @@ export const useWorkspaceProjects = () => {
   return {
     projects,
     loading,
-    error: queryError ? (queryError instanceof Error ? queryError.message : String(queryError)) : null,
+    error: queryError
+      ? queryError instanceof Error
+        ? queryError.message
+        : String(queryError)
+      : null,
     refresh,
     isManagerMode,
   };

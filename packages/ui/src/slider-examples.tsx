@@ -1,16 +1,18 @@
-import { useState } from 'react'
-import { Slider } from './slider'
+import { useState } from "react";
+import { Slider } from "./slider";
 
 export function SliderExamples() {
-  const [singleValue, setSingleValue] = useState([50])
-  const [rangeValue, setRangeValue] = useState([20, 80])
-  const [tripleValue, setTripleValue] = useState([10, 50, 90])
+  const [singleValue, setSingleValue] = useState([50]);
+  const [rangeValue, setRangeValue] = useState([20, 80]);
+  const [tripleValue, setTripleValue] = useState([10, 50, 90]);
 
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Примеры использования Slider</h3>
-        
+        <h3 className="mb-4 text-lg font-semibold">
+          Примеры использования Slider
+        </h3>
+
         {/* Одиночный слайдер */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
@@ -42,7 +44,8 @@ export function SliderExamples() {
         {/* Тройной слайдер */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Тройной слайдер: {tripleValue[0]} - {tripleValue[1]} - {tripleValue[2]}
+            Тройной слайдер: {tripleValue[0]} - {tripleValue[1]} -{" "}
+            {tripleValue[2]}
           </label>
           <Slider
             value={tripleValue}
@@ -68,9 +71,7 @@ export function SliderExamples() {
 
         {/* Отключенный слайдер */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Отключенный слайдер
-          </label>
+          <label className="text-sm font-medium">Отключенный слайдер</label>
           <Slider
             defaultValue={[40]}
             max={100}
@@ -81,5 +82,5 @@ export function SliderExamples() {
         </div>
       </div>
     </div>
-  )
+  );
 }

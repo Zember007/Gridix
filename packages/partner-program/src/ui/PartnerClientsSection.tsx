@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Search, UserPlus, LogIn, CheckCircle2, StickyNote, X, Save, CheckSquare } from 'lucide-react';
-import { usePartnerClients } from '../queries/usePartnerClients';
-import { useToast } from '@gridix/ui';
+import React, { useEffect, useState } from "react";
+import {
+  Search,
+  UserPlus,
+  LogIn,
+  CheckCircle2,
+  StickyNote,
+  X,
+  Save,
+  CheckSquare,
+} from "lucide-react";
+import { usePartnerClients } from "../queries/usePartnerClients";
+import { useToast } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
-import { useLanguage } from '@gridix/utils/react';
+import { useLanguage } from "@gridix/utils/react";
 import { Card, CardContent } from "@gridix/ui";
 import { Input } from "@gridix/ui";
 import {
@@ -20,53 +29,62 @@ export const PartnerClientsSection: React.FC = () => {
   const { t } = useLanguage();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>(
-    'all',
-  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "expired"
+  >("all");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [activeNoteClient, setActiveNoteClient] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState('');
+  const [noteText, setNoteText] = useState("");
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
-  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState("");
   const [isAddingClient, setIsAddingClient] = useState(false);
 
   // Загружаем заметки из localStorage при монтировании
   useEffect(() => {
     try {
-      if (typeof window === 'undefined') return;
-      const stored = window.localStorage.getItem('partner_client_notes');
+      if (typeof window === "undefined") return;
+      const stored = window.localStorage.getItem("partner_client_notes");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === 'object') {
+        if (parsed && typeof parsed === "object") {
           setNotes(parsed);
         }
       }
     } catch (err) {
-      console.error('Failed to load partner client notes from localStorage:', err);
+      console.error(
+        "Failed to load partner client notes from localStorage:",
+        err,
+      );
     }
   }, []);
 
   // Сохраняем заметки в localStorage при изменениях
   useEffect(() => {
     try {
-      if (typeof window === 'undefined') return;
-      window.localStorage.setItem('partner_client_notes', JSON.stringify(notes));
+      if (typeof window === "undefined") return;
+      window.localStorage.setItem(
+        "partner_client_notes",
+        JSON.stringify(notes),
+      );
     } catch (err) {
-      console.error('Failed to save partner client notes to localStorage:', err);
+      console.error(
+        "Failed to save partner client notes to localStorage:",
+        err,
+      );
     }
   }, [notes]);
 
   // Преобразуем реальных клиентов: показываем только на сопровождении (managed)
-  const managedClients = clients.filter((c) => c.type === 'managed');
+  const managedClients = clients.filter((c) => c.type === "managed");
 
   // Применяем поиск и фильтр статуса
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredClients = managedClients.filter((client) => {
     const name =
-      client.user_profiles.full_name || client.user_profiles.email || '';
-    const email = client.user_profiles.email || '';
+      client.user_profiles.full_name || client.user_profiles.email || "";
+    const email = client.user_profiles.email || "";
 
     const matchesSearch =
       !normalizedSearch ||
@@ -75,38 +93,38 @@ export const PartnerClientsSection: React.FC = () => {
 
     if (!matchesSearch) return false;
 
-    if (statusFilter === 'all') return true;
+    if (statusFilter === "all") return true;
 
     const projects = client.projects ?? [];
 
-    if (statusFilter === 'active') {
+    if (statusFilter === "active") {
       // активен, если есть хотя бы один активный/пробный проект
       const hasActiveProject = projects.some(
         (p) =>
-          p.subscription_status === 'active' ||
-          p.subscription_status === 'trialing',
+          p.subscription_status === "active" ||
+          p.subscription_status === "trialing",
       );
       const isAggregatedActive =
-        client.subscription_status === 'active' ||
-        client.subscription_status === 'trialing';
+        client.subscription_status === "active" ||
+        client.subscription_status === "trialing";
 
       return hasActiveProject || isAggregatedActive;
     }
 
-    if (statusFilter === 'expired') {
+    if (statusFilter === "expired") {
       // истекшие — если все проекты либо истекли, либо нет активных, и агрегированный статус об этом говорит
       const hasProjects = projects.length > 0;
       const allProjectsExpired =
         hasProjects &&
         projects.every(
           (p) =>
-            p.subscription_status === 'expired' ||
-            p.subscription_status === 'trial_expired',
+            p.subscription_status === "expired" ||
+            p.subscription_status === "trial_expired",
         );
 
       const isAggregatedExpired =
-        client.subscription_status === 'expired' ||
-        client.subscription_status === 'trial_expired';
+        client.subscription_status === "expired" ||
+        client.subscription_status === "trial_expired";
 
       return allProjectsExpired || (!hasProjects && isAggregatedExpired);
     }
@@ -118,10 +136,10 @@ export const PartnerClientsSection: React.FC = () => {
   const handleImpersonate = async (clientId: string) => {
     try {
       const { data, error: functionError } = await supabase.functions.invoke(
-        'partner-program',
+        "partner-program",
         {
           body: {
-            action: 'impersonate',
+            action: "impersonate",
             client_id: clientId,
           },
         },
@@ -136,14 +154,14 @@ export const PartnerClientsSection: React.FC = () => {
       }
 
       if (data?.redirect_url) {
-        window.open(data.redirect_url as string, '_blank');
+        window.open(data.redirect_url as string, "_blank");
       }
     } catch (error) {
-      console.error('Error impersonating client:', error);
+      console.error("Error impersonating client:", error);
       toast({
-        title: t('partners.error'),
-        description: t('partners.loginAsFailed'),
-        variant: 'destructive',
+        title: t("partners.error"),
+        description: t("partners.loginAsFailed"),
+        variant: "destructive",
       });
     }
   };
@@ -153,12 +171,12 @@ export const PartnerClientsSection: React.FC = () => {
     status?: string | null,
     expiresAt?: string | null,
   ) => {
-    if (!status || status === 'none') {
+    if (!status || status === "none") {
       return {
-        label: t('partners.noActiveSubscription'),
+        label: t("partners.noActiveSubscription"),
         daysLeft: null as number | null,
-        color: 'bg-slate-300',
-        textColor: 'text-slate-500',
+        color: "bg-slate-300",
+        textColor: "text-slate-500",
         isExpired: false,
       };
     }
@@ -174,15 +192,15 @@ export const PartnerClientsSection: React.FC = () => {
     }
 
     if (
-      status === 'expired' ||
-      status === 'trial_expired' ||
+      status === "expired" ||
+      status === "trial_expired" ||
       (daysLeft !== null && daysLeft < 0)
     ) {
       return {
-        label: t('partners.subscriptionExpired'),
+        label: t("partners.subscriptionExpired"),
         daysLeft: 0,
-        color: 'bg-slate-300',
-        textColor: 'text-red-600',
+        color: "bg-slate-300",
+        textColor: "text-red-600",
         isExpired: true,
       };
     }
@@ -190,31 +208,31 @@ export const PartnerClientsSection: React.FC = () => {
     if (daysLeft === null) {
       return {
         label:
-          status === 'active' || status === 'trialing'
-            ? t('partners.subscriptionActive')
+          status === "active" || status === "trialing"
+            ? t("partners.subscriptionActive")
             : status,
         daysLeft: null,
-        color: 'bg-green-500',
-        textColor: 'text-green-600',
+        color: "bg-green-500",
+        textColor: "text-green-600",
         isExpired: false,
       };
     }
 
-    let color = 'bg-green-500';
-    let textColor = 'text-green-600';
+    let color = "bg-green-500";
+    let textColor = "text-green-600";
 
     if (daysLeft <= 5) {
-      color = 'bg-red-500';
-      textColor = 'text-red-600';
+      color = "bg-red-500";
+      textColor = "text-red-600";
     } else if (daysLeft <= 15) {
-      color = 'bg-amber-500';
-      textColor = 'text-amber-600';
+      color = "bg-amber-500";
+      textColor = "text-amber-600";
     }
 
     const label =
       daysLeft >= 0
-        ? t('partners.subscriptionDaysLeft', { days: daysLeft })
-        : t('partners.subscriptionExpired');
+        ? t("partners.subscriptionDaysLeft", { days: daysLeft })
+        : t("partners.subscriptionExpired");
 
     return {
       label,
@@ -243,9 +261,9 @@ export const PartnerClientsSection: React.FC = () => {
   const handleAddManagedClient = async () => {
     if (!newClientEmail.trim()) {
       toast({
-        title: t('partners.error'),
-        description: t('partners.clientEmail'),
-        variant: 'destructive',
+        title: t("partners.error"),
+        description: t("partners.clientEmail"),
+        variant: "destructive",
       });
       return;
     }
@@ -257,46 +275,47 @@ export const PartnerClientsSection: React.FC = () => {
         data: result,
         error,
       }: {
-        data: { success: boolean; error?: string; invitation_link?: string } | null;
+        data: {
+          success: boolean;
+          error?: string;
+          invitation_link?: string;
+        } | null;
         error: { message?: string } | null;
-      } = await supabase.functions.invoke(
-        'partner-program',
-        {
-          body: {
-            action: 'send_invitation',
-            email: newClientEmail.trim(),
-            invitation_type: 'managed',
-          },
+      } = await supabase.functions.invoke("partner-program", {
+        body: {
+          action: "send_invitation",
+          email: newClientEmail.trim(),
+          invitation_type: "managed",
         },
-      );
+      });
 
       if (error) {
-        throw new Error(error.message || t('partners.invitationFailed'));
+        throw new Error(error.message || t("partners.invitationFailed"));
       }
 
       if (!result?.success) {
-        throw new Error(result?.error || t('partners.invitationFailed'));
+        throw new Error(result?.error || t("partners.invitationFailed"));
       }
 
       toast({
-        title: t('partners.invitationSent'),
-        description: t('partners.invitationSentDesc', {
+        title: t("partners.invitationSent"),
+        description: t("partners.invitationSentDesc", {
           email: newClientEmail.trim(),
-          link: result.invitation_link ?? '',
+          link: result.invitation_link ?? "",
         }),
       });
 
-      setNewClientEmail('');
+      setNewClientEmail("");
       setIsAddClientModalOpen(false);
     } catch (error) {
-      console.error('Error adding managed client:', error);
+      console.error("Error adding managed client:", error);
       toast({
-        title: t('partners.error'),
+        title: t("partners.error"),
         description:
           error instanceof Error
             ? error.message
-            : t('partners.invitationFailed'),
-        variant: 'destructive',
+            : t("partners.invitationFailed"),
+        variant: "destructive",
       });
     } finally {
       setIsAddingClient(false);
@@ -305,7 +324,7 @@ export const PartnerClientsSection: React.FC = () => {
 
   const openNoteModal = (clientId: string) => {
     setActiveNoteClient(clientId);
-    setNoteText(notes[clientId] || '');
+    setNoteText(notes[clientId] || "");
     setIsNoteModalOpen(true);
   };
 
@@ -318,13 +337,10 @@ export const PartnerClientsSection: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse" />
+        <div className="h-8 w-1/4 animate-pulse rounded bg-gray-200" />
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-24 bg-gray-200 rounded animate-pulse"
-            />
+            <div key={i} className="h-24 animate-pulse rounded bg-gray-200" />
           ))}
         </div>
       </div>
@@ -336,7 +352,7 @@ export const PartnerClientsSection: React.FC = () => {
       <Card>
         <CardContent className="pt-6">
           <p className="text-destructive">
-            {t('partners.clientsLoadError', { error })}
+            {t("partners.clientsLoadError", { error })}
           </p>
         </CardContent>
       </Card>
@@ -344,14 +360,14 @@ export const PartnerClientsSection: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 relative pb-20">
+    <div className="animate-in fade-in relative space-y-6 pb-20 duration-500">
       {/* Модалка заметок */}
       {isNoteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">
-                {t('partners.notesTitle')}
+                {t("partners.notesTitle")}
               </h3>
               <button
                 onClick={() => setIsNoteModalOpen(false)}
@@ -361,8 +377,8 @@ export const PartnerClientsSection: React.FC = () => {
               </button>
             </div>
             <textarea
-              className="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:border-blue-500 outline-none resize-none mb-4"
-              placeholder={t('partners.notesPlaceholder')}
+              className="mb-4 h-32 w-full resize-none rounded-lg border border-slate-200 p-3 text-sm outline-none focus:border-blue-500"
+              placeholder={t("partners.notesPlaceholder")}
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               autoFocus
@@ -370,15 +386,15 @@ export const PartnerClientsSection: React.FC = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsNoteModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
               >
-                {t('partners.cancel')}
+                {t("partners.cancel")}
               </button>
               <button
                 onClick={saveNote}
-                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center gap-2"
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
               >
-                <Save size={16} /> {t('partners.save')}
+                <Save size={16} /> {t("partners.save")}
               </button>
             </div>
           </div>
@@ -387,11 +403,11 @@ export const PartnerClientsSection: React.FC = () => {
 
       {/* Модалка добавления клиента */}
       {isAddClientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">
-                {t('partners.inviteNewClient')}
+                {t("partners.inviteNewClient")}
               </h3>
               <button
                 onClick={() => setIsAddClientModalOpen(false)}
@@ -401,22 +417,22 @@ export const PartnerClientsSection: React.FC = () => {
               </button>
             </div>
 
-            <p className="text-sm text-slate-500 mb-4">
-              {t('partners.inviteNewClientDesc')}
+            <p className="mb-4 text-sm text-slate-500">
+              {t("partners.inviteNewClientDesc")}
             </p>
 
-            <div className="space-y-3 mb-4">
+            <div className="mb-4 space-y-3">
               <label
                 htmlFor="partner-client-email"
-                className="text-xs font-medium text-slate-600 uppercase tracking-wide"
+                className="text-xs font-medium tracking-wide text-slate-600 uppercase"
               >
-                {t('partners.clientEmail')}
+                {t("partners.clientEmail")}
               </label>
               <input
                 id="partner-client-email"
                 type="email"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                placeholder={t('partners.clientEmailPlaceholder')}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                placeholder={t("partners.clientEmailPlaceholder")}
                 value={newClientEmail}
                 onChange={(e) => setNewClientEmail(e.target.value)}
               />
@@ -425,17 +441,19 @@ export const PartnerClientsSection: React.FC = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsAddClientModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
                 disabled={isAddingClient}
               >
-                {t('partners.cancel')}
+                {t("partners.cancel")}
               </button>
               <button
                 onClick={handleAddManagedClient}
                 disabled={isAddingClient}
-                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg flex items-center gap-2"
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-blue-400"
               >
-                {isAddingClient ? t('partners.sending') : t('partners.sendInvitation')}
+                {isAddingClient
+                  ? t("partners.sending")
+                  : t("partners.sendInvitation")}
               </button>
             </div>
           </div>
@@ -443,71 +461,71 @@ export const PartnerClientsSection: React.FC = () => {
       )}
 
       {/* Шапка секции */}
-      <div className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
-              {t('partners.clients')}
+              {t("partners.clients")}
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
-              {t('partners.managedClientsHint')}
+            <p className="mt-1 text-sm text-slate-500">
+              {t("partners.managedClientsHint")}
             </p>
           </div>
           <button
-            className="bg-[#1a1a1a] hover:bg-black text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg hover:shadow-xl"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-black hover:shadow-xl md:w-auto"
             onClick={() => setIsAddClientModalOpen(true)}
           >
             <UserPlus size={18} />
-            {t('partners.addClient')}
+            {t("partners.addClient")}
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
             <Search
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
             />
             <Input
               type="text"
-              placeholder={t('partners.searchPlaceholder')}
-              className="w-full pl-10 pr-4"
+              placeholder={t("partners.searchPlaceholder")}
+              className="w-full pr-4 pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 sm:w-auto w-full">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <ShadcnSelect
               value={statusFilter}
               onValueChange={(value) =>
-                setStatusFilter(value as 'all' | 'active' | 'expired')
+                setStatusFilter(value as "all" | "active" | "expired")
               }
             >
               <SelectTrigger className="flex-1">
                 <SelectValue
-                  placeholder={t('partners.subscriptionFilterPlaceholder')}
+                  placeholder={t("partners.subscriptionFilterPlaceholder")}
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {t('partners.filterAllClients')}
+                  {t("partners.filterAllClients")}
                 </SelectItem>
                 <SelectItem value="active">
-                  {t('partners.filterActive')}
+                  {t("partners.filterActive")}
                 </SelectItem>
                 <SelectItem value="expired">
-                  {t('partners.filterExpired')}
+                  {t("partners.filterExpired")}
                 </SelectItem>
               </SelectContent>
             </ShadcnSelect>
             <button
               onClick={toggleAll}
-              className={`p-2.5 rounded-lg border transition-colors ${
+              className={`rounded-lg border p-2.5 transition-colors ${
                 selectedIds.size === clients.length
-                  ? 'bg-blue-50 border-blue-200 text-blue-600'
-                  : 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                  ? "border-blue-200 bg-blue-50 text-blue-600"
+                  : "border-slate-200 text-slate-400 hover:bg-slate-50"
               }`}
-              title={t('partners.selectAllTitle')}
+              title={t("partners.selectAllTitle")}
             >
               <CheckSquare size={20} />
             </button>
@@ -527,28 +545,29 @@ export const PartnerClientsSection: React.FC = () => {
           const isSelected = selectedIds.has(client.id);
           const hasNote = !!notes[client.id];
 
-          const name = client.user_profiles.full_name || client.user_profiles.email;
+          const name =
+            client.user_profiles.full_name || client.user_profiles.email;
           const email = client.user_profiles.email;
 
           return (
             <div
               key={client.id}
-              className={`relative bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition-all ${
+              className={`relative rounded-xl border bg-white p-5 shadow-sm transition-all hover:shadow-md ${
                 isSelected
-                  ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/20'
-                  : 'border-slate-200'
+                  ? "border-blue-500 bg-blue-50/20 ring-1 ring-blue-500"
+                  : "border-slate-200"
               }`}
             >
               {/* Чекбокс выбора */}
               <div
-                className="absolute left-0 top-0 bottom-0 w-12 cursor-pointer z-10 flex items-center justify-center group/checkbox"
+                className="group/checkbox absolute top-0 bottom-0 left-0 z-10 flex w-12 cursor-pointer items-center justify-center"
                 onClick={() => toggleSelection(client.id)}
               >
                 <div
-                  className={`w-5 h-5 rounded border transition-colors flex items-center justify-center ${
+                  className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
                     isSelected
-                      ? 'bg-blue-600 border-blue-600'
-                      : 'border-slate-300 bg-white group-hover/checkbox:border-blue-400'
+                      ? "border-blue-600 bg-blue-600"
+                      : "border-slate-300 bg-white group-hover/checkbox:border-blue-400"
                   }`}
                 >
                   {isSelected && (
@@ -557,45 +576,45 @@ export const PartnerClientsSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="md:pl-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="flex flex-col justify-between gap-6 md:pl-8 lg:flex-row lg:items-center">
                 {/* Информация о клиенте */}
-                <div className="flex items-center gap-4 md:min-w-[250px] md:flex-row flex-col">
+                <div className="flex flex-col items-center gap-4 md:min-w-[250px] md:flex-row">
                   <div
-                    className={`w-12 h-12 min-w-12 min-h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
-                      !isExpired ? 'bg-blue-600' : 'bg-slate-400'
+                    className={`flex h-12 min-h-12 w-12 min-w-12 items-center justify-center rounded-full text-lg font-bold text-white ${
+                      !isExpired ? "bg-blue-600" : "bg-slate-400"
                     }`}
                   >
                     {name.charAt(0)}
                   </div>
-                  <div className='truncate max-w-full'>
-                    <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <div className="max-w-full truncate">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
                       <span className="truncate">{name}</span>
                       {hasNote && (
                         <StickyNote
                           size={14}
-                          className="text-amber-500 fill-amber-100"
+                          className="fill-amber-100 text-amber-500"
                         />
                       )}
                     </div>
-                    <div className="text-xs text-slate-500 truncate">
+                    <div className="truncate text-xs text-slate-500">
                       {email}
                     </div>
                   </div>
                 </div>
 
                 {/* Подписки по проектам */}
-                <div className="md:pl-0 pl-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
+                <div className="grid flex-1 grid-cols-1 gap-6 border-t border-slate-100 pt-4 pl-8 sm:grid-cols-2 md:pl-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      {t('partners.tariffLabel')}
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                      {t("partners.tariffLabel")}
                     </span>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="mt-1 flex items-center gap-2">
                       <span className="font-bold text-slate-800">
-                        {t('partners.tariffManaged')}
+                        {t("partners.tariffManaged")}
                       </span>
-                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                        {client.status === 'active'
-                          ? t('partners.statusActive')
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                        {client.status === "active"
+                          ? t("partners.statusActive")
                           : client.status}
                       </span>
                     </div>
@@ -605,8 +624,8 @@ export const PartnerClientsSection: React.FC = () => {
                     {/* Подробности по каждому проекту клиента — только «Проекты и подписки» */}
                     {clientProjects.length > 0 && (
                       <div className="space-y-1.5">
-                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {t('partners.projectsAndSubscriptions')}
+                        <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                          {t("partners.projectsAndSubscriptions")}
                         </div>
                         {clientProjects.slice(0, 3).map((project) => {
                           const projectSub = getSubscriptionInfo(
@@ -618,7 +637,7 @@ export const PartnerClientsSection: React.FC = () => {
                           return (
                             <div
                               key={project.id}
-                              className="flex items-center justify-between gap-2 text-xs bg-slate-50 rounded-md px-2 py-1"
+                              className="flex items-center justify-between gap-2 rounded-md bg-slate-50 px-2 py-1 text-xs"
                             >
                               <div className="truncate text-slate-700">
                                 {project.name}
@@ -626,9 +645,12 @@ export const PartnerClientsSection: React.FC = () => {
                               <div
                                 className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                   projectExpired
-                                    ? 'bg-red-50 text-red-600'
-                                    : projectSub.color.replace('bg-', 'bg-opacity-20 bg-') +
-                                      ' ' +
+                                    ? "bg-red-50 text-red-600"
+                                    : projectSub.color.replace(
+                                        "bg-",
+                                        "bg-opacity-20 bg-",
+                                      ) +
+                                      " " +
                                       projectSub.textColor
                                 }`}
                               >
@@ -638,8 +660,8 @@ export const PartnerClientsSection: React.FC = () => {
                           );
                         })}
                         {clientProjects.length > 3 && (
-                          <div className="text-[10px] text-slate-400 text-right">
-                            {t('partners.moreProjects', {
+                          <div className="text-right text-[10px] text-slate-400">
+                            {t("partners.moreProjects", {
                               count: clientProjects.length - 3,
                             })}
                           </div>
@@ -650,31 +672,31 @@ export const PartnerClientsSection: React.FC = () => {
                 </div>
 
                 {/* Действия */}
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto pt-4 lg:pt-0">
+                <div className="flex w-full flex-col items-center gap-3 pt-4 sm:flex-row lg:w-auto lg:pt-0">
                   <button
                     onClick={() => openNoteModal(client.id)}
-                    className={`p-2 rounded-lg transition-colors border ${
+                    className={`rounded-lg border p-2 transition-colors ${
                       hasNote
-                        ? 'bg-amber-50 border-amber-200 text-amber-600'
-                        : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                        ? "border-amber-200 bg-amber-50 text-amber-600"
+                        : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                     }`}
-                    title={t('partners.notesTitle')}
+                    title={t("partners.notesTitle")}
                   >
                     <StickyNote
                       size={18}
-                      className={hasNote ? 'fill-amber-100' : ''}
+                      className={hasNote ? "fill-amber-100" : ""}
                     />
                   </button>
 
                   <button
                     onClick={() => handleImpersonate(client.client_id)}
-                    className="w-full sm:w-auto px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center justify-center gap-2 group"
+                    className="group flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 sm:w-auto"
                   >
                     <LogIn
                       size={16}
-                      className="group-hover:text-blue-600 transition-colors"
+                      className="transition-colors group-hover:text-blue-600"
                     />
-                    {t('partners.loginAs')}
+                    {t("partners.loginAs")}
                   </button>
                 </div>
               </div>
@@ -683,17 +705,15 @@ export const PartnerClientsSection: React.FC = () => {
         })}
       </div>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start mt-8">
-        <div className="text-blue-500 mt-0.5">💡</div>
-        <div className="text-sm text-blue-800 leading-relaxed">
-          <p className="font-semibold mb-1">
-            {t('partners.integratorCabinetTitle')}
+      <div className="mt-8 flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
+        <div className="mt-0.5 text-blue-500">💡</div>
+        <div className="text-sm leading-relaxed text-blue-800">
+          <p className="mb-1 font-semibold">
+            {t("partners.integratorCabinetTitle")}
           </p>
-          <span>{t('partners.integratorCabinetText')}</span>
+          <span>{t("partners.integratorCabinetText")}</span>
         </div>
       </div>
     </div>
   );
 };
-
-

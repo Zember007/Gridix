@@ -1,24 +1,16 @@
 {
-    "extends": "../../packages/config/typescript/tsconfig.base.json",
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ]
-        },
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "resolveJsonModule": true
+  "extends": "../../packages/config/typescript/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
     },
-    "include": [
-        "src/**/*",
-        "src/vite-env.d.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*", "src/vite-env.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

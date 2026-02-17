@@ -11,4 +11,4 @@ export {
   convertPrice,
   type CurrencyInfo,
   type CurrencyType,
-} from '@gridix/utils/lib';
+} from "@gridix/utils/lib";

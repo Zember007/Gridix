@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 import { formatMoney, Language } from "@gridix/utils/lib";
-import type { Apartment } from '@/entities/apartment/model/types';
+import type { Apartment } from "@/entities/apartment/model/types";
 
 interface FieldConfig {
   field_label: string;
@@ -10,7 +10,11 @@ interface FieldConfig {
 interface UseFieldHelpersParams {
   language: Language;
   t: (key: string) => string;
-  convertPrice: (value: number, fromCurrency?: string | null, toCurrency?: string) => number;
+  convertPrice: (
+    value: number,
+    fromCurrency?: string | null,
+    toCurrency?: string,
+  ) => number;
   // explicit union to work well with exactOptionalPropertyTypes
   projectCurrency: string | null | undefined;
   selectedCurrency: string;
@@ -27,7 +31,10 @@ export const useFieldHelpers = ({
 }: UseFieldHelpersParams) => {
   const getFieldLabel = useCallback(
     (field: FieldConfig) => {
-      if (field.field_label_translations && field.field_label_translations[language]) {
+      if (
+        field.field_label_translations &&
+        field.field_label_translations[language]
+      ) {
         return field.field_label_translations[language];
       }
       return field.field_label;
@@ -35,14 +42,17 @@ export const useFieldHelpers = ({
     [language],
   );
 
-  const getCustomFieldValue = useCallback((apartment: Apartment, fieldName: string) => {
-    if (!apartment.custom_fields) return null;
-    const customFields = apartment.custom_fields as Record<string, unknown>;
-    return customFields[fieldName] || null;
-  }, []);
+  const getCustomFieldValue = useCallback(
+    (apartment: Apartment, fieldName: string) => {
+      if (!apartment.custom_fields) return null;
+      const customFields = apartment.custom_fields as Record<string, unknown>;
+      return customFields[fieldName] || null;
+    },
+    [],
+  );
 
   const formatPrice = useCallback((price: number) => {
-    return new Intl.NumberFormat('en-US').format(Math.round(price));
+    return new Intl.NumberFormat("en-US").format(Math.round(price));
   }, []);
 
   const formatFieldValue = useCallback(
@@ -51,45 +61,45 @@ export const useFieldHelpers = ({
         value === null ||
         value === undefined ||
         ((value === 0 || Number.isNaN(value)) &&
-          (selectedType == 'commercial' || selectedType == 'parking'))
+          (selectedType == "commercial" || selectedType == "parking"))
       )
-        return '-';
+        return "-";
 
-      if (fieldName === 'price') {
-          return formatMoney(
-              convertPrice(value as number, projectCurrency, selectedCurrency),
-              selectedCurrency,
+      if (fieldName === "price") {
+        return formatMoney(
+          convertPrice(value as number, projectCurrency, selectedCurrency),
+          selectedCurrency,
         );
       }
 
-      if (fieldName === 'area') {
-        return value + ' м²';
+      if (fieldName === "area") {
+        return value + " м²";
       }
 
-      if (fieldName === 'floor_number') {
-        return value + ' ' + t('project.floor').toLowerCase();
+      if (fieldName === "floor_number") {
+        return value + " " + t("project.floor").toLowerCase();
       }
 
-      if (fieldName === 'rooms') {
+      if (fieldName === "rooms") {
         if (value === 0) {
-          return t('apartment.studio');
+          return t("apartment.studio");
         } else {
-          return value + ' ' + t('apartment.room').toLowerCase();
+          return value + " " + t("apartment.room").toLowerCase();
         }
       }
 
       switch (fieldType) {
-        case 'boolean':
-          return value ? 'Да' : 'Нет';
-        case 'number':
-          return typeof value === 'number' ? value.toString() : String(value);
-        case 'select':
-          return Array.isArray(value) ? value.join(', ') : String(value);
+        case "boolean":
+          return value ? "Да" : "Нет";
+        case "number":
+          return typeof value === "number" ? value.toString() : String(value);
+        case "select":
+          return Array.isArray(value) ? value.join(", ") : String(value);
         default:
           return String(value);
       }
     },
-      [convertPrice, projectCurrency, selectedCurrency, selectedType, t],
+    [convertPrice, projectCurrency, selectedCurrency, selectedType, t],
   );
 
   return {
@@ -99,5 +109,3 @@ export const useFieldHelpers = ({
     formatPrice,
   };
 };
-
-

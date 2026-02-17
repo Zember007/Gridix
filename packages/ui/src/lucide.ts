@@ -6,5 +6,4 @@ export {
   MapPin as MapPinIcon,
   SlidersHorizontal as SlidersHorizontalIcon,
   X as XIcon,
-} from 'lucide-react';
-
+} from "lucide-react";

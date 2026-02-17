@@ -7,8 +7,8 @@ function getEnv(name: string, fallback: string): string {
     import.meta.env &&
     typeof (import.meta.env as Record<string, string | undefined>)[name] ===
       "string"
-    ? (import.meta.env as Record<string, string | undefined>)[name]
-    : undefined;
+      ? (import.meta.env as Record<string, string | undefined>)[name]
+      : undefined;
   return (v && v.length > 0 ? v : fallback) as string;
 }
 
@@ -25,7 +25,7 @@ export interface RedirectByAccountTypeOptions {
 export async function redirectToAppByAccountType(
   supabase: SupabaseClient,
   session: Session,
-  options: RedirectByAccountTypeOptions = {}
+  options: RedirectByAccountTypeOptions = {},
 ): Promise<void> {
   const { redirectToUrl, lang } = options;
   const userId = session.user?.id;
@@ -43,9 +43,15 @@ export async function redirectToAppByAccountType(
       ? String((profile as { account_type: string }).account_type)
       : "developer";
 
-  const agentCabinet = getEnv("VITE_AGENT_CABINET_URL", "https://agent.gridix.live");
+  const agentCabinet = getEnv(
+    "VITE_AGENT_CABINET_URL",
+    "https://agent.gridix.live",
+  );
   const mainApp = getEnv("VITE_MAIN_APP_URL", "https://app.gridix.live");
-  const partnersApp = getEnv("VITE_PARTNERS_APP_URL", "https://partner.gridix.live");
+  const partnersApp = getEnv(
+    "VITE_PARTNERS_APP_URL",
+    "https://partner.gridix.live",
+  );
 
   const hash = new URLSearchParams({
     access_token: session.access_token,
@@ -68,7 +74,8 @@ export async function redirectToAppByAccountType(
         const isPartnerTarget = u.origin === new URL(partnersApp).origin;
         const wrongTarget =
           (isAgentTarget && accountType !== "agent") ||
-          (isMainTarget && (accountType === "agent" || accountType === "partner")) ||
+          (isMainTarget &&
+            (accountType === "agent" || accountType === "partner")) ||
           (isPartnerTarget && accountType !== "partner");
         if (!wrongTarget) {
           const base = `${u.origin}${u.pathname}${u.search}`;

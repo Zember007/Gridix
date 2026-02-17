@@ -64,7 +64,8 @@ export async function consumeSupabaseSessionFromUrl(
     if (access_token && refresh_token) {
       // setSession replaces any existing session; avoid signOut first to prevent "signal is aborted" (competing requests).
       const isAbortError = (e: unknown) =>
-        e instanceof Error && (e.message.includes("abort") || e.name === "AbortError");
+        e instanceof Error &&
+        (e.message.includes("abort") || e.name === "AbortError");
       let lastError: Error | null = null;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
@@ -101,4 +102,3 @@ export async function consumeSupabaseSessionFromUrl(
     console.error("Failed to set session from hash tokens:", e);
   }
 }
-

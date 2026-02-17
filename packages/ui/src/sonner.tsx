@@ -1,13 +1,13 @@
-import * as React from "react"
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast as sonnerToast } from "sonner"
+import * as React from "react";
+import { useTheme } from "next-themes";
+import { Toaster as Sonner, toast as sonnerToast } from "sonner";
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme } = useTheme()
+  const { theme } = useTheme();
   const resolvedTheme: "light" | "dark" | "system" =
-    theme === "light" || theme === "dark" ? theme : "system"
+    theme === "light" || theme === "dark" ? theme : "system";
 
   return (
     <Sonner
@@ -27,7 +27,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster, sonnerToast }
+export { Toaster, sonnerToast };

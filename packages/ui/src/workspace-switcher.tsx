@@ -1,7 +1,18 @@
-import { Buildings as Building2, Building, Handshake, UserCheck } from "@phosphor-icons/react";
+import {
+  Buildings as Building2,
+  Building,
+  Handshake,
+  UserCheck,
+} from "@phosphor-icons/react";
 import { ADMIN_THEME } from "@gridix/utils/lib";
 import { useWorkspace } from "@gridix/utils/react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
 
 export interface WorkspaceSwitcherProps {
   className?: string;
@@ -22,14 +33,22 @@ export interface WorkspaceSwitcherProps {
 
 const toValue = (id: string | null) => id ?? "own";
 
-export function WorkspaceSwitcher({ className, show = true, isCollapsed = false, ownLabel }: WorkspaceSwitcherProps) {
-  const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } = useWorkspace();
+export function WorkspaceSwitcher({
+  className,
+  show = true,
+  isCollapsed = false,
+  ownLabel,
+}: WorkspaceSwitcherProps) {
+  const { activeWorkspaceId, setActiveWorkspaceId, availableWorkspaces } =
+    useWorkspace();
 
   if (!show || isCollapsed) return null;
   if (!availableWorkspaces.length) return null;
 
   const hasOwn = availableWorkspaces.some((w) => w.id === null);
-  const currentValue = hasOwn ? toValue(activeWorkspaceId) : toValue(activeWorkspaceId ?? availableWorkspaces[0]?.id ?? null);
+  const currentValue = hasOwn
+    ? toValue(activeWorkspaceId)
+    : toValue(activeWorkspaceId ?? availableWorkspaces[0]?.id ?? null);
 
   return (
     <div
@@ -38,7 +57,9 @@ export function WorkspaceSwitcher({ className, show = true, isCollapsed = false,
     >
       <Select
         value={currentValue}
-        onValueChange={(value) => setActiveWorkspaceId(value === "own" ? null : value)}
+        onValueChange={(value) =>
+          setActiveWorkspaceId(value === "own" ? null : value)
+        }
       >
         <SelectTrigger
           className="w-full"
@@ -48,7 +69,7 @@ export function WorkspaceSwitcher({ className, show = true, isCollapsed = false,
             color: ADMIN_THEME.sidebarText,
           }}
         >
-          <div className="flex items-center gap-2 flex-1 overflow-hidden">
+          <div className="flex flex-1 items-center gap-2 overflow-hidden">
             <Building className="h-4 w-4 flex-shrink-0" />
             <SelectValue />
           </div>
@@ -57,7 +78,10 @@ export function WorkspaceSwitcher({ className, show = true, isCollapsed = false,
           {availableWorkspaces.map((workspace) => {
             const id = workspace.id;
             const value = toValue(id);
-            const label = id === null ? ownLabel ?? workspace.label ?? "Мой workspace" : workspace.label;
+            const label =
+              id === null
+                ? (ownLabel ?? workspace.label ?? "Мой workspace")
+                : workspace.label;
 
             return (
               <SelectItem key={value} value={value}>
@@ -79,4 +103,3 @@ export function WorkspaceSwitcher({ className, show = true, isCollapsed = false,
     </div>
   );
 }
-

@@ -5,7 +5,6 @@ import { componentTagger } from "lovable-tagger";
 import viteCompression from "vite-plugin-compression";
 import Inspect from "vite-plugin-inspect";
 
-
 export default defineConfig(({ mode }) => {
   const isWidgetBuild = process.env.WIDGET_BUILD === "true";
   const timestamp = Date.now().toString();
@@ -17,18 +16,17 @@ export default defineConfig(({ mode }) => {
   if (isWidgetBuild) console.log(`📦 Build version: ${buildVersion}`);
 
   const baseConfig = {
-    
-    base: '/', // Ensure assets load from root domain, not relative to current path
+    base: "/", // Ensure assets load from root domain, not relative to current path
     server: {
       host: "::",
       port: 8080,
       proxy: {
-        '/api/widget': {
-          target: 'http://localhost:54321/functions/v1/widget-api',
+        "/api/widget": {
+          target: "http://localhost:54321/functions/v1/widget-api",
           changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/api\/widget/, '')
-        }
-      }
+          rewrite: (path: string) => path.replace(/^\/api\/widget/, ""),
+        },
+      },
     },
     plugins: [
       Inspect(),
@@ -36,19 +34,19 @@ export default defineConfig(({ mode }) => {
       mode === "development" && componentTagger(),
       ...(mode === "production"
         ? [
-          viteCompression({
-            algorithm: "gzip",
-            ext: ".gz",
-            threshold: 10240,
-            deleteOriginFile: false,
-          }),
-          viteCompression({
-            algorithm: "brotliCompress",
-            ext: ".br",
-            threshold: 10240,
-            deleteOriginFile: false,
-          }),
-        ]
+            viteCompression({
+              algorithm: "gzip",
+              ext: ".gz",
+              threshold: 10240,
+              deleteOriginFile: false,
+            }),
+            viteCompression({
+              algorithm: "brotliCompress",
+              ext: ".br",
+              threshold: 10240,
+              deleteOriginFile: false,
+            }),
+          ]
         : []),
     ].filter(Boolean),
     resolve: {
@@ -70,7 +68,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       build: {
-        outDir: 'public/widget',
+        outDir: "public/widget",
         cssCodeSplit: false,
         minify: "esbuild",
         lib: {
@@ -88,7 +86,9 @@ export default defineConfig(({ mode }) => {
             extend: false,
             exports: "default",
             assetFileNames: (assetInfo) =>
-              assetInfo.name === "style.css" ? "style.css" : assetInfo.name || "asset",
+              assetInfo.name === "style.css"
+                ? "style.css"
+                : assetInfo.name || "asset",
           },
         },
       },
@@ -109,10 +109,15 @@ export default defineConfig(({ mode }) => {
         compress: {
           drop_console: true,
           drop_debugger: true,
-          pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
+          pure_funcs: [
+            "console.log",
+            "console.info",
+            "console.debug",
+            "console.trace",
+          ],
         },
       },
-      sourcemap: false
+      sourcemap: false,
     },
   };
 });

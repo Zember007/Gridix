@@ -16,19 +16,17 @@ export const useLeadsQuery = (filters?: LeadFilters) => {
   const filtersKey = generateFiltersKey(filters);
 
   const query = useQuery({
-    queryKey: [
-      "leads",
-      userRole.type,
-      activeWorkspaceId,
-      filtersKey,
-    ],
+    queryKey: ["leads", userRole.type, activeWorkspaceId, filtersKey],
     enabled: userRole.type !== "loading",
     queryFn: async () => {
       if (userRole.type === "manager" && activeWorkspaceId) {
         const userId = user?.id;
         if (!userId) return [];
 
-        const projectIds = await getManagerProjectIds(userId, activeWorkspaceId);
+        const projectIds = await getManagerProjectIds(
+          userId,
+          activeWorkspaceId,
+        );
 
         if (!projectIds || projectIds.length === 0) {
           return [];

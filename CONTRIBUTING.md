@@ -6,15 +6,15 @@
 
 The following must **NEVER** be committed to this repository:
 
-| File/Secret | Reason |
-|-------------|--------|
-| `.env` files | Contains credentials |
-| `SUPABASE_SERVICE_ROLE_KEY` | Full database access |
-| Production Supabase keys | Security breach risk |
-| AmoCRM/Bitrix API keys | Third-party access |
-| OneSignal keys | Notification access |
-| JWT secrets | Auth bypass risk |
-| Any `*_SECRET` or `*_KEY` variables | Security |
+| File/Secret                         | Reason               |
+| ----------------------------------- | -------------------- |
+| `.env` files                        | Contains credentials |
+| `SUPABASE_SERVICE_ROLE_KEY`         | Full database access |
+| Production Supabase keys            | Security breach risk |
+| AmoCRM/Bitrix API keys              | Third-party access   |
+| OneSignal keys                      | Notification access  |
+| JWT secrets                         | Auth bypass risk     |
+| Any `*_SECRET` or `*_KEY` variables | Security             |
 
 ### Pre-Commit Checklist
 
@@ -162,13 +162,13 @@ supabase functions deploy <function-name>
 
 ```typescript
 // ✅ Correct
-import { Button } from '@gridix/ui';
-import { supabase } from '@gridix/utils';
-import type { Database } from '@gridix/types/database';
+import { Button } from "@gridix/ui";
+import { supabase } from "@gridix/utils";
+import type { Database } from "@gridix/types/database";
 
 // ❌ Incorrect
-import { Button } from '../../packages/ui';
-import { something } from '@/shared/something';
+import { Button } from "../../packages/ui";
+import { something } from "@/shared/something";
 ```
 
 ### Database Types
@@ -176,10 +176,10 @@ import { something } from '@/shared/something';
 Always use generated Supabase types:
 
 ```typescript
-import type { Database } from '@gridix/types/database';
+import type { Database } from "@gridix/types/database";
 
-type Project = Database['public']['Tables']['projects']['Row'];
-type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
+type Project = Database["public"]["Tables"]["projects"]["Row"];
+type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
 ```
 
 ---
@@ -193,6 +193,7 @@ type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 ```
 
 Examples:
+
 - `[main] Add project filtering by status`
 - `[agent-cabinet] Fix dashboard loading state`
 - `[types] Regenerate database types for new schema`
@@ -201,16 +202,20 @@ Examples:
 
 ```markdown
 ## Summary
+
 Brief description of changes
 
 ## Changes
+
 - Change 1
 - Change 2
 
 ## Testing
+
 How to test these changes
 
 ## Checklist
+
 - [ ] `pnpm turbo run typecheck` passes
 - [ ] `pnpm turbo run lint` passes
 - [ ] No secrets in code

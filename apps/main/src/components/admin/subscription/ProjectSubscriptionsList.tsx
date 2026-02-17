@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { Button } from "@gridix/ui";
 import {
   Building2,
@@ -6,32 +6,31 @@ import {
   AlertTriangle,
   ArrowRight,
   Plus,
-} from 'lucide-react';
-import { ProjectSubscription } from '@/entities/subscription/queries/useSubscription';
-import { useLanguage } from '@/contexts/LanguageContext';
+} from "lucide-react";
+import { ProjectSubscription } from "@/entities/subscription/queries/useSubscription";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProjectSubscriptionsListProps {
   projects: ProjectSubscription[];
   onOpenInvoice: (projectId: string, currentPlanId?: string | null) => void;
 }
 
-export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> = ({
-  projects,
-  onOpenInvoice,
-}) => {
+export const ProjectSubscriptionsList: React.FC<
+  ProjectSubscriptionsListProps
+> = ({ projects, onOpenInvoice }) => {
   const { t } = useLanguage();
 
   if (projects.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-8 text-center shadow-sm">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
           <Building2 size={24} className="text-slate-400" />
         </div>
         <h3 className="text-lg font-bold text-slate-700">
-          {t('admin.subscriptionPage.projects.emptyTitle')}
+          {t("admin.subscriptionPage.projects.emptyTitle")}
         </h3>
-        <p className="text-slate-500 text-sm mt-1 mb-4 max-w-md mx-auto">
-          {t('admin.subscriptionPage.projects.emptyDescription')}
+        <p className="mx-auto mb-4 mt-1 max-w-md text-sm text-slate-500">
+          {t("admin.subscriptionPage.projects.emptyDescription")}
         </p>
       </div>
     );
@@ -41,12 +40,13 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
     <div className="flex flex-col gap-4">
       {projects.map((project) => {
         const sub = project.user_subscriptions?.[0];
-        const isActive = sub?.status === 'active';
-        const isExpired = sub?.status === 'expired';
+        const isActive = sub?.status === "active";
+        const isExpired = sub?.status === "expired";
 
         const daysLeft = isActive
           ? Math.ceil(
-              (new Date(sub.current_period_end || '').getTime() - new Date().getTime()) /
+              (new Date(sub.current_period_end || "").getTime() -
+                new Date().getTime()) /
                 (1000 * 60 * 60 * 24),
             )
           : 0;
@@ -55,24 +55,26 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
         return (
           <div
             key={project.id}
-            className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
+            className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
+            <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center">
               {/* Project Info */}
-              <div className="flex items-center gap-4 min-w-[250px]">
+              <div className="flex min-w-[250px] items-center gap-4">
                 <div
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 font-bold text-lg uppercase ${
-                    isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-bold uppercase ${
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   {project.name.substring(0, 2)}
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 truncate max-w-[200px] ">
+                  <h3 className="max-w-[200px] truncate font-bold text-slate-900">
                     {project.name}
                   </h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 ">
-                    <Building2 size={10} />{' '}
+                  <p className="flex items-center gap-1 text-xs text-slate-500">
+                    <Building2 size={10} />{" "}
                     {project.user_profiles?.company_name ||
                       project.user_profiles?.full_name ||
                       project.user_profiles?.email ||
@@ -82,84 +84,93 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
               </div>
 
               {/* Subscription Status Info */}
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+              <div className="flex flex-1 gap-4 border-t border-slate-100 pt-4 max-lg:flex-col max-lg:gap-1 max-md:flex-row max-md:gap-4 md:border-l md:border-t-0 md:pl-6 md:pt-0 lg:gap-4">
                 {/* Plan Name */}
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                    {t('admin.subscriptionPage.projects.tariff')}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {t("admin.subscriptionPage.projects.tariff")}
                   </span>
                   {sub?.subscription_plans ? (
-                    <div className="font-bold text-slate-800 mt-0.5">
+                    <div className="mt-0.5 font-bold text-slate-800">
                       {sub.subscription_plans.name}
                     </div>
                   ) : (
-                    <div className="text-sm text-slate-400 mt-0.5 italic">
-                      {t('admin.subscriptionPage.projects.notSelected')}
+                    <div className="mt-0.5 text-sm italic text-slate-400">
+                      {t("admin.subscriptionPage.projects.notSelected")}
                     </div>
                   )}
                 </div>
 
                 {/* Dates */}
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                    {t('admin.subscriptionPage.projects.expiresAt')}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {t("admin.subscriptionPage.projects.expiresAt")}
                   </span>
                   {sub?.current_period_end ? (
                     <div className="mt-0.5">
                       <div
                         className={`text-sm font-medium ${
-                          isUrgent && isActive ? 'text-red-600' : 'text-slate-700'
+                          isUrgent && isActive
+                            ? "text-red-600"
+                            : "text-slate-700"
                         }`}
                       >
-                        {new Date(sub.current_period_end).toLocaleDateString('ru-RU')}
+                        {new Date(sub.current_period_end).toLocaleDateString(
+                          "ru-RU",
+                        )}
                       </div>
                     </div>
                   ) : project.subscription_expires_at ? (
                     <div className="mt-0.5 text-sm text-slate-700">
-                      {new Date(project.subscription_expires_at).toLocaleDateString('ru-RU')}
+                      {new Date(
+                        project.subscription_expires_at,
+                      ).toLocaleDateString("ru-RU")}
                     </div>
                   ) : (
-                    <div className="text-sm text-slate-300 mt-0.5">—</div>
+                    <div className="mt-0.5 text-sm text-slate-300">—</div>
                   )}
                 </div>
 
                 {/* Status Badge */}
                 <div className="flex items-center sm:justify-start">
                   {isActive ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                      <CheckCircle2 size={14} /> {t('admin.subscriptionPage.projects.status.active')}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">
+                      <CheckCircle2 size={14} />{" "}
+                      {t("admin.subscriptionPage.projects.status.active")}
                     </span>
                   ) : isExpired ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                      <AlertTriangle size={14} /> {t('admin.subscriptionPage.projects.status.expired')}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
+                      <AlertTriangle size={14} />{" "}
+                      {t("admin.subscriptionPage.projects.status.expired")}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
-                      {t('admin.subscriptionPage.projects.status.inactive')}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500">
+                      {t("admin.subscriptionPage.projects.status.inactive")}
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Action Button */}
-              <div className="flex md:justify-end pt-2 md:pt-0">
+              <div className="flex pt-2 md:justify-end md:pt-0">
                 {isActive ? (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-full md:w-auto px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm flex items-center justify-center gap-2"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600 md:w-auto"
                     onClick={() => onOpenInvoice(project.id, sub?.plan_id)}
                   >
-                    {t('admin.subscriptionPage.projects.buttons.extend')}{' '}
+                    {t("admin.subscriptionPage.projects.buttons.extend")}{" "}
                     <ArrowRight size={16} className="opacity-50" />
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    className="w-full md:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg md:w-auto"
                     onClick={() => onOpenInvoice(project.id, sub?.plan_id)}
                   >
-                    <Plus size={18} /> {t('admin.subscriptionPage.projects.buttons.activate')}
+                    <Plus size={18} />{" "}
+                    {t("admin.subscriptionPage.projects.buttons.activate")}
                   </Button>
                 )}
               </div>
@@ -169,7 +180,7 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
             {isActive && daysLeft > 0 && daysLeft < 30 && (
               <div className="h-1 w-full bg-slate-100">
                 <div
-                  className={`h-full ${isUrgent ? 'bg-red-500' : 'bg-green-500'}`}
+                  className={`h-full ${isUrgent ? "bg-red-500" : "bg-green-500"}`}
                   style={{
                     width: `${Math.max(0, Math.min(100, (daysLeft / 30) * 100))}%`,
                   }}
@@ -182,4 +193,3 @@ export const ProjectSubscriptionsList: React.FC<ProjectSubscriptionsListProps> =
     </div>
   );
 };
-

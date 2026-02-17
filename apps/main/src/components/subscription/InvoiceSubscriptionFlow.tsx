@@ -1,14 +1,20 @@
-import { useState } from 'react';
-import { useCompanySettings } from '@/hooks/useCompanySettings';
-import { useSubscription } from '@/entities/subscription/queries/useSubscription';
-import { PaymentMethodSelector } from './PaymentMethodSelector';
-import { InvoiceViewer } from './InvoiceViewer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import { useState } from "react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useSubscription } from "@/entities/subscription/queries/useSubscription";
+import { PaymentMethodSelector } from "./PaymentMethodSelector";
+import { InvoiceViewer } from "./InvoiceViewer";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Alert, AlertDescription } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Loader2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { toast } from '@gridix/ui';
+import { Loader2, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { toast } from "@gridix/ui";
 
 interface InvoiceSubscriptionFlowProps {
   projectId: string;
@@ -18,29 +24,35 @@ interface InvoiceSubscriptionFlowProps {
   onCancel?: () => void;
 }
 
-export function InvoiceSubscriptionFlow({ 
-  projectId, 
-  planId, 
-  durationMonths, 
-  onSuccess, 
-  onCancel 
+export function InvoiceSubscriptionFlow({
+  projectId,
+  planId,
+  durationMonths,
+  onSuccess,
+  onCancel,
 }: InvoiceSubscriptionFlowProps) {
-  const { settings, isSettingsComplete, loading: settingsLoading } = useCompanySettings();
+  const {
+    settings,
+    isSettingsComplete,
+    loading: settingsLoading,
+  } = useCompanySettings();
   const { requestInvoice, loading: subscriptionLoading } = useSubscription();
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'invoice' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "invoice" | null>(
+    null,
+  );
   const [isRequesting, setIsRequesting] = useState(false);
   const [invoiceRequested, setInvoiceRequested] = useState(false);
 
-  const handlePaymentMethodSelect = (method: 'card' | 'invoice') => {
+  const handlePaymentMethodSelect = (method: "card" | "invoice") => {
     setPaymentMethod(method);
   };
 
   const handleRequestInvoice = async () => {
     if (!isSettingsComplete()) {
       toast({
-        title: 'Ошибка',
-        description: 'Необходимо заполнить реквизиты компании',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Необходимо заполнить реквизиты компании",
+        variant: "destructive",
       });
       return;
     }
@@ -50,14 +62,14 @@ export function InvoiceSubscriptionFlow({
       await requestInvoice(projectId, planId, durationMonths);
       setInvoiceRequested(true);
       toast({
-        title: 'Запрос отправлен',
-        description: 'Счет будет сгенерирован администратором',
+        title: "Запрос отправлен",
+        description: "Счет будет сгенерирован администратором",
       });
     } catch (error: any) {
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось запросить счет',
-        variant: 'destructive',
+        title: "Ошибка",
+        description: error.message || "Не удалось запросить счет",
+        variant: "destructive",
       });
     } finally {
       setIsRequesting(false);
@@ -76,12 +88,12 @@ export function InvoiceSubscriptionFlow({
 
   const getStatusText = () => {
     if (invoiceRequested) {
-      return 'Запрос на счет отправлен';
+      return "Запрос на счет отправлен";
     }
     if (isRequesting) {
-      return 'Отправка запроса...';
+      return "Отправка запроса...";
     }
-    return 'Готово к отправке запроса';
+    return "Готово к отправке запроса";
   };
 
   if (settingsLoading) {
@@ -107,14 +119,14 @@ export function InvoiceSubscriptionFlow({
       )}
 
       {/* Invoice Flow */}
-      {paymentMethod === 'invoice' && (
+      {paymentMethod === "invoice" && (
         <div className="space-y-4">
           {/* Company Settings Check */}
           {!isSettingsComplete() && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Для выставления счета необходимо заполнить реквизиты компании. 
+                Для выставления счета необходимо заполнить реквизиты компании.
                 Перейдите в настройки и заполните все обязательные поля.
               </AlertDescription>
             </Alert>
@@ -126,31 +138,42 @@ export function InvoiceSubscriptionFlow({
               <CardHeader>
                 <CardTitle>Готово к выставлению счета</CardTitle>
                 <CardDescription>
-                  Все необходимые данные заполнены. Можете запросить счет на оплату.
+                  Все необходимые данные заполнены. Можете запросить счет на
+                  оплату.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Предварительный просмотр</h4>
+                <div className="rounded-lg bg-muted p-4">
+                  <h4 className="mb-2 font-medium">Предварительный просмотр</h4>
                   <div className="space-y-1 text-sm">
-                    <div><strong>Плательщик:</strong> {settings?.company_name}</div>
-                    <div><strong>Получатель:</strong> GRIDIX LLC</div>
-                    <div><strong>Назначение:</strong> Оплата подписки на {durationMonths} месяца по проекту (аккаунт {settings?.company_name})</div>
+                    <div>
+                      <strong>Плательщик:</strong> {settings?.company_name}
+                    </div>
+                    <div>
+                      <strong>Получатель:</strong> GRIDIX LLC
+                    </div>
+                    <div>
+                      <strong>Назначение:</strong> Оплата подписки на{" "}
+                      {durationMonths} месяца по проекту (аккаунт{" "}
+                      {settings?.company_name})
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Button 
+                  <Button
                     onClick={handleRequestInvoice}
                     disabled={isRequesting}
                     className="flex items-center gap-2"
                   >
-                    {isRequesting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isRequesting && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
                     Запросить счет
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     onClick={onCancel}
                     disabled={isRequesting}
                   >
@@ -170,7 +193,8 @@ export function InvoiceSubscriptionFlow({
                   {getStatusText()}
                 </CardTitle>
                 <CardDescription>
-                  Администратор сгенерирует PDF-счет и отправит вам ссылку для скачивания
+                  Администратор сгенерирует PDF-счет и отправит вам ссылку для
+                  скачивания
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -179,21 +203,20 @@ export function InvoiceSubscriptionFlow({
                   <AlertDescription>
                     <div className="space-y-2">
                       <p className="font-medium">Что дальше:</p>
-                      <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <ol className="list-inside list-decimal space-y-1 text-sm">
                         <li>Администратор сгенерирует PDF-счет</li>
                         <li>Вы получите ссылку для скачивания</li>
                         <li>Оплатите счет через банковский перевод</li>
-                        <li>Администратор подтвердит оплату и активирует подписку</li>
+                        <li>
+                          Администратор подтвердит оплату и активирует подписку
+                        </li>
                       </ol>
                     </div>
                   </AlertDescription>
                 </Alert>
 
                 <div className="flex items-center gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={onCancel}
-                  >
+                  <Button variant="outline" onClick={onCancel}>
                     Закрыть
                   </Button>
                 </div>
@@ -204,7 +227,7 @@ export function InvoiceSubscriptionFlow({
       )}
 
       {/* Card Payment Flow */}
-      {paymentMethod === 'card' && (
+      {paymentMethod === "card" && (
         <Card>
           <CardHeader>
             <CardTitle>Оплата картой</CardTitle>
@@ -220,18 +243,12 @@ export function InvoiceSubscriptionFlow({
                 Пока доступна только оплата по счету для компаний из Грузии.
               </AlertDescription>
             </Alert>
-            
-            <div className="flex items-center gap-3 mt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setPaymentMethod(null)}
-              >
+
+            <div className="mt-4 flex items-center gap-3">
+              <Button variant="outline" onClick={() => setPaymentMethod(null)}>
                 Назад к выбору
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={onCancel}
-              >
+              <Button variant="outline" onClick={onCancel}>
                 Отмена
               </Button>
             </div>

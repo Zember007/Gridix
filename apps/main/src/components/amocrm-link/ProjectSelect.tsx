@@ -1,4 +1,4 @@
-import type { Project } from '@/entities/project/queries/useProjectsManager';
+import type { Project } from "@/entities/project/queries/useProjectsManager";
 
 export function ProjectSelect({
   projects,
@@ -17,7 +17,7 @@ export function ProjectSelect({
     <div className="space-y-2">
       <select
         className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        value={value ?? ''}
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
         disabled={disabled}
       >
@@ -32,28 +32,3 @@ export function ProjectSelect({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

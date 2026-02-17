@@ -1,5 +1,4 @@
-
-import ProjectsGallery from '@/components/projects/ProjectsGallery';
+import ProjectsGallery from "@/components/projects/ProjectsGallery";
 import { LanguageToggle } from "@gridix/ui";
 import { useLanguageNavigation } from "@gridix/utils/react";
 
@@ -7,7 +6,9 @@ interface ProjectsGalleryPageProps {
   embedMode?: boolean;
 }
 
-const ProjectsGalleryPage = ({ embedMode = false }: ProjectsGalleryPageProps) => {
+const ProjectsGalleryPage = ({
+  embedMode = false,
+}: ProjectsGalleryPageProps) => {
   const { getPathWithLanguage } = useLanguageNavigation();
 
   return (
@@ -23,9 +24,11 @@ const ProjectsGalleryPage = ({ embedMode = false }: ProjectsGalleryPageProps) =>
           showHeader={true}
           onProjectSelect={(projectId) => {
             if (embedMode) {
-              window.open(`/embed/project/${projectId}`, '_blank');
+              window.open(`/embed/project/${projectId}`, "_blank");
             } else {
-              window.location.href = getPathWithLanguage(`/project/${projectId}`);
+              window.location.href = getPathWithLanguage(
+                `/project/${projectId}`,
+              );
             }
           }}
         />

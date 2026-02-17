@@ -9,21 +9,43 @@ import {
   SimplifiedSidebar,
   type SimplifiedSidebarNavItem,
 } from "@gridix/ui";
-import { ChartBar, Buildings as Building2, UserCircle as UserIcon, Stack as Layers3, Handshake } from "@phosphor-icons/react";
+import {
+  ChartBar,
+  Buildings as Building2,
+  UserCircle as UserIcon,
+  Stack as Layers3,
+  Handshake,
+} from "@phosphor-icons/react";
 import { Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@gridix/ui";
 
-export type AgentCabinetPage = "dashboard" | "analytics" | "contacts" | "catalog" | "partnerProgram";
+export type AgentCabinetPage =
+  | "dashboard"
+  | "analytics"
+  | "contacts"
+  | "catalog"
+  | "partnerProgram";
 
 const getQueryPage = (search: string): AgentCabinetPage | null => {
   const page = new URLSearchParams(search).get("page");
-  if (page === "dashboard" || page === "analytics" || page === "contacts" || page === "catalog" || page === "partnerProgram") return page;
+  if (
+    page === "dashboard" ||
+    page === "analytics" ||
+    page === "contacts" ||
+    page === "catalog" ||
+    page === "partnerProgram"
+  )
+    return page;
   return null;
 };
 
-const setQueryPage = (navigate: ReturnType<typeof useNavigate>, location: ReturnType<typeof useLocation>, page: AgentCabinetPage) => {
+const setQueryPage = (
+  navigate: ReturnType<typeof useNavigate>,
+  location: ReturnType<typeof useLocation>,
+  page: AgentCabinetPage,
+) => {
   const url = new URL(window.location.href);
   if (url.searchParams.get("page") === page) return;
   url.searchParams.set("page", page);
@@ -47,11 +69,31 @@ export function AgentCabinetLayout({
 
   const navItems = useMemo<SimplifiedSidebarNavItem[]>(
     () => [
-      { id: "dashboard", icon: <Building2 size={20} />, label: t("common.nav.dashboard") },
-      { id: "contacts", icon: <UserIcon size={20} />, label: t("common.nav.contacts") },
-      { id: "catalog", icon: <Layers3 size={20} />, label: t("common.nav.projects") },
-      { id: "analytics", icon: <ChartBar size={20} />, label: t("common.nav.analytics") },
-      { id: "partnerProgram", icon: <Handshake size={20} />, label: t("common.nav.partnerProgram") },
+      {
+        id: "dashboard",
+        icon: <Building2 size={20} />,
+        label: t("common.nav.dashboard"),
+      },
+      {
+        id: "contacts",
+        icon: <UserIcon size={20} />,
+        label: t("common.nav.contacts"),
+      },
+      {
+        id: "catalog",
+        icon: <Layers3 size={20} />,
+        label: t("common.nav.projects"),
+      },
+      {
+        id: "analytics",
+        icon: <ChartBar size={20} />,
+        label: t("common.nav.analytics"),
+      },
+      {
+        id: "partnerProgram",
+        icon: <Handshake size={20} />,
+        label: t("common.nav.partnerProgram"),
+      },
     ],
     [t],
   );
@@ -79,10 +121,10 @@ export function AgentCabinetLayout({
   );
 
   return (
-    <div className="min-h-screen bg-background flex overflow-x-hidden">
+    <div className="flex min-h-screen overflow-x-hidden bg-background">
       {isMobile ? (
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-          <SheetContent side="left" className="p-0 w-80">
+          <SheetContent side="left" className="w-80 p-0">
             {sidebar}
           </SheetContent>
         </Sheet>
@@ -91,20 +133,28 @@ export function AgentCabinetLayout({
       )}
 
       <div
-        className={`flex-1 min-w-0 bg-background flex flex-col transition-all duration-300 overflow-x-hidden ${
-          isCollapsed && !isMobile ? "md:ml-28 md:max-w-[calc(100vw-7rem)]" : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
+        className={`flex min-w-0 flex-1 flex-col bg-background transition-all duration-300 ${
+          isCollapsed && !isMobile
+            ? "md:ml-28 md:max-w-[calc(100vw-7rem)]"
+            : "md:ml-64 md:max-w-[calc(100vw-16rem)]"
         }`}
       >
         {isMobile ? (
-          <div className="p-4 border-b flex items-center bg-white sticky top-0 z-20">
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)}>
+          <div className="sticky top-0 z-20 flex items-center border-b bg-white p-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileOpen(true)}
+            >
               <Menu className="h-6 w-6" />
             </Button>
             <span className="ml-2 font-semibold">{t("common.app.title")}</span>
           </div>
         ) : null}
 
-        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden h-screen bg-[#F8FAFC]">{children}</main>
+        <main className="h-screen min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#F8FAFC]">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -115,7 +165,8 @@ export function useAgentCabinetPageRouting() {
   const navigate = useNavigate();
 
   const activePage = getQueryPage(location.search) ?? "dashboard";
-  const setActivePage = (p: AgentCabinetPage) => setQueryPage(navigate, location, p);
+  const setActivePage = (p: AgentCabinetPage) =>
+    setQueryPage(navigate, location, p);
 
   return { activePage, setActivePage };
 }

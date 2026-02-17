@@ -1,22 +1,22 @@
-import React from 'react';
-import { cn } from '@gridix/utils/lib';
+import React from "react";
+import { cn } from "@gridix/utils/lib";
 
 interface LoaderProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   color?: string;
 }
 
 const sizeMap = {
-  sm: 'w-8 h-8',
-  md: 'w-12 h-12',
-  lg: 'w-[100px] h-[100px]'
+  sm: "w-8 h-8",
+  md: "w-12 h-12",
+  lg: "w-[100px] h-[100px]",
 };
 
 export const Loader: React.FC<LoaderProps> = ({
   className,
-  size = 'md',
-  color = '#000000'
+  size = "md",
+  color = "#000000",
 }) => {
   const itemsCount = 9;
   const loaderItems = Array.from({ length: itemsCount }, (_, index) => index);
@@ -30,29 +30,28 @@ export const Loader: React.FC<LoaderProps> = ({
       <div
         className="absolute inset-0 transform"
         style={{
-          transform: 'rotateX(45deg) rotateZ(45deg)',
-          transformStyle: 'preserve-3d'
+          transform: "rotateX(45deg) rotateZ(45deg)",
+          transformStyle: "preserve-3d",
         }}
       >
-
         <div
-          className="absolute inset-0 "
+          className="absolute inset-0"
           style={{
             backgroundColor: `color-mix(in srgb, ${color} ${100 - 7 * 4}%, white)`,
-						transform: 'translate(0%, 0%)'
+            transform: "translate(0%, 0%)",
           }}
         />
         {loaderItems.map((index) => (
           <div
             key={index}
-            className="absolute inset-0 animate-loader-item"
+            className="animate-loader-item absolute inset-0"
             style={{
               backgroundColor: `color-mix(in srgb, ${color} ${100 - 7 * 4}%, white)`,
               // Отрицательная задержка — ключевой момент для плавности
               animationDelay: `-${index * step}s`,
               animationDuration: `${duration}s`,
-              animationIterationCount: 'infinite',
-              animationTimingFunction: 'ease'
+              animationIterationCount: "infinite",
+              animationTimingFunction: "ease",
             }}
           />
         ))}

@@ -8,7 +8,9 @@ const ProjectWidgetPage = lazy(() => import("@/pages/ProjectWidgetPage"));
 const AuthRedirectPage = lazy(() => import("@/pages/AuthRedirectPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const PDFTemplatePage = lazy(() => import("@/pages/PDFTemplatePage"));
-const InvitationHandlerPage = lazy(() => import("@/pages/InvitationHandlerPage"));
+const InvitationHandlerPage = lazy(
+  () => import("@/pages/InvitationHandlerPage"),
+);
 const AgentProjectsPage = lazy(() => import("@/pages/AgentProjectsPage"));
 const AgentApplicationPage = lazy(() => import("@/pages/AgentApplicationPage"));
 
@@ -20,8 +22,14 @@ export function PublicRoutes() {
       {/* Widget routes */}
       <Route path="widget/:projectSlug" element={<ProjectWidgetPage />} />
       <Route path="project/:projectSlug" element={<ProjectWidgetPage />} />
-      <Route path="project/:projectSlug/apartment/:apartmentNumber" element={<ApartmentDetailsPage />} />
-      <Route path="project/:projectSlug/apartment/:apartmentNumber/pdf" element={<PDFTemplatePage />} />
+      <Route
+        path="project/:projectSlug/apartment/:apartmentNumber"
+        element={<ApartmentDetailsPage />}
+      />
+      <Route
+        path="project/:projectSlug/apartment/:apartmentNumber/pdf"
+        element={<PDFTemplatePage />}
+      />
 
       {/* Auth routes */}
       <Route path="auth" element={<AuthRedirectPage />} />
@@ -40,4 +48,3 @@ export function PublicRoutes() {
     </Routes>
   );
 }
-

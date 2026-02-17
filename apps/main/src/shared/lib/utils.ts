@@ -9,4 +9,3 @@ export { cn } from "@gridix/utils/lib";
 export { generateSlug } from "@gridix/utils/lib";
 export { formatDate, formatDateTime, getRelativeTime } from "@gridix/utils/lib";
 export { AMOCRM_DEVELOPER_CABINET_URL } from "@/shared/config/urls";
-

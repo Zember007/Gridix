@@ -1,18 +1,33 @@
-import { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@gridix/ui";
+import { useState, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@gridix/ui";
 import { Button } from "@gridix/ui";
 import { Badge } from "@gridix/ui";
-import { Plus, GripVertical, Eye, EyeOff, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  Plus,
+  GripVertical,
+  Eye,
+  EyeOff,
+  Edit,
+  Trash2,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Language } from "@gridix/utils/lib";
-import CustomFieldsManager from '@/components/fields/CustomFieldsManager';
-import { useFields, FieldSetting } from '@/hooks/useFields';
+import CustomFieldsManager from "@/components/fields/CustomFieldsManager";
+import { useFields, FieldSetting } from "@/hooks/useFields";
 
 interface CustomField {
   id?: string;
   field_name: string;
   field_label: string;
-  field_type: 'text' | 'number' | 'select' | 'boolean';
+  field_type: "text" | "number" | "select" | "boolean";
   is_required: boolean;
   field_options?: string[];
   sort_order: number;
@@ -30,13 +45,19 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   const { t, language } = useLanguage();
 
   // Функция для получения локализованного названия поля
-  const getFieldLabel = (field: { field_label: string; field_label_translations?: Partial<Record<Language, string>> }) => {
-    if (field.field_label_translations && field.field_label_translations[language]) {
+  const getFieldLabel = (field: {
+    field_label: string;
+    field_label_translations?: Partial<Record<Language, string>>;
+  }) => {
+    if (
+      field.field_label_translations &&
+      field.field_label_translations[language]
+    ) {
       return field.field_label_translations[language];
     }
     return field.field_label;
   };
-  
+
   const {
     fields,
     loading,
@@ -44,45 +65,46 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     updateFieldOrder,
     updateFieldVisibility,
     deleteField,
-    refreshFields
+    refreshFields,
   } = useFields(projectId);
-
-
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = useCallback(async (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    
-    if (draggedIndex === null || draggedIndex === dropIndex || isSaving) {
+  const handleDrop = useCallback(
+    async (e: React.DragEvent, dropIndex: number) => {
+      e.preventDefault();
+
+      if (draggedIndex === null || draggedIndex === dropIndex || isSaving) {
+        setDraggedIndex(null);
+        return;
+      }
+
+      const newFields = [...fields];
+      const [draggedField] = newFields.splice(draggedIndex, 1);
+      if (!draggedField) {
+        setDraggedIndex(null);
+        return;
+      }
+      newFields.splice(dropIndex, 0, draggedField);
+
+      const updatedFields = newFields.map((field, index) => ({
+        ...field,
+        sort_order: index,
+      }));
+
+      await updateFieldOrder(updatedFields);
       setDraggedIndex(null);
-      return;
-    }
-
-    const newFields = [...fields];
-    const [draggedField] = newFields.splice(draggedIndex, 1);
-    if (!draggedField) {
-      setDraggedIndex(null);
-      return;
-    }
-    newFields.splice(dropIndex, 0, draggedField);
-
-    const updatedFields = newFields.map((field, index) => ({
-      ...field,
-      sort_order: index
-    }));
-
-    await updateFieldOrder(updatedFields);
-    setDraggedIndex(null);
-  }, [draggedIndex, fields, isSaving, updateFieldOrder]);
+    },
+    [draggedIndex, fields, isSaving, updateFieldOrder],
+  );
 
   const handleVisibilityToggle = async (field: FieldSetting) => {
     await updateFieldVisibility(field);
@@ -96,7 +118,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
     if (!field.is_custom || isSaving) {
       if (!field.is_custom) {
         // Показываем ошибку через toast, но не импортируем toast
-        console.error(t('customFields.cannotEditBuiltIn'));
+        console.error(t("customFields.cannotEditBuiltIn"));
       }
       return;
     }
@@ -110,7 +132,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
       sort_order: field.sort_order,
       is_visible: field.is_visible,
       is_required: field.is_required || false,
-      field_options: field.field_options || []
+      field_options: field.field_options || [],
     });
   };
 
@@ -125,12 +147,12 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
               setEditingField(null);
             }}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t('customFields.back')}
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("customFields.back")}
           </Button>
         </div>
-        <CustomFieldsManager 
-          projectId={projectId} 
+        <CustomFieldsManager
+          projectId={projectId}
           onFieldsChange={() => {
             refreshFields();
           }}
@@ -145,27 +167,29 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
   }
 
   if (loading) {
-    return <div className="p-4 text-center">{t('customFields.loading')}</div>;
+    return <div className="p-4 text-center">{t("customFields.loading")}</div>;
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {t('customFields.allFieldsOrder')}
+          {t("customFields.allFieldsOrder")}
           {isSaving && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </CardTitle>
         <CardDescription>
-          {isSaving ? t('customFields.saving') : t('customFields.allFieldsOrderDescription')}
+          {isSaving
+            ? t("customFields.saving")
+            : t("customFields.allFieldsOrderDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {fields.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">
-              {t('customFields.noFields')}
+          <div className="py-8 text-center">
+            <p className="mb-4 text-muted-foreground">
+              {t("customFields.noFields")}
             </p>
           </div>
         ) : (
@@ -177,47 +201,60 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                 onDragStart={(e) => !isSaving && handleDragStart(e, index)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => !isSaving && handleDrop(e, index)}
-                className={`
-                  flex items-center gap-3 p-3 border rounded-lg bg-background
-                  hover:shadow-sm transition-shadow
-                  ${isSaving ? 'cursor-not-allowed opacity-50' : 'cursor-move'}
-                  ${draggedIndex === index ? 'opacity-50' : ''}
-                  ${!field.is_visible ? 'opacity-60' : ''}
-                `}
+                className={`relative flex gap-3 rounded-lg border bg-background p-3 transition-shadow hover:shadow-sm max-xs:flex-col xs:items-center ${isSaving ? "cursor-not-allowed opacity-50" : "cursor-move"} ${draggedIndex === index ? "opacity-50" : ""} ${!field.is_visible ? "opacity-60" : ""} `}
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+
+                <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-center">
+                  <div className="flex flex-col">
                     <span className="font-medium">{getFieldLabel(field)}</span>
+                    <p className="text-sm text-muted-foreground">
+                      {field.field_name}
+                    </p>
+                  </div>
+                  <div className={"flex h-full gap-2"}>
                     {field.is_custom ? (
-                      <Badge variant="secondary" className="text-xs">
-                        {t('customFields.custom')}
+                      <Badge
+                        variant="secondary"
+                        className="whitespace-nowrap text-xs"
+                      >
+                        {t("customFields.custom")}
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-xs">
-                        {t('customFields.builtin')}
+                      <Badge
+                        variant="outline"
+                        className="whitespace-nowrap text-xs"
+                      >
+                        {t("customFields.builtin")}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-xs">
-                      {field.field_type === 'text' && t('customFields.fieldTypeText')}
-                      {field.field_type === 'number' && t('customFields.fieldTypeNumber')}
-                      {field.field_type === 'select' && t('customFields.fieldTypeSelect')}
-                      {field.field_type === 'boolean' && t('customFields.fieldTypeBoolean')}
+                    <Badge
+                      variant="outline"
+                      className="whitespace-nowrap text-xs"
+                    >
+                      {field.field_type === "text" &&
+                        t("customFields.fieldTypeText")}
+                      {field.field_type === "number" &&
+                        t("customFields.fieldTypeNumber")}
+                      {field.field_type === "select" &&
+                        t("customFields.fieldTypeSelect")}
+                      {field.field_type === "boolean" &&
+                        t("customFields.fieldTypeBoolean")}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {field.field_name}
-                  </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-0 xs:gap-2 sm:flex-row">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => !isSaving && handleVisibilityToggle(field)}
                     disabled={isSaving}
-                    title={field.is_visible ? t('customFields.hide') : t('customFields.show')}
+                    title={
+                      field.is_visible
+                        ? t("customFields.hide")
+                        : t("customFields.show")
+                    }
                   >
                     {field.is_visible ? (
                       <Eye className="h-4 w-4" />
@@ -225,7 +262,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                       <EyeOff className="h-4 w-4" />
                     )}
                   </Button>
-                  
+
                   {field.is_custom && (
                     <>
                       <Button
@@ -236,7 +273,7 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -259,8 +296,8 @@ const AllFieldsManager = ({ projectId }: AllFieldsManagerProps) => {
           className="w-full"
           variant="outline"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('customFields.addField')}
+          <Plus className="mr-2 h-4 w-4" />
+          {t("customFields.addField")}
         </Button>
       </CardContent>
     </Card>

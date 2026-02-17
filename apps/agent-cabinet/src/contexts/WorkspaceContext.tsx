@@ -17,9 +17,12 @@ export function AgentWorkspaceProvider({ children }: { children: ReactNode }) {
       loadWorkspaces={async () => {
         if (!user?.id) return [];
 
-        const { data, error } = await supabase.functions.invoke("agent-program", {
-          body: { action: "list_my_workspaces" },
-        });
+        const { data, error } = await supabase.functions.invoke(
+          "agent-program",
+          {
+            body: { action: "list_my_workspaces" },
+          },
+        );
         if (error) throw error;
 
         const raw = (data as { workspaces?: unknown } | null)?.workspaces;
@@ -27,10 +30,12 @@ export function AgentWorkspaceProvider({ children }: { children: ReactNode }) {
 
         return list
           .map((w) => {
-            const applicationId = typeof w?.application_id === "string" ? w.application_id : null;
+            const applicationId =
+              typeof w?.application_id === "string" ? w.application_id : null;
             const profile = (w as any)?.developer_profile ?? null;
             const label =
-              (typeof profile?.company_name === "string" && profile.company_name) ||
+              (typeof profile?.company_name === "string" &&
+                profile.company_name) ||
               (typeof profile?.full_name === "string" && profile.full_name) ||
               (typeof profile?.email === "string" && profile.email) ||
               "Workspace";
@@ -40,9 +45,16 @@ export function AgentWorkspaceProvider({ children }: { children: ReactNode }) {
             const developerInfo =
               profile && typeof profile === "object"
                 ? {
-                    full_name: typeof profile.full_name === "string" ? profile.full_name : "",
-                    company_name: typeof profile.company_name === "string" ? profile.company_name : "",
-                    email: typeof profile.email === "string" ? profile.email : "",
+                    full_name:
+                      typeof profile.full_name === "string"
+                        ? profile.full_name
+                        : "",
+                    company_name:
+                      typeof profile.company_name === "string"
+                        ? profile.company_name
+                        : "",
+                    email:
+                      typeof profile.email === "string" ? profile.email : "",
                   }
                 : null;
 
@@ -51,13 +63,18 @@ export function AgentWorkspaceProvider({ children }: { children: ReactNode }) {
               label,
               type: "agent",
               meta: {
-                developer_user_id: typeof (w as any)?.developer_user_id === "string" ? (w as any).developer_user_id : null,
+                developer_user_id:
+                  typeof (w as any)?.developer_user_id === "string"
+                    ? (w as any).developer_user_id
+                    : null,
                 commission_rate: (w as any)?.commission_rate ?? null,
                 agreement_signed_at: (w as any)?.agreement_signed_at ?? null,
               },
             };
 
-            return developerInfo ? { ...optionBase, developerInfo } : optionBase;
+            return developerInfo
+              ? { ...optionBase, developerInfo }
+              : optionBase;
           })
           .filter(Boolean) as WorkspaceOption[];
       }}
@@ -66,4 +83,3 @@ export function AgentWorkspaceProvider({ children }: { children: ReactNode }) {
     </WorkspaceProvider>
   );
 }
-

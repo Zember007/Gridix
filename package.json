@@ -6,7 +6,11 @@
     "dev": "pnpm turbo run dev",
     "build": "pnpm turbo run build",
     "lint": "pnpm turbo run lint",
+    "format": "prettier . --write",
+    "format:check": "lint-staged --diff=origin/dev --allow-empty",
     "typecheck": "pnpm turbo run typecheck",
+    "stylelint": "stylelint \"**/*.{css,scss}\"",
+    "stylelint:fix": "stylelint \"**/*.{css,scss}\" --fix",
     "clean": "pnpm turbo run clean",
     "dev:main": "pnpm --filter @gridix/main dev",
     "dev:agent": "pnpm --filter @gridix/agent-cabinet dev",
@@ -16,13 +20,23 @@
     "translate:dry-run": "node scripts/translate.mjs --dry-run"
   },
   "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
     "fs-extra": "^11.3.3",
     "google-translate-api-x": "^10.7.2",
     "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "stylelint": "^17.3.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-scss": "^7.0.0",
     "turbo": "^2.3.3"
   },
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=18"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,yml,yaml,css,scss,html}": "prettier --check"
   }
 }

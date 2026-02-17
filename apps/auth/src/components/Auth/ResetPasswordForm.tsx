@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@gridix/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@gridix/ui";
 import { toast } from "sonner";
 import { supabase } from "@gridix/utils/api";
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
@@ -9,7 +18,9 @@ interface ResetPasswordFormProps {
   onSuccess?: () => void;
 }
 
-export default function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({
+  onSuccess,
+}: ResetPasswordFormProps) {
   const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,11 +71,13 @@ export default function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps)
 
   if (!isValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-muted-foreground">{t("auth.checkingRecoverySession")}</p>
+              <p className="text-muted-foreground">
+                {t("auth.checkingRecoverySession")}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -73,14 +86,18 @@ export default function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">{t("auth.resetPasswordPageTitle")}</CardTitle>
-          <CardDescription className="text-center">{t("auth.resetPasswordPageDescription")}</CardDescription>
+          <CardTitle className="text-center text-2xl">
+            {t("auth.resetPasswordPageTitle")}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {t("auth.resetPasswordPageDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <form onSubmit={handleSubmit} className="mt-2 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">{t("auth.newPassword")}</Label>
               <Input
@@ -95,7 +112,9 @@ export default function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
+              <Label htmlFor="confirmPassword">
+                {t("auth.confirmPassword")}
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -116,4 +135,3 @@ export default function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps)
     </div>
   );
 }
-

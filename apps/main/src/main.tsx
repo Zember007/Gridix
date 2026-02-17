@@ -12,6 +12,4 @@ if (import.meta.env.PROD) {
   });
 }
 
-
-
 createRoot(document.getElementById("root")!).render(<App />);

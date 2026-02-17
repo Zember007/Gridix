@@ -3,11 +3,15 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
-
+import eslintConfigPrettier from "eslint-config-prettier";
 export default tseslint.config(
   { ignores: ["dist", "supabase/functions/**"] },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      eslintConfigPrettier,
+    ],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
@@ -33,8 +37,7 @@ export default tseslint.config(
       // We keep typechecking strict, but allow `any` in lint to avoid blocking CI.
       "@typescript-eslint/no-explicit-any": "off",
     },
-  }
-  ,
+  },
   // Layer boundaries (FSD-like). We allow app-layer imports only inside src/app.
   {
     files: ["src/**/*.{ts,tsx}"],
@@ -53,8 +56,7 @@ export default tseslint.config(
         },
       ],
     },
-  }
-  ,
+  },
   // Prevent direct Supabase client imports (use `@/shared/api/supabase` wrapper).
   {
     files: ["src/**/*.{ts,tsx}"],
@@ -73,8 +75,7 @@ export default tseslint.config(
         },
       ],
     },
-  }
-  ,
+  },
   // Entities should not depend on UI layers directly.
   {
     files: ["src/entities/**/*.{ts,tsx}"],
@@ -92,13 +93,12 @@ export default tseslint.config(
         },
       ],
     },
-  }
-  ,
+  },
   // Tooling configs sometimes use `require()` for compatibility.
   {
     files: ["**/*.config.*", "tailwind.config.ts"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },
-  }
+  },
 );

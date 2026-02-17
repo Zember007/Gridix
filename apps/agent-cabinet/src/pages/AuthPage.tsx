@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@gridix/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@gridix/ui";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,16 +20,23 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-none shadow-xl bg-white">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md border-none bg-white shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-black">{t("common.app.title")}</CardTitle>
+          <CardTitle className="text-2xl font-black">
+            {t("common.app.title")}
+          </CardTitle>
           <CardDescription>{t("common.auth.sendLink")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">{t("common.auth.email")}</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <Button
             className="w-full"
@@ -34,7 +50,9 @@ export default function AuthPage() {
               try {
                 setLoading(true);
                 await signInWithOtp(cleaned);
-                toast.success(t("common.auth.checkEmailTitle"), { description: t("common.auth.magicLinkSent") });
+                toast.success(t("common.auth.checkEmailTitle"), {
+                  description: t("common.auth.magicLinkSent"),
+                });
               } catch (e: any) {
                 console.error(e);
                 toast.error(e?.message || t("common.errors.failedToSendLink"));
@@ -50,4 +68,3 @@ export default function AuthPage() {
     </div>
   );
 }
-

@@ -1,142 +1,141 @@
 {
-    "title": "Refund Policy",
-    "lastUpdated": "Last updated:",
-    "introduction": {
-      "title": "General Provisions",
-      "text": "Gridix company strives to ensure high quality service and customer satisfaction. This Refund Policy describes the conditions under which you can request a refund for paid funds for using the FloorPlan Wizard service.",
-      "important": "Important:",
-      "importantText": "Please carefully read the refund conditions before subscribing."
+  "title": "Refund Policy",
+  "lastUpdated": "Last updated:",
+  "introduction": {
+    "title": "General Provisions",
+    "text": "Gridix company strives to ensure high quality service and customer satisfaction. This Refund Policy describes the conditions under which you can request a refund for paid funds for using the FloorPlan Wizard service.",
+    "important": "Important:",
+    "importantText": "Please carefully read the refund conditions before subscribing."
+  },
+  "companyInfo": {
+    "title": "Company Information",
+    "name": "Name:",
+    "nameValue": "Gridix",
+    "address": "Address:",
+    "addressValue": "Georgia, Batumi, Leselidze St. 3",
+    "email": "Email:",
+    "emailValue": "inbox@gridix.live"
+  },
+  "guarantee": {
+    "title": "Money Back Guarantee (14 days)",
+    "text": "We offer a 14-day money back guarantee for new subscriptions:",
+    "item1": "Refund available within 14 calendar days from the first payment",
+    "item2": "Applies only to the first subscription payment (does not apply to renewals)",
+    "item3": "Full refund is provided",
+    "item4": "No explanation of refund reasons required",
+    "item5": "After refund, access to paid features will be terminated",
+    "note": "Note:",
+    "noteText": "To process a refund within 14 days, contact us at inbox@gridix.live"
+  },
+  "eligibility": {
+    "title": "Refund Eligibility",
+    "eligible": {
+      "title": "✓ Refund is available in the following cases:",
+      "item1": "First subscription within 14 days of payment",
+      "item2": "Technical problems that make the service unusable",
+      "item3": "Mismatch with stated functionality with documentary evidence",
+      "item4": "Double charge due to technical reasons",
+      "item5": "Subscription cancellation initiated by the company"
     },
-    "companyInfo": {
-      "title": "Company Information",
-      "name": "Name:",
-      "nameValue": "Gridix",
-      "address": "Address:",
-      "addressValue": "Georgia, Batumi, Leselidze St. 3",
-      "email": "Email:",
-      "emailValue": "inbox@gridix.live"
-    },
-    "guarantee": {
-      "title": "Money Back Guarantee (14 days)",
-      "text": "We offer a 14-day money back guarantee for new subscriptions:",
-      "item1": "Refund available within 14 calendar days from the first payment",
-      "item2": "Applies only to the first subscription payment (does not apply to renewals)",
-      "item3": "Full refund is provided",
-      "item4": "No explanation of refund reasons required",
-      "item5": "After refund, access to paid features will be terminated",
-      "note": "Note:",
-      "noteText": "To process a refund within 14 days, contact us at inbox@gridix.live"
-    },
-    "eligibility": {
-      "title": "Refund Eligibility",
-      "eligible": {
-        "title": "✓ Refund is available in the following cases:",
-        "item1": "First subscription within 14 days of payment",
-        "item2": "Technical problems that make the service unusable",
-        "item3": "Mismatch with stated functionality with documentary evidence",
-        "item4": "Double charge due to technical reasons",
-        "item5": "Subscription cancellation initiated by the company"
-      },
-      "notEligible": {
-        "title": "✗ Refund is NOT provided in the following cases:",
-        "item1": "More than 14 days have passed since the first payment",
-        "item2": "Renewal of existing subscription",
-        "item3": "Violation of the User Agreement",
-        "item4": "Account blocking for violation of usage rules",
-        "item5": "Partial use of paid period (except 14-day guarantee)",
-        "item6": "Change of user decision without objective reasons (after 14 days)"
-      }
-    },
-    "process": {
-      "title": "Refund Process",
-      "text": "To process a refund, follow these steps:",
-      "step1": {
-        "title": "Submit Request",
-        "text": "Write to inbox@gridix.live with subject \"Refund Request\""
-      },
-      "step2": {
-        "title": "Provide Information",
-        "text": "Provide account email, payment date and refund reason (optional)"
-      },
-      "step3": {
-        "title": "Get Confirmation",
-        "text": "We will review your request within 2-3 business days"
-      },
-      "step4": {
-        "title": "Receive Refund",
-        "text": "Upon approval, refund will be processed within 5-10 business days to original payment method"
-      }
-    },
-    "timeline": {
-      "title": "Refund Timeline",
-      "processing": {
-        "title": "Processing Time:",
-        "item1": "Request review: 2-3 business days",
-        "item2": "Approval/rejection: within 1 business day after review",
-        "item3": "Customer notification: within 24 hours"
-      },
-      "receipt": {
-        "title": "Receipt Time:",
-        "item1": "Credit/debit cards: 5-10 business days",
-        "item2": "PayPal: 3-5 business days",
-        "item3": "Bank transfer: 7-14 business days"
-      },
-      "note": "Please note:",
-      "noteText": "Actual receipt time may depend on your bank or payment system."
-    },
-    "partialRefunds": {
-      "title": "Partial Refunds",
-      "text": "In some cases, a partial refund may be provided:",
-      "item1": "Significant technical problems affecting part of the subscription period",
-      "item2": "Service changes significantly affecting functionality",
-      "item3": "Discontinuation of certain features",
-      "calculation": "Partial refund amount is calculated proportionally to unused subscription period or degree of service unavailability."
-    },
-    "cancellation": {
-      "title": "Subscription Cancellation Without Refund",
-      "text": "You can cancel automatic subscription renewal at any time:",
-      "item1": "Access to service is retained until the end of paid period",
-      "item2": "Automatic charges cease",
-      "item3": "No refund for remaining period (except cases described above)",
-      "item4": "You can resume subscription at any time",
-      "howTo": "How to cancel:",
-      "howToText": "Go to \"Subscription\" section in your account and click \"Cancel Subscription\""
-    },
-    "specialCases": {
-      "title": "Special Cases",
-      "technical": {
-        "title": "Technical Problems:",
-        "text": "If you encounter technical problems preventing service use, please contact our support first. We will try to resolve the issue before considering a refund."
-      },
-      "forceMajeure": {
-        "title": "Force Majeure:",
-        "text": "In case of force majeure circumstances making service provision impossible, we may offer proportional refund or subscription extension."
-      },
-      "functionality": {
-        "title": "Functionality Changes:",
-        "text": "If significant functionality changes do not meet your expectations, we will consider refund on individual basis."
-      }
-    },
-    "disputes": {
-      "title": "Dispute Resolution",
-      "text": "If you disagree with the decision on your refund request:",
-      "item1": "You can request reconsideration with additional evidence",
-      "item2": "We strive to find fair solution for both parties",
-      "item3": "If necessary, matter can be escalated to management",
-      "item4": "As last resort, disputes are resolved according to applicable law"
-    },
-    "changes": {
-      "title": "Changes to Refund Policy",
-      "text1": "Gridix company reserves the right to change the terms of this Refund Policy. Changes take effect upon publication on the website.",
-      "text2": "Significant changes worsening conditions for users do not apply to existing subscriptions until renewal."
-    },
-    "contact": {
-      "title": "Contact Information",
-      "text": "For refund questions, contact:",
-      "email": "Email: inbox@gridix.live",
-      "address": "Address: Georgia, Batumi, Leselidze St. 3",
-      "responseTime": "Response Time:",
-      "responseTimeText": "We strive to respond to all refund requests within 2-3 business days."
+    "notEligible": {
+      "title": "✗ Refund is NOT provided in the following cases:",
+      "item1": "More than 14 days have passed since the first payment",
+      "item2": "Renewal of existing subscription",
+      "item3": "Violation of the User Agreement",
+      "item4": "Account blocking for violation of usage rules",
+      "item5": "Partial use of paid period (except 14-day guarantee)",
+      "item6": "Change of user decision without objective reasons (after 14 days)"
     }
+  },
+  "process": {
+    "title": "Refund Process",
+    "text": "To process a refund, follow these steps:",
+    "step1": {
+      "title": "Submit Request",
+      "text": "Write to inbox@gridix.live with subject \"Refund Request\""
+    },
+    "step2": {
+      "title": "Provide Information",
+      "text": "Provide account email, payment date and refund reason (optional)"
+    },
+    "step3": {
+      "title": "Get Confirmation",
+      "text": "We will review your request within 2-3 business days"
+    },
+    "step4": {
+      "title": "Receive Refund",
+      "text": "Upon approval, refund will be processed within 5-10 business days to original payment method"
+    }
+  },
+  "timeline": {
+    "title": "Refund Timeline",
+    "processing": {
+      "title": "Processing Time:",
+      "item1": "Request review: 2-3 business days",
+      "item2": "Approval/rejection: within 1 business day after review",
+      "item3": "Customer notification: within 24 hours"
+    },
+    "receipt": {
+      "title": "Receipt Time:",
+      "item1": "Credit/debit cards: 5-10 business days",
+      "item2": "PayPal: 3-5 business days",
+      "item3": "Bank transfer: 7-14 business days"
+    },
+    "note": "Please note:",
+    "noteText": "Actual receipt time may depend on your bank or payment system."
+  },
+  "partialRefunds": {
+    "title": "Partial Refunds",
+    "text": "In some cases, a partial refund may be provided:",
+    "item1": "Significant technical problems affecting part of the subscription period",
+    "item2": "Service changes significantly affecting functionality",
+    "item3": "Discontinuation of certain features",
+    "calculation": "Partial refund amount is calculated proportionally to unused subscription period or degree of service unavailability."
+  },
+  "cancellation": {
+    "title": "Subscription Cancellation Without Refund",
+    "text": "You can cancel automatic subscription renewal at any time:",
+    "item1": "Access to service is retained until the end of paid period",
+    "item2": "Automatic charges cease",
+    "item3": "No refund for remaining period (except cases described above)",
+    "item4": "You can resume subscription at any time",
+    "howTo": "How to cancel:",
+    "howToText": "Go to \"Subscription\" section in your account and click \"Cancel Subscription\""
+  },
+  "specialCases": {
+    "title": "Special Cases",
+    "technical": {
+      "title": "Technical Problems:",
+      "text": "If you encounter technical problems preventing service use, please contact our support first. We will try to resolve the issue before considering a refund."
+    },
+    "forceMajeure": {
+      "title": "Force Majeure:",
+      "text": "In case of force majeure circumstances making service provision impossible, we may offer proportional refund or subscription extension."
+    },
+    "functionality": {
+      "title": "Functionality Changes:",
+      "text": "If significant functionality changes do not meet your expectations, we will consider refund on individual basis."
+    }
+  },
+  "disputes": {
+    "title": "Dispute Resolution",
+    "text": "If you disagree with the decision on your refund request:",
+    "item1": "You can request reconsideration with additional evidence",
+    "item2": "We strive to find fair solution for both parties",
+    "item3": "If necessary, matter can be escalated to management",
+    "item4": "As last resort, disputes are resolved according to applicable law"
+  },
+  "changes": {
+    "title": "Changes to Refund Policy",
+    "text1": "Gridix company reserves the right to change the terms of this Refund Policy. Changes take effect upon publication on the website.",
+    "text2": "Significant changes worsening conditions for users do not apply to existing subscriptions until renewal."
+  },
+  "contact": {
+    "title": "Contact Information",
+    "text": "For refund questions, contact:",
+    "email": "Email: inbox@gridix.live",
+    "address": "Address: Georgia, Batumi, Leselidze St. 3",
+    "responseTime": "Response Time:",
+    "responseTimeText": "We strive to respond to all refund requests within 2-3 business days."
+  }
 }
-

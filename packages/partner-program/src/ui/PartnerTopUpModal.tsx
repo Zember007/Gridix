@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   X,
   CreditCard,
@@ -10,24 +10,24 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
-} from 'lucide-react';
-import { useLanguage } from '@gridix/utils/react';
+} from "lucide-react";
+import { useLanguage } from "@gridix/utils/react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type ViewState = 'topup' | 'add_requisites';
-type PersonType = 'individual' | 'legal';
+type ViewState = "topup" | "add_requisites";
+type PersonType = "individual" | "legal";
 
 export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
-  const [view, setView] = useState<ViewState>('topup');
-  const [amount, setAmount] = useState('');
+  const [view, setView] = useState<ViewState>("topup");
+  const [amount, setAmount] = useState("");
 
   // Requisites Form State
-  const [personType, setPersonType] = useState<PersonType>('individual');
+  const [personType, setPersonType] = useState<PersonType>("individual");
   const [hasNoVat, setHasNoVat] = useState(false);
 
   if (!isOpen) return null;
@@ -37,89 +37,83 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const total = numAmount + vat;
 
   const handleClose = () => {
-    setView('topup');
+    setView("topup");
     onClose();
   };
 
   // --- VIEW: Add Requisites ---
-  if (view === 'add_requisites') {
+  if (view === "add_requisites") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all scale-100 flex flex-col max-h-[90vh]">
+      <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+        <div className="flex max-h-[90vh] w-full max-w-lg scale-100 transform flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10 shrink-0">
+          <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-gray-100 bg-white p-4 sm:p-5">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setView('topup')}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => setView("topup")}
+                className="rounded-full p-1 transition-colors hover:bg-gray-100"
               >
                 <ArrowLeft size={20} className="text-gray-500" />
               </button>
               <h3 className="text-lg font-bold text-gray-900">
-                {t('partners.topupAddRequisitesTitle')}
+                {t("partners.topupAddRequisitesTitle")}
               </h3>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 transition-colors hover:text-gray-600"
             >
               <X size={24} />
             </button>
           </div>
 
           {/* Info Box */}
-          <div className="px-4 py-3 sm:px-6 sm:py-4 bg-blue-50 border-b border-blue-100 shrink-0">
+          <div className="shrink-0 border-b border-blue-100 bg-blue-50 px-4 py-3 sm:px-6 sm:py-4">
             <div className="flex gap-3">
               <HelpCircle
                 size={18}
-                className="text-blue-500 flex-shrink-0 mt-0.5"
+                className="mt-0.5 flex-shrink-0 text-blue-500"
               />
               <p className="text-xs text-blue-700">
-                {t('partners.topupAddRequisitesHint')}
+                {t("partners.topupAddRequisitesHint")}
               </p>
             </div>
           </div>
 
           {/* Form Content */}
-          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 sm:space-y-5">
+          <div className="custom-scrollbar space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-6">
             {/* Toggle */}
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setPersonType('individual')}
-                className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                  personType === 'individual'
-                    ? 'bg-green-50 border-green-500 text-green-700 shadow-sm'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                onClick={() => setPersonType("individual")}
+                className={`flex items-center justify-center gap-2 rounded-lg border p-3 transition-all ${
+                  personType === "individual"
+                    ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 <User size={18} />
-                <span className="font-medium text-sm">
-                  {t('partners.topupIndividual')}
+                <span className="text-sm font-medium">
+                  {t("partners.topupIndividual")}
                 </span>
-                {personType === 'individual' && (
-                  <CheckCircle2
-                    size={16}
-                    className="ml-1 hidden sm:block"
-                  />
+                {personType === "individual" && (
+                  <CheckCircle2 size={16} className="ml-1 hidden sm:block" />
                 )}
               </button>
               <button
-                onClick={() => setPersonType('legal')}
-                className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                  personType === 'legal'
-                    ? 'bg-green-50 border-green-500 text-green-700 shadow-sm'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                onClick={() => setPersonType("legal")}
+                className={`flex items-center justify-center gap-2 rounded-lg border p-3 transition-all ${
+                  personType === "legal"
+                    ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 <Building2 size={18} />
-                <span className="font-medium text-sm">
-                  {t('partners.topupLegal')}
+                <span className="text-sm font-medium">
+                  {t("partners.topupLegal")}
                 </span>
-                {personType === 'legal' && (
-                  <CheckCircle2
-                    size={16}
-                    className="ml-1 hidden sm:block"
-                  />
+                {personType === "legal" && (
+                  <CheckCircle2 size={16} className="ml-1 hidden sm:block" />
                 )}
               </button>
             </div>
@@ -130,45 +124,40 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 <input
                   type="text"
                   placeholder={
-                    personType === 'individual'
-                      ? t('partners.topupNamePlaceholder')
-                      : t('partners.topupCompanyPlaceholder')
+                    personType === "individual"
+                      ? t("partners.topupNamePlaceholder")
+                      : t("partners.topupCompanyPlaceholder")
                   }
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 />
               </div>
 
-              {personType === 'individual' && (
+              {personType === "individual" && (
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder={t('partners.topupBirthDatePlaceholder')}
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400"
+                    placeholder={t("partners.topupBirthDatePlaceholder")}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500"
                   />
                   <Calendar
                     size={18}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400"
                   />
                 </div>
               )}
 
               <div className="relative">
-                <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all text-gray-700 appearance-none">
+                <select className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 transition-all outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500">
                   <option value="" disabled selected>
-                    {t('partners.topupCountry')}
+                    {t("partners.topupCountry")}
                   </option>
                   <option value="ge">Georgia</option>
                   <option value="ua">Ukraine</option>
                   <option value="kz">Kazakhstan</option>
                   <option value="tr">Turkey</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg
-                    width="10"
-                    height="6"
-                    viewBox="0 0 10 6"
-                    fill="none"
-                  >
+                <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
                     <path
                       d="M1 1L5 5L9 1"
                       stroke="#9CA3AF"
@@ -180,40 +169,40 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <input
                   type="text"
-                  placeholder={t('partners.topupZip')}
-                  className="w-full sm:w-1/3 px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400"
+                  placeholder={t("partners.topupZip")}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 sm:w-1/3"
                 />
                 <input
                   type="text"
-                  placeholder={t('partners.topupCity')}
-                  className="w-full sm:w-2/3 px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400"
+                  placeholder={t("partners.topupCity")}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 sm:w-2/3"
                 />
               </div>
 
               <input
                 type="text"
-                placeholder={t('partners.topupAddress')}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400"
+                placeholder={t("partners.topupAddress")}
+                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500"
               />
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <input
                   type="text"
                   placeholder="VAT No."
                   disabled={hasNoVat}
-                  className={`w-full sm:flex-1 px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400 ${
-                    hasNoVat ? 'bg-gray-100 text-gray-400' : 'bg-white'
+                  className={`w-full rounded-lg border border-gray-200 px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 sm:flex-1 ${
+                    hasNoVat ? "bg-gray-100 text-gray-400" : "bg-white"
                   }`}
                 />
-                <label className="flex items-center gap-2 cursor-pointer select-none py-1 sm:py-0">
+                <label className="flex cursor-pointer items-center gap-2 py-1 select-none sm:py-0">
                   <div
-                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
                       hasNoVat
-                        ? 'bg-green-500 border-green-500'
-                        : 'border-gray-300 bg-white'
+                        ? "border-green-500 bg-green-500"
+                        : "border-gray-300 bg-white"
                     }`}
                   >
                     {hasNoVat && (
@@ -227,7 +216,7 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     />
                   </div>
                   <span className="text-sm text-gray-700">
-                    {t('partners.topupNoVat')}
+                    {t("partners.topupNoVat")}
                   </span>
                 </label>
               </div>
@@ -235,18 +224,18 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Footer Buttons */}
-          <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4 mt-auto shrink-0">
+          <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 bg-gray-50 p-4 sm:p-5">
             <button
-              onClick={() => setView('topup')}
-              className="text-gray-500 font-bold text-xs hover:text-gray-700 transition-colors uppercase tracking-wider px-2 py-2"
+              onClick={() => setView("topup")}
+              className="px-2 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase transition-colors hover:text-gray-700"
             >
-              {t('partners.cancel')}
+              {t("partners.cancel")}
             </button>
             <button
-              onClick={() => setView('topup')}
-              className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold text-xs px-6 py-3 rounded shadow-md hover:shadow-lg transition-all uppercase tracking-wide"
+              onClick={() => setView("topup")}
+              className="rounded bg-[#4CAF50] px-6 py-3 text-xs font-bold tracking-wide text-white uppercase shadow-md transition-all hover:bg-[#43A047] hover:shadow-lg"
             >
-              {t('partners.topupAdd')}
+              {t("partners.topupAdd")}
             </button>
           </div>
         </div>
@@ -256,39 +245,39 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   // --- VIEW: Main Top Up ---
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all scale-100">
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm duration-200">
+      <div className="w-full max-w-lg scale-100 transform overflow-hidden rounded-xl bg-white shadow-xl transition-all">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-            {t('partners.topupTitle')}
+        <div className="flex items-center justify-between border-b border-gray-100 p-5">
+          <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
+            {t("partners.topupTitle")}
           </h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors hover:text-gray-600"
           >
             <X size={24} />
           </button>
         </div>
 
-        <div className="p-5 space-y-5 sm:space-y-6">
+        <div className="space-y-5 p-5 sm:space-y-6">
           {/* Requisites */}
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              {t('partners.topupRequisites')}
+            <label className="mb-2 block text-xs font-semibold tracking-wider text-gray-400 uppercase">
+              {t("partners.topupRequisites")}
             </label>
-            <div className="relative group">
-              <div className="w-full border border-gray-200 rounded-lg px-4 py-3 text-gray-800 flex items-center justify-between bg-white cursor-pointer hover:border-gray-300 transition-colors shadow-sm">
-                <span className="truncate text-sm font-medium pr-2">
-                  {t('partners.topupRequisitesSample')}
+            <div className="group relative">
+              <div className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-gray-800 shadow-sm transition-colors hover:border-gray-300">
+                <span className="truncate pr-2 text-sm font-medium">
+                  {t("partners.topupRequisitesSample")}
                 </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button className="text-gray-300 hover:text-black transition-colors p-1">
+                <div className="flex shrink-0 items-center gap-2">
+                  <button className="p-1 text-gray-300 transition-colors hover:text-black">
                     <Edit2 size={16} />
                   </button>
                   <button
-                    onClick={() => setView('add_requisites')}
-                    className="text-gray-300 hover:text-green-600 transition-colors p-1 bg-gray-50 hover:bg-green-50 rounded"
+                    onClick={() => setView("add_requisites")}
+                    className="rounded bg-gray-50 p-1 text-gray-300 transition-colors hover:bg-green-50 hover:text-green-600"
                   >
                     <Plus size={18} />
                   </button>
@@ -300,36 +289,36 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
           {/* Amount */}
           <div>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+              <span className="absolute top-1/2 left-4 -translate-y-1/2 font-medium text-gray-500">
                 $
               </span>
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder={t('partners.topupAmountPlaceholder')}
-                className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-4 py-3 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder:text-gray-400 font-medium shadow-sm hover:border-gray-300"
+                placeholder={t("partners.topupAmountPlaceholder")}
+                className="w-full rounded-lg border border-gray-200 bg-white py-3 pr-4 pl-8 font-medium shadow-sm transition-all outline-none placeholder:text-gray-400 hover:border-gray-300 focus:border-green-500 focus:ring-1 focus:ring-green-500"
               />
             </div>
           </div>
 
           {/* Summary */}
-          <div className="space-y-3 py-3 bg-gray-50/50 rounded-lg px-4">
-            <div className="flex justify-between items-center text-sm">
+          <div className="space-y-3 rounded-lg bg-gray-50/50 px-4 py-3">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">
-                {t('partners.topupSummaryAmount')}
+                {t("partners.topupSummaryAmount")}
               </span>
               <span className="font-bold text-gray-900">{numAmount} $</span>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600 flex items-center gap-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1 text-gray-600">
                 VAT <HelpCircle size={14} className="text-gray-400" />
               </span>
               <span className="font-bold text-gray-900">{vat} $</span>
             </div>
-            <div className="flex justify-between items-center pt-3 mt-1 border-t border-gray-200">
+            <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-3">
               <span className="text-base font-bold text-gray-900">
-                {t('partners.topupSummaryTotal')}
+                {t("partners.topupSummaryTotal")}
               </span>
               <span className="text-xl font-extrabold text-green-600">
                 {total} $
@@ -338,40 +327,37 @@ export const PartnerTopUpModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Card Input */}
-          <div className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 bg-white shadow-sm hover:border-gray-300 transition-colors">
-            <div className="text-gray-400 shrink-0">
+          <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors hover:border-gray-300">
+            <div className="shrink-0 text-gray-400">
               <CreditCard size={24} />
             </div>
             <input
               type="text"
-              placeholder={t('partners.topupCardPlaceholder')}
-              className="flex-1 outline-none text-gray-800 placeholder:text-gray-400 text-sm font-medium bg-transparent min-w-0"
+              placeholder={t("partners.topupCardPlaceholder")}
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-800 outline-none placeholder:text-gray-400"
             />
-            <div className="hidden sm:flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <div className="hidden shrink-0 items-center gap-2 rounded bg-gray-900 px-3 py-1.5 text-xs font-bold text-white sm:flex">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
               LINK
-              <div className="h-3 w-px bg-gray-600 mx-1" />
+              <div className="mx-1 h-3 w-px bg-gray-600" />
               <span className="font-mono">VISA •• 6465</span>
             </div>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 border-t border-gray-100 bg-gray-50 p-5">
           <button
             onClick={handleClose}
-            className="text-gray-500 font-bold text-xs hover:text-gray-700 transition-colors uppercase tracking-wider px-2 py-2"
+            className="px-2 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase transition-colors hover:text-gray-700"
           >
-            {t('partners.cancel')}
+            {t("partners.cancel")}
           </button>
-          <button className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold text-xs px-8 py-3 rounded shadow-md hover:shadow-lg transition-all uppercase tracking-wide">
-            {t('partners.topupSubmit')}
+          <button className="rounded bg-[#4CAF50] px-8 py-3 text-xs font-bold tracking-wide text-white uppercase shadow-md transition-all hover:bg-[#43A047] hover:shadow-lg">
+            {t("partners.topupSubmit")}
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-
-

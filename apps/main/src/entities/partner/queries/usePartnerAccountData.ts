@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { usePartnerStats } from './usePartnerStats';
-import type { PartnerTransaction } from '../model/types';
+import { useState, useEffect, useRef, useMemo } from "react";
+import { usePartnerStats } from "./usePartnerStats";
+import type { PartnerTransaction } from "../model/types";
 
 export function usePartnerAccountData() {
   const { stats, loading, error } = usePartnerStats();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
 
-  const [filterType, setFilterType] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [filterType, setFilterType] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -20,9 +20,9 @@ export function usePartnerAccountData() {
       }
     };
     if (openMenuIndex !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openMenuIndex]);
 
   const toggleMenu = (index: number, e: React.MouseEvent) => {
@@ -33,11 +33,11 @@ export function usePartnerAccountData() {
   const handleDownloadInvoice = () => {
     setOpenMenuIndex(null);
     // Пока просто алерт с заглушкой, позже можно заменить на реальное скачивание
-    alert('Скачивание инвойса...');
+    alert("Скачивание инвойса...");
   };
 
   const parseDate = (dateStr: string) => {
-    const [dayStr, monthStr, yearStr] = dateStr.split('.');
+    const [dayStr, monthStr, yearStr] = dateStr.split(".");
     const day = Number(dayStr);
     const month = Number(monthStr);
     const year = Number(yearStr);
@@ -47,7 +47,7 @@ export function usePartnerAccountData() {
 
   const parseInputDate = (dateStr: string) => {
     if (!dateStr) return null;
-    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const [yearStr, monthStr, dayStr] = dateStr.split("-");
     const year = Number(yearStr);
     const month = Number(monthStr);
     const day = Number(dayStr);
@@ -71,19 +71,18 @@ export function usePartnerAccountData() {
   const filteredTransactions = useMemo(
     () =>
       baseTransactions.filter((tx: PartnerTransaction) => {
-        if (filterType === 'expense' && tx.sum >= 0) return false;
+        if (filterType === "expense" && tx.sum >= 0) return false;
         if (
-          filterType === 'income' &&
+          filterType === "income" &&
           (tx.sum < 0 ||
-            tx.comment.includes('комиссия') ||
-            tx.comment.includes('Бонус'))
+            tx.comment.includes("комиссия") ||
+            tx.comment.includes("Бонус"))
         )
           return false;
         if (
-          filterType === 'commission' &&
+          filterType === "commission" &&
           (tx.sum < 0 ||
-            (!tx.comment.includes('комиссия') &&
-              !tx.comment.includes('Бонус')))
+            (!tx.comment.includes("комиссия") && !tx.comment.includes("Бонус")))
         )
           return false;
 
@@ -102,12 +101,12 @@ export function usePartnerAccountData() {
   );
 
   const resetFilters = () => {
-    setFilterType('all');
-    setStartDate('');
-    setEndDate('');
+    setFilterType("all");
+    setStartDate("");
+    setEndDate("");
   };
 
-  const hasFilters = filterType !== 'all' || startDate !== '' || endDate !== '';
+  const hasFilters = filterType !== "all" || startDate !== "" || endDate !== "";
 
   return {
     loading,
@@ -133,6 +132,3 @@ export function usePartnerAccountData() {
     commissionPercentage,
   };
 }
-
-
-
