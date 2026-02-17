@@ -343,7 +343,7 @@ export function CatalogTab() {
       ) : null}
 
       <div className={`flex-1 overflow-y-auto bg-slate-50 ${viewMode === "grid" ? "p-4 md:p-6" : "p-0"} custom-scrollbar`}>
-        <div className="pb-20 h-full">
+        <div className="h-full">
           {!activeWorkspaceId ? (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-sm text-slate-600">
               {t("common.workspace.pickInSidebar")}
@@ -356,14 +356,14 @@ export function CatalogTab() {
             </div>
           ) : (
             viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                 {filtered.map((p) => {
                   const shareUrl = shareUrlForProject(p);
 
                   return (
                     <div
                       key={p.id}
-                      className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-lg hover:border-slate-300/80 transition-all duration-300 group cursor-pointer"
+                      className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-lg hover:border-slate-300/80 transition-all duration-300 group cursor-pointer flex flex-col"
                       onClick={() => handleOpenProject(p)}
                     >
                       {p.building_image_url ? (
@@ -371,10 +371,10 @@ export function CatalogTab() {
                       ) : (
                         <div className="h-44 w-full bg-slate-200" />
                       )}
-                      <div className="p-5">
+                      <div className="p-5 flex flex-1 flex-col">
                         <div className="font-black text-slate-900 leading-tight line-clamp-2">{p.name}</div>
                         <div className="text-xs text-slate-500 mt-1 line-clamp-2">{p.address ?? t("common.common.empty")}</div>
-                        <div className="mt-4">
+                        <div className="mt-auto pt-4">
                           <div className="flex items-center gap-2">
                             <Button
                               className="flex-1"
@@ -442,4 +442,3 @@ export function CatalogTab() {
     </div>
   );
 }
-

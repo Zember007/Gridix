@@ -103,7 +103,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
             ) : null}
           </div>
           {subtitle ? (
-            <p className="text-xs text-slate-500 font-medium mt-1 truncate max-w-full lg:max-w-md">
+            <p className="text-xs text-slate-500 font-medium mt-1 max-w-full lg:max-w-md">
               {subtitle}
             </p>
           ) : null}
@@ -176,7 +176,7 @@ export const ModuleHeader: React.FC<ModuleHeaderProps> = ({
         ) : null}
 
         {viewMode && onViewModeChange && availableViews && availableViews.length > 1 ? (
-          <div className="hidden md:flex p-1 bg-slate-100 rounded-lg border border-slate-200">
+          <div className="hidden lg:flex p-1 bg-slate-100 rounded-lg border border-slate-200">
             {availableViews.map((view) => (
               <button
                 key={view}
