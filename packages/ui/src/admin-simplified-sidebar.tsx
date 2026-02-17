@@ -176,40 +176,6 @@ const ProfileFooterMenu = ({
           </p>
         </div>
 
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger
-            className="flex cursor-pointer items-center gap-2"
-            style={{ color: ADMIN_THEME.sidebarText }}
-          >
-            <Globe className="h-4 w-4" />
-            <span className="flex-1">{t("common.language")}</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent
-            className="w-48"
-            style={{
-              backgroundColor: ADMIN_THEME.sidebarBackground,
-              borderColor: ADMIN_THEME.sidebarBorder,
-            }}
-          >
-            {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
-              <DropdownMenuItem
-                key={code}
-                className={`cursor-pointer pl-8 ${
-                  language === code
-                    ? "!bg-[var(--admin-sidebar-active-background)]"
-                    : "hover:!bg-[var(--admin-sidebar-active-background)]"
-                }`}
-                style={{ color: ADMIN_THEME.sidebarText }}
-                onSelect={() => {
-                  void handleSelectLanguage(code as Language);
-                }}
-              >
-                <span className="mr-2">{config.flag}</span>
-                {config.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
         {isMobile ? (
           <>
             <div
