@@ -38,7 +38,6 @@ import {
   FileText,
   Globe,
   Phone,
-  Mail,
   MapPin,
   BadgeCheck,
   FileCheck,

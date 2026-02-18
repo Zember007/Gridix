@@ -249,9 +249,12 @@
       "signature": "İmza",
       "drawSignature": "Çizmek",
       "uploadSignature": "Yüklemek",
+      "replaceSignature": "İmzayı Değiştir",
       "clear": "Temizlemek",
       "sign": "Sözleşme imzala",
-      "submit": "Başvuruyu gönder"
+      "submit": "Başvuruyu gönder",
+      "currentSignaturePrompt": "Bu, sözleşmeler için kullanılan mevcut imzanızdır.",
+      "uploadHint": "İmzanızın yüksek kaliteli bir görselini (PNG veya JPG) yükleyin."
     },
     "status": {
       "pending": "Askıda olması",

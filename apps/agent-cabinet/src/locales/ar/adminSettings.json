@@ -8,6 +8,8 @@
   "billingInfoDesc": "تفاصيل الشركة لتوليد الفواتير",
   "bankName": "اسم البنك",
   "bankNamePlaceholder": "بنك تي بي سي",
+  "billingCurrency": "عملة الفواتير",
+  "billingCurrencyPlaceholder": "اختر العملة",
   "changeEmail": "تغيير البريد الإلكتروني",
   "changePassword": "تغيير كلمة المرور",
   "company": "الشركة",

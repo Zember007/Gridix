@@ -249,9 +249,12 @@
       "signature": "إمضاء",
       "drawSignature": "يرسم",
       "uploadSignature": "رفع",
+      "replaceSignature": "استبدال التوقيع",
       "clear": "واضح",
       "sign": "توقيع الاتفاقية",
-      "submit": "تقديم الطلب"
+      "submit": "تقديم الطلب",
+      "currentSignaturePrompt": "هذا هو توقيعك الحالي المستخدم في العقود.",
+      "uploadHint": "قم بتحميل صورة عالية الجودة لتوقيعك (PNG أو JPG)."
     },
     "status": {
       "pending": "قيد الانتظار",

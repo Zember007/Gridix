@@ -8,6 +8,8 @@
   "billingInfoDesc": "კომპანიის დეტალები ინვოისების გენერაციისთვის",
   "bankName": "ბანკის სახელი",
   "bankNamePlaceholder": "თბს ბანკი",
+  "billingCurrency": "ბილინგის ვალუტა",
+  "billingCurrencyPlaceholder": "აირჩიეთ ვალუტა",
   "changeEmail": "ელფოსტის შეცვლა",
   "changePassword": "პაროლის შეცვლა",
   "company": "კომპანია",

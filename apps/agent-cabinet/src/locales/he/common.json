@@ -249,9 +249,12 @@
       "signature": "חֲתִימָה",
       "drawSignature": "לִמְשׁוֹך",
       "uploadSignature": "העלה",
+      "replaceSignature": "החלף חתימה",
       "clear": "בָּרוּר",
       "sign": "חתמו על הסכם",
-      "submit": "הגש בקשה"
+      "submit": "הגש בקשה",
+      "currentSignaturePrompt": "זוהי החתימה הנוכחית שלך המשמשת עבור חוזים.",
+      "uploadHint": "העלה תמונה באיכות גבוהה של החתימה שלך (PNG או JPG)."
     },
     "status": {
       "pending": "תָלוּי וְעוֹמֵד",

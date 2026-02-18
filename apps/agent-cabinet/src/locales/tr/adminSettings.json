@@ -8,6 +8,8 @@
   "billingInfoDesc": "Fatura oluşturma için şirket fatura ayrıntıları",
   "bankName": "Banka adı",
   "bankNamePlaceholder": "TBC Bankası",
+  "billingCurrency": "Faturalandırma para birimi",
+  "billingCurrencyPlaceholder": "Para birimini seçin",
   "changeEmail": "E-postayı Değiştir",
   "changePassword": "Şifre değiştir",
   "company": "Şirket",

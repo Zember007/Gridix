@@ -65,7 +65,9 @@
   "common": {
     "language": "ენა",
     "more": "დეტალები",
-    "hide": "დამალვა"
+    "hide": "დამალვა",
+    "yes": "დიახ",
+    "no": "არა"
   },
   "admin": {
     "documentation": "დოკუმენტაცია"

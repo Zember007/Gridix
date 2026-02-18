@@ -65,7 +65,9 @@
   "common": {
     "language": "Dil",
     "more": "Daha fazla ayrıntı",
-    "hide": "Saklamak"
+    "hide": "Saklamak",
+    "yes": "Evet",
+    "no": "HAYIR"
   },
   "admin": {
     "documentation": "Dokümantasyon"

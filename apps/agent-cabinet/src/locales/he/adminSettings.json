@@ -8,6 +8,8 @@
   "billingInfoDesc": "פרטי חיוב חברה להפקת חשבוניות",
   "bankName": "שם הבנק",
   "bankNamePlaceholder": "בנק TBC",
+  "billingCurrency": "מטבע חיוב",
+  "billingCurrencyPlaceholder": "בחר מטבע",
   "changeEmail": "שנה אימייל",
   "changePassword": "שנה סיסמה",
   "company": "חֶברָה",
