@@ -45,7 +45,7 @@ const resources: Record<string, { translation: Record<string, string> }> = {};
 
 Object.entries(localeModules).forEach(([path, mod]) => {
   // Извлекаем язык и имя файла из пути: /locales/ru/common.json -> ru, common
-  const match = path.match(/\/locales\/(ru|en|ka|ar|he)\/(.+)\.json$/);
+  const match = path.match(/\/locales\/(ru|en|ka|ar|he|tr)\/(.+)\.json$/);
   if (!match) {
     console.warn("[i18n] Не удалось распарсить путь:", path);
     return;

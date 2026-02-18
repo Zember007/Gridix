@@ -65,7 +65,9 @@
   "common": {
     "language": "اللغة",
     "more": "المزيد من التفاصيل",
-    "hide": "إخفاء"
+    "hide": "إخفاء",
+    "yes": "نعم",
+    "no": "لا"
   },
   "admin": {
     "documentation": "التوثيق"

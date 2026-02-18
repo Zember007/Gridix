@@ -1,0 +1,199 @@
+{
+  "hero": {
+    "badge": "💰 %50'ye varan komisyon kazanın",
+    "title": "GRIDIX Ortağı Olun",
+    "subtitle": "ve bizimle birlikte kazanın",
+    "description": "Geliştiricilerin daha hızlı, daha şeffaf ve daha modern bir şekilde satış yapmasına yardımcı olun. Getirdiğiniz her müşteri için seviyenize bağlı olarak %20'den %50'ye kadar komisyon alın.",
+    "ctaPrimary": "Ortak Olun",
+    "ctaSecondary": "Kârınızı hesaplayın"
+  },
+  "whyEasyToSell": {
+    "title": "Gridix'in Satışı Neden Kolaydır?",
+    "description": "Gridix geliştiriciler, ajanslar ve yatırımcılar için temel zorlukları çözüyor; talebin artmasının nedeni de bu",
+    "item1": {
+      "title": "Gerçek acı noktalarını çözer",
+      "desc": "Kaosu, hataları ve gecikmeleri ortadan kaldırır. Çevrimiçi satışların hızlı bir şekilde nasıl başlatılacağını gösterir."
+    },
+    "item2": {
+      "title": "Sonuçlar aracılığıyla satış yapar",
+      "desc": "Satış artışı, müşteri güveni, yatırımcılar için şeffaflık — zaman tasarrufu"
+    },
+    "item3": {
+      "title": "Herkes için anlaşılır",
+      "desc": "Basit görselleştirme, hazır arayüz, minimum eğitim. Herkes değerini hemen görüyor."
+    },
+    "item4": {
+      "title": "Müşterilere gösterilmesi kolay",
+      "desc": "Tek tıklamayla etkileşimli kat planının bağlantısını paylaşın"
+    },
+    "item5": {
+      "title": "'Vay be' etkisi yaratır",
+      "desc": "Geliştiriciler gerçek bir çalışma aracı görüyor ve müşteriler daha fazla güveniyor"
+    },
+    "item6": {
+      "title": "Pazar büyüyor",
+      "desc": "Dünya çapında yüzlerce geliştirici, satışları artırmak ve zamanı optimize etmek için yenilikçi çözümlere ihtiyaç duyuyor."
+    }
+  },
+  "valueProposition": {
+    "title": "Her ekosistem katılımcısı ne alır?",
+    "builders": {
+      "title": "Geliştiriciler",
+      "item1": "1 gün içinde etkileşimli kat planını başlatın",
+      "item2": "Satışları ve alıcı güvenini artırın",
+      "item3": "CRM entegrasyonları ve öncü otomasyon",
+      "item4": "Çoklu dil desteğine sahip web sitesi widget'ı"
+    },
+    "managers": {
+      "title": "Satış Yöneticileri",
+      "item1": "Basit arayüz, eğitim gerektirmez",
+      "item2": "Özelliklerde anında güncellemeler",
+      "item3": "Daha az manuel rutin çalışma",
+      "item4": "Analitik ve satış şeffaflığı"
+    },
+    "clients": {
+      "title": "Alıcılar",
+      "item1": "Uygun çevrimiçi daire seçimi",
+      "item2": "Şeffaflık ve güven",
+      "item3": "PDF daire sunumları",
+      "item4": "Tek tıkla rezervasyon özelliği"
+    }
+  },
+  "partnerTypes": {
+    "title": "İki Tür Ortak",
+    "description": "İşletmenize uygun formatı seçin. Basit başlayın ve bizimle büyüyün",
+    "basic": {
+      "commission": "%20 komisyon",
+      "title": "Temel Ortak",
+      "subtitle": "Pazarlamacılar, acenteler, danışmanlar",
+      "item1": "İş ortağı bağlantınızı paylaşın",
+      "item2": "Her ücretli projeden %20",
+      "item3": "İstatistiklere ve ödemelere erişim",
+      "item4": "Uygulamaya katılım yok",
+      "note": "💡 5 dakika içinde başlayabilir - hiçbir teknik bilgi gerektirmez ve projeler aktifken kar elde edebilirsiniz",
+      "cta": "İş Ortağı olarak başlayın"
+    },
+    "integrator": {
+      "recommended": "⭐ Önerilen",
+      "commission": "%40–50 komisyon",
+      "title": "Entegratör Ortağı",
+      "subtitle": "Dijital ajanslar, CRM entegratörleri, serbest çalışanlar",
+      "item1": "Müşteriler için hesaplar oluşturun ve destek sağlayın",
+      "item2": "10 müşteriye kadar %40, 10+ müşteriye %50",
+      "item3": "Önerilen Gridix durumu",
+      "item4": "Hesabınıza komisyonunuz düşülerek bağımsız olarak yükleme yapın ve müşteri aboneliklerini ödeyin",
+      "note": "🚀 Uygulamayı istikrarlı bir gelire dönüştürün",
+      "cta": "Entegratör Olun"
+    }
+  },
+  "calculator": {
+    "badge": "Gelir Hesaplayıcı",
+    "title": "Potansiyel gelirinizi hesaplayın",
+    "description": "Yıllık proje sayısını seçerek ne kadar kazanabileceğinizi öğrenin",
+    "projectsLabel": "Yıllık proje sayısı",
+    "statusLabel": "Durumunuz:",
+    "statusPartner": "Ortak",
+    "statusAmbassador": "Büyükelçi",
+    "commissionLabel": "Komisyon oranı:",
+    "yearlyIncome": "Yıllık geliriniz",
+    "fromProjects": "{{count}} {{projeden}}",
+    "projectSingular": "proje",
+    "projectPluralFew": "projeler",
+    "projectPluralMany": "projeler",
+    "tierBasic": "Temel",
+    "tierIntegrator": "Entegratör",
+    "tierAmbassador": "Büyükelçi",
+    "commission20": "%20 komisyon",
+    "youAreHere": "BURADASINIZ",
+    "integratorDesc": "10 projeye kadar • %40 komisyon",
+    "ambassadorDesc": "10'dan fazla proje • %50 komisyon",
+    "infoNote": "💡 Tüm hesaplamalar ortalama yıllık Gridix abonelik maliyetine dayanmaktadır — $ {{price}}. Geliriniz her aktif müşteriyle birlikte artar.",
+    "ctaButton": "Ortak olun ve kazanın"
+  },
+  "caseStudies": {
+    "title": "Gridix Uygulama Örnekleri",
+    "description": "Uygulama sonrası satış büyümesinin gerçek örnekleri",
+    "problemLabel": "Sorun:",
+    "solutionLabel": "Çözüm:",
+    "resultLabel": "Sonuç",
+    "batumi": {
+      "title": "Batum",
+      "company": "Metropol Geliştirme",
+      "type": "Geliştirici",
+      "problem": "Excel tabloları genellikle güncelliğini yitirir, müşteriler kat planlarında kaybolur ve birçok tekrarlanan soru sorar.",
+      "solution": "Üç dilde sunulan, filtreler, düzenler ve CRM entegrasyonu içeren etkileşimli kat planı.",
+      "result1": "Satış departmanı zamandan %40'a kadar tasarruf sağlar",
+      "result2": "Müşteriler web sitesi aracılığıyla daha fazla başvuru gönderir",
+      "result3": "Artan yatırımcı güveni ve şeffaflık"
+    },
+    "izmir": {
+      "title": "izmir",
+      "company": "Türkiye Konut Grubu",
+      "type": "Geliştirici",
+      "problem": "Yöneticiler 'kat planını gönder' ve 'PDF gönder' gibi istekleri yanıtlamak için her gün saatler harcıyor.",
+      "solution": "Otomatik oluşturulan PDF ve gerçek zamanlı durum güncellemelerine sahip çevrimiçi kat planı.",
+      "result1": "+%30 başvuruların rezervasyona dönüşümü",
+      "result2": "Günde 4 saate kadar tasarruf edin",
+      "result3": "Güncel veriler sayesinde artan güven"
+    },
+    "dubai": {
+      "title": "Dubai",
+      "company": "Emaar Premium Gelişmeleri",
+      "type": "Geliştirici",
+      "problem": "Premium geliştiriciler statik PDF'ler ve manuel güncellemeler kullanarak güvenlerini kaybederler.",
+      "solution": "Filtreleme, durumlar, otomatik PDF ve CRM bildirimleri içeren çevrimiçi katalog.",
+      "result1": "Müşteriler web sitesinde 3 kat daha fazla zaman harcıyor",
+      "result2": "Yöneticiler yalnızca 'ateşli' potansiyel müşterilerle çalışır",
+      "result3": "Yenilikçi bir marka imajı oluşturmak"
+    }
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "becomePartner": {
+      "question": "Nasıl ortak olabilirim?",
+      "answer": "'Ortak Olun'a tıklayın, kaydolun; bağlantıya hemen ulaşabilirsiniz. Bir format seçin: basit yönlendirme (%20) veya tam uygulama (%40-50)."
+    },
+    "firstPayout": {
+      "question": "İlk ödememi ne zaman alacağım?",
+      "answer": "Müşteri ödeme yaptıktan sonra. Minimum para çekme işlemi 100$'dır, işlem süresi 7 güne kadardır. Hesabınızdaki tüm verileri gerçek zamanlı olarak görebilirsiniz."
+    },
+    "integratorRequirements": {
+      "question": "Entegratör olmak için neye ihtiyacım var?",
+      "answer": "Müşterileri aktif olarak uygulayın ve yönetin. 5-10 projeden sonra tam ekip desteğiyle %40-50 komisyon seviyesine geçersiniz."
+    },
+    "shareLink": {
+      "question": "Sadece bir bağlantı paylaşabilir miyim?",
+      "answer": "Evet, %20 komisyonlu temel ortaklık formatıdır. Geliştiricilerle bağlantısı olan pazarlamacılar ve danışmanlar için mükemmeldir."
+    },
+    "support": {
+      "question": "Destek var mı?",
+      "answer": "Evet, Telegram sohbeti ve materyalleri 7/24 mevcuttur. Sunumlara, şablonlara, web seminerlerine ve demo hesaplara erişebilirsiniz."
+    },
+    "salesIncrease": {
+      "question": "Satışlar ne kadar artabilir?",
+      "answer": "Sonuçlar projeye bağlıdır, ancak müşterilerimiz ortalama olarak %20-40 büyüme görüyor. Otomasyon sayesinde yöneticinin zamandan günde 2-4 saat tasarruf etmesi sağlanır."
+    },
+    "setupTime": {
+      "question": "Kurulum için ne kadar zamana ihtiyaç var?",
+      "answer": "Temel kat planı 1 günde oluşturulur. CRM entegrasyonları ile tam uygulamaya geçilmesi projenin karmaşıklığına bağlı olarak 3-5 gün sürebilir."
+    },
+    "languages": {
+      "question": "Gridix diğer dilleri destekliyor mu?",
+      "answer": "Evet, platform İngilizce, Rusça, Gürcüce, Türkçe ve Arapça'yı desteklemektedir. Uluslararası projeler için çok dilli bir widget ayarlayabilirsiniz."
+    },
+    "crmIntegration": {
+      "question": "Gridix ile hangi CRM'ler entegre olur?",
+      "answer": "Popüler CRM sistemleriyle entegre oluyoruz ve özel entegrasyonlar için Webhook'ları destekliyoruz. Entegrasyonların tam listesini hesabınızda görebilirsiniz."
+    },
+    "profitExample": {
+      "question": "Ortak gelirine bir örnek verin?",
+      "answer": "Temel ortak olarak ayda ortalama 500 ABD Doları anlaşmayla 5 müşteri getirdiyseniz, geliriniz 500 ABD Doları (%20 × 5 × 500 ABD Doları) olur. 10'dan fazla müşteriye sahip entegratörler ayda 2500 $'dan fazla kazanabilir."
+    }
+  },
+  "finalCta": {
+    "title": "Kazanmaya başlamaya hazır mısınız?",
+    "description": "Gridix ortaklarının büyüyen ağına katılın. İlk geliriniz bu ay olabilir.",
+    "ctaPrimary": "Gridix Ortağı Olun",
+    "ctaSecondary": "Destek Ekibiyle İletişime Geçin"
+  }
+}

@@ -9,11 +9,18 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
 } from "@gridix/ui";
 import { supabase } from "@gridix/utils/api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Building2, User, Download } from "lucide-react";
+import { Building2, User, Download, CreditCard } from "lucide-react";
 
 type Step = "details" | "signature" | "contracts" | "success";
 
@@ -139,6 +146,10 @@ export default function AgentApplicationPage() {
     tax_id: "",
     phone: "",
     legal_address: "",
+    bank_name: "",
+    iban: "",
+    billing_currency: "USD",
+    is_vat_payer: false,
     bank_details: "",
     agent_company_type: "",
     agent_registered_office: "",
@@ -538,7 +549,10 @@ export default function AgentApplicationPage() {
     developerAssets,
     displayName,
     finalSignatureDataUrl,
-    formData.bank_details,
+    formData.bank_name,
+    formData.iban,
+    formData.billing_currency,
+    formData.is_vat_payer,
     formData.agent_company_type,
     formData.agent_registered_office,
     formData.agent_representative_name,
@@ -619,7 +633,12 @@ export default function AgentApplicationPage() {
                 tax_id: formData.tax_id || null,
                 phone: formData.phone,
                 legal_address: formData.legal_address || null,
-                bank_details: { details: formData.bank_details },
+                bank_details: {
+                  bank_name: formData.bank_name || null,
+                  iban: formData.iban || null,
+                  billing_currency: formData.billing_currency || null,
+                  is_vat_payer: formData.is_vat_payer || false,
+                },
                 agent_company_type: formData.agent_company_type || null,
                 agent_registered_office:
                   formData.agent_registered_office || null,
@@ -1433,23 +1452,98 @@ export default function AgentApplicationPage() {
                             </div>
                           </div>
 
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                          <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/30 p-4 md:p-6">
+                            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                              <CreditCard size={16} className="text-blue-500" />
                               {t("agentApplication.bankDetailsOptional")}
-                            </label>
-                            <textarea
-                              value={formData.bank_details}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  bank_details: e.target.value,
-                                })
-                              }
-                              placeholder={t(
-                                "agentApplication.bankDetailsPlaceholder",
-                              )}
-                              className="min-h-[96px] w-full rounded-xl border border-slate-200 bg-white p-3 outline-none transition-all focus:border-blue-500"
-                            />
+                            </h3>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  {t("agentApplication.bankName")}
+                                </Label>
+                                <Input
+                                  value={formData.bank_name}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      bank_name: e.target.value,
+                                    })
+                                  }
+                                  placeholder={t(
+                                    "agentApplication.bankNamePlaceholder",
+                                  )}
+                                  className="rounded-xl border-slate-200 bg-white"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  {t("agentApplication.ibanLabel")}
+                                </Label>
+                                <Input
+                                  value={formData.iban}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      iban: e.target.value,
+                                    })
+                                  }
+                                  placeholder={t(
+                                    "agentApplication.ibanPlaceholder",
+                                  )}
+                                  className="rounded-xl border-slate-200 bg-white"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  {t("agentApplication.billingCurrency")}
+                                </Label>
+                                <Select
+                                  value={formData.billing_currency}
+                                  onValueChange={(val) =>
+                                    setFormData({
+                                      ...formData,
+                                      billing_currency: val,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="rounded-xl border-slate-200 bg-white">
+                                    <SelectValue
+                                      placeholder={t(
+                                        "agentApplication.billingCurrencyPlaceholder",
+                                      )}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="EUR">EUR</SelectItem>
+                                    <SelectItem value="TRY">TRY</SelectItem>
+                                    <SelectItem value="GEL">GEL</SelectItem>
+                                    <SelectItem value="AED">AED</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
+                                <div className="space-y-0.5">
+                                  <Label className="text-sm font-bold text-slate-900">
+                                    {t("agentApplication.isVatPayer")}
+                                  </Label>
+                                </div>
+                                <Switch
+                                  checked={formData.is_vat_payer}
+                                  onCheckedChange={(checked) =>
+                                    setFormData({
+                                      ...formData,
+                                      is_vat_payer: checked,
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
                           </div>
                         </>
                       )}

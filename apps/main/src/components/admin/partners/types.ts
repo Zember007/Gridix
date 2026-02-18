@@ -12,7 +12,11 @@ export interface AgencyPartner {
   joinedAt: string;
   agreementSigned: boolean;
   bankDetails?: {
-    details: string;
+    details?: string;
+    bank_name?: string | null;
+    iban?: string | null;
+    billing_currency?: string | null;
+    is_vat_payer?: boolean | null;
   };
   stats: {
     totalLeads: number;

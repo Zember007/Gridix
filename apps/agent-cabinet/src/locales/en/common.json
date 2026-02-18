@@ -10,7 +10,8 @@
     "leads": "Leads",
     "payouts": "Payouts",
     "analytics": "Analytics",
-    "partnerProgram": "Partner Program"
+    "partnerProgram": "Partner Program",
+    "settings": "Settings"
   },
   "common": {
     "loading": "Loading...",
@@ -248,14 +249,44 @@
       "signature": "Signature",
       "drawSignature": "Draw",
       "uploadSignature": "Upload",
+      "replaceSignature": "Replace Signature",
       "clear": "Clear",
       "sign": "Sign agreement",
-      "submit": "Submit application"
+      "submit": "Submit application",
+      "currentSignaturePrompt": "This is your current signature used for contracts.",
+      "uploadHint": "Upload a high-quality image of your signature (PNG or JPG)."
     },
     "status": {
       "pending": "Pending",
       "approved": "Approved",
       "rejected": "Rejected"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account, notifications and contract details",
+    "contractTitle": "Contract details",
+    "contractDesc": "Information from your agent agreement",
+    "fullName": "Full name",
+    "companyName": "Company name",
+    "type": "Type",
+    "taxId": "Tax ID",
+    "legalAddress": "Legal address",
+    "phone": "Phone",
+    "bankDetails": "Bank details",
+    "agentCompanyType": "Company type",
+    "agentRegisteredOffice": "Registered office",
+    "agentRepresentativeName": "Representative name",
+    "agentRepresentativeTitle": "Representative title",
+    "status": "Status",
+    "agreementSignedAt": "Agreement signed",
+    "commissionRate": "Commission rate",
+    "savingProfile": "Saving…",
+    "profileSaved": "Profile saved",
+    "profileSaveError": "Failed to save profile",
+    "notificationsSaved": "Notification preferences saved",
+    "notificationsSaveError": "Failed to save notification preferences",
+    "saveAll": "Save all",
+    "loadError": "Failed to load contract data"
   }
 }

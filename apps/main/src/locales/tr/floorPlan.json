@@ -1,0 +1,70 @@
+{
+  "apartments": {
+    "settings": "Poligon Ayarları",
+    "add": "Daire Ekle",
+    "area": "Alan (m²)",
+    "available": "Mevcut",
+    "deleteError": "Daire silinirken hata oluştu",
+    "deleteSuccess": "Daire silindi",
+    "editApartment": "Poligonu Düzenle - Daire #{{number}}",
+    "fillAllFields": "Tüm alanları doldurun ve poligon oluşturun (minimum 3 nokta)",
+    "list": "Kattaki daireler:",
+    "loading": {
+      "error": "Daireler yüklenirken hata oluştu"
+    },
+    "newApartment": "Yeni Daire",
+    "noPhotos": "Fotoğraf yok",
+    "noPhotosDesc": "Daire fotoğraflarını yükle",
+    "number": "Daire Numarası",
+    "numberPlaceholder": "Örnek: 101",
+    "parameters": "Daire Parametreleri",
+    "photoDeleteError": "Fotoğraf silinirken hata oluştu",
+    "photoDeleteSuccess": "Fotoğraf silindi",
+    "photos": "Fotoğraflar",
+    "photoUploadError": "Fotoğraflar yüklenirken hata oluştu",
+    "photoUploadSuccess": "Fotoğraflar başarıyla yüklendi",
+    "price": "Fiyat",
+    "reserved": "Rezerve",
+    "rooms": "Odalar",
+    "roomsShort": "odalar",
+    "saveError": "Daire kaydedilirken hata oluştu",
+    "saveSuccess": "Daire kaydedildi",
+    "sold": "Satılmış",
+    "status": "Durum",
+    "title": "Apartman Yönetimi",
+    "uploadMultiplePhotos": "Yüklemek için birden fazla resim seçin"
+  },
+  "duplicate": {
+    "error": "Tüm katlara kopyalanırken hata oluştu",
+    "noData": "Kopyalanacak veri yok",
+    "success": "Alanlara göre tüm katlara kopyalanan plan ve çokgenler"
+  },
+  "duplicateToAllFloors": "Tüm katlara çoğalt",
+  "image": {
+    "loadError": "Plan resmi yüklenemedi"
+  },
+  "loading": {
+    "error": "Kat planı yüklenirken hata oluştu"
+  },
+  "settings": {
+    "backToEditor": "Editöre Geri Dön",
+    "title": "Kat {{kat}} Poligon Ayarları"
+  },
+  "title": "Kat Planı",
+  "upload": {
+    "authRequired": "Kat planlarını yüklemek için kimlik doğrulama gerekiyor",
+    "changeImage": "Resmi Değiştir",
+    "clickToChange": "Resmi değiştirmek için tıklayın",
+    "dragDrop": "Resmi buraya sürükleyip bırakın",
+    "dropToReplace": "Resmi değiştirmek için bırakın",
+    "error": "Kat planı yüklenirken hata oluştu",
+    "floorPlan": "Kat {{kat}} planı",
+    "imageUploaded": "Resim yüklendi",
+    "invalidFileType": "Lütfen bir resim dosyası seçin",
+    "loading": "Yükleniyor...",
+    "orClickToSelect": "veya dosyayı seçmek için tıklayın",
+    "selectImage": "Resim Seç",
+    "success": "Kat planı yüklendi",
+    "title": "Kat Planı Yükleme"
+  }
+}

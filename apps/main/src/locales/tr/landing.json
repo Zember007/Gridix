@@ -1,0 +1,459 @@
+{
+  "address": "Adres",
+  "adminPanel": "Hesap",
+  "badge": "Gayrimenkul için yenilikçi çözüm",
+  "company": "Şirket",
+  "companyDescription": "Etkileşimli emlak planları oluşturmak için yenilikçi platform. Satış sürecini basitleştiriyor ve dönüşümü artırıyoruz.",
+  "contacts": "Kişiler",
+  "copyright": "Gridix. Her hakkı saklıdır.",
+  "crmIntegrationDesc": "Potansiyel müşteri ve daire verilerinin amoCRM, Bitrix24, HubSpot ve diğer CRM sistemlerine otomatik aktarımı. Başvuru kaybı yok; tüm müşteriler hemen dönüşüm hunisinde.",
+  "crmIntegrationTitle": "Popüler CRM sistemleriyle entegrasyon",
+  "dataImportDesc": "Daire durumlarını ve fiyatlarını Excel, CSV veya Google E-Tablolar'dan yükleyin. Tüm veriler otomatik olarak sisteme senkronize edilecektir.",
+  "dataImportTitle": "Verileri İçe Aktarma",
+  "description": "Etkileşimli emlak kat planları oluşturmak ve yönetmek için profesyonel platform. Planları yükleyin, daireleri yapılandırın ve web sitenize widget'lar yerleştirin.",
+  "email": "E-posta",
+  "embeddableWidget": "Yerleştirilebilir Widget'lar",
+  "embeddableWidgetDesc": "Basit HTML koduyla web sitenize etkileşimli planlar ekleyin",
+  "enterAdmin": "Ücretsiz deneyin",
+  "excelIntegration": "Excel Entegrasyonu",
+  "excelIntegrationDesc": "Daire verilerini Excel dosyalarından içe aktarın ve bilgileri senkronize edin",
+  "feature": {
+    "mobile": {
+      "desc": "Tüm cihazlarda çalışır",
+      "title": "Mobil uyumlu"
+    },
+    "multilang": {
+      "desc": "3 dili destekler",
+      "title": "Çok dilli"
+    },
+    "quality": {
+      "desc": "Profesyonel sonuçlar",
+      "title": "Kalite"
+    },
+    "quickSetup": {
+      "desc": "5 dakikada proje oluşturun",
+      "title": "Hızlı kurulum"
+    },
+    "security": {
+      "desc": "Güvenli veri depolama",
+      "title": "Güvenlik"
+    },
+    "simplicity": {
+      "desc": "Sezgisel arayüz",
+      "title": "Sadelik"
+    }
+  },
+  "features": "Platformun Özellikleri",
+  "freeTrial": "Ücretsiz deneme süresi",
+  "getStarted": {
+    "title": "GRIDIX'i bugün kullanmaya başlayın",
+    "freeTrial": "7 gün Pro ücretsiz",
+    "noCard": "Kart gerekmez",
+    "oneDayLaunch": "1 gün içinde lansman",
+    "steps": {
+      "registration": {
+        "title": "Kayıt",
+        "description": "1 dakikada hesap oluşturun"
+      },
+      "projectCreation": {
+        "title": "Proje oluşturma",
+        "description": "Verileri yükleyin ve görselleştirmeyi yapılandırın"
+      },
+      "leads": {
+        "title": "Potansiyel müşteriler edinin",
+        "description": "Widget'ı web sitesine yerleştirin ve satışa başlayın"
+      }
+    },
+    "tryFree": "7 gün ücretsiz deneyin",
+    "choosePlan": "Planı seç"
+  },
+  "howItLooks": {
+    "title": "Nasıl görünüyor?",
+    "subtitle": "İnteraktif demo"
+  },
+  "interactiveDemo": "İNTERAKTİF DEMO",
+  "interactiveEditing": "İnteraktif Düzenleme",
+  "interactiveEditingDesc": "Kullanışlı bir düzenleyiciyle apartman çokgenlerini doğrudan tarayıcıda oluşturun ve düzenleyin",
+  "interactivePlansDesc": "Gridix, net ve kullanışlı emlak planları oluşturmaya yardımcı olur: daire durumlarını işaretleyin, CRM entegrasyonlarını bağlayın ve tek satır kodla planları paylaşın. Her şey basit, hızlı ve gereksiz masraflar olmadan.",
+  "interactivePlansTitle": "Geliştiriciler ve emlak acenteleri için etkileşimli satranç tahtası ve planlar",
+  "legalInfo": "Yasal bilgiler",
+  "multiProject": "Çoklu Projeler",
+  "multiProjectDesc": "Birden fazla gayrimenkul projesini tek bir yönetici panelinde yönetin",
+  "noObligations": "Hiçbir yükümlülük yok",
+  "ourAdvantages": "AVANTAJLARIMIZ",
+  "planUpload": "Plan Yükleme",
+  "planUploadDesc": "Bina planı resimlerini yükleyin ve etkileşimli apartman haritaları oluşturun",
+  "pricing": "Fiyatlandırma",
+  "privacyPolicy": "Gizlilik politikası",
+  "quickLinks": "Navigasyon",
+  "readyToStart": "Başlamaya Hazır mısınız?",
+  "readyToStartDesc": "İlk interaktif emlak planınızı bugün oluşturun",
+  "refundPolicy": "Geri ödeme politikası",
+  "sellFromAnywhere": "DÜNYANIN HER YERİNDEN SATIŞ",
+  "setupIn5Minutes": "5 dakikada kurulum",
+  "stats": {
+    "companies": "Şirketler",
+    "projects": "Projeler",
+    "support": "Destek",
+    "uptime": "Çalışma süresi"
+  },
+  "statusManagement": "Durum Yönetimi",
+  "statusManagementDesc": "Daire durumlarını takip edin: müsait, rezerve edilmiş, satıldı",
+  "subtitle": "kolaylıkla",
+  "support": "Destek",
+  "termsOfService": "Hizmet şartları",
+  "testimonials": {
+    "title": "Müşterilerimiz ne diyor",
+    "subtitle": "Halihazırda GRIDIX kullanan geliştiricilerin gerçek incelemeleri",
+    "badge": "Profesyoneller tarafından güvenilen",
+    "items": {
+      "marketing": {
+        "name": "Pazarlama ekibi",
+        "role": "Geliştirici",
+        "company": "Geliştirici",
+        "content": "GRIDIX iş sürecimizin bir parçası oldu; rezervasyon aşamasında, sunumda ve analizlerde kullanıyoruz. Müşteriler rahatlığı, satış departmanının çalışma hızını not ediyor."
+      },
+      "salesManager": {
+        "name": "Satış Müdürü",
+        "role": "Geliştirici",
+        "company": "Geliştirici",
+        "content": "Bu sadece bir kat planı değil; hem müşteriye hem de ekibe yardımcı olan bir araçtır. Anlaşmalar daha şeffaf ve daha hızlı hale geldi. Tüm geliştiricilere tavsiye ederim!"
+      },
+      "commercialDirector": {
+        "name": "Ticari Direktör",
+        "role": "Geliştirici",
+        "company": "Geliştirici",
+        "content": "GRIDIX kontrol ve otomasyon sağlar ve alıcılar için net ve rahat bir seçim sağlar. Sistem stabildir ve sonuç verir. Çok memnun kaldım!"
+      }
+    }
+  },
+  "title": "İnteraktif Kat Planları Oluşturun",
+  "toolsHeadline": "Etkileşimli emlak kat planları oluşturmak için güçlü araçlar",
+  "trialBadge": "Ücretsiz deneme • Taahhüt yok • 5 dakika içinde kurulum",
+  "videoNotSupported": "Tarayıcınız videoyu desteklemiyor.",
+  "viewDemo": "Demoyu Görüntüle",
+  "whatWeGiveClients": "müşterilerimize ne veriyoruz",
+  "widgetsDesc": "Tek satır kodlu, yerleştirilebilir etkileşimli planlar. Herhangi bir CMS'de (WordPress, Tilda, 1C-Bitrix) çalışır.",
+  "widgetsTitle": "Her web sitesi için hazır widget'lar",
+  "workWithoutBorders": "sınır tanımadan çalışmak",
+  "hero": {
+    "title": "Gayrimenkul satışları için interaktif platform",
+    "description": "Kat planınızı modern bir şekilde sergileyin ve dönüşümü ortalama %40 artırın. CRM'de potansiyel müşteri toplayın ve gerçek analitiklere dayalı kararlar alın. Projenizi 1 günde başlatın, programcıya gerek yok.",
+    "demoButton": "Demo rezervasyonu yapın",
+    "freeTrialText": "7 gün ücretsiz deneme"
+  },
+  "heroStats": {
+    "projectsLaunched": "150'den fazla proje hayata geçirildi",
+    "conversionGrowth": "Ortalama dönüşüm artışı +%40",
+    "countries": "12 ülkedeki geliştiricilerle çalışma"
+  },
+  "keyMetrics": {
+    "title": "GRIDIX ile temel metriklerinizi artırın",
+    "description": "GRIDIX'i uyguladıktan sonra geliştiricilerin elde ettiği spesifik sonuçlar",
+    "leadCost": {
+      "title": "Kurşun maliyeti",
+      "reduction": "-35%",
+      "reductionText": "maliyet azaltma",
+      "reason": "Dönüşüm büyümesi nedeniyle"
+    },
+    "conversion": {
+      "title": "Web sitesi dönüşümü",
+      "old": "%2-3",
+      "new": "%4-5",
+      "increase": "Potansiyel müşteri sayısında %40 artış"
+    },
+    "processingSpeed": {
+      "title": "İşleme hızı",
+      "savings": "%40",
+      "savingsText": "yöneticiler için zaman tasarrufu",
+      "reason": "Müşteri BAĞIMSIZ OLARAK seçer"
+    }
+  },
+  "problems": {
+    "title": "Geliştiricilerin karşılaştığı sorunlar nelerdir?",
+    "description": "Verimsiz iş süreçleri, analitik eksikliği ve yöneticilerin rutin görevlerle aşırı yüklenmesi nedeniyle geliştiriciler potansiyel müşterilerin %40'a kadarını kaybediyor",
+    "before": "Önce",
+    "after": "GRIDIX'ten sonra",
+    "beforeItems": {
+      "item1": "Müşteriler kat planlarını anlamıyor ve \"neler mevcut?\" diye soruyorlar.",
+      "item2": "Yöneticiler zamanlarının %40'ını kullanılabilirlik danışmanlığına harcıyor",
+      "item3": "Yöneticinin iş yükü nedeniyle soğuk potansiyel müşterilerin işlenmesi daha uzun sürüyor",
+      "item4": "Dönüşüme öncülük edecek web sitesi: %2-3"
+    },
+    "afterItems": {
+      "item1": "İnteraktif harita — müşteri BAĞIMSIZ OLARAK daireyi çevrimiçi seçer",
+      "item2": "Yönetici danışmanlık yapmak yerine anlaşmaları hemen kapatır",
+      "item3": "Seçim verileriyle birlikte tüm potansiyel müşteriler CRM'de otomatik olarak",
+      "item4": "Nesne popülerliği ve yönetici etkinliğine ilişkin analizleri içeren kontrol paneli",
+      "item5": "Karar vermek için raporları Excel/PDF'ye aktarın",
+      "item6": "Dinamik fiyatlar kat planı ve widget'ta otomatik olarak güncellenir",
+      "item7": "Web sitesinden dönüşüme öncülük etme: %4-5 (+%40)"
+    },
+    "departments": {
+      "sales": {
+        "title": "Satış Departmanı",
+        "item1": "Statik kat planları müşterilerin ilgisini çekmez",
+        "item2": "Uzun manuel kurşun işleme",
+        "item3": "Daire avantajlarını görsel olarak açıklamak zor"
+      },
+      "marketing": {
+        "title": "Pazarlama",
+        "item1": "Projeyi çevrimiçi olarak çekici bir şekilde sergilemek zor",
+        "item2": "Düşük dönüşüm nedeniyle yüksek potansiyel müşteri maliyeti",
+        "item3": "Müşteri çıkarlarına ilişkin analiz yok"
+      },
+      "management": {
+        "title": "Yönetmek",
+        "item1": "Tüm daireler için tek bir veri kaynağı yok",
+        "item2": "Hangi dairelerin müşterilerin ilgisini çektiğini anlamak zor",
+        "item3": "Farklı sistemlerden gelen veriler eşleşmiyor",
+        "item4": "Raporlar ek analiz gerektirir"
+      },
+      "client": {
+        "title": "Müşteriler için",
+        "item1": "İnteraktif kat planı olmadan daire seçmek sakıncalı",
+        "item2": "Mülkün konumunu ve düzenini anlamak zor",
+        "item3": "Güncel olmayan web sitesi geliştiriciye olan güveni azaltır"
+      }
+    }
+  },
+  "solution": {
+    "title": "GRIDIX bu sorunları nasıl çözüyor?",
+    "description": "Modern gayrimenkul satışları için ihtiyacınız olan her şey tek platformda",
+    "features": {
+      "interactivePlans": {
+        "title": "İnteraktif kat planları",
+        "content": "Plan üzerinde görsel durumları (mevcut, rezerve edilmiş, satılmış) bulunan tıklanabilir nesneler. Müşteri BAĞIMSIZ olarak daireyi seçer, tüm özelliklerini online olarak görür ve tek tıkla başvuruyu yapar.",
+        "category": "Görselleştirme"
+      },
+      "automation": {
+        "title": "Satış otomasyonu",
+        "content": "amoCRM, Bitrix24 ve diğer CRM'lerle entegrasyonla 7/24 otomatik potansiyel müşteri toplama. Seçim verileri ve yöneticilere otomatik atama ile CRM'de anında liderliğe ulaşır. Geceleri ve hafta sonları bile çalışır.",
+        "category": "Entegrasyonlar"
+      },
+      "dataImport": {
+        "title": "Veri içe aktarma",
+        "content": "Birkaç tıklamayla Excel veya Google E-Tablolar'dan veri yükleyin; programcıya gerek yok. Otomatik fiyat güncellemeleri ve durum senkronizasyonu.",
+        "category": "Veri"
+      },
+      "teamManagement": {
+        "title": "Ekip yönetimi",
+        "content": "Yöneticileri davet edin, erişim seviyelerini ayarlayın ve ekip çalışmasını kontrol edin. Roller ve erişim hakları, etkinlik takibi, güvenli izin ayrımı.",
+        "category": "Yönetmek"
+      },
+      "customDomain": {
+        "title": "Özel alan adı",
+        "content": "Her proje için şirketinizin alan adını bağlayın. Alan adınız (ör., flats.company.com), otomatik olarak SSL sertifikası, tam markalama.",
+        "category": "Altyapı"
+      },
+      "customization": {
+        "title": "Özelleştirme",
+        "content": "Platformu markanıza göre özelleştirin: renkler, alanlar, diller, Beyaz Etiket. Özel alanlar ve özellikler, marka renk şeması, çok dilli arayüz.",
+        "category": "Markalaşma"
+      }
+    }
+  },
+  "whyGridix": {
+    "title": "Neden GRIDIX'i seçmelisiniz?",
+    "description": "Gerçekten sonuç veren bir platform oluşturduk",
+    "quickLaunch": {
+      "title": "Hızlı başlatma",
+      "item1": "Projeyi 1 gün içinde başlatın",
+      "item2": "Eğitim gerektirmeyen sezgisel arayüz",
+      "item3": "Belgeler ve video eğitimleri",
+      "item4": "Her aşamada destek"
+    },
+    "automation": {
+      "title": "Maksimum otomasyon",
+      "item1": "7/24 otomatik potansiyel müşteri toplama",
+      "item2": "CRM ve web sitesi ile entegrasyonlar",
+      "item3": "Dinamik fiyatlar ve durumlar",
+      "item4": "Otomatik veri senkronizasyonu"
+    },
+    "flexibility": {
+      "title": "Esneklik ve ölçek",
+      "item1": "Bir binadan proje portföyüne",
+      "item2": "Tüm gayrimenkul türleri (konut, ofis, ticari)",
+      "item3": "Markanıza göre tam kişiselleştirme",
+      "item4": "Beyaz Etiket çözümleri"
+    },
+    "technology": {
+      "title": "Geleceğin teknolojileri",
+      "item1": "GDPR ve veri güvenliği",
+      "item2": "Düzenli güncellemeler ve iyileştirmeler",
+      "item3": "%99,9 kesintisiz çalışma",
+      "item4": "Trend teknolojiler"
+    }
+  },
+  "expandedDemo": {
+    "title": "Nasıl çalışıyor?",
+    "subtitle": "Temel özellikler",
+    "widget": {
+      "title": "Web sitesi widget'ı",
+      "description": "1 dakikada herhangi bir web sitesine gömülür — Tilda, WordPress, Bitrix, Wix"
+    },
+    "excelImport": {
+      "title": "Excel'den içe aktarma",
+      "description": "100'den fazla nesneyi 2 dakikada yükleyin — otomatik yapı tanıma"
+    },
+    "crmIntegration": {
+      "title": "CRM entegrasyonu",
+      "description": "Müşteri seçim verileriyle amoCRM/Bitrix24'te otomatik olarak öne çıkar"
+    },
+    "dataUpdate": {
+      "title": "Veri ve durum güncellemeleri",
+      "description": "Daire durumlarını ve dinamik fiyatları gerçek zamanlı olarak güncelleyin; tüm değişiklikler anında kat planında ve widget'ta görünür"
+    },
+    "analytics": {
+      "title": "Analizler ve raporlar",
+      "description": "Popüler düzenleri, katları ve müşteri davranışını gerçek zamanlı olarak izleyin. Tüm veriler otomatik olarak güncellenerek talebin anlaşılmasına ve kararların daha hızlı alınmasına yardımcı olur"
+    },
+    "teamManagement": {
+      "title": "Ekip yönetimi",
+      "description": "Yöneticiler, pazarlamacılar ve yöneticiler için rolleri ve erişim haklarını yapılandırın. Her biri yalnızca projelerini ve işlevlerini görür"
+    }
+  },
+  "caseStudy": {
+    "badge": "Gerçek vaka çalışması",
+    "title": "Müşteri vaka çalışması",
+    "description": "GRIDIX uygulamasından gerçek sonuçlar",
+    "mainTitle": "Bir geliştirici aynı reklam bütçesiyle satışlarını nasıl yüzde :yüzde artırdı?",
+    "problem": {
+      "label": "Sorun",
+      "text": "Alıcılar dairelerin yerlerini anlamıyordu; yöneticiler, potansiyel müşterileri açıklamak ve manuel olarak işleme koymak için zaman harcıyordu."
+    },
+    "solution": {
+      "label": "Çözüm",
+      "item1": "1 günde 380 daire yüklendi",
+      "item2": "Web sitesine etkileşimli widget yerleştirildi",
+      "item3": "Otomasyon için bağlı amoCRM"
+    },
+    "results": {
+      "label": "Sonuçlar (1 ay)",
+      "conversion": "potansiyel müşterilere dönüşüm",
+      "selfSelection": "bağımsız olarak seçen müşterilerin oranı",
+      "timeSavings": "kurşun işleme süresi",
+      "costReduction": "müşteri edinme maliyeti",
+      "convenience": "seçim kolaylığı",
+      "marketing": "Pazarlama, reklamları GRIDIX analitiğine dayanarak optimize etmeye başladı"
+    },
+    "testimonial": {
+      "quote": "GRIDIX satış sürecini tamamen değiştirdi. Artık müşterilerin çevrimiçi olarak daire seçmesi daha kolay ve yöneticiler hazırlıklı alıcılarla çalışıyor. Bu, anlaşmaları hızlandırdı ve marka güvenini artırdı. Özellikle değerli olan, GRIDIX analitiğinin pazarlamamızın reklam kampanyalarını optimize etmesine yardımcı olmasıdır; hangi özelliklerin müşterilerin ilgisini çektiğini anlamaya başladık ve bütçeyi dönüşümün daha yüksek olduğu yere yönlendirdik.",
+      "author": "Geliştirici",
+      "company": "1380 daire"
+    }
+  },
+  "costComparison": {
+    "title": "Özel geliştirme ve GRIDIX karşılaştırması",
+    "description": "Web sitesi için özel kat planı geliştirmenin maliyeti binlerce dolara ulaşabilir ve geliştirilmesi 1 ila 6 ay sürebilir. GRIDIX ile aylık 129$'dan başlayan fiyatlarla projenizi 1 günde başlatabilirsiniz!",
+    "customDevelopment": {
+      "label": "Özel geliştirme",
+      "price": "5.000 $ - 15.000 $",
+      "priceNote": "Bir kerelik maliyet",
+      "item1": "1 ila 6 ay arası gelişim",
+      "item2": "Teknik ekip gerekli",
+      "item3": "Ek destek maliyetleri",
+      "item4": "Teknik hata riski",
+      "item5": "Hazır CRM entegrasyonu yok",
+      "item6": "Yeni projelere ölçeklendirmenin zor olması"
+    },
+    "gridix": {
+      "label": "GRIDIX",
+      "price": "129$/ay'dan başlayan fiyatlarla",
+      "priceNote": "7 gün ücretsiz abonelik",
+      "item1": "1 gün içinde lansman",
+      "item2": "Teknik ekibe gerek yok",
+      "item3": "Destek ve güncellemeler dahildir",
+      "item4": "Hatasız kararlı çalışma",
+      "item5": "amoCRM, Bitrix24 ile hazır entegrasyonlar",
+      "item6": "İstenilen sayıda projeye kolayca ölçeklenir",
+      "tryFree": "Ücretsiz deneyin"
+    }
+  },
+  "faq": {
+    "title": "SSS",
+    "subtitle": "Sık sorulan sorular",
+    "general": {
+      "title": "Genel sorular",
+      "q1": {
+        "question": "GRIDIX ile çalışmak için teknik bilgiye ihtiyacım var mı?",
+        "answer": "Hayır. Arayüz sezgiseldir. Widget'ı web sitesine yerleştirmek için bir kod satırını kopyalamanız yeterlidir."
+      },
+      "q2": {
+        "question": "Satın almadan önce deneyebilir miyim?",
+        "answer": "Evet! PRO planına 7 gün ücretsiz erişim sağlıyoruz. Kart gerekmez, tüm özelliklere tam erişim. Deneme süresinden sonra projeniz 30 gün süreyle duraklatılacak ve ardından silinecektir. Proje müşterilerin kullanımına kapalı olacaktır."
+      },
+      "q3": {
+        "question": "Bir projeyi ne kadar hızlı başlatabilirim?",
+        "answer": "Proje oluşturma, kat planı tablosunu ve aşağıdakiler dahil olmak üzere tüm görselleştirmeyi hazırlamanız koşuluyla 1 saatten sürer: 3D bina render'ı, kat planları, daire planları (2D ve 3D), ek yenileme görselleştirmesi ve diğer satış görselleri. Kaliteli görselleştirme, dönüşümü ve görsel algıyı önemli ölçüde artırır."
+      },
+      "q4": {
+        "question": "Nesne sayısında sınırlama var mı?",
+        "answer": "Projede daire, kat ve bölüm sayısında sınırlama yoktur. Her ölçekte proje oluşturabilirsiniz."
+      }
+    },
+    "technical": {
+      "title": "Teknik sorular",
+      "q1": {
+        "question": "Hangi resim formatları destekleniyor?",
+        "answer": "JPG, JPEG, PNG formatları desteklenmektedir. Önerilen çözünürlük: 1920×1080 piksel. Maksimum dosya boyutu: 10 MB."
+      },
+      "q2": {
+        "question": "Telefon veya tabletten çalışabilir miyim?",
+        "answer": "Evet, yönetici paneli mobil cihazlara uyarlanmıştır. Projeleri herhangi bir cihazdan yönetebilirsiniz."
+      },
+      "q3": {
+        "question": "Veriler ne kadar güvenli bir şekilde saklanıyor?",
+        "answer": "GDPR uyumlu, veri şifrelemeli Supabase (PostgreSQL) kullanıyoruz. Yedeklemeler her gün otomatik olarak oluşturulur."
+      },
+      "q4": {
+        "question": "Entegrasyonlar için API var mı?",
+        "answer": "Evet, PRO planı, sistemlerinizle entegrasyon için REST API içerir. Belgeler kişisel hesapta mevcuttur."
+      }
+    },
+    "payment": {
+      "title": "Ödeme ve abonelik",
+      "q1": {
+        "question": "Tüzel kişilerden ödeme yapabilir miyim?",
+        "answer": "Evet, \"Fatura\" ödeme yöntemini seçebilirsiniz ve sistem fatura oluşturacaktır. Fatura ödeme onayının ardından abonelik aktif hale gelir. Önemli: Doğru fatura için hesaptaki bilgilerinizi yapılandırın. Ayrıca kapanış belgeleri de sağlıyoruz (kanun, fatura)."
+      },
+      "q2": {
+        "question": "Deneme süresi sona erdikten sonra ne olur?",
+        "answer": "7 günlük deneme süresinden sonra plan ve ödemeli aboneliği seçebilirsiniz. Ödemezseniz proje 30 gün süreyle duraklatılır ve ardından silinir."
+      },
+      "q3": {
+        "question": "Çalışma sırasında planı değiştirebilir miyim?",
+        "answer": "Evet, istediğiniz zaman BASIC'ten PRO'ya veya tam tersi şekilde geçiş yapabilirsiniz. Değişiklikler bir sonraki fatura döneminden itibaren geçerli olur."
+      },
+      "q4": {
+        "question": "Geri ödeme var mı?",
+        "answer": "Hizmetten memnun kalmadığınız takdirde, ödeme yapıldıktan sonraki 7 gün içinde paranızı iade ederiz. Soru sorulmadı."
+      },
+      "q5": {
+        "question": "Kaç tane proje oluşturabilirim?",
+        "answer": "Sınırsız sayıda. Plan, her aktif proje için ayrı ayrı ödenir."
+      }
+    },
+    "supportLink": "Sorunuzun cevabını bulamadınız mı? {link}destekle{/link} iletişime geçin"
+  },
+  "demoModal": {
+    "badge": "📅 Demo rezervasyonu yapın",
+    "title": "GRIDIX'i çalışırken görün",
+    "description": "Sizin için uygun bir zaman seçin; yöneticiniz demoyu koordine etmek ve tüm sorularınızı yanıtlamak için sizinle iletişime geçecektir.",
+    "benefits": {
+      "personalDemo": {
+        "title": "Kişisel demo",
+        "description": "Görevlerinize yönelik özellikler göstereceğiz"
+      },
+      "answers": {
+        "title": "Soruları yanıtlayın",
+        "description": "Entegrasyonları ve yetenekleri tartışacağız"
+      },
+      "help": {
+        "title": "Yardımı başlat",
+        "description": "İlk projenizi oluşturmanıza yardımcı olacağız"
+      }
+    },
+    "calendarTitle": "Demo rezervasyonu yapın"
+  }
+}

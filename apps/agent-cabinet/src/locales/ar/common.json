@@ -10,7 +10,8 @@
     "leads": "يؤدي",
     "payouts": "الدفعات",
     "analytics": "التحليلات",
-    "partnerProgram": "برنامج الشريك"
+    "partnerProgram": "برنامج الشريك",
+    "settings": "الإعدادات"
   },
   "common": {
     "loading": "تحميل...",
@@ -248,14 +249,44 @@
       "signature": "إمضاء",
       "drawSignature": "يرسم",
       "uploadSignature": "رفع",
+      "replaceSignature": "استبدال التوقيع",
       "clear": "واضح",
       "sign": "توقيع الاتفاقية",
-      "submit": "تقديم الطلب"
+      "submit": "تقديم الطلب",
+      "currentSignaturePrompt": "هذا هو توقيعك الحالي المستخدم في العقود.",
+      "uploadHint": "قم بتحميل صورة عالية الجودة لتوقيعك (PNG أو JPG)."
     },
     "status": {
       "pending": "قيد الانتظار",
       "approved": "موافقة",
       "rejected": "مرفوض"
     }
+  },
+  "settings": {
+    "title": "إعدادات",
+    "subtitle": "إدارة حسابك والإخطارات وتفاصيل العقد",
+    "contractTitle": "تفاصيل العقد",
+    "contractDesc": "معلومات من اتفاقية الوكيل الخاص بك",
+    "fullName": "الاسم الكامل",
+    "companyName": "اسم الشركة",
+    "type": "يكتب",
+    "taxId": "معرف الضريبة",
+    "legalAddress": "العنوان القانوني",
+    "phone": "هاتف",
+    "bankDetails": "تفاصيل البنك",
+    "agentCompanyType": "نوع الشركة",
+    "agentRegisteredOffice": "مكتب مسجل",
+    "agentRepresentativeName": "اسم الممثل",
+    "agentRepresentativeTitle": "عنوان تمثيلي",
+    "status": "حالة",
+    "agreementSignedAt": "تم توقيع الاتفاقية",
+    "commissionRate": "معدل العمولة",
+    "savingProfile": "توفير…",
+    "profileSaved": "تم حفظ الملف الشخصي",
+    "profileSaveError": "فشل حفظ الملف الشخصي",
+    "notificationsSaved": "تم حفظ تفضيلات الإشعارات",
+    "notificationsSaveError": "فشل في حفظ تفضيلات الإخطار",
+    "saveAll": "احفظ الكل",
+    "loadError": "فشل في تحميل بيانات العقد"
   }
 }

@@ -1,4 +1,4 @@
-export type Language = "ru" | "en" | "ka" | "ar" | "he";
+export type Language = "ru" | "en" | "ka" | "ar" | "he" | "tr";
 
 export const RTL_LANGUAGES = ["ar", "he"] as const;
 
@@ -36,6 +36,12 @@ export const LANGUAGE_CONFIG = {
     urlPrefix: "/ru",
     name: "Русский",
     flag: "🇷🇺",
+  },
+  tr: {
+    code: "tr",
+    urlPrefix: "/tr",
+    name: "Türkçe",
+    flag: "🇹🇷",
   },
 } as const;
 

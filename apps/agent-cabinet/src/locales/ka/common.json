@@ -10,7 +10,8 @@
     "leads": "მიჰყავს",
     "payouts": "გადახდები",
     "analytics": "ანალიტიკა",
-    "partnerProgram": "პარტნიორული პროგრამა"
+    "partnerProgram": "პარტნიორული პროგრამა",
+    "settings": "პარამეტრები"
   },
   "common": {
     "loading": "იტვირთება...",
@@ -248,14 +249,44 @@
       "signature": "ხელმოწერა",
       "drawSignature": "დახატე",
       "uploadSignature": "ატვირთვა",
+      "replaceSignature": "შეცვალეთ ხელმოწერა",
       "clear": "წმინდა",
       "sign": "ხელი მოაწერე ხელშეკრულებას",
-      "submit": "განაცხადის გაგზავნა"
+      "submit": "განაცხადის გაგზავნა",
+      "currentSignaturePrompt": "ეს არის თქვენი ამჟამინდელი ხელმოწერა, რომელიც გამოიყენება კონტრაქტებისთვის.",
+      "uploadHint": "ატვირთეთ თქვენი ხელმოწერის მაღალი ხარისხის სურათი (PNG ან JPG)."
     },
     "status": {
       "pending": "მომლოდინე",
       "approved": "დამტკიცებულია",
       "rejected": "უარყოფილია"
     }
+  },
+  "settings": {
+    "title": "პარამეტრები",
+    "subtitle": "მართეთ თქვენი ანგარიში, შეტყობინებები და კონტრაქტის დეტალები",
+    "contractTitle": "კონტრაქტის დეტალები",
+    "contractDesc": "ინფორმაცია თქვენი აგენტის ხელშეკრულებიდან",
+    "fullName": "სრული სახელი",
+    "companyName": "კომპანიის სახელი",
+    "type": "ტიპი",
+    "taxId": "საგადასახადო ID",
+    "legalAddress": "იურიდიული მისამართი",
+    "phone": "ტელეფონი",
+    "bankDetails": "ბანკის დეტალები",
+    "agentCompanyType": "კომპანიის ტიპი",
+    "agentRegisteredOffice": "რეგისტრირებული ოფისი",
+    "agentRepresentativeName": "წარმომადგენლის სახელი",
+    "agentRepresentativeTitle": "წარმომადგენლის წოდება",
+    "status": "სტატუსი",
+    "agreementSignedAt": "ხელშეკრულება გაფორმდა",
+    "commissionRate": "საკომისიო განაკვეთი",
+    "savingProfile": "მიმდინარეობს შენახვა…",
+    "profileSaved": "პროფილი შენახულია",
+    "profileSaveError": "პროფილის შენახვა ვერ მოხერხდა",
+    "notificationsSaved": "შეტყობინებების პარამეტრები შენახულია",
+    "notificationsSaveError": "შეტყობინებების პარამეტრების შენახვა ვერ მოხერხდა",
+    "saveAll": "შეინახეთ ყველა",
+    "loadError": "ხელშეკრულების მონაცემები ვერ ჩაიტვირთა"
   }
 }

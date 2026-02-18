@@ -12,6 +12,7 @@ import {
   FileText,
   AlertTriangle,
   Download,
+  CreditCard,
 } from "lucide-react";
 import { AgencyPartner } from "./types";
 import { Button } from "@gridix/ui";
@@ -321,14 +322,64 @@ export const PartnerDrawer: React.FC<Props> = ({
                       {new Date(partner.joinedAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="col-span-2 mt-2 border-t border-slate-100 pt-2">
-                    <div className="mb-1 text-xs text-slate-500">
+                  <div className="col-span-2 mt-4 border-t border-slate-100 pt-4 text-left">
+                    <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <CreditCard size={14} className="text-blue-500" />
                       {t("partners.drawer.bankDetails")}
                     </div>
-                    <div className="rounded border border-slate-200 bg-slate-50 p-2 font-mono text-xs text-slate-700">
-                      {partner.bankDetails?.details ||
-                        t("partners.drawer.noBankDetails")}
-                    </div>
+                    {partner.bankDetails?.bank_name ||
+                    partner.bankDetails?.iban ? (
+                      <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                        {partner.bankDetails.bank_name && (
+                          <div>
+                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
+                              {t("agentApplication.bankName")}
+                            </div>
+                            <div className="text-sm font-semibold text-slate-900">
+                              {partner.bankDetails.bank_name}
+                            </div>
+                          </div>
+                        )}
+                        {partner.bankDetails.iban && (
+                          <div>
+                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
+                              {t("agentApplication.ibanLabel")}
+                            </div>
+                            <div className="font-mono text-sm font-semibold text-slate-900">
+                              {partner.bankDetails.iban}
+                            </div>
+                          </div>
+                        )}
+                        {partner.bankDetails.billing_currency && (
+                          <div>
+                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
+                              {t("agentApplication.billingCurrency")}
+                            </div>
+                            <div className="text-sm font-semibold text-slate-900">
+                              {partner.bankDetails.billing_currency}
+                            </div>
+                          </div>
+                        )}
+                        {typeof partner.bankDetails.is_vat_payer ===
+                          "boolean" && (
+                          <div>
+                            <div className="mb-0.5 text-[10px] font-bold uppercase text-slate-400">
+                              {t("agentApplication.isVatPayer")}
+                            </div>
+                            <div className="text-sm font-semibold text-slate-900">
+                              {partner.bankDetails.is_vat_payer
+                                ? t("common.yes")
+                                : t("common.no")}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-700">
+                        {partner.bankDetails?.details ||
+                          t("partners.drawer.noBankDetails")}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

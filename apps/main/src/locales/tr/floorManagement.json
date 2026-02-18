@@ -1,0 +1,21 @@
+{
+  "add": "Eklemek",
+  "addFloor": "Kat Ekle",
+  "addFloorError": "Kat eklenirken hata oluştu",
+  "addFloorSuccess": "{{kat}}. kat başarıyla eklendi",
+  "apartment": "daire",
+  "apartments": "daireler",
+  "deleteFloorConfirm": "{{kat}}. katı silmek istediğinizden emin misiniz?",
+  "deleteFloorError": "Kat silinirken hata oluştu",
+  "deleteFloorSuccess": "{{kat}}. kat başarıyla silindi",
+  "deleteFloorWithApartmentsConfirm": "{{kat}}. katı silmek istediğinizden emin misiniz? Ayrıca silinecek {{count}} daire içeriyor.",
+  "description": "Projeye kat ekleme veya kaldırma",
+  "existingFloors": "Mevcut zeminler",
+  "floor": "Zemin",
+  "floorAlreadyExists": "{{kat}}. kat zaten mevcut",
+  "floorNumber": "Kat numarası",
+  "invalidFloorNumber": "Geçersiz kat numarası",
+  "manageFloors": "Katları Yönet",
+  "noFloors": "Kat oluşturulmadı",
+  "title": "Kat Yönetimi"
+}

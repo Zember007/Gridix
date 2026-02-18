@@ -1,0 +1,19 @@
+{
+  "title": "Abonelikler",
+  "subtitle": "Aboneliğinizi yönetin ve gelişmiş özelliklere erişin",
+  "mySubscription": "Aboneliğim",
+  "plans": "Planlar",
+  "trialExpired": "Deneme Süresi Sona Erdi",
+  "subscriptionExpired": "Abonelik Süresi Doldu",
+  "trialExpiredDesc": "14 günlük Pro plan deneme süreniz sona erdi. Gelişmiş özellikleri kullanmaya devam etmek için uygun bir plan seçin.",
+  "subscriptionExpiredDesc": "Aboneliğiniz sona erdi. Gelişmiş özellikleri kullanmaya devam etmek için bir plan seçin.",
+  "faqTitle": "Sıkça Sorulan Sorular",
+  "faq1Title": "Ücretsiz deneme neleri içeriyor?",
+  "faq1Text": "14 günlük deneme, Pro planın tüm özelliklerini içerir: CRM entegrasyonu, özel alan adı, gelişmiş şablonlar ve öncelikli destek. Kredi kartı gerekmez.",
+  "faq2Title": "Planımı değiştirebilir miyim?",
+  "faq2Text": "Evet, planınızı istediğiniz zaman yükseltebilir veya düşürebilirsiniz. Yükseltme sırasında fark, kalan süreye eşit olarak dağıtılacaktır.",
+  "faq3Title": "İndirimler nasıl çalışır?",
+  "faq3Text": "Abonelik süresi ne kadar uzun olursa indirim de o kadar büyük olur: 3 ay - %5, 6 ay - %10, 1 yıl - %20, 2 yıl - %30, 3 yıl - %50. İndirimler otomatik olarak uygulanır.",
+  "faq4Title": "İptal ettiğimde ne olur?",
+  "faq4Text": "Aboneliğinizi iptal ettiğinizde, ücretli dönem sonuna kadar erişime devam edersiniz. Bundan sonra hesabınız sınırlı özelliklere sahip Temel plana geçer."
+}

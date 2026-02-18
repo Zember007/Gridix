@@ -65,7 +65,9 @@
   "common": {
     "language": "Язык",
     "more": "Подробнее",
-    "hide": "Скрыть"
+    "hide": "Скрыть",
+    "yes": "Да",
+    "no": "Нет"
   },
   "admin": {
     "documentation": "Документация"

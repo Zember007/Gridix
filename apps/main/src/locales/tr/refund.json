@@ -1,0 +1,141 @@
+{
+  "title": "Geri Ödeme Politikası",
+  "lastUpdated": "Son güncelleme:",
+  "introduction": {
+    "title": "Genel Hükümler",
+    "text": "Gridix şirketi yüksek kaliteli hizmet ve müşteri memnuniyetini sağlamaya çalışmaktadır. Bu Geri Ödeme Politikası, FloorPlan Sihirbazı hizmetini kullanmak karşılığında ödenen tutarlar için geri ödeme talep edebileceğiniz koşulları açıklamaktadır.",
+    "important": "Önemli:",
+    "importantText": "Lütfen abone olmadan önce iade koşullarını dikkatlice okuyunuz."
+  },
+  "companyInfo": {
+    "title": "Şirket Bilgileri",
+    "name": "İsim:",
+    "nameValue": "Izgara",
+    "address": "Adres:",
+    "addressValue": "Gürcistan, Batum, Leselidze St.3",
+    "email": "E-posta:",
+    "emailValue": "gelen kutusu@gridix.live"
+  },
+  "guarantee": {
+    "title": "Para İade Garantisi (14 gün)",
+    "text": "Yeni abonelikler için 14 günlük para iade garantisi sunuyoruz:",
+    "item1": "İlk ödemeden itibaren 14 takvim günü içinde geri ödeme yapılabilir",
+    "item2": "Yalnızca ilk abonelik ödemesi için geçerlidir (yenilemeler için geçerli değildir)",
+    "item3": "Tam geri ödeme sağlanır",
+    "item4": "Geri ödeme nedenlerinin açıklamasına gerek yok",
+    "item5": "Para iadesinin ardından ücretli özelliklere erişim sonlandırılacak",
+    "note": "Not:",
+    "noteText": "Geri ödemeyi 14 gün içinde işleme koymak için inbox@gridix.live adresinden bizimle iletişime geçin."
+  },
+  "eligibility": {
+    "title": "Geri Ödeme Uygunluğu",
+    "eligible": {
+      "title": "✓ Aşağıdaki durumlarda geri ödeme yapılabilir:",
+      "item1": "Ödeme yapıldıktan sonraki 14 gün içinde ilk abonelik",
+      "item2": "Hizmeti kullanılamaz hale getiren teknik sorunlar",
+      "item3": "Belgesel kanıtlarla belirtilen işlevsellik arasındaki uyumsuzluk",
+      "item4": "Teknik nedenlerden dolayı çift ücretlendirme",
+      "item5": "Şirket tarafından başlatılan abonelik iptali"
+    },
+    "notEligible": {
+      "title": "✗ Aşağıdaki durumlarda geri ödeme YAPILMAZ:",
+      "item1": "İlk ödemenin üzerinden 14 günden fazla zaman geçti",
+      "item2": "Mevcut aboneliğin yenilenmesi",
+      "item3": "Kullanıcı Sözleşmesinin İhlali",
+      "item4": "Kullanım kurallarının ihlali nedeniyle hesabın engellenmesi",
+      "item5": "Ücretli sürenin kısmi kullanımı (14 günlük garanti hariç)",
+      "item6": "Kullanıcı kararının objektif sebepler olmadan değiştirilmesi (14 gün sonra)"
+    }
+  },
+  "process": {
+    "title": "İade Süreci",
+    "text": "Geri ödemeyi işleme koymak için şu adımları izleyin:",
+    "step1": {
+      "title": "Talebi Gönder",
+      "text": "\"Geri Ödeme Talebi\" konusuyla inbox@gridix.live adresine yazın"
+    },
+    "step2": {
+      "title": "Bilgi Sağlayın",
+      "text": "Hesap e-postasını, ödeme tarihini ve geri ödeme nedenini belirtin (isteğe bağlı)"
+    },
+    "step3": {
+      "title": "Onay Alın",
+      "text": "Talebinizi 2-3 iş günü içinde inceleyeceğiz"
+    },
+    "step4": {
+      "title": "Geri Ödeme Al",
+      "text": "Onayın ardından geri ödeme, orijinal ödeme yöntemine 5-10 iş günü içinde gerçekleştirilecektir."
+    }
+  },
+  "timeline": {
+    "title": "Geri Ödeme Zaman Çizelgesi",
+    "processing": {
+      "title": "İşlem Süresi:",
+      "item1": "İnceleme isteği: 2-3 iş günü",
+      "item2": "Onay/red: incelemeden sonraki 1 iş günü içinde",
+      "item3": "Müşteri bildirimi: 24 saat içinde"
+    },
+    "receipt": {
+      "title": "Alınma Zamanı:",
+      "item1": "Kredi/banka kartları: 5-10 iş günü",
+      "item2": "PayPal: 3-5 iş günü",
+      "item3": "Banka havalesi: 7-14 iş günü"
+    },
+    "note": "Lütfen aklınızda bulundurun:",
+    "noteText": "Gerçek tahsilat süresi bankanıza veya ödeme sisteminize bağlı olabilir."
+  },
+  "partialRefunds": {
+    "title": "Kısmi Geri Ödemeler",
+    "text": "Bazı durumlarda kısmi geri ödeme yapılabilir:",
+    "item1": "Abonelik süresinin bir kısmını etkileyen önemli teknik sorunlar",
+    "item2": "İşlevselliği önemli ölçüde etkileyen hizmet değişiklikleri",
+    "item3": "Belirli özelliklerin durdurulması",
+    "calculation": "Kısmi iade tutarı, kullanılmamış abonelik süresi veya hizmetin kullanılamama derecesi ile orantılı olarak hesaplanır."
+  },
+  "cancellation": {
+    "title": "Geri Ödemesiz Abonelik İptali",
+    "text": "Otomatik abonelik yenilemeyi istediğiniz zaman iptal edebilirsiniz:",
+    "item1": "Hizmete erişim, ücretli sürenin sonuna kadar korunur",
+    "item2": "Otomatik ödemeler sona eriyor",
+    "item3": "Kalan süre için geri ödeme yapılmaz (yukarıda açıklanan durumlar hariç)",
+    "item4": "Aboneliği istediğiniz zaman devam ettirebilirsiniz",
+    "howTo": "Nasıl iptal edilir:",
+    "howToText": "Hesabınızdaki \"Abonelik\" bölümüne gidin ve \"Aboneliği İptal Et\"e tıklayın"
+  },
+  "specialCases": {
+    "title": "Özel Durumlar",
+    "technical": {
+      "title": "Teknik Sorunlar:",
+      "text": "Hizmet kullanımını engelleyen teknik sorunlarla karşılaşırsanız lütfen öncelikle desteğimizle iletişime geçin. Geri ödemeyi düşünmeden önce sorunu çözmeye çalışacağız."
+    },
+    "forceMajeure": {
+      "title": "Mücbir Sebep:",
+      "text": "Hizmet sunumunu imkansız hale getiren mücbir sebeplerin ortaya çıkması halinde, orantılı geri ödeme veya abonelik uzatma teklifinde bulunabiliriz."
+    },
+    "functionality": {
+      "title": "İşlevsellik Değişiklikleri:",
+      "text": "Önemli işlevsellik değişiklikleri beklentilerinizi karşılamıyorsa, geri ödemeyi bireysel olarak değerlendireceğiz."
+    }
+  },
+  "disputes": {
+    "title": "Uyuşmazlık Çözümü",
+    "text": "Geri ödeme talebinize ilişkin karara katılmıyorsanız:",
+    "item1": "Ek kanıtlarla yeniden değerlendirme talebinde bulunabilirsiniz",
+    "item2": "Her iki taraf için de adil bir çözüm bulmaya çalışıyoruz",
+    "item3": "Gerektiğinde konu yönetime iletilebilir",
+    "item4": "Son çare olarak anlaşmazlıklar yürürlükteki kanunlara göre çözümlenir."
+  },
+  "changes": {
+    "title": "Geri Ödeme Politikasındaki Değişiklikler",
+    "text1": "Gridix şirketi bu İade Politikasının şartlarını değiştirme hakkını saklı tutar. Değişiklikler web sitesinde yayınlandıktan sonra yürürlüğe girer.",
+    "text2": "Kullanıcıların koşullarını kötüleştiren önemli değişiklikler, yenilenene kadar mevcut abonelikler için geçerli değildir."
+  },
+  "contact": {
+    "title": "İletişim Bilgileri",
+    "text": "Geri ödemeyle ilgili sorularınız için şu adresle iletişime geçin:",
+    "email": "E-posta: inbox@gridix.live",
+    "address": "Adres: Gürcistan, Batum, Leselidze St. 3",
+    "responseTime": "Tepki Süresi:",
+    "responseTimeText": "Tüm geri ödeme taleplerine 2-3 iş günü içinde yanıt vermeye çalışıyoruz."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "chooseMethod": "Proje oluşturma yöntemini seçin",
+  "createProject": "Yeni proje oluştur",
+  "importExcel": "Excel'den içe aktar",
+  "importExcelDesc": "Daire verilerini içeren Excel dosyasını yükleyin ve otomatik olarak proje oluşturun",
+  "manualSetup": "Manuel kurulum",
+  "manualSetupDesc": "Sıfırdan proje oluşturun ve her şeyi manuel olarak yapılandırın",
+  "startManual": "Manuel oluşturmayı başlat"
+}

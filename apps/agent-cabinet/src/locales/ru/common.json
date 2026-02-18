@@ -10,7 +10,8 @@
     "leads": "Лиды",
     "payouts": "Выплаты",
     "analytics": "Аналитика",
-    "partnerProgram": "Партнёрская программа"
+    "partnerProgram": "Партнёрская программа",
+    "settings": "Настройки"
   },
   "common": {
     "loading": "Загрузка...",
@@ -248,14 +249,44 @@
       "signature": "Подпись",
       "drawSignature": "Нарисовать",
       "uploadSignature": "Загрузить",
+      "replaceSignature": "Заменить подпись",
       "clear": "Очистить",
       "sign": "Подписать договор",
-      "submit": "Отправить заявку"
+      "submit": "Отправить заявку",
+      "currentSignaturePrompt": "Это ваша текущая подпись, используемая в договорах.",
+      "uploadHint": "Загрузите качественное изображение подписи (PNG или JPG)."
     },
     "status": {
       "pending": "На проверке",
       "approved": "Одобрено",
       "rejected": "Отклонено"
     }
+  },
+  "settings": {
+    "title": "Настройки",
+    "subtitle": "Управление аккаунтом, уведомлениями и данными по договору",
+    "contractTitle": "Данные по договору",
+    "contractDesc": "Информация из агентского соглашения",
+    "fullName": "ФИО",
+    "companyName": "Компания",
+    "type": "Тип",
+    "taxId": "ИНН",
+    "legalAddress": "Юридический адрес",
+    "phone": "Телефон",
+    "bankDetails": "Банковские реквизиты",
+    "agentCompanyType": "Тип организации",
+    "agentRegisteredOffice": "Зарегистрированный офис",
+    "agentRepresentativeName": "Имя представителя",
+    "agentRepresentativeTitle": "Должность представителя",
+    "status": "Статус",
+    "agreementSignedAt": "Дата подписания",
+    "commissionRate": "Комиссия",
+    "savingProfile": "Сохранение…",
+    "profileSaved": "Профиль сохранён",
+    "profileSaveError": "Не удалось сохранить профиль",
+    "notificationsSaved": "Настройки уведомлений сохранены",
+    "notificationsSaveError": "Не удалось сохранить настройки уведомлений",
+    "saveAll": "Сохранить всё",
+    "loadError": "Не удалось загрузить данные договора"
   }
 }

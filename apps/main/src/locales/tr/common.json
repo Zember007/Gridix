@@ -1,0 +1,92 @@
+{
+  "language": "Dil",
+  "available": "Mevcut",
+  "back": "Geri",
+  "cancel": "İptal etmek",
+  "continue": "Devam etmek",
+  "copied": "Bağlantı panoya kopyalandı",
+  "error": "Bir hata oluştu",
+  "example": "Örnek",
+  "grid": "Izgara",
+  "hide": "Saklamak",
+  "list": "Liste",
+  "menu": "Menü",
+  "more": "Daha fazla ayrıntı",
+  "priceOnRequest": "Talep üzerine",
+  "reserve": "Rezerv",
+  "reserved": "Rezerve",
+  "leaveRequest": "Bir istek bırakın",
+  "search": "Aramak",
+  "share": "Paylaşmak",
+  "sold": "Satılmış",
+  "unavailable": "Kullanılamıyor",
+  "view": "Görüş",
+  "clear": "Temizlemek",
+  "save": "Kaydetmek",
+  "close": "Kapalı",
+  "saving": "Kaydediliyor...",
+  "companySettingsNotFound": "Şirket ayarları bulunamadı. Fatura oluşturmadan önce lütfen şirket bilgilerinizi yapılandırın.",
+  "companySettingsIncomplete": "Fatura oluşturmak için lütfen şirket ayarlarında ödeme ayrıntılarını doldurun.",
+  "invoiceGenerationFailed": "Fatura oluşturulamadı",
+  "invoiceDownloadFailed": "Fatura indirilemedi",
+  "drawer": {
+    "tabs": {
+      "overview": "Genel Bakış",
+      "units": "Birimler",
+      "construction": "Yapı",
+      "media": "Medya",
+      "partners": "Ortaklar",
+      "settings": "Ayarlar"
+    },
+    "commission": {
+      "title": "Komisyonunuz",
+      "active": "Aktif",
+      "requiresContract": "Sözleşme gerektirir",
+      "condition": "Ödeme koşulu",
+      "signOffer": "Müşterileri kilitlemek ve komisyon almak için teklifi geliştiriciyle imzalayın."
+    },
+    "stats": {
+      "roi": "yatırım getirisi",
+      "completion": "Tamamlama",
+      "priceFrom": "Başlangıç ​​fiyatı",
+      "units": "Birimler"
+    },
+    "about": {
+      "title": "Proje hakkında",
+      "description": "Prestijli bir bölgede modern konut kompleksi. Yaşamak ve yatırım için idealdir."
+    },
+    "quickAccess": "Hızlı erişim",
+    "media": {
+      "title": "Proje medya bankası",
+      "downloadAll": "Tümünü indir (ZIP)",
+      "renders": "renderlar",
+      "videos": "Videolar",
+      "presentations": "Sunumlar",
+      "noMaterials": "Malzeme yok",
+      "restricted": "Erişim kısıtlı",
+      "signToAccess": "Medya bankasına erişmek için geliştiriciyle sözleşmeyi imzalayın.",
+      "connect": "Bağlamak"
+    },
+    "construction": {
+      "title": "İnşaat ilerlemesi",
+      "noUpdates": "Güncelleme yok"
+    },
+    "units": {
+      "legend": {
+        "available": "Mevcut",
+        "booked": "Rezerve edildi",
+        "sold": "Satılmış"
+      },
+      "downloadPdf": "PDF'yi indir"
+    },
+    "actions": {
+      "lock": "İstemciyi kilitle",
+      "favorite": "Koleksiyona ekle",
+      "share": "Paylaşmak",
+      "becomePartner": "Ortak olun",
+      "pendingConfirmation": "Onay bekleniyor",
+      "partnershipUnavailable": "Ortaklık mevcut değil",
+      "openPage": "Sayfayı aç"
+    }
+  }
+}
