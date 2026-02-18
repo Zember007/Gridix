@@ -37,6 +37,6 @@
     "node": ">=18"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,yml,yaml,css,scss,html}": "prettier --check"
+    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,yml,yaml,css,scss,html}": "prettier --write"
   }
 }

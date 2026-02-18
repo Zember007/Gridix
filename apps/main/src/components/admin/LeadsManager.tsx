@@ -815,10 +815,10 @@ export function LeadsManager({
                         <p className="text-sm font-extrabold text-amber-900">
                           {t("leads.warnings.funnelTriggersTitle")}
                         </p>
-                        <p className="text-xs text-amber-800 mt-2 sm:truncate">
-                        <span className="font-bold">
-                          {t('leads.warnings.missingFunnels')}:
-                        </span>{' '}
+                        <p className="mt-2 text-xs text-amber-800 sm:truncate">
+                          <span className="font-bold">
+                            {t("leads.warnings.missingFunnels")}:
+                          </span>{" "}
                           {missingApartmentStatusFunnels
                             .map((f) => f.name)
                             .join(", ")}

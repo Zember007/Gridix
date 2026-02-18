@@ -862,7 +862,7 @@ const ProjectList = ({
       ) : (
         <div className="space-y-6">
           {/* Header with Create New Project Button */}
-          <div className="flex flex-wrap items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2
                 style={{ color: ADMIN_THEME.textPrimary }}
@@ -877,7 +877,7 @@ const ProjectList = ({
             {!isCrmMode && onCreateNew && (
               <Button
                 onClick={onCreateNew}
-                className="create_project_usertour"
+                className="create_project_usertour w-full md:w-auto"
                 style={{
                   backgroundColor: ADMIN_THEME.primary,
                   color: ADMIN_THEME.textOnPrimary,
