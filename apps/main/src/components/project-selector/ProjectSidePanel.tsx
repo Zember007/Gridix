@@ -143,12 +143,26 @@ export const ProjectSidePanel = ({
     );
 
     if (idsFromModuleCache.length > 0) {
-      const cachedValues: Record<string, string | null> = {};
-      for (const id of idsFromModuleCache) {
-        cachedValues[id] = apartmentCoverPhotoCache.get(id) ?? null;
-      }
-      setApartmentCoverPhotoById((prev) => ({ ...prev, ...cachedValues }));
+      setApartmentCoverPhotoById((prev) => {
+        const patch: Record<string, string | null> = {};
+        let hasNew = false;
+        for (const id of idsFromModuleCache) {
+          if (!(id in prev)) {
+            patch[id] = apartmentCoverPhotoCache.get(id) ?? null;
+            hasNew = true;
+          }
+        }
+        return hasNew ? { ...prev, ...patch } : prev;
+      });
       setApartmentCoverPhotoLoadingById((prev) => {
+        let changed = false;
+        for (const id of idsFromModuleCache) {
+          if (prev[id] !== false) {
+            changed = true;
+            break;
+          }
+        }
+        if (!changed) return prev;
         const next = { ...prev };
         for (const id of idsFromModuleCache) next[id] = false;
         return next;
@@ -156,8 +170,7 @@ export const ProjectSidePanel = ({
     }
 
     const idsToFetch = apartmentIds.filter(
-      (id) =>
-        !(id in apartmentCoverPhotoById) && !apartmentCoverPhotoCache.has(id),
+      (id) => !apartmentCoverPhotoCache.has(id),
     );
     if (idsToFetch.length === 0) return;
 
@@ -223,7 +236,6 @@ export const ProjectSidePanel = ({
           return next;
         });
       } catch (e) {
-        // If we failed - stop spinner and mark as resolved to avoid refetch loops
         if (!cancelled) {
           setApartmentCoverPhotoById((prev) => {
             const next = { ...prev };
@@ -245,7 +257,7 @@ export const ProjectSidePanel = ({
     return () => {
       cancelled = true;
     };
-  }, [open, state, floorApartments, apartmentCoverPhotoById]);
+  }, [open, state, floorApartments]);
 
   // Safely get image URL
   const getApartmentImage = useCallback(
