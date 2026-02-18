@@ -1,7 +1,9 @@
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import { LANGUAGE_CONFIG } from "@gridix/utils/lib";
+import { createAppQueryClient } from "@gridix/utils/api";
 import i18n from "@/shared/lib/i18n";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProjectApartmentSelector } from "@/components";
@@ -28,6 +30,8 @@ type InitOptions = {
 };
 
 const DEFAULT_CONTAINER_ID = "gridix-widget-root";
+
+const widgetQueryClient = createAppQueryClient();
 
 function getWidgetScriptSrc(): string | null {
   // Best case: during script execution, currentScript points to the widget script.
@@ -240,20 +244,22 @@ async function initFloatingButton(opts: InitOptions) {
     const root = createRoot(buttonMount);
 
     root.render(
-      <I18nextProvider i18n={i18n}>
-        <MemoryRouter>
-          <AuthProvider>
-            <FloatingProjectButton
-              projectId={opts.projectId as string}
-              side={
-                opts.floatingButtonSide as FloatingProjectButtonProps["side"]
-              }
-              bottomOffset={opts.floatingButtonBottomOffset}
-              sideOffset={opts.floatingButtonSideOffset}
-            />
-          </AuthProvider>
-        </MemoryRouter>
-      </I18nextProvider>,
+      <QueryClientProvider client={widgetQueryClient}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter>
+            <AuthProvider>
+              <FloatingProjectButton
+                projectId={opts.projectId as string}
+                side={
+                  opts.floatingButtonSide as FloatingProjectButtonProps["side"]
+                }
+                bottomOffset={opts.floatingButtonBottomOffset}
+                sideOffset={opts.floatingButtonSideOffset}
+              />
+            </AuthProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </QueryClientProvider>,
     );
   } catch (err) {
     console.error("GridixWidget floating button init error:", err);
@@ -298,13 +304,15 @@ async function initInternal(opts: InitOptions) {
 
   const root = createRoot(mountPoint);
   root.render(
-    <I18nextProvider i18n={i18n}>
-      <MemoryRouter>
-        <AuthProvider>
-          <WidgetApp projectId={opts.projectId} />
-        </AuthProvider>
-      </MemoryRouter>
-    </I18nextProvider>,
+    <QueryClientProvider client={widgetQueryClient}>
+      <I18nextProvider i18n={i18n}>
+        <MemoryRouter>
+          <AuthProvider>
+            <WidgetApp projectId={opts.projectId} />
+          </AuthProvider>
+        </MemoryRouter>
+      </I18nextProvider>
+    </QueryClientProvider>,
   );
 }
 
