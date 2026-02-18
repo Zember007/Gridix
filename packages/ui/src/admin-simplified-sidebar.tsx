@@ -205,20 +205,20 @@ const ProfileFooterMenu = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              className="flex w-full items-center justify-between px-2 py-1 text-xs font-medium tracking-wide uppercase transition-colors"
-              style={{ color: ADMIN_THEME.textMuted }}
-              onClick={() => setIsLanguageOpen((prev) => !prev)}
+            <DropdownMenuItem
+              className="flex cursor-pointer items-center gap-2"
+              style={{ color: ADMIN_THEME.sidebarText }}
+              onSelect={(event) => {
+                event.preventDefault();
+                setIsLanguageOpen((prev) => !prev);
+              }}
             >
-              <span className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                {t("common.language")}
-              </span>
+              <Globe className="h-4 w-4" />
+              <span className="flex-1">{t("common.language")}</span>
               <ChevronDownIcon
                 className={`h-4 w-4 transition-transform duration-200 ${isLanguageOpen ? "rotate-180" : ""}`}
               />
-            </button>
+            </DropdownMenuItem>
           </>
         ) : (
           <DropdownMenuSub>
