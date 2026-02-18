@@ -245,7 +245,7 @@ export const ProjectSidePanel = ({
     return () => {
       cancelled = true;
     };
-  }, [open, state, floorApartments, apartmentCoverPhotoById]);
+  }, [open, state, floorApartments]);
 
   // Safely get image URL
   const getApartmentImage = useCallback(
