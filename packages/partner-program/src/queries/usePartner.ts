@@ -1,6 +1,14 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@gridix/utils/api";
 import type { PartnerProfile } from "../model/types";
+
+interface CachedPartnerState {
+  isPartner: boolean;
+  partnerProfile: PartnerProfile | null;
+}
+
+const partnerStateCache = new Map<string, CachedPartnerState>();
+const partnerRequestInFlight = new Map<string, Promise<CachedPartnerState>>();
 
 export function usePartner() {
   const [isPartner, setIsPartner] = useState(false);
@@ -9,63 +17,99 @@ export function usePartner() {
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkPartnerStatus();
-  }, []);
+  const checkPartnerStatus = useCallback(async () => {
+    let userId: string | null = null;
 
-  const checkPartnerStatus = async () => {
     try {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      userId = session?.user?.id ?? null;
 
-      if (!user) {
+      if (!userId) {
         setIsPartner(false);
         setPartnerProfile(null);
         setLoading(false);
         return;
       }
 
-      const { data: profile, error } = await supabase
-        .from("partner_profiles" as any)
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error fetching partner profile:", error);
-        setIsPartner(false);
-        setPartnerProfile(null);
-      } else if (profile) {
-        setIsPartner(true);
-        setPartnerProfile(profile as any);
-      } else {
-        setIsPartner(false);
-        setPartnerProfile(null);
+      const cached = partnerStateCache.get(userId);
+      if (cached) {
+        setIsPartner(cached.isPartner);
+        setPartnerProfile(cached.partnerProfile);
+        setLoading(false);
+        return;
       }
+
+      const inFlight = partnerRequestInFlight.get(userId);
+      if (inFlight) {
+        const state = await inFlight;
+        setIsPartner(state.isPartner);
+        setPartnerProfile(state.partnerProfile);
+        setLoading(false);
+        return;
+      }
+
+      const request = (async (): Promise<CachedPartnerState> => {
+        const { data: profile, error } = await supabase
+          .from("partner_profiles" as any)
+          .select("*")
+          .eq("user_id", userId)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
+
+        if (profile) {
+          return {
+            isPartner: true,
+            partnerProfile: profile as unknown as PartnerProfile,
+          };
+        }
+
+        return {
+          isPartner: false,
+          partnerProfile: null,
+        };
+      })();
+
+      partnerRequestInFlight.set(userId, request);
+      const nextState = await request;
+      partnerStateCache.set(userId, nextState);
+      setIsPartner(nextState.isPartner);
+      setPartnerProfile(nextState.partnerProfile);
     } catch (error) {
       console.error("Error checking partner status:", error);
       setIsPartner(false);
       setPartnerProfile(null);
     } finally {
+      if (userId) {
+        partnerRequestInFlight.delete(userId);
+      }
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void checkPartnerStatus();
+  }, [checkPartnerStatus]);
 
   const createPartnerProfile = async () => {
     try {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
-      if (!user) {
+      if (!userId) {
         throw new Error("User not authenticated");
       }
 
       // Генерируем партнёрский код
       const { data: codeData, error: codeError } = await supabase.rpc(
         "generate_partner_code" as any,
-        { user_id_param: user.id },
+        { user_id_param: userId },
       );
 
       if (codeError) {
@@ -75,7 +119,7 @@ export function usePartner() {
       const { data: profile, error: profileError } = await supabase
         .from("partner_profiles" as any)
         .insert({
-          user_id: user.id,
+          user_id: userId,
           partner_code: codeData,
         })
         .select()
@@ -85,7 +129,13 @@ export function usePartner() {
         throw new Error("Failed to create partner profile");
       }
 
-      setPartnerProfile(profile as any);
+      const nextState: CachedPartnerState = {
+        isPartner: true,
+        partnerProfile: profile as unknown as PartnerProfile,
+      };
+
+      partnerStateCache.set(userId, nextState);
+      setPartnerProfile(nextState.partnerProfile);
       setIsPartner(true);
 
       return profile;

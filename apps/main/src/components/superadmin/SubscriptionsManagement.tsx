@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@gridix/utils/api";
 import { Button } from "@gridix/ui";
 import { Card } from "@gridix/ui";
@@ -106,10 +106,17 @@ export function SubscriptionsManagement() {
     customEndDate: "",
   });
 
+  const didInitRef = useRef(false);
+
   useEffect(() => {
-    fetchSubscriptions();
-    fetchPlans();
-    fetchProjects();
+    if (didInitRef.current) {
+      return;
+    }
+
+    didInitRef.current = true;
+    void fetchSubscriptions();
+    void fetchPlans();
+    void fetchProjects();
   }, []);
 
   const fetchSubscriptions = async () => {
@@ -132,28 +139,46 @@ export function SubscriptionsManagement() {
         throw error;
       }
 
-      // Now fetch user profiles separately for each subscription
-      const subscriptionsWithProfiles = await Promise.all(
-        (data || []).map(async (sub) => {
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select("email, full_name")
-            .eq("id", sub.user_id)
-            .single();
+      const rawSubscriptions = (data ?? []) as Array<
+        Omit<Subscription, "user_profiles"> & { user_profiles?: unknown }
+      >;
 
-          return {
-            ...sub,
-            user_profiles: profile || {
-              email: "Unknown",
-              full_name: "Unknown",
-            },
-          };
+      const userIds = Array.from(
+        new Set(rawSubscriptions.map((sub) => sub.user_id).filter(Boolean)),
+      );
+
+      const profilesById = new Map<string, Subscription["user_profiles"]>();
+
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("user_profiles")
+          .select("id, email, full_name")
+          .in("id", userIds);
+
+        if (profilesError) {
+          throw profilesError;
+        }
+
+        (profiles ?? []).forEach((profile) => {
+          if (!profile?.id) return;
+          profilesById.set(profile.id, {
+            email: profile.email ?? "Unknown",
+            full_name: profile.full_name ?? "Unknown",
+          });
+        });
+      }
+
+      const subscriptionsWithProfiles = rawSubscriptions.map(
+        (subscription) => ({
+          ...subscription,
+          user_profiles: profilesById.get(subscription.user_id) ?? {
+            email: "Unknown",
+            full_name: "Unknown",
+          },
         }),
       );
 
-      setSubscriptions(
-        (subscriptionsWithProfiles as unknown as Subscription[]) || [],
-      );
+      setSubscriptions(subscriptionsWithProfiles as Subscription[]);
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
       toast({

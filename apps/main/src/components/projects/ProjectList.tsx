@@ -1,42 +1,43 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@gridix/ui";
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  type SharedProject,
+  SharedProjectDrawer,
 } from "@gridix/ui";
-import { Badge } from "@gridix/ui";
-import { Loader } from "@gridix/ui";
-import { SharedProjectDrawer, type SharedProject } from "@gridix/ui";
 import {
-  Building2,
-  Plus,
-  Trash2,
-  Eye,
-  Edit3,
   Building,
-  Info,
-  ShieldCheck,
-  Globe,
-  Save,
-  Percent,
+  Building2,
+  Edit3,
+  Eye,
   FileText,
-  Image as ImageIcon,
-  PlayCircle,
-  Hammer,
-  X,
+  Globe,
   Handshake,
+  Image as ImageIcon,
+  Info,
+  Percent,
+  PlayCircle,
+  Plus,
+  Save,
+  ShieldCheck,
+  Trash2,
+  X,
 } from "lucide-react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
-import { useWorkspaceProjects } from "@/entities/workspace/queries/useWorkspaceProjects";
+import {
+  Project,
+  useWorkspaceProjects,
+} from "@/entities/workspace/queries/useWorkspaceProjects";
 import { useProjectCRUD } from "@/entities/project/queries/useProjects";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { LeadsStats } from "@/components/admin/LeadsNotification";
-import { Project } from "@/entities/workspace/queries/useWorkspaceProjects";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
 import { supabase } from "@gridix/utils/api";
 import Spinner from "@/shared/ui/Spinner.tsx";
@@ -155,8 +156,7 @@ const ProjectList = ({
     const partnershipSettings = p?.partnershipSettings
       ? {
           isEnabled: Boolean(p.partnershipSettings.isEnabled),
-          allowPartnerConnect:
-            p.partnershipSettings.allowPartnerConnect === false ? false : true,
+          allowPartnerConnect: p.partnershipSettings.allowPartnerConnect,
           commissionType: (p.partnershipSettings.commissionType === "fixed"
             ? "fixed"
             : "percent") as "fixed" | "percent",

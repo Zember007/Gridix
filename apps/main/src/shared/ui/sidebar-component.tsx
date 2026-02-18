@@ -5,6 +5,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@gridix/ui";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { useAmoWidget } from "@/hooks/useAmoWidget";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Book,
   Briefcase,
@@ -194,6 +195,7 @@ export function AdminSidebar({
 }) {
   const { t } = useLanguage();
   const { userRole } = useUserRole();
+  const { user, userProfile } = useAuth();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState(
     () => activeTab || getQueryPage() || "projects",
@@ -247,6 +249,8 @@ export function AdminSidebar({
         }
       }}
       {...(onSignOut && { onSignOut })}
+      userId={user?.id}
+      preferredLocale={userProfile?.preferred_locale ?? undefined}
     />
   );
 

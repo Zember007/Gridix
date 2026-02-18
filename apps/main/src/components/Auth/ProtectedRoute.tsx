@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { addLanguageToPath, getLanguageFromPath } from "@gridix/utils/lib";
@@ -19,6 +19,7 @@ export const ProtectedRoute = ({
   const location = useLocation();
   const [passwordGateLoading, setPasswordGateLoading] = useState(false);
   const [needsPasswordSet, setNeedsPasswordSet] = useState(false);
+  const passwordCheckCacheRef = useRef<Map<string, boolean>>(new Map());
   const currentLanguage = useMemo(
     () => getLanguageFromPath(location.pathname),
     [location.pathname],
@@ -61,10 +62,37 @@ export const ProtectedRoute = ({
         return;
       }
       try {
+        const cacheKey = `has_password:${user.id}`;
+        const cachedHasPassword = passwordCheckCacheRef.current.get(user.id);
+        const storedHasPassword =
+          typeof window !== "undefined"
+            ? window.sessionStorage.getItem(cacheKey)
+            : null;
+
+        if (cachedHasPassword !== undefined) {
+          setNeedsPasswordSet(!cachedHasPassword || requiresPasswordSetup);
+          setPasswordGateLoading(false);
+          return;
+        }
+
+        if (storedHasPassword === "true" || storedHasPassword === "false") {
+          const hasPassword = storedHasPassword === "true";
+          passwordCheckCacheRef.current.set(user.id, hasPassword);
+          setNeedsPasswordSet(!hasPassword || requiresPasswordSetup);
+          setPasswordGateLoading(false);
+          return;
+        }
+
         setPasswordGateLoading(true);
         const hasPassword = await hasUserPassword(supabase as any);
-        if (!cancelled)
+
+        if (!cancelled) {
+          passwordCheckCacheRef.current.set(user.id, hasPassword);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(cacheKey, String(hasPassword));
+          }
           setNeedsPasswordSet(!hasPassword || requiresPasswordSetup);
+        }
       } catch (e) {
         // If RPC fails, fall back to requiresPasswordSetup only.
         if (!cancelled) setNeedsPasswordSet(!!requiresPasswordSetup);
