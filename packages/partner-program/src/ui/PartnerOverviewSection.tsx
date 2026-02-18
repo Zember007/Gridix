@@ -193,9 +193,9 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
   return (
     <div className="animate-in fade-in space-y-6 duration-500">
       {/* Gamification / Level Card */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-xl bg-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white shadow-lg">
         <div className="pointer-events-none absolute top-0 right-0 -mt-16 -mr-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div className="relative z-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+        <div className="relative z-10 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
               <div className="rounded-lg bg-white/10 p-1.5">
@@ -232,10 +232,10 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
             )}
           </div>
           {nextLevelTarget && nextLevelTarget > 0 && (
-            <div className="w-full md:w-64">
-              <div className="mb-2 flex justify-between text-xs font-semibold text-slate-400">
+            <div className="w-full lg:w-72 lg:shrink-0">
+              <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold text-slate-400">
                 <span>{t("partners.levelProgress")}</span>
-                <span>
+                <span className="whitespace-nowrap">
                   {totalProjectsLevel} / {nextLevelTarget}{" "}
                   {t("partners.levelProjectsShort")}
                 </span>
@@ -252,7 +252,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
         <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
           <div className="absolute top-5 right-5 text-gray-300 transition-colors group-hover:text-black">
             <Users size={20} />
@@ -329,7 +329,7 @@ export const PartnerOverviewSection: React.FC<PartnerOverviewSectionProps> = ({
           </div>
         </div>
 
-        <div className="w-full">
+        <div className="h-[180px] w-full sm:h-[220px]">
           <IncomeChart
             data={chartData}
             dates={chartDates}

@@ -548,7 +548,7 @@ export const SharedProjectDrawer: React.FC<SharedProjectDrawerProps> = ({
   project,
   mode,
   onClose,
-  zIndex = 50,
+  zIndex = 100,
   onLock,
   onConnect,
   onShare,

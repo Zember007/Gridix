@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLanguage, useWorkspace } from "@gridix/utils/react";
 import { ADMIN_THEME, getAdminThemeVariables } from "@gridix/utils/lib";
 import { Language, LANGUAGE_CONFIG } from "@gridix/utils/lib";
@@ -44,6 +45,7 @@ const setQueryPage = (page: string) => {
 const ProfileFooterMenu = ({
   userEmail,
   isCollapsed,
+  isMobile = false,
   onSignOut,
   language,
   setLanguage,
@@ -52,6 +54,7 @@ const ProfileFooterMenu = ({
 }: {
   userEmail: string;
   isCollapsed: boolean;
+  isMobile?: boolean;
   onSignOut?: () => void;
   language: Language;
   setLanguage: (l: Language) => void;
@@ -59,6 +62,7 @@ const ProfileFooterMenu = ({
   t: (k: string) => string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const username = userEmail.split("@")[0] ?? userEmail;
 
   const handleSelectLanguage = async (nextLanguage: Language) => {
@@ -82,7 +86,13 @@ const ProfileFooterMenu = ({
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) setIsLanguageOpen(false);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -166,40 +176,87 @@ const ProfileFooterMenu = ({
           </p>
         </div>
 
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger
-            className="flex cursor-pointer items-center gap-2"
-            style={{ color: ADMIN_THEME.sidebarText }}
-          >
-            <Globe className="h-4 w-4" />
-            <span className="flex-1">{t("common.language")}</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent
-            className="w-48"
-            style={{
-              backgroundColor: ADMIN_THEME.sidebarBackground,
-              borderColor: ADMIN_THEME.sidebarBorder,
-            }}
-          >
-            {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
-              <DropdownMenuItem
-                key={code}
-                className={`cursor-pointer pl-8 ${
-                  language === code
-                    ? "!bg-[var(--admin-sidebar-active-background)]"
-                    : "hover:!bg-[var(--admin-sidebar-active-background)]"
-                }`}
-                style={{ color: ADMIN_THEME.sidebarText }}
-                onSelect={() => {
-                  void handleSelectLanguage(code as Language);
-                }}
-              >
-                <span className="mr-2">{config.flag}</span>
-                {config.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        {isMobile ? (
+          <>
+            <div
+              className="grid overflow-hidden transition-all duration-200 ease-out"
+              style={{
+                gridTemplateRows: isLanguageOpen ? "1fr" : "0fr",
+                opacity: isLanguageOpen ? 1 : 0,
+              }}
+            >
+              <div className="min-h-0">
+                {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                  <DropdownMenuItem
+                    key={code}
+                    className={`cursor-pointer pl-8 ${
+                      language === code
+                        ? "!bg-[var(--admin-sidebar-active-background)]"
+                        : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                    }`}
+                    style={{ color: ADMIN_THEME.sidebarText }}
+                    onSelect={() => {
+                      void handleSelectLanguage(code as Language);
+                    }}
+                  >
+                    <span className="mr-2">{config.flag}</span>
+                    {config.name}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-2 py-1 text-xs font-medium tracking-wide uppercase transition-colors"
+              style={{ color: ADMIN_THEME.textMuted }}
+              onClick={() => setIsLanguageOpen((prev) => !prev)}
+            >
+              <span className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                {t("common.language")}
+              </span>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform duration-200 ${isLanguageOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </>
+        ) : (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger
+              className="flex cursor-pointer items-center gap-2"
+              style={{ color: ADMIN_THEME.sidebarText }}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="flex-1">{t("common.language")}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent
+              className="w-48"
+              style={{
+                backgroundColor: ADMIN_THEME.sidebarBackground,
+                borderColor: ADMIN_THEME.sidebarBorder,
+              }}
+            >
+              {Object.entries(LANGUAGE_CONFIG).map(([code, config]) => (
+                <DropdownMenuItem
+                  key={code}
+                  className={`cursor-pointer pl-8 ${
+                    language === code
+                      ? "!bg-[var(--admin-sidebar-active-background)]"
+                      : "hover:!bg-[var(--admin-sidebar-active-background)]"
+                  }`}
+                  style={{ color: ADMIN_THEME.sidebarText }}
+                  onSelect={() => {
+                    void handleSelectLanguage(code as Language);
+                  }}
+                >
+                  <span className="mr-2">{config.flag}</span>
+                  {config.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
 
         {docsUrl ? (
           <DropdownMenuItem
@@ -504,6 +561,7 @@ export function SimplifiedSidebar({
           <ProfileFooterMenu
             userEmail={userEmail}
             isCollapsed={isCollapsed}
+            isMobile={isMobile}
             {...(onSignOut ? { onSignOut } : {})}
             language={language}
             setLanguage={setLanguage}
@@ -516,7 +574,7 @@ export function SimplifiedSidebar({
   );
 
   const SupportButton = () => {
-    return (
+    const buttonNode = (
       <Button
         size={"icon"}
         className="support_usertour fixed right-2 bottom-2 z-1 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl lg:right-6 lg:bottom-6"
@@ -540,6 +598,10 @@ export function SimplifiedSidebar({
         <MessageCircleQuestionMark />
       </Button>
     );
+
+    if (typeof document === "undefined") return null;
+
+    return createPortal(buttonNode, document.body);
   };
 
   if (isMobile) {

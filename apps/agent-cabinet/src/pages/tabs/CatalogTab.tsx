@@ -371,7 +371,6 @@ export function CatalogTab() {
         <SharedProjectDrawer
           project={drawerProject ?? toSharedProject(selectedProject)}
           mode="agent"
-          /*  onLock={(project) => {}} */
           onClose={handleCloseDrawer}
           onShare={handleShareProject}
           onOpenPublicPage={handleOpenPublicPage}
@@ -409,7 +408,7 @@ export function CatalogTab() {
       <div
         className={`flex-1 overflow-y-auto bg-slate-50 ${viewMode === "grid" ? "p-4 md:p-6" : "p-0"} custom-scrollbar`}
       >
-        <div className="h-full pb-20">
+        <div className="h-full">
           {!activeWorkspaceId ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
               {t("common.workspace.pickInSidebar")}
@@ -423,14 +422,14 @@ export function CatalogTab() {
               {t("common.catalog.noProjects")}
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filtered.map((p) => {
                 const shareUrl = shareUrlForProject(p);
 
                 return (
                   <div
                     key={p.id}
-                    className="group cursor-pointer overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:border-slate-300/80 hover:shadow-lg"
+                    className="group flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:border-slate-300/80 hover:shadow-lg"
                     onClick={() => handleOpenProject(p)}
                   >
                     {p.building_image_url ? (
@@ -442,14 +441,14 @@ export function CatalogTab() {
                     ) : (
                       <div className="h-44 w-full bg-slate-200" />
                     )}
-                    <div className="p-5">
+                    <div className="flex flex-1 flex-col p-5">
                       <div className="line-clamp-2 font-black leading-tight text-slate-900">
                         {p.name}
                       </div>
                       <div className="mt-1 line-clamp-2 text-xs text-slate-500">
                         {p.address ?? t("common.common.empty")}
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-auto pt-4">
                         <div className="flex items-center gap-2">
                           <Button
                             className="flex-1"

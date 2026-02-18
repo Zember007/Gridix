@@ -150,7 +150,7 @@ export function ContactsTab() {
         onOpenChange={(open) => setOpenContactKey(open ? openContactKey : null)}
       >
         <div className="custom-scrollbar relative flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-          <div className="pb-20">
+          <div className="mx-auto max-w-[1600px] pb-20">
             {!activeWorkspaceId ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
                 {t("common.workspace.pickInSidebar")}
@@ -194,27 +194,37 @@ export function ContactsTab() {
                               <div className="truncate font-bold text-slate-900">
                                 {title}
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-slate-500">
-                                <span className="inline-flex items-center gap-1">
-                                  <Phone size={14} className="text-slate-400" />{" "}
-                                  {c.phone || t("common.common.empty")}
+                              <div className="flex flex-col gap-1 text-xs text-slate-500 lg:flex-row lg:items-center lg:gap-3">
+                                <span className="inline-flex min-w-0 items-center gap-1">
+                                  <Phone
+                                    size={14}
+                                    className="shrink-0 text-slate-400"
+                                  />
+                                  <span className="truncate">
+                                    {c.phone || t("common.common.empty")}
+                                  </span>
                                 </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Mail size={14} className="text-slate-400" />{" "}
-                                  {c.email || t("common.common.empty")}
+                                <span className="inline-flex min-w-0 items-center gap-1">
+                                  <Mail
+                                    size={14}
+                                    className="shrink-0 text-slate-400"
+                                  />
+                                  <span className="truncate">
+                                    {c.email || t("common.common.empty")}
+                                  </span>
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="w-24 text-right text-xs text-slate-600">
+                          <div className="w-10 shrink-0 text-center text-xs tabular-nums text-slate-600 xl:w-14">
                             {c.leadsCount}
                           </div>
-                          <div className="w-64 truncate text-right text-xs text-slate-600">
+                          <div className="hidden w-40 shrink-0 truncate text-left text-xs text-slate-600 xl:block 2xl:w-56">
                             {(c.projects ?? []).length
                               ? c.projects.join(", ")
                               : t("common.common.empty")}
                           </div>
-                          <div className="w-48 text-right text-xs text-slate-500">
+                          <div className="w-28 shrink-0 truncate text-left text-xs tabular-nums text-slate-500 xl:w-36">
                             {c.lastLeadAt
                               ? new Date(c.lastLeadAt).toLocaleString()
                               : t("common.common.empty")}

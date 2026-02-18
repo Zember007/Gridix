@@ -288,7 +288,9 @@ const LiveActivityFeed = ({
                   </div>
                 </div>
               </div>
-              <span className="text-[10px] text-slate-400">{act.time}</span>
+              <span className="ml-3 w-12 shrink-0 break-words text-right text-[10px] leading-tight text-slate-400">
+                {act.time}
+              </span>
             </div>
           ))
         )}
@@ -385,8 +387,8 @@ export function DashboardTab() {
         hideSearch
       />
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="mx-auto max-w-[1600px] space-y-6 pb-20">
+      <div className="custom-scrollbar flex-1 overflow-visible p-4 md:overflow-y-auto md:p-8">
+        <div className="mx-auto max-w-[1600px] space-y-6">
           {!activeWorkspaceId ? (
             <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <Lock size={18} className="text-slate-400" />

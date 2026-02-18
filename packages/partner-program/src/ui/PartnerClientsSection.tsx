@@ -462,8 +462,8 @@ export const PartnerClientsSection: React.FC = () => {
 
       {/* Шапка секции */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <div className="mb-6 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <div className={"self-start"}>
+        <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div>
             <h2 className="text-2xl font-bold text-slate-900">
               {t("partners.clients")}
             </h2>
